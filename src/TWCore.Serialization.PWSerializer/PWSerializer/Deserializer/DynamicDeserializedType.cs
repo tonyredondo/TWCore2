@@ -226,7 +226,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object GetValue(object item, Type underType)
         {
-            object value;
+            object value = item;
             if (item is DynamicDeserializedType ddtValue)
             {
                 if (ddtValue.ValueType != null)
@@ -235,8 +235,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     value = Activator.CreateInstance(underType);
                 ddtValue.BindObject(ref value);
             }
-            else
-                value = DataTypeHelper.Change(item, underType);
+            value = DataTypeHelper.Change(value, underType);
             return value;
         }
 

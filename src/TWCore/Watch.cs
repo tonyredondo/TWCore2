@@ -216,7 +216,7 @@ namespace TWCore
                         if (item.LastTapTicks != item.GlobalTicks)
                         {
                             gTime = (item.GlobalTicks / _frequency) * 1000;
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Cumulated = {2:0.0000}] {3}", item.Id, cTime, gTime, item.Message);
+                            Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
                         }
                         else
                         {
@@ -226,7 +226,7 @@ namespace TWCore
                     case 2:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         gTime = (item.GlobalTicks / _frequency) * 1000;
-                        Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Total = {2:0.0000}] {3}", item.Id, cTime, gTime, item.Message);
+                        Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Total = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
                         break;
                 }
             }

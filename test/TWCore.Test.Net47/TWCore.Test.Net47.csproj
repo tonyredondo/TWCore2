@@ -1,0 +1,132 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <RootNamespace>TWCore.Test.Net47</RootNamespace>
+    <AssemblyName>TWCore.Test.Net47</AssemblyName>
+    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj">
+      <Project>{a6976039-047f-427e-92bc-c65e641569b1}</Project>
+      <Name>TWCore.Bot.Telegram</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj">
+      <Project>{979fefcd-138c-4c44-8f7b-9bd8a10b1cd2}</Project>
+      <Name>TWCore.Bot</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Cache.Client\TWCore.Cache.Client.csproj">
+      <Project>{6befe186-9433-45e0-8ac4-a5dde9d31220}</Project>
+      <Name>TWCore.Cache.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Cache.Server\TWCore.Cache.Server.csproj">
+      <Project>{9ca6ae08-92a3-4513-ab40-1091b60a1441}</Project>
+      <Name>TWCore.Cache.Server</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Cache\TWCore.Cache.csproj">
+      <Project>{88baf82b-ecf0-4cc3-935f-8a656261dd5e}</Project>
+      <Name>TWCore.Cache</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj">
+      <Project>{33545dbf-015f-4d28-b309-2153cc533348}</Project>
+      <Name>TWCore.Collections</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj">
+      <Project>{26727c2d-58a1-40ea-8218-f74794e8958d}</Project>
+      <Name>TWCore.Data</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj">
+      <Project>{8e07c9c2-2274-447d-bdc6-b66bdb597870}</Project>
+      <Name>TWCore.Geo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj">
+      <Project>{ec6b6366-06e2-4052-b353-91cbf0bcab62}</Project>
+      <Name>TWCore.Messaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Net.Browser\TWCore.Net.Browser.csproj">
+      <Project>{4f47447e-82da-4dc8-a2c6-7d3378a1942e}</Project>
+      <Name>TWCore.Net.Browser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj">
+      <Project>{f13af665-cad1-42b0-8fcc-b474e9538b13}</Project>
+      <Name>TWCore.Net.HttpServer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj">
+      <Project>{89395e35-4675-480d-8c63-06b7f2fe899e}</Project>
+      <Name>TWCore.Net.Rpc</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Numerics\TWCore.Numerics.csproj">
+      <Project>{adc3974a-1a2e-483f-a19e-3117746135e4}</Project>
+      <Name>TWCore.Numerics</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj">
+      <Project>{705a32b5-cbcb-45e4-a6b4-1bddaa427e51}</Project>
+      <Name>TWCore.Serialization.PWSerializer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj">
+      <Project>{61ab6b30-242b-41fb-9e7e-87f3f8093a23}</Project>
+      <Name>TWCore.Serialization.WSerializer</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj">
+      <Project>{78b31e9b-eed7-41e4-896c-cbc53e3f53d5}</Project>
+      <Name>TWCore.Triggers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore\TWCore.csproj">
+      <Project>{90b27d63-8183-4a1d-8b02-e9883b0d2537}</Project>
+      <Name>TWCore</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TWCore.Tests\TWCore.Tests.csproj">
+      <Project>{9f46c08e-f99d-4cc7-93e0-d9c5bf65ae01}</Project>
+      <Name>TWCore.Tests</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

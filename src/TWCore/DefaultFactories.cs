@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,6 +22,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Runtime.Serialization;
 using System.Threading;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status;
@@ -36,12 +37,6 @@ namespace TWCore
     public class DefaultFactories : Factories
     {
         const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
-        const string SettingKey_EnvironmentName = "Core:EnvironmentName";
-        const string SettingKey_MachineName = "Core:MachineName";
-        const string SettingKey_ApplicationName = "Core:ApplicationName";
-        const string SettingKey_ApplicationDisplayName = "Core:ApplicationDisplayName";
-        const string SettingKey_SettingsConfigFile = "Core:SettingsFile";
-        const string SettingKey_InjectorConfigFile = "Core:InjectorFile";
 
         List<Assembly> assemblies = null;
         bool usedResolver = false;
@@ -67,8 +62,8 @@ namespace TWCore
                 if (assemblies == null)
                 {
                     assemblies = new List<Assembly>();
-                    
-                    var dependencies = AppDomain.CurrentDomain.GetAssemblies().Where(d => 
+
+                    var dependencies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
                     {
                         if (d.IsDynamic) return false;
 
@@ -79,7 +74,7 @@ namespace TWCore
                         !assemblyName.Name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
                         !assemblyName.Name.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) &&
                         !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
-                    }).DistinctBy(i =>i.Location).ToArray();
+                    }).DistinctBy(i => i.Location).ToArray();
                     foreach (var assembly in dependencies)
                     {
                         try
@@ -93,7 +88,6 @@ namespace TWCore
                 }
                 return assemblies.ToArray();
             };
-
             this.GetAllAssemblies = () =>
             {
                 var resolver = AssemblyResolverManager.GetAssemblyResolver();
@@ -166,60 +160,61 @@ namespace TWCore
 
             AttachStatus();
 
-            var config = new ConfigurationBuilder().AddJsonFile($"{Core.ApplicationName}.config.json", true).Build();
-            var twCoreSettings = config.GetSection("Core").AsEnumerable().ToArray();
-
-            var sEnvironment = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_EnvironmentName).Value;
-            var sMachine = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_MachineName).Value;
-            var sApplication = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_ApplicationName).Value;
-            var sApplicationDisplay = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_ApplicationDisplayName).Value;
-            var sSettings = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_SettingsConfigFile).Value;
-            var sInjector = twCoreSettings.FirstOrDefault(s => s.Key == SettingKey_InjectorConfigFile).Value;
-
-            if (sEnvironment.IsNotNullOrWhitespace())
-                Core.EnvironmentName = sEnvironment;
-            if (sMachine.IsNotNullOrWhitespace())
-                Core.MachineName = sMachine;
-            if (sApplication.IsNotNullOrWhitespace())
-                Core.ApplicationName = sApplication;
-            if (sApplicationDisplay.IsNotNullOrWhitespace())
-                Core.ApplicationDisplayName = sApplicationDisplay;
-            if (sSettings.IsNotNullOrWhitespace())
-                Core.LoadSettings(sSettings);
-
-            var twCoreAppSettings = config.GetSection("Settings").AsEnumerable().ToArray();
-
-            foreach (var item in twCoreAppSettings)
+            var configFile = $"{Core.ApplicationName}.config.json";
+            if (File.Exists(configFile))
             {
-                if (item.Key.Length > 9)
+                var jser = JsonSerializer.CreateDefault();
+                var fSettings = jser.Deserialize<FactorySettings>(new JsonTextReader(new StreamReader(configFile)));
+
+                if (fSettings != null)
                 {
-                    var key = item.Key.Substring(9);
-                    if (key.IndexOf(">") > -1)
+                    if (fSettings.Core != null)
                     {
-                        var keyPair = key.SplitAndTrim(">");
-                        var k1 = keyPair[0].SplitAndTrim(".");
-                        string env = k1[0];
-                        string mac = k1.Length > 1 ? k1[1] : null;
-                        string ckey = keyPair[1];
-                        if (env == Core.EnvironmentName && (mac == null || mac == Core.MachineName))
+                        if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace())
+                            Core.EnvironmentName = fSettings.Core.EnvironmentName;
+                        if (fSettings.Core.MachineName.IsNotNullOrWhitespace())
+                            Core.MachineName = fSettings.Core.MachineName;
+                        if (fSettings.Core.ApplicationName.IsNotNullOrWhitespace())
+                            Core.ApplicationName = fSettings.Core.ApplicationName;
+                        if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
+                            Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
+                        if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
+                            Core.LoadSettings(fSettings.Core.SettingsFile);
+                    }
+
+                    if (fSettings.AppSettings != null)
+                    {
+                        foreach (var item in fSettings.AppSettings)
                         {
-                            Core.Settings.Remove(ckey);
-                            Core.Settings.Add(ckey, item.Value);
+                            if (item.Key.IndexOf(">") > -1)
+                            {
+                                var keyPair = item.Key.SplitAndTrim(">");
+                                var k1 = keyPair[0].SplitAndTrim(".");
+                                string env = k1[0];
+                                string mac = k1.Length > 1 ? k1[1] : null;
+                                string ckey = keyPair[1];
+                                if (env == Core.EnvironmentName && (mac == null || mac == Core.MachineName))
+                                {
+                                    Core.Settings.Remove(ckey);
+                                    Core.Settings.Add(ckey, item.Value);
+                                }
+                            }
+                            else
+                            {
+                                if (!Core.Settings.Contains(item.Key))
+                                    Core.Settings.Add(item.Key, item.Value);
+                            }
                         }
                     }
-                    else
-                    {
-                        if (!Core.Settings.Contains(key))
-                            Core.Settings.Add(key, item.Value);
-                    }
+
+                    Core.RebindSettings();
+
+                    if (fSettings.Core != null)
+                        if (fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
+                            Core.LoadInjector(fSettings.Core.InjectorFile);
                 }
             }
 
-            Core.RebindSettings();
-
-            if (sInjector.IsNotNullOrWhitespace())
-                Core.LoadInjector(sInjector);
-                        
             SetLargeObjectHeapCompactTimeout();
         }
 
@@ -272,11 +267,12 @@ namespace TWCore
                 sItem.Values.Add(nameof(process.WorkingSet64), process.WorkingSet64.ToReadeableBytes());
                 return sItem;
             });
-            Core.Status.Attach(() => {
+            Core.Status.Attach(() =>
+            {
                 var sItem = new StatusItem { Name = "Garbage Collector" };
                 var maxGen = GC.MaxGeneration;
                 sItem.Values.Add("Max Generation", maxGen);
-                for(var i = 0; i <= maxGen; i++)
+                for (var i = 0; i <= maxGen; i++)
                 {
                     sItem.Values.Add("Collection Count Gen " + i, GC.CollectionCount(i));
                 }
@@ -324,6 +320,34 @@ namespace TWCore
                     }, null, time, time);
                 }
                 lastValue = Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes;
+            }
+        }
+        #endregion
+
+        #region FactorySettings
+        [DataContract]
+        internal class FactorySettings
+        {
+            [DataMember]
+            public Dictionary<string, string> AppSettings { get; set; }
+            [DataMember]
+            public InnerSettings Core { get; set; }
+
+            [DataContract]
+            public class InnerSettings
+            {
+                [DataMember]
+                public string EnvironmentName { get; set; }
+                [DataMember]
+                public string MachineName { get; set; }
+                [DataMember]
+                public string ApplicationName { get; set; }
+                [DataMember]
+                public string ApplicationDisplayName { get; set; }
+                [DataMember]
+                public string SettingsFile { get; set; }
+                [DataMember]
+                public string InjectorFile { get; set; }
             }
         }
         #endregion

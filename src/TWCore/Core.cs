@@ -229,7 +229,15 @@ namespace TWCore
                 }
 
                 var allAssemblies = Factory.GetAllAssemblies();
-                var types = allAssemblies.SelectMany(a => a.DefinedTypes).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
+                var types = allAssemblies.SelectMany(a =>
+                {
+                    try
+                    {
+                        return a.DefinedTypes;
+                    }
+                    catch {}
+                    return new TypeInfo[0];
+                }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
                 if (types?.Any() == true)
                 {
                     foreach (var type in types)

@@ -2,7 +2,7 @@
   "appSettings": {
     "key": "value"
   },
-  "TWCore": {
+  "Core": {
     "environmentName": "DEV",
     "machineName": null,
     "applicationName": "TWCore Test",

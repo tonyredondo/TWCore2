@@ -46,7 +46,7 @@ namespace TWCore.Compression
             uint out_len = 0;
             fixed (byte* wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
-                Lzo1x_decompress((byte*)@in.AsPointer, (uint)@in.Count, @pOut, ref @out_len, wrkmem);
+                Lzo1x_decompress((byte*)@in.GetPointer(), (uint)@in.Count, @pOut, ref @out_len, wrkmem);
             }
             return new SubArray<byte>(@out, 0, (int)out_len);
         }
@@ -78,7 +78,7 @@ namespace TWCore.Compression
             uint out_len = 0;
             fixed (byte* wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
-                Lzo1x_1_compress((byte*)input.AsPointer, (uint)input.Count, @pOut, ref @out_len, wrkmem);
+                Lzo1x_1_compress((byte*)input.GetPointer(), (uint)input.Count, @pOut, ref @out_len, wrkmem);
             }
             return new SubArray<byte>(@out, 0, (int)out_len);
         }

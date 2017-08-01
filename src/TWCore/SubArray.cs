@@ -107,7 +107,7 @@ namespace TWCore
             _count = array.Count;
         }
         #endregion
-
+        
         #region Methods
         /// <summary>
         /// Reference to an element inside the array
@@ -122,7 +122,7 @@ namespace TWCore
         /// <summary>
         /// Unsafe pointer to the array offset
         /// </summary>
-        public unsafe void* AsPointer => Unsafe.AsPointer(ref _array[_offset]);
+        public unsafe void* GetPointer() => Unsafe.AsPointer(ref _array[_offset]);
         /// <summary>
         /// Gets the index of an item
         /// </summary>

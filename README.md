@@ -1,4 +1,4 @@
-# TWCore
+# TWCore 2
 A multipurpose framework library for netstandard 2
 
 

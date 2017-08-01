@@ -34,12 +34,12 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             Index = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(SerializerPlan plan, object value)
+        public void Init(SerializerPlan plan, Type originalType, object value)
         {
             if (plan != null)
             {
                 Plan = plan.Plan;
-                Type = plan.Type;
+                Type = originalType;
                 IsIList = plan.IsIList;
                 IsIDictionary = plan.IsIDictionary;
                 PlanLength = plan.Plan.Length;

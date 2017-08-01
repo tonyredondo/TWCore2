@@ -50,6 +50,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             public bool IsIList;
             public bool IsIDictionary;
             public string[] Properties;
+            public string[] TypeParts;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TypeStart(Type type, TypeInfo typeInfo)
@@ -57,6 +58,11 @@ namespace TWCore.Serialization.PWSerializer.Serializer
                 PlanType = SerializerPlanItemType.TypeStart;
                 Type = type;
                 IsArray = type.IsArray;
+
+                if (type != null)
+                    TypeParts = type.AssemblyQualifiedName.SplitAndTrim(',');
+                else
+                    TypeParts = new string[0];
             }
         }
         #endregion

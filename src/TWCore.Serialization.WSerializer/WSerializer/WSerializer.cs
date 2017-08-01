@@ -489,7 +489,7 @@ namespace TWCore.Serialization.WSerializer
             if (mStream.Length > MinimumLengthToCompress)
             {
                 globalBW.Write(DataType.FileStartCompressed);
-                var dataBytes = Compression.MiniLZO.Compress(mStream.ToArray());
+                var dataBytes = Compression.MiniLZO.Compress(mStream.ToSubArray());
                 globalBW.Write(dataBytes.Count);
                 globalBW.Write(dataBytes.Array, dataBytes.Offset, dataBytes.Count);
             }

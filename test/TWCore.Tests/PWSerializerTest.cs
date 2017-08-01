@@ -20,7 +20,7 @@ namespace TWCore.Tests
                 Age = 33
             };
             var collection = new List<List<STest>>();
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i <= 10000; i++)
             {
                 var colSTest = new List<STest>()
                 {
@@ -45,7 +45,7 @@ namespace TWCore.Tests
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+16, Age = 17 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+17, Age = 18 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+18, Age = 19 },
-                    new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20 },
+                    new STest2 { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20, New = "This is a test" },
                 };
                 collection.Add(colSTest);
             }
@@ -53,136 +53,63 @@ namespace TWCore.Tests
             string jsonText = null;
             SubArray<byte> jsonBytes = null, pwBytes = null, wBytes = null;
 
-            //PWBinarySerializerExtensions.Serializer.SerializerMode = TWCore.Serialization.PWSerializer.SerializerMode.NoCached;
-
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON"))
-                jsonText = collection[0].SerializeToJson();
-
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary"))
-                pwBytes = collection[0].SerializeToPWBinary();
-            using (Watch.Create("PWBinary DESERIALIZATION"))
-                pwBytes.DeserializeFromPWBinary<List<STest>>();
-            using (Watch.Create("PWBinary DESERIALIZATION GENERIC"))
-                pwBytes.DeserializeFromPWBinary(null);
-
-            var obj = (DynamicDeserializedType)pwBytes.DeserializeFromPWBinary(null);
-            var lst = obj.GetObject<List<STest>>();
-
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary"))
-                wBytes = collection[0].SerializeToWBinary();
-            Factory.Thread.Sleep(1000);
-
-            using (Watch.Create("JSON"))
-                jsonText = collection[0].SerializeToJson();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary"))
-                pwBytes = collection[0].SerializeToPWBinary();
-            using (Watch.Create("PWBinary DESERIALIZATION"))
-                pwBytes.DeserializeFromPWBinary<List<STest>>();
-            using (Watch.Create("PWBinary DESERIALIZATION GENERIC"))
-                pwBytes.DeserializeFromPWBinary(null);
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary"))
-                wBytes = collection[0].SerializeToWBinary();
-            Factory.Thread.Sleep(1000);
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON"))
-                for (var i = 0; i < 100000; i++)
-                    jsonText = collection[i % 10000].SerializeToJson();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON DESERIALIZATION"))
-                for (var i = 0; i < 100000; i++)
-                    jsonText.DeserializeFromJson<List<STest>>();
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary"))
-                for (var i = 0; i < 100000; i++)
-                    pwBytes = collection[i % 10000].SerializeToPWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZATION"))
-                for (var i = 0; i < 100000; i++)
-                    pwBytes.DeserializeFromPWBinary<List<STest>>();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZATION GENERIC"))
-                for (var i = 0; i < 100000; i++)
-                    pwBytes.DeserializeFromPWBinary(null);
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary"))
-                for (var i = 0; i < 100000; i++)
-                    wBytes = collection[i % 10000].SerializeToWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary DESERIALIZATION"))
-                for (var i = 0; i < 100000; i++)
-                    wBytes.DeserializeFromWBinary<List<STest>>();
-
-            //PWBinarySerializerExtensions.Serializer.SerializerMode = TWCore.Serialization.PWSerializer.SerializerMode.NoCached;
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON"))
-                for (var i = 0; i < 200000; i++)
-                    jsonText = collection[i % 10000].SerializeToJson();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON DESERIALIZATION"))
-                for (var i = 0; i < 200000; i++)
-                    jsonText.DeserializeFromJson<List<STest>>();
-
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary"))
-                for (var i = 0; i < 200000; i++)
-                    pwBytes = collection[i % 10000].SerializeToPWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZATION"))
-                for (var i = 0; i < 200000; i++)
-                    pwBytes.DeserializeFromPWBinary<List<STest>>();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZATION GENERIC"))
-                for (var i = 0; i < 200000; i++)
-                    pwBytes.DeserializeFromPWBinary(null);
-
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary"))
-                for (var i = 0; i < 200000; i++)
-                    wBytes = collection[i % 10000].SerializeToWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("WBinary DESERIALIZATION"))
-                for (var i = 0; i < 200000; i++)
-                    wBytes.DeserializeFromWBinary<List<STest>>();
+            var lt = new List<STest>
+            {
+                new STest { FirstName = "Name1" , LastName = "LName1" , Age = 11 },
+                new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" },
+            };
+            var fByte = lt.SerializeToPWBinary();
+            var obj1 = (DynamicDeserializedType)fByte.DeserializeFromPWBinary(null);
 
             pwBytes = collection[0].SerializeToPWBinary();
+            var obj = (DynamicDeserializedType)pwBytes.DeserializeFromPWBinary(null);
+            var lst = obj.GetObject<List<STest>>();
+            var obj2 = pwBytes.DeserializeFromPWBinary<List<STest>>();
+
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("JSON SERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    jsonText = collection[i % 10000].SerializeToJson();
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("JSON DESERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    jsonText.DeserializeFromJson<List<STest>>();
+
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("PWBinary SERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    pwBytes = collection[i % 10000].SerializeToPWBinary();
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("PWBinary DESERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    pwBytes.DeserializeFromPWBinary<List<STest>>();
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("PWBinary DESERIALIZER GENERIC"))
+                for (var i = 0; i < 100000; i++)
+                    pwBytes.DeserializeFromPWBinary(null);
+
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("WBinary SERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    wBytes = collection[i % 10000].SerializeToWBinary();
+            System.GC.Collect();
+            System.GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("WBinary DESERIALIZER"))
+                for (var i = 0; i < 100000; i++)
+                    wBytes.DeserializeFromWBinary<List<STest>>();
 
             jsonBytes = Encoding.UTF8.GetBytes(jsonText);
 
@@ -201,5 +128,9 @@ namespace TWCore.Tests
         public string LastName { get; set; }
         public int Age { get; set; }
         public STest Brother { get; set; }
+    }
+    public class STest2 : STest
+    {
+        public string New { get; set; }
     }
 }

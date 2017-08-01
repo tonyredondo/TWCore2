@@ -35,8 +35,9 @@ namespace TWCore.Serialization.PWSerializer
 	/// </summary>
 	public class PWSerializer
 	{
-		private static readonly ObjectPool<Tuple<SerializerCache<string[]>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<string[]>, SerializerCache<object>>>(() =>
-				Tuple.Create(new SerializerCache<string[]>(SerializerMode.CachedUShort, ArrayEqualityComparer<string>.Default), new SerializerCache<object>(SerializerMode.CachedUShort)),
+        private static ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
+        private static readonly ObjectPool<(SerializerCache<string[]>, SerializerCache<object>)> CachePool = new ObjectPool<(SerializerCache<string[]>, SerializerCache<object>)>(() =>
+				(new SerializerCache<string[]>(SerializerMode.CachedUShort, StringArrayComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
 					i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
 					1,
 					PoolResetMode.AfterUse);
@@ -91,7 +92,7 @@ namespace TWCore.Serialization.PWSerializer
 			var plan = GetSerializerPlan(currentSerializerPlanTypes, serializersTable, type);
 			var scopeStack = StackPool.New();
 			var scope = SerializerScopePool.New();
-			scope.Init(plan, value);
+			scope.Init(plan, type, value);
 			scopeStack.Push(scope);
 
 			var bw = new FastBinaryWriter(stream, Encoding.UTF8, true);
@@ -219,8 +220,15 @@ namespace TWCore.Serialization.PWSerializer
 						{
 							objectCache.SerializerSet(scope.Value);
 							var tStartItem = (SerializerPlanItem.TypeStart)item;
-
-							var typeIdx = typesCache.SerializerGet(tStartItem.Properties);
+                            var valType = scope.Value.GetType();
+                            if (valType != scope.Type)
+                            {
+								bw.Write(DataType.TypeName);
+                                numberSerializer.WriteValue(bw, tStartItem.TypeParts.Length);
+                                for (var i = 0; i < tStartItem.TypeParts.Length; i++)
+                                    propertySerializer.WriteValue(bw, tStartItem.TypeParts[i]);
+                            }
+                            var typeIdx = typesCache.SerializerGet(tStartItem.Properties);
 							if (typeIdx < 0)
 							{
 								#region TypeStart write
@@ -228,16 +236,10 @@ namespace TWCore.Serialization.PWSerializer
 								var props = tStartItem.Properties;
 								var propsLength = props.Length;
 								numberSerializer.WriteValue(bw, propsLength);
-								for (var i = 0; i < propsLength; i++)
-									propertySerializer.WriteValue(bw, props[i]);
-								if (tStartItem.IsIList)
-									numberSerializer.WriteValue(bw, ((IList)scope.Value).Count);
-								else if (tStartItem.IsIDictionary)
-									numberSerializer.WriteValue(bw, ((IDictionary)scope.Value).Count);
-								else
-									numberSerializer.WriteValue(bw, 0);
+                                for (var i = 0; i < propsLength; i++)
+                                    propertySerializer.WriteValue(bw, props[i]);
+                                typesCache.SerializerSet(props);
 								#endregion
-								typesCache.SerializerSet(props);
 							}
 							else
 							{
@@ -275,14 +277,15 @@ namespace TWCore.Serialization.PWSerializer
 											Write(bw, DataType.TypeRefUShort, (ushort)typeIdx);
 										break;
 								}
-								if (tStartItem.IsIList)
-									numberSerializer.WriteValue(bw, ((IList)scope.Value).Count);
-								else if (tStartItem.IsIDictionary)
-									numberSerializer.WriteValue(bw, ((IDictionary)scope.Value).Count);
-								else
-									numberSerializer.WriteValue(bw, 0);
 							}
-						}
+
+                            if (tStartItem.IsIList)
+                                numberSerializer.WriteValue(bw, ((IList)scope.Value).Count);
+                            else if (tStartItem.IsIDictionary)
+                                numberSerializer.WriteValue(bw, ((IDictionary)scope.Value).Count);
+                            else
+                                numberSerializer.WriteValue(bw, 0);
+                        }
 						continue;
 
 					#endregion
@@ -302,9 +305,9 @@ namespace TWCore.Serialization.PWSerializer
 								{
 									var itemList = iList[i];
 									itemList = ResolveLinqEnumerables(itemList);
-									var itemType = itemList?.GetType() ?? lType.InnerType;
-									var srpVal = SerializerRuntimePool.New();
-									srpVal.Init(itemType, serializersTable.GetSerializerByValueType(itemType)?.GetType(), itemList);
+                                    var itemType = itemList?.GetType() ?? lType.InnerType;
+                                    var srpVal = SerializerRuntimePool.New();
+									srpVal.Init(lType.InnerType, serializersTable.GetSerializerByValueType(itemType)?.GetType(), itemList);
 									aPlan[i] = srpVal;
 								}
 								scope = SerializerScopePool.New();
@@ -338,11 +341,11 @@ namespace TWCore.Serialization.PWSerializer
 									var valueValue = iDictio[keyValue];
 									valueValue = ResolveLinqEnumerables(valueValue);
 									var aPlanKeyVal = SerializerRuntimePool.New();
-									aPlanKeyVal.Init(kv?.GetType() ?? dictioItem.KeyType, dictioItem.KeySerializerType, kv);
+									aPlanKeyVal.Init(dictioItem.KeyType, dictioItem.KeySerializerType, kv);
 									aPlan[aIdx++] = aPlanKeyVal;
 
 									var aPlanValVal = SerializerRuntimePool.New();
-									aPlanValVal.Init(valueValue?.GetType() ?? dictioItem.ValueType, dictioItem.ValueSerializerType, valueValue);
+									aPlanValVal.Init(dictioItem.ValueType, dictioItem.ValueSerializerType, valueValue);
 									aPlan[aIdx++] = aPlanValVal;
 								}
 								scope = SerializerScopePool.New();
@@ -382,7 +385,7 @@ namespace TWCore.Serialization.PWSerializer
 						{
 							rVal = ResolveLinqEnumerables(rVal);
 							scope = SerializerScopePool.New();
-							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, rVal?.GetType() ?? rItem.Type), rVal);
+							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, rVal?.GetType() ?? rItem.Type), rItem.Type, rVal);
 							scopeStack.Push(scope);
 						}
 						continue;
@@ -400,7 +403,7 @@ namespace TWCore.Serialization.PWSerializer
 						else
 						{
 							scope = SerializerScopePool.New();
-							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, scope.Value?.GetType() ?? vItem.Type), scope.Value);
+							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, scope.Value?.GetType() ?? vItem.Type), vItem.Type, scope.Value);
 							scopeStack.Push(scope);
 						}
 						continue;
@@ -417,8 +420,8 @@ namespace TWCore.Serialization.PWSerializer
 							serializersTable.Write(rvItem.SerializerType, bw, rvItem.Value);
 						else
 						{
-							scope = SerializerScopePool.New();
-							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, rvItem.Value?.GetType() ?? rvItem.Type), rvItem.Value);
+                            scope = SerializerScopePool.New();
+							scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, rvItem.Value?.GetType() ?? rvItem.Type), rvItem.Type, rvItem.Value);
 							scopeStack.Push(scope);
 						}
 						SerializerRuntimePool.Store(rvItem);
@@ -520,7 +523,7 @@ namespace TWCore.Serialization.PWSerializer
 							propType = Nullable.GetUnderlyingType(propType);
 						var serType = serializerTable.GetSerializerByValueType(propType)?.GetType();
 						propNames.Add(prop.Name);
-						if (serType == null)
+                        if (serType == null)
 						{
 							plan.Add(new SerializerPlanItem.PropertyReference(prop));
 							if (!currentSerializerPlanTypes.Contains(propType))
@@ -530,10 +533,10 @@ namespace TWCore.Serialization.PWSerializer
 							plan.Add(new SerializerPlanItem.PropertyValue(prop, serType, propIsNullable));
 					}
 					tStart.Properties = propNames.ToArray();
-					#endregion
+                    #endregion
 
-					#region ListInfo
-					if (isIList)
+                    #region ListInfo
+                    if (isIList)
 					{
 						var ifaces = typeInfo.ImplementedInterfaces;
 						var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
@@ -641,12 +644,12 @@ namespace TWCore.Serialization.PWSerializer
 			}
 			var fStart = startBuffer[0];
 			var sMode = (SerializerMode)startBuffer[1];
-			Mode = sMode;
 			BufferArray.Store(startBuffer);
-			if (fStart != DataType.PWFileStart)
+            if (fStart != DataType.PWFileStart)
 				throw new FormatException(string.Format("The stream is not in PWBinary format. Byte {0} was expected, received: {1}", DataType.PWFileStart, fStart));
+            Mode = sMode;
 
-			var serializersTable = DeserializersTable.GetTable(sMode);
+            var serializersTable = DeserializersTable.GetTable(sMode);
 			var propertySerializer = PropertiesSerializerPool.New();
 			var numberSerializer = serializersTable.NumberSerializer;
 			var cacheTuple = CachePool.New();
@@ -656,13 +659,22 @@ namespace TWCore.Serialization.PWSerializer
 
 			var desStack = DStackPool.New();
 			DeserializerType typeItem = null;
+            Type valueType = null;
 			do
 			{
-				var currentType = typeItem?.CurrentType ?? type;
+				var currentType = valueType ?? typeItem?.CurrentType ?? type;
 				var currentByte = br.ReadByte();
 				switch (currentByte)
 				{
-					#region TypeStart
+                    #region TypeStart
+                    case DataType.TypeName:
+						var vTypePartsLength = numberSerializer.ReadValue(br);
+						var vTypeParts = new string[vTypePartsLength];
+                        for (var i = 0; i < vTypePartsLength; i++)
+                            vTypeParts[i] = propertySerializer.ReadValue(br);
+                        var vType = string.Join(", ", vTypeParts);
+                        valueType = Core.GetType(vType);
+                        continue;
 					case DataType.TypeStart:
 						var typePropertiesLength = numberSerializer.ReadValue(br);
 						var typeProperties = new string[typePropertiesLength];
@@ -674,7 +686,8 @@ namespace TWCore.Serialization.PWSerializer
 						typeItem.SetProperties(currentType, typeProperties, propertiesTypes, length);
 						objectCache.DeserializerSet(typeItem.Value);
 						desStack.Push(typeItem);
-						continue;
+                        valueType = null;
+                        continue;
 					case DataType.TypeRefByte0:
 					case DataType.TypeRefByte1:
 					case DataType.TypeRefByte2:
@@ -707,7 +720,8 @@ namespace TWCore.Serialization.PWSerializer
 						typeItem.SetProperties(currentType, typeProperties, propertiesTypes, length);
 						objectCache.DeserializerSet(typeItem.Value);
 						desStack.Push(typeItem);
-						continue;
+                        valueType = null;
+                        continue;
 					case DataType.TypeRefByte:
 						var refByteVal = br.ReadByte();
 						typeProperties = typesCache.DeserializerGet(refByteVal);
@@ -716,7 +730,8 @@ namespace TWCore.Serialization.PWSerializer
 						typeItem.SetProperties(currentType, typeProperties, propertiesTypes, length);
 						objectCache.DeserializerSet(typeItem.Value);
 						desStack.Push(typeItem);
-						continue;
+                        valueType = null;
+                        continue;
 					case DataType.TypeRefUShort:
 						var refUshortVal = br.ReadUInt16();
 						typeProperties = typesCache.DeserializerGet(refUshortVal);
@@ -725,7 +740,8 @@ namespace TWCore.Serialization.PWSerializer
 						typeItem.SetProperties(currentType, typeProperties, propertiesTypes, length);
 						objectCache.DeserializerSet(typeItem.Value);
 						desStack.Push(typeItem);
-						continue;
+                        valueType = null;
+                        continue;
 					#endregion
 
 					#region TypeEnd
@@ -737,7 +753,7 @@ namespace TWCore.Serialization.PWSerializer
 							typeItem.AddValue(lastItem.Value);
 							DesarializerTypePool.Store(lastItem);
 						}
-						continue;
+                        continue;
 					#endregion
 
 					#region ListStart
@@ -927,24 +943,32 @@ namespace TWCore.Serialization.PWSerializer
 
 			var desStack = GDStackPool.New();
 			DynamicDeserializedType typeItem = null;
+            string valueType = null;
 			do
 			{
 				var currentByte = br.ReadByte();
 				switch (currentByte)
 				{
-					#region TypeStart
-
-					case DataType.TypeStart:
+                    #region TypeStart
+                    case DataType.TypeName:
+                        var vTypePartsLength = numberSerializer.ReadValue(br);
+                        var vTypeParts = new string[vTypePartsLength];
+                        for (var i = 0; i < vTypePartsLength; i++)
+                            vTypeParts[i] = propertySerializer.ReadValue(br);
+                        valueType = string.Join(", ", vTypeParts);
+                        continue;
+                    case DataType.TypeStart:
 						var typePropertiesLength = numberSerializer.ReadValue(br);
 						var typeProperties = new string[typePropertiesLength];
 						for (var i = 0; i < typePropertiesLength; i++)
 							typeProperties[i] = propertySerializer.ReadValue(br);
 						var length = numberSerializer.ReadValue(br);
 						typesCache.DeserializerSet(typeProperties);
-						typeItem = new DynamicDeserializedType(typeProperties, length);
+						typeItem = new DynamicDeserializedType(valueType, typeProperties, length);
 						objectCache.DeserializerSet(typeItem);
 						desStack.Push(typeItem);
-						continue;
+                        valueType = null;
+                        continue;
 					case DataType.TypeRefByte0:
 					case DataType.TypeRefByte1:
 					case DataType.TypeRefByte2:
@@ -973,32 +997,34 @@ namespace TWCore.Serialization.PWSerializer
 						var byteIdx = currentByte - DataType.TypeRefByte0;
 						typeProperties = typesCache.DeserializerGet(byteIdx);
 						length = numberSerializer.ReadValue(br);
-						typeItem = new DynamicDeserializedType(typeProperties, length);
+						typeItem = new DynamicDeserializedType(valueType, typeProperties, length);
 						objectCache.DeserializerSet(typeItem);
 						desStack.Push(typeItem);
+                        valueType = null;
 						continue;
-					case DataType.TypeRefByte:
+                    case DataType.TypeRefByte:
 						var refByteVal = br.ReadByte();
 						typeProperties = typesCache.DeserializerGet(refByteVal);
 						length = numberSerializer.ReadValue(br);
-						typeItem = new DynamicDeserializedType(typeProperties, length);
+						typeItem = new DynamicDeserializedType(valueType, typeProperties, length);
 						objectCache.DeserializerSet(typeItem);
 						desStack.Push(typeItem);
+                        valueType = null;
 						continue;
-					case DataType.TypeRefUShort:
+                    case DataType.TypeRefUShort:
 						var refUshortVal = br.ReadUInt16();
 						typeProperties = typesCache.DeserializerGet(refUshortVal);
 						length = numberSerializer.ReadValue(br);
-						typeItem = new DynamicDeserializedType(typeProperties, length);
+						typeItem = new DynamicDeserializedType(valueType, typeProperties, length);
 						objectCache.DeserializerSet(typeItem);
 						desStack.Push(typeItem);
+                        valueType = null;
 						continue;
+                    #endregion
 
-					#endregion
+                    #region TypeEnd
 
-					#region TypeEnd
-
-					case DataType.TypeEnd:
+                    case DataType.TypeEnd:
 						var lastItem = desStack.Pop();
 						if (desStack.Count > 0)
 						{

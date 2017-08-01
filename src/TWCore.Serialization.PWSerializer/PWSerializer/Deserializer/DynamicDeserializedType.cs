@@ -53,6 +53,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         private byte Operation;
         #endregion
 
+        public string ValueType { get; private set; }
         public Dictionary<string, object> Properties
         {
             get
@@ -68,8 +69,9 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         public Dictionary<object, object> Dictionary;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DynamicDeserializedType(string[] properties, int length)
+        public DynamicDeserializedType(string valueType, string[] properties, int length)
         {
+            ValueType = valueType;
             if (properties?.Length > 0)
             {
                 PropertiesNames = properties;
@@ -169,7 +171,11 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetObject<T>() where T: class, new()
         {
-            var obj = (object)Activator.CreateInstance<T>();
+            object obj;
+            if (ValueType != null)
+                obj = Activator.CreateInstance(Core.GetType(ValueType));
+            else
+                obj = Activator.CreateInstance<T>();
             BindObject(ref obj);
             return (T)obj;
         }
@@ -196,7 +202,6 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                 foreach (var item in List)
                 {
                     var value = GetValue(item, underType);
-
                     if (!typeInfo.IsArray)
                         ilistObj.Add(value);
                     else
@@ -224,7 +229,10 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             object value;
             if (item is DynamicDeserializedType ddtValue)
             {
-                value = Activator.CreateInstance(underType);
+                if (ddtValue.ValueType != null)
+                    value = Activator.CreateInstance(Core.GetType(ddtValue.ValueType));
+                else
+                    value = Activator.CreateInstance(underType);
                 ddtValue.BindObject(ref value);
             }
             else

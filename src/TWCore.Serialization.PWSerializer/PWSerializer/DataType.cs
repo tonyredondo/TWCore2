@@ -53,6 +53,7 @@ namespace TWCore.Serialization.PWSerializer
         public const byte   TypeRefByte23               = 27;
         public const byte   TypeRefByte24               = 28;
         public const byte   TypeRefUShort               = 29;
+        public const byte   TypeName                    = 30;
 
         public const byte   ValueNull   				= 31;
         public const byte   ListStart                   = 32;

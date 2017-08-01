@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "TWCore.Test": {
+      "commandName": "Project",
+      "commandLineArgs": "/pwserializertest"
+    }
+  }
+}

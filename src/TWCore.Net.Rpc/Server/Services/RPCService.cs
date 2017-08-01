@@ -1,0 +1,172 @@
+﻿#pragma warning disable IDE1006 // Estilos de nombres
+/*
+Copyright 2015-2017 Daniel Adrian Redondo Suarez
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using TWCore.Net.RPC.Server;
+
+namespace TWCore.Services
+{
+    /// <summary>
+    /// RPC Service base
+    /// </summary>
+    public abstract class RPCService : IRPCService
+    {
+        CancellationTokenSource cts;
+
+        #region Properties
+        /// <summary>
+        /// RPC Server to start
+        /// </summary>
+        public RPCServer Server { get; private set; }
+        /// <summary>
+        /// Service cancellation token
+        /// </summary>
+        public CancellationToken ServiceToken { get; private set; }
+        /// <summary>
+        /// Get if the service support pause and continue
+        /// </summary>
+        public bool CanPauseAndContinue => true;
+        #endregion
+
+        #region .ctor
+        /// <summary>
+        /// RPC Service
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCService()
+        {
+            Core.Status.Attach(collection => Core.Status.AttachChild(Server, this));
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// On Continue from pause method
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async void OnContinue()
+        {
+            try
+            {
+                Core.Log.InfoBasic("Continuing RPC service...");
+                cts = new CancellationTokenSource();
+                ServiceToken = cts.Token;
+                await Server.StartAsync().ConfigureAwait(false);
+                Core.Log.InfoBasic("RPC service has started.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        /// <summary>
+        /// On Pause method
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async void OnPause()
+        {
+            try
+            {
+                Core.Log.InfoBasic("Pausing RPC service...");
+                cts?.Cancel();
+                await Server.StopAsync().ConfigureAwait(false);
+                Core.Log.InfoBasic("RPC service has been paused.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        /// <summary>
+        /// On shutdown requested method
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void OnShutdown()
+        {
+            OnStop();
+        }
+        /// <summary>
+        /// On Service Start method
+        /// </summary>
+        /// <param name="args">Start arguments</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async void OnStart(string[] args)
+        {
+            try
+            {
+                Core.Log.InfoBasic("Starting RPC service...");
+                cts = new CancellationTokenSource();
+                ServiceToken = cts.Token;
+                OnInit(args);
+                Server = GetRPCServer();
+                if (Server == null)
+                    throw new NullReferenceException("The RPCServer can't be null, nothing to start. Check your GetRPCServer method implementation.");
+                await Server.StartAsync().ConfigureAwait(false);
+                Core.Log.InfoBasic("RPC service has started.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// On Service Stops method
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async void OnStop()
+        {
+            try
+            {
+                cts?.Cancel();
+                OnFinalizing();
+                Core.Log.InfoBasic("Stopping RPC service...");
+                await Server.StopAsync().ConfigureAwait(false);
+                Core.Log.InfoBasic("RPC service has stopped.");
+                OnDispose();
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Service Init
+        /// </summary>
+        /// <param name="args">Service arguments</param>
+        protected virtual void OnInit(string[] args) { }
+        /// <summary>
+        /// On Service Stop
+        /// </summary>
+        protected virtual void OnFinalizing() { }
+        /// <summary>
+        /// On Service Dispose
+        /// </summary>
+        protected virtual void OnDispose() { }
+        /// <summary>
+        /// Gets the RPCServer 
+        /// </summary>
+        /// <returns>RPCServer instance</returns>
+        protected abstract RPCServer GetRPCServer();
+        #endregion
+    }
+}

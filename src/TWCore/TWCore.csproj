@@ -2,18 +2,18 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>TWCore.Cache</Title>
+    <Title>TWCore</Title>
     <Authors>Daniel Redondo</Authors>
     <Company />
     <Description>TWCore Framework.
 A multipurpose framework library for .net core</Description>
-    <RepositoryUrl>https://github.com/tonyredondo/TWCore.Cache</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tonyredondo/TWCore</RepositoryUrl>
     <Version>0.2.0-alpha</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
     <Copyright></Copyright>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/tonyredondo/TWCore.Cache</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/tonyredondo/TWCore</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -25,7 +25,8 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TWCore\TWCore.csproj" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.0.0-preview2-final" />
+    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 
 </Project>

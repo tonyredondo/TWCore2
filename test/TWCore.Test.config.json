@@ -1,0 +1,13 @@
+﻿{
+  "appSettings": {
+    "key": "value"
+  },
+  "TWCore": {
+    "environmentName": "DEV",
+    "machineName": null,
+    "applicationName": "TWCore Test",
+    "applicationDisplayName": "TWCore Test App",
+    "settingsFile": "",
+    "injectorFile": ""
+  }
+}

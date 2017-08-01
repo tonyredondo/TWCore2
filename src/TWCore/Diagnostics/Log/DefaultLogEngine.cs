@@ -169,7 +169,7 @@ namespace TWCore.Diagnostics.Log
             {
                 if (disposing)
                 {
-                    _itemsWorker?.Stop(50);
+                    _itemsWorker?.Stop(int.MaxValue);
                     _itemsWorker?.Clear();
                     _lastLogItemsWorker?.Stop(50);
                     _lastLogItemsWorker?.Clear();

@@ -183,6 +183,7 @@ namespace TWCore.Services
             {
                 ShowHelp();
             }
+            Core.Dispose();
         }
 
         /// <summary>

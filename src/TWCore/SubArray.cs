@@ -17,7 +17,9 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
@@ -49,8 +51,11 @@ namespace TWCore
         /// </summary>
         public static SubArray<T> Empty = new SubArray<T>();
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         T[] _array;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _offset;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _count;
 
         #region Properties
@@ -107,7 +112,7 @@ namespace TWCore
             _count = array.Count;
         }
         #endregion
-        
+
         #region Methods
         /// <summary>
         /// Reference to an element inside the array
@@ -122,7 +127,7 @@ namespace TWCore
         /// <summary>
         /// Unsafe pointer to the array offset
         /// </summary>
-        public unsafe void* GetPointer() => Unsafe.AsPointer(ref _array[_offset]);
+        public unsafe void* GetPointer() => Marshal.UnsafeAddrOfPinnedArrayElement(_array, _offset).ToPointer();
         /// <summary>
         /// Gets the index of an item
         /// </summary>
@@ -238,7 +243,7 @@ namespace TWCore
         public override unsafe string ToString()
         {
             if (typeof(T) == typeof(char))
-                return new string((char*)Unsafe.AsPointer(ref _array[_offset]), 0, _count);
+                return new string((char*)Marshal.UnsafeAddrOfPinnedArrayElement(_array, _offset).ToPointer(), 0, _count);
             return "[SubArray: " + typeof(T).Name + " - Offset: " + _offset + " - Count: " + _count + "]";
         }
 

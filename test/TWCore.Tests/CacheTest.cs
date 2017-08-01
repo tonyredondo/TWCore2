@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Cache;
 using TWCore.Cache.Storages;
 using TWCore.Cache.Storages.IO;
 using TWCore.Serialization;
 using TWCore.Services;
 
-namespace TWCore.Cache.Test
+namespace TWCore.Tests
 {
     public class CacheTest : ContainerParameterService
     {

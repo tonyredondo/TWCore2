@@ -2,7 +2,7 @@ using System;
 using TWCore.Compression;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class CompressorTest : ContainerParameterService
     {

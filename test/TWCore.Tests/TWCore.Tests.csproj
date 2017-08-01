@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Version>0.2.0-alpha</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Cache.Client\TWCore.Cache.Client.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Cache.Server\TWCore.Cache.Server.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Cache\TWCore.Cache.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Net.Browser\TWCore.Net.Browser.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Numerics\TWCore.Numerics.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
+    <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
+  </ItemGroup>
+
+</Project>

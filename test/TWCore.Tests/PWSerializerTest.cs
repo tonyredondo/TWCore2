@@ -4,7 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using TWCore.Serialization.PWSerializer.Deserializer;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class PwSerializerTest : ContainerParameterService
     {

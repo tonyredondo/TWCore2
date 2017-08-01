@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class CollectionTest : ContainerParameterService
     {

@@ -11,7 +11,7 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Serialization;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class RpcTest : ContainerParameterServiceAsync
     {

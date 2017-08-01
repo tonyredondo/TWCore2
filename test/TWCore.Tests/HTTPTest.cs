@@ -2,7 +2,7 @@ using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class HttpTest : ContainerParameterService
     {

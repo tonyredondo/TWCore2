@@ -1,7 +1,7 @@
 using TWCore.Security;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class EncryptionTest : ContainerParameterService
     {

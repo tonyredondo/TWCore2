@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using TWCore.Net.Browser;
 using TWCore.Services;
 
-namespace TWCore.Test.Tests
+namespace TWCore.Tests
 {
     public class BrowserEmulatorTest : ContainerParameterServiceAsync
     {

@@ -220,14 +220,15 @@ namespace TWCore.Serialization.PWSerializer
 						{
 							objectCache.SerializerSet(scope.Value);
 							var tStartItem = (SerializerPlanItem.TypeStart)item;
-                            var valType = scope.Value.GetType();
-                            if (valType != scope.Type)
+                            //var valType = scope.Value.GetType();
+                            if (item.Type != scope.Type)
                             {
-								bw.Write(DataType.TypeName);
-                                numberSerializer.WriteValue(bw, tStartItem.TypeParts.Length);
-                                for (var i = 0; i < tStartItem.TypeParts.Length; i++)
-                                    propertySerializer.WriteValue(bw, tStartItem.TypeParts[i]);
+                                var tParts = tStartItem.TypeParts;
+                                Write(bw, DataType.TypeName, (byte)tParts.Length);
+                                for (var i = 0; i < tParts.Length; i++)
+                                    propertySerializer.WriteValue(bw, tParts[i]);
                             }
+
                             var typeIdx = typesCache.SerializerGet(tStartItem.Properties);
 							if (typeIdx < 0)
 							{
@@ -668,11 +669,11 @@ namespace TWCore.Serialization.PWSerializer
 				{
                     #region TypeStart
                     case DataType.TypeName:
-						var vTypePartsLength = numberSerializer.ReadValue(br);
+						var vTypePartsLength = (int)br.ReadByte();
 						var vTypeParts = new string[vTypePartsLength];
                         for (var i = 0; i < vTypePartsLength; i++)
                             vTypeParts[i] = propertySerializer.ReadValue(br);
-                        var vType = string.Join(", ", vTypeParts);
+                        var vType = string.Join(",", vTypeParts);
                         valueType = Core.GetType(vType);
                         continue;
 					case DataType.TypeStart:
@@ -951,11 +952,11 @@ namespace TWCore.Serialization.PWSerializer
 				{
                     #region TypeStart
                     case DataType.TypeName:
-                        var vTypePartsLength = numberSerializer.ReadValue(br);
+                        var vTypePartsLength = (int)br.ReadByte();
                         var vTypeParts = new string[vTypePartsLength];
                         for (var i = 0; i < vTypePartsLength; i++)
                             vTypeParts[i] = propertySerializer.ReadValue(br);
-                        valueType = string.Join(", ", vTypeParts);
+                        valueType = string.Join(",", vTypeParts);
                         continue;
                     case DataType.TypeStart:
 						var typePropertiesLength = numberSerializer.ReadValue(br);

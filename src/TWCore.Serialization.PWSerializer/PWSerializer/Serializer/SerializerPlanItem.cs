@@ -60,7 +60,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
                 IsArray = type.IsArray;
 
                 if (type != null)
-                    TypeParts = type.AssemblyQualifiedName.SplitAndTrim(',');
+                    TypeParts = type.AssemblyQualifiedName.Split(',');
                 else
                     TypeParts = new string[0];
             }

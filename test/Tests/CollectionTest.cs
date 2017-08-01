@@ -53,7 +53,7 @@ namespace TWCore.Test.Tests
                 Core.Log.InfoDetail("LFU Deletes: {0}", lfu.Deletes);
                 Core.Log.InfoDetail("LFU Inserts: {0}", lfu.Inserts);
                 Core.Log.InfoDetail("LFU ms per item: {0}ms", ms);
-                Core.Log.InfoDetail("LFU ms per item: {0}ns", ms * 1_000_000);
+                Core.Log.InfoDetail("LFU ns per item: {0}ns", ms * 1_000_000);
             }
 			Thread.Sleep(1000);
 			Core.Log.WriteEmptyLine();
@@ -72,7 +72,7 @@ namespace TWCore.Test.Tests
                 Core.Log.InfoDetail("LRU Deletes: {0}", lru.Deletes);
                 Core.Log.InfoDetail("LRU Inserts: {0}", lru.Inserts);
                 Core.Log.InfoDetail("LRU ms per item: {0}ms", ms);
-                Core.Log.InfoDetail("LRU ms per item: {0}ns", ms * 1_000_000);
+                Core.Log.InfoDetail("LRU ns per item: {0}ns", ms * 1_000_000);
             }
 			Thread.Sleep(1000);
 			Core.Log.WriteEmptyLine();
@@ -91,7 +91,7 @@ namespace TWCore.Test.Tests
                 Core.Log.InfoDetail("LRU2QSimple Deletes: {0}", lru2QSimple.Deletes);
                 Core.Log.InfoDetail("LRU2QSimple Inserts: {0}", lru2QSimple.Inserts);
                 Core.Log.InfoDetail("LRU2QSimple ms per item: {0}ms", ms);
-                Core.Log.InfoDetail("LRU2QSimple ms per item: {0}ns", ms * 1_000_000);
+                Core.Log.InfoDetail("LRU2QSimple ns per item: {0}ns", ms * 1_000_000);
             }
 			Thread.Sleep(1000);
 			Core.Log.WriteEmptyLine();
@@ -110,7 +110,7 @@ namespace TWCore.Test.Tests
                 Core.Log.InfoDetail("LRU2Q Deletes: {0}", lru2Q.Deletes);
                 Core.Log.InfoDetail("LRU2Q Inserts: {0}", lru2Q.Inserts);
                 Core.Log.InfoDetail("LRU2Q ms per item: {0}ms", ms);
-                Core.Log.InfoDetail("LRU2Q ms per item: {0}ns", ms * 1_000_000);
+                Core.Log.InfoDetail("LRU2Q ns per item: {0}ns", ms * 1_000_000);
             }
 			Thread.Sleep(1000);
 			Core.Log.WriteEmptyLine();

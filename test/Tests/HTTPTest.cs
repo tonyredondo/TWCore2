@@ -19,6 +19,7 @@ namespace TWCore.Test.Tests
                     })
                     .AddHttpControllerRoutes<MyController>();
                 await server.StartAsync(8085).ConfigureAwait(false);
+                Core.Log.InfoBasic("Listening to port 8085");
                 await Task.Run(() => token.WaitHandle.WaitOne(), token).ConfigureAwait(false);
                 await server.StopAsync().ConfigureAwait(false);
             });

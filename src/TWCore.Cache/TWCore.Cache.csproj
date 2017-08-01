@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Title>TWCore.Cache</Title>
+    <Authors>Daniel Redondo</Authors>
+    <Company />
+    <Description>TWCore Framework.
+A multipurpose framework library for .net core</Description>
+    <RepositoryUrl>https://github.com/tonyredondo/TWCore.Cache</RepositoryUrl>
+    <Version>0.2.0-alpha</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
+    <Copyright></Copyright>
+    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/tonyredondo/TWCore.Cache</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\TWCore\src\TWCore.csproj" />
+  </ItemGroup>
+
+</Project>

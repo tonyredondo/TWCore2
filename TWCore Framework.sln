@@ -49,11 +49,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache.Client", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache.Server", "src\TWCore.Cache.Server\TWCore.Cache.Server.csproj", "{9CA6AE08-92A3-4513-AB40-1091B60A1441}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Tests", "test\TWCore.Tests\TWCore.Tests.csproj", "{9F46C08E-F99D-4CC7-93E0-D9C5BF65AE01}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Tests", "test\TWCore.Tests\TWCore.Tests.csproj", "{9F46C08E-F99D-4CC7-93E0-D9C5BF65AE01}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Test.Core", "test\TWCore.Test.Core\TWCore.Test.Core.csproj", "{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Test.Net47", "test\TWCore.Test.Net47\TWCore.Test.Net47.csproj", "{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc.Http", "src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj", "{B86E8D00-6D3D-416A-89F7-AE82302C17F4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -141,6 +143,10 @@ Global
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -166,6 +172,7 @@ Global
 		{9F46C08E-F99D-4CC7-93E0-D9C5BF65AE01} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 		{C07C0FEC-8255-4D15-BBE4-B6622515F0AF} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
+		{B86E8D00-6D3D-416A-89F7-AE82302C17F4} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

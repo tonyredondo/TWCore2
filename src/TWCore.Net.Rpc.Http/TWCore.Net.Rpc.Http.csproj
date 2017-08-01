@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>TWCore.Serialization.WSerializer</Title>
+    <Title>TWCore.Net.Rpc.Http</Title>
     <Authors>Daniel Redondo</Authors>
     <Company />
     <Description>TWCore Framework.
@@ -25,6 +25,8 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj" />
+    <ProjectReference Include="..\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj" />
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 

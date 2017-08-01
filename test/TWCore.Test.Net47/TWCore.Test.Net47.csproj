@@ -102,6 +102,10 @@
       <Project>{f13af665-cad1-42b0-8fcc-b474e9538b13}</Project>
       <Name>TWCore.Net.HttpServer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj">
+      <Project>{b86e8d00-6d3d-416a-89f7-ae82302c17f4}</Project>
+      <Name>TWCore.Net.Rpc.Http</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj">
       <Project>{89395e35-4675-480d-8c63-06b7f2fe899e}</Project>
       <Name>TWCore.Net.Rpc</Name>

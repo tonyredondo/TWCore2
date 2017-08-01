@@ -7,13 +7,13 @@
     <Company />
     <Description>TWCore Framework.
 A multipurpose framework library for .net core</Description>
-    <RepositoryUrl>https://github.com/tonyredondo/TWCore.Numerics</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
     <Version>0.2.0-alpha</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
     <Copyright></Copyright>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
-    <PackageProjectUrl>https://github.com/tonyredondo/TWCore.Numerics</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

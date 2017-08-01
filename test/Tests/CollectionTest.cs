@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Services;
 
@@ -11,129 +13,108 @@ namespace TWCore.Test.Tests
         public CollectionTest() : base("collectionTest", "Collections Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting COLLECTIONS TEST");
-            Run(10, 3500, 8000, 3000);
+			Thread.Sleep(1000);
+
+			Core.Log.Warning("Starting HIT TEST");
+            Run(0, 50_000, 10_000_000, 50_000);
+
+			Thread.Sleep(2000);
+			Core.Log.WriteEmptyLine();
+			Core.Log.WriteEmptyLine();
+
+			Core.Log.Warning("Starting INSERTION/DELETE TEST");
+			Run(0, 200_000_000, 10_000_000, 50_000);
         }
 
         public static void Run(int min, int max, int numberElements, int capacity)
         {
-            var results = PreProcessRandomNumberCountThatShouldTakeTime(min, max);
-
             var randNum = new Random();
             var randomNumbers = Enumerable.Repeat(0, numberElements).Select(i => randNum.Next(min, max)).ToArray();
-
             var lru = new LRUCollection<int, long>(capacity);
             var lfu = new LFUCollection<int, long>(capacity);
-            var lru2Q = new LRU2QCollection<int, long>((int)(capacity));
+            var lru2Q = new LRU2QCollection<int, long>(capacity);
             var lru2QSimple = new LRU2QSimpleCollection<int, long>(capacity);
 
-            using (Watch.Create("LFU Start", "LFU End"))
-            {
-                var hit = 0;
-                foreach (var item in randomNumbers)
-                {
-                    if (!lfu.TryGetValue(item, out var value))
-                    {
-                        lfu.GetOrAdd(item, RandomNumberCountThatShouldTakeTime(item));
-                    }
-                    else
-                    {
-                        if (value != results[item])
-                            Core.Log.Warning("Bad value: " + value + " " + results[item]);
-                        hit++;
-                    }
-                }
-                Core.Log.Debug("LFU Hits : " + hit + "");
-            }
+            Core.Log.InfoBasic("Processing: {0} elements", numberElements);
+            Core.Log.InfoBasic("Collections Capacity: {0} elements", capacity);
+            Core.Log.InfoBasic("Random numbers from {0} to {1}", min, max);
+			Core.Log.WriteEmptyLine();
 
-            using (Watch.Create("LRU Start", "LRU End"))
+			using (var w = Watch.Create("LFU Start", "LFU End"))
             {
-                var hit = 0;
-                foreach (var item in randomNumbers)
+                Parallel.ForEach(randomNumbers, item =>
                 {
-                    if (!lru.TryGetValue(item, out var value))
-                    {
-                        lru.GetOrAdd(item, RandomNumberCountThatShouldTakeTime(item));
-                    }
-                    else
-                    {
-                        if (value != results[item])
-                            Core.Log.Warning("Bad value: " + value + " " + results[item]);
-                        hit++;
-                    }
-                }
-                Core.Log.Debug("LRU Hits : " + hit + "");
+                    var value = lfu.GetOrAdd(item, item);
+                    if (value != item)
+                        Core.Log.Warning("Bad value: " + value + " " + item);
+                });
+                var ms = w.GlobalElapsedMilliseconds / numberElements;
+                Core.Log.InfoDetail("LFU Hits: {0}", lfu.Hits);
+                Core.Log.InfoDetail("LFU Deletes: {0}", lfu.Deletes);
+                Core.Log.InfoDetail("LFU Inserts: {0}", lfu.Inserts);
+                Core.Log.InfoDetail("LFU ms per item: {0}ms", ms);
+                Core.Log.InfoDetail("LFU ms per item: {0}ns", ms * 1_000_000);
             }
+			Thread.Sleep(1000);
+			Core.Log.WriteEmptyLine();
 
-            using (Watch.Create("LRU2QSimple Start", "LRU2QSimple End"))
-            {
-                var hit = 0;
-                foreach (var item in randomNumbers)
-                {
-                    if (!lru2QSimple.TryGetValue(item, out var value))
-                    {
-                        lru2QSimple.GetOrAdd(item, RandomNumberCountThatShouldTakeTime(item));
-                    }
-                    else
-                    {
-                        if (value != results[item])
-                            Core.Log.Warning("Bad value");
-                        hit++;
-                    }
-                }
-                Core.Log.Debug("LRU2QSimple Hits : " + hit + "");
-            }
 
-            using (Watch.Create("LRU2Q Start", "LRU2Q End"))
+			using (var w = Watch.Create("LRU Start", "LRU End"))
             {
-                var hit = 0;
-                foreach (var item in randomNumbers)
+                Parallel.ForEach(randomNumbers, item =>
                 {
-                    if (!lru2Q.TryGetValue(item, out var value))
-                    {
-                        lru2Q.GetOrAdd(item, RandomNumberCountThatShouldTakeTime(item));
-                    }
-                    else
-                    {
-                        if (value != results[item]) Core.Log.Warning("Bad value");
-                        hit++;
-                    }
-                }
-                Core.Log.Debug("LRU2Q hits : " + hit + "");
+                    var value = lru.GetOrAdd(item, item);
+                    if (value != item)
+                        Core.Log.Warning("Bad value: " + value + " " + item);
+                });
+                var ms = w.GlobalElapsedMilliseconds / numberElements;
+                Core.Log.InfoDetail("LRU Hits: {0}", lru.Hits);
+                Core.Log.InfoDetail("LRU Deletes: {0}", lru.Deletes);
+                Core.Log.InfoDetail("LRU Inserts: {0}", lru.Inserts);
+                Core.Log.InfoDetail("LRU ms per item: {0}ms", ms);
+                Core.Log.InfoDetail("LRU ms per item: {0}ns", ms * 1_000_000);
             }
-        }
+			Thread.Sleep(1000);
+			Core.Log.WriteEmptyLine();
 
-        private static long RandomNumberCountThatShouldTakeTime(int n)
-        {
-            long result = 0;
-            for (var i = 1; i <= n; i++)
+
+			using (var w = Watch.Create("LRU2QSimple Start", "LRU2QSimple End"))
             {
-                result++;
-            }
-            for (var i = 1; i <= n / 2; i++)
-            {
-                result = result + i;
-            }
-            for (var i = 0; i < 3000; i++) { }
-            return result;
-        }
-        private static Dictionary<int, long> PreProcessRandomNumberCountThatShouldTakeTime(int min, int max)
-        {
-            var list = new Dictionary<int, long>();
-            for (var i = min; i <= max; i++)
-            {
-                long result = 0;
-                for (var j = 1; j <= i; j++)
+                Parallel.ForEach(randomNumbers, item =>
                 {
-                    result++;
-                }
-                for (var j = 1; j <= i / 2; j++)
-                {
-                    result = result + j;
-                }
-                list.Add(i, result);
+                    var value = lru2QSimple.GetOrAdd(item, item);
+                    if (value != item)
+                        Core.Log.Warning("Bad value: " + value + " " + item);
+                });
+                var ms = w.GlobalElapsedMilliseconds / numberElements;
+                Core.Log.InfoDetail("LRU2QSimple Hits: {0}", lru2QSimple.Hits);
+                Core.Log.InfoDetail("LRU2QSimple Deletes: {0}", lru2QSimple.Deletes);
+                Core.Log.InfoDetail("LRU2QSimple Inserts: {0}", lru2QSimple.Inserts);
+                Core.Log.InfoDetail("LRU2QSimple ms per item: {0}ms", ms);
+                Core.Log.InfoDetail("LRU2QSimple ms per item: {0}ns", ms * 1_000_000);
             }
-            return list;
-        }
+			Thread.Sleep(1000);
+			Core.Log.WriteEmptyLine();
+
+
+			using (var w = Watch.Create("LRU2Q Start", "LRU2Q End"))
+            {
+                Parallel.ForEach(randomNumbers, item =>
+                {
+                    var value = lru2Q.GetOrAdd(item, item);
+                    if (value != item)
+                        Core.Log.Warning("Bad value: " + value + " " + item);
+                });
+                var ms = w.GlobalElapsedMilliseconds / numberElements;
+                Core.Log.InfoDetail("LRU2Q Hits: {0}", lru2Q.Hits);
+                Core.Log.InfoDetail("LRU2Q Deletes: {0}", lru2Q.Deletes);
+                Core.Log.InfoDetail("LRU2Q Inserts: {0}", lru2Q.Inserts);
+                Core.Log.InfoDetail("LRU2Q ms per item: {0}ms", ms);
+                Core.Log.InfoDetail("LRU2Q ms per item: {0}ns", ms * 1_000_000);
+            }
+			Thread.Sleep(1000);
+			Core.Log.WriteEmptyLine();
+
+		}
     }
 }

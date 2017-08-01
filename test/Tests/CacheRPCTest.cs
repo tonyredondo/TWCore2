@@ -12,9 +12,9 @@ using TWCore.Services;
 
 namespace TWCore.Test.Tests
 {
-    public class CacheTest : ContainerParameterServiceAsync
+    public class CacheRPCTest : ContainerParameterServiceAsync
     {
-        public CacheTest() : base("cacheTest", "Cache Test") { }
+        public CacheRPCTest() : base("cacherpcTest", "Cache Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting CACHE TEST");

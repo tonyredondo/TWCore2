@@ -51,7 +51,7 @@ namespace TWCore
         [ThreadStatic]
         static Dictionary<object, object> threadObjectData = new Dictionary<object, object>();
         volatile static bool _initialized = false;
-        static ConcurrentQueue<Action> _oninitActions = new ConcurrentQueue<Action>();
+        static Queue<Action> _oninitActions = new Queue<Action>();
 
         #region Properties
         /// <summary>
@@ -228,31 +228,38 @@ namespace TWCore
                     Status.Enabled = GlobalSettings.StatusEnabled;
                 }
 
-                var allAssemblies = Factory.GetAllAssemblies();
-                var types = allAssemblies.SelectMany(a =>
+                try
                 {
-                    try
-                    {
-                        return a.DefinedTypes;
-                    }
-                    catch {}
-                    return new TypeInfo[0];
-                }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
-                if (types?.Any() == true)
-                {
-                    foreach (var type in types)
+                    var allAssemblies = Factory.GetAllAssemblies();
+                    var types = allAssemblies.SelectMany(a =>
                     {
                         try
                         {
-                            var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
-                            Log.Debug("Loading CoreStart from: {0}", instance);
-                            instance.CoreInit(factories);
+                            return a.DefinedTypes;
                         }
-                        catch (Exception ex)
+                        catch { }
+                        return new TypeInfo[0];
+                    }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
+                    if (types?.Any() == true)
+                    {
+                        foreach (var type in types)
                         {
-                            Log.Write(ex);
+                            try
+                            {
+                                var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
+                                Log.Debug("Loading CoreStart from: {0}", instance);
+                                instance.CoreInit(factories);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Write(ex);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
                 }
 
                 Status.Attach(() =>
@@ -269,15 +276,31 @@ namespace TWCore
                     return null;
                 });
 
-                while (_oninitActions.Count > 0)
-                    if (_oninitActions.TryDequeue(out var result))
-                        result();
+                bool onError = false;
+                lock (_oninitActions)
+                {
+                    while (_oninitActions.Count > 0)
+                    {
+                        try
+                        {
+                            _oninitActions.Dequeue()();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                            onError = true;
+                        }
+                    }
+                }
                 Log.Start();
 
                 factories.Thread.Sleep(25);
                 var dlog = (Log as DefaultLogEngine);
                 if (dlog != null)
                     dlog.LogDoneTask.WaitAsync();
+
+                if (onError)
+                    throw new Exception("Error initializing the application.");
             }
         }
 
@@ -405,7 +428,8 @@ namespace TWCore
             if (_initialized)
                 action();
             else
-                _oninitActions.Enqueue(action);
+                lock (_oninitActions)
+                    _oninitActions.Enqueue(action);
         }
         #endregion  
 

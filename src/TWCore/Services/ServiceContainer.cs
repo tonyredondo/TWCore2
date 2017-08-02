@@ -31,8 +31,10 @@ namespace TWCore.Services
         static ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
         static string[] currentArgs;
         static volatile bool serviceEndAfterStart = false;
-        internal Action initAction;
-        bool hasConsole
+        /// <summary>
+        /// Gets if the Console is available
+        /// </summary>
+        public static bool HasConsole
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -47,6 +49,7 @@ namespace TWCore.Services
                 }
             }
         }
+        internal Action initAction;
 
         #region Properties
         /// <summary>
@@ -174,7 +177,7 @@ namespace TWCore.Services
             }
             if (Service != null)
             {
-                if (hasConsole)
+                if (HasConsole)
                     RunAsConsole(args);
                 else
                     RunWithNoConsole(args);

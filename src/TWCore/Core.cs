@@ -170,7 +170,8 @@ namespace TWCore
                 {
                     Log.InfoBasic("Core Init - Platform: {0} - OS: {1}", Factory.PlatformType, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
                 }
-                Log.AddConsoleStorage();
+                if (ServiceContainer.HasConsole)
+                    Log.AddConsoleStorage();
 
                 if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
                 {

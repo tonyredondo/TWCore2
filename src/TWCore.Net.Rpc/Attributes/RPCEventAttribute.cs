@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Net.RPC.Attributes
 {
@@ -32,14 +33,11 @@ namespace TWCore.Net.RPC.Attributes
         /// In case of scope sets to Hub, the Comma separated Hub name list to fire the event
         /// </summary>
         public string HubName { get; set; }
-
         /// <summary>
         /// Define the event as a RPC Event so a handler is associated in order to sent the event triggering to the client.
         /// </summary>
         /// <param name="scope">RPC Message scope for the event</param>
-        public RPCEventAttribute(RPCMessageScope scope)
-        {
-            Scope = scope;
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCEventAttribute(RPCMessageScope scope) => Scope = scope;
     }
 }

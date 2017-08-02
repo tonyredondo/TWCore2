@@ -57,9 +57,11 @@ namespace TWCore.Net.RPC.Client
                 if (transport != null)
                     transport.OnEventReceived -= Transport_OnEventReceived;
                 transport = value;
-                InitTransportAsync().WaitAsync();
                 if (transport != null)
+                {
                     transport.OnEventReceived += Transport_OnEventReceived;
+                    InitTransportAsync().WaitAsync();
+                }
             }
         }
         /// <summary>
@@ -98,8 +100,7 @@ namespace TWCore.Net.RPC.Client
         /// <typeparam name="T">Type of the service to create the proxy</typeparam>
         /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<DynamicProxy> CreateDynamicProxyAsync<T>()
-            => CreateDynamicProxyAsync(typeof(T));
+        public Task<DynamicProxy> CreateDynamicProxyAsync<T>() => CreateDynamicProxyAsync(typeof(T));
         /// <summary>
         /// Creates a dynamic object to act as client proxy
         /// </summary>

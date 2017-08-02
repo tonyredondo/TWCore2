@@ -42,6 +42,7 @@ namespace TWCore.Net.RPC.Client
         /// Transport Counters
         /// </summary>
         RPCTransportCounters Counters { get; }
+
         /// <summary>
         /// Gets the descriptors for the RPC server
         /// </summary>

@@ -67,7 +67,7 @@ namespace TWCore.Serialization.PWSerializer
 		{
 			_buffer[0] = type;
 			_buffer[1] = value;
-			bw.BaseStream.Write(_buffer, 0, 2);
+			bw.Write(_buffer, 0, 2);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteUshort(FastBinaryWriter bw, byte type, ushort value)
@@ -75,7 +75,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((ushort*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 3);
+            bw.Write(_buffer, 0, 3);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteInt(FastBinaryWriter bw, byte type, int value)
@@ -83,7 +83,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((int*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 5);
+            bw.Write(_buffer, 0, 5);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteDouble(FastBinaryWriter bw, byte type, double value)
@@ -91,7 +91,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((double*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 9);
+            bw.Write(_buffer, 0, 9);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteFloat(FastBinaryWriter bw, byte type, float value)
@@ -99,7 +99,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((float*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 5);
+            bw.Write(_buffer, 0, 5);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteLong(FastBinaryWriter bw, byte type, long value)
@@ -107,7 +107,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((long*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 9);
+            bw.Write(_buffer, 0, 9);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteULong(FastBinaryWriter bw, byte type, ulong value)
@@ -115,7 +115,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((ulong*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 9);
+            bw.Write(_buffer, 0, 9);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteUInt(FastBinaryWriter bw, byte type, uint value)
@@ -123,7 +123,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((uint*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 5);
+            bw.Write(_buffer, 0, 5);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected unsafe void WriteShort(FastBinaryWriter bw, byte type, short value)
@@ -131,7 +131,7 @@ namespace TWCore.Serialization.PWSerializer
 			_buffer[0] = type;
 			fixed (byte* b = &_buffer[1])
 				*((short*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 3);
+            bw.Write(_buffer, 0, 3);
 		}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected unsafe void WriteChar(FastBinaryWriter bw, byte type, char value)
@@ -139,7 +139,7 @@ namespace TWCore.Serialization.PWSerializer
             _buffer[0] = type;
             fixed (byte* b = &_buffer[1])
                 *((char*)b) = value;
-            bw.BaseStream.Write(_buffer, 0, 3);
+            bw.Write(_buffer, 0, 3);
         }
     }
 

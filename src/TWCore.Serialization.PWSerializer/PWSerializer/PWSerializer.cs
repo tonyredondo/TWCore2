@@ -35,6 +35,7 @@ namespace TWCore.Serialization.PWSerializer
     /// </summary>
     public class PWSerializer
     {
+        private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
         private static ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
         private static readonly ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer)> OPool = new ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer)>(() =>
             {
@@ -105,7 +106,7 @@ namespace TWCore.Serialization.PWSerializer
             scope.Init(plan, type, value);
             scopeStack.Push(scope);
 
-            var bw = new FastBinaryWriter(stream, Encoding.UTF8, true);
+            var bw = new FastBinaryWriter(stream, DefaultUTF8Encoding, true);
             _bufferSer[0] = DataType.PWFileStart;
             _bufferSer[1] = (byte)Mode;
             bw.Write(_bufferSer, 0, 2);
@@ -306,17 +307,19 @@ namespace TWCore.Serialization.PWSerializer
                         {
                             var lType = (SerializerPlanItem.ListStart)item;
                             var iList = (IList)scope.Value;
-                            if (iList.Count > 0)
+                            var iListCount = iList.Count;
+                            if (iListCount > 0)
                             {
                                 bw.Write(DataType.ListStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iList.Count];
-                                for (var i = 0; i < iList.Count; i++)
+                                var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                for (var i = 0; i < iListCount; i++)
                                 {
                                     var itemList = iList[i];
                                     itemList = ResolveLinqEnumerables(itemList);
                                     var itemType = itemList?.GetType() ?? lType.InnerType;
                                     var srpVal = SerializerRuntimePool.New();
-                                    srpVal.Init(lType.InnerType, serializersTable.GetSerializerByValueType(itemType)?.GetType(), itemList);
+                                    var serValue = serializersTable.GetSerializerByValueType(itemType);
+                                    srpVal.Init(lType.InnerType, serValue?.GetType(), itemList);
                                     aPlan[i] = srpVal;
                                 }
                                 scope = SerializerScopePool.New();
@@ -339,10 +342,11 @@ namespace TWCore.Serialization.PWSerializer
                         {
                             var dictioItem = (SerializerPlanItem.DictionaryStart)item;
                             var iDictio = (IDictionary)scope.Value;
-                            if (iDictio.Count > 0)
+                            var iDictioCount = iDictio.Count;
+                            if (iDictioCount > 0)
                             {
                                 bw.Write(DataType.DictionaryStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iDictio.Count * 2];
+                                var aPlan = new SerializerPlanItem.RuntimeValue[iDictioCount * 2];
                                 var aIdx = 0;
                                 foreach (var keyValue in iDictio.Keys)
                                 {
@@ -641,7 +645,7 @@ namespace TWCore.Serialization.PWSerializer
         {
             if (type == null)
                 return Deserialize(stream);
-            var br = new FastBinaryReader(stream, Encoding.UTF8, true);
+            var br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];
@@ -920,7 +924,7 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            var br = new FastBinaryReader(stream, Encoding.UTF8, true);
+            var br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];

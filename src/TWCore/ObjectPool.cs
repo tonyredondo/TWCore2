@@ -29,18 +29,18 @@ namespace TWCore
     /// <typeparam name="T">Object type</typeparam>
     public sealed class ObjectPool<T>
     {
-		readonly ConcurrentStack<T> objectStack;
+        readonly object _padLock = new object();
+		readonly Stack<T> objectStack;
 		Func<T> createFunc;
         Action<T> resetAction;
         PoolResetMode resetMode;
-        int count;
         int preallocationThreshold;
         bool allocating = false;
 
         /// <summary>
         /// Get the number of objects in the queue
         /// </summary>
-        public int Count => count;
+        public int Count => objectStack.Count;
 
         /// <summary>
         /// Object pool
@@ -53,7 +53,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ObjectPool(Func<T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
         {
-            objectStack = new ConcurrentStack<T>();
+            objectStack = new Stack<T>(12);
             this.createFunc = createFunc;
             this.resetAction = resetAction;
             this.resetMode = resetMode;
@@ -72,8 +72,9 @@ namespace TWCore
         {
             for (var i = 0; i < number; i++)
             {
-                objectStack.Push(createFunc());
-                Interlocked.Increment(ref this.count);
+                var value = createFunc();
+                lock (_padLock)
+                    objectStack.Push(value);
             }
         }
         /// <summary>
@@ -83,22 +84,31 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            if (objectStack.TryPop(out var item))
+            bool cNew = true;
+            T value = default(T);
+            lock (_padLock)
             {
-                if (Interlocked.Decrement(ref count) < preallocationThreshold && !allocating)
+                var count = objectStack.Count;
+                if (count > 0)
                 {
-                    Task.Run(() =>
+                    value = objectStack.Pop();
+                    cNew = false;
+                    if (count - 1 < preallocationThreshold && !allocating)
                     {
-                        allocating = true;
-                        Preallocate(preallocationThreshold * 2);
-                        allocating = false;
-                    });
+                        Task.Run(() =>
+                        {
+                            allocating = true;
+                            Preallocate(preallocationThreshold * 2);
+                            allocating = false;
+                        });
+                    }
                 }
-                if (resetMode == PoolResetMode.BeforeUse)
-                    resetAction?.Invoke(item);
-                return item;
             }
-            return createFunc();
+            if (cNew)
+                return createFunc();
+            if (resetMode == PoolResetMode.BeforeUse && resetAction != null)
+                resetAction(value);
+            return value;
         }
         /// <summary>
         /// Store the instance back to the pool
@@ -107,10 +117,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Store(T obj)
         {
-            if (resetMode == PoolResetMode.AfterUse)
-                resetAction?.Invoke(obj);
-            objectStack.Push(obj);
-            Interlocked.Increment(ref count);
+            if (resetMode == PoolResetMode.AfterUse && resetAction != null)
+                resetAction.Invoke(obj);
+            lock(_padLock)
+                objectStack.Push(obj);
         }
         /// <summary>
         /// Get current objects in the pool
@@ -119,7 +129,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> GetCurrentObjects()
         {
-            return objectStack.ToReadOnly();
+            lock(_padLock)
+                return objectStack.ToReadOnly();
         }
         /// <summary>
         /// Clear the current object stack
@@ -127,8 +138,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            objectStack.Clear();
-            Interlocked.Exchange(ref count, 0);
+            lock(_padLock)
+                objectStack.Clear();
         }
     }
 }

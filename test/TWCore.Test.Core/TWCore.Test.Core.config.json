@@ -1,6 +1,7 @@
 ﻿{
   "appSettings": {
-    "key": "value"
+    "key": "value",
+    "Core.DebugMode": true
   },
   "Core": {
     "environmentName": "DEV",

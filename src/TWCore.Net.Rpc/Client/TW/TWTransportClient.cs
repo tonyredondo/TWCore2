@@ -808,7 +808,21 @@ namespace TWCore.Net.RPC.Client.Transports
 
                     try
                     {
-                        message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCMessage));
+						switch(mTypeEnum)
+						{
+							case RPCMessageType.SessionResponse:
+								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCSessionResponseMessage));
+								break;
+							case RPCMessageType.ResponseMessage:
+								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCResponseMessage));
+								break;
+							case RPCMessageType.EventMessage:
+								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCEventMessage));
+								break;
+							case RPCMessageType.PushMessage:
+								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCPushMessage));
+								break;
+						}
                     }
                     catch (Exception ex)
                     {

@@ -286,7 +286,15 @@ namespace TWCore.Net.RPC.Server.Transports
                 RPCMessage message = null;
                 try
                 {
-                    message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCMessage));
+					switch(mTypeEnum)
+					{
+						case RPCMessageType.SessionRequest:
+							message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCSessionRequestMessage));
+							break;
+						case RPCMessageType.RequestMessage:
+							message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCRequestMessage));
+							break;
+					}
                 }
                 catch (Exception ex)
                 {

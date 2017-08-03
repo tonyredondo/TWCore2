@@ -41,7 +41,7 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Service descriptor collection
         /// </summary>
-        public ServiceDescriptorCollection Descriptors => GetDescriptorsAsync().WaitAndResults();
+        public ServiceDescriptorCollection Descriptors => GetDescriptors();
         /// <summary>
         /// Transport client object
         /// </summary>
@@ -309,11 +309,11 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
-            if (UseServerDescriptor && _serverDescriptors == null)
-                _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
-            lock (this)
+            if (_descriptors == null)
             {
-                if (_descriptors == null)
+                if (_serverDescriptors == null && UseServerDescriptor)
+                    _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
+                lock (this)
                 {
                     _descriptors = new ServiceDescriptorCollection();
                     if (UseServerDescriptor)
@@ -325,11 +325,11 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ServiceDescriptorCollection GetDescriptors()
         {
-            if (UseServerDescriptor && _serverDescriptors == null)
-                _serverDescriptors = Transport.GetDescriptors();
-            lock (this)
+            if (_descriptors == null)
             {
-                if (_descriptors == null)
+                if (_serverDescriptors == null && UseServerDescriptor)
+                    _serverDescriptors = Transport.GetDescriptors();
+                lock (this)
                 {
                     _descriptors = new ServiceDescriptorCollection();
                     if (UseServerDescriptor)

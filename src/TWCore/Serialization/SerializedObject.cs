@@ -51,7 +51,7 @@ namespace TWCore.Serialization
             if (data == null) return;
             var type = data.GetType();
             DataType = type.AssemblyQualifiedName;
-            SerializerMimeType = serializer.MimeTypes + ((serializer.Compressor != null) ? ":" + serializer.Compressor.EncodingType : string.Empty);
+            SerializerMimeType = serializer.MimeTypes[0] + ((serializer.Compressor != null) ? ":" + serializer.Compressor.EncodingType : string.Empty);
             Data = (byte[])serializer.Serialize(data, type);
         }
         #endregion

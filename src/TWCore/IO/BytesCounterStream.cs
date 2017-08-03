@@ -25,6 +25,7 @@ namespace TWCore.IO
     /// </summary>
     public class BytesCounterStream : Stream
     {
+        Stream _baseStream;
         long _bytesRead;
         long _bytesWrite;
 
@@ -32,7 +33,7 @@ namespace TWCore.IO
         /// <summary>
         /// Base stream decorated
         /// </summary>
-        public Stream BaseStream { get; set; }
+        public Stream BaseStream => _baseStream;
         /// <summary>
         ///  Bytes read
         /// </summary>
@@ -65,12 +66,12 @@ namespace TWCore.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return BaseStream.Position;
+                return _baseStream.Position;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                BaseStream.Position = value;
+                _baseStream.Position = value;
             }
         }
         #endregion
@@ -82,7 +83,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public BytesCounterStream(Stream baseStream)
         {
-            BaseStream = baseStream;
+            _baseStream = baseStream;
         }
         #endregion
 
@@ -97,7 +98,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int res = BaseStream.Read(buffer, offset, count);
+            int res = _baseStream.Read(buffer, offset, count);
             if (res > 0)
                 _bytesRead += res;
             return res;
@@ -109,7 +110,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
         {
-            int res = BaseStream.ReadByte();
+            int res = _baseStream.ReadByte();
             if (res >= 0)
                 _bytesRead += res;
             return res;
@@ -123,7 +124,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            BaseStream.Write(buffer, offset, count);
+            _baseStream.Write(buffer, offset, count);
             _bytesWrite += count;
         }
         /// <summary>
@@ -133,17 +134,14 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteByte(byte value)
         {
-            BaseStream.WriteByte(value);
+            _baseStream.WriteByte(value);
             _bytesWrite++;
         }
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Flush()
-        {
-            BaseStream.Flush();
-        }
+        public override void Flush() => _baseStream.Flush();
         /// <summary>
         /// Sets the position within the current stream.
         /// </summary>
@@ -151,13 +149,13 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
+        public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value) => BaseStream.SetLength(value);
+        public override void SetLength(long value) => _baseStream.SetLength(value);
         /// <summary>
         /// Clear Bytes counter
         /// </summary>

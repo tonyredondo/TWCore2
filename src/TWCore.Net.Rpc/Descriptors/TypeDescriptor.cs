@@ -42,23 +42,6 @@ namespace TWCore.Net.RPC.Descriptors
         /// Object type public properties
         /// </summary>
         [XmlElement("Property"), DataMember]
-        public List<PropertyDescriptor> Properties { get; set; } = new List<PropertyDescriptor>();
-    }
-    /// <summary>
-    /// Type description collection
-    /// </summary>
-    [DataContract]
-    public class TypeDescriptorCollection : KeyedCollection<string, TypeDescriptor>
-    {
-        /// <summary>
-        /// Type description collection
-        /// </summary>
-        public TypeDescriptorCollection() : base(StringComparer.Ordinal) { }
-        /// <summary>
-        /// Gets the key of the item
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        protected override string GetKeyForItem(TypeDescriptor item) => item.Name;
+        public PropertyDescriptor[] Properties { get; set; }
     }
 }

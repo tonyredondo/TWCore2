@@ -141,10 +141,10 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
         {
-            var Descriptor = Descriptors?.Items.FirstOrDefault(i => i.Name == messageRQ.ServiceName);
-            if (Descriptor != null)
+            ServiceDescriptor descriptor = null;
+            if (Descriptors?.Items.TryGetValue(messageRQ.ServiceName, out descriptor) == true)
             {
-                foreach (var tDesc in Descriptor.Types)
+                foreach (var tDesc in descriptor.Types.Values)
                 {
                     var type = Core.GetType(tDesc.FullName);
                     if (type != null)
@@ -168,10 +168,10 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
         {
-            var Descriptor = Descriptors?.Items.FirstOrDefault(i => i.Name == messageRQ.ServiceName);
-            if (Descriptor != null)
+            ServiceDescriptor descriptor = null;
+            if (Descriptors?.Items.TryGetValue(messageRQ.ServiceName, out descriptor) == true)
             {
-                foreach (var tDesc in Descriptor.Types)
+                foreach (var tDesc in descriptor.Types.Values)
                 {
                     var type = Core.GetType(tDesc.FullName);
                     if (type != null)

@@ -35,11 +35,6 @@ namespace TWCore.Net.RPC
         /// Method identifier
         /// </summary>
         [XmlAttribute, DataMember]
-        public int MethodIndex { get; set; }
-        /// <summary>
-        /// Method identifier
-        /// </summary>
-        [XmlAttribute, DataMember]
         public string MethodId { get; set; }
         /// <summary>
         /// Method parameters

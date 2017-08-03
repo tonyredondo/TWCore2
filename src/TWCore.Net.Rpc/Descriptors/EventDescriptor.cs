@@ -46,21 +46,4 @@ namespace TWCore.Net.RPC.Descriptors
         [XmlIgnore, NonSerialize]
         public EventInfo Event { get; internal set; }
     }
-    /// <summary>
-    /// Event description collection
-    /// </summary>
-    [DataContract]
-    public class EventDescriptorCollection : KeyedCollection<string, EventDescriptor>
-    {
-        /// <summary>
-        /// Event description collection
-        /// </summary>
-        public EventDescriptorCollection() : base(StringComparer.Ordinal) { }
-        /// <summary>
-        /// Gets the key of the item
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        protected override string GetKeyForItem(EventDescriptor item) => item.Name;
-    }
 }

@@ -31,11 +31,6 @@ namespace TWCore.Net.RPC.Descriptors
     public class MethodDescriptor
     {
         /// <summary>
-        /// Method Index
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public int Index { get; set; }
-        /// <summary>
         /// Method identifier
         /// </summary>
         [XmlAttribute, DataMember]
@@ -49,36 +44,17 @@ namespace TWCore.Net.RPC.Descriptors
         /// Method parameters
         /// </summary>
         [XmlElement("Parameter"), DataMember]
-        public List<ParameterDescriptor> Parameters { get; set; } = new List<ParameterDescriptor>();
+        public ParameterDescriptor[] Parameters { get; set; }
         /// <summary>
         /// Method return object type
         /// </summary>
         [XmlAttribute, DataMember]
         public string ReturnType { get; set; }
 
-
-
         /// <summary>
         /// Reflected method acessor delegate for direct access.
         /// </summary>
         [XmlIgnore, NonSerialize]
         public MethodAccessorDelegate Method { get; internal set; }
-    }
-    /// <summary>
-    /// Method description collection
-    /// </summary>
-    [DataContract]
-    public class MethodDescriptorCollection : KeyedCollection<string, MethodDescriptor>
-    {
-        /// <summary>
-        /// Method description collection
-        /// </summary>
-        public MethodDescriptorCollection() : base(StringComparer.Ordinal) { }
-        /// <summary>
-        /// Gets the key of the item
-        /// </summary>
-        /// <param name="item"></param>
-        /// <returns></returns>
-        protected override string GetKeyForItem(MethodDescriptor item) => item.Id;
     }
 }

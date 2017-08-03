@@ -42,17 +42,17 @@ namespace TWCore.Net.RPC.Descriptors
         /// Service methods
         /// </summary>
         [XmlArray("Methods"), XmlArrayItem("Method"), DataMember]
-        public MethodDescriptorCollection Methods { get; set; } = new MethodDescriptorCollection();
+        public Dictionary<string, MethodDescriptor> Methods { get; set; } = new Dictionary<string, MethodDescriptor>();
         /// <summary>
         /// Service events
         /// </summary>
         [XmlArray("Events"), XmlArrayItem("Event"), DataMember]
-        public EventDescriptorCollection Events { get; set; } = new EventDescriptorCollection();
+        public Dictionary<string, EventDescriptor> Events { get; set; } = new Dictionary<string, EventDescriptor>();
         /// <summary>
         /// Service types
         /// </summary>
         [XmlArray("Types"), XmlArrayItem("Type"), DataMember]
-        public TypeDescriptorCollection Types { get; set; } = new TypeDescriptorCollection();
+        public Dictionary<string, TypeDescriptor> Types { get; set; } = new Dictionary<string, TypeDescriptor>();
 
 
         /// <summary>
@@ -69,7 +69,6 @@ namespace TWCore.Net.RPC.Descriptors
             };
             bool isInterface = serviceType.GetTypeInfo().IsInterface;
             var methodsInfo = serviceType.GetRuntimeMethods().OrderBy(i => i.Name + "[" + i.GetParameters()?.Select(p => p.Name).Join(", ") + "]");
-            int idx = 0;
             foreach (var mInfo in methodsInfo)
             {
                 if (mInfo.IsPublic && !mInfo.IsSpecialName)
@@ -79,7 +78,6 @@ namespace TWCore.Net.RPC.Descriptors
                     {
                         var mDesc = new MethodDescriptor()
                         {
-                            Index = idx++,
                             Method = mInfo.GetMethodAccessor(),
                             Name = mInfo.Name,
                             ReturnType = GetTypeName(mInfo.ReturnType)
@@ -87,8 +85,10 @@ namespace TWCore.Net.RPC.Descriptors
                         RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 
                         var pars = mInfo.GetParameters();
-                        foreach(var p in pars)
+                        mDesc.Parameters = new ParameterDescriptor[pars.Length];
+                        for (var i = 0; i < pars.Length; i++)
                         {
+                            var p = pars[i];
                             var pDes = new ParameterDescriptor()
                             {
                                 Parameter = p,
@@ -97,10 +97,10 @@ namespace TWCore.Net.RPC.Descriptors
                                 Type = GetTypeName(p.ParameterType)
                             };
                             RegisterServiceDescriptorType(descriptor, p.ParameterType);
-                            mDesc.Parameters.Add(pDes);
+                            mDesc.Parameters[i] = pDes;
                         }
                         mDesc.Id = GetMethodId(descriptor, mDesc);
-                        descriptor.Methods.Add(mDesc);
+                        descriptor.Methods.Add(mDesc.Id, mDesc);
                     }
                 }
             }
@@ -116,7 +116,7 @@ namespace TWCore.Net.RPC.Descriptors
                         var name = eInfo.Name;
                         var eventHandler = GetTypeName(eInfo.EventHandlerType);
                         RegisterServiceDescriptorType(descriptor, eInfo.EventHandlerType);
-                        descriptor.Events.Add(new EventDescriptor { Name = name, Type = eventHandler, Event = eInfo });
+                        descriptor.Events.Add(name, new EventDescriptor { Name = name, Type = eventHandler, Event = eInfo });
                     }
                 }
             }
@@ -157,37 +157,38 @@ namespace TWCore.Net.RPC.Descriptors
 
             var typeInfo = type.GetTypeInfo();
             var asmName = typeInfo.Assembly.GetName();
-            
+
             if (asmName.Name != "mscorlib")
             {
                 var name = GetTypeName(type);
-
-                if (!descriptor.Types.Contains(name))
+                if (!descriptor.Types.ContainsKey(name))
                 {
                     var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
-                    descriptor.Types.Add(tDesc);
-                    var props = type.GetRuntimeProperties();
-                    foreach (var p in props)
+                    descriptor.Types.Add(name, tDesc);
+                    var props = type.GetRuntimeProperties().ToArray();
+                    tDesc.Properties = new PropertyDescriptor[props.Length];
+                    for (var i = 0; i < props.Length; i++)
                     {
+                        var p = props[i];
                         var pDesc = new PropertyDescriptor()
                         {
                             Name = p.Name,
                             Type = GetTypeName(p.PropertyType)
                         };
                         RegisterServiceDescriptorType(descriptor, p.PropertyType);
-                        tDesc.Properties.Add(pDesc);
+                        tDesc.Properties[i] = pDesc;
                     }
                 }
             }
             else
             {
-                if (typeInfo.GenericTypeArguments.Any(t=> t.GetTypeInfo().Assembly.GetName().Name != "mscorlib"))
+                if (typeInfo.GenericTypeArguments.Any(t => t.GetTypeInfo().Assembly.GetName().Name != "mscorlib"))
                 {
                     var name = GetTypeName(type);
-                    if (!descriptor.Types.Contains(name))
+                    if (!descriptor.Types.ContainsKey(name))
                     {
                         var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
-                        descriptor.Types.Add(tDesc);
+                        descriptor.Types.Add(name, tDesc);
                     }
                 }
             }

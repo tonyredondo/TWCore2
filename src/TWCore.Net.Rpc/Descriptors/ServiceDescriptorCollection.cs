@@ -15,7 +15,9 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
@@ -30,24 +32,25 @@ namespace TWCore.Net.RPC.Descriptors
         /// <summary>
         /// Service descriptors list
         /// </summary>
-        [XmlElement("Descriptor"), DataMember]
-        public ServiceDescriptorKeyedCollection Items { get; set; } = new ServiceDescriptorKeyedCollection();
-    }
-    /// <summary>
-    /// Service descriptor keyed collection byte name
-    /// </summary>
-    [DataContract]
-    public class ServiceDescriptorKeyedCollection : KeyedCollection<string, ServiceDescriptor>
-    {
+        [DataMember]
+        public Dictionary<string, ServiceDescriptor>  Items { get; set; } = new Dictionary<string, ServiceDescriptor>(StringComparer.Ordinal);
+
         /// <summary>
-        /// Service descriptor keyed collection byte name
+        /// Add service descriptor
         /// </summary>
-        public ServiceDescriptorKeyedCollection() : base(StringComparer.Ordinal) { }
+        /// <param name="descriptor">Service Descriptor instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add(ServiceDescriptor descriptor) => Items[descriptor.Name] = descriptor;
         /// <summary>
-        /// Gets the Service Descriptor Key
+        /// Combine with another Descriptor collection
         /// </summary>
-        /// <param name="item">Item</param>
-        /// <returns>Key</returns>
-        protected override string GetKeyForItem(ServiceDescriptor item) => item.Name;
+        /// <param name="descriptors">Descriptor collection</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Combine(ServiceDescriptorCollection descriptors)
+        {
+            if (descriptors?.Items == null) return;
+            foreach(var item in descriptors.Items)
+                Items[item.Key] = item.Value;
+        }
     }
 }

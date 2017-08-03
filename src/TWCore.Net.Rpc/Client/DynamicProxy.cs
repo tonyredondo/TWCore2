@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Runtime.CompilerServices;
@@ -54,7 +55,7 @@ namespace TWCore.Net.RPC.Client
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             var binderName = binder.Name;
-            if (binderName.Length > 5 && binderName.EndsWith("Async"))
+            if (binderName.Length > 5 && binderName.EndsWith("Async", StringComparison.Ordinal))
             {
                 var name = binderName.Substring(0, binderName.Length - 5);
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args);

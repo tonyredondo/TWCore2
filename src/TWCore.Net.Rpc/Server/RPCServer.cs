@@ -105,7 +105,7 @@ namespace TWCore.Net.RPC.Server
             Descriptors = new ServiceDescriptorCollection();
             ServicesInstances.Each(v =>
             {
-                Descriptors.Items.Add(v.Value.Descriptor);
+                Descriptors.Add(v.Value.Descriptor);
                 v.Value.BindToServiceType();
             });
             if (ServicesInstances.Count == 1)
@@ -162,29 +162,25 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnMethodCall(object sender, MethodEventArgs e)
         {
-            //Core.Log.LibDebug("Method Request Received");
             if (ServicesInstances.TryGetValue(e.Request.ServiceName, out var sItem))
                 e.Response = sItem.ProcessRequest(e.Request, e.ClientId);
             else
             {
-                var response = new RPCResponseMessage(e.Request)
+                e.Response = new RPCResponseMessage(e.Request)
                 {
                     Succeed = false,
                     Exception = new SerializableException(new NotImplementedException("An instance of ServiceName = {0} was not found on the service.".ApplyFormat(e.Request.ServiceName)))
                 };
-                e.Response = response;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
         {
-            //Core.Log.LibDebug("Server Descriptor Request Received");
             e.Descriptors = Descriptors;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnClientConnect(object sender, ClientConnectEventArgs e)
         {
-            //Core.Log.LibDebug("On Client Connection Received");
             ServicesInstances.Each(item => item.Value.FireClientConnection(e.ClientId));
         }
         #endregion
@@ -224,7 +220,7 @@ namespace TWCore.Net.RPC.Server
                 #region Events
                 if (Descriptor?.Events?.Any() == true)
                 {
-                    foreach (var evDesc in Descriptor.Events)
+                    foreach (var evDesc in Descriptor.Events.Values)
                     {
                         if (evDesc.Event != null)
                         {
@@ -292,14 +288,13 @@ namespace TWCore.Net.RPC.Server
                 MethodDescriptor mDesc = null;
                 try
                 {
-                    if (request.MethodId == null && request.MethodId.IsNullOrWhitespace())
-                        mDesc = Descriptor.Methods[request.MethodIndex];
-                    else
-                        mDesc = Descriptor.Methods[request.MethodId];
-                    ThreadClientId.AddOrUpdate(Environment.CurrentManagedThreadId, clientId, (x, i) => clientId);
-                    response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters?.ToArray());
-                    ThreadClientId.TryRemove(Environment.CurrentManagedThreadId, out var clientOldId);
-                    response.Succeed = true;
+                    if (request.MethodId != null && Descriptor.Methods.TryGetValue(request.MethodId, out mDesc))
+                    {
+                        ThreadClientId.AddOrUpdate(Environment.CurrentManagedThreadId, clientId, (x, i) => clientId);
+                        response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters?.ToArray());
+                        ThreadClientId.TryRemove(Environment.CurrentManagedThreadId, out var clientOldId);
+                        response.Succeed = true;
+                    }
                 }
                 catch (TargetInvocationException ex)
                 {

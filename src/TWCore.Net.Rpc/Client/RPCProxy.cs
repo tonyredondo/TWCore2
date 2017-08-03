@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -29,11 +30,17 @@ namespace TWCore.Net.RPC.Client
     /// </summary>
     public abstract class RPCProxy
     {
-        /// <summary>
-        /// Gets the current RPC Client object
-        /// </summary>
         RPCClient _client;
-        ServiceDescriptor _descriptor;
+        string _serviceName;
+        Dictionary<string, FieldInfo> _events;
+
+        #region .ctor
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCProxy()
+        {
+            _events = GetType().GetRuntimeFields().ToDictionary(k => k.Name, v => v);
+        }
+        #endregion
 
         /// <summary>
         /// Sets the RPC client to the proxy
@@ -41,11 +48,11 @@ namespace TWCore.Net.RPC.Client
         /// <param name="client">RPCClient object instance</param>
         /// <param name="descriptor">Service descriptor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void SetClient(RPCClient client, ServiceDescriptor descriptor)
+        internal void SetClient(RPCClient client, string serviceName)
         {
             Ensure.ArgumentNotNull(client, "RPC Client can't be null.");
-            Ensure.ArgumentNotNull(descriptor, "ServiceDescriptor can't be null.");
-            _descriptor = descriptor;
+            Ensure.ArgumentNotNull(serviceName, "ServiceName can't be null.");
+            _serviceName = serviceName;
             _client = client;
             _client.OnEventReceived += Client_OnEventReceived;
 
@@ -63,11 +70,10 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void Client_OnEventReceived(object sender, EventDataEventArgs e)
         {
-            if (e.ServiceName == _descriptor.Name)
+            if (e.ServiceName == _serviceName && _events.TryGetValue(e.EventName, out var value) && value.GetValue(this) is MulticastDelegate evHandler)
             {
-                if (this.GetType().GetRuntimeFields().FirstOrDefault(f => f.Name == e.EventName)?.GetValue(this) is MulticastDelegate evHandler)
-                    foreach (var handler in evHandler.GetInvocationList())
-                        handler.DynamicInvoke(this, e.EventArgs);
+                foreach (var handler in evHandler.GetInvocationList())
+                    handler.DynamicInvoke(this, e.EventArgs);
             }
         }
 
@@ -80,7 +86,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<T> ServerInvokeAsync<T>(string method, params object[] args) => _client.ServerInvokeAsync<T>(_descriptor.Name, method, args);
+        protected Task<T> ServerInvokeAsync<T>(string method, params object[] args) => _client.ServerInvokeAsync<T>(_serviceName, method, args);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -88,7 +94,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Task<object> ServerInvokeAsync(string method, params object[] args) => _client.ServerInvokeAsync(_descriptor.Name, method, args);
+        protected Task<object> ServerInvokeAsync(string method, params object[] args) => _client.ServerInvokeAsync(_serviceName, method, args);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -97,7 +103,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected T ServerInvoke<T>(string method, params object[] args) => _client.ServerInvoke<T>(_descriptor.Name, method, args);
+        protected T ServerInvoke<T>(string method, params object[] args) => _client.ServerInvoke<T>(_serviceName, method, args);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -105,7 +111,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected object ServerInvoke(string method, params object[] args) => _client.ServerInvoke(_descriptor.Name, method, args);
+        protected object ServerInvoke(string method, params object[] args) => _client.ServerInvoke(_serviceName, method, args);
         #endregion
 
         #region Invoke Generic
@@ -181,7 +187,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="memberName">Compiler caller member name</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected object Invoke ([CallerMemberName]string memberName = "") => ServerInvoke(memberName);
+        protected object Invoke([CallerMemberName]string memberName = "") => ServerInvoke(memberName);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -368,11 +374,11 @@ namespace TWCore.Net.RPC.Client
         /// </summary>
         public void Dispose()
         {
-            _descriptor = null;
-            try {
+            try
+            {
                 _client?.Dispose();
             }
-            catch {}
+            catch { }
             _client = null;
             Core.Status.DeAttachObject(this);
         }

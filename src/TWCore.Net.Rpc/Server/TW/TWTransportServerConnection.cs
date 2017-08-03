@@ -147,9 +147,7 @@ namespace TWCore.Net.RPC.Server.Transports
             var netStream = client.GetStream();
             Serializer = serializer;
             readCounterStream = new BytesCounterStream(netStream);
-            readCounterStream.OnBytesRead += (s, e) => Server.Counters.IncrementBytesReceived(e);
             writeCounterStream = new BytesCounterStream(netStream);
-            writeCounterStream.OnBytesWrite += (s, e) => Server.Counters.IncrementBytesSent(e);
             ReadStream = new BufferedStream(readCounterStream, ReceiveSize);
             WriteStream = new BufferedStream(writeCounterStream, SendSize);
             Reader = new BinaryReader(ReadStream, Encoding.UTF8, true);
@@ -171,6 +169,10 @@ namespace TWCore.Net.RPC.Server.Transports
                             ThreadPool.QueueUserWorkItem(ProcessSessionRequestMessage, message);
                             break;
                     }
+                    if (readCounterStream != null)
+                        Server.Counters.SetBytesReceived(readCounterStream.BytesRead);
+                    if (writeCounterStream != null)
+                        Server.Counters.SetBytesSent(writeCounterStream.BytesWrite);
                 }
                 if (Disconnected)
                 {

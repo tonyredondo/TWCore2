@@ -643,9 +643,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     client.SendBufferSize = _sendBufferSize;
                     var netStream = client.GetStream();
                     readCounterStream = new BytesCounterStream(netStream);
-                    readCounterStream.OnBytesRead += (s, e) => _counters.IncrementBytesReceived(e);
                     writeCounterStream = new BytesCounterStream(netStream);
-                    writeCounterStream.OnBytesWrite += (s, e) => _counters.IncrementBytesSent(e);
                     ReadStream = new BufferedStream(readCounterStream, _receiveBufferSize);
                     WriteStream = new BufferedStream(writeCounterStream, _sendBufferSize);
                     Reader = new BinaryReader(ReadStream, Encoding.UTF8, true);
@@ -816,6 +814,8 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         Core.Log.Write(ex);
                     }
+                    if (readCounterStream != null)
+                        _counters.SetBytesReceived(readCounterStream.BytesRead);
                     return (mTypeEnum, message);
                 }
             }
@@ -841,6 +841,8 @@ namespace TWCore.Net.RPC.Client.Transports
                             Core.Log.Write(ex);
                         }
                         WriteStream.Flush();
+                        if (writeCounterStream != null)
+                            _counters.SetBytesSent(writeCounterStream.BytesWrite);
                     }
                     catch (Exception ex)
                     {

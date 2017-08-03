@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Runtime.CompilerServices;
+using System.Threading;
+
 namespace TWCore.Net.RPC
 {
     /// <summary>
@@ -21,17 +24,18 @@ namespace TWCore.Net.RPC
     /// </summary>
     public class RPCTransportCounters
     {
-        static object _locker = new object();
+        long _bytesSent;
+        long _bytesReceived;
 
         #region Properties
         /// <summary>
         /// Bytes sent
         /// </summary>
-        public long BytesSent { get; private set; }
+        public long BytesSent => _bytesSent;
         /// <summary>
         /// Bytes received
         /// </summary>
-        public long BytesReceived { get; private set; }
+        public long BytesReceived => _bytesReceived;
         #endregion
 
         #region .ctor
@@ -50,31 +54,33 @@ namespace TWCore.Net.RPC
 
         #region Public Methods
         /// <summary>
+        /// Set Bytes Sent
+        /// </summary>
+        /// <param name="bytes">Bytes sent</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetBytesSent(long bytes)
+            => Interlocked.Exchange(ref _bytesSent, bytes);
+        /// <summary>
+        /// Set Bytes Received
+        /// </summary>
+        /// <param name="bytes">Bytes received</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SetBytesReceived(long bytes)
+            => Interlocked.Exchange(ref _bytesReceived, bytes);
+        /// <summary>
         /// Increment Bytes Sent
         /// </summary>
         /// <param name="bytes">Bytes sent</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementBytesSent(long bytes)
-        {
-            lock (_locker)
-            {
-                if (long.MaxValue - bytes < BytesSent)
-                    BytesSent = 0;
-                BytesSent += bytes;
-            }
-        }
+            => Interlocked.Add(ref _bytesSent, bytes);
         /// <summary>
         /// Increment Bytes Received
         /// </summary>
         /// <param name="bytes">Bytes received</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementBytesReceived(long bytes)
-        {
-            lock (_locker)
-            {
-                if (long.MaxValue - bytes < BytesReceived)
-                    BytesReceived = 0;
-                BytesReceived += bytes;
-            }
-        }
+            => Interlocked.Add(ref _bytesReceived, bytes);
         #endregion
     }
 }

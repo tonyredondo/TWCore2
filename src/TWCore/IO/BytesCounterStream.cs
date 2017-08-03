@@ -25,6 +25,9 @@ namespace TWCore.IO
     /// </summary>
     public class BytesCounterStream : Stream
     {
+        long _bytesRead;
+        long _bytesWrite;
+
         #region Properties
         /// <summary>
         /// Base stream decorated
@@ -33,11 +36,11 @@ namespace TWCore.IO
         /// <summary>
         ///  Bytes read
         /// </summary>
-        public long BytesRead { get; private set; }
+        public long BytesRead => _bytesRead;
         /// <summary>
         /// Bytes write
         /// </summary>
-        public long BytesWrite { get; private set; }
+        public long BytesWrite => _bytesWrite;
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
@@ -72,17 +75,6 @@ namespace TWCore.IO
         }
         #endregion
 
-        #region Events
-        /// <summary>
-        /// On Bytes read
-        /// </summary>
-        public EventHandler<int> OnBytesRead;
-        /// <summary>
-        /// On Bytes write
-        /// </summary>
-        public EventHandler<int> OnBytesWrite;
-        #endregion
-
         #region .ctor
         /// <summary>
         /// Stream decorator with transfered bytes count
@@ -107,10 +99,7 @@ namespace TWCore.IO
         {
             int res = BaseStream.Read(buffer, offset, count);
             if (res > 0)
-            {
-                BytesRead += res;
-                OnBytesRead?.Invoke(this, res);
-            }
+                _bytesRead += res;
             return res;
         }
         /// <summary>
@@ -122,10 +111,7 @@ namespace TWCore.IO
         {
             int res = BaseStream.ReadByte();
             if (res >= 0)
-            {
-                BytesRead += res;
-                OnBytesRead?.Invoke(this, res);
-            }
+                _bytesRead += res;
             return res;
         }
         /// <summary>
@@ -138,8 +124,7 @@ namespace TWCore.IO
         public override void Write(byte[] buffer, int offset, int count)
         {
             BaseStream.Write(buffer, offset, count);
-            BytesWrite += count;
-            OnBytesWrite?.Invoke(this, count);
+            _bytesWrite += count;
         }
         /// <summary>
         /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
@@ -149,8 +134,7 @@ namespace TWCore.IO
         public override void WriteByte(byte value)
         {
             BaseStream.WriteByte(value);
-            BytesWrite++;
-            OnBytesWrite?.Invoke(this, 1);
+            _bytesWrite++;
         }
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
@@ -180,8 +164,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearBytesCounters()
         {
-            BytesRead = 0;
-            BytesWrite = 0;
+            _bytesRead = 0;
+            _bytesWrite = 0;
         }
         #endregion
     }

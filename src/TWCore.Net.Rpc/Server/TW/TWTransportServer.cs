@@ -34,11 +34,11 @@ namespace TWCore.Net.RPC.Server.Transports
     public class TWTransportServer : ITransportServer
     {
         const string DescriptorMethodId = "{DESCRIPTOR}";
+        readonly ConcurrentDictionary<Guid, TWTransportServerConnection> sessions = new ConcurrentDictionary<Guid, TWTransportServerConnection>();
         TcpListener _listener;
         CancellationTokenSource tokenSource;
         CancellationToken token;
         Task tskListener;
-        readonly ConcurrentDictionary<Guid, TWTransportServerConnection> sessions = new ConcurrentDictionary<Guid, TWTransportServerConnection>();
         Timer disconnectionTimer;
 
         #region Properties
@@ -61,7 +61,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Timeout to clean up the disconnected sessions
         /// </summary>
         [StatusProperty]
-        public int DisconnectedSessionTimeoutInMinutes { get; set; } = 30;
+        public int DisconnectedSessionTimeoutInMinutes { get; set; } = 10;
         /// <summary>
         /// Transport Counters
         /// </summary>

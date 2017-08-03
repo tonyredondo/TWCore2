@@ -158,9 +158,7 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 while (!token.IsCancellationRequested && !Disconnected)
                 {
-                    var tuple = GetRPCMessage(Reader);
-                    var msgType = tuple.Item1;
-                    var message = tuple.Item2;
+                    var (msgType, message) = GetRPCMessage(Reader);
 #pragma warning disable 4014
                     switch (msgType)
                     {
@@ -244,13 +242,11 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        Tuple<RPCMessageType, RPCMessage> GetRPCMessage(BinaryReader reader)
+        (RPCMessageType, RPCMessage) GetRPCMessage(BinaryReader reader)
         {
             lock (readLock)
             {
-                RPCMessage message = null;
-                RPCMessageType mTypeEnum = RPCMessageType.Unknown;
-                //Load Type
+                #region LoadType
                 byte mTypeByte = 255;
                 try
                 {
@@ -260,20 +256,20 @@ namespace TWCore.Net.RPC.Server.Transports
                 {
                     Interlocked.Increment(ref socketErrors);
                     Core.Log.Warning("Error reading bytes ({0})", ex.Message);
-                    return Tuple.Create(RPCMessageType.Unknown, message);
+                    return (RPCMessageType.Unknown, null);
                 }
-                mTypeEnum = (RPCMessageType)mTypeByte;
+                var mTypeEnum = (RPCMessageType)mTypeByte;
+                #endregion
 
                 #region Check if is a valid type
-                if (mTypeEnum != RPCMessageType.Ping &&
-                    mTypeEnum != RPCMessageType.SessionRequest &&
-                    mTypeEnum != RPCMessageType.RequestMessage)
+                if (mTypeByte < 1 || mTypeByte > 3)
                 {
                     Core.Log.Warning("Invalid Message Type ({0})", mTypeEnum);
-                    return Tuple.Create(RPCMessageType.Unknown, message);
+                    return (RPCMessageType.Unknown, null);
                 }
                 #endregion
 
+                #region Check if is a Ping
                 if (mTypeEnum == RPCMessageType.Ping)
                 {
                     Core.Log.LibVerbose("Ping message received, sending pong.");
@@ -281,63 +277,46 @@ namespace TWCore.Net.RPC.Server.Transports
                     {
                         lock (WriteStream)
                         {
-                            WriteStream.Write(new byte[] { (byte)RPCMessageType.Pong }, 0, 1);
+                            WriteStream.WriteByte((byte)RPCMessageType.Pong);
                             WriteStream.Flush();
+                            return (RPCMessageType.Ping, null);
                         }
                     }
                 }
-                else
+                #endregion  
+
+                RPCMessage message = null;
+                try
                 {
-                    Type type = typeof(RPCMessage);
-                    switch (mTypeEnum)
+                    message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCMessage));
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                    Interlocked.Increment(ref socketErrors);
+                    if (Disconnected && !disconnectionEventSent)
                     {
-                        case RPCMessageType.RequestMessage:
-                            type = typeof(RPCRequestMessage);
-                            break;
-                        case RPCMessageType.SessionRequest:
-                            type = typeof(RPCSessionRequestMessage);
-                            break;
-                    }
-                    try
-                    {
-                        message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, type);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                        Interlocked.Increment(ref socketErrors);
-                        if (Disconnected && !disconnectionEventSent)
-                        {
-                            OnSessionDisconnected?.Invoke(this);
-                            disconnectionEventSent = true;
-                        }
+                        OnSessionDisconnected?.Invoke(this);
+                        disconnectionEventSent = true;
                     }
                 }
-                return Tuple.Create(mTypeEnum, message);
+                return (mTypeEnum, message);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void WriteRPCMessageData(RPCMessage message, RPCMessageType messageType = RPCMessageType.Unknown)
+        void WriteRPCMessageData(RPCMessage message, RPCMessageType messageType)
         {
             lock (writeLock)
             {
-                RPCMessageType mTypeEnum = messageType;
-                Type mType = message?.GetType() ?? typeof(object);
-                if (mTypeEnum == RPCMessageType.Unknown)
-                {
-                    if (message as RPCSessionResponseMessage != null) mTypeEnum = RPCMessageType.SessionResponse;
-                    else if (message as RPCResponseMessage != null) mTypeEnum = RPCMessageType.ResponseMessage;
-                    else if (message as RPCEventMessage != null) mTypeEnum = RPCMessageType.EventMessage;
-                    else if (message as RPCPushMessage != null) mTypeEnum = RPCMessageType.PushMessage;
-                }
                 if (Disconnected)
                     Factory.Thread.SleepUntil(() => !Disconnected);
+
                 try
                 {
-                    WriteStream.WriteByte((byte)mTypeEnum);
+                    WriteStream.WriteByte((byte)messageType);
                     try
                     {
-                        Serializer.Serialize(message, mType, WriteStream);
+                        Serializer.Serialize(message, WriteStream);
                     }
                     catch (Exception ex)
                     {

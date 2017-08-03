@@ -38,37 +38,24 @@ namespace TWCore.Net.RPC.Client.Transports
     public class TWTransportClient : ITransportClient
     {
         const string DescriptorMethodId = "{DESCRIPTOR}";
-        readonly List<SocketConnection> availableConnections = new List<SocketConnection>();
-        readonly List<SocketConnection> connectedSockets = new List<SocketConnection>();
-        readonly ConcurrentDictionary<Guid, RPCResponseHandler> MessageResponsesHandlers = new ConcurrentDictionary<Guid, RPCResponseHandler>();
-        readonly HashSet<Guid> MessageRetries = new HashSet<Guid>();
-        volatile int connectedSocketsCount = 0;
-        int socketTurn = 0;
-        byte SocketsPerClient = 2;
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        ManualResetEventSlim connectionResetEvent = new ManualResetEventSlim(false);
+        readonly ManualResetEventSlim _connectionResetEvent = new ManualResetEventSlim(false);
+        readonly List<SocketConnection> _availableConnections = new List<SocketConnection>();
+        readonly List<SocketConnection> _connectedSockets = new List<SocketConnection>();
+        readonly ConcurrentDictionary<Guid, RPCResponseHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCResponseHandler>();
+        readonly HashSet<Guid> _messageRetries = new HashSet<Guid>();
+        readonly LRU2QCollection<Guid, object> previousMessages = new LRU2QCollection<Guid, object>(2048);
+        volatile int _connectedSocketsCount = 0;
+        int _socketTurn = 0;
+        byte _socketsPerClient = 2;
+        CancellationTokenSource _tokenSource;
+        CancellationToken _token;
+
 
         #region Nested Class
-        class RPCResponseHandler
+        sealed class RPCResponseHandler
         {
-            public ManualResetEventSlim Event = new ManualResetEventSlim(false);
+            public readonly ManualResetEventSlim Event = new ManualResetEventSlim(false);
             public RPCResponseMessage Message;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public RPCResponseHandler() { }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static RPCResponseHandler GetFromPool()
-                => ReferencePool<RPCResponseHandler>.Shared.New();
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void StoreToPool(RPCResponseHandler handler)
-            {
-                handler.Event.Reset();
-                handler.Message = null;
-                ReferencePool<RPCResponseHandler>.Shared.Store(handler);
-            }
         }
         #endregion
 
@@ -120,6 +107,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <summary>
         /// Transport Counters
         /// </summary>
+        [StatusProperty]
         public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
         /// <summary>
         /// Connection status
@@ -182,13 +170,13 @@ namespace TWCore.Net.RPC.Client.Transports
         {
             Serializer = SerializerManager.DefaultBinarySerializer.DeepClone();
 
-            for (var i = 0; i < SocketsPerClient; i++)
-                availableConnections.Add(CreateSocketConnection());
+            for (var i = 0; i < _socketsPerClient; i++)
+                _availableConnections.Add(CreateSocketConnection());
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Messages Waiting Response Count", MessageResponsesHandlers.Count);
-                foreach (var cnn in availableConnections)
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count);
+                foreach (var cnn in _availableConnections)
                     Core.Status.AttachChild(cnn, this);
             });
         }
@@ -205,15 +193,15 @@ namespace TWCore.Net.RPC.Client.Transports
             Port = port;
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             if (socketsPerClient > 0)
-                SocketsPerClient = socketsPerClient;
+                _socketsPerClient = socketsPerClient;
 
-            for (var i = 0; i < SocketsPerClient; i++)
-                availableConnections.Add(CreateSocketConnection());
+            for (var i = 0; i < _socketsPerClient; i++)
+                _availableConnections.Add(CreateSocketConnection());
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Messages Waiting Response Count", MessageResponsesHandlers.Count);
-                foreach (var cnn in availableConnections)
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count);
+                foreach (var cnn in _availableConnections)
                     Core.Status.AttachChild(cnn, this);
             });
         }
@@ -268,9 +256,9 @@ namespace TWCore.Net.RPC.Client.Transports
                 if (Status != ConnectionStatus.Connected)
                     throw new Exception("Couldn't connect to the remote server {0}:{1} [Status: {2}, Target: {3}]".ApplyFormat(Host, Port, Status, TargetStatus));
             }
-            if (token.IsCancellationRequested) return null;
+            if (_token.IsCancellationRequested) return null;
             var messageId = messageRQ.MessageId;
-            var wh = MessageResponsesHandlers.GetOrAdd(messageId, id => RPCResponseHandler.GetFromPool());
+            var wh = _messageResponsesHandlers.GetOrAdd(messageId, id => new RPCResponseHandler());
             //Core.Log.LibVerbose("Getting Connection for message Id={0}", messageId);
             var socketConnection = GetSocketConnection();
             //Core.Log.LibVerbose("Connection selected, sending message Id={0} [SessionId={1}]", messageId, socketConnection.SessionId);
@@ -278,14 +266,11 @@ namespace TWCore.Net.RPC.Client.Transports
             //Core.Log.LibVerbose("Waiting response message for Id: {0} [SessionId={1}]", messageId, socketConnection.SessionId);
             if (wh.Event.Wait(InvokeMethodTimeout, socketConnection.OnlineToken))
             {
-                var message = wh.Message;
-                RPCResponseHandler.StoreToPool(wh);
-                return message;
+                return wh.Message;
             }
-            else if (MessageRetries.Contains(messageId))
+            else if (_messageRetries.Contains(messageId))
             {
-                RPCResponseHandler.StoreToPool(wh);
-                MessageRetries.Remove(messageId);
+                _messageRetries.Remove(messageId);
                 throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
             }
             else
@@ -296,9 +281,8 @@ namespace TWCore.Net.RPC.Client.Transports
                     Core.Log.Warning("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}, Retrying one more time...", InvokeMethodTimeout / 1000, messageRQ.MessageId);
 
                 socketConnection.ResetConnection();
-                MessageRetries.Add(messageId);
-                MessageResponsesHandlers.TryRemove(messageId, out var old);
-                RPCResponseHandler.StoreToPool(wh);
+                _messageRetries.Add(messageId);
+                _messageResponsesHandlers.TryRemove(messageId, out var old);
                 return await InvokeMethodAsync(messageRQ).ConfigureAwait(false);
             }
         }
@@ -316,31 +300,27 @@ namespace TWCore.Net.RPC.Client.Transports
                 if (Status != ConnectionStatus.Connected)
                     throw new Exception("Couldn't connect to the remote server {0}:{1} [Status: {2}, Target: {3}]".ApplyFormat(Host, Port, Status, TargetStatus));
             }
-            if (token.IsCancellationRequested) return null;
+            if (_token.IsCancellationRequested) return null;
             var messageId = messageRQ.MessageId;
-            var wh = MessageResponsesHandlers.GetOrAdd(messageId, id => RPCResponseHandler.GetFromPool());
+            var wh = _messageResponsesHandlers.GetOrAdd(messageId, id => new RPCResponseHandler());
             var socketConnection = GetSocketConnection();
             socketConnection.SendRequestMessage(messageRQ);
             //Core.Log.LibVerbose("Waiting response message for Id: {0} [SessionId={1}]", messageId, socketConnection.SessionId);
-            if (wh.Event.Wait(InvokeMethodTimeout, token))
+            if (wh.Event.Wait(InvokeMethodTimeout, _token))
             {
-                var message = wh.Message;
-                RPCResponseHandler.StoreToPool(wh);
-                return message;
+                return wh.Message;
             }
-            else if (MessageRetries.Contains(messageId))
+            else if (_messageRetries.Contains(messageId))
             {
-                RPCResponseHandler.StoreToPool(wh);
-                MessageRetries.Remove(messageId);
+                _messageRetries.Remove(messageId);
                 throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
             }
             else
             {
                 Core.Log.Warning("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}, Retrying one more time...".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
                 socketConnection.ResetConnection();
-                MessageRetries.Add(messageId);
-                MessageResponsesHandlers.TryRemove(messageId, out var old);
-                RPCResponseHandler.StoreToPool(wh);
+                _messageRetries.Add(messageId);
+                _messageResponsesHandlers.TryRemove(messageId, out var old);
                 return InvokeMethod(messageRQ);
             }
         }
@@ -356,19 +336,19 @@ namespace TWCore.Net.RPC.Client.Transports
             {
                 Core.Log.LibVerbose("Calling Socket Connects...");
                 Status = ConnectionStatus.Connecting;
-                tokenSource?.Cancel();
-                connectionResetEvent.Reset();
-                tokenSource = new CancellationTokenSource();
-                token = tokenSource.Token;
+                _tokenSource?.Cancel();
+                _connectionResetEvent.Reset();
+                _tokenSource = new CancellationTokenSource();
+                _token = _tokenSource.Token;
                 OnConnecting?.Invoke(this, new EventArgs());
 
                 try
                 {
                     //Core.Log.LibVerbose("Setting available connections tasks...");
-                    var tasks = new Task[availableConnections.Count];
-                    for(var i = 0; i < availableConnections.Count; i++)
+                    var tasks = new Task[_availableConnections.Count];
+                    for (var i = 0; i < _availableConnections.Count; i++)
                     {
-                        var cnn = availableConnections[i];
+                        var cnn = _availableConnections[i];
                         cnn._host = Host;
                         cnn._port = Port;
                         cnn._hub = Hub;
@@ -377,19 +357,19 @@ namespace TWCore.Net.RPC.Client.Transports
                         Core.Log.LibVerbose("Connecting task");
                         tasks[i] = cnn.ConnectAsync();
                     }
-                    if (Task.WaitAll(tasks, 10000, token))
+                    if (Task.WaitAll(tasks, 10000, _token))
                     {
                         OnConnected?.Invoke(this, new EventArgs());
                         Status = ConnectionStatus.Connected;
                         Core.Log.InfoDetail("Connected to: {0}:{1}", Host, Port);
-                        connectionResetEvent.Set();
+                        _connectionResetEvent.Set();
                         return Task.CompletedTask;
                     }
                     else
                     {
                         Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
                         Status = ConnectionStatus.Disconnected;
-                        connectionResetEvent.Set();
+                        _connectionResetEvent.Set();
                         return Task.CompletedTask;
                     }
                 }
@@ -397,7 +377,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 {
                     Core.Log.Error(ex, "Disconnected by connection tasks errors.");
                     Status = ConnectionStatus.Disconnected;
-                    connectionResetEvent.Set();
+                    _connectionResetEvent.Set();
                     return Task.CompletedTask;
                 }
             }
@@ -417,9 +397,9 @@ namespace TWCore.Net.RPC.Client.Transports
                 Status = ConnectionStatus.Disconnecting;
                 OnDisconnecting?.Invoke(this, new EventArgs());
                 Core.Log.LibVerbose("Cancelling tasks...");
-                tokenSource?.Cancel();
-                tokenSource = null;
-                Task.WaitAll(availableConnections.Select(a => a.DisconnectAsync()).ToArray(), 11000, token);
+                _tokenSource?.Cancel();
+                _tokenSource = null;
+                Task.WaitAll(_availableConnections.Select(a => a.DisconnectAsync()).ToArray(), 11000, _token);
                 Status = ConnectionStatus.Disconnected;
                 Core.Log.LibVerbose("Disconnected");
                 OnDisconnected?.Invoke(this, new EventArgs());
@@ -445,93 +425,84 @@ namespace TWCore.Net.RPC.Client.Transports
             sConn.OnConnecting += OnConnecting;
             sConn.OnDisconnected += OnDisconnectedHandler;
             sConn.OnDisconnecting += OnDisconnecting;
-            sConn.OnMessageReceiveHandler = OnMessageReceivedHandler;
+            sConn.OnResponseMessageReceivedHandler = OnResponseMessageReceivedHandler;
+            sConn.OnEventMessageReceivedHandler = OnEventMessageReceivedHandler;
+            sConn.OnPushMessageReceivedHandler = OnPushMessageReceivedHandler;
             return sConn;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnConnectedHandler(object sender, EventArgs e)
         {
-            lock (connectedSockets)
+            lock (_connectedSockets)
             {
-                connectedSockets.Add((SocketConnection)sender);
-                Interlocked.Increment(ref connectedSocketsCount);
+                _connectedSockets.Add((SocketConnection)sender);
+                Interlocked.Increment(ref _connectedSocketsCount);
             }
-            connectionResetEvent.Set();
+            _connectionResetEvent.Set();
             OnConnected?.Invoke(this, e);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnDisconnectedHandler(object sender, EventArgs e)
         {
             var acnn = 0;
-            lock (connectedSockets)
+            lock (_connectedSockets)
             {
-                if (connectedSockets.Remove((SocketConnection)sender))
-                    acnn = Interlocked.Decrement(ref connectedSocketsCount);
+                if (_connectedSockets.Remove((SocketConnection)sender))
+                    acnn = Interlocked.Decrement(ref _connectedSocketsCount);
             }
             if (acnn > 0)
-                connectionResetEvent.Set();
+                _connectionResetEvent.Set();
             else
-                connectionResetEvent.Reset();
+                _connectionResetEvent.Reset();
             OnDisconnected?.Invoke(this, e);
         }
-
-        LRU2QCollection<Guid, object> previousMessages = new LRU2QCollection<Guid, object>(4096);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OnMessageReceivedHandler(RPCMessageType msgType, RPCMessage message)
+        void OnResponseMessageReceivedHandler(RPCResponseMessage message)
         {
-            switch (msgType)
+            if (_messageResponsesHandlers.TryGetValue(message.RequestMessageId, out var wh))
             {
-                case RPCMessageType.ResponseMessage:
-                    var messageResponse = (RPCResponseMessage)message;
-                    if (MessageResponsesHandlers.TryGetValue(messageResponse.RequestMessageId, out var wh))
-                    {
-                        wh.Message = messageResponse;
-                        wh.Event.Set();
-                        MessageResponsesHandlers.TryRemove(messageResponse.RequestMessageId, out var whOld);
-                        //Core.Log.LibVerbose("Message response received for Id: {0}", messageResponse.RequestMessageId);
-                    }
-                    break;
-                case RPCMessageType.EventMessage:
-                    lock (previousMessages)
-                    {
-                        previousMessages.GetOrAdd(message.MessageId, _id =>
-                        {
-                            var eventTrigger = (RPCEventMessage)message;
-                            OnEventReceived?.InvokeAsync(this, new EventDataEventArgs(eventTrigger.ServiceName, eventTrigger.EventName, eventTrigger.EventArgs));
-                            return null;
-                        });
-                    }
-                    break;
-                case RPCMessageType.PushMessage:
-                    lock (previousMessages)
-                    {
-                        previousMessages.GetOrAdd(message.MessageId, _id =>
-                        {
-                            OnPushMessageReceived?.InvokeAsync(this, new EventArgs<RPCPushMessage>((RPCPushMessage)message));
-                            return null;
-                        });
-                    }
-                    break;
+                wh.Message = message;
+                wh.Event.Set();
+                _messageResponsesHandlers.TryRemove(message.RequestMessageId, out var whOld);
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void OnEventMessageReceivedHandler(RPCEventMessage message)
+        {
+            previousMessages.GetOrAdd(message.MessageId, _id =>
+            {
+                OnEventReceived?.InvokeAsync(this, new EventDataEventArgs(message.ServiceName, message.EventName, message.EventArgs));
+                return null;
+            });
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void OnPushMessageReceivedHandler(RPCPushMessage message)
+        {
+            previousMessages.GetOrAdd(message.MessageId, _id =>
+            {
+                OnPushMessageReceived?.InvokeAsync(this, new EventArgs<RPCPushMessage>(message));
+                return null;
+            });
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         SocketConnection GetSocketConnection()
         {
-            if (connectedSocketsCount < 1)
-                connectionResetEvent.Wait(5000, token);
-            if (connectedSocketsCount < 1)
+            if (_connectedSocketsCount < 1)
+                _connectionResetEvent.Wait(5000, _token);
+            if (_connectedSocketsCount < 1)
             {
                 Status = ConnectionStatus.Disconnected;
                 ConnectAsync();
-                connectionResetEvent.Wait(5000, token);
+                _connectionResetEvent.Wait(5000, _token);
             }
-            lock (connectedSockets)
+            lock (_connectedSockets)
             {
-                if (socketTurn >= connectedSocketsCount) socketTurn = 0;
-                if (connectedSocketsCount > 0)
-                    return connectedSockets[socketTurn++];
+                if (_socketTurn >= _connectedSocketsCount) _socketTurn = 0;
+                if (_connectedSocketsCount > 0)
+                    return _connectedSockets[_socketTurn++];
             }
-            throw new Exception($"No connection to server. [connectedSocketsCount={connectedSocketsCount}, socketTurn={socketTurn}, availableConnections={availableConnections.Count}]");
+            throw new Exception($"No connection to server. [connectedSocketsCount={_connectedSocketsCount}, socketTurn={_socketTurn}, availableConnections={_availableConnections.Count}]");
         }
         #endregion
 
@@ -577,7 +548,10 @@ namespace TWCore.Net.RPC.Client.Transports
             public RPCTransportCounters _counters;
             public Guid SessionId { get; private set; }
             public bool IsOnSession { get; private set; } = false;
-            public Action<RPCMessageType, RPCMessage> OnMessageReceiveHandler;
+            public Action<RPCResponseMessage> OnResponseMessageReceivedHandler;
+            public Action<RPCEventMessage> OnEventMessageReceivedHandler;
+            public Action<RPCPushMessage> OnPushMessageReceivedHandler;
+
 
             #region Events
             public event EventHandler OnConnecting;
@@ -774,7 +748,6 @@ namespace TWCore.Net.RPC.Client.Transports
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void SendRequestMessage(RPCRequestMessage messageRQ)
             {
-                if (connectionToken.IsCancellationRequested) return;
                 if (connectionStatus != ConnectionStatus.Connected)
                 {
                     if (targetStatus == TargetConnectionStatus.Connected)
@@ -806,7 +779,6 @@ namespace TWCore.Net.RPC.Client.Transports
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             (RPCMessageType, RPCMessage) GetRPCMessage(BinaryReader reader)
             {
-                RPCMessage message = null;
                 RPCMessageType mTypeEnum;
                 byte mTypeByte;
                 lock (readLock)
@@ -819,82 +791,62 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         return (RPCMessageType.Unknown, null);
                     }
-                    mTypeEnum = (RPCMessageType)mTypeByte;
 
                     #region Check if is a valid type
-                    if (mTypeEnum != RPCMessageType.Pong &&
-                        mTypeEnum != RPCMessageType.SessionResponse &&
-                        mTypeEnum != RPCMessageType.ResponseMessage &&
-                        mTypeEnum != RPCMessageType.EventMessage &&
-                        mTypeEnum != RPCMessageType.PushMessage)
-                        return (RPCMessageType.Unknown, message);
+                    if (mTypeByte < 11 || mTypeByte > 15)
+                        return (RPCMessageType.Unknown, null);
                     #endregion
 
-                    if (mTypeEnum != RPCMessageType.Pong)
+                    mTypeEnum = (RPCMessageType)mTypeByte;
+                    RPCMessage message = null;
+
+                    #region Check if is Pong
+                    if (mTypeEnum == RPCMessageType.Pong)
                     {
-                        #region Get Type
-                        Type type = typeof(RPCMessage);
-                        switch (mTypeEnum)
-                        {
-                            case RPCMessageType.ResponseMessage:
-                                type = typeof(RPCResponseMessage);
-                                break;
-                            case RPCMessageType.SessionResponse:
-                                type = typeof(RPCSessionResponseMessage);
-                                break;
-                            case RPCMessageType.EventMessage:
-                                type = typeof(RPCEventMessage);
-                                break;
-                            case RPCMessageType.PushMessage:
-                                type = typeof(RPCPushMessage);
-                                break;
-                        }
-                        #endregion
-                        try
-                        {
-                            message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, type);
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }
-                    else
                         Core.Log.LibVerbose("Pong message received.");
+                        return (mTypeEnum, null);
+                    }
+                    #endregion
+
+                    try
+                    {
+                        message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCMessage));
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                    return (mTypeEnum, message);
                 }
-                return (mTypeEnum, message);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void WriteRPCMessageData(RPCMessage message, RPCMessageType messageType)
             {
                 lock (writeLock)
                 {
-                    if (socketStatus == SocketStatus.Connected)
+                    if (socketStatus != SocketStatus.Connected)
                     {
+                        Core.Log.Warning("Message with Id:{0} was skipped due the socket is not connected.", message.MessageId);
+                        return;
+                    }
+                    try
+                    {
+                        WriteStream.WriteByte((byte)messageType);
                         try
                         {
-                            WriteStream.WriteByte((byte)messageType);
-                            try
-                            {
-                                Serializer.Serialize(message, WriteStream);
-                            }
-                            catch (Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                            }
-                            WriteStream.Flush();
-                            //Core.Log.LibVerbose("Message with Id: {0} was sent. Total Bytes sent on the stream = {1}", message.MessageId, writeCounterStream.BytesWrite);
+                            Serializer.Serialize(message, WriteStream);
                         }
                         catch (Exception ex)
                         {
-                            connectionStatus = ConnectionStatus.Disconnected;
-                            OnlineTokenSource.Cancel();
                             Core.Log.Write(ex);
                         }
+                        WriteStream.Flush();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        Core.Log.LibVerbose("Message with Id:{0} was skipped due the socket is not connected.", message.MessageId);
+                        connectionStatus = ConnectionStatus.Disconnected;
+                        OnlineTokenSource.Cancel();
+                        Core.Log.Write(ex);
                     }
                 }
             }
@@ -994,24 +946,43 @@ namespace TWCore.Net.RPC.Client.Transports
                 Core.Log.LibVerbose("ReceiveTaskHandler started.");
                 while (!connectionToken.IsCancellationRequested)
                 {
-                    try
-                    {
-                        if (!receiveMessageEvent.Wait(10000, connectionToken))
-                            break;
-                    }
-                    catch (Exception)
-                    {
-                        break;
-                    }
-                    if (!connectionToken.IsCancellationRequested)
+                    if (!receiveMessageEvent.IsSet)
                     {
                         try
                         {
-                            (RPCMessageType msgType, RPCMessage message) = GetRPCMessage(Reader);
-                            if (msgType == RPCMessageType.Unknown)
+                            if (!receiveMessageEvent.Wait(10000, connectionToken))
+                                break;
+                        }
+                        catch (Exception)
+                        {
+                            break;
+                        }
+                    }
+                    if (connectionToken.IsCancellationRequested) break;
+
+                    RPCMessageType msgType = RPCMessageType.Unknown;
+                    RPCMessage message = null;
+                    try
+                    {
+                        var tpl = GetRPCMessage(Reader);
+                        msgType = tpl.Item1;
+                        message = tpl.Item2;
+                    }
+                    catch (Exception ex)
+                    {
+                        connectionStatus = ConnectionStatus.Disconnected;
+                        OnlineTokenSource.Cancel();
+                        Core.Log.Write(ex);
+                        break;
+                    }
+
+                    try
+                    {
+                        switch (msgType)
+                        {
+                            case RPCMessageType.Unknown:
                                 continue;
-                            if (msgType == RPCMessageType.SessionResponse)
-                            {
+                            case RPCMessageType.SessionResponse:
                                 var sessionResponse = message as RPCSessionResponseMessage;
                                 if (sessionResponse?.Succeed == true)
                                 {
@@ -1021,20 +992,24 @@ namespace TWCore.Net.RPC.Client.Transports
                                 }
                                 else
                                     Core.Log.LibVerbose("ReadWorker. Session wasn't created.");
-                            }
-                            else
-                            {
-                                OnMessageReceiveHandler(msgType, message);
+                                break;
+                            case RPCMessageType.ResponseMessage:
+                                OnResponseMessageReceivedHandler((RPCResponseMessage)message);
                                 lastWriteDate = DateTime.UtcNow;
-                            }
+                                break;
+                            case RPCMessageType.EventMessage:
+                                OnEventMessageReceivedHandler((RPCEventMessage)message);
+                                lastWriteDate = DateTime.UtcNow;
+                                break;
+                            case RPCMessageType.PushMessage:
+                                OnPushMessageReceivedHandler((RPCPushMessage)message);
+                                lastWriteDate = DateTime.UtcNow;
+                                break;
                         }
-                        catch (Exception ex)
-                        {
-                            connectionStatus = ConnectionStatus.Disconnected;
-                            OnlineTokenSource.Cancel();
-                            Core.Log.Write(ex);
-                            break;
-                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
                     }
                 }
                 ReceiveTask = null;

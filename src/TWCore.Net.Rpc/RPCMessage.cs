@@ -36,9 +36,6 @@ namespace TWCore.Net.RPC
         /// RPC Message base class
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCMessage()
-        {
-            MessageId = Factory.NewGuid();
-        }
+        public RPCMessage() => MessageId = Factory.NewGuid();
     }
 }

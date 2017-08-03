@@ -25,38 +25,39 @@ namespace TWCore.Net.RPC
         /// <summary>
         /// Unknown message type
         /// </summary>
-        Unknown = 0x00,
+        Unknown = 0,
         /// <summary>
         /// Ping message
         /// </summary>
-        Ping = 0x01,
-        /// <summary>
-        /// Pong message
-        /// </summary>
-        Pong = 0x02,
+        Ping = 1,
         /// <summary>
         /// Session request message
         /// </summary>
-        SessionRequest = 0x03,
-        /// <summary>
-        /// Session response message
-        /// </summary>
-        SessionResponse = 0x04,
+        SessionRequest = 2,
         /// <summary>
         /// Request message
         /// </summary>
-        RequestMessage = 0x05,
+        RequestMessage = 3,
+
+        /// <summary>
+        /// Pong message
+        /// </summary>
+        Pong = 11,
+        /// <summary>
+        /// Session response message
+        /// </summary>
+        SessionResponse = 12,
         /// <summary>
         /// Response message
         /// </summary>
-        ResponseMessage = 0x06,
+        ResponseMessage = 13,
         /// <summary>
         /// Event message
         /// </summary>
-        EventMessage = 0x07,
+        EventMessage = 14,
         /// <summary>
         /// Push message
         /// </summary>
-        PushMessage
+        PushMessage = 15
     }
 }

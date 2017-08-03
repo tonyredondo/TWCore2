@@ -36,6 +36,7 @@ namespace TWCore.Serialization.WSerializer
     /// </summary>
     public class WSerializer
     {
+        private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
         private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(() =>
                 Tuple.Create(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
                     i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
@@ -64,9 +65,10 @@ namespace TWCore.Serialization.WSerializer
         #region Serializer
         private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
-        private static readonly ObjectPool<byte[]> BufferArray = new ObjectPool<byte[]>(() => new byte[8], null, 1);
         private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(1, s => s.Clear());
         HashSet<Type> CurrentSerializerPlanTypes = new HashSet<Type>();
+        byte[] _buffer = new byte[4];
+
         #region Public Methods
         /// <summary>
         /// Serialize an object value in a Tony Wanhjor format
@@ -96,7 +98,7 @@ namespace TWCore.Serialization.WSerializer
             _scopeStack.Push(scope);
 
             var mStream = new MemoryStream(1024);
-            var bw = new FastBinaryWriter(mStream, Encoding.UTF8, true);
+            var bw = new FastBinaryWriter(mStream, DefaultUTF8Encoding, true);
             bw.Write((byte)Mode);
             do
             {
@@ -484,7 +486,7 @@ namespace TWCore.Serialization.WSerializer
             SerializersTable.ReturnTable(serializersTable);
             StackPool.Store(_scopeStack);
 
-            var globalBW = new FastBinaryWriter(stream, Encoding.UTF8, true);
+            var globalBW = new FastBinaryWriter(stream, DefaultUTF8Encoding, true);
             mStream.Position = 0;
             if (mStream.Length > MinimumLengthToCompress)
             {
@@ -503,23 +505,19 @@ namespace TWCore.Serialization.WSerializer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Write(FastBinaryWriter bw, byte type, byte value)
+        private void Write(FastBinaryWriter bw, byte type, byte value)
         {
-            var buffer = BufferArray.New();
-            buffer[0] = type;
-            buffer[1] = value;
-            bw.Write(buffer, 0, 2);
-            BufferArray.Store(buffer);
+            _buffer[0] = type;
+            _buffer[1] = value;
+            bw.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static unsafe void Write(FastBinaryWriter bw, byte type, ushort value)
+        private unsafe void Write(FastBinaryWriter bw, byte type, ushort value)
         {
-            var buffer = BufferArray.New();
-            buffer[0] = type;
-            fixed (byte* b = &buffer[1])
+            _buffer[0] = type;
+            fixed (byte* b = &_buffer[1])
                 *((ushort*)b) = value;
-            bw.Write(buffer, 0, 3);
-            BufferArray.Store(buffer);
+            bw.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         SerializerPlan GetSerializerPlan(SerializersTable serializerTable, Type type)
@@ -747,14 +745,14 @@ namespace TWCore.Serialization.WSerializer
             FastBinaryReader br;
             if (fStart == DataType.FileStartCompressed)
             {
-                var gbr = new FastBinaryReader(stream, Encoding.UTF8, true);
+                var gbr = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
                 var cLength = gbr.ReadInt32();
                 var bytes = Compression.MiniLZO.Decompress(gbr.ReadBytes(cLength));
                 stream = bytes.ToMemoryStream();
-                br = new FastBinaryReader(stream, Encoding.UTF8, true);
+                br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
             }
             else
-                br = new FastBinaryReader(stream, Encoding.UTF8, true);
+                br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
 
             var bMode = br.ReadByte();
             var sMode = (SerializerMode)bMode;

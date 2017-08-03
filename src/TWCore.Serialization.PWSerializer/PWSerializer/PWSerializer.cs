@@ -78,7 +78,7 @@ namespace TWCore.Serialization.PWSerializer
         }, 1, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(1, scope => scope.Init(), null, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(1, p => p.Init(), null, PoolResetMode.AfterUse);
-        byte[] _bufferSer = new byte[8];
+        byte[] _bufferSer = new byte[4];
 
         #region Public Methods
         /// <summary>

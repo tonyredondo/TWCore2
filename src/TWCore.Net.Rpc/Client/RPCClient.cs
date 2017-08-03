@@ -230,7 +230,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
-            using (Watch.Create($"RPC Invoke START: {serviceName}.{method}", $"RPC Invoke END: {serviceName}.{method}"))
+            using (Watch.Create($"RPC Invoke: {serviceName}.{method}"))
             {
                 var request = CreateRequest(serviceName, method, args);
                 if (Transport.Descriptors == null)
@@ -269,7 +269,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object ServerInvoke(string serviceName, string method, params object[] args)
         {
-            using (Watch.Create($"RPC Invoke START: {serviceName}.{method}", $"RPC Invoke END: {serviceName}.{method}"))
+            using (Watch.Create($"RPC Invoke: {serviceName}.{method}"))
             {
                 var request = CreateRequest(serviceName, method, args);
                 if (Transport.Descriptors == null)

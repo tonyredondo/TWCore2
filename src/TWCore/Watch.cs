@@ -209,24 +209,27 @@ namespace TWCore
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}] {1}", item.Id, item.Message);
+                        Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-START] {1}", item.Id, item.Message);
                         break;
                     case 1:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         if (item.LastTapTicks != item.GlobalTicks)
                         {
                             gTime = (item.GlobalTicks / _frequency) * 1000;
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
+                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "  [{0:00}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
                         }
                         else
                         {
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms] {2}", item.Id, cTime, item.Message);
+                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "  [{0:00}-TAP, Time = {1:0.0000}ms] {2}", item.Id, cTime, item.Message);
                         }
                         break;
                     case 2:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         gTime = (item.GlobalTicks / _frequency) * 1000;
-                        Core.Log.Stats(new string(' ', (item.Id - 1) * 2) + "[{0:00}, Time: {1:0.0000}ms, Total = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
+                        if (cTime != gTime)
+                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
+                        else
+                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Total Time = {1:0.0000}ms] {2}", item.Id, gTime, item.Message);
                         break;
                 }
             }
@@ -294,11 +297,12 @@ namespace TWCore
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static WItem CreateItem(string lastMessage)
+            internal static WItem CreateItem(string message)
             {
                 var item = itemPools.New();
-                item._lastMessage = lastMessage;
+                item._lastMessage = message;
                 item._id = Interlocked.Increment(ref _watcherCount);
+                item.StartedTap(message);
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

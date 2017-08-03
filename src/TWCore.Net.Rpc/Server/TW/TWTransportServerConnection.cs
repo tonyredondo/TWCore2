@@ -159,20 +159,18 @@ namespace TWCore.Net.RPC.Server.Transports
                 while (!token.IsCancellationRequested && !Disconnected)
                 {
                     var (msgType, message) = GetRPCMessage(Reader);
-#pragma warning disable 4014
                     switch (msgType)
                     {
                         case RPCMessageType.Unknown:
                             Interlocked.Increment(ref socketErrors);
                             break;
                         case RPCMessageType.RequestMessage:
-                            Task.Factory.StartNew(ProcessRequestMessage, message, token);
+                            ThreadPool.QueueUserWorkItem(ProcessRequestMessage, message);
                             break;
                         case RPCMessageType.SessionRequest:
-                            ProcessSessionRequestMessage((RPCSessionRequestMessage)message);
+                            ThreadPool.QueueUserWorkItem(ProcessSessionRequestMessage, message);
                             break;
                     }
-#pragma warning restore 4014
                 }
                 if (Disconnected)
                 {
@@ -193,49 +191,47 @@ namespace TWCore.Net.RPC.Server.Transports
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ProcessSessionRequestMessage(RPCSessionRequestMessage sessionRequest)
+        void ProcessSessionRequestMessage(object message)
         {
-            if (sessionRequest != null)
+            var sessionRequest = message as RPCSessionRequestMessage;
+            if (sessionRequest == null) return;
+            using (var watch = Watch.Create())
             {
-                using (var watch = Watch.Create())
+                var sessionId = sessionRequest.SessionId;
+                if (sessionId == Guid.Empty)
+                    sessionId = Guid.NewGuid();
+                var sessionResponse = new RPCSessionResponseMessage { SessionId = sessionId, RequestMessageId = sessionRequest.MessageId, Succeed = true };
+                OnSessionRequestReceived?.Invoke(this, sessionRequest, sessionResponse);
+                if (sessionResponse.Succeed)
                 {
-                    var sessionId = sessionRequest.SessionId;
-                    if (sessionId == Guid.Empty)
-                        sessionId = Guid.NewGuid();
-                    var sessionResponse = new RPCSessionResponseMessage { SessionId = sessionId, RequestMessageId = sessionRequest.MessageId, Succeed = true };
-                    OnSessionRequestReceived?.Invoke(this, sessionRequest, sessionResponse);
-                    if (sessionResponse.Succeed)
-                    {
-                        SessionId = sessionResponse.SessionId;
-                        Hub = sessionRequest.Hub;
-                        IsOnSession = true;
-                        WriteRPCMessageData(sessionResponse, RPCMessageType.SessionResponse);
-                        watch.Tap($"Session created with Id: {SessionId}, Hub: {Hub}");
-                    }
-                    else
-                    {
-                        WriteRPCMessageData(sessionResponse, RPCMessageType.SessionResponse);
-                        watch.Tap("Session wasn't created.");
-                        Client.Dispose();
-                    }
+                    SessionId = sessionResponse.SessionId;
+                    Hub = sessionRequest.Hub;
+                    IsOnSession = true;
+                    WriteRPCMessageData(sessionResponse, RPCMessageType.SessionResponse);
+                    watch.Tap($"Session created with Id: {SessionId}, Hub: {Hub}");
+                }
+                else
+                {
+                    WriteRPCMessageData(sessionResponse, RPCMessageType.SessionResponse);
+                    watch.Tap("Session wasn't created.");
+                    Client.Dispose();
                 }
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ProcessRequestMessage(object message)
         {
-            using (var watch = Watch.Create())
+            var messageRequest = message as RPCRequestMessage;
+            if (messageRequest == null) return;
+            using (var watch = Watch.Create($"Process Request Message: {messageRequest.MessageId}"))
             {
-                var messageRequest = message as RPCRequestMessage;
-                if (messageRequest == null) return;
-                if (IsOnSession)
+                if (!IsOnSession)
                 {
-                    var messageResponse = OnRequestReceived?.Invoke(this, messageRequest);
-                    WriteRPCMessageData(messageResponse, RPCMessageType.ResponseMessage);
-                    watch.Tap($"Response message for Id: {messageResponse.RequestMessageId} sent.");
-                }
-                else
                     Core.Log.Warning("RPC message received without a session, the message is not going to be processed.");
+                    return;
+                }
+                var messageResponse = OnRequestReceived?.Invoke(this, messageRequest);
+                WriteRPCMessageData(messageResponse, RPCMessageType.ResponseMessage);
             }
         }
         #endregion

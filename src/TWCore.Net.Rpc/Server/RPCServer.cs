@@ -196,7 +196,7 @@ namespace TWCore.Net.RPC.Server
             public object ServiceInstance { get; set; }
             public ServiceDescriptor Descriptor { get; set; }
             public readonly Dictionary<EventInfo, EventHandler> ServiceEventHandlers = new Dictionary<EventInfo, EventHandler>();
-            readonly ConcurrentDictionary<int, Guid> ThreadClientId = new ConcurrentDictionary<int, Guid>();
+            readonly Dictionary<int, Guid> ThreadClientId = new Dictionary<int, Guid>();
             public MethodInfo OnClientConnectMethod;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -231,7 +231,8 @@ namespace TWCore.Net.RPC.Server
                             {
                                 if (Server.Transport != null)
                                 {
-                                    ThreadClientId.TryGetValue(Environment.CurrentManagedThreadId, out Guid clientId);
+                                    Guid clientId;
+                                    lock (ThreadClientId) ThreadClientId.TryGetValue(Environment.CurrentManagedThreadId, out clientId);
                                     Server.Transport.FireEvent(eventAttribute, clientId, Descriptor.Name, evDesc.Event.Name, s, e);
                                 }
                             });
@@ -271,13 +272,14 @@ namespace TWCore.Net.RPC.Server
                 {
                     if (OnClientConnectMethod != null)
                     {
-                        ThreadClientId.AddOrUpdate(Environment.CurrentManagedThreadId, clientId, (x, i) => clientId);
+                        var tId = Environment.CurrentManagedThreadId;
+                        lock (ThreadClientId) ThreadClientId[tId] = clientId;
                         var pTers = OnClientConnectMethod.GetParameters();
                         if (pTers.Length == 0)
                             OnClientConnectMethod?.Invoke(ServiceInstance, null);
                         if (pTers.Length == 1)
                             OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
-                        ThreadClientId.TryRemove(Environment.CurrentManagedThreadId, out var clientOldId);
+                        lock (ThreadClientId) ThreadClientId.Remove(tId);
                     }
                 });
             }
@@ -291,10 +293,10 @@ namespace TWCore.Net.RPC.Server
                     if (request.MethodId != null && Descriptor.Methods.TryGetValue(request.MethodId, out mDesc))
                     {
                         var tId = Environment.CurrentManagedThreadId;
-                        ThreadClientId.AddOrUpdate(tId, clientId, (x, i) => clientId);
+                        lock (ThreadClientId) ThreadClientId[tId] = clientId;
                         response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters?.ToArray());
-                        ThreadClientId.TryRemove(tId, out var clientOldId);
                         response.Succeed = true;
+                        lock (ThreadClientId) ThreadClientId.Remove(tId);
                     }
                 }
                 catch (TargetInvocationException ex)

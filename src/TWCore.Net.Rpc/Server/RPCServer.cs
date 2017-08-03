@@ -290,9 +290,10 @@ namespace TWCore.Net.RPC.Server
                 {
                     if (request.MethodId != null && Descriptor.Methods.TryGetValue(request.MethodId, out mDesc))
                     {
-                        ThreadClientId.AddOrUpdate(Environment.CurrentManagedThreadId, clientId, (x, i) => clientId);
+                        var tId = Environment.CurrentManagedThreadId;
+                        ThreadClientId.AddOrUpdate(tId, clientId, (x, i) => clientId);
                         response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters?.ToArray());
-                        ThreadClientId.TryRemove(Environment.CurrentManagedThreadId, out var clientOldId);
+                        ThreadClientId.TryRemove(tId, out var clientOldId);
                         response.Succeed = true;
                     }
                 }

@@ -14,24 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Runtime.Serialization;
+
 namespace TWCore.Net.RPC
 {
     /// <summary>
     /// Push message type
     /// </summary>
+	[Serializable, DataContract]
     public class RPCPushMessage : RPCMessage
     {
         /// <summary>
         /// Message scope
         /// </summary>
+		[DataMember]
         public RPCMessageScope Scope { get; set; }
         /// <summary>
         /// Message description
         /// </summary>
+		[DataMember]
         public string Description { get; set; }
         /// <summary>
         /// Push data
         /// </summary>
+		[DataMember]
         public object Data { get; set; }
     }
 }

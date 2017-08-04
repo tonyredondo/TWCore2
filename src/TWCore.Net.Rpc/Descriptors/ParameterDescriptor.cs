@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -24,23 +25,23 @@ namespace TWCore.Net.RPC.Descriptors
     /// <summary>
     /// Describe a parameter of a method
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class ParameterDescriptor
     {
         /// <summary>
         /// Parameter index number
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public int Index { get; set; }
         /// <summary>
         /// Parameter name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Name { get; set; }
         /// <summary>
         /// Parameter type
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Type { get; set; }
 
         /// <summary>

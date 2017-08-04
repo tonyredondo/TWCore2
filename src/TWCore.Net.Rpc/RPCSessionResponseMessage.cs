@@ -23,23 +23,23 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Session Response Message
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class RPCSessionResponseMessage : RPCMessage
     {
         /// <summary>
         /// Request Message identifier for this response
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid RequestMessageId { get; set; }
         /// <summary>
         /// true if the remote procedure call was executed successfully; otherwise, false.
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public bool Succeed { get; set; }
         /// <summary>
         /// Client session identifier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid SessionId { get; set; }
     }
 }

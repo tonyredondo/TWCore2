@@ -25,7 +25,7 @@ namespace TWCore
 	/// Generic EventArgs
 	/// </summary>
 	/// <typeparam name="T1">Type 1 of EventArgs</typeparam>
-    [DataContract]
+    [Serializable, DataContract]
     public class EventArgs<T1> : EventArgs
     {
         /// <summary>
@@ -58,7 +58,7 @@ namespace TWCore
     /// </summary>
     /// <typeparam name="T1">Type 1 of EventArgs</typeparam>
     /// <typeparam name="T2">Type 2 of EventArgs</typeparam>
-    [DataContract]
+	[Serializable, DataContract]
     public class EventArgs<T1, T2> : EventArgs
     {
         /// <summary>
@@ -99,7 +99,7 @@ namespace TWCore
     /// <typeparam name="T1">Type 1 of EventArgs</typeparam>
     /// <typeparam name="T2">Type 2 of EventArgs</typeparam>
     /// <typeparam name="T3">Type 3 of EventArgs</typeparam>
-    [DataContract]
+	[Serializable, DataContract]
     public class EventArgs<T1, T2, T3> : EventArgs
     {
         /// <summary>
@@ -148,7 +148,7 @@ namespace TWCore
     /// <typeparam name="T2">Type 2 of EventArgs</typeparam>
     /// <typeparam name="T3">Type 3 of EventArgs</typeparam>
     /// <typeparam name="T4">Type 4 of EventArgs</typeparam>
-    [DataContract]
+	[Serializable, DataContract]
     public class EventArgs<T1, T2, T3, T4> : EventArgs
     {
         /// <summary>
@@ -205,7 +205,7 @@ namespace TWCore
     /// <typeparam name="T3">Type 3 of EventArgs</typeparam>
     /// <typeparam name="T4">Type 4 of EventArgs</typeparam>
     /// <typeparam name="T5">Type 5 of EventArgs</typeparam>
-    [DataContract]
+	[Serializable, DataContract]
     public class EventArgs<T1, T2, T3, T4, T5> : EventArgs
     {
         /// <summary>

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -23,23 +24,23 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Request Message
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class RPCRequestMessage : RPCMessage
     {
         /// <summary>
         /// Service name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string ServiceName { get; set; }
         /// <summary>
         /// Method identifier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string MethodId { get; set; }
         /// <summary>
         /// Method parameters
         /// </summary>
-        [XmlElement("Parameter"), DataMember]
+        [DataMember]
         public List<object> Parameters { get; set; }
     }
 }

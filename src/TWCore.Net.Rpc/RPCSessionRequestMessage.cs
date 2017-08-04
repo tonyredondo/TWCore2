@@ -23,18 +23,18 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Session Request Message
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class RPCSessionRequestMessage : RPCMessage
     {
         /// <summary>
         /// Client session identifier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid SessionId { get; set; }
         /// <summary>
         /// Hub name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Hub { get; set; }
     }
 }

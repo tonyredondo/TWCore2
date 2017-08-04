@@ -26,7 +26,7 @@ namespace TWCore.Net.RPC.Descriptors
     /// <summary>
     /// Defines a RPC Service
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class ServiceDescriptorCollection
     {
         /// <summary>

@@ -23,18 +23,18 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Event message sent by the server
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class RPCEventMessage : RPCMessage
     {
         /// <summary>
         /// Service name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string ServiceName { get; set; }
         /// <summary>
         /// Fired event name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string EventName { get; set; }
         /// <summary>
         /// Event arguments

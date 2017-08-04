@@ -76,7 +76,7 @@ namespace TWCore.Net.RPC.Client.Transports
             };
             httpClient = new HttpClient(_handler);
             httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
-            Serializer = new XmlTextSerializer();
+            Serializer = new JsonTextSerializer();
 
             Core.Status.Attach(collection =>
             {
@@ -152,9 +152,9 @@ namespace TWCore.Net.RPC.Client.Transports
                 }
             }
             var dataRQ = Serializer.Serialize(messageRQ);
-            Counters.IncrementBytesSent(dataRQ.Count);
             var sContent = new StreamContent(dataRQ.ToMemoryStream());
             var postResult = await httpClient.PostAsync(Url, sContent).ConfigureAwait(false);
+			Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             Counters.IncrementBytesReceived(dataRS.Length);
             var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);
@@ -179,9 +179,9 @@ namespace TWCore.Net.RPC.Client.Transports
                 }
             }
             var dataRQ = Serializer.Serialize(messageRQ);
-            Counters.IncrementBytesSent(dataRQ.Count);
             var sContent = new StreamContent(dataRQ.ToMemoryStream());
             var postResult = httpClient.PostAsync(Url, sContent).WaitAsync();
+			Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = postResult.Content.ReadAsByteArrayAsync().WaitAsync();
             Counters.IncrementBytesReceived(dataRS.Length);
             var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);

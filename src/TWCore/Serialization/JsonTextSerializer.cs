@@ -50,7 +50,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Gets or sets if the serialized json result should be indented
         /// </summary>
-        public bool Indent { get; set; }
+		public bool Indent { get; set; } = false;
         /// <summary>
         /// Gets or sets if the properties should be serialized in CammelCase, false if is PascalCase
         /// </summary>
@@ -62,7 +62,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Gets or sets the name handling for types
         /// </summary>
-        public TypeNameHandling NameHandling { get; set; } = TypeNameHandling.Auto;
+		public TypeNameHandling NameHandling { get; set; } = TypeNameHandling.Auto;
 		/// <summary>
 		/// Gets or sets the setting for serializing Enums as integer or as string.
 		/// </summary>

@@ -73,7 +73,7 @@ namespace TWCore.Net.RPC.Server.Transports
         {
             httpServer = new SimpleHttpServer();
             httpServer.OnBeginRequest += HttpServer_OnBeginRequest;
-            Serializer = new XmlTextSerializer();
+			Serializer = new JsonTextSerializer();
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Port), Port);

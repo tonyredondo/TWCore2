@@ -24,13 +24,13 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Message base class
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public abstract class RPCMessage
     {
         /// <summary>
         /// Message identifier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid MessageId { get; set; }
         /// <summary>
         /// RPC Message base class

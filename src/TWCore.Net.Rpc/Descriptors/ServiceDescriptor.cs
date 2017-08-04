@@ -30,28 +30,28 @@ namespace TWCore.Net.RPC.Descriptors
     /// <summary>
     /// Defines a RPC Service
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class ServiceDescriptor
     {
         /// <summary>
         /// Service name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Name { get; set; }
         /// <summary>
         /// Service methods
         /// </summary>
-        [XmlArray("Methods"), XmlArrayItem("Method"), DataMember]
+        [DataMember]
         public Dictionary<string, MethodDescriptor> Methods { get; set; } = new Dictionary<string, MethodDescriptor>();
         /// <summary>
         /// Service events
         /// </summary>
-        [XmlArray("Events"), XmlArrayItem("Event"), DataMember]
+        [DataMember]
         public Dictionary<string, EventDescriptor> Events { get; set; } = new Dictionary<string, EventDescriptor>();
         /// <summary>
         /// Service types
         /// </summary>
-        [XmlArray("Types"), XmlArrayItem("Type"), DataMember]
+        [DataMember]
         public Dictionary<string, TypeDescriptor> Types { get; set; } = new Dictionary<string, TypeDescriptor>();
 
 

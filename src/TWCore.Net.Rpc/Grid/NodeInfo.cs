@@ -23,23 +23,23 @@ namespace TWCore.Net.RPC.Grid
     /// <summary>
     /// Grid node information object
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class NodeInfo
     {
         /// <summary>
         /// Node Idetinfier
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid Id { get; set; }
         /// <summary>
         /// Node Type
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Type { get; set; }
         /// <summary>
         /// Node Service Name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string ServiceName { get; set; }
     }
 }

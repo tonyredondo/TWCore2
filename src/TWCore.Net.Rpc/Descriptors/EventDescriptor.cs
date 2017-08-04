@@ -26,18 +26,18 @@ namespace TWCore.Net.RPC.Descriptors
     /// <summary>
     /// Describe a event definition of an object
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class EventDescriptor
     {
         /// <summary>
         /// Property name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Name { get; set; }
         /// <summary>
         /// Property type
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Type { get; set; }
 
         /// <summary>

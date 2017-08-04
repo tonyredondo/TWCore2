@@ -23,18 +23,18 @@ namespace TWCore.Net.RPC
     /// <summary>
     /// RPC Response Message
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class RPCResponseMessage : RPCMessage
     {
         /// <summary>
         /// Request Message identifier for this response
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public Guid RequestMessageId { get; set; }
         /// <summary>
         /// true if the remote procedure call was executed successfully; otherwise, false.
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public bool Succeed { get; set; }
         /// <summary>
         /// Object returned from the execution of the remote procedure, if the method return void, then is null.

@@ -30,7 +30,7 @@ namespace TWCore
     /// <summary>
     /// Serializable exception
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class SerializableException
     {
         #region Properties

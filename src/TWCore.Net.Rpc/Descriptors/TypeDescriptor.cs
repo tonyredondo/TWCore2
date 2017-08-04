@@ -25,23 +25,23 @@ namespace TWCore.Net.RPC.Descriptors
     /// <summary>
     /// Describe an object type
     /// </summary>
-    [DataContract]
+    [Serializable, DataContract]
     public class TypeDescriptor
     {
         /// <summary>
         /// Object type name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string Name { get; set; }
         /// <summary>
         /// Object type Qualified name
         /// </summary>
-        [XmlAttribute, DataMember]
+        [DataMember]
         public string FullName { get; set; }
         /// <summary>
         /// Object type public properties
         /// </summary>
-        [XmlElement("Property"), DataMember]
+        [DataMember]
         public PropertyDescriptor[] Properties { get; set; }
     }
 }

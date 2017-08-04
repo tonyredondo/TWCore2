@@ -567,7 +567,7 @@ namespace TWCore.Cache.Client
                 var sto = Get(key);
                 if (sto == null)
                 {
-                    Pool.Write(a => a.Storage.Set(key, data));
+					Pool.Write(ref key, ref data,(PoolItem item, ref string arg1, ref SerializedObject arg2) => item.Storage.Set(arg1, arg2));
                     sto = Get(key);
                 }
                 w.StoreElapsed(Counters.IncrementGetOrSet);
@@ -589,7 +589,8 @@ namespace TWCore.Cache.Client
                 var sto = Get(key, expirationDate);
                 if (sto == null)
                 {
-                    Pool.Write(a => a.Storage.Set(key, data, expirationDate));
+					Pool.Write(ref key, ref data, ref expirationDate, 
+					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan arg3) => item.Storage.Set(arg1, arg2, arg3));
                     sto = Get(key);
                 }
                 w.StoreElapsed(Counters.IncrementGetOrSet);
@@ -612,7 +613,8 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? Get(key, expirationDate.Value) : Get(key);
                 if (sto == null)
                 {
-                    Pool.Write(a => a.Storage.Set(key, data, expirationDate, tags));
+					Pool.Write(ref key, ref data, ref expirationDate, ref tags, 
+					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan? arg3, ref string[] arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
                     sto = Get(key);
                 }
                 w.StoreElapsed(Counters.IncrementGetOrSet);
@@ -634,7 +636,8 @@ namespace TWCore.Cache.Client
                 var sto = Get(key, expirationDate);
                 if (sto == null)
                 {
-                    Pool.Write(a => a.Storage.Set(key, data, expirationDate));
+					Pool.Write(ref key, ref data, ref expirationDate, 
+					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime arg3) => item.Storage.Set(arg1, arg2, arg3));
                     sto = Get(key);
                 }
                 w.StoreElapsed(Counters.IncrementGetOrSet);
@@ -657,7 +660,8 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? Get(key, expirationDate.Value) : Get(key);
                 if (sto == null)
                 {
-                    Pool.Write(a => a.Storage.Set(key, data, expirationDate, tags));
+					Pool.Write(ref key, ref data, ref expirationDate, ref tags, 
+					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime? arg3, ref string[] arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
                     sto = Get(key);
                 }
                 w.StoreElapsed(Counters.IncrementGetOrSet);

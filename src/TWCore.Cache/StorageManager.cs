@@ -337,8 +337,25 @@ namespace TWCore.Cache
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string[] GetKeys()
-            => ExecuteInAllStackAndReturn(sto => sto.GetKeys()).SelectMany(a => a).Distinct().ToArray();
+		public string[] GetKeys() 
+		{
+			var keys = new HashSet<string>();
+			foreach (var storage in storages)
+			{
+				if (!storage.IsEnabled() || !storage.IsReady()) continue;
+				try
+				{
+					var keyArray = storage.GetKeys();
+					foreach(var key in keyArray)
+						keys.Add(key);
+				}
+				catch (Exception ex)
+				{
+					Core.Log.Write(ex);
+				}
+			}
+			return keys.ToArray();
+		}
         #endregion
 
         #region Get Dates

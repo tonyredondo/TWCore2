@@ -23,6 +23,22 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Cache.Client
 {
 	/// <summary>
+	/// Storage action delegate.
+	/// </summary>
+	public delegate void StorageActionDelegate<A1>(PoolItem item, ref A1 arg1);
+	/// <summary>
+	/// Storage action delegate.
+	/// </summary>
+	public delegate void StorageActionDelegate<A1, A2>(PoolItem item, ref A1 arg1, ref A2 arg2);
+	/// <summary>
+	/// Storage action delegate.
+	/// </summary>
+	public delegate void StorageActionDelegate<A1, A2, A3>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3);
+	/// <summary>
+	/// Storage action delegate.
+	/// </summary>
+	public delegate void StorageActionDelegate<A1, A2, A3, A4>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4);
+	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
 	public delegate T StorageFuncDelegate<T>(PoolItem item);
@@ -35,6 +51,14 @@ namespace TWCore.Cache.Client
 	/// </summary>
 	public delegate T StorageFuncDelegate<T, A1, A2>(PoolItem item, ref A1 arg1, ref A2 arg2);
 	/// <summary>
+	/// Storage func delegate.
+	/// </summary>
+	public delegate T StorageFuncDelegate<T, A1, A2, A3>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3);
+	/// <summary>
+	/// Storage func delegate.
+	/// </summary>
+	public delegate T StorageFuncDelegate<T, A1, A2, A3, A4>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4);
+	/// <summary>
 	/// Response Condition Delegate
 	/// </summary>
 	public delegate bool ResponseConditionDelegate<T>(ref T response);
@@ -44,6 +68,7 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class PoolItemCollection : IDisposable
     {
+		static object emptyObject = new object();
         ActionWorker Worker;
         internal List<PoolItem> Items;
         bool firstTime = true;
@@ -84,6 +109,19 @@ namespace TWCore.Cache.Client
 		/// <value><c>true</c> if has memory storage; otherwise, <c>false</c>.</value>
 		public bool HasMemoryStorage => hasMemoryStorage;
         #endregion
+
+		#region Nested Type
+		class WriteItem<A1, A2, A3, A4>
+		{
+			public int Index;
+			public PoolItem[] Items;
+			public A1 Arg1;
+			public A2 Arg2;
+			public A3 Arg3;
+			public A4 Arg4;
+			public StorageActionDelegate<A1, A2, A3, A4> Action;
+		}
+		#endregion
 
         #region .ctor
         /// <summary>
@@ -240,35 +278,7 @@ namespace TWCore.Cache.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Read<T>(StorageFuncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
-        {
-			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
-			var items = WaitAndGetEnabled(StorageItemMode.Read);
-			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
-				return default(T);
-			var iCount = items.Length;
-			for(var i = 0; i < iCount; i++) 
-			{
-				var item = items[i];
-				try 
-				{
-					var response = function(item);
-					var conditionResult = responseCondition(ref response);
-					if (conditionResult)
-					{
-						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
-						return response;
-					}
-					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
-						break;
-				}
-				catch(Exception ex) 
-				{
-					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
-				}
-			}
-			Core.Log.LibVerbose("\tItem not Found in the pool.");
-			return default(T);
-        }
+			=> Read(ref emptyObject, ref emptyObject, (PoolItem item, ref object a1, ref object a2) => function(item), responseCondition).Item1;
 		/// <summary>
 		/// Read action on the Pool.
 		/// </summary>
@@ -278,35 +288,7 @@ namespace TWCore.Cache.Client
 		/// <returns>Return value</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public (T, PoolItem) Read<T, A1>(ref A1 arg1, StorageFuncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
-		{
-			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
-			var items = WaitAndGetEnabled(StorageItemMode.Read);
-			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
-				return (default(T), null);
-			var iCount = items.Length;
-			for(var i = 0; i < iCount; i++) 
-			{
-				var item = items[i];
-				try 
-				{
-					var response = function(item, ref arg1);
-					var conditionResult = responseCondition(ref response);
-					if (conditionResult)
-					{
-						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
-						return (response, item);
-					}
-					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
-						break;
-				}
-				catch(Exception ex) 
-				{
-					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
-				}
-			}
-			Core.Log.LibVerbose("\tItem not Found in the pool.");
-			return (default(T), null);
-		}
+			=> Read(ref arg1, ref emptyObject, (PoolItem item, ref A1 a1, ref object a2) => function(item, ref a1), responseCondition);
 		/// <summary>
 		/// Read action on the Pool.
 		/// </summary>
@@ -348,105 +330,62 @@ namespace TWCore.Cache.Client
 		#endregion
 
 		#region Write Methods
+
         /// <summary>
         /// Write action on the Pool
         /// </summary>
         /// <param name="action">Action to execute in the pool item</param>
         /// <param name="onlyMemoryStorages">Write only on memory storages</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Action<PoolItem> action, bool onlyMemoryStorages = false)
-        {
-            Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-            var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+        public void Write<A1>(ref A1 arg1, StorageActionDelegate<A1> action, bool onlyMemoryStorages = false)
+			=> Write(ref arg1, ref emptyObject, ref emptyObject, ref emptyObject, 
+		             (PoolItem item, ref A1 a1, ref object a2, ref object a3, ref object a4) => action(item, ref a1), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write<A1, A2>(ref A1 arg1, ref A2 arg2, StorageActionDelegate<A1, A2> action, bool onlyMemoryStorages = false)
+			=> Write(ref arg1, ref arg2, ref emptyObject, ref emptyObject, 
+		             (PoolItem item, ref A1 a1, ref A2 a2, ref object a3, ref object a4) => action(item, ref a1, ref a2), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write<A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageActionDelegate<A1, A2, A3> action, bool onlyMemoryStorages = false)
+			=> Write(ref arg1, ref arg2, ref arg3, ref emptyObject, 
+		         (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref object a4) => action(item, ref a1, ref a2, ref a3), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Write<A1, A2, A3, A4>(ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4, StorageActionDelegate<A1, A2, A3, A4> action, bool onlyMemoryStorages = false)
+		{
+			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
+			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
-            if (WriteMode == PoolWriteMode.WritesAllInSync)
-            {
+			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			{
 				for(var i = 0; i < arrEnabled.Length; i++)
-                {
+				{
 					var item = arrEnabled[i];
-                    try
-                    {
-                        action(item);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-				return;
-            }
-
-            if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-            {
-				var idx = 0;
-				for(; idx < arrEnabled.Length; idx++)
-                {
-					var item = arrEnabled[idx];
 					try
 					{
-						action(item);
+						action(item, ref arg1, ref arg2, ref arg3, ref arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
 					{
 						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
 					}
-                    if (!item.InMemoryStorage)
-                        break;
-                }
-                Worker.Enqueue(() =>
-                {
-					for(idx++; idx < arrEnabled.Length; idx++)
-                    {
-						var item = arrEnabled[idx];
-                        try
-                        {
-                            if (item.Enabled)
-                            {
-                                action(item);
-                                Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                        }
-                    }
-                });
-            }
-        }
-        /// <summary>
-        /// Write action on the Pool
-        /// </summary>
-        /// <param name="function">Function to execute in the pool item</param>
-        /// <param name="onlyMemoryStorages">Write only on memory storages</param>
-        /// <returns>Return value from the function</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Write<T>(Func<PoolItem, T> function, bool onlyMemoryStorages = false)
-        {
-            Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
-
-            T response = default(T);
-
-            if (WriteMode == PoolWriteMode.WritesAllInSync)
-            {
-				for(var i = 0; i < arrEnabled.Length; i++)
-                {
-					var item = arrEnabled[i];
-                    try
-                    {
-                        response = function(item);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-				return response;
-            }
+				}
+				return;
+			}
 
 			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
 			{
@@ -456,7 +395,7 @@ namespace TWCore.Cache.Client
 					var item = arrEnabled[idx];
 					try
 					{
-						response = function(item);
+						action(item, ref arg1, ref arg2, ref arg3, ref arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
@@ -466,29 +405,139 @@ namespace TWCore.Cache.Client
 					if (!item.InMemoryStorage)
 						break;
 				}
-				Worker.Enqueue(() =>
+				idx++;
+				if (idx < arrEnabled.Length) 
 				{
-					for(idx++; idx < arrEnabled.Length; idx++)
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+						Action = action, 
+						Arg1 = arg1, 
+						Arg2 = arg2, 
+						Arg3 = arg3, 
+						Arg4 = arg4, 
+						Index = idx, 
+						Items = arrEnabled 
+					});
+				}
+			}
+		}
+        
+
+		/// <summary>
+        /// Write action on the Pool
+        /// </summary>
+        /// <param name="function">Function to execute in the pool item</param>
+        /// <param name="onlyMemoryStorages">Write only on memory storages</param>
+        /// <returns>Return value from the function</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T Write<T, A1>(ref A1 arg1, StorageFuncDelegate<T, A1> function, bool onlyMemoryStorages = false)
+			=> Write(ref arg1, ref emptyObject, ref emptyObject, ref emptyObject, 
+		             (PoolItem item, ref A1 a1, ref object a2, ref object a3, ref object a4) => function(item, ref a1), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Function to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		/// <returns>Return value from the function</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Write<T, A1, A2>(ref A1 arg1, ref A2 arg2, StorageFuncDelegate<T, A1, A2> function, bool onlyMemoryStorages = false)
+			=> Write(ref arg1, ref arg2, ref emptyObject, ref emptyObject, 
+		             (PoolItem item, ref A1 a1, ref A2 a2, ref object a3, ref object a4) => function(item, ref a1, ref a2), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Function to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		/// <returns>Return value from the function</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Write<T, A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageFuncDelegate<T, A1, A2, A3> function, bool onlyMemoryStorages = false)
+		=> Write(ref arg1, ref arg2, ref arg3, ref emptyObject, 
+		             (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref object a4) => function(item, ref a1, ref a2, ref a3), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T Write<T, A1, A2, A3, A4>(ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4, StorageFuncDelegate<T, A1, A2, A3, A4> function, bool onlyMemoryStorages = false)
+		{
+			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
+			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+
+			T response = default(T);
+
+			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			{
+				for(var i = 0; i < arrEnabled.Length; i++)
+				{
+					var item = arrEnabled[i];
+					try
 					{
-						var item = arrEnabled[idx];
-						try
-						{
-							if (item.Enabled)
-							{
-								function(item);
-								Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-							}
-						}
-						catch (Exception ex)
-						{
-							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-						}
+						response = function(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
-				});
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+				}
+				return response;
+			}
+
+			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
+			{
+				var idx = 0;
+				for(; idx < arrEnabled.Length; idx++)
+				{
+					var item = arrEnabled[idx];
+					try
+					{
+						response = function(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+					if (!item.InMemoryStorage)
+						break;
+				}
+				idx++;
+				if (idx < arrEnabled.Length) 
+				{
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+						Action = (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref A4 a4) => function(item, ref a1, ref a2, ref a3, ref a4), 
+						Arg1 = arg1, 
+						Arg2 = arg2, 
+						Arg3 = arg3, 
+						Arg4 = arg4, 
+						Index = idx, 
+						Items = arrEnabled 
+					});
+				}
 			}
 
 			return response;
-        }
+		}
+
+		static void WorkerHandler<A1, A2, A3, A4>(WriteItem<A1, A2, A3, A4> wItem)
+		{
+			for(; wItem.Index < wItem.Items.Length; wItem.Index++)
+			{
+				var item = wItem.Items[wItem.Index];
+				try
+				{
+					if (item.Enabled)
+					{
+						wItem.Action(item, ref wItem.Arg1, ref wItem.Arg2, ref wItem.Arg3, ref wItem.Arg4);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+				}
+				catch (Exception ex)
+				{
+					Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+				}
+			}
+		}
 		#endregion
 
         /// <summary>

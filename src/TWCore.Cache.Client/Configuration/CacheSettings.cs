@@ -62,7 +62,6 @@ namespace TWCore.Cache.Client.Configuration
                     var selectionOrder = cConfig.Pool.SelectionOrder;
                     var indexOrder = cConfig.Pool.IndexOrder;
                     var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
-                    var writeInMemory = cConfig.Pool.WriteNetworkItemsToMemoryOnGet;
                     ISerializer serializer = null;
                     if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
                     {
@@ -75,7 +74,6 @@ namespace TWCore.Cache.Client.Configuration
                     var ccp = new CacheClientPool(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
                     ccp.Serializer = serializer;
                     ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
-                    ccp.WriteNetworkItemsToMemoryOnGet = writeInMemory;
 
                     if (cConfig.Pool.Items?.Any() == true)
                     {
@@ -161,7 +159,6 @@ namespace TWCore.Cache.Client.Configuration
                     var selectionOrder = cConfig.Pool.SelectionOrder;
                     var indexOrder = cConfig.Pool.IndexOrder;
                     var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
-                    var writeInMemory = cConfig.Pool.WriteNetworkItemsToMemoryOnGet;
                     ISerializer serializer = null;
                     if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
                     {
@@ -174,7 +171,6 @@ namespace TWCore.Cache.Client.Configuration
                     var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
                     ccp.Serializer = serializer;
                     ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
-                    ccp.WriteNetworkItemsToMemoryOnGet = writeInMemory;
 
                     if (cConfig.Pool.Items?.Any() == true)
                     {

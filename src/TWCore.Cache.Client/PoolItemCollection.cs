@@ -22,6 +22,23 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Cache.Client
 {
+	/// <summary>
+	/// Storage func delegate.
+	/// </summary>
+	public delegate T StorageFuncDelegate<T>(PoolItem item);
+	/// <summary>
+	/// Storage func delegate.
+	/// </summary>
+	public delegate T StorageFuncDelegate<T, A1>(PoolItem item, ref A1 arg1);
+	/// <summary>
+	/// Storage func delegate.
+	/// </summary>
+	public delegate T StorageFuncDelegate<T, A1, A2>(PoolItem item, ref A1 arg1, ref A2 arg2);
+	/// <summary>
+	/// Response Condition Delegate
+	/// </summary>
+	public delegate bool ResponseConditionDelegate<T>(ref T response);
+
     /// <summary>
     /// Cache pool item collection
     /// </summary>
@@ -30,6 +47,7 @@ namespace TWCore.Cache.Client
         ActionWorker Worker;
         internal List<PoolItem> Items;
         bool firstTime = true;
+		bool hasMemoryStorage = false;
 
         #region Properties
         /// <summary>
@@ -60,6 +78,11 @@ namespace TWCore.Cache.Client
         /// Force at least one network item enabled
         /// </summary>
         public bool ForceAtLeastOneNetworkItemEnabled { get; set; } = true;
+		/// <summary>
+		/// Gets is the pool has a memory storage
+		/// </summary>
+		/// <value><c>true</c> if has memory storage; otherwise, <c>false</c>.</value>
+		public bool HasMemoryStorage => hasMemoryStorage;
         #endregion
 
         #region .ctor
@@ -115,6 +138,7 @@ namespace TWCore.Cache.Client
                 item.PingDelay = PingDelay;
                 item.PingDelayOnError = PingDelayOnError;
                 Items.Add(item);
+				hasMemoryStorage |= item.InMemoryStorage;
             }
         }
         /// <summary>
@@ -190,9 +214,10 @@ namespace TWCore.Cache.Client
                 if (SelectionOrder == PoolOrder.PingTime)
                     iWhere = iWhere.OrderBy(i => i.PingTime);
 
-                if ((!ForceAtLeastOneNetworkItemEnabled && iWhere.Any()) || (ForceAtLeastOneNetworkItemEnabled && iWhere.Any(i => !i.InMemoryStorage)) || onlyMemoryStorages)
+				var tmp = iWhere.ToList();
+				if ((!ForceAtLeastOneNetworkItemEnabled && tmp.Count > 0) || (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => !i.InMemoryStorage)) || onlyMemoryStorages)
                 {
-                    lstEnabled = iWhere.ToList();
+					lstEnabled = tmp;
                     break;
                 }
                 Factory.Thread.Sleep(250);
@@ -211,9 +236,9 @@ namespace TWCore.Cache.Client
                 }
             }
             return lstEnabled;
-
         }
 
+		#region Read Methods
         /// <summary>
         /// Read action on the Pool.
         /// </summary>
@@ -222,41 +247,115 @@ namespace TWCore.Cache.Client
         /// <param name="responseCondition">Function to check if the result is good or not.</param>
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Read<T>(Func<PoolItem, T> function, Func<T, bool> responseCondition)
+		public T Read<T>(StorageFuncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
         {
-            Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
-            var items = WaitAndGetEnabled(StorageItemMode.Read);
-            T response = default(T);
-            bool resultFound = false;
-
-            if (ReadMode == PoolReadMode.NormalRead || ReadMode == PoolReadMode.FastestOnlyRead)
-            {
-                foreach (var item in items)
-                {
-                    try
-                    {
-                        Core.Log.LibVerbose("\tLooking data in node: '{0}'.", item.Name);
-                        response = function(item);
-                        bool conditionResult = responseCondition(response);
-                        if (conditionResult)
-                        {
-                            resultFound = true;
-                            Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
-                            break;
-                        }
-                        else if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
-                            break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
-                    }
-                }
-            }
-            if (!resultFound)
-                Core.Log.LibVerbose("\tItem not Found in the pool.");
-            return response;
+			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+			var items = WaitAndGetEnabled(StorageItemMode.Read);
+			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
+				return default(T);
+			var iCount = items.Count;
+			for(var i = 0; i < iCount; i++) 
+			{
+				var item = items[i];
+				try 
+				{
+					var response = function(item);
+					var conditionResult = responseCondition(ref response);
+					if (conditionResult)
+					{
+						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
+						return response;
+					}
+					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
+						break;
+				}
+				catch(Exception ex) 
+				{
+					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+				}
+			}
+			Core.Log.LibVerbose("\tItem not Found in the pool.");
+			return default(T);
         }
+		/// <summary>
+		/// Read action on the Pool.
+		/// </summary>
+		/// <typeparam name="T">Return value type</typeparam>
+		/// <param name="function">Function to execute on the storage pool item</param>
+		/// <param name="responseCondition">Function to check if the result is good or not.</param>
+		/// <returns>Return value</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public (T, PoolItem) Read<T, A1>(ref A1 arg1, StorageFuncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
+		{
+			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+			var items = WaitAndGetEnabled(StorageItemMode.Read);
+			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
+				return (default(T), null);
+			var iCount = items.Count;
+			for(var i = 0; i < iCount; i++) 
+			{
+				var item = items[i];
+				try 
+				{
+					var response = function(item, ref arg1);
+					var conditionResult = responseCondition(ref response);
+					if (conditionResult)
+					{
+						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
+						return (response, item);
+					}
+					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
+						break;
+				}
+				catch(Exception ex) 
+				{
+					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+				}
+			}
+			Core.Log.LibVerbose("\tItem not Found in the pool.");
+			return (default(T), null);
+		}
+		/// <summary>
+		/// Read action on the Pool.
+		/// </summary>
+		/// <typeparam name="T">Return value type</typeparam>
+		/// <param name="function">Function to execute on the storage pool item</param>
+		/// <param name="responseCondition">Function to check if the result is good or not.</param>
+		/// <returns>Return value</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public (T, PoolItem) Read<T, A1, A2>(ref A1 arg1, ref A2 arg2, StorageFuncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
+		{
+			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+			var items = WaitAndGetEnabled(StorageItemMode.Read);
+			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
+				return (default(T), null);
+			var iCount = items.Count;
+			for(var i = 0; i < iCount; i++) 
+			{
+				var item = items[i];
+				try 
+				{
+					var response = function(item, ref arg1, ref arg2);
+					var conditionResult = responseCondition(ref response);
+					if (conditionResult)
+					{
+						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
+						return (response, item);
+					}
+					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
+						break;
+				}
+				catch(Exception ex) 
+				{
+					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+				}
+			}
+			Core.Log.LibVerbose("\tItem not Found in the pool.");
+			return (default(T), null);
+		}
+		#endregion
+
+		#region Write Methods
         /// <summary>
         /// Write action on the Pool
         /// </summary>
@@ -325,7 +424,6 @@ namespace TWCore.Cache.Client
                 });
             }
         }
-
         /// <summary>
         /// Write action on the Pool
         /// </summary>
@@ -397,6 +495,8 @@ namespace TWCore.Cache.Client
             }
             return response;
         }
+		#endregion
+
         /// <summary>
         /// Dispose all resources
         /// </summary>

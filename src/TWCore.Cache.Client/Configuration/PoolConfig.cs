@@ -62,11 +62,6 @@ namespace TWCore.Cache.Client.Configuration
         [XmlAttribute, DataMember]
         public bool ForceAtLeastOneNetworkItemEnabled { get; set; } = true;
         /// <summary>
-        /// Write network items to memory when get
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public bool WriteNetworkItemsToMemoryOnGet { get; set; } = false;
-        /// <summary>
         /// Pool item selection order for Read and Write
         /// </summary>
         [XmlAttribute, DataMember]

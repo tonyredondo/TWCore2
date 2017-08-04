@@ -214,7 +214,6 @@ namespace TWCore.Cache.Client
 		public PoolItem[] WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
         {
             var sw = Stopwatch.StartNew();
-            Core.Log.LibDebug($"Getting enabled cache for {mode}. [ForceAtLeastOneNetworkItemEnabled = {ForceAtLeastOneNetworkItemEnabled}]");
 
             //Sort index according the IndexOrder
             if (firstTime && SelectionOrder == PoolOrder.Index && IndexOrder?.Any() == true)

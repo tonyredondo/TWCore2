@@ -173,9 +173,8 @@ namespace TWCore.Cache.Client
         /// <param name="onlyMemoryStorages">Only on memory storages</param>
         /// <returns>List of Enabled Pool items</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public List<PoolItem> WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
+		public PoolItem[] WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
         {
-            List<PoolItem> lstEnabled = null;
             var sw = Stopwatch.StartNew();
             Core.Log.LibDebug($"Getting enabled cache for {mode}. [ForceAtLeastOneNetworkItemEnabled = {ForceAtLeastOneNetworkItemEnabled}]");
 
@@ -214,28 +213,21 @@ namespace TWCore.Cache.Client
                 if (SelectionOrder == PoolOrder.PingTime)
                     iWhere = iWhere.OrderBy(i => i.PingTime);
 
-				var tmp = iWhere.ToList();
-				if ((!ForceAtLeastOneNetworkItemEnabled && tmp.Count > 0) || (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => !i.InMemoryStorage)) || onlyMemoryStorages)
-                {
-					lstEnabled = tmp;
-                    break;
-                }
+				if (!ForceAtLeastOneNetworkItemEnabled && iWhere.Any())
+					return iWhere.ToArray();
+
+				var tmp = iWhere.ToArray();
+				if (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => !i.InMemoryStorage))
+					return tmp;
+
+				if (onlyMemoryStorages)
+					return tmp;
+
                 Factory.Thread.Sleep(250);
             }
 
-            if (lstEnabled == null || lstEnabled.Count == 0)
-            {
-                if (onlyMemoryStorages)
-                {
-                    Core.Log.Warning("The Cache Pool is configured to write network values to memory storages, but no memory storage were found or configurated.");
-                }
-                else
-                {
-                    Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
-                    throw new Exception(string.Format("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server. Please check configurations.", mode));
-                }
-            }
-            return lstEnabled;
+			Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
+			throw new Exception(string.Format("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server. Please check configurations.", mode));
         }
 
 		#region Read Methods
@@ -253,7 +245,7 @@ namespace TWCore.Cache.Client
 			var items = WaitAndGetEnabled(StorageItemMode.Read);
 			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
 				return default(T);
-			var iCount = items.Count;
+			var iCount = items.Length;
 			for(var i = 0; i < iCount; i++) 
 			{
 				var item = items[i];
@@ -291,7 +283,7 @@ namespace TWCore.Cache.Client
 			var items = WaitAndGetEnabled(StorageItemMode.Read);
 			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
 				return (default(T), null);
-			var iCount = items.Count;
+			var iCount = items.Length;
 			for(var i = 0; i < iCount; i++) 
 			{
 				var item = items[i];
@@ -329,7 +321,7 @@ namespace TWCore.Cache.Client
 			var items = WaitAndGetEnabled(StorageItemMode.Read);
 			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
 				return (default(T), null);
-			var iCount = items.Count;
+			var iCount = items.Length;
 			for(var i = 0; i < iCount; i++) 
 			{
 				var item = items[i];
@@ -365,12 +357,13 @@ namespace TWCore.Cache.Client
         public void Write(Action<PoolItem> action, bool onlyMemoryStorages = false)
         {
             Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-            var lstEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+            var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
             if (WriteMode == PoolWriteMode.WritesAllInSync)
             {
-                foreach (var item in lstEnabled)
+				for(var i = 0; i < arrEnabled.Length; i++)
                 {
+					var item = arrEnabled[i];
                     try
                     {
                         action(item);
@@ -381,33 +374,32 @@ namespace TWCore.Cache.Client
                         Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
                     }
                 }
+				return;
             }
-            else if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
+
+            if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
             {
-                var writeList = new List<PoolItem>();
-                foreach (var item in lstEnabled)
+				var idx = 0;
+				for(; idx < arrEnabled.Length; idx++)
                 {
-                    writeList.Add(item);
+					var item = arrEnabled[idx];
+					try
+					{
+						action(item);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
                     if (!item.InMemoryStorage)
                         break;
                 }
-                var asyncList = lstEnabled.Skip(writeList.Count).ToList();
-                foreach (var item in writeList)
-                {
-                    try
-                    {
-                        action(item);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
                 Worker.Enqueue(() =>
                 {
-                    foreach (var item in asyncList)
+					for(idx++; idx < arrEnabled.Length; idx++)
                     {
+						var item = arrEnabled[idx];
                         try
                         {
                             if (item.Enabled)
@@ -434,13 +426,15 @@ namespace TWCore.Cache.Client
         public T Write<T>(Func<PoolItem, T> function, bool onlyMemoryStorages = false)
         {
             Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-            var lstEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
             T response = default(T);
+
             if (WriteMode == PoolWriteMode.WritesAllInSync)
             {
-                foreach (var item in lstEnabled)
+				for(var i = 0; i < arrEnabled.Length; i++)
                 {
+					var item = arrEnabled[i];
                     try
                     {
                         response = function(item);
@@ -451,49 +445,49 @@ namespace TWCore.Cache.Client
                         Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
                     }
                 }
+				return response;
             }
-            else if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-            {
-                var writeList = new List<PoolItem>();
-                foreach (var item in lstEnabled)
-                {
-                    writeList.Add(item);
-                    if (!item.InMemoryStorage)
-                        break;
-                }
-                var asyncList = lstEnabled.Skip(writeList.Count).ToList();
-                foreach (var item in writeList)
-                {
-                    try
-                    {
-                        response = function(item);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-                Worker.Enqueue(() =>
-                {
-                    foreach (var item in asyncList)
-                    {
-                        try
-                        {
-                            if (item.Enabled)
-                            {
-                                function(item);
-                                Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                        }
-                    }
-                });
-            }
-            return response;
+
+			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
+			{
+				var idx = 0;
+				for(; idx < arrEnabled.Length; idx++)
+				{
+					var item = arrEnabled[idx];
+					try
+					{
+						response = function(item);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+					if (!item.InMemoryStorage)
+						break;
+				}
+				Worker.Enqueue(() =>
+				{
+					for(idx++; idx < arrEnabled.Length; idx++)
+					{
+						var item = arrEnabled[idx];
+						try
+						{
+							if (item.Enabled)
+							{
+								function(item);
+								Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+							}
+						}
+						catch (Exception ex)
+						{
+							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						}
+					}
+				});
+			}
+
+			return response;
         }
 		#endregion
 

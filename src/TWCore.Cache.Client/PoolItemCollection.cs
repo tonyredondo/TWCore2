@@ -310,12 +310,8 @@ namespace TWCore.Cache.Client
 				try 
 				{
 					var response = function(item, ref arg1, ref arg2);
-					var conditionResult = responseCondition(ref response);
-					if (conditionResult)
-					{
-						Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
+					if (responseCondition(ref response))
 						return (response, item);
-					}
 					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
 						break;
 				}

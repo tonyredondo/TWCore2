@@ -14,19 +14,20 @@ namespace TWCore.Tests
 {
     public class CacheRPCTest : ContainerParameterServiceAsync
     {
+		static ISerializer GlobalSerializer = new WBinarySerializer();
+
         public CacheRPCTest() : base("cacherpcTest", "Cache Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting CACHE TEST");
-            Core.DebugMode = false;
             info.ShouldEndExecution = false;
 
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);
 
-            using (var cachePool = new CacheClientPool { Serializer = SerializerManager.DefaultBinarySerializer })
+			using (var cachePool = new CacheClientPool { Serializer = GlobalSerializer })
             {
-                var cacheClient = await CacheClientProxy.GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, SerializerManager.DefaultBinarySerializer)).ConfigureAwait(false);
+				var cacheClient = await CacheClientProxy.GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
                 string[] keys;
@@ -40,7 +41,6 @@ namespace TWCore.Tests
                 {
                     string key = "test-" + i;
                     value = cachePool.Get(key);
-                    Core.Log.InfoBasic("Value is Null: {0}", value == null);
                     cachePool.Set(key, "bla bla bla bla bla");
                 }
             }
@@ -50,9 +50,11 @@ namespace TWCore.Tests
         {
             protected override StorageManager GetManager()
             {
-                var fileSto = new FileStorage("./cache_data");
-                fileSto.NumberOfSubFolders = 2;
-                var lruSto = new LRU2QStorage(10000);
+				var fileSto = new FileStorage("./cache_data")
+				{
+					NumberOfSubFolders = 10
+				};
+				var lruSto = new LRU2QStorage(10000);
                 var stoManager = new StorageManager();
                 stoManager.Push(fileSto);
                 stoManager.Push(lruSto);
@@ -60,7 +62,7 @@ namespace TWCore.Tests
             }
             protected override ITransportServer[] GetTransports()
             {
-                return new ITransportServer[] { new TWTransportServer(20051, SerializerManager.DefaultBinarySerializer) };
+				return new ITransportServer[] { new TWTransportServer(20051, GlobalSerializer) };
             }
         }
     }

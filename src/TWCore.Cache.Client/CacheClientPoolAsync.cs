@@ -147,7 +147,7 @@ namespace TWCore.Cache.Client
         }
         #endregion
 
-        #region IStorageAsync 
+        #region IStorageAsync
 
         #region Exist Key / Get Keys
         /// <summary>
@@ -160,7 +160,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.ExistKeyAsync(key), r => r).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.ExistKeyAsync(key), (ref bool r) => r).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementExistKey);
                 return res;
             }
@@ -175,7 +175,7 @@ namespace TWCore.Cache.Client
             using (var w = Watch.Create())
             {
                 var poolEnabled = Pool.WaitAndGetEnabled(StorageItemMode.Read);
-                var tasks = new Task<string[]>[poolEnabled.Count];
+                var tasks = new Task<string[]>[poolEnabled.Length];
                 for (var i = 0; i < tasks.Length; i++)
                     tasks[i] = poolEnabled[i].Storage.GetKeysAsync();
                 var stringBags = await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -197,7 +197,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetCreationDateAsync(key), r => r != null).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetCreationDateAsync(key), (ref DateTime? r) => r != null).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetCreationDate);
                 return res;
             }
@@ -212,7 +212,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetExpirationDateAsync(key), r => r != null).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetExpirationDateAsync(key), (ref DateTime? r)=> r != null).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetExpirationDate);
                 return res;
             }
@@ -230,7 +230,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key), r => r != null).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key), (ref StorageItemMeta r) => r != null).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetMeta);
                 return res;
             }
@@ -246,7 +246,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key, lastTime), r => r != null).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key, lastTime), (ref StorageItemMeta r)=> r != null).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetMeta);
                 return res;
             }
@@ -262,7 +262,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key, comparer), r => r != null).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetMetaAsync(key, comparer), (ref StorageItemMeta r) => r != null).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetMeta);
                 return res;
             }
@@ -277,7 +277,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetMetaByTagAsync(tags), r => r?.Any() == true).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetMetaByTagAsync(tags), (ref StorageItemMeta[] r) => r?.Any() == true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetMetaByTag);
                 return res;
             }
@@ -293,7 +293,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var res = await Pool.ReadAsync(item => item.Storage.GetMetaByTagAsync(tags, containingAll), r => r?.Any() == true).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(item => item.Storage.GetMetaByTagAsync(tags, containingAll), (ref StorageItemMeta[] r) => r?.Any() == true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetMetaByTag);
                 return res;
             }
@@ -311,10 +311,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                PoolAsyncItem usedItem = null;
-                var sto = await Pool.ReadAsync(item => { usedItem = item; return item.Storage.GetAsync(key); }, r => r != null).ConfigureAwait(false);
+				var (sto, usedItem) = await Pool.ReadAsync(key, (item, a1) => item.Storage.GetAsync(a1), (ref StorageItem r) => r != null);
                 if (sto?.Meta != null && WriteNetworkItemsToMemoryOnGet && usedItem?.InMemoryStorage == false)
-                    await Pool.WriteAsync(item => item.Storage.SetAsync(sto), true).ConfigureAwait(false);
+					await Pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGet);
                 return sto;
             }
@@ -330,10 +329,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                PoolAsyncItem usedItem = null;
-                var sto = await Pool.ReadAsync(item => { usedItem = item; return item.Storage.GetAsync(key, lastTime); }, r => r != null).ConfigureAwait(false);
+				var (sto, usedItem) = await Pool.ReadAsync(key, lastTime, (item, a1, a2) => item.Storage.GetAsync(a1, a2), (ref StorageItem r) => r != null);
                 if (sto?.Meta != null && WriteNetworkItemsToMemoryOnGet && usedItem?.InMemoryStorage == false)
-                    await Pool.WriteAsync(item => item.Storage.SetAsync(sto), true).ConfigureAwait(false);
+					await Pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGet);
                 return sto;
             }
@@ -349,10 +347,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                PoolAsyncItem usedItem = null;
-                var sto = await Pool.ReadAsync(item => { usedItem = item; return item.Storage.GetAsync(key, comparer); }, r => r != null).ConfigureAwait(false);
+				var (sto, usedItem) = await Pool.ReadAsync(key, comparer, (item, a1, a2) => item.Storage.GetAsync(a1, a2), (ref StorageItem r) => r != null);
                 if (sto?.Meta != null && WriteNetworkItemsToMemoryOnGet && usedItem?.InMemoryStorage == false)
-                    await Pool.WriteAsync(item => item.Storage.SetAsync(sto), true).ConfigureAwait(false);
+					await Pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGet);
                 return sto;
             }
@@ -367,9 +364,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var stos = await Pool.ReadAsync(item => item.Storage.GetByTagAsync(tags), r => r?.Any() == true).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(tags, (item, arg1) => item.Storage.GetByTagAsync(arg1), (ref StorageItem[] r) => r?.Any() == true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetByTag);
-                return stos;
+				return res.Item1;
             }
         }
         /// <summary>
@@ -383,9 +380,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var stos = await Pool.ReadAsync(item => item.Storage.GetByTagAsync(tags, containingAll), r => r?.Any() == true).ConfigureAwait(false);
+				var res = await Pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetByTagAsync(arg1, arg2), (ref StorageItem[] r) => r?.Any() == true).ConfigureAwait(false);
                 w.StoreElapsed(Counters.IncrementGetByTag);
-                return stos;
+				return res.Item1;
             }
         }
         #endregion

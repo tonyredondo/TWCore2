@@ -23,11 +23,49 @@ using System.Threading.Tasks;
 
 namespace TWCore.Cache.Client
 {
+	/// <summary>
+	/// Storage action async delegate.
+	/// </summary>
+	public delegate Task StorageActionAsyncDelegate<A1>(PoolAsyncItem item, A1 arg1);
+	/// <summary>
+	/// Storage action async delegate.
+	/// </summary>
+	public delegate Task StorageActionAsyncDelegate<A1, A2>(PoolAsyncItem item, A1 arg1, A2 arg2);
+	/// <summary>
+	/// Storage action async delegate.
+	/// </summary>
+	public delegate Task StorageActionAsyncDelegate<A1, A2, A3>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3);
+	/// <summary>
+	/// Storage action async delegate.
+	/// </summary>
+	public delegate Task StorageActionAsyncDelegate<A1, A2, A3, A4>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
+	/// <summary>
+	/// Storage func async delegate.
+	/// </summary>
+	public delegate Task<T> StorageFuncAsyncDelegate<T>(PoolAsyncItem item);
+	/// <summary>
+	/// Storage func async delegate.
+	/// </summary>
+	public delegate Task<T> StorageFuncAsyncDelegate<T, A1>(PoolAsyncItem item, A1 arg1);
+	/// <summary>
+	/// Storage func async delegate.
+	/// </summary>
+	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2>(PoolAsyncItem item, A1 arg1, A2 arg2);
+	/// <summary>
+	/// Storage func async delegate.
+	/// </summary>
+	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2, A3>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3);
+	/// <summary>
+	/// Storage func async delegate.
+	/// </summary>
+	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2, A3, A4>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
+
     /// <summary>
     /// Cache pool item collection
     /// </summary>
     public class PoolAsyncItemCollection : IDisposable
     {
+		static object emptyObject = new object();
         ActionWorker Worker;
         internal List<PoolAsyncItem> Items;
         bool firstTime = true;
@@ -62,6 +100,19 @@ namespace TWCore.Cache.Client
         /// </summary>
         public bool ForceAtLeastOneNetworkItemEnabled { get; set; } = true;
         #endregion
+
+		#region Nested Type
+		class WriteItem<A1, A2, A3, A4>
+		{
+			public int Index;
+			public PoolAsyncItem[] Items;
+			public A1 Arg1;
+			public A2 Arg2;
+			public A3 Arg3;
+			public A4 Arg4;
+			public StorageActionAsyncDelegate<A1, A2, A3, A4> Action;
+		}
+		#endregion
 
         #region .ctor
         /// <summary>
@@ -143,262 +194,336 @@ namespace TWCore.Cache.Client
         /// <returns>true if there at least one cache is enabled; otherwise, false</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool AnyEnabled() => Items.Any(i => i.Enabled);
-        /// <summary>
-        /// Waits and gets the list of enabled storages ordered by Ping time
-        /// </summary>
-        /// <param name="mode">Storage item mode</param>
-        /// <param name="onlyMemoryStorages">Only on memory storages</param>
-        /// <returns>List of Enabled Pool items</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public List<PoolAsyncItem> WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
-        {
-            List<PoolAsyncItem> lstEnabled = null;
-            var sw = Stopwatch.StartNew();
+		/// <summary>
+		/// Waits and gets the list of enabled storages ordered by Ping time
+		/// </summary>
+		/// <param name="mode">Storage item mode</param>
+		/// <param name="onlyMemoryStorages">Only on memory storages</param>
+		/// <returns>List of Enabled Pool items</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public PoolAsyncItem[] WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
+		{
+			var sw = Stopwatch.StartNew();
 
-            //Sort index according the IndexOrder
-            if (firstTime && SelectionOrder == PoolOrder.Index && IndexOrder?.Any() == true)
-            {
-                firstTime = false;
-                var lstItems = new List<PoolAsyncItem>(Items);
-                var nItems = new List<PoolAsyncItem>();
-                foreach (var idx in IndexOrder)
-                {
-                    if (idx >= 0 && idx < lstItems.Count)
-                    {
-                        if (lstItems[idx] != null)
-                        {
-                            nItems.Add(lstItems[idx]);
-                            lstItems[idx] = null;
-                        }
-                    }
-                }
-                foreach (var item in lstItems)
-                    if (item != null)
-                        nItems.Add(item);
-                Items = nItems;
-            }
+			//Sort index according the IndexOrder
+			if (firstTime && SelectionOrder == PoolOrder.Index && IndexOrder?.Any() == true)
+			{
+				firstTime = false;
+				var lstItems = new List<PoolAsyncItem>(Items);
+				var nItems = new List<PoolAsyncItem>();
+				foreach(var idx in IndexOrder)
+				{
+					if (idx >=0 && idx < lstItems.Count)
+					{
+						if (lstItems[idx] != null)
+						{
+							nItems.Add(lstItems[idx]);
+							lstItems[idx] = null;
+						}
+					}
+				}
+				foreach(var item in lstItems)
+					if (item != null)
+						nItems.Add(item);
+				Items = nItems;
+			}
 
-            Core.Log.LibDebug($"Getting enabled cache for {mode}. [ForceAtLeastOneNetworkItemEnabled = {ForceAtLeastOneNetworkItemEnabled}]");
-            while (sw.Elapsed.TotalSeconds < 15)
-            {
-                IEnumerable<PoolAsyncItem> iWhere;
-                if (onlyMemoryStorages)
-                    iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.InMemoryStorage);
-                else
-                    iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
+			while (sw.Elapsed.TotalSeconds < 15)
+			{
+				IEnumerable<PoolAsyncItem> iWhere;
 
-                if (SelectionOrder == PoolOrder.PingTime)
-                    iWhere = iWhere.OrderBy(i => i.PingTime);
+				if (onlyMemoryStorages)
+					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.InMemoryStorage);
+				else
+					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
 
-                if ((!ForceAtLeastOneNetworkItemEnabled && iWhere.Any()) || (ForceAtLeastOneNetworkItemEnabled && iWhere.Any(i => !i.InMemoryStorage)) || onlyMemoryStorages)
-                {
-                    lstEnabled = iWhere.ToList();
-                    break;
-                }
-                Factory.Thread.Sleep(250);
-            }
+				if (SelectionOrder == PoolOrder.PingTime)
+					iWhere = iWhere.OrderBy(i => i.PingTime);
 
-            if (lstEnabled == null || lstEnabled.Count == 0)
-            {
-                if (onlyMemoryStorages)
-                {
-                    Core.Log.Warning("The Cache Pool is configured to write network values to memory storages, but no memory storage were found or configurated.");
-                }
-                else
-                {
-                    Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
-                    throw new Exception(string.Format("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server. Please check configurations.", mode));
-                }
-            }
-            return lstEnabled;
+				if (!ForceAtLeastOneNetworkItemEnabled && iWhere.Any())
+					return iWhere.ToArray();
 
-        }
+				var tmp = iWhere.ToArray();
+				if (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => !i.InMemoryStorage))
+					return tmp;
 
-        /// <summary>
-        /// Read action on the Pool.
-        /// </summary>
-        /// <typeparam name="T">Return value type</typeparam>
-        /// <param name="function">Function to execute on the storage pool item</param>
-        /// <param name="responseCondition">Function to check if the result is good or not.</param>
-        /// <returns>Return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> ReadAsync<T>(Func<PoolAsyncItem, Task<T>> function, Func<T, bool> responseCondition)
-        {
-            Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
-            var items = WaitAndGetEnabled(StorageItemMode.Read);
-            T response = default(T);
-            bool resultFound = false;
+				if (onlyMemoryStorages)
+					return tmp;
 
-            if (ReadMode == PoolReadMode.NormalRead || ReadMode == PoolReadMode.FastestOnlyRead)
-            {
-                foreach (var item in items)
-                {
-                    try
-                    {
-                        Core.Log.LibVerbose("\tLooking data in node: '{0}'.", item.Name);
-                        response = await function(item).ConfigureAwait(false);
-                        bool conditionResult = responseCondition(response);
-                        if (conditionResult)
-                        {
-                            resultFound = true;
-                            Core.Log.LibVerbose("\tFound in node: '{0}'.", item.Name);
-                            break;
-                        }
-                        else if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
-                            break;
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
-                    }
-                }
+				Factory.Thread.Sleep(250);
+			}
 
-            }
-            if (!resultFound)
-                Core.Log.LibVerbose("\tItem not Found in the pool.");
-            return response;
-        }
-        /// <summary>
-        /// Write action on the Pool
-        /// </summary>
-        /// <param name="action">Action to execute in the pool item</param>
-        /// <param name="onlyMemoryStorages">Write only on memory storages</param>
-        /// <returns>Running task for the write function</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WriteAsync(Func<PoolAsyncItem, Task> action, bool onlyMemoryStorages = false)
-        {
-            Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-            var lstEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+			Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
+			throw new Exception(string.Format("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server. Please check configurations.", mode));
+		}
 
-            if (WriteMode == PoolWriteMode.WritesAllInSync)
-            {
-                foreach (var item in lstEnabled)
-                {
-                    try
-                    {
-                        await action(item).ConfigureAwait(false);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-            }
-            else if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-            {
-                var writeList = new List<PoolAsyncItem>();
-                foreach (var item in lstEnabled)
-                {
-                    writeList.Add(item);
-                    if (!item.InMemoryStorage)
-                        break;
-                }
-                var asyncList = lstEnabled.Skip(writeList.Count).ToList();
-                foreach(var item in writeList)
-                {
-                    try
-                    {
-                        await action(item).ConfigureAwait(false);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-                Worker.Enqueue(async () =>
-                {
-                    foreach (var item in asyncList)
-                    {
-                        try
-                        {
-                            if (item.Enabled)
-                            {
-                                await action(item).ConfigureAwait(false);
-                                Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                        }
-                    }
-                });
-            }
-        }
+		#region Read Methods
+		/// <summary>
+		/// Read action on the Pool.
+		/// </summary>
+		/// <typeparam name="T">Return value type</typeparam>
+		/// <param name="function">Function to execute on the storage pool item</param>
+		/// <param name="responseCondition">Function to check if the result is good or not.</param>
+		/// <returns>Return value</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> ReadAsync<T>(StorageFuncAsyncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
+			=> (await ReadAsync(null, null, (PoolAsyncItem item, object a1, object a2) => function(item), responseCondition).ConfigureAwait(false)).Item1;
+		/// <summary>
+		/// Read action on the Pool.
+		/// </summary>
+		/// <typeparam name="T">Return value type</typeparam>
+		/// <param name="function">Function to execute on the storage pool item</param>
+		/// <param name="responseCondition">Function to check if the result is good or not.</param>
+		/// <returns>Return value</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task<(T, PoolAsyncItem)> ReadAsync<T, A1>(A1 arg1, StorageFuncAsyncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
+			=> ReadAsync(arg1, null, (PoolAsyncItem item, A1 a1, object a2) => function(item, a1), responseCondition);
+		/// <summary>
+		/// Read action on the Pool.
+		/// </summary>
+		/// <typeparam name="T">Return value type</typeparam>
+		/// <param name="function">Function to execute on the storage pool item</param>
+		/// <param name="responseCondition">Function to check if the result is good or not.</param>
+		/// <returns>Return value</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<(T, PoolAsyncItem)> ReadAsync<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncAsyncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
+		{
+			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
+			var items = WaitAndGetEnabled(StorageItemMode.Read);
+			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
+				return (default(T), null);
+			var iCount = items.Length;
+			for(var i = 0; i < iCount; i++) 
+			{
+				var item = items[i];
+				try 
+				{
+					var response = await function(item, arg1, arg2).ConfigureAwait(false);
+					if (responseCondition(ref response))
+						return (response, item);
+					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
+						break;
+				}
+				catch(Exception ex) 
+				{
+					Core.Log.LibVerbose("\tException on PoolGet '{0}'. Message: {1}", item.Name, ex.Message);
+				}
+			}
+			Core.Log.LibVerbose("\tItem not Found in the pool.");
+			return (default(T), null);
+		}
+		#endregion
 
-        /// <summary>
-        /// Write action on the Pool
-        /// </summary>
-        /// <param name="function">Function to execute in the pool item</param>
-        /// <param name="onlyMemoryStorages">Write only on memory storages</param>
-        /// <returns>Return value from the function</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> WriteAsync<T>(Func<PoolAsyncItem, Task<T>> function, bool onlyMemoryStorages = false)
-        {
-            Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-            var lstEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+		#region WriteAsync Methods
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task WriteAsync<A1>(A1 arg1, StorageActionAsyncDelegate<A1> action, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, null, null, null, 
+		             (PoolAsyncItem item, A1 a1, object a2, object a3, object a4) => action(item, a1), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task WriteAsync<A1, A2>(A1 arg1, A2 arg2, StorageActionAsyncDelegate<A1, A2> action, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, arg2, null, null, 
+		             (PoolAsyncItem item, A1 a1, A2 a2, object a3, object a4) => action(item, a1, a2), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task WriteAsync<A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageActionAsyncDelegate<A1, A2, A3> action, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, arg2, arg3, null, 
+		             (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, object a4) => action(item, a1, a2, a3), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task WriteAsync<A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageActionAsyncDelegate<A1, A2, A3, A4> action, bool onlyMemoryStorages = false)
+		{
+			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
+			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
-            T response = default(T);
-            if (WriteMode == PoolWriteMode.WritesAllInSync)
-            {
-                foreach (var item in lstEnabled)
-                {
-                    try
-                    {
-                        response = await function(item).ConfigureAwait(false);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-            }
-            else if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-            {
-                var writeList = new List<PoolAsyncItem>();
-                foreach (var item in lstEnabled)
-                {
-                    writeList.Add(item);
-                    if (!item.InMemoryStorage)
-                        break;
-                }
-                var asyncList = lstEnabled.Skip(writeList.Count).ToList();
-                foreach (var item in writeList)
-                {
-                    try
-                    {
-                        response = await function(item).ConfigureAwait(false);
-                        Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                    }
-                }
-                Worker.Enqueue(async () =>
-                {
-                    foreach (var item in asyncList)
-                    {
-                        try
-                        {
-                            if (item.Enabled)
-                            {
-                                await function(item).ConfigureAwait(false);
-                                Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-                        }
-                    }
-                });
-            }
-            return response;
-        }
+			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			{
+				for(var i = 0; i < arrEnabled.Length; i++)
+				{
+					var item = arrEnabled[i];
+					try
+					{
+						await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+				}
+				return;
+			}
+
+			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
+			{
+				var idx = 0;
+				for(; idx < arrEnabled.Length; idx++)
+				{
+					var item = arrEnabled[idx];
+					try
+					{
+						await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+					if (!item.InMemoryStorage)
+						break;
+				}
+				idx++;
+				if (idx < arrEnabled.Length) 
+				{
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+						Action = action, 
+						Arg1 = arg1, 
+						Arg2 = arg2, 
+						Arg3 = arg3, 
+						Arg4 = arg4, 
+						Index = idx, 
+						Items = arrEnabled 
+					});
+				}
+			}
+		}
+
+
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Function to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		/// <returns>Return value from the function</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task<T> WriteAsync<T, A1>(A1 arg1, StorageFuncAsyncDelegate<T, A1> function, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, null, null, null, 
+		             (PoolAsyncItem item, A1 a1, object a2, object a3, object a4) => function(item, a1), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Function to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		/// <returns>Return value from the function</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task<T> WriteAsync<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncAsyncDelegate<T, A1, A2> function, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, arg2, null, null, 
+		             (PoolAsyncItem item, A1 a1, A2 a2, object a3, object a4) => function(item, a1, a2), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Function to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		/// <returns>Return value from the function</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task<T> WriteAsync<T, A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3, StorageFuncAsyncDelegate<T, A1, A2, A3> function, bool onlyMemoryStorages = false)
+			=> WriteAsync(arg1, arg2, arg3, null, 
+		         (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, object a4) => function(item, a1, a2, a3), onlyMemoryStorages);
+		/// <summary>
+		/// Write action on the Pool
+		/// </summary>
+		/// <param name="function">Action to execute in the pool item</param>
+		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> WriteAsync<T, A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageFuncAsyncDelegate<T, A1, A2, A3, A4> function, bool onlyMemoryStorages = false)
+		{
+			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
+			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+
+			T response = default(T);
+
+			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			{
+				for(var i = 0; i < arrEnabled.Length; i++)
+				{
+					var item = arrEnabled[i];
+					try
+					{
+						response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+				}
+				return response;
+			}
+
+			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
+			{
+				var idx = 0;
+				for(; idx < arrEnabled.Length; idx++)
+				{
+					var item = arrEnabled[idx];
+					try
+					{
+						response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+					catch (Exception ex)
+					{
+						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+					}
+					if (!item.InMemoryStorage)
+						break;
+				}
+				idx++;
+				if (idx < arrEnabled.Length) 
+				{
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+						Action = async (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, A4 a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
+						Arg1 = arg1, 
+						Arg2 = arg2, 
+						Arg3 = arg3, 
+						Arg4 = arg4, 
+						Index = idx, 
+						Items = arrEnabled 
+					});
+				}
+			}
+
+			return response;
+		}
+
+		static void WorkerHandler<A1, A2, A3, A4>(WriteItem<A1, A2, A3, A4> wItem)
+		{
+			for(; wItem.Index < wItem.Items.Length; wItem.Index++)
+			{
+				var item = wItem.Items[wItem.Index];
+				try
+				{
+					if (item.Enabled)
+					{
+						wItem.Action(item, wItem.Arg1, wItem.Arg2, wItem.Arg3, wItem.Arg4).WaitAsync();
+						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+					}
+				}
+				catch (Exception ex)
+				{
+					Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+				}
+			}
+		}
+		#endregion
+
         /// <summary>
         /// Dispose all resources
         /// </summary>

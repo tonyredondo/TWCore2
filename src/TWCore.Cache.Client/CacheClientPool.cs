@@ -136,7 +136,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, (PoolItem item, ref string a1) => item.Storage.ExistKey(a1), (ref bool r) => r);
+				var res = Pool.Read(key, (item, a1) => item.Storage.ExistKey(a1), r => r);
                 w.StoreElapsed(Counters.IncrementExistKey);
                 return res.Item1;
             }
@@ -176,7 +176,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, (PoolItem item, ref string a1) => item.Storage.GetCreationDate(a1), (ref DateTime? r) => r != null);
+				var res = Pool.Read(key, (item, a1) => item.Storage.GetCreationDate(a1), r => r != null);
 				Counters.IncrementGetCreationDate(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -191,7 +191,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, (PoolItem item, ref string a1) => item.Storage.GetExpirationDate(a1), (ref DateTime? r) => r != null);
+				var res = Pool.Read(key, (item, a1) => item.Storage.GetExpirationDate(a1), r => r != null);
 				Counters.IncrementGetExpirationDate(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -209,7 +209,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, (PoolItem item, ref string a1) => item.Storage.GetMeta(a1), (ref StorageItemMeta r) => r != null);
+				var res = Pool.Read(key, (item, a1) => item.Storage.GetMeta(a1), r => r != null);
 				Counters.IncrementGetMeta(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -225,7 +225,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, ref lastTime, (PoolItem item, ref string a1, ref TimeSpan a2) => item.Storage.GetMeta(a1, a2), (ref StorageItemMeta r) => r != null);
+				var res = Pool.Read(key, lastTime, (item, a1, a2) => item.Storage.GetMeta(a1, a2), r => r != null);
 				Counters.IncrementGetMeta(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -241,7 +241,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref key, ref comparer, (PoolItem item, ref string a1, ref DateTime a2) => item.Storage.GetMeta(a1, a2), (ref StorageItemMeta r) => r != null);
+				var res = Pool.Read(key, comparer, (item, a1, a2) => item.Storage.GetMeta(a1, a2), r => r != null);
 				Counters.IncrementGetMeta(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -256,7 +256,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref tags, (PoolItem item, ref string[] a1) => item.Storage.GetMetaByTag(a1), (ref StorageItemMeta[] r) => r?.Any() == true);
+				var res = Pool.Read(tags, (item, a1) => item.Storage.GetMetaByTag(a1), r => r?.Any() == true);
 				Counters.IncrementGetMetaByTag(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -272,7 +272,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref tags, ref containingAll, (PoolItem item, ref string[] a1, ref bool a2) => item.Storage.GetMetaByTag(a1, a2), (ref StorageItemMeta[] r) => r?.Any() == true);
+				var res = Pool.Read(tags, containingAll, (item, a1, a2) => item.Storage.GetMetaByTag(a1, a2), r => r?.Any() == true);
 				Counters.IncrementGetMetaByTag(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -290,11 +290,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = Pool.Read(ref key, 
-				                                (PoolItem item, ref string a1) => item.Storage.Get(a1), 
-				                                (ref StorageItem r) => r != null);
+				var (sto, usedItem) = Pool.Read(key, (item, a1) => item.Storage.Get(a1), r => r != null);
 				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
+					Pool.Write(sto, (item, a1) => item.Storage.Set(a1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;
             }
@@ -310,11 +308,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = Pool.Read(ref key, ref lastTime, 
-				                                (PoolItem item, ref string a1, ref TimeSpan a2) => item.Storage.Get(a1, a2), 
-				                                (ref StorageItem r) => r != null);
+				var (sto, usedItem) = Pool.Read(key, lastTime, (item, a1, a2) => item.Storage.Get(a1, a2), r => r != null);
 				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
+					Pool.Write(sto, (item, a1) => item.Storage.Set(a1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;
             }
@@ -330,11 +326,9 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = Pool.Read(ref key, ref comparer, 
-				                                (PoolItem item, ref string a1, ref DateTime a2) => item.Storage.Get(a1, a2), 
-				                                (ref StorageItem r) => r != null);
+				var (sto, usedItem) = Pool.Read(key, comparer, (item, a1, a2) => item.Storage.Get(a1, a2), r => r != null);
 				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
-					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
+					Pool.Write(sto, (item, a1) => item.Storage.Set(a1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;
             }
@@ -349,9 +343,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref tags, 
-				                    (PoolItem item, ref string[] a1) => item.Storage.GetByTag(a1), 
-				                    (ref StorageItem[] r) => r?.Any() == true);
+				var res = Pool.Read(tags, (item, a1) => item.Storage.GetByTag(a1), r => r?.Any() == true);
 				Counters.IncrementGetByTag(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -367,9 +359,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Read(ref tags, ref containingAll, 
-				                    (PoolItem item, ref string[] a1, ref bool a2) => item.Storage.GetByTag(a1, a2), 
-				                    (ref StorageItem[] r) => r?.Any() == true);
+				var res = Pool.Read(tags, containingAll, (item, a1, a2) => item.Storage.GetByTag(a1, a2), r => r?.Any() == true);
 				Counters.IncrementGetByTag(w.ElapsedMilliseconds);
                 return res.Item1;
             }
@@ -386,8 +376,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref item, (PoolItem p, ref StorageItem arg1) => p.Storage.Set(arg1));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(item, (p, arg1) => p.Storage.Set(arg1));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -402,8 +392,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, (PoolItem item, ref string arg1, ref SerializedObject arg2) => item.Storage.Set(arg1, arg2));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(key, data, (p, arg1, arg2) => p.Storage.Set(arg1, arg2));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -419,9 +409,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, ref expirationDate,
-				                     (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan arg3) => item.Storage.Set(arg1, arg2, arg3));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(key, data, expirationDate, (p, arg1, arg2, arg3) => p.Storage.Set(arg1, arg2, arg3));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -438,10 +427,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, ref expirationDate, ref tags,
-				                     (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan? arg3, ref string[] arg4) => 
-				                     	item.Storage.Set(arg1, arg2, arg3, arg4));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(key, data, expirationDate, tags, (p, arg1, arg2, arg3, arg4) => p.Storage.Set(arg1, arg2, arg3, arg4));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -457,9 +444,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, ref expirationDate,
-				                     (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime arg3) => item.Storage.Set(arg1, arg2, arg3));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(key, data, expirationDate, (p, arg1, arg2, arg3) => p.Storage.Set(arg1, arg2, arg3));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -476,10 +462,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, ref expirationDate, ref tags,
-				                     (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime? arg3, ref string[] arg4) => 
-				                     	item.Storage.Set(arg1, arg2, arg3, arg4));
-                w.StoreElapsed(Counters.IncrementSet);
+				var res = Pool.Write(key, data, expirationDate, tags, (p, arg1, arg2, arg3, arg4) => p.Storage.Set(arg1, arg2, arg3, arg4));
+				Counters.IncrementSet(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -497,8 +481,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, ref data, (PoolItem item, ref string arg1, ref SerializedObject arg2) => item.Storage.UpdateData(arg1, arg2));
-                w.StoreElapsed(Counters.IncrementUpdateData);
+				var res = Pool.Write(key, data, (item, arg1, arg2) => item.Storage.UpdateData(arg1, arg2));
+				Counters.IncrementUpdateData(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -512,8 +496,8 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var res = Pool.Write(ref key, (PoolItem item, ref string arg1) => item.Storage.Remove(arg1));
-                w.StoreElapsed(Counters.IncrementRemove);
+				var res = Pool.Write(key, (item, arg1) => item.Storage.Remove(arg1));
+				Counters.IncrementRemove(w.ElapsedMilliseconds);
                 return res;
             }
         }
@@ -532,7 +516,7 @@ namespace TWCore.Cache.Client
                 var lstKeys = new List<string>();
                 keys.Each(i => lstKeys.AddRange(i));
                 var result = lstKeys.Distinct().ToArray();
-                w.StoreElapsed(Counters.IncrementRemoveByTag);
+				Counters.IncrementRemoveByTag(w.ElapsedMilliseconds);
                 return result;
             }
         }
@@ -552,7 +536,7 @@ namespace TWCore.Cache.Client
                 var lstKeys = new List<string>();
                 keys.Each(i => lstKeys.AddRange(i));
                 var result = lstKeys.Distinct().ToArray();
-                w.StoreElapsed(Counters.IncrementRemoveByTag);
+				Counters.IncrementRemoveByTag(w.ElapsedMilliseconds);
                 return result;
             }
         }
@@ -573,10 +557,10 @@ namespace TWCore.Cache.Client
                 var sto = Get(key);
                 if (sto == null)
                 {
-					Pool.Write(ref key, ref data,(PoolItem item, ref string arg1, ref SerializedObject arg2) => item.Storage.Set(arg1, arg2));
+					Pool.Write(key, data, (item, arg1, arg2) => item.Storage.Set(arg1, arg2));
                     sto = Get(key);
                 }
-                w.StoreElapsed(Counters.IncrementGetOrSet);
+				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
                 return sto;
             }
         }
@@ -595,11 +579,10 @@ namespace TWCore.Cache.Client
                 var sto = Get(key, expirationDate);
                 if (sto == null)
                 {
-					Pool.Write(ref key, ref data, ref expirationDate, 
-					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan arg3) => item.Storage.Set(arg1, arg2, arg3));
+					Pool.Write(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.Set(arg1, arg2, arg3));
                     sto = Get(key);
                 }
-                w.StoreElapsed(Counters.IncrementGetOrSet);
+				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
                 return sto;
             }
         }
@@ -619,11 +602,10 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? Get(key, expirationDate.Value) : Get(key);
                 if (sto == null)
                 {
-					Pool.Write(ref key, ref data, ref expirationDate, ref tags, 
-					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref TimeSpan? arg3, ref string[] arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
+					Pool.Write(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
                     sto = Get(key);
                 }
-                w.StoreElapsed(Counters.IncrementGetOrSet);
+				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
                 return sto;
             }
         }
@@ -642,11 +624,10 @@ namespace TWCore.Cache.Client
                 var sto = Get(key, expirationDate);
                 if (sto == null)
                 {
-					Pool.Write(ref key, ref data, ref expirationDate, 
-					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime arg3) => item.Storage.Set(arg1, arg2, arg3));
+					Pool.Write(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.Set(arg1, arg2, arg3));
                     sto = Get(key);
                 }
-                w.StoreElapsed(Counters.IncrementGetOrSet);
+				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
                 return sto;
             }
         }
@@ -666,11 +647,10 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? Get(key, expirationDate.Value) : Get(key);
                 if (sto == null)
                 {
-					Pool.Write(ref key, ref data, ref expirationDate, ref tags, 
-					           (PoolItem item, ref string arg1, ref SerializedObject arg2, ref DateTime? arg3, ref string[] arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
+					Pool.Write(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.Set(arg1, arg2, arg3, arg4));
                     sto = Get(key);
                 }
-                w.StoreElapsed(Counters.IncrementGetOrSet);
+				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
                 return sto;
             }
         }
@@ -687,7 +667,7 @@ namespace TWCore.Cache.Client
         /// </summary>
         /// <returns>true if the storage is ready; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool IsReady() => Pool.Read(p => p.Storage.IsReady(), (ref bool r) => r);
+		public bool IsReady() => Pool.Read(p => p.Storage.IsReady(), r => r);
         #endregion
 
         #region IStorage Extensions

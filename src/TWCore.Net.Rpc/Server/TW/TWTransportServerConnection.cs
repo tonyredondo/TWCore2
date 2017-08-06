@@ -132,7 +132,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Defines a TW progressive connection to a client
         /// </summary>
         /// <param name="server">TwoWay transport server</param>
-        /// <param name="socket">Client socket</param>
+		/// <param name="client">Client socket</param>
         /// <param name="serializer">Stream serializer</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TWTransportServerConnection(TWTransportServer server, TcpClient client, ISerializer serializer)
@@ -225,14 +225,14 @@ namespace TWCore.Net.RPC.Server.Transports
         {
             var messageRequest = message as RPCRequestMessage;
             if (messageRequest == null) return;
-            using (var watch = Watch.Create($"Process Request Message: {messageRequest.MessageId}"))
+            using (var watch = Watch.Create($"Processing Request Message"))
             {
                 if (!IsOnSession)
                 {
                     Core.Log.Warning("RPC message received without a session, the message is not going to be processed.");
                     return;
                 }
-                var messageResponse = OnRequestReceived?.Invoke(this, messageRequest);
+                var messageResponse = OnRequestReceived.Invoke(this, messageRequest);
                 WriteRPCMessageData(messageResponse, RPCMessageType.ResponseMessage);
             }
         }

@@ -305,7 +305,7 @@ namespace TWCore.Cache.Client
 				try 
 				{
 					var response = await function(item, arg1, arg2).ConfigureAwait(false);
-					if (responseCondition(ref response))
+					if (responseCondition(response))
 						return (response, item);
 					if (item.Storage.Type != StorageType.Memory && ReadMode == PoolReadMode.FastestOnlyRead)
 						break;

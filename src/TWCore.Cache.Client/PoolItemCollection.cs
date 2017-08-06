@@ -25,19 +25,19 @@ namespace TWCore.Cache.Client
 	/// <summary>
 	/// Storage action delegate.
 	/// </summary>
-	public delegate void StorageActionDelegate<A1>(PoolItem item, ref A1 arg1);
+	public delegate void StorageActionDelegate<A1>(PoolItem item, A1 arg1);
 	/// <summary>
 	/// Storage action delegate.
 	/// </summary>
-	public delegate void StorageActionDelegate<A1, A2>(PoolItem item, ref A1 arg1, ref A2 arg2);
+	public delegate void StorageActionDelegate<A1, A2>(PoolItem item, A1 arg1, A2 arg2);
 	/// <summary>
 	/// Storage action delegate.
 	/// </summary>
-	public delegate void StorageActionDelegate<A1, A2, A3>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3);
+	public delegate void StorageActionDelegate<A1, A2, A3>(PoolItem item, A1 arg1, A2 arg2, A3 arg3);
 	/// <summary>
 	/// Storage action delegate.
 	/// </summary>
-	public delegate void StorageActionDelegate<A1, A2, A3, A4>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4);
+	public delegate void StorageActionDelegate<A1, A2, A3, A4>(PoolItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
 	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
@@ -45,30 +45,29 @@ namespace TWCore.Cache.Client
 	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
-	public delegate T StorageFuncDelegate<T, A1>(PoolItem item, ref A1 arg1);
+	public delegate T StorageFuncDelegate<T, A1>(PoolItem item, A1 arg1);
 	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
-	public delegate T StorageFuncDelegate<T, A1, A2>(PoolItem item, ref A1 arg1, ref A2 arg2);
+	public delegate T StorageFuncDelegate<T, A1, A2>(PoolItem item, A1 arg1, A2 arg2);
 	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
-	public delegate T StorageFuncDelegate<T, A1, A2, A3>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3);
+	public delegate T StorageFuncDelegate<T, A1, A2, A3>(PoolItem item, A1 arg1, A2 arg2, A3 arg3);
 	/// <summary>
 	/// Storage func delegate.
 	/// </summary>
-	public delegate T StorageFuncDelegate<T, A1, A2, A3, A4>(PoolItem item, ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4);
+	public delegate T StorageFuncDelegate<T, A1, A2, A3, A4>(PoolItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
 	/// <summary>
 	/// Response Condition Delegate
 	/// </summary>
-	public delegate bool ResponseConditionDelegate<T>(ref T response);
+	public delegate bool ResponseConditionDelegate<T>(T response);
 
     /// <summary>
     /// Cache pool item collection
     /// </summary>
     public class PoolItemCollection : IDisposable
     {
-		static object emptyObject = new object();
         ActionWorker Worker;
         internal List<PoolItem> Items;
         bool firstTime = true;
@@ -277,7 +276,7 @@ namespace TWCore.Cache.Client
         /// <returns>Return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Read<T>(StorageFuncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
-			=> Read(ref emptyObject, ref emptyObject, (PoolItem item, ref object a1, ref object a2) => function(item), responseCondition).Item1;
+			=> Read((object)null, (object)null, (item, a1, a2) => function(item), responseCondition).Item1;
 		/// <summary>
 		/// Read action on the Pool.
 		/// </summary>
@@ -286,8 +285,8 @@ namespace TWCore.Cache.Client
 		/// <param name="responseCondition">Function to check if the result is good or not.</param>
 		/// <returns>Return value</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public (T, PoolItem) Read<T, A1>(ref A1 arg1, StorageFuncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
-			=> Read(ref arg1, ref emptyObject, (PoolItem item, ref A1 a1, ref object a2) => function(item, ref a1), responseCondition);
+		public (T, PoolItem) Read<T, A1>(A1 arg1, StorageFuncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
+			=> Read(arg1, (object)null, (item, a1, a2) => function(item, a1), responseCondition);
 		/// <summary>
 		/// Read action on the Pool.
 		/// </summary>
@@ -296,7 +295,7 @@ namespace TWCore.Cache.Client
 		/// <param name="responseCondition">Function to check if the result is good or not.</param>
 		/// <returns>Return value</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public (T, PoolItem) Read<T, A1, A2>(ref A1 arg1, ref A2 arg2, StorageFuncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
+		public (T, PoolItem) Read<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
 		{
 			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
 			var items = WaitAndGetEnabled(StorageItemMode.Read);
@@ -308,8 +307,8 @@ namespace TWCore.Cache.Client
 				var item = items[i];
 				try 
 				{
-					var response = function(item, ref arg1, ref arg2);
-					if (responseCondition(ref response))
+					var response = function(item, arg1, arg2);
+					if (responseCondition(response))
 						return (response, item);
 					if (item.Storage.Type != StorageType.Memory && ReadMode == PoolReadMode.FastestOnlyRead)
 						break;
@@ -332,34 +331,31 @@ namespace TWCore.Cache.Client
         /// <param name="action">Action to execute in the pool item</param>
         /// <param name="onlyMemoryStorages">Write only on memory storages</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write<A1>(ref A1 arg1, StorageActionDelegate<A1> action, bool onlyMemoryStorages = false)
-			=> Write(ref arg1, ref emptyObject, ref emptyObject, ref emptyObject, 
-		             (PoolItem item, ref A1 a1, ref object a2, ref object a3, ref object a4) => action(item, ref a1), onlyMemoryStorages);
+        public void Write<A1>(A1 arg1, StorageActionDelegate<A1> action, bool onlyMemoryStorages = false)
+			=> Write(arg1, (object)null, (object)null, (object)null, (item, a1, a2, a3, a4) => action(item, a1), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
 		/// <param name="action">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write<A1, A2>(ref A1 arg1, ref A2 arg2, StorageActionDelegate<A1, A2> action, bool onlyMemoryStorages = false)
-			=> Write(ref arg1, ref arg2, ref emptyObject, ref emptyObject, 
-		             (PoolItem item, ref A1 a1, ref A2 a2, ref object a3, ref object a4) => action(item, ref a1, ref a2), onlyMemoryStorages);
+		public void Write<A1, A2>(A1 arg1, A2 arg2, StorageActionDelegate<A1, A2> action, bool onlyMemoryStorages = false)
+			=> Write(arg1, arg2, (object)null, (object)null, (item, a1, a2, a3, a4) => action(item, a1, a2), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
 		/// <param name="action">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write<A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageActionDelegate<A1, A2, A3> action, bool onlyMemoryStorages = false)
-			=> Write(ref arg1, ref arg2, ref arg3, ref emptyObject, 
-		         (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref object a4) => action(item, ref a1, ref a2, ref a3), onlyMemoryStorages);
+		public void Write<A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3, StorageActionDelegate<A1, A2, A3> action, bool onlyMemoryStorages = false)
+			=> Write(arg1, arg2, arg3, (object)null, (item, a1, a2, a3, a4) => action(item, a1, a2, a3), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
 		/// <param name="action">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Write<A1, A2, A3, A4>(ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4, StorageActionDelegate<A1, A2, A3, A4> action, bool onlyMemoryStorages = false)
+		public void Write<A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageActionDelegate<A1, A2, A3, A4> action, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
 			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
@@ -371,7 +367,7 @@ namespace TWCore.Cache.Client
 					var item = arrEnabled[i];
 					try
 					{
-						action(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						action(item, arg1, arg2, arg3, arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
@@ -390,7 +386,7 @@ namespace TWCore.Cache.Client
 					var item = arrEnabled[idx];
 					try
 					{
-						action(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						action(item, arg1, arg2, arg3, arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
@@ -425,9 +421,8 @@ namespace TWCore.Cache.Client
         /// <param name="onlyMemoryStorages">Write only on memory storages</param>
         /// <returns>Return value from the function</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Write<T, A1>(ref A1 arg1, StorageFuncDelegate<T, A1> function, bool onlyMemoryStorages = false)
-			=> Write(ref arg1, ref emptyObject, ref emptyObject, ref emptyObject, 
-		             (PoolItem item, ref A1 a1, ref object a2, ref object a3, ref object a4) => function(item, ref a1), onlyMemoryStorages);
+        public T Write<T, A1>(A1 arg1, StorageFuncDelegate<T, A1> function, bool onlyMemoryStorages = false)
+			=> Write(arg1, (object)null, (object)null, (object)null, (item, a1, a2, a3, a4) => function(item, a1), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
@@ -435,9 +430,8 @@ namespace TWCore.Cache.Client
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		/// <returns>Return value from the function</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Write<T, A1, A2>(ref A1 arg1, ref A2 arg2, StorageFuncDelegate<T, A1, A2> function, bool onlyMemoryStorages = false)
-			=> Write(ref arg1, ref arg2, ref emptyObject, ref emptyObject, 
-		             (PoolItem item, ref A1 a1, ref A2 a2, ref object a3, ref object a4) => function(item, ref a1, ref a2), onlyMemoryStorages);
+		public T Write<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncDelegate<T, A1, A2> function, bool onlyMemoryStorages = false)
+			=> Write(arg1, arg2, (object)null, (object)null, (item, a1, a2, a3, a4) => function(item, a1, a2), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
@@ -445,16 +439,15 @@ namespace TWCore.Cache.Client
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		/// <returns>Return value from the function</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Write<T, A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageFuncDelegate<T, A1, A2, A3> function, bool onlyMemoryStorages = false)
-		=> Write(ref arg1, ref arg2, ref arg3, ref emptyObject, 
-		             (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref object a4) => function(item, ref a1, ref a2, ref a3), onlyMemoryStorages);
+		public T Write<T, A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3, StorageFuncDelegate<T, A1, A2, A3> function, bool onlyMemoryStorages = false)
+			=> Write(arg1, arg2, arg3, (object)null, (item, a1, a2, a3, a4) => function(item, a1, a2, a3), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
-		/// <param name="action">Action to execute in the pool item</param>
+		/// <param name="function">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public T Write<T, A1, A2, A3, A4>(ref A1 arg1, ref A2 arg2, ref A3 arg3, ref A4 arg4, StorageFuncDelegate<T, A1, A2, A3, A4> function, bool onlyMemoryStorages = false)
+		public T Write<T, A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageFuncDelegate<T, A1, A2, A3, A4> function, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
 			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
@@ -468,7 +461,7 @@ namespace TWCore.Cache.Client
 					var item = arrEnabled[i];
 					try
 					{
-						response = function(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						response = function(item, arg1, arg2, arg3, arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
@@ -487,7 +480,7 @@ namespace TWCore.Cache.Client
 					var item = arrEnabled[idx];
 					try
 					{
-						response = function(item, ref arg1, ref arg2, ref arg3, ref arg4);
+						response = function(item, arg1, arg2, arg3, arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 					catch (Exception ex)
@@ -502,7 +495,7 @@ namespace TWCore.Cache.Client
 				{
 					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> 
 					{ 
-						Action = (PoolItem item, ref A1 a1, ref A2 a2, ref A3 a3, ref A4 a4) => function(item, ref a1, ref a2, ref a3, ref a4), 
+						Action = (item, a1, a2, a3, a4) => function(item, a1, a2, a3, a4), 
 						Arg1 = arg1, 
 						Arg2 = arg2, 
 						Arg3 = arg3, 
@@ -525,7 +518,7 @@ namespace TWCore.Cache.Client
 				{
 					if (item.Enabled)
 					{
-						wItem.Action(item, ref wItem.Arg1, ref wItem.Arg2, ref wItem.Arg3, ref wItem.Arg4);
+						wItem.Action(item, wItem.Arg1, wItem.Arg2, wItem.Arg3, wItem.Arg4);
 						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
 					}
 				}

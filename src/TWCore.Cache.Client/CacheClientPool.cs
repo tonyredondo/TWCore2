@@ -146,15 +146,17 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var poolEnabled = Pool.WaitAndGetEnabled(StorageItemMode.Read);
-                var keys = poolEnabled.AsParallel()
-                    .Select(pItem => pItem.Storage.GetKeys())
-                    .RemoveNulls()
-                    .SelectMany(i => i)
-                    .Distinct()
-                    .ToArray();
+				var hKeys = new HashSet<string>(StringComparer.Ordinal);
+                var poolEnabled = Pool.WaitAndGetEnabled (StorageItemMode.Read);
+				for(var i = 0; i < poolEnabled.Length; i++)
+				{
+					var kList = poolEnabled[i].Storage.GetKeys();
+					for(var j = 0; j < kList.Length; j++)
+						hKeys.Add(kList[j]);
+				}
+				var lKeys = hKeys.ToArray();
                 w.StoreElapsed(Counters.IncrementGetKeys);
-                return keys;
+                return lKeys;
             }
         }
         #endregion

@@ -339,7 +339,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public string[] GetKeys() 
 		{
-			var keys = new HashSet<string>();
+			var keys = new HashSet<string>(StringComparer.Ordinal);
 			foreach (var storage in storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;

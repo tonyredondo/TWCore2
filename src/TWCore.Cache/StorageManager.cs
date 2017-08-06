@@ -82,12 +82,17 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		R ReturnFromStack<R, A1>(A1 arg1, Func<IStorage, A1, R> functionValueToLook, Action<IStorage, A1, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
 		{
-			Stack<IStorage> noDataStack = null;
 			var defaultComparer = EqualityComparer<R>.Default;
+			ReferencePool<Stack<IStorage>> refPool = null;
+			Stack<IStorage> noDataStack = null;
 			bool actionToPrevious = actionOnPreviousStorages != null;
 			if (actionToPrevious) 
-				noDataStack = ReferencePool<Stack<IStorage>>.Shared.New();
+			{
+				refPool = ReferencePool<Stack<IStorage>>.Shared;
+				noDataStack = refPool.New();
+			}
 			var response = defaultValue;
+			bool found = false;
 			foreach (var storage in storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
@@ -96,6 +101,7 @@ namespace TWCore.Cache
 				if (bCondition)
 				{
 					response = functionResponse;
+					found = true;
 					break;
 				}
 				if (actionToPrevious) 
@@ -103,30 +109,40 @@ namespace TWCore.Cache
 			}
 			if (actionToPrevious)
 			{
-				while (noDataStack.Count > 0) 
+				if (found)
 				{
-					try 
+					while (noDataStack.Count > 0) 
 					{
-						actionOnPreviousStorages(noDataStack.Pop(), arg1, response);
-					}
-					catch(Exception ex) 
-					{
-						Core.Log.Write(ex);
+						try 
+						{
+							actionOnPreviousStorages(noDataStack.Pop(), arg1, response);
+						}
+						catch(Exception ex) 
+						{
+							Core.Log.Write(ex);
+						}
 					}
 				}
-				ReferencePool<Stack<IStorage>>.Shared.Store(noDataStack);
+				else
+					noDataStack.Clear();
+				refPool.Store(noDataStack);
 			}
 			return response;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		R ReturnFromStack<R, A1, A2>(A1 arg1, A2 arg2, Func<IStorage, A1, A2, R> functionValueToLook, Action<IStorage, A1, A2, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
 		{
-			Stack<IStorage> noDataStack = null;
 			var defaultComparer = EqualityComparer<R>.Default;
+			ReferencePool<Stack<IStorage>> refPool = null;
+			Stack<IStorage> noDataStack = null;
 			bool actionToPrevious = actionOnPreviousStorages != null;
 			if (actionToPrevious)
-				noDataStack = ReferencePool<Stack<IStorage>>.Shared.New();
+			{
+				refPool = ReferencePool<Stack<IStorage>>.Shared;
+				noDataStack = refPool.New();
+			}
 			var response = defaultValue;
+			bool found = false;
 			foreach (var storage in storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
@@ -135,6 +151,7 @@ namespace TWCore.Cache
 				if (bCondition)
 				{
 					response = functionResponse;
+					found = true;
 					break;
 				}
 				if (actionToPrevious)
@@ -142,18 +159,23 @@ namespace TWCore.Cache
 			}
 			if (actionToPrevious)
 			{
-				while (noDataStack.Count > 0) 
+				if (found)
 				{
-					try 
+					while (noDataStack.Count > 0) 
 					{
-						actionOnPreviousStorages(noDataStack.Pop(), arg1, arg2, response);
-					}
-					catch(Exception ex) 
-					{
-						Core.Log.Write(ex);
+						try 
+						{
+							actionOnPreviousStorages(noDataStack.Pop(), arg1, arg2, response);
+						}
+						catch(Exception ex) 
+						{
+							Core.Log.Write(ex);
+						}
 					}
 				}
-				ReferencePool<Stack<IStorage>>.Shared.Store(noDataStack);
+				else
+					noDataStack.Clear();
+				refPool.Store(noDataStack);
 			}
 			return response;
 		}

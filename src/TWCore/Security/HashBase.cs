@@ -77,7 +77,6 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] GetBytes(byte[] bytes)
         {
-            //Core.Log.LibVerbose("Creating hash of a byte array using: {0}", GetType().Name);
             return GetHashValue(bytes);
         }
         /// <summary>
@@ -100,7 +99,13 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Guid GetGuid(byte[] bytes) => new Guid(GetBytes(bytes));
+		public virtual Guid GetGuid(byte[] bytes) 
+		{
+			var bHash = GetBytes(bytes);
+			var newGuid = new byte[16];
+			Buffer.BlockCopy(bHash, 0, newGuid, 0, 16);
+			return new Guid(newGuid);
+		}
 
         /// <summary>
         /// Gets the hash bytes from an object

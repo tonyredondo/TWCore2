@@ -33,7 +33,6 @@ namespace TWCore.Net.RPC.Server.Transports
     /// </summary>
     public class TWTransportServer : ITransportServer
     {
-        const string DescriptorMethodId = "{DESCRIPTOR}";
         readonly ConcurrentDictionary<Guid, TWTransportServerConnection> sessions = new ConcurrentDictionary<Guid, TWTransportServerConnection>();
         TcpListener _listener;
         CancellationTokenSource tokenSource;
@@ -264,7 +263,7 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         RPCResponseMessage Session_OnRequestReceived(TWTransportServerConnection client, RPCRequestMessage request)
         {
-            if (request.MethodId == DescriptorMethodId)
+            if (request.MethodId == Guid.Empty)
             {
                 var dEventArgs = new ServerDescriptorsEventArgs();
                 OnGetDescriptorsRequest?.Invoke(this, dEventArgs);

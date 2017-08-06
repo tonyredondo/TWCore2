@@ -28,15 +28,10 @@ namespace TWCore.Net.RPC
     public class RPCRequestMessage : RPCMessage
     {
         /// <summary>
-        /// Service name
-        /// </summary>
-        [DataMember]
-        public string Service { get; set; }
-        /// <summary>
         /// Method identifier
         /// </summary>
         [DataMember]
-        public string MethodId { get; set; }
+        public Guid MethodId { get; set; }
         /// <summary>
         /// Method parameters
         /// </summary>

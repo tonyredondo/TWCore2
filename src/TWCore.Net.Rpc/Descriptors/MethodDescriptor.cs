@@ -34,7 +34,7 @@ namespace TWCore.Net.RPC.Descriptors
         /// Method identifier
         /// </summary>
         [XmlAttribute, DataMember]
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         /// <summary>
         /// Method name
         /// </summary>

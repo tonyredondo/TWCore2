@@ -42,7 +42,7 @@ namespace TWCore.Net.RPC.Descriptors
         /// Service methods
         /// </summary>
         [DataMember]
-		public Dictionary<string, MethodDescriptor> Methods { get; set; } = new Dictionary<string, MethodDescriptor>(StringComparer.Ordinal);
+		public Dictionary<Guid, MethodDescriptor> Methods { get; set; } = new Dictionary<Guid, MethodDescriptor>();
         /// <summary>
         /// Service events
         /// </summary>
@@ -126,7 +126,7 @@ namespace TWCore.Net.RPC.Descriptors
         #region Private methods
         static IHash hash = HashManager.Get("SHA1");
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static string GetMethodId(ServiceDescriptor serviceDescriptor, MethodDescriptor methodDescriptor)
+        static Guid GetMethodId(ServiceDescriptor serviceDescriptor, MethodDescriptor methodDescriptor)
         {
             StringBuilder sb = new StringBuilder();
             sb.Append(serviceDescriptor.Name + "." + methodDescriptor.Name);
@@ -135,7 +135,7 @@ namespace TWCore.Net.RPC.Descriptors
                 foreach (var p in methodDescriptor.Parameters)
                     sb.Append(string.Format(" {0}[{1}] ", p.Name, p.Type));
             sb.Append(") : " + methodDescriptor.ReturnType);
-            return hash.Get(sb.ToString());
+			return hash.GetGuid(sb.ToString());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static string GetTypeName(Type type)

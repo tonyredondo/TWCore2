@@ -37,7 +37,6 @@ namespace TWCore.Net.RPC.Client.Transports
     /// </summary>
     public class TWTransportClient : ITransportClient
     {
-        const string DescriptorMethodId = "{DESCRIPTOR}";
         readonly ManualResetEventSlim _connectionResetEvent = new ManualResetEventSlim(false);
         readonly List<SocketConnection> _availableConnections = new List<SocketConnection>();
         readonly List<SocketConnection> _connectedSockets = new List<SocketConnection>();
@@ -227,7 +226,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
-            var request = new RPCRequestMessage { MethodId = DescriptorMethodId };
+            var request = new RPCRequestMessage { MethodId = Guid.Empty };
             var response = await InvokeMethodAsync(request).ConfigureAwait(false);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
@@ -238,7 +237,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceDescriptorCollection GetDescriptors()
         {
-            var request = new RPCRequestMessage { MethodId = DescriptorMethodId };
+			var request = new RPCRequestMessage { MethodId = Guid.Empty };
             var response = InvokeMethod(request);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }

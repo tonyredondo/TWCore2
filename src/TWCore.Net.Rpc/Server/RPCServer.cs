@@ -32,8 +32,8 @@ namespace TWCore.Net.RPC.Server
     /// </summary>
     public class RPCServer : IRPCServer
     {
-		readonly Dictionary<string, ServiceItem> _serviceInstances = new Dictionary<string, ServiceItem>(100);
-        ServiceItem _singleServiceInstance = null;
+		readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
+		readonly Dictionary<Guid, (ServiceItem, MethodDescriptor)> _methods = new Dictionary<Guid, (ServiceItem, MethodDescriptor)>(100);
         ITransportServer transport = null;
 
         #region Properties
@@ -75,7 +75,7 @@ namespace TWCore.Net.RPC.Server
                 collection.Add(nameof(Running), Running, Running ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
                 collection.Add("Service Instances Count", _serviceInstances.Count);
                 foreach (var sItem in _serviceInstances)
-                    Core.Status.AttachChild(sItem.Value, this);
+                    Core.Status.AttachChild(sItem, this);
                 Core.Status.AttachChild(Transport, this);
             });
         }
@@ -98,18 +98,16 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task StartAsync()
         {
-            Core.Log.LibVerbose("Starting RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Value.Descriptor.Name).Join(","));
+            Core.Log.LibVerbose("Starting RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Descriptor.Name).Join(","));
             Transport.OnMethodCall += OnMethodCall;
             Transport.OnGetDescriptorsRequest += OnGetDescriptorsRequest;
             Transport.OnClientConnect += OnClientConnect;
             Descriptors = new ServiceDescriptorCollection();
             _serviceInstances.Each(v =>
             {
-                Descriptors.Add(v.Value.Descriptor);
-                v.Value.BindToServiceType();
+                Descriptors.Add(v.Descriptor);
+                v.BindToServiceType();
             });
-            if (_serviceInstances.Count == 1)
-                _singleServiceInstance = _serviceInstances.First().Value;
             await Transport.StartListenerAsync().ConfigureAwait(false);
             Running = true;
             Core.Log.LibVerbose("RPC Server started.");
@@ -121,13 +119,12 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task StopAsync()
         {
-            Core.Log.LibVerbose("Stopping RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Value.Descriptor.Name).Join(","));
+            Core.Log.LibVerbose("Stopping RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Descriptor.Name).Join(","));
             await Transport.StopListenerAsync().ConfigureAwait(false);
-            _serviceInstances.Each(v => v.Value.UnbindToServiceType());
+            _serviceInstances.Each(v => v.UnbindToServiceType());
             Transport.OnMethodCall -= OnMethodCall;
             Transport.OnGetDescriptorsRequest -= OnGetDescriptorsRequest;
             Transport.OnClientConnect -= OnClientConnect;
-			_singleServiceInstance = null;
             Running = false;
             Core.Log.LibVerbose("RPC Server Stopped.");
         }
@@ -143,7 +140,9 @@ namespace TWCore.Net.RPC.Server
                 throw new ArgumentException("The type of the service should be an interface", "serviceInterfaceType");
             Core.Log.LibVerbose("Adding service.");
             var sItem = new ServiceItem(this, serviceInterfaceType, serviceInstance);
-            _serviceInstances.Add(sItem.Descriptor.Name, sItem);
+            _serviceInstances.Add(sItem);
+			foreach(var mDesc in sItem.Descriptor.Methods)
+				_methods.Add(mDesc.Key, (sItem, mDesc.Value));
             Core.Log.LibVerbose("Service added.");
         }
         /// <summary>
@@ -163,17 +162,15 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnMethodCall(object sender, MethodEventArgs e)
         {
-			if (_singleServiceInstance != null)
-				e.Response = _singleServiceInstance.ProcessRequest(e.Request, e.ClientId);
-            else if (_serviceInstances.TryGetValue(e.Request.Service, out var sItem))
-                e.Response = sItem.ProcessRequest(e.Request, e.ClientId);
-            else
-            {
-                e.Response = new RPCResponseMessage(e.Request)
-                {
-                    Exception = new SerializableException(new NotImplementedException("An instance of ServiceName = {0} was not found on the service.".ApplyFormat(e.Request.Service)))
-                };
-            }
+			if (_methods.TryGetValue(e.Request.MethodId, out var desc)) 
+			{
+				e.Response = desc.Item1.ProcessRequest(e.Request, e.ClientId, desc.Item2);
+				return;
+			}
+			e.Response = new RPCResponseMessage(e.Request)
+			{
+				Exception = new SerializableException(new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)))
+			};
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
@@ -183,7 +180,7 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void OnClientConnect(object sender, ClientConnectEventArgs e)
         {
-            _serviceInstances.Each(item => item.Value.FireClientConnection(e.ClientId));
+            _serviceInstances.Each(item => item.FireClientConnection(e.ClientId));
         }
         #endregion
 
@@ -286,19 +283,15 @@ namespace TWCore.Net.RPC.Server
                 });
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId)
+			public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc)
             {
                 var response = new RPCResponseMessage(request);
-                MethodDescriptor mDesc = null;
                 try
                 {
-                    if (Descriptor.Methods.TryGetValue(request.MethodId, out mDesc))
-                    {
-                        var tId = Environment.CurrentManagedThreadId;
-                        lock (ThreadClientId) ThreadClientId[tId] = clientId;
-                        response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
-                        lock (ThreadClientId) ThreadClientId.Remove(tId);
-                    }
+					var tId = Environment.CurrentManagedThreadId;
+					lock (ThreadClientId) ThreadClientId[tId] = clientId;
+					response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
+					lock (ThreadClientId) ThreadClientId.Remove(tId);
                 }
                 catch (TargetInvocationException ex)
                 {

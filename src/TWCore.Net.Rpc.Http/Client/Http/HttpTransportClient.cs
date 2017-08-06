@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable 0067
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -33,6 +34,9 @@ namespace TWCore.Net.RPC.Client.Transports
     /// </summary>
     public class HttpTransportClient : ITransportClient
     {
+		readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
+		ServiceDescriptorCollection _descriptors = null;
+
         HttpClient httpClient;
 
         #region Properties
@@ -44,7 +48,25 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <summary>
         /// Services descriptors to use on RPC Request messages
         /// </summary>
-        public ServiceDescriptorCollection Descriptors { get; set; }
+		public ServiceDescriptorCollection Descriptors 
+		{
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			get => _descriptors;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+			set 
+			{
+				_descriptors = value;
+				if (_descriptors != null)
+				{
+					_methods.Clear();
+					foreach(var descriptor in _descriptors.Items.Values)
+					{
+						foreach(var mtd in descriptor.Methods)
+							_methods.Add(mtd.Key, descriptor);
+					}
+				}
+			}
+		}
         /// <summary>
         /// Http RPC Transport Server URL
         /// </summary>
@@ -141,8 +163,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
         {
-            ServiceDescriptor descriptor = null;
-            if (Descriptors?.Items.TryGetValue(messageRQ.Service, out descriptor) == true)
+			if (_methods.TryGetValue(messageRQ.MethodId, out var descriptor))
             {
                 foreach (var tDesc in descriptor.Types.Values)
                 {
@@ -167,26 +188,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-        {
-            ServiceDescriptor descriptor = null;
-            if (Descriptors?.Items.TryGetValue(messageRQ.Service, out descriptor) == true)
-            {
-                foreach (var tDesc in descriptor.Types.Values)
-                {
-                    var type = Core.GetType(tDesc.FullName);
-                    if (type != null)
-                        Serializer.KnownTypes.Add(type);
-                }
-            }
-            var dataRQ = Serializer.Serialize(messageRQ);
-            var sContent = new StreamContent(dataRQ.ToMemoryStream());
-            var postResult = httpClient.PostAsync(Url, sContent).WaitAsync();
-			Counters.IncrementBytesSent(dataRQ.Count);
-            var dataRS = postResult.Content.ReadAsByteArrayAsync().WaitAsync();
-            Counters.IncrementBytesReceived(dataRS.Length);
-            var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);
-            return res;
-        }
+			=> InvokeMethodAsync(messageRQ).WaitAndResults();
         /// <summary>
         /// Dispose all resources
         /// </summary>

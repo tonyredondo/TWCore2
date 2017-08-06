@@ -58,6 +58,11 @@ namespace TWCore.Cache.Storages.IO
         /// Maximún number of elements waiting for write before starting to slow down the storage to free the queue
         /// </summary>
         public int SlowDownWriteThreshold { get; set; } = 1000;
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public override StorageType Type => StorageType.File;
         #endregion
 
         #region .ctor

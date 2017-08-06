@@ -19,11 +19,19 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache
 {
-    /// <summary>
-    /// Defines a cache storage
-    /// </summary>
-    public interface IStorage : IDisposable
+	/// <summary>
+	/// Defines a cache storage
+	/// </summary>
+	public interface IStorage : IDisposable
     {
+		#region Properties
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		StorageType Type { get; }
+		#endregion
+		
         /// <summary>
 		/// Init this storage
 		/// </summary>

@@ -31,6 +31,12 @@ namespace TWCore.Cache
         readonly Stack<IStorage> StorageStack = new Stack<IStorage>();
         IStorage[] storages = null;
 
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public StorageType Type => StorageType.Unknown;
+
         #region .ctor
         /// <summary>
         /// Storage Manager

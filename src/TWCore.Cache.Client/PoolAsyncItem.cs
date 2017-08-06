@@ -44,10 +44,6 @@ namespace TWCore.Cache.Client
         /// </summary>
         public StorageItemMode Mode { get; private set; }
         /// <summary>
-        /// Gets if the storage is in memory mode (Ignores the Pool write mode to ensure the write in a physical cache)
-        /// </summary>
-        public bool InMemoryStorage { get; private set; }
-        /// <summary>
         /// Lastest ping time
         /// </summary>
         public double PingTime { get; private set; }
@@ -84,14 +80,12 @@ namespace TWCore.Cache.Client
         /// <param name="name">Pool item name</param>
         /// <param name="storage">Storage instance</param>
         /// <param name="mode">Storage mode inside the pool</param>
-        /// <param name="inMemoryStorage">Gets if the storage is in memory mode (Ignores the Pool write mode to ensure the write in a physical cache)</param>
         /// <param name="pingDelay">Delays between ping tries in milliseconds</param>
         /// <param name="pingDelayOnError">Delay after a ping error for next try</param>
-        public PoolAsyncItem(string name, IStorageAsync storage, StorageItemMode mode, bool inMemoryStorage, int pingDelay = 5000, int pingDelayOnError = 30000)
+        public PoolAsyncItem(string name, IStorageAsync storage, StorageItemMode mode, int pingDelay = 5000, int pingDelayOnError = 30000)
         {
             Storage = storage;
             Mode = mode;
-            InMemoryStorage = inMemoryStorage;
             PingTime = 0;
             PingDelay = pingDelay;
             PingDelayOnError = pingDelayOnError;
@@ -99,69 +93,75 @@ namespace TWCore.Cache.Client
             tokenSource = new CancellationTokenSource();
             token = tokenSource.Token;
             Name = name ?? storage?.ToString();
-            pingTask = Task.Factory.StartNew(async () =>
-            {
-                try
-                {
-                    var syncStorage = Storage as IStorage;
-                    while (!token.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            if (Storage != null)
-                            {
-                                using (var watch = Watch.Create())
-                                {
-                                    bool enabled = true;
-                                    try
-                                    {
-                                        Enabled = false;
-                                        if (syncStorage != null)
-                                            enabled = syncStorage.IsEnabled();
-                                        else
-                                            enabled = await Storage.IsEnabledAsync().ConfigureAwait(false);
-                                        if (PingResponse == int.MaxValue) PingResponse = 15;
-                                        PingResponse++;
-                                        PingConsecutiveFailure = 0;
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(ex);
-                                        enabled = false;
-                                        if (PingFailure == int.MaxValue) PingFailure = 15;
-                                        if (PingConsecutiveFailure == int.MaxValue) PingConsecutiveFailure = 15;
-                                        PingFailure++;
-                                        PingConsecutiveFailure++;
-                                    }
-                                    Enabled = enabled;
-                                    PingTime = watch.GlobalElapsedMilliseconds;
-                                    Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms. (Using Sync={3})", name, Enabled, PingTime, syncStorage != null);
-                                }
-                            }
-                            else
-                                Core.Log.Error("The pool item node: {0} doesn't have any storage associated", name);
+			if (storage?.Type == StorageType.Memory)
+			{
+				Enabled = true;
+				PingTime = 0;
+			}
+			else
+			{
+            	pingTask = Task.Factory.StartNew(async () =>
+	            {
+	                try
+	                {
+	                    var syncStorage = Storage as IStorage;
+	                    while (!token.IsCancellationRequested)
+	                    {
+	                        try
+	                        {
+	                            if (Storage != null)
+	                            {
+	                                using (var watch = Watch.Create())
+	                                {
+	                                    bool enabled = true;
+	                                    try
+	                                    {
+	                                        Enabled = false;
+	                                        if (syncStorage != null)
+	                                            enabled = syncStorage.IsEnabled();
+	                                        else
+	                                            enabled = await Storage.IsEnabledAsync().ConfigureAwait(false);
+	                                        if (PingResponse == int.MaxValue) PingResponse = 15;
+	                                        PingResponse++;
+	                                        PingConsecutiveFailure = 0;
+	                                    }
+	                                    catch (Exception ex)
+	                                    {
+	                                        Core.Log.Write(ex);
+	                                        enabled = false;
+	                                        if (PingFailure == int.MaxValue) PingFailure = 15;
+	                                        if (PingConsecutiveFailure == int.MaxValue) PingConsecutiveFailure = 15;
+	                                        PingFailure++;
+	                                        PingConsecutiveFailure++;
+	                                    }
+	                                    Enabled = enabled;
+	                                    PingTime = watch.GlobalElapsedMilliseconds;
+	                                    Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms. (Using Sync={3})", name, Enabled, PingTime, syncStorage != null);
+	                                }
+	                            }
+	                            else
+	                                Core.Log.Error("The pool item node: {0} doesn't have any storage associated", name);
 
-                            await Task.Delay((PingConsecutiveFailure > 15) ? PingDelayOnError : PingDelay, token).ConfigureAwait(false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }
-                    Core.Log.Warning("Ping Task for Pool item node: {0} was terminated.", name);
-                }
-                catch(Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
+	                            await Task.Delay((PingConsecutiveFailure > 15) ? PingDelayOnError : PingDelay, token).ConfigureAwait(false);
+	                        }
+	                        catch (Exception ex)
+	                        {
+	                            Core.Log.Write(ex);
+	                        }
+	                    }
+	                    Core.Log.Warning("Ping Task for Pool item node: {0} was terminated.", name);
+	                }
+	                catch(Exception ex)
+	                {
+	                    Core.Log.Write(ex);
+	                }
+	            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+			}
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Name), Name);
                 collection.Add(nameof(Storage), Storage);
                 collection.Add(nameof(Mode), Mode);
-                collection.Add(nameof(InMemoryStorage), InMemoryStorage);
                 collection.Add(nameof(PingTime), PingTime);
                 collection.Add(nameof(PingDelay), PingDelay);
                 collection.Add(nameof(PingDelayOnError), PingDelayOnError);

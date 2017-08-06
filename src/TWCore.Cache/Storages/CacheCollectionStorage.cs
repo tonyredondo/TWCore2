@@ -32,6 +32,12 @@ namespace TWCore.Cache.Storages
     {
         ICacheCollection<string, (StorageItemMeta, SerializedObject)> Storage;
 
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public override StorageType Type => StorageType.Memory;
+
         #region .ctor
         /// <summary>
         /// Cache storage using LRU Algorithm

@@ -172,7 +172,7 @@ namespace TWCore.Cache.Client
                 item.PingDelay = PingDelay;
                 item.PingDelayOnError = PingDelayOnError;
                 Items.Add(item);
-				hasMemoryStorage |= item.InMemoryStorage;
+				hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
             }
         }
         /// <summary>
@@ -239,7 +239,7 @@ namespace TWCore.Cache.Client
 				IEnumerable<PoolAsyncItem> iWhere;
 
 				if (onlyMemoryStorages)
-					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.InMemoryStorage);
+					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory);
 				else
 					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
 
@@ -250,7 +250,7 @@ namespace TWCore.Cache.Client
 					return iWhere.ToArray();
 
 				var tmp = iWhere.ToArray();
-				if (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => !i.InMemoryStorage))
+				if (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => i.Storage.Type != StorageType.Memory))
 					return tmp;
 
 				if (onlyMemoryStorages)
@@ -307,7 +307,7 @@ namespace TWCore.Cache.Client
 					var response = await function(item, arg1, arg2).ConfigureAwait(false);
 					if (responseCondition(ref response))
 						return (response, item);
-					if (!item.InMemoryStorage && ReadMode == PoolReadMode.FastestOnlyRead)
+					if (item.Storage.Type != StorageType.Memory && ReadMode == PoolReadMode.FastestOnlyRead)
 						break;
 				}
 				catch(Exception ex) 
@@ -392,13 +392,14 @@ namespace TWCore.Cache.Client
 					{
 						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
 					}
-					if (!item.InMemoryStorage)
+					if (item.Storage.Type != StorageType.Memory)
 						break;
 				}
 				idx++;
 				if (idx < arrEnabled.Length) 
 				{
-					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> 
+					{ 
 						Action = action, 
 						Arg1 = arg1, 
 						Arg2 = arg2, 
@@ -488,13 +489,14 @@ namespace TWCore.Cache.Client
 					{
 						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
 					}
-					if (!item.InMemoryStorage)
+					if (item.Storage.Type != StorageType.Memory)
 						break;
 				}
 				idx++;
 				if (idx < arrEnabled.Length) 
 				{
-					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> { 
+					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> 
+					{ 
 						Action = async (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, A4 a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
 						Arg1 = arg1, 
 						Arg2 = arg2, 

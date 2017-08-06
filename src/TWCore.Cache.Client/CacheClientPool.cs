@@ -50,6 +50,11 @@ namespace TWCore.Cache.Client
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set { Pool.ForceAtLeastOneNetworkItemEnabled = value; }
         }
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public StorageType Type => StorageType.Unknown;
         #endregion
 
         #region .ctor
@@ -89,9 +94,8 @@ namespace TWCore.Cache.Client
         /// <param name="name">Pool item name</param>
         /// <param name="storage">Storage instance</param>
         /// <param name="mode">Storage mode inside the pool</param>
-        /// <param name="inMemoryStorage">Gets if the storage is in memory mode (Ignores the Pool write mode to ensure the write in a physical cache)</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Add(string name, IStorage storage, StorageItemMode mode = StorageItemMode.ReadAndWrite, bool inMemoryStorage = false)
+        public void Add(string name, IStorage storage, StorageItemMode mode = StorageItemMode.ReadAndWrite)
         {
             PoolItem pItem = null;
             lock (shared)
@@ -104,11 +108,11 @@ namespace TWCore.Cache.Client
                 else
                 {
                     Core.Log.LibVerbose("Creating Cache Connection: {0}", name);
-                    pItem = new PoolItem(name, storage, mode, inMemoryStorage, Pool.PingDelay, Pool.PingDelayOnError);
+                    pItem = new PoolItem(name, storage, mode, Pool.PingDelay, Pool.PingDelayOnError);
                     AllItems.Add(pItem);
                 }
             }
-            Core.Log.LibVerbose("\tName = {0}, Mode = {1}, InMemoryStorage = {2}", name, pItem.Mode, pItem.InMemoryStorage);
+            Core.Log.LibVerbose("\tName = {0}, Mode = {1}, Type = {2}", name, pItem.Mode, pItem.Storage.Type);
             Pool.Add(pItem);
         }
         #endregion
@@ -289,7 +293,7 @@ namespace TWCore.Cache.Client
 				var (sto, usedItem) = Pool.Read(ref key, 
 				                                (PoolItem item, ref string a1) => item.Storage.Get(a1), 
 				                                (ref StorageItem r) => r != null);
-				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.InMemoryStorage == false)
+				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;
@@ -309,7 +313,7 @@ namespace TWCore.Cache.Client
 				var (sto, usedItem) = Pool.Read(ref key, ref lastTime, 
 				                                (PoolItem item, ref string a1, ref TimeSpan a2) => item.Storage.Get(a1, a2), 
 				                                (ref StorageItem r) => r != null);
-				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.InMemoryStorage == false)
+				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;
@@ -329,7 +333,7 @@ namespace TWCore.Cache.Client
 				var (sto, usedItem) = Pool.Read(ref key, ref comparer, 
 				                                (PoolItem item, ref string a1, ref DateTime a2) => item.Storage.Get(a1, a2), 
 				                                (ref StorageItem r) => r != null);
-				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.InMemoryStorage == false)
+				if (Pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					Pool.Write(ref sto, (PoolItem item, ref StorageItem arg1) => item.Storage.Set(arg1), true);
 				Counters.IncrementGet(w.ElapsedMilliseconds);
                 return sto;

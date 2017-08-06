@@ -28,6 +28,12 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientProxy : RPCProxy, IStorage, IStorageAsync
     {
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public StorageType Type => StorageType.Network;
+
         #region IStorage
         /// <summary>
         /// Init this storage

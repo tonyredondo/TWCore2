@@ -76,7 +76,7 @@ namespace TWCore.Services
                 return server;
             }
             else
-                throw new ArgumentNullException("The server needs to define at least one server transport.");
+				throw new NullReferenceException("The server needs to define at least one server transport.");
         }
         /// <summary>
         /// On Service Dispose

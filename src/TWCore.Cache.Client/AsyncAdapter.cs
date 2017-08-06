@@ -28,6 +28,12 @@ namespace TWCore.Cache.Client
     {
         IStorage _storage;
 
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public StorageType Type => _storage.Type;
+
         #region AsyncDelegates
         Func<string, Task<bool>> _existKeyAsync;
         Func<Task<string[]>> _getKeysAsync;

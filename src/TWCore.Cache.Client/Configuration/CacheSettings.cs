@@ -84,49 +84,21 @@ namespace TWCore.Cache.Client.Configuration
                             if (!pitem.Enabled)
                                 continue;
 
-                            var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-                            var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
+							var objType = pitem.CreateInstance<object>();
+							if (objType is ITransportClient transport)
+							{
+								var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+								var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
-                            if (!pitem.InMemoryStorage)
-                            {
-                                if (cacheConfig.UseSharedMemoryOnLocal)
-                                {
-                                    if (hostParam != null)
-                                    {
-                                        if (IpHelper.IsLocalhost(hostParam.Value))
-                                        {
-                                            var type = "TWCore.Net.RPC.Client.Configuration.TwoWay.SharedMemoryTwoWayTransportClientFactory, TWCore.Desktop.Net.RPC.Client.TwoWay";
-                                            var _type = Core.GetType(type, false);
-                                            if (_type != null)
-                                            {
-                                                //TODO: 
-                                                Core.Log.Warning("The UseSharedMemoryOnLocal Flag was activated, this is an alpha feature and is not to be used on production environment.");
-
-                                                pitem.TypeFactory = type;
-                                                pitem.Parameters = new KeyValueCollection
-                                                {
-                                                    new KeyValue<string, string> { Key = "MappedFileName", Value = cacheConfig.Name }
-                                                };
-                                                pitem.Name = "SharedMemoryTwoWayTransportClient";
-                                            }
-                                            else
-                                            {
-                                                Core.Log.Warning("The Flag UseSharedMemoryOnLocal was activated, but the type {0} couldn't be loaded, check if the assymbly exist on your bin folder.", type);
-                                            }
-                                        }
-                                    }
-                                }
-                                var transport = pitem.CreateInstance<ITransportClient>();
-                                var proxy = CacheClientProxy.GetClient(transport);
-                                var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".PoolItem(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-                                ccp.Add(cppName, proxy, pitem.Mode, false);
-                            }
-                            else
-                            {
-                                var sto = pitem.CreateInstance<StorageBase>();
-                                var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".MStorage." + idx;
-                                ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite, true);
-                            }
+								var proxy = CacheClientProxy.GetClient(transport);
+								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+								ccp.Add(cppName, proxy, pitem.Mode);
+							}
+							if (objType is StorageBase sto)
+							{
+								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+								ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite);
+							}
                         }
                     }
                     return ccp;
@@ -181,48 +153,21 @@ namespace TWCore.Cache.Client.Configuration
                             if (!pitem.Enabled)
                                 continue;
 
-                            var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-                            var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
-                            if (!pitem.InMemoryStorage)
-                            {
-                                if (cacheConfig.UseSharedMemoryOnLocal)
-                                {
-                                    if (hostParam != null)
-                                    {
-                                        if (IpHelper.IsLocalhost(hostParam.Value))
-                                        {
-                                            var type = "TWCore.Net.RPC.Client.Configuration.TwoWay.SharedMemoryTwoWayTransportClientFactory, TWCore.Desktop.Net.RPC.Client.TwoWay";
-                                            var _type = Core.GetType(type, false);
-                                            if (_type != null)
-                                            {
-                                                //TODO: 
-                                                Core.Log.Warning("The UseSharedMemoryOnLocal Flag was activated, this is an alpha feature and is not to be used on production environment.");
+							var objType = pitem.CreateInstance<object>();
+							if (objType is ITransportClient transport)
+							{
+								var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+								var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
-                                                pitem.TypeFactory = type;
-                                                pitem.Parameters = new KeyValueCollection
-                                                {
-                                                    new KeyValue<string, string> { Key = "MappedFileName", Value = cacheConfig.Name }
-                                                };
-                                                pitem.Name = "SharedMemoryTwoWayTransportClient";
-                                            }
-                                            else
-                                            {
-                                                Core.Log.Warning("The Flag UseSharedMemoryOnLocal was activated, but the type {0} couldn't be loaded, check if the assymbly exist on your bin folder.", type);
-                                            }
-                                        }
-                                    }
-                                }
-                                var transport = pitem.CreateInstance<ITransportClient>();
-                                var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
-                                var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".PoolItem(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-                                ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode, false);
-                            }
-                            else
-                            {
-                                var sto = pitem.CreateInstance<StorageBase>();
-                                var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".MStorage." + idx;
-                                ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite, true);
-                            }
+								var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
+								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+								ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
+							}
+							if (objType is StorageBase sto)
+							{
+								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+								ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite);
+							}
                         }
                     }
                     return ccp;

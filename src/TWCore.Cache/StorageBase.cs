@@ -65,6 +65,11 @@ namespace TWCore.Cache
         /// Overwrites the expiration date setted by each item in TimeSpan.
         /// </summary>
         public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
+		/// <summary>
+		/// Gets the Storage Type
+		/// </summary>
+		/// <value>The type.</value>
+		public abstract StorageType Type { get; }
         #endregion
 
         #region Events

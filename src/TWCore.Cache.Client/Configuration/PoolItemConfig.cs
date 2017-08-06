@@ -31,10 +31,5 @@ namespace TWCore.Cache.Client.Configuration
         /// </summary>
         [XmlAttribute, DataMember]
         public StorageItemMode Mode { get; set; }
-        /// <summary>
-        /// Gets if the storage is in memory mode (Ignores the Pool write mode to ensure the write in a physical cache)
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public bool InMemoryStorage { get; set; }
     }
 }

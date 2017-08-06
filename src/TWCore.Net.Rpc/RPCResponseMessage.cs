@@ -32,11 +32,6 @@ namespace TWCore.Net.RPC
         [DataMember]
         public Guid RequestMessageId { get; set; }
         /// <summary>
-        /// true if the remote procedure call was executed successfully; otherwise, false.
-        /// </summary>
-        [DataMember]
-        public bool Succeed { get; set; }
-        /// <summary>
         /// Object returned from the execution of the remote procedure, if the method return void, then is null.
         /// </summary>
         [DataMember]
@@ -60,7 +55,7 @@ namespace TWCore.Net.RPC
         /// <param name="request">RPC request message from this response</param>
         public RPCResponseMessage(RPCRequestMessage request)
         {
-            RequestMessageId = request?.MessageId ?? Guid.Empty;
+			RequestMessageId = request.MessageId;
         }
         #endregion
     }

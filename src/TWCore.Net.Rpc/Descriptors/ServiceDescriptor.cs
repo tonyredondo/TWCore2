@@ -42,17 +42,17 @@ namespace TWCore.Net.RPC.Descriptors
         /// Service methods
         /// </summary>
         [DataMember]
-        public Dictionary<string, MethodDescriptor> Methods { get; set; } = new Dictionary<string, MethodDescriptor>();
+		public Dictionary<string, MethodDescriptor> Methods { get; set; } = new Dictionary<string, MethodDescriptor>(StringComparer.Ordinal);
         /// <summary>
         /// Service events
         /// </summary>
         [DataMember]
-        public Dictionary<string, EventDescriptor> Events { get; set; } = new Dictionary<string, EventDescriptor>();
+		public Dictionary<string, EventDescriptor> Events { get; set; } = new Dictionary<string, EventDescriptor>(StringComparer.Ordinal);
         /// <summary>
         /// Service types
         /// </summary>
         [DataMember]
-        public Dictionary<string, TypeDescriptor> Types { get; set; } = new Dictionary<string, TypeDescriptor>();
+		public Dictionary<string, TypeDescriptor> Types { get; set; } = new Dictionary<string, TypeDescriptor>(StringComparer.Ordinal);
 
 
         /// <summary>

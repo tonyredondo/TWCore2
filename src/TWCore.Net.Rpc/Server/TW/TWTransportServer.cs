@@ -271,7 +271,6 @@ namespace TWCore.Net.RPC.Server.Transports
                 var response = new RPCResponseMessage(request)
                 {
                     ReturnValue = dEventArgs.Descriptors,
-                    Succeed = true
                 };
                 return response;
             }

@@ -239,10 +239,9 @@ namespace TWCore.Net.RPC.Client
                 ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");
-                if (response.Succeed)
-                    return response.ReturnValue;
-                else
-                    throw response.Exception.GetException();
+				if (response.Exception != null)
+					throw response.Exception.GetException();
+				return response.ReturnValue;
             }
         }
         #endregion
@@ -278,10 +277,9 @@ namespace TWCore.Net.RPC.Client
                 ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");
-                if (response.Succeed)
-                    return response.ReturnValue;
-                else
-                    throw response.Exception.GetException();
+                if (response.Exception != null)
+					throw response.Exception.GetException();
+				return response.ReturnValue;
             }
         }
         #endregion

@@ -34,25 +34,25 @@ namespace TWCore.Net.RPC.Client.Grid
         public NodeInfo GetNodeInfo()
         {
             if (_info == null)
-                _info = ServerInvoke<NodeInfo>("GetNodeInfo");
+				_info = Invoke<NodeInfo>();
             return _info;
         }
         /// <summary>
         /// Gets if node is available to process.
         /// </summary>
         /// <returns>true if the node is ready; otherwise, false.</returns>
-        public bool GetIsReady() => ServerInvoke<bool>("GetIsReady");
+		public bool GetIsReady() => Invoke<bool>();
         /// <summary>
         /// Node Init Method
         /// </summary>
         /// <param name="args">Arguments</param>
         /// <returns>Output object</returns>
-        public object Init(params object[] args) => ServerInvoke("Init", args);
+		public object Init(params object[] args) => Invoke(args);
         /// <summary>
         /// Start the process execution
         /// </summary>
         /// <param name="args">Arguments</param>
         /// <returns>Response object</returns>
-        public object Process(params object[] args) => ServerInvoke("Process");
+		public object Process(params object[] args) => Invoke(args);
     }
 }

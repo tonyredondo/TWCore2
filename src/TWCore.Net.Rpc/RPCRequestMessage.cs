@@ -31,7 +31,7 @@ namespace TWCore.Net.RPC
         /// Service name
         /// </summary>
         [DataMember]
-        public string ServiceName { get; set; }
+        public string Service { get; set; }
         /// <summary>
         /// Method identifier
         /// </summary>
@@ -41,6 +41,6 @@ namespace TWCore.Net.RPC
         /// Method parameters
         /// </summary>
         [DataMember]
-        public List<object> Parameters { get; set; }
+		public object[] Parameters { get; set; }
     }
 }

@@ -165,13 +165,13 @@ namespace TWCore.Net.RPC.Server
         {
 			if (_singleServiceInstance != null)
 				e.Response = _singleServiceInstance.ProcessRequest(e.Request, e.ClientId);
-            else if (_serviceInstances.TryGetValue(e.Request.ServiceName, out var sItem))
+            else if (_serviceInstances.TryGetValue(e.Request.Service, out var sItem))
                 e.Response = sItem.ProcessRequest(e.Request, e.ClientId);
             else
             {
                 e.Response = new RPCResponseMessage(e.Request)
                 {
-                    Exception = new SerializableException(new NotImplementedException("An instance of ServiceName = {0} was not found on the service.".ApplyFormat(e.Request.ServiceName)))
+                    Exception = new SerializableException(new NotImplementedException("An instance of ServiceName = {0} was not found on the service.".ApplyFormat(e.Request.Service)))
                 };
             }
         }
@@ -296,7 +296,7 @@ namespace TWCore.Net.RPC.Server
                     {
                         var tId = Environment.CurrentManagedThreadId;
                         lock (ThreadClientId) ThreadClientId[tId] = clientId;
-                        response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters?.ToArray());
+                        response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
                         lock (ThreadClientId) ThreadClientId.Remove(tId);
                     }
                 }

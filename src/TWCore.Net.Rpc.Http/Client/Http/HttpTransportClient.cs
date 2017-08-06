@@ -142,7 +142,7 @@ namespace TWCore.Net.RPC.Client.Transports
         public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
         {
             ServiceDescriptor descriptor = null;
-            if (Descriptors?.Items.TryGetValue(messageRQ.ServiceName, out descriptor) == true)
+            if (Descriptors?.Items.TryGetValue(messageRQ.Service, out descriptor) == true)
             {
                 foreach (var tDesc in descriptor.Types.Values)
                 {
@@ -169,7 +169,7 @@ namespace TWCore.Net.RPC.Client.Transports
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
         {
             ServiceDescriptor descriptor = null;
-            if (Descriptors?.Items.TryGetValue(messageRQ.ServiceName, out descriptor) == true)
+            if (Descriptors?.Items.TryGetValue(messageRQ.Service, out descriptor) == true)
             {
                 foreach (var tDesc in descriptor.Types.Values)
                 {

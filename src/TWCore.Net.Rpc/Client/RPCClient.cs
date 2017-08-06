@@ -399,8 +399,8 @@ namespace TWCore.Net.RPC.Client
 
             RPCRequestMessage rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
             rqMessage.MessageId = Guid.NewGuid();
-            rqMessage.ServiceName = serviceName;
-            rqMessage.Parameters = parameters;
+            rqMessage.Service = serviceName;
+			rqMessage.Parameters = parameters.ToArray();
             rqMessage.MethodId = mDesc.Id;
             return rqMessage;
         }

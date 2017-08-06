@@ -37,12 +37,19 @@ namespace TWCore.Tests
                 Console.ReadLine();
 
                 StorageItem value;
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 100; i++)
                 {
                     string key = "test-" + i;
                     value = cachePool.Get(key);
                     cachePool.Set(key, "bla bla bla bla bla");
                 }
+				Console.ReadLine();
+				for (var i = 0; i < 100; i++)
+				{
+					string key = "test-" + i;
+					value = cachePool.Get(key);
+					cachePool.Set(key, "bla bla bla bla bla");
+				}
             }
         }
 

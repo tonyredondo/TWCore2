@@ -82,7 +82,6 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		R ReturnFromStack<R, A1>(A1 arg1, Func<IStorage, A1, R> functionValueToLook, Action<IStorage, A1, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
 		{
-			var defaultComparer = EqualityComparer<R>.Default;
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			bool actionToPrevious = actionOnPreviousStorages != null;
@@ -97,7 +96,7 @@ namespace TWCore.Cache
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(storage, arg1);
-				var bCondition = breakCondition != null ? breakCondition(functionResponse) : !defaultComparer.Equals(functionResponse, defaultValue);
+				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<R>.Default.Equals(functionResponse, defaultValue);
 				if (bCondition)
 				{
 					response = functionResponse;
@@ -132,7 +131,6 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		R ReturnFromStack<R, A1, A2>(A1 arg1, A2 arg2, Func<IStorage, A1, A2, R> functionValueToLook, Action<IStorage, A1, A2, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
 		{
-			var defaultComparer = EqualityComparer<R>.Default;
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			bool actionToPrevious = actionOnPreviousStorages != null;
@@ -147,7 +145,7 @@ namespace TWCore.Cache
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(storage, arg1, arg2);
-				var bCondition = breakCondition != null ? breakCondition(functionResponse) : !defaultComparer.Equals(functionResponse, defaultValue);
+				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<R>.Default.Equals(functionResponse, defaultValue);
 				if (bCondition)
 				{
 					response = functionResponse;

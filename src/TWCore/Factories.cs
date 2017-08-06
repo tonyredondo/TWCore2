@@ -301,14 +301,14 @@ namespace TWCore
             else
                 basePath = GetAbsolutePath(basePath, null);
 
-            if (relativePath.StartsWith("~")) relativePath = relativePath.Substring(1);
+			if (relativePath.StartsWith("~", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
             if (Factory.PlatformType == PlatformType.Windows)
             {
-                if (relativePath.StartsWith("/")) relativePath = relativePath.Substring(1);
+				if (relativePath.StartsWith("/", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
             }
             if (!Path.IsPathRooted(relativePath) || "\\".Equals(Path.GetPathRoot(relativePath)))
             {
-                if (relativePath.StartsWith(Path.DirectorySeparatorChar.ToString()))
+				if (relativePath.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal))
                     return Path.GetFullPath(Path.Combine(Path.GetPathRoot(basePath), relativePath.TrimStart(Path.DirectorySeparatorChar)));
                 else
                     return Path.GetFullPath(Path.Combine(basePath, relativePath));
@@ -333,22 +333,27 @@ namespace TWCore
         #endregion
 
         #region Sockets
-        const int SIO_LOOPBACK_FAST_PATH = (-1744830448);
+		const int SIO_LOOPBACK_FAST_PATH = (-1744830448);
         /// <summary>
         /// Set Socket Loopback Fast Path
         /// </summary>
         /// <param name="socket">Socket instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void SetSocketLoopbackFastPath(Socket socket)
+        public void SetSocketLoopbackFastPath(Socket socket)
         {
-            try
-            {
-                var optionInValue = BitConverter.GetBytes(1);
-                socket.IOControl(SIO_LOOPBACK_FAST_PATH, optionInValue, null);
-            }
-            catch (Exception)
-            {
-            }
+			if (PlatformType == PlatformType.Windows)
+			{
+				Core.Log.InfoMedium("Setting Loopback FastPath Mode");
+	            try
+	            {
+	                var optionInValue = BitConverter.GetBytes(1);
+	                socket.IOControl(SIO_LOOPBACK_FAST_PATH, optionInValue, null);
+	            }
+	            catch (Exception)
+	            {
+					Core.Log.Warning("The Loopback FastPath can't be setted.");
+	            }
+			}
         }
         #endregion
     }

@@ -104,12 +104,12 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Receive  Size
         /// </summary>
         [StatusProperty]
-        public int ReceiveSize { get; set; } = 65536;
+		public int ReceiveSize { get; set; } = 16384;
         /// <summary>
         /// Send  Size
         /// </summary>
         [StatusProperty]
-        public int SendSize { get; set; } = 65536;
+		public int SendSize { get; set; } = 16384;
         #endregion
 
         #region Delegates

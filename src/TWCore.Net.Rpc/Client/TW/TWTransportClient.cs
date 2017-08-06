@@ -117,12 +117,12 @@ namespace TWCore.Net.RPC.Client.Transports
         /// Receive Buffer Size
         /// </summary>
         [StatusProperty]
-        public int ReceiveBufferSize { get; set; } = 65536;
+        public int ReceiveBufferSize { get; set; } = 16384;
         /// <summary>
         /// Send Buffer Size
         /// </summary>
         [StatusProperty]
-        public int SendBufferSize { get; set; } = 65536;
+		public int SendBufferSize { get; set; } = 16384;
         /// <summary>
         /// Invoke Method Timeout
         /// </summary>
@@ -542,8 +542,8 @@ namespace TWCore.Net.RPC.Client.Transports
             public string _host;
             public int _port;
             public string _hub;
-            public int _receiveBufferSize = 65536;
-            public int _sendBufferSize = 65536;
+			public int _receiveBufferSize = 16384;
+			public int _sendBufferSize = 16384;
             public RPCTransportCounters _counters;
             public Guid SessionId { get; private set; }
             public bool IsOnSession { get; private set; } = false;
@@ -618,8 +618,6 @@ namespace TWCore.Net.RPC.Client.Transports
                         client = new TcpClient()
                         {
                             NoDelay = true,
-                            SendBufferSize = _sendBufferSize,
-                            ReceiveBufferSize = _receiveBufferSize
                         };
                         Factory.SetSocketLoopbackFastPath(client.Client);
                     }
@@ -638,8 +636,6 @@ namespace TWCore.Net.RPC.Client.Transports
                         throw;
                     }
                     client.NoDelay = true;
-                    client.ReceiveBufferSize = _receiveBufferSize;
-                    client.SendBufferSize = _sendBufferSize;
                     var netStream = client.GetStream();
                     readCounterStream = new BytesCounterStream(netStream);
                     writeCounterStream = new BytesCounterStream(netStream);

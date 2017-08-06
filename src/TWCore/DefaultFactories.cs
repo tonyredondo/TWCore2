@@ -186,7 +186,7 @@ namespace TWCore
                     {
                         foreach (var item in fSettings.AppSettings)
                         {
-                            if (item.Key.IndexOf(">") > -1)
+							if (item.Key.IndexOf(">", StringComparison.Ordinal) > -1)
                             {
                                 var keyPair = item.Key.SplitAndTrim(">");
                                 var k1 = keyPair[0].SplitAndTrim(".");

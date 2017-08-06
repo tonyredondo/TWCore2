@@ -65,10 +65,10 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class PoolAsyncItemCollection : IDisposable
     {
-		static object emptyObject = new object();
         ActionWorker Worker;
         internal List<PoolAsyncItem> Items;
         bool firstTime = true;
+		bool hasMemoryStorage = false;
 
         #region Properties
         /// <summary>
@@ -99,6 +99,11 @@ namespace TWCore.Cache.Client
         /// Force at least one network item enabled
         /// </summary>
         public bool ForceAtLeastOneNetworkItemEnabled { get; set; } = true;
+		/// <summary>
+		/// Gets is the pool has a memory storage
+		/// </summary>
+		/// <value><c>true</c> if has memory storage; otherwise, <c>false</c>.</value>
+		public bool HasMemoryStorage => hasMemoryStorage;
         #endregion
 
 		#region Nested Type
@@ -167,6 +172,7 @@ namespace TWCore.Cache.Client
                 item.PingDelay = PingDelay;
                 item.PingDelayOnError = PingDelayOnError;
                 Items.Add(item);
+				hasMemoryStorage |= item.InMemoryStorage;
             }
         }
         /// <summary>

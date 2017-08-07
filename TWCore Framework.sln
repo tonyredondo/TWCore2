@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26724.1
+VisualStudioVersion = 15.0.26730.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0679-4AD7-A184-BD3CCC7A5C10}"
 	ProjectSection(SolutionItems) = preProject
@@ -55,7 +55,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Test.Core", "test\TW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Test.Net47", "test\TWCore.Test.Net47\TWCore.Test.Net47.csproj", "{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc.Http", "src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj", "{B86E8D00-6D3D-416A-89F7-AE82302C17F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Rpc.Http", "src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj", "{B86E8D00-6D3D-416A-89F7-AE82302C17F4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.SqlServer", "src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj", "{432BF34B-6929-44D2-AC4B-3189D708B3BE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -147,6 +149,10 @@ Global
 		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B86E8D00-6D3D-416A-89F7-AE82302C17F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -173,6 +179,7 @@ Global
 		{C07C0FEC-8255-4D15-BBE4-B6622515F0AF} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 		{B86E8D00-6D3D-416A-89F7-AE82302C17F4} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{432BF34B-6929-44D2-AC4B-3189D708B3BE} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

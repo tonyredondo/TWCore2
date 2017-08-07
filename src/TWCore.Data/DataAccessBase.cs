@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -30,14 +32,54 @@ namespace TWCore.Data
     /// </summary>
     public abstract class DataAccessBase : IDataAccess, IDataAccessAsync
     {
+        readonly static TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
+        readonly static DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
+
+        #region Properties
         /// <summary>
-        /// Fires when an error occurs in the execution of a command.
+        /// Data access command type
         /// </summary>
-        public event EventHandler<EventArgs<Exception>> OnError;
+        public DataAccessType AccessType { get; protected set; }
+        /// <summary>
+        /// Parameters Binder
+        /// </summary>
+        public IParametersBinder ParametersBinder { get; set; } = new DefaultParametersBinder();
+        /// <summary>
+        /// Gets or Sets the value converter for the entity binder
+        /// </summary>
+        public IEntityValueConverter EntityValueConverter { get; set; } = new DefaultEntityValueConverter();
+        /// <summary>
+        /// Return parameter parameter name
+        /// </summary>
+        public string ReturnParameterName { get; set; } = "@ReturnValue";
+        /// <summary>
+        /// Command timeout
+        /// </summary>
+        public int CommandTimeout { get; set; } = Settings.CommandTimeout;
+        /// <summary>;
+        /// Data access connection string
+        /// </summary>
+        public string ConnectionString { get; set; }
+        /// <summary>
+        /// String to append before every parameter
+        /// </summary>
+        public string ParametersPrefix { get; } = "@";
+        /// <summary>
+        /// Cache for columns by name or query in seconds
+        /// </summary>
+        public int ColumnsByNameOrQueryCacheInSec { get; set; } = Settings.ColumnsByNameOrQueryCacheInSec;
         /// <summary>
         /// Cache timeout per command
         /// </summary>
         public TimeSpan CacheTimeout { get; set; }
+        #endregion
+
+        #region Events
+        /// <summary>
+        /// Fires when an error occurs in the execution of a command.
+        /// </summary>
+        public event EventHandler<EventArgs<Exception>> OnError;
+        #endregion
 
         #region .ctor
         /// <summary>
@@ -51,6 +93,19 @@ namespace TWCore.Data
                 collection.Add(nameof(CacheTimeout), CacheTimeout);
             });
         }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// Gets the database connection object
+        /// </summary>
+        /// <returns>A DbConnection object</returns>
+        protected abstract DbConnection GetConnection();
+        /// <summary>
+        /// Gets the database command object
+        /// </summary>
+        /// <returns>A DbCommand object</returns>
+        protected abstract DbCommand GetCommand();
         #endregion
 
         #region Fire Event
@@ -85,6 +140,41 @@ namespace TWCore.Data
                 return dctParameters;
             }
             return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual Dictionary<string, int> ExtractColumnNames(string nameOrQuery, DbDataReader reader)
+        {
+            if (ColumnsByNameOrQueryCacheInSec > 0)
+            {
+                if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var _result))
+                {
+                    if (_result.Count != reader.FieldCount)
+                        ColumnsByNameOrQuery.TryRemove(nameOrQuery, out _result);
+                    else
+                        return _result;
+                }
+                return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
+            }
+            else
+                return InternalExtractColumnNames(nameOrQuery, reader);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual Dictionary<string, int> InternalExtractColumnNames(string nameOrQuery, DbDataReader reader)
+        {
+            var dct = new Dictionary<string, int>();
+            for (var i = 0; i < reader.FieldCount; i++)
+            {
+                var name = reader.GetName(i);
+                if (!dct.ContainsKey(name))
+                    dct[name] = i;
+                else
+                {
+                    var oIdx = dct[name];
+                    var nIdx = i;
+                    Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+                }
+            }
+            return dct;
         }
         #endregion
 
@@ -247,6 +337,100 @@ namespace TWCore.Data
                 throw;
             }
         }
+        /// <summary>
+        /// Selects a collection of elements from the data source
+        /// </summary>
+        /// <typeparam name="T">Type of entity to be selected</typeparam>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <param name="fillMethod">Entity fill delegate</param>
+        /// <param name="returnValue">Return value from the data source</param>
+        /// <returns>IEnumerable of entity type with the results from the data source</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual IEnumerable<T> OnSelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    //Bind return parameter
+                    DbParameter returnValueParam = null;
+                    if (ReturnParameterName.IsNotNullOrEmpty())
+                    {
+                        returnValueParam = command.CreateParameter();
+                        returnValueParam.ParameterName = ReturnParameterName;
+                        returnValueParam.Value = DBNull.Value;
+                        returnValueParam.Direction = ParameterDirection.ReturnValue;
+                        command.Parameters.Add(returnValueParam);
+                    }
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    var entityBinder = new EntityBinder(EntityValueConverter);
+                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    if (fillMethod == null)
+                        fillMethod = (e, o) => e.Bind<T>(o);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        var lstRows = new List<EntityDataRow<T>>();
+                        int indexNumber = 0;
+                        bool firstTime = true;
+                        connection.Open();
+                        using (var reader = command.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                if (firstTime)
+                                {
+                                    firstTime = false;
+                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                    indexNumber = cIndex.Count;
+                                    entityBinder.ColumnIndex = cIndex;
+                                }
+                                var columns = new object[indexNumber];
+                                reader.GetValues(columns);
+                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+                            }
+                        }
+                        returnValue = returnValueParam?.Value;
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the IEnumerable of T with the late fillMethod call.
+                        return lstRows.Select(row => row.Entity);
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region SelectElement
@@ -350,6 +534,92 @@ namespace TWCore.Data
                 throw;
             }
         }
+        /// <summary>
+        /// Select a single element from the data source
+        /// </summary>
+        /// <typeparam name="T">Type of entity to be selected</typeparam>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <param name="fillMethod">Entity fill delegate</param>
+        /// <param name="returnValue">Return value from the data source</param>
+        /// <returns>Single entity from the data source</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual T OnSelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    //Bind return parameter
+                    DbParameter returnValueParam = null;
+                    if (ReturnParameterName.IsNotNullOrEmpty())
+                    {
+                        returnValueParam = command.CreateParameter();
+                        returnValueParam.ParameterName = ReturnParameterName;
+                        returnValueParam.Value = DBNull.Value;
+                        returnValueParam.Direction = ParameterDirection.ReturnValue;
+                        command.Parameters.Add(returnValueParam);
+                    }
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    var entityBinder = new EntityBinder(EntityValueConverter);
+                    Task.Run(() => EntityBinder.PrepareEntity(typeof(T)));
+                    if (fillMethod == null)
+                        fillMethod = (e, o) => e.Bind<T>(o);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        var row = new EntityDataRow<T>(null, entityBinder, fillMethod);
+                        connection.Open();
+                        using (var reader = command.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                entityBinder.ColumnIndex = cIndex;
+                                row.RowValues = new object[cIndex.Count];
+                                reader.GetValues(row.RowValues);
+                            }
+                        }
+                        returnValue = returnValueParam?.Value;
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the value of T as result of the fillMethod call.
+                        return row.RowValues?.Any() == true ? row.Entity : default(T);
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
+            }
+        }
+
         #endregion
 
         #region ExecuteNonQuery
@@ -381,6 +651,60 @@ namespace TWCore.Data
                 Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
+            }
+        }
+        /// <summary>
+        /// Execute a command on the data source and returns the number of rows.
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <returns>Number of rows</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual int OnExecuteNonQuery(string nameOrQuery, IDictionary<string, object> parameters = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        connection.Open();
+                        var resInt = command.ExecuteNonQuery();
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the IEnumerable of T with the late fillMethod call.
+                        return resInt;
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
             }
         }
         #endregion
@@ -416,6 +740,73 @@ namespace TWCore.Data
                 throw;
             }
         }
+        /// <summary>
+        /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parametersIEnumerable">Inputsparameters</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void OnExecuteNonQuery(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                try
+                {
+                    connection.Open();
+
+                    using (var command = GetCommand())
+                    {
+                        var transaction = connection.BeginTransaction();
+
+                        #region Sets Connection Object
+                        command.Connection = connection;
+                        command.Transaction = transaction;
+                        command.CommandTimeout = CommandTimeout;
+                        switch (AccessType)
+                        {
+                            case DataAccessType.Query:
+                                command.CommandType = CommandType.Text;
+                                break;
+                            case DataAccessType.StoredProcedure:
+                                command.CommandType = CommandType.StoredProcedure;
+                                break;
+                        }
+                        command.CommandText = nameOrQuery;
+                        #endregion
+
+                        foreach (var parameters in parametersIEnumerable)
+                        {
+                            #region Bind parameters
+                            //Bind parameters
+                            ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                            #endregion
+
+                            #region Command Execution
+                            command.ExecuteNonQuery();
+                            #endregion
+                        }
+
+                        try
+                        {
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                            transaction.Rollback();
+                            throw;
+                        }
+                    }
+                    connection.Close();
+                }
+                catch
+                {
+                    connection.Close();
+                    throw;
+                }
+            }
+        }
         #endregion
 
         #region SelectScalar
@@ -447,6 +838,87 @@ namespace TWCore.Data
                 Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
+            }
+        }
+        /// <summary>
+        /// Select a single row field from the data source
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <returns>Number of rows</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual T OnSelectScalar<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        connection.Open();
+                        var value = command.ExecuteScalar();
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        var valueType = value?.GetType();
+                        var propertyType = typeof(T).GetUnderlyingType();
+                        var defaultValue = default(T);
+
+                        object result = defaultValue;
+
+                        if (propertyType == typeof(Guid) && valueType == typeof(string))
+                            result = new Guid((string)value);
+                        else if (propertyType.GetTypeInfo().IsEnum &&
+                            (valueType == typeof(int) || valueType == typeof(Int64) || valueType == typeof(string) || valueType == typeof(byte)))
+                            result = Enum.Parse(propertyType, value.ToString());
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), out object valueConverterResult))
+                            result = valueConverterResult;
+                        else
+                        {
+                            try
+                            {
+                                result = Convert.ChangeType(value, propertyType);
+                            }
+                            catch (InvalidCastException exCast)
+                            {
+                                Core.Log.Write(exCast);
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }
+                        return (T)result;
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
             }
         }
         #endregion
@@ -787,54 +1259,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SelectResultSetsElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
             => OnSelectElements(nameOrQuery, parameters, resultSets, out returnValue);
-        #endregion
-
-        #region Abstracts Methods
-        /// <summary>
-        /// Selects a collection of elements from the data source
-        /// </summary>
-        /// <typeparam name="T">Type of entity to be selected</typeparam>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <param name="fillMethod">Entity fill delegate</param>
-        /// <param name="returnValue">Return value from the data source</param>
-        /// <returns>IEnumerable of entity type with the results from the data source</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract IEnumerable<T> OnSelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue);
-        /// <summary>
-        /// Select a single element from the data source
-        /// </summary>
-        /// <typeparam name="T">Type of entity to be selected</typeparam>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <param name="fillMethod">Entity fill delegate</param>
-        /// <param name="returnValue">Return value from the data source</param>
-        /// <returns>Single entity from the data source</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract T OnSelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue);
-        /// <summary>
-        /// Execute a command on the data source and returns the number of rows.
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <returns>Number of rows</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract int OnExecuteNonQuery(string nameOrQuery, IDictionary<string, object> parameters = null);
-        /// <summary>
-        /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parametersIEnumerable">Inputs parameters</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract void OnExecuteNonQuery(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null);
-        /// <summary>
-        /// Select a single row field from the data source
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <returns>Number of rows</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract T OnSelectScalar<T>(string nameOrQuery, IDictionary<string, object> parameters = null);
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source
         /// </summary>
@@ -843,9 +1267,105 @@ namespace TWCore.Data
         /// <param name="resultSets">Array of IResultSetItem instances to fill from the data source</param>
         /// <param name="returnValue">Return value from the data source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract void OnSelectElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue);
-        #endregion
+        protected virtual void OnSelectElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
+        {
+            returnValue = null;
 
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    //Bind return parameter
+                    DbParameter returnValueParam = null;
+                    if (ReturnParameterName.IsNotNullOrEmpty())
+                    {
+                        returnValueParam = command.CreateParameter();
+                        returnValueParam.ParameterName = ReturnParameterName;
+                        returnValueParam.Value = DBNull.Value;
+                        returnValueParam.Direction = ParameterDirection.ReturnValue;
+                        command.Parameters.Add(returnValueParam);
+                    }
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    resultSets?.Each(r => r.PrepareSet(EntityValueConverter));
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        connection.Open();
+                        using (var reader = command.ExecuteReader())
+                        {
+                            int resultSetIndex = 0;
+
+                            do
+                            {
+                                int indexNumber = 0;
+                                bool firstTime = true;
+                                var resultset = resultSets[resultSetIndex];
+
+                                while (reader.Read())
+                                {
+                                    if (firstTime)
+                                    {
+                                        firstTime = false;
+                                        var dct = new Dictionary<string, int>();
+                                        for (var i = 0; i < reader.FieldCount; i++)
+                                        {
+                                            var name = reader.GetName(i);
+                                            if (!dct.ContainsKey(name))
+                                                dct[name] = i;
+                                            else
+                                            {
+                                                var oIdx = dct[name];
+                                                var nIdx = i;
+                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+                                            }
+                                        }
+                                        indexNumber = dct.Count;
+                                        resultset.SetColumnsOnBinder(dct);
+                                    }
+                                    var columns = new object[indexNumber];
+                                    reader.GetValues(columns);
+                                    resultset.AddRow(columns);
+                                }
+                                resultSetIndex++;
+                            } while (reader.NextResult() && resultSets.Length > resultSetIndex);
+                        }
+                        returnValue = returnValueParam?.Value;
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
+            }
+        }
+        #endregion
 
         //Async Version
 
@@ -909,6 +1429,87 @@ namespace TWCore.Data
                 Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
+            }
+        }
+        /// <summary>
+        /// Selects a collection of elements from the data source
+        /// </summary>
+        /// <typeparam name="T">Type of entity to be selected</typeparam>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <param name="fillMethod">Entity fill delegate</param>
+        /// <returns>IEnumerable of entity type with the results from the data source</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual async Task<IEnumerable<T>> OnSelectElementsAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    var entityBinder = new EntityBinder(EntityValueConverter);
+                    EntityBinder.PrepareEntity(typeof(T));
+                    if (fillMethod == null)
+                        fillMethod = (e, o) => e.Bind<T>(o);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        var lstRows = new List<EntityDataRow<T>>();
+                        int indexNumber = 0;
+                        bool firstTime = true;
+                        await connection.OpenAsync().ConfigureAwait(false);
+                        using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                        {
+                            while (await reader.ReadAsync().ConfigureAwait(false))
+                            {
+                                if (firstTime)
+                                {
+                                    firstTime = false;
+                                    var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                    indexNumber = cIndex.Count;
+                                    entityBinder.ColumnIndex = cIndex;
+                                }
+                                var columns = new object[indexNumber];
+                                reader.GetValues(columns);
+                                lstRows.Add(new EntityDataRow<T>(columns, entityBinder, fillMethod));
+                            }
+                        }
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the IEnumerable of T with the late fillMethod call.
+                        return lstRows.Select(row => row.Entity);
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
             }
         }
         #endregion
@@ -975,6 +1576,79 @@ namespace TWCore.Data
                 throw;
             }
         }
+        /// <summary>
+        /// Select a single element from the data source
+        /// </summary>
+        /// <typeparam name="T">Type of entity to be selected</typeparam>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <param name="fillMethod">Entity fill delegate</param>
+        /// <returns>Single entity from the data source</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual async Task<T> OnSelectElementAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    var entityBinder = new EntityBinder(EntityValueConverter);
+                    EntityBinder.PrepareEntity(typeof(T));
+                    if (fillMethod == null)
+                        fillMethod = (e, o) => e.Bind<T>(o);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        var row = new EntityDataRow<T>(null, entityBinder, fillMethod);
+                        await connection.OpenAsync().ConfigureAwait(false);
+                        using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                        {
+                            if (await reader.ReadAsync().ConfigureAwait(false))
+                            {
+                                var cIndex = ExtractColumnNames(nameOrQuery, reader);
+                                entityBinder.ColumnIndex = cIndex;
+                                row.RowValues = new object[cIndex.Count];
+                                reader.GetValues(row.RowValues);
+                            }
+                        }
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the value of T as result of the fillMethod call.
+                        return row.RowValues?.Any() == true ? row.Entity : default(T);
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
+            }
+        }
         #endregion
 
         #region ExecuteNonQueryAsync
@@ -1006,6 +1680,60 @@ namespace TWCore.Data
                 Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
+            }
+        }
+        /// <summary>
+        /// Execute a command on the data source and returns the number of rows.
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <returns>Number of rows</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual async Task<int> OnExecuteNonQueryAsync(string nameOrQuery, IDictionary<string, object> parameters = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        await connection.OpenAsync().ConfigureAwait(false);
+                        var resInt = await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        //Returns the IEnumerable of T with the late fillMethod call.
+                        return resInt;
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
             }
         }
         #endregion
@@ -1041,6 +1769,73 @@ namespace TWCore.Data
                 throw;
             }
         }
+        /// <summary>
+        /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parametersIEnumerable">Inputsparameters</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual async Task OnExecuteNonQueryAsync(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                try
+                {
+                    await connection.OpenAsync().ConfigureAwait(false);
+
+                    using (var command = GetCommand())
+                    {
+                        var transaction = connection.BeginTransaction();
+
+                        #region Sets Connection Object
+                        command.Connection = connection;
+                        command.Transaction = transaction;
+                        command.CommandTimeout = CommandTimeout;
+                        switch (AccessType)
+                        {
+                            case DataAccessType.Query:
+                                command.CommandType = CommandType.Text;
+                                break;
+                            case DataAccessType.StoredProcedure:
+                                command.CommandType = CommandType.StoredProcedure;
+                                break;
+                        }
+                        command.CommandText = nameOrQuery;
+                        #endregion
+
+                        foreach (var parameters in parametersIEnumerable)
+                        {
+                            #region Bind parameters
+                            //Bind parameters
+                            ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                            #endregion
+
+                            #region Command Execution
+                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+                            #endregion
+                        }
+
+                        try
+                        {
+                            transaction.Commit();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                            transaction.Rollback();
+                            throw;
+                        }
+                    }
+                    connection.Close();
+                }
+                catch
+                {
+                    connection.Close();
+                    throw;
+                }
+            }
+        }
         #endregion
 
         #region SelectScalarAsync
@@ -1072,6 +1867,87 @@ namespace TWCore.Data
                 Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
+            }
+        }
+        /// <summary>
+        /// Select a single row field from the data source
+        /// </summary>
+        /// <param name="nameOrQuery">Procedure name or sql query</param>
+        /// <param name="parameters">Inputs and outputs parameters</param>
+        /// <returns>Number of rows</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual async Task<T> OnSelectScalarAsync<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        await connection.OpenAsync().ConfigureAwait(false);
+                        var value = await command.ExecuteScalarAsync().ConfigureAwait(false);
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+
+                        var valueType = value?.GetType();
+                        var propertyType = typeof(T).GetUnderlyingType();
+                        var defaultValue = default(T);
+
+                        object result = defaultValue;
+
+                        if (propertyType == typeof(Guid) && valueType == typeof(string))
+                            result = new Guid((string)value);
+                        else if (propertyType.GetTypeInfo().IsEnum &&
+                            (valueType == typeof(int) || valueType == typeof(Int64) || valueType == typeof(string) || valueType == typeof(byte)))
+                            result = Enum.Parse(propertyType, value.ToString());
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, out object valueConverterResult))
+                            result = valueConverterResult;
+                        else
+                        {
+                            try
+                            {
+                                result = Convert.ChangeType(value, propertyType);
+                            }
+                            catch (InvalidCastException exCast)
+                            {
+                                Core.Log.Write(exCast);
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }
+                        return (T)result;
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
             }
         }
         #endregion
@@ -1377,52 +2253,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task SelectResultSetsElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
             => OnSelectElementsAsync(nameOrQuery, parameters, resultSets);
-        #endregion
-
-        #region Abstract Async Methods
-        /// <summary>
-        /// Selects a collection of elements from the data source
-        /// </summary>
-        /// <typeparam name="T">Type of entity to be selected</typeparam>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <param name="fillMethod">Entity fill delegate</param>
-        /// <returns>IEnumerable of entity type with the results from the data source</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task<IEnumerable<T>> OnSelectElementsAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod);
-        /// <summary>
-        /// Select a single element from the data source
-        /// </summary>
-        /// <typeparam name="T">Type of entity to be selected</typeparam>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <param name="fillMethod">Entity fill delegate</param>
-        /// <returns>Single entity from the data source</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task<T> OnSelectElementAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod);
-        /// <summary>
-        /// Execute a command on the data source and returns the number of rows.
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <returns>Number of rows</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task<int> OnExecuteNonQueryAsync(string nameOrQuery, IDictionary<string, object> parameters = null);
-        /// <summary>
-        /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parametersIEnumerable">Inputs parameters</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task OnExecuteNonQueryAsync(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null);
-        /// <summary>
-        /// Select a single row field from the data source
-        /// </summary>
-        /// <param name="nameOrQuery">Procedure name or sql query</param>
-        /// <param name="parameters">Inputs and outputs parameters</param>
-        /// <returns>Number of rows</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task<T> OnSelectScalarAsync<T>(string nameOrQuery, IDictionary<string, object> parameters = null);
         /// <summary>
         /// Selects a all Result sets with a collection of elements from the data source
         /// </summary>
@@ -1430,7 +2260,91 @@ namespace TWCore.Data
         /// <param name="parameters">Inputs and outputs parameters</param>
         /// <param name="resultSets">Array of IResultSetItem instances to fill from the data source</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract Task OnSelectElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets);
+        protected virtual async Task OnSelectElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                using (var command = GetCommand())
+                {
+                    #region Sets Connection Object
+                    command.Connection = connection;
+                    command.CommandTimeout = CommandTimeout;
+                    switch (AccessType)
+                    {
+                        case DataAccessType.Query:
+                            command.CommandType = CommandType.Text;
+                            break;
+                        case DataAccessType.StoredProcedure:
+                            command.CommandType = CommandType.StoredProcedure;
+                            break;
+                    }
+                    command.CommandText = nameOrQuery;
+                    #endregion
+
+                    #region Bind parameters
+                    //Bind parameters
+                    ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                    #endregion
+
+                    #region Sets EntityBinder and FillMethod
+                    resultSets?.Each(r => r.PrepareSet(EntityValueConverter));
+                    #endregion
+
+                    try
+                    {
+                        #region Command Execution
+                        await connection.OpenAsync().ConfigureAwait(false);
+                        using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
+                        {
+                            int resultSetIndex = 0;
+
+                            do
+                            {
+                                int indexNumber = 0;
+                                bool firstTime = true;
+                                var resultset = resultSets[resultSetIndex];
+
+                                while (reader.Read())
+                                {
+                                    if (firstTime)
+                                    {
+                                        firstTime = false;
+                                        var dct = new Dictionary<string, int>();
+                                        for (var i = 0; i < reader.FieldCount; i++)
+                                        {
+                                            var name = reader.GetName(i);
+                                            if (!dct.ContainsKey(name))
+                                                dct[name] = i;
+                                            else
+                                            {
+                                                var oIdx = dct[name];
+                                                var nIdx = i;
+                                                Core.Log.Error($"The column name '{name}' for the query '{nameOrQuery}' is already on the collection. [ResulsetIndex={resultSetIndex}, FirstIndex={oIdx}, CurrentIndex={nIdx}]");
+                                            }
+                                        }
+                                        indexNumber = dct.Count;
+                                        resultset.SetColumnsOnBinder(dct);
+                                    }
+                                    var columns = new object[indexNumber];
+                                    reader.GetValues(columns);
+                                    resultset.AddRow(columns);
+                                }
+                                resultSetIndex++;
+                            } while (reader.NextResult() && resultSets.Length > resultSetIndex);
+                        }
+                        ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
+                        connection.Close();
+                        #endregion
+                    }
+                    catch
+                    {
+                        connection.Close();
+                        throw;
+                    }
+                }
+            }
+        }
         #endregion
     }
 }

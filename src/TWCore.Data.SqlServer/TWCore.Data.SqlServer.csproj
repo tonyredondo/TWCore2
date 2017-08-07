@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>TWCore.Cache</Title>
+    <Title>TWCore.Data.SqlServer</Title>
     <Authors>Daniel Redondo</Authors>
     <Company />
     <Description>TWCore Framework.
-A multipurpose framework library for .net core</Description>
+A multipurpose framework library for .net core
+    </Description>
     <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
     <Version>0.2.1-alpha</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -25,6 +26,11 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="System.Data.SqlClient" Version="4.4.0-preview2-25405-01" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 

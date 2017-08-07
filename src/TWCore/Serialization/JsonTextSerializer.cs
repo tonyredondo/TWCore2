@@ -30,6 +30,8 @@ namespace TWCore.Serialization
     public class JsonTextSerializer : TextSerializer
     {
 		static ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> _serializerSettings = new ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
+        static string[] _extensions = new string[] { ".json" };
+        static string[] _mimeTypes = new string[] { SerializerMimeTypes.Json, "text/json" };
 
         #region Default Values
         /// <summary>
@@ -42,15 +44,15 @@ namespace TWCore.Serialization
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions { get; } = new string[] { ".json" };
+        public override string[] Extensions => _extensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes { get; } = new string[] { SerializerMimeTypes.Json, "text/json" };
+        public override string[] MimeTypes => _mimeTypes;
         /// <summary>
         /// Gets or sets if the serialized json result should be indented
         /// </summary>
-		public bool Indent { get; set; } = false;
+        public bool Indent { get; set; } = false;
         /// <summary>
         /// Gets or sets if the properties should be serialized in CammelCase, false if is PascalCase
         /// </summary>

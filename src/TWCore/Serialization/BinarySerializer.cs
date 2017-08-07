@@ -46,7 +46,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Known types to add to the serializer
         /// </summary>
-        public virtual List<Type> KnownTypes { get; } = new List<Type>();
+        public List<Type> KnownTypes { get; } = new List<Type>();
         /// <summary>
         /// Compresor used on Serialization and Deserialization of byte arrays, streams and files
         /// </summary>

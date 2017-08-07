@@ -32,6 +32,8 @@ namespace TWCore.Serialization
     public class XmlTextSerializer : TextSerializer
     {
         static ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings> settingsCache = new ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings>();
+        static string[] _extensions = new string[] { ".xml" };
+        static string[] _mimeTypes = new string[] { SerializerMimeTypes.Xml, "text/xml" };
 
         #region Default Values
         /// <summary>
@@ -56,11 +58,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions { get; } = new string[] { ".xml" };
+        public override string[] Extensions => _extensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes { get; } = new string[] { SerializerMimeTypes.Xml, "text/xml" };
+        public override string[] MimeTypes => _mimeTypes;
         /// <summary>
         /// Indicates if the serialized xml should have Indent
         /// </summary>

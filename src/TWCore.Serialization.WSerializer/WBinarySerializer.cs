@@ -26,19 +26,28 @@ namespace TWCore.Serialization
     /// </summary>
     public class WBinarySerializer : BinarySerializer
     {
+        static string[] _extensions = new string[] { ".wbin" };
+        static string[] _mimeTypes = new string[] { SerializerMimeTypes.WBinary };
+        static ReferencePool<WSerializer.WSerializer> _pool = ReferencePool<WSerializer.WSerializer>.Shared;
+        WSerializer.SerializerMode _mode = WSerializer.SerializerMode.Cached2048;
+
         #region Properties
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions { get; } = new string[] { ".wbin" };
+        public override string[] Extensions => _extensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes { get; } = new string[] { SerializerMimeTypes.WBinary };
+        public override string[] MimeTypes => _mimeTypes;
         /// <summary>
         /// Serialization mode
         /// </summary>
-        public WSerializer.SerializerMode SerializerMode { get; set; } = WSerializer.SerializerMode.Cached2048;
+        public WSerializer.SerializerMode SerializerMode
+        {
+            get => _mode;
+            set => _mode = value;
+        }
         /// <summary>
         /// Include Inner KnownTypes
         /// </summary>
@@ -48,19 +57,30 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = new WSerializer.WSerializer(SerializerMode);
-            foreach (var type in SerializerManager.DefaultKnownTypes.Concat(KnownTypes))
+            var ser = _pool.New();
+            ser.Mode = _mode;
+            foreach (var type in SerializerManager.DefaultKnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
-            return ser.Deserialize(stream, itemType);
+            foreach (var type in KnownTypes)
+                ser.AddKnownType(type, IncludeInnerKnownTypes);
+            var obj = ser.Deserialize(stream, itemType);
+            ser.ClearKnownTypes();
+            _pool.Store(ser);
+            return obj;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = new WSerializer.WSerializer(SerializerMode);
-            foreach (var type in SerializerManager.DefaultKnownTypes.Concat(KnownTypes))
+            var ser = _pool.New();
+            ser.Mode = _mode;
+            foreach (var type in SerializerManager.DefaultKnownTypes)
+                ser.AddKnownType(type, IncludeInnerKnownTypes);
+            foreach (var type in KnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             ser.Serialize(stream, item, itemType);
+            ser.ClearKnownTypes();
+            _pool.Store(ser);
         }
 
         /// <summary>

@@ -25,32 +25,46 @@ namespace TWCore.Serialization
     /// </summary>
     public class PWBinarySerializer : BinarySerializer
     {
+        static string[] _extensions = new string[] { ".pwbin" };
+        static string[] _mimeTypes = new string[] { SerializerMimeTypes.PWBinary };
+        static ReferencePool<PWSerializer.PWSerializer> _pool = ReferencePool<PWSerializer.PWSerializer>.Shared;
+        PWSerializer.SerializerMode _mode = PWSerializer.SerializerMode.Cached2048;
+
         #region Properties
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions { get; } = new string[] { ".pwbin" };
+        public override string[] Extensions => _extensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes { get; } = new string[] { SerializerMimeTypes.PWBinary };
+        public override string[] MimeTypes => _mimeTypes;
         /// <summary>
         /// Serialization mode
         /// </summary>
-        public PWSerializer.SerializerMode SerializerMode { get; set; } = PWSerializer.SerializerMode.Cached2048;
+        public PWSerializer.SerializerMode SerializerMode
+        {
+            get => _mode;
+            set => _mode = value;
+        }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = new PWSerializer.PWSerializer(SerializerMode);
-            return ser.Deserialize(stream, itemType);
+            var ser = _pool.New();
+            ser.Mode = _mode;
+            var obj = ser.Deserialize(stream, itemType);
+            _pool.Store(ser);
+            return obj;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = new PWSerializer.PWSerializer(SerializerMode);
+            var ser = _pool.New();
+            ser.Mode = _mode;
             ser.Serialize(stream, item);
+            _pool.Store(ser);
         }
 
         /// <summary>

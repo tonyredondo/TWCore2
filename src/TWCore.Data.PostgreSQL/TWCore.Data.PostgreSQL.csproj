@@ -1,12 +1,13 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>TWCore</Title>
+    <Title>TWCore.Data.PostgreSQL</Title>
     <Authors>Daniel Redondo</Authors>
     <Company />
     <Description>TWCore Framework.
-A multipurpose framework library for .net core</Description>
+A multipurpose framework library for .net core
+    </Description>
     <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
     <Version>0.2.1-alpha</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
@@ -25,8 +26,12 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.4.0-preview2-25405-01" />
+    <PackageReference Include="Npgsql" Version="3.2.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TWCore.Data\TWCore.Data.csproj" />
+    <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 
 </Project>

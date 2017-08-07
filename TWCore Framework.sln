@@ -59,6 +59,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Rpc.Http", "src\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.SqlServer", "src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj", "{432BF34B-6929-44D2-AC4B-3189D708B3BE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.PostgreSQL", "src\TWCore.Data.PostgreSQL\TWCore.Data.PostgreSQL.csproj", "{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -153,6 +155,10 @@ Global
 		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{432BF34B-6929-44D2-AC4B-3189D708B3BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -180,6 +186,7 @@ Global
 		{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 		{B86E8D00-6D3D-416A-89F7-AE82302C17F4} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{432BF34B-6929-44D2-AC4B-3189D708B3BE} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

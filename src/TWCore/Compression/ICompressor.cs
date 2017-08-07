@@ -58,7 +58,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
-        Task<SubArray<byte>> CompressAsync(SubArray<byte> source);
+        ValueTask<SubArray<byte>> CompressAsync(SubArray<byte> source);
         #endregion
 
         #region Decompress methods
@@ -86,7 +86,7 @@ namespace TWCore.Compression
         /// </summary>
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
-        Task<SubArray<byte>> DecompressAsync(SubArray<byte> source);
+        ValueTask<SubArray<byte>> DecompressAsync(SubArray<byte> source);
         #endregion
     }
 }

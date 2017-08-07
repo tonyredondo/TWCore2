@@ -15,15 +15,12 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Xml.Serialization;
-using TWCore.Collections;
 using TWCore.Serialization;
 
 namespace TWCore.Cache

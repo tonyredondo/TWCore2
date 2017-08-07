@@ -72,8 +72,8 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Task<SubArray<byte>> CompressAsync(SubArray<byte> source) 
-            => Task.FromResult(Compress(source));
+        public virtual ValueTask<SubArray<byte>> CompressAsync(SubArray<byte> source) 
+            => new ValueTask<SubArray<byte>>(Compress(source));
         #endregion
 
         #region Decompression Methods
@@ -112,8 +112,8 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Task<SubArray<byte>> DecompressAsync(SubArray<byte> source)
-            => Task.FromResult(Decompress(source));
+        public virtual ValueTask<SubArray<byte>> DecompressAsync(SubArray<byte> source)
+            => new ValueTask<SubArray<byte>>(Decompress(source));
         #endregion
     }
 }

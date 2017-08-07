@@ -112,7 +112,7 @@ namespace TWCore.IO
         {
             int res = _baseStream.ReadByte();
             if (res >= 0)
-                _bytesRead += res;
+                _bytesRead++;
             return res;
         }
         /// <summary>

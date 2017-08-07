@@ -25,11 +25,13 @@ namespace TWCore.IO
     /// </summary>
     public class LimitedStream : Stream
     {
+		Stream _baseStream = null;
+
         #region Properties
         /// <summary>
         /// Base stream decorated
         /// </summary>
-        public Stream BaseStream { get; set; }
+		public Stream BaseStream => _baseStream;
         /// <summary>
         /// Remaining bytes to read
         /// </summary>
@@ -41,19 +43,19 @@ namespace TWCore.IO
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
-        public override bool CanSeek => BaseStream.CanSeek;
+		public override bool CanSeek => _baseStream.CanSeek;
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
-        public override bool CanRead => BaseStream.CanRead;
+		public override bool CanRead => _baseStream.CanRead;
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
-        public override bool CanWrite => BaseStream.CanWrite;
+		public override bool CanWrite => _baseStream.CanWrite;
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => Math.Min(BaseStream.Length, MaxLength);
+		public override long Length => Math.Min(_baseStream.Length, MaxLength);
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
@@ -62,12 +64,12 @@ namespace TWCore.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                return BaseStream.Position;
+				return _baseStream.Position;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                BaseStream.Position = value;
+				_baseStream.Position = value;
             }
         }
         #endregion
@@ -79,7 +81,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LimitedStream(Stream baseStream, int maxLength)
         {
-            BaseStream = baseStream;
+			_baseStream = baseStream;
             MaxLength = maxLength;
             Remaining = MaxLength;
         }
@@ -97,7 +99,7 @@ namespace TWCore.IO
         public override int Read(byte[] buffer, int offset, int count)
         {
             var nCount = Math.Min(count, Remaining);
-            int res = BaseStream.Read(buffer, offset, nCount);
+			int res = _baseStream.Read(buffer, offset, nCount);
             if (res > 0)
                 Remaining -= res;
             return res;
@@ -111,7 +113,7 @@ namespace TWCore.IO
         {
             if (Remaining <= 0)
                 return -1;
-            int res = BaseStream.ReadByte();
+			int res = _baseStream.ReadByte();
             if (res >= 0)
                 Remaining--;
             return res;
@@ -125,7 +127,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            BaseStream.Write(buffer, offset, count);
+			_baseStream.Write(buffer, offset, count);
         }
         /// <summary>
         /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
@@ -134,7 +136,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteByte(byte value)
         {
-            BaseStream.WriteByte(value);
+			_baseStream.WriteByte(value);
         }
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
@@ -142,7 +144,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Flush()
         {
-            BaseStream.Flush();
+			_baseStream.Flush();
         }
         /// <summary>
         /// Sets the position within the current stream.
@@ -151,13 +153,13 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) => BaseStream.Seek(offset, origin);
+		public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void SetLength(long value) => BaseStream.SetLength(value);
+		public override void SetLength(long value) => _baseStream.SetLength(value);
         #endregion
     }
 }

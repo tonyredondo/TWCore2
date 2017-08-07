@@ -27,8 +27,8 @@ namespace TWCore.IO
     /// </summary>
     public class TwoWayStream : Stream
     {
-        private readonly Stream _readStream;
-        private readonly Stream _writeStream;
+        readonly Stream _readStream;
+        readonly Stream _writeStream;
 
         #region Properties
         /// <summary>

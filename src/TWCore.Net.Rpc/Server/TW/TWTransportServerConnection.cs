@@ -63,9 +63,8 @@ namespace TWCore.Net.RPC.Server.Transports
         bool disconnectionEventSent = false;
         CancellationTokenSource tokenSource;
         CancellationToken token;
-        Stream ReadStream;
-        Stream WriteStream;
-        BinaryReader Reader;
+        BufferedStream ReadStream;
+        BufferedStream WriteStream;
         ISerializer Serializer;
         BytesCounterStream readCounterStream;
         BytesCounterStream writeCounterStream;
@@ -104,12 +103,12 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Receive  Size
         /// </summary>
         [StatusProperty]
-		public int ReceiveSize { get; set; } = 16384;
+		public int ReceiveSize { get; set; } = 32768;
         /// <summary>
         /// Send  Size
         /// </summary>
         [StatusProperty]
-		public int SendSize { get; set; } = 16384;
+		public int SendSize { get; set; } = 32768;
         #endregion
 
         #region Delegates
@@ -150,13 +149,12 @@ namespace TWCore.Net.RPC.Server.Transports
             writeCounterStream = new BytesCounterStream(netStream);
             ReadStream = new BufferedStream(readCounterStream, ReceiveSize);
             WriteStream = new BufferedStream(writeCounterStream, SendSize);
-            Reader = new BinaryReader(ReadStream, Encoding.UTF8, true);
 
             ReceiveTask = Task.Factory.StartNew(() =>
             {
                 while (!token.IsCancellationRequested && !Disconnected)
                 {
-                    var (msgType, message) = GetRPCMessage(Reader);
+                    var (msgType, message) = GetRPCMessage();
                     switch (msgType)
                     {
                         case RPCMessageType.Unknown:
@@ -240,15 +238,15 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        (RPCMessageType, RPCMessage) GetRPCMessage(BinaryReader reader)
+        (RPCMessageType, RPCMessage) GetRPCMessage()
         {
             lock (readLock)
             {
                 #region LoadType
-                byte mTypeByte = 255;
+                int mTypeByte = 255;
                 try
                 {
-                    mTypeByte = reader.ReadByte();
+                    mTypeByte = ReadStream.ReadByte();
                 }
                 catch (Exception ex)
                 {
@@ -289,10 +287,10 @@ namespace TWCore.Net.RPC.Server.Transports
 					switch(mTypeEnum)
 					{
 						case RPCMessageType.SessionRequest:
-							message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCSessionRequestMessage));
+							message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCSessionRequestMessage));
 							break;
 						case RPCMessageType.RequestMessage:
-							message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCRequestMessage));
+							message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCRequestMessage));
 							break;
 					}
                 }

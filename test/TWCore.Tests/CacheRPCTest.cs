@@ -40,7 +40,13 @@ namespace TWCore.Tests
                 {
                     string key = "test-" + i;
                     value = cachePool.Get(key);
-                    Core.Log.InfoBasic("Value is Null: {0}", value == null);
+                    cachePool.Set(key, "bla bla bla bla bla");
+                }
+                Console.ReadLine();
+                for (var i = 0; i < 1000; i++)
+                {
+                    string key = "test-" + i;
+                    value = cachePool.Get(key);
                     cachePool.Set(key, "bla bla bla bla bla");
                 }
             }

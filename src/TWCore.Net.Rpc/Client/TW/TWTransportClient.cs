@@ -117,12 +117,12 @@ namespace TWCore.Net.RPC.Client.Transports
         /// Receive Buffer Size
         /// </summary>
         [StatusProperty]
-        public int ReceiveBufferSize { get; set; } = 16384;
+        public int ReceiveBufferSize { get; set; } = 32768;
         /// <summary>
         /// Send Buffer Size
         /// </summary>
         [StatusProperty]
-		public int SendBufferSize { get; set; } = 16384;
+		public int SendBufferSize { get; set; } = 32768;
         /// <summary>
         /// Invoke Method Timeout
         /// </summary>
@@ -530,9 +530,8 @@ namespace TWCore.Net.RPC.Client.Transports
             Task ReceiveTask;
             Timer PingTimer;
 
-            Stream WriteStream;
-            Stream ReadStream;
-            BinaryReader Reader;
+            BufferedStream WriteStream;
+            BufferedStream ReadStream;
             IO.BytesCounterStream readCounterStream;
             IO.BytesCounterStream writeCounterStream;
             ManualResetEventSlim connectionEvent = new ManualResetEventSlim();
@@ -641,7 +640,6 @@ namespace TWCore.Net.RPC.Client.Transports
                     writeCounterStream = new BytesCounterStream(netStream);
                     ReadStream = new BufferedStream(readCounterStream, _receiveBufferSize);
                     WriteStream = new BufferedStream(writeCounterStream, _sendBufferSize);
-                    Reader = new BinaryReader(ReadStream, Encoding.UTF8, true);
                     lastWriteDate = DateTime.UtcNow;
                     receiveMessageEvent.Set();
                     socketStatus = SocketStatus.Connected;
@@ -770,15 +768,15 @@ namespace TWCore.Net.RPC.Client.Transports
 
             #region Internal Write/Read Data
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            (RPCMessageType, RPCMessage) GetRPCMessage(BinaryReader reader)
+            (RPCMessageType, RPCMessage) GetRPCMessage()
             {
                 RPCMessageType mTypeEnum;
-                byte mTypeByte;
+                int mTypeByte;
                 lock (readLock)
                 {
                     try
                     {
-                        mTypeByte = reader.ReadByte();
+                        mTypeByte = ReadStream.ReadByte();
                     }
                     catch
                     {
@@ -806,16 +804,16 @@ namespace TWCore.Net.RPC.Client.Transports
 						switch(mTypeEnum)
 						{
 							case RPCMessageType.SessionResponse:
-								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCSessionResponseMessage));
+								message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCSessionResponseMessage));
 								break;
 							case RPCMessageType.ResponseMessage:
-								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCResponseMessage));
+								message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCResponseMessage));
 								break;
 							case RPCMessageType.EventMessage:
-								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCEventMessage));
+								message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCEventMessage));
 								break;
 							case RPCMessageType.PushMessage:
-								message = (RPCMessage)Serializer.Deserialize(reader.BaseStream, typeof(RPCPushMessage));
+								message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCPushMessage));
 								break;
 						}
                     }
@@ -975,7 +973,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     RPCMessage message = null;
                     try
                     {
-                        var tpl = GetRPCMessage(Reader);
+                        var tpl = GetRPCMessage();
                         msgType = tpl.Item1;
                         message = tpl.Item2;
                     }

@@ -36,6 +36,28 @@ namespace TWCore.Data
         /// <param name="dalAssembly">Data access layer assembly</param>
         public void Register(Assembly dalAssembly)
         {
+            dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal))).Each(t =>
+            {
+                var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
+                foreach (var iface in ifaces)
+                {
+                    try
+                    {
+                        Core.Injector.Register(iface, t.AsType(), t.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            });
+        }
+        /// <summary>
+        /// Register the dal on the injector
+        /// </summary>
+        /// <param name="dalAssembly">Data access layer assembly</param>
+        public void RegisterUnsafe(Assembly dalAssembly)
+        {
             dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any()).Each(t =>
             {
                 var iface = t.ImplementedInterfaces.First();
@@ -43,7 +65,7 @@ namespace TWCore.Data
                 {
                     Core.Injector.Register(iface, t.AsType(), t.Name);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                 }

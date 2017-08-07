@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
 {
@@ -28,14 +29,25 @@ namespace TWCore.Data
         /// <summary>
         /// Register the dal on the injector
         /// </summary>
-        public void Register() => Register(this.GetAssembly());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Register()
+        {
+            var assembly = this.GetAssembly();
+            if (Register(assembly) == 0)
+            {
+                Core.Log.Warning("Registering DAL in unsafe mode.");
+                RegisterUnsafe(assembly);
+            }
+        }
 
         /// <summary>
         /// Register the dal on the injector
         /// </summary>
         /// <param name="dalAssembly">Data access layer assembly</param>
-        public void Register(Assembly dalAssembly)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int Register(Assembly dalAssembly)
         {
+            int res = 0;
             dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal))).Each(t =>
             {
                 var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
@@ -43,6 +55,7 @@ namespace TWCore.Data
                 {
                     try
                     {
+                        res++;
                         Core.Injector.Register(iface, t.AsType(), t.Name);
                     }
                     catch (Exception ex)
@@ -51,18 +64,22 @@ namespace TWCore.Data
                     }
                 }
             });
+            return res;
         }
         /// <summary>
         /// Register the dal on the injector
         /// </summary>
         /// <param name="dalAssembly">Data access layer assembly</param>
-        public void RegisterUnsafe(Assembly dalAssembly)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int RegisterUnsafe(Assembly dalAssembly)
         {
+            int res = 0;
             dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any()).Each(t =>
             {
                 var iface = t.ImplementedInterfaces.First();
                 try
                 {
+                    res++;
                     Core.Injector.Register(iface, t.AsType(), t.Name);
                 }
                 catch (Exception ex)
@@ -70,6 +87,7 @@ namespace TWCore.Data
                     Core.Log.Write(ex);
                 }
             });
+            return res;
         }
     }
 }

@@ -75,9 +75,12 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual SubArray<byte> Compress(SubArray<byte> source)
         {
-            var msDes = new MemoryStream();
-            Compress(source.ToMemoryStream(), msDes);
-            return msDes.ToSubArray();
+            using (var msDes = new MemoryStream())
+            {
+                using (var msOrg = source.ToMemoryStream())
+                    Compress(msOrg, msDes);
+                return msDes.ToSubArray();
+            }
         }
         /// <summary>
         /// Compress a byte array
@@ -87,9 +90,11 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async ValueTask<SubArray<byte>> CompressAsync(SubArray<byte> source)
         {
-            var msDes = new MemoryStream();
-            await CompressAsync(source.ToMemoryStream(), msDes).ConfigureAwait(false);
-            return msDes.ToSubArray();
+            using (var msDes = new MemoryStream())
+            {
+                await CompressAsync(source.ToMemoryStream(), msDes).ConfigureAwait(false);
+                return msDes.ToSubArray();
+            }
         }
         #endregion
 
@@ -131,9 +136,12 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual SubArray<byte> Decompress(SubArray<byte> source)
         {
-            var msDes = new MemoryStream();
-            Decompress(source.ToMemoryStream(), msDes);
-            return msDes.ToSubArray();
+            using (var msDes = new MemoryStream())
+            {
+                using (var msOrg = source.ToMemoryStream())
+                    Decompress(msOrg, msDes);
+                return msDes.ToSubArray();
+            }
         }
         /// <summary>
         /// Decompress a byte array
@@ -143,9 +151,12 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async ValueTask<SubArray<byte>> DecompressAsync(SubArray<byte> source)
         {
-            var msDes = new MemoryStream();
-            await DecompressAsync(source.ToMemoryStream(), msDes).ConfigureAwait(false);
-            return msDes.ToSubArray();
+            using (var msDes = new MemoryStream())
+            {
+                using (var msOrg = source.ToMemoryStream())
+                    await DecompressAsync(msOrg, msDes).ConfigureAwait(false);
+                return msDes.ToSubArray();
+            }
         }
         #endregion
     }

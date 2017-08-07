@@ -140,16 +140,17 @@ namespace TWCore.Security
         public virtual byte[] Encrypt(byte[] data, byte[] password)
         {
             Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
-            MemoryStream ms = new MemoryStream();
-            lock (alg)
+            using (var ms = new MemoryStream())
             {
-                alg.Key = pdb.GetBytes(32);
-                alg.IV = pdb.GetBytes(16);
-                using (var cs = new CryptoStream(ms, alg.CreateEncryptor(), CryptoStreamMode.Write))
-                    cs.Write(data, 0, data.Length);
+                lock (alg)
+                {
+                    alg.Key = pdb.GetBytes(32);
+                    alg.IV = pdb.GetBytes(16);
+                    using (var cs = new CryptoStream(ms, alg.CreateEncryptor(), CryptoStreamMode.Write))
+                        cs.Write(data, 0, data.Length);
+                }
+                return ms.ToArray();
             }
-            byte[] encryptedData = ms.ToArray();
-            return encryptedData;
         }
 
         /// <summary>
@@ -186,16 +187,17 @@ namespace TWCore.Security
         public virtual byte[] Decrypt(byte[] data, byte[] password)
         {
             Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
-            MemoryStream ms = new MemoryStream();
-            lock (alg)
+            using (var ms = new MemoryStream())
             {
-                alg.Key = pdb.GetBytes(32);
-                alg.IV = pdb.GetBytes(16);
-                using (var cs = new CryptoStream(ms, alg.CreateDecryptor(), CryptoStreamMode.Write))
-                    cs.Write(data, 0, data.Length);
+                lock (alg)
+                {
+                    alg.Key = pdb.GetBytes(32);
+                    alg.IV = pdb.GetBytes(16);
+                    using (var cs = new CryptoStream(ms, alg.CreateDecryptor(), CryptoStreamMode.Write))
+                        cs.Write(data, 0, data.Length);
+                }
+                return ms.ToArray();
             }
-            byte[] decryptedData = ms.ToArray();
-            return decryptedData;
         }
         #endregion
 

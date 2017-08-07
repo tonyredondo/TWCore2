@@ -61,9 +61,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SubArray<byte> ReadBytes(this Stream stream)
         {
-            MemoryStream ms = new MemoryStream();
-            stream.CopyTo(ms);
-            return ms.ToSubArray();
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.ToSubArray();
+            }
         }
         /// <summary>
         /// Reads the data from a stream a returns the bytes array
@@ -74,9 +76,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SubArray<byte> ReadBytes(this Stream stream, int bufferSize)
         {
-            MemoryStream ms = new MemoryStream();
-            stream.CopyTo(ms, bufferSize);
-            return ms.ToSubArray();
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms, bufferSize);
+                return ms.ToSubArray();
+            }
         }
         /// <summary>
         /// Reads the data from a stream a returns the bytes array
@@ -86,9 +90,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream)
         {
-            MemoryStream ms = new MemoryStream();
-            await stream.CopyToAsync(ms).ConfigureAwait(false);
-            return ms.ToSubArray();
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms).ConfigureAwait(false);
+                return ms.ToSubArray();
+            }
         }
         /// <summary>
         /// Reads the data from a stream a returns the bytes array
@@ -99,9 +105,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize)
         {
-            MemoryStream ms = new MemoryStream();
-            await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
-            return ms.ToArray();
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
+                return ms.ToArray();
+            }
         }
         /// <summary>
         /// Reads the data from a stream a returns the bytes array
@@ -113,10 +121,12 @@ namespace TWCore
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, int timeout)
         {
             CancellationTokenSource cts = new CancellationTokenSource();
-            MemoryStream ms = new MemoryStream();
-            cts.CancelAfter(timeout);
-            await stream.CopyToAsync(ms, bufferSize, cts.Token).ConfigureAwait(false);
-            return ms.ToSubArray();
+            using (var ms = new MemoryStream())
+            {
+                cts.CancelAfter(timeout);
+                await stream.CopyToAsync(ms, bufferSize, cts.Token).ConfigureAwait(false);
+                return ms.ToSubArray();
+            }
         }
         /// <summary>
         /// Reads the data from a stream a returns the bytes array
@@ -127,9 +137,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
         {
-            MemoryStream ms = new MemoryStream();
-            await stream.CopyToAsync(ms, bufferSize, cancellationToken).ConfigureAwait(false);
-            return ms.ToSubArray();
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms, bufferSize, cancellationToken).ConfigureAwait(false);
+                return ms.ToSubArray();
+            }
         }
         /// <summary>
         /// Read a string line from a stream

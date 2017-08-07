@@ -45,8 +45,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Compress(Stream source, Stream destination)
         {
-            var ms = Compress(source.ReadBytes()).ToMemoryStream();
-            ms.CopyTo(destination);
+            using (var ms = Compress(source.ReadBytes()).ToMemoryStream())
+                ms.CopyTo(destination);
         }
         /// <summary>
         /// Compress a stream into another stream
@@ -56,8 +56,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task CompressAsync(Stream source, Stream destination)
         {
-            var ms = Compress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream();
-            await ms.CopyToAsync(destination).ConfigureAwait(false);
+            using (var ms = Compress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
+                await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <summary>
         /// Compress a byte array
@@ -85,8 +85,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Decompress(Stream source, Stream destination)
         {
-            var ms = Decompress(source.ReadBytes()).ToMemoryStream();
-            ms.CopyTo(destination);
+            using (var ms = Decompress(source.ReadBytes()).ToMemoryStream())
+                ms.CopyTo(destination);
         }
         /// <summary>
         /// Decompress a stream into another stream
@@ -96,8 +96,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task DecompressAsync(Stream source, Stream destination)
         {
-            var ms = Decompress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream();
-            await ms.CopyToAsync(destination).ConfigureAwait(false);
+            using (var ms = Decompress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
+                await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <summary>
         /// Decompress a byte array

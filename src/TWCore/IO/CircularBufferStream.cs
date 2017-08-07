@@ -30,9 +30,9 @@ namespace TWCore.IO
         byte[] _buffer;
         int ReadPosition => BitConverter.ToInt32(_buffer, 0);
         int WritePosition => BitConverter.ToInt32(_buffer, 4);
-        ManualResetEventSlim readEvent = new ManualResetEventSlim(true);
-        ManualResetEventSlim writeEvent = new ManualResetEventSlim(true);
-        bool firstTime = false;
+		readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(true);
+		readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(true);
+		bool firstTime = false;
         #endregion
 
         #region Properties

@@ -27,8 +27,9 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
+		static ConcurrentQueue<List<byte[]>> _lstPool = new ConcurrentQueue<List<byte[]>>();
         static ConcurrentQueue<byte[]> _pool = new ConcurrentQueue<byte[]>();
-        int _maxLength = 255;
+        static int _maxLength = 255;
         bool _canWrite = true;
         int _length = 0;
         int _maxRow = 0;
@@ -101,10 +102,11 @@ namespace TWCore.IO
         public RecycleMemoryStream(byte[] buffer, int index, int count, bool writable)
         {
             _currentBuffer = GetArray();
-            _buffer = new List<byte[]> { _currentBuffer };
+			_buffer = GetList();
+			_buffer.Add(_currentBuffer);
             _maxRow = 0;
             if (buffer != null)
-                Write(buffer, index, count);
+                InternalWrite(buffer, index, count);
             _canWrite = writable;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -115,12 +117,13 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void Dispose(bool disposing)
         {
-            _currentBuffer = null;
             if (_buffer != null)
             {
+				_currentBuffer = null;
                 foreach (var array in _buffer)
                     StoreArray(array);
-                _buffer.Clear();
+				StoreList(_buffer);
+				_buffer = null;
             }
             base.Dispose(disposing);
         }
@@ -206,33 +209,7 @@ namespace TWCore.IO
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
-        {
-            int total = 0;
-            while (count > 0)
-            {
-                var clength = (_rowIndex == _maxRow) ? _length : _maxLength;
-                var remain = clength - _position;
-                if (remain == 0)
-                {
-                    if (_rowIndex < _maxRow)
-                    {
-                        _rowIndex++;
-                        _currentBuffer = _buffer[_rowIndex];
-                        _position = 0;
-                        remain = (_rowIndex == _maxRow) ? _length : _maxLength;
-                    }
-                    else
-                        return total;
-                }
-                var canRead = remain < count ? remain : count;
-                Buffer.BlockCopy(_currentBuffer, _position, buffer, offset, canRead);
-                count -= canRead;
-                offset += canRead;
-                total += canRead;
-                _position += canRead;
-            }
-            return total;
-        }
+			=> InternalRead(buffer, offset, count);
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
@@ -241,59 +218,106 @@ namespace TWCore.IO
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
-        {
-            while (count > 0)
-            {
-                var remain = _maxLength - _position;
-                if (remain == 0)
-                {
-                    _currentBuffer = GetArray();
-                    _buffer.Add(_currentBuffer);
-                    _maxRow++;
-                    _rowIndex++;
-                    _position = 0;
-                    _length = 0;
-                    remain = _maxLength;
-                }
-                var canWrite = remain < count ? remain : count;
-                Buffer.BlockCopy(buffer, offset, _currentBuffer, _position, canWrite);
-                count -= canWrite;
-                offset += canWrite;
-                _position += canWrite;
-                if (_position > _length) _length = _position;
-            }
-        }
+			=> InternalWrite(buffer, offset, count);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteByte(byte value)
         {
             _singleByte[0] = value;
-            Write(_singleByte, 0, 1);
+			InternalWrite(_singleByte, 0, 1);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
         {
-            if (Read(_singleByte, 0, 1) > 0)
+            if (InternalRead(_singleByte, 0, 1) > 0)
                 return _singleByte[0];
             return -1;
         }
         #endregion
 
+		#region Private Method
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		int InternalRead(byte[] buffer, int offset, int count)
+		{
+			int total = 0;
+			while (count > 0)
+			{
+				var clength = (_rowIndex == _maxRow) ? _length : _maxLength;
+				var remain = clength - _position;
+				if (remain == 0)
+				{
+					if (_rowIndex < _maxRow)
+					{
+						_rowIndex++;
+						_currentBuffer = _buffer[_rowIndex];
+						_position = 0;
+						remain = (_rowIndex == _maxRow) ? _length : _maxLength;
+					}
+					else
+						return total;
+				}
+				var canRead = remain < count ? remain : count;
+				Buffer.BlockCopy(_currentBuffer, _position, buffer, offset, canRead);
+				count -= canRead;
+				offset += canRead;
+				total += canRead;
+				_position += canRead;
+			}
+			return total;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void InternalWrite(byte[] buffer, int offset, int count)
+		{
+			while (count > 0)
+			{
+				var remain = _maxLength - _position;
+				if (remain == 0)
+				{
+					_currentBuffer = GetArray();
+					_buffer.Add(_currentBuffer);
+					_maxRow++;
+					_rowIndex++;
+					_position = 0;
+					_length = 0;
+					remain = _maxLength;
+				}
+				var canWrite = remain < count ? remain : count;
+				Buffer.BlockCopy(buffer, offset, _currentBuffer, _position, canWrite);
+				count -= canWrite;
+				offset += canWrite;
+				_position += canWrite;
+				if (_position > _length) _length = _position;
+			}
+		}
+		#endregion
+
         #region Pool Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        byte[] GetArray()
+        static byte[] GetArray()
         {
             if (!_pool.TryDequeue(out var res))
                 res = new byte[_maxLength];
             return res;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void StoreArray(byte[] array)
+        static void StoreArray(byte[] array)
         {
-            if (array.Length != _maxLength) return;
             Array.Clear(array, 0, _maxLength);
             _pool.Enqueue(array);
         }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static List<byte[]> GetList()
+		{
+			if (!_lstPool.TryDequeue(out var res))
+				res = new List<byte[]>(10);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static void StoreList(List<byte[]> lst)
+		{
+			lst.Clear();
+			_lstPool.Enqueue(lst);
+		}
         #endregion
     }
 }

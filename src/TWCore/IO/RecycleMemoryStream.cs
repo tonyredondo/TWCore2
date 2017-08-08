@@ -210,7 +210,7 @@ namespace TWCore.IO
             int total = 0;
             while (count > 0)
             {
-                var clength = (_rowIndex == _maxRow) ? Math.Min(_maxLength, _length) : _maxLength;
+                var clength = (_rowIndex == _maxRow) ? _length : _maxLength;
                 var remain = clength - _position;
                 if (remain == 0)
                 {
@@ -219,12 +219,12 @@ namespace TWCore.IO
                         _rowIndex++;
                         _currentBuffer = _buffer[_rowIndex];
                         _position = 0;
-                        remain = (_rowIndex == _maxRow) ? Math.Min(_maxLength, _length) : _maxLength;
+                        remain = (_rowIndex == _maxRow) ? _length : _maxLength;
                     }
                     else
                         return total;
                 }
-                var canRead = Math.Min(count, remain);
+                var canRead = remain < count ? remain : count;
                 Buffer.BlockCopy(_currentBuffer, _position, buffer, offset, canRead);
                 count -= canRead;
                 offset += canRead;
@@ -255,7 +255,7 @@ namespace TWCore.IO
                     _length = 0;
                     remain = _maxLength;
                 }
-                var canWrite = Math.Min(count, remain);
+                var canWrite = remain < count ? remain : count;
                 Buffer.BlockCopy(buffer, offset, _currentBuffer, _position, canWrite);
                 count -= canWrite;
                 offset += canWrite;

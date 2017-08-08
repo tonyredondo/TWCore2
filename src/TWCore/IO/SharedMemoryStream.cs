@@ -63,16 +63,13 @@ namespace TWCore.IO
         /// <summary>
         /// Circular buffer stream
         /// </summary>
-        /// <param name="filePath">Name of the shared memory file</param>
+        /// <param name="name">Name of the shared memory</param>
         /// <param name="bufferSize">Buffer size, default size 262144 bytes</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SharedMemoryStream(string filePath, int bufferSize = 262144)
+        public SharedMemoryStream(string name, int bufferSize = 262144)
         {
             length = bufferSize;
-            var name = Path.GetFileNameWithoutExtension(filePath);
-            _mmfBuffer = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, length + start);
-            //_mmfBuffer = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, name, length + start);
-            //_mmfBuffer = MemoryMappedFile.CreateOrOpen(name, length + start);
+            _mmfBuffer = MemoryMappedFile.CreateOrOpen(name, length + start);
             _view = _mmfBuffer.CreateViewAccessor();
             var readEventName = "Global\\CoreStream." + name + ".Read";
             var writeEventName = "Global\\CoreStream." + name + ".Write";

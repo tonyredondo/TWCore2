@@ -53,7 +53,7 @@ namespace TWCore.Tests
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("Press Enter to Start SharedMemoryStream Test. Press Enter Again to finish the test.");
             Console.ReadLine();
-            using (var sharedms = new SharedMemoryStream("./test.map", 2000))
+            using (var sharedms = new SharedMemoryStream("test", 2000))
             {
                 CancellationTokenSource cts = new CancellationTokenSource();
                 Task.Run(async () =>

@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace TWCore.IO
 {
@@ -27,8 +28,10 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-		static ConcurrentQueue<List<byte[]>> _lstPool = new ConcurrentQueue<List<byte[]>>();
-        static ConcurrentQueue<byte[]> _pool = new ConcurrentQueue<byte[]>();
+		static Queue<List<byte[]>> _lstPool = new Queue<List<byte[]>>();
+        static long _lstPoolCount = 0;
+        static Queue<byte[]> _pool = new Queue<byte[]>();
+        static long _poolCount = 0;
         static int _maxLength = 255;
         bool _canWrite = true;
         int _length = 0;
@@ -295,29 +298,35 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static byte[] GetArray()
         {
-            if (!_pool.TryDequeue(out var res))
-                res = new byte[_maxLength];
-            return res;
+            if (Interlocked.Read(ref _poolCount) > 0)
+                lock (_pool)
+                    return _pool.Dequeue();
+            return new byte[_maxLength];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void StoreArray(byte[] array)
         {
             Array.Clear(array, 0, _maxLength);
-            _pool.Enqueue(array);
+            lock(_pool)
+                _pool.Enqueue(array);
+            Interlocked.Increment(ref _poolCount);
         }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static List<byte[]> GetList()
 		{
-			if (!_lstPool.TryDequeue(out var res))
-				res = new List<byte[]>(10);
-			return res;
-		}
+            if (Interlocked.Read(ref _lstPoolCount) > 0)
+                lock (_lstPool)
+                    return _lstPool.Dequeue();
+            return new List<byte[]>(10);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static void StoreList(List<byte[]> lst)
 		{
 			lst.Clear();
-			_lstPool.Enqueue(lst);
-		}
+            lock(_lstPool)
+                _lstPool.Enqueue(lst);
+            Interlocked.Increment(ref _lstPoolCount);
+        }
         #endregion
     }
 }

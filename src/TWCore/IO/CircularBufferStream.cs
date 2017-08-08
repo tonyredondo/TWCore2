@@ -27,14 +27,13 @@ namespace TWCore.IO
     public class CircularBufferStream : Stream
     {
         #region Fields
-        int start = 8;
+        int start = 9;
         int length = 0;
         byte[] _buffer;
         readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(false);
         readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(false);
         readonly object readLock = new object();
         readonly object writeLock = new object();
-        long readFirst = 0;
         #endregion
 
         #region Properties
@@ -110,7 +109,7 @@ namespace TWCore.IO
             {
                 var rPos = GetReadPosition();
                 var wPos = GetWritePosition();
-                while (Interlocked.Read(ref readFirst) == 0 && rPos == wPos)
+                while (GetReadFirst() == 0 && rPos == wPos)
                 {
                     writeEvent.Wait();
                     writeEvent.Reset();
@@ -118,7 +117,7 @@ namespace TWCore.IO
                 }
                 int totalRead = 0;
                 int cLength = 0;
-                if (Interlocked.Read(ref readFirst) == 0)
+                if (GetReadFirst() == 0)
                     cLength = rPos > wPos ? length : wPos;
                 else
                     cLength = rPos >= wPos ? length : wPos;
@@ -132,7 +131,6 @@ namespace TWCore.IO
                         SetReadPosition(0);
                     else
                         SetReadPosition(rPos);
-                    readEvent.Set();
                 }
                 else
                 {
@@ -143,7 +141,6 @@ namespace TWCore.IO
                     if (rPos == wPos)
                     {
                         SetReadPosition(rPos);
-                        readEvent.Set();
                     }
                     else
                     {
@@ -151,17 +148,12 @@ namespace TWCore.IO
                         Buffer.BlockCopy(_buffer, start, buffer, offset + bufRemain, canRead);
                         totalRead += canRead;
                         if (canRead < remain)
-                        {
                             SetReadPosition(canRead);
-                            readEvent.Set();
-                        }
                         else
-                        {
                             SetReadPosition(remain);
-                            readEvent.Set();
-                        }
                     }
                 }
+                readEvent.Set();
                 return totalRead;
             }
         }
@@ -178,13 +170,12 @@ namespace TWCore.IO
             {
                 var rPos = GetReadPosition();
                 var wPos = GetWritePosition();
-                while (Interlocked.Read(ref readFirst) == 1 && rPos == wPos)
+                while (GetReadFirst() == 1 && rPos == wPos)
                 {
                     readEvent.Wait();
                     readEvent.Reset();
                     rPos = GetReadPosition();
                 }
-
                 int cLength = rPos <= wPos ? length : rPos;
                 var bufRemain = cLength - wPos;
                 if (bufRemain >= count)
@@ -196,7 +187,7 @@ namespace TWCore.IO
                     else
                         SetWritePosition(wPos);
                     if (rPos == wPos)
-                        Interlocked.Exchange(ref readFirst, 1);
+                        SetReadFirst(1);
                     writeEvent.Set();
                 }
                 else
@@ -207,7 +198,7 @@ namespace TWCore.IO
                     if (wPos == rPos)
                     {
                         SetWritePosition(wPos);
-                        Interlocked.Exchange(ref readFirst, 1);
+                        SetReadFirst(1);
                         writeEvent.Set();
                         Write(buffer, offset + bufRemain, remain);
                     }
@@ -219,14 +210,14 @@ namespace TWCore.IO
                         {
                             SetWritePosition(canWrite);
                             remain = remain - canWrite;
-                            Interlocked.Exchange(ref readFirst, 1);
+                            SetReadFirst(1);
                             writeEvent.Set();
                             Write(buffer, offset + bufRemain + canWrite, remain);
                         }
                         else
                         {
                             if (rPos == remain)
-                                Interlocked.Exchange(ref readFirst, 1);
+                                SetReadFirst(1);
                             SetWritePosition(remain);
                             writeEvent.Set();
                         }
@@ -260,5 +251,9 @@ namespace TWCore.IO
             fixed (byte* b = &_buffer[4])
                 *((int*)b) = value;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        byte GetReadFirst() => _buffer[8];
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void SetReadFirst(byte value) => _buffer[8] = value;
     }
 }

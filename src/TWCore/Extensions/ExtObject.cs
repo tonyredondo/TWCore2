@@ -42,13 +42,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T DeepClone<T>(this T source)
         {
-            if (Object.ReferenceEquals(source, null))
-                return default(T);
+            if (source == null) return default(T);
+            if (source.GetType().IsValueType) return default(T);
             return (T)ObjectCloner.Clone(source);
-            //var dbs = SerializerManager.DefaultBinarySerializer;
-            //var type = source?.GetType() ?? typeof(T);
-            //var bytes = dbs.Serialize(source, type);
-            //return (T)dbs.Deserialize(bytes, type);
         }
         
         /// <summary>

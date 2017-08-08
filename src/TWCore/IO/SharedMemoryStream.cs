@@ -28,11 +28,10 @@ namespace TWCore.IO
     public class SharedMemoryStream : Stream
     {
         #region Fields
-        MemoryMappedFile _mmf;
+        int start = 9;
+        int length = 0;
+        MemoryMappedFile _mmfBuffer;
         MemoryMappedViewAccessor _view;
-        int bufferLength;
-        int ReadPosition => _view.ReadInt32(0);
-        int WritePosition => _view.ReadInt32(4);
         EventWaitHandle readEvent;
         EventWaitHandle writeEvent;
         #endregion
@@ -69,20 +68,15 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SharedMemoryStream(string name, int bufferSize = 262144)
         {
-            _mmf = MemoryMappedFile.CreateOrOpen(name, bufferSize + 8);
-            _view = _mmf.CreateViewAccessor();
-            var readEventName = "Global\\MrFly.SharedMemoryStream." + name + ".Read";
-            var writeEventName = "Global\\MrFly.SharedMemoryStream." + name + ".Write";
-            bool readCreated;
+            length = bufferSize;
+            _mmfBuffer = MemoryMappedFile.CreateOrOpen(name, length + start);
+            _view = _mmfBuffer.CreateViewAccessor();
+            var readEventName = "Global\\CoreStream." + name + ".Read";
+            var writeEventName = "Global\\CoreStream." + name + ".Write";
             if (!EventWaitHandle.TryOpenExisting(readEventName, out readEvent))
-                readEvent = new EventWaitHandle(true, EventResetMode.ManualReset, readEventName, out readCreated);
-            bool writeCreated;
+                readEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readEventName, out bool readCreated);
             if (!EventWaitHandle.TryOpenExisting(writeEventName, out writeEvent))
-            {
-                writeEvent = new EventWaitHandle(true, EventResetMode.ManualReset, writeEventName, out writeCreated);
-                _view.Write(4, -1);
-            }
-            bufferLength = bufferSize;
+                writeEvent = new EventWaitHandle(false, EventResetMode.ManualReset, writeEventName, out bool writeCreated);
         }
         #endregion
 
@@ -105,23 +99,10 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) { return -1; }
+        public override long Seek(long offset, SeekOrigin origin) => -1;
         #endregion
 
         #region Override Methods
-        byte[] byteBuffer = new byte[1];
-        /// <summary>
-        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
-        /// </summary>
-        /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
-        {
-            int res = Read(byteBuffer, 0, 1);
-            if (res > 0)
-                return byteBuffer[0];
-            return res;
-        }
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -132,55 +113,48 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (WritePosition == -1)
-                Factory.Thread.SleepUntil(() => WritePosition > -1);
-            readEvent.WaitOne();
-            readEvent.Reset();
-            int totalRead = 0;
-            while (true)
+            var rPos = GetReadPosition();
+            var wPos = GetWritePosition();
+            while (GetReadFirst() == 0 && rPos == wPos)
             {
-                var writePosition = WritePosition;
-                var readPosition = ReadPosition;
-                var availLength = writePosition - readPosition;
-                if (availLength < 0)
-                    availLength = bufferLength + availLength;
-
-                var rCount = Math.Min(count, availLength);
-                if (rCount > 0)
-                {
-                    if (writePosition > readPosition)
-                    {
-                        _view.ReadArray(readPosition + 8, buffer, offset, rCount);
-                        readPosition += rCount;
-                        if (readPosition == bufferLength) readPosition = 0;
-                        _view.Write(0, readPosition);
-                    }
-                    else
-                    {
-                        var availTilEnd = bufferLength - readPosition;
-                        var rCountTilEnd = Math.Min(rCount, availTilEnd);
-
-                        _view.ReadArray(readPosition + 8, buffer, offset, rCountTilEnd);
-                        readPosition += rCountTilEnd;
-                        if (readPosition == bufferLength) readPosition = 0;
-                        _view.Write(0, readPosition);
-
-                        var remain = rCount - rCountTilEnd;
-                        if (remain > 0)
-                        {
-                            _view.ReadArray(8, buffer, offset + rCountTilEnd, remain);
-                            readPosition = remain;
-                            if (readPosition == bufferLength) readPosition = 0;
-                            _view.Write(0, readPosition);
-                        }
-                    }
-                    count -= rCount;
-                    totalRead += rCount;
-                }
-                if (count == 0)
-                    break;
+                writeEvent.WaitOne();
+                writeEvent.Reset();
+                wPos = GetWritePosition();
+            }
+            int totalRead = 0;
+            int cLength = 0;
+            if (GetReadFirst() == 0)
+                cLength = rPos > wPos ? length : wPos;
+            else
+                cLength = rPos >= wPos ? length : wPos;
+            var bufRemain = cLength - rPos;
+            if (bufRemain >= count)
+            {
+                totalRead += _view.ReadArray(rPos + start, buffer, offset, count);
+                rPos += count;
+                if (rPos == length)
+                    SetReadPosition(0);
                 else
-                    writeEvent.WaitOne();
+                    SetReadPosition(rPos);
+            }
+            else
+            {
+                var remain = count - bufRemain;
+                totalRead += _view.ReadArray(rPos + start, buffer, offset, bufRemain);
+                rPos += bufRemain;
+                if (rPos == wPos)
+                {
+                    SetReadPosition(rPos);
+                }
+                else
+                {
+                    var canRead = Math.Min(remain, wPos);
+                    totalRead += _view.ReadArray(start, buffer, offset + bufRemain, canRead);
+                    if (canRead < remain)
+                        SetReadPosition(canRead);
+                    else
+                        SetReadPosition(remain);
+                }
             }
             readEvent.Set();
             return totalRead;
@@ -194,59 +168,77 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            writeEvent.WaitOne();
-            writeEvent.Reset();
-            while (true)
+            var rPos = GetReadPosition();
+            var wPos = GetWritePosition();
+            while (GetReadFirst() == 1 && rPos == wPos)
             {
-                var writePosition = WritePosition;
-                if (writePosition == -1)
-                {
-                    writePosition = 0;
-                    _view.Write(4, writePosition);
-                }
-                var readPosition = ReadPosition;
-                var availLength = readPosition - writePosition;
-                if (availLength <= 0)
-                    availLength = bufferLength + availLength;
+                readEvent.WaitOne();
+                readEvent.Reset();
+                rPos = GetReadPosition();
+            }
 
-                var wCount = Math.Min(count, availLength);
-                if (wCount > 0)
+            int cLength = rPos <= wPos ? length : rPos;
+            var bufRemain = cLength - wPos;
+            if (bufRemain >= count)
+            {
+                _view.WriteArray(wPos + start, buffer, offset, count);
+                wPos += count;
+                if (wPos == length)
+                    SetWritePosition(0);
+                else
+                    SetWritePosition(wPos);
+                if (rPos == wPos)
+                    SetReadFirst(1);
+                writeEvent.Set();
+            }
+            else
+            {
+                var remain = count - bufRemain;
+                _view.WriteArray(wPos + start, buffer, offset, bufRemain);
+                wPos += bufRemain;
+                if (wPos == rPos)
                 {
-                    if (readPosition > writePosition)
+                    SetWritePosition(wPos);
+                    SetReadFirst(1);
+                    writeEvent.Set();
+                    Write(buffer, offset + bufRemain, remain);
+                }
+                else
+                {
+                    var canWrite = Math.Min(remain, rPos);
+                    _view.WriteArray(start, buffer, offset + bufRemain, canWrite);
+                    if (canWrite < remain)
                     {
-                        _view.WriteArray(writePosition + 8, buffer, offset, wCount);
-                        writePosition += wCount;
-                        if (writePosition == bufferLength) writePosition = 0;
-                        _view.Write(4, writePosition);
+                        SetWritePosition(canWrite);
+                        remain = remain - canWrite;
+                        SetReadFirst(1);
+                        writeEvent.Set();
+                        Write(buffer, offset + bufRemain + canWrite, remain);
                     }
                     else
                     {
-                        var availTilEnd = bufferLength - writePosition;
-                        var wCountTilEnd = Math.Min(wCount, availTilEnd);
-
-                        _view.WriteArray(writePosition + 8, buffer, offset, wCountTilEnd);
-                        writePosition += wCountTilEnd;
-                        if (writePosition == bufferLength) writePosition = 0;
-                        _view.Write(4, writePosition);
-
-                        var remain = wCount - wCountTilEnd;
-                        if (remain > 0)
-                        {
-                            _view.WriteArray(8, buffer, offset + wCountTilEnd, remain);
-                            writePosition = remain;
-                            if (writePosition == bufferLength) writePosition = 0;
-                            _view.Write(4, writePosition);
-                        }
+                        if (rPos == remain)
+                            SetReadFirst(1);
+                        SetWritePosition(remain);
+                        writeEvent.Set();
                     }
-                    count -= wCount;
                 }
-                if (count == 0)
-                    break;
-                else
-                    readEvent.WaitOne();
             }
-            writeEvent.Set();
         }
         #endregion
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        int GetReadPosition() => _view.ReadInt32(0);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void SetReadPosition(int value) => _view.Write(0, value);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        int GetWritePosition() => _view.ReadInt32(4);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void SetWritePosition(int value) => _view.Write(4, value);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        byte GetReadFirst() => _view.ReadByte(8);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void SetReadFirst(byte value) => _view.Write(8, value);
     }
 }

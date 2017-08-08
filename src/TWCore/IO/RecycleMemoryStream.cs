@@ -232,9 +232,22 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
         {
-            if (InternalRead(_singleByte, 0, 1) > 0)
-                return _singleByte[0];
-            return -1;
+			if (_rowIndex == _maxRow)
+			{
+				if (_length > _position)
+					return _currentBuffer[_position++];
+				return -1;
+			}
+			if (_maxLength > _position)
+				return _currentBuffer[_position++];
+			if (_rowIndex < _maxRow)
+			{
+				_rowIndex++;
+				_currentBuffer = _buffer[_rowIndex];
+				_position = 1;
+				return _currentBuffer[0];
+			}
+			return -1;
         }
         #endregion
 

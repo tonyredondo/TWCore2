@@ -27,12 +27,14 @@ namespace TWCore.IO
     public class CircularBufferStream : Stream
     {
         #region Fields
+        int start = 8;
+        int length = 0;
         byte[] _buffer;
-        int ReadPosition => BitConverter.ToInt32(_buffer, 0);
-        int WritePosition => BitConverter.ToInt32(_buffer, 4);
-		readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(true);
-		readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(true);
-		bool firstTime = false;
+        readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(false);
+        readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(false);
+        readonly object readLock = new object();
+        readonly object writeLock = new object();
+        long readFirst = 0;
         #endregion
 
         #region Properties
@@ -66,8 +68,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CircularBufferStream(int bufferSize = 65536)
         {
-            _buffer = new byte[bufferSize + 8];
-            Buffer.BlockCopy(BitConverter.GetBytes(-1), 0, _buffer, 4, 4);
+            length = bufferSize;
+            _buffer = new byte[length + start];
         }
         #endregion
 
@@ -90,23 +92,10 @@ namespace TWCore.IO
         /// <param name="origin">A value of type System.IO.SeekOrigin indicating the reference point used to obtain the new position.</param>
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override long Seek(long offset, SeekOrigin origin) { return -1; }
+        public override long Seek(long offset, SeekOrigin origin) => -1;
         #endregion
 
         #region Override Methods
-        byte[] byteBuffer = new byte[1];
-        /// <summary>
-        /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
-        /// </summary>
-        /// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
-        {
-            int res = Read(byteBuffer, 0, 1);
-            if (res > 0)
-                return byteBuffer[0];
-            return res;
-        }
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -117,59 +106,64 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (WritePosition == -1)
-                Factory.Thread.SleepUntil(() => WritePosition > -1);
-            readEvent.Wait();
-            readEvent.Reset();
-            int totalRead = 0;
-            while (true)
+            lock (readLock)
             {
-                var writePosition = WritePosition;
-                var readPosition = ReadPosition;
-                var availLength = writePosition - readPosition;
-                var bufferLength = (_buffer.Length - 8);
-                if (availLength < 0)
-                    availLength = bufferLength + availLength;
-
-                var rCount = Math.Min(count, availLength);
-                if (rCount > 0)
+                var rPos = GetReadPosition();
+                var wPos = GetWritePosition();
+                while (Interlocked.Read(ref readFirst) == 0 && rPos == wPos)
                 {
-                    if (writePosition > readPosition)
+                    writeEvent.Wait();
+                    writeEvent.Reset();
+                    wPos = GetWritePosition();
+                }
+                int totalRead = 0;
+                int cLength = 0;
+                if (Interlocked.Read(ref readFirst) == 0)
+                    cLength = rPos > wPos ? length : wPos;
+                else
+                    cLength = rPos >= wPos ? length : wPos;
+                var bufRemain = cLength - rPos;
+                if (bufRemain >= count)
+                {
+                    Buffer.BlockCopy(_buffer, rPos + start, buffer, offset, count);
+                    totalRead += count;
+                    rPos += count;
+                    if (rPos == length)
+                        SetReadPosition(0);
+                    else
+                        SetReadPosition(rPos);
+                    readEvent.Set();
+                }
+                else
+                {
+                    var remain = count - bufRemain;
+                    Buffer.BlockCopy(_buffer, rPos + start, buffer, offset, bufRemain);
+                    totalRead += bufRemain;
+                    rPos += bufRemain;
+                    if (rPos == wPos)
                     {
-                        Buffer.BlockCopy(_buffer, readPosition + 8, buffer, offset, rCount);
-                        readPosition += rCount;
-                        if (readPosition == bufferLength) readPosition = 0;
-                        Buffer.BlockCopy(BitConverter.GetBytes(readPosition), 0, _buffer, 0, 4);
+                        SetReadPosition(rPos);
+                        readEvent.Set();
                     }
                     else
                     {
-                        var availTilEnd = bufferLength - readPosition;
-                        var rCountTilEnd = Math.Min(rCount, availTilEnd);
-
-                        Buffer.BlockCopy(_buffer, readPosition + 8, buffer, offset, rCountTilEnd);
-                        readPosition += rCountTilEnd;
-                        if (readPosition == bufferLength) readPosition = 0;
-                        Buffer.BlockCopy(BitConverter.GetBytes(readPosition), 0, _buffer, 0, 4);
-
-                        var remain = rCount - rCountTilEnd;
-                        if (remain > 0)
+                        var canRead = Math.Min(remain, wPos);
+                        Buffer.BlockCopy(_buffer, start, buffer, offset + bufRemain, canRead);
+                        totalRead += canRead;
+                        if (canRead < remain)
                         {
-                            Buffer.BlockCopy(_buffer, 8, buffer, offset + rCountTilEnd, remain);
-                            readPosition = remain;
-                            if (readPosition == bufferLength) readPosition = 0;
-                            Buffer.BlockCopy(BitConverter.GetBytes(readPosition), 0, _buffer, 0, 4);
+                            SetReadPosition(canRead);
+                            readEvent.Set();
+                        }
+                        else
+                        {
+                            SetReadPosition(remain);
+                            readEvent.Set();
                         }
                     }
-                    count -= rCount;
-                    totalRead += rCount;
                 }
-                if (count == 0)
-                    break;
-                else
-                    writeEvent.Wait();
+                return totalRead;
             }
-            readEvent.Set();
-            return totalRead;
         }
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
@@ -180,58 +174,91 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            writeEvent.Wait();
-            writeEvent.Reset();
-            while (true)
+            lock (writeLock)
             {
-                var writePosition = WritePosition;
-                if (writePosition == -1) writePosition = 0;
-                var readPosition = ReadPosition;
-                var availLength = readPosition - writePosition;
-                var bufferLength = (_buffer.Length - 8);
-                if (availLength <= 0)
-                    availLength = bufferLength + availLength;
-
-                var wCount = Math.Min(count, availLength);
-                if (wCount > 0)
+                var rPos = GetReadPosition();
+                var wPos = GetWritePosition();
+                while (Interlocked.Read(ref readFirst) == 1 && rPos == wPos)
                 {
-                    if (readPosition > writePosition)
+                    readEvent.Wait();
+                    readEvent.Reset();
+                    rPos = GetReadPosition();
+                }
+
+                int cLength = rPos <= wPos ? length : rPos;
+                var bufRemain = cLength - wPos;
+                if (bufRemain >= count)
+                {
+                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + start, count);
+                    wPos += count;
+                    if (wPos == length)
+                        SetWritePosition(0);
+                    else
+                        SetWritePosition(wPos);
+                    if (rPos == wPos)
+                        Interlocked.Exchange(ref readFirst, 1);
+                    writeEvent.Set();
+                }
+                else
+                {
+                    var remain = count - bufRemain;
+                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + start, bufRemain);
+                    wPos += bufRemain;
+                    if (wPos == rPos)
                     {
-                        Buffer.BlockCopy(buffer, offset, _buffer, writePosition + 8, wCount);
-                        writePosition += wCount;
-                        if (writePosition == bufferLength) writePosition = 0;
-                        Buffer.BlockCopy(BitConverter.GetBytes(writePosition), 0, _buffer, 4, 4);
+                        SetWritePosition(wPos);
+                        Interlocked.Exchange(ref readFirst, 1);
+                        writeEvent.Set();
+                        Write(buffer, offset + bufRemain, remain);
                     }
                     else
                     {
-                        var availTilEnd = bufferLength - writePosition;
-                        var wCountTilEnd = Math.Min(wCount, availTilEnd);
-
-                        Buffer.BlockCopy(buffer, offset, _buffer, writePosition + 8, wCountTilEnd);
-                        writePosition += wCountTilEnd;
-                        if (writePosition == bufferLength) writePosition = 0;
-                        Buffer.BlockCopy(BitConverter.GetBytes(writePosition), 0, _buffer, 4, 4);
-
-                        var remain = wCount - wCountTilEnd;
-                        if (remain > 0)
+                        var canWrite = Math.Min(remain, rPos);
+                        Buffer.BlockCopy(buffer, offset + bufRemain, _buffer, start, canWrite);
+                        if (canWrite < remain)
                         {
-                            Buffer.BlockCopy(buffer, offset + wCountTilEnd, _buffer, 8, remain);
-                            writePosition = remain;
-                            if (writePosition == bufferLength) writePosition = 0;
-                            Buffer.BlockCopy(BitConverter.GetBytes(writePosition), 0, _buffer, 4, 4);
+                            SetWritePosition(canWrite);
+                            remain = remain - canWrite;
+                            Interlocked.Exchange(ref readFirst, 1);
+                            writeEvent.Set();
+                            Write(buffer, offset + bufRemain + canWrite, remain);
+                        }
+                        else
+                        {
+                            if (rPos == remain)
+                                Interlocked.Exchange(ref readFirst, 1);
+                            SetWritePosition(remain);
+                            writeEvent.Set();
                         }
                     }
-                    count -= wCount;
                 }
-                if (count == 0)
-                    break;
-                else
-                    readEvent.Wait();
             }
-            writeEvent.Set();
-            if (firstTime)
-                readEvent.Set();
         }
         #endregion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe int GetReadPosition()
+        {
+            fixed (byte* rPos = &_buffer[0])
+                return *(int*)rPos;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe void SetReadPosition(int value)
+        {
+            fixed (byte* b = &_buffer[0])
+                *((int*)b) = value;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe int GetWritePosition()
+        {
+            fixed (byte* rPos = &_buffer[4])
+                return *(int*)rPos;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        unsafe void SetWritePosition(int value)
+        {
+            fixed (byte* b = &_buffer[4])
+                *((int*)b) = value;
+        }
     }
 }

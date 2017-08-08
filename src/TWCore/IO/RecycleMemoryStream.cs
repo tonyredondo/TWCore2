@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -26,6 +25,7 @@ namespace TWCore.IO
     /// <summary>
     /// Recycle ByteArray MemoryStream
     /// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
     public class RecycleMemoryStream : Stream
     {
 		static Queue<List<byte[]>> _lstPool = new Queue<List<byte[]>>();
@@ -57,7 +57,7 @@ namespace TWCore.IO
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-        public override long Length => ((_buffer.Count - 1) * _maxLength) + _length;
+		public override long Length => (_maxRow * _maxLength) + _length;
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
@@ -268,7 +268,10 @@ namespace TWCore.IO
 				if (_position > _length) _length = _position;
 			}
 		}
-
+		/// <summary>
+		/// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
+		/// </summary>
+		/// <param name="value">The byte to write to the stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteByte(byte value)
         {
@@ -287,6 +290,10 @@ namespace TWCore.IO
 			_length = 1;
 			_currentBuffer[0] = value;
         }
+		/// <summary>
+		/// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
+		/// </summary>
+		/// <returns>The unsigned byte cast to an Int32, or -1 if at the end of the stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
         {
@@ -307,8 +314,15 @@ namespace TWCore.IO
 			}
 			return -1;
         }
-
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public byte[] ToArray()
+		{
+			var tmp = new byte[Length];
+			for(var i = 0; i < _maxRow; i++)
+				Buffer.BlockCopy(_buffer[i], 0, tmp, i * _maxLength, _maxLength);
+			Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * _maxLength, _length);
+			return tmp;
+		}
         #endregion
 
         #region Pool Methods

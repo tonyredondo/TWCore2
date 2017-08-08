@@ -23,6 +23,7 @@ namespace TWCore.IO
     /// <summary>
     /// Stream decorator with limited bytes read
     /// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
     public class LimitedStream : Stream
     {
 		Stream _baseStream = null;

@@ -25,6 +25,7 @@ namespace TWCore.IO
     /// <summary>
     /// Stream decorator with events for Reading and Writing
     /// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
     public class EventStream : Stream
     {
 		Stream _baseStream = null;

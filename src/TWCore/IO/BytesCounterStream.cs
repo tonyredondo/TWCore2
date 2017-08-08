@@ -23,6 +23,7 @@ namespace TWCore.IO
     /// <summary>
     /// Stream decorator with transfered bytes count
     /// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
     public class BytesCounterStream : Stream
     {
         Stream _baseStream;

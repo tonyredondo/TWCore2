@@ -23,6 +23,7 @@ namespace TWCore.IO
     /// <summary>
     /// Writes primitive data types as binary values in a specific encoding.
     /// </summary>
+	[System.Diagnostics.DebuggerNonUserCode]
     public class FastBinaryWriter : BinaryWriter
     {
         byte[] _buffer = new byte[8];

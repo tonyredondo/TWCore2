@@ -70,7 +70,8 @@ namespace TWCore.IO
         {
             length = bufferSize;
             var name = Path.GetFileNameWithoutExtension(filePath);
-            _mmfBuffer = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, name, length + start);
+            _mmfBuffer = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, null, length + start);
+            //_mmfBuffer = MemoryMappedFile.CreateFromFile(filePath, FileMode.OpenOrCreate, name, length + start);
             //_mmfBuffer = MemoryMappedFile.CreateOrOpen(name, length + start);
             _view = _mmfBuffer.CreateViewAccessor();
             var readEventName = "Global\\CoreStream." + name + ".Read";

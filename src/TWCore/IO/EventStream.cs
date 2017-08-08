@@ -52,15 +52,9 @@ namespace TWCore.IO
         public override long Position
         {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-				return _baseStream.Position;
-            }
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-				_baseStream.Position = value;
-            }
+            get => _baseStream.Position;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _baseStream.Position = value;
         }
         /// <summary>
         /// Gets a value that determines whether the current stream can time out.
@@ -72,15 +66,9 @@ namespace TWCore.IO
         public override int ReadTimeout
         {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-				return _baseStream.ReadTimeout;
-            }
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-				_baseStream.ReadTimeout = value;
-            }
+            get => _baseStream.ReadTimeout;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _baseStream.ReadTimeout = value;
         }
         /// <summary>
         /// Gets or sets a value, in miliseconds, that determines how long the stream will attempt to write before timing out.
@@ -88,20 +76,20 @@ namespace TWCore.IO
         public override int WriteTimeout
         {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-				return _baseStream.WriteTimeout;
-            }
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-				_baseStream.WriteTimeout = value;
-            }
+            get => _baseStream.WriteTimeout;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _baseStream.WriteTimeout = value;
         }
         /// <summary>
         /// Stream base object instance
         /// </summary>
-		public Stream BaseStream => _baseStream;
+		public Stream BaseStream
+        {
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _baseStream;
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _baseStream = value;
+        }
         #endregion
 
         #region Events

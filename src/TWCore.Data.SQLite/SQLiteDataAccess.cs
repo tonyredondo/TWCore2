@@ -14,36 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using MySql.Data.MySqlClient;
+using Microsoft.Data.Sqlite;
+using System;
 using System.Data.Common;
 
-namespace TWCore.Data.MySql
+namespace TWCore.Data.SQLite
 {
     /// <summary>
-    /// MySql Data Access
+    /// SQLite Data Access
     /// </summary>
-    public class MySqlDataAccess : DataAccessBase
+    public class SQLiteDataAccess : DataAccessBase
     {
         /// <summary>
         /// Gets the database connection object
         /// </summary>
         /// <returns>A DbConnection object</returns>
-        protected override DbConnection GetConnection() => new MySqlConnection();
+        protected override DbConnection GetConnection() => new SqliteConnection();
         /// <summary>
         /// Gets the database command object
         /// </summary>
         /// <returns>A DbCommand object</returns>
-        protected override DbCommand GetCommand() => new MySqlCommand();
-        /// <summary>
-        /// MySql Server Data access
-        /// </summary>
-        /// <param name="connectionString">Connection string</param>
-        /// <param name="accessType">Data access type</param>
-        public MySqlDataAccess(string connectionString, DataAccessType accessType = DataAccessType.Query)
-        {
-            ConnectionString = connectionString;
-            AccessType = accessType;
-            EntityValueConverter = new MySqlEntityValueConverter(this);
-        }
+        protected override DbCommand GetCommand() => new SqliteCommand();
     }
 }

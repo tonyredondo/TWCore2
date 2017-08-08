@@ -40,7 +40,6 @@ namespace TWCore.IO
         int _position = 0;
         List<byte[]> _buffer;
         byte[] _currentBuffer;
-        byte[] _singleByte = new byte[1];
 
         #region Properties
         /// <summary>
@@ -109,7 +108,7 @@ namespace TWCore.IO
 			_buffer.Add(_currentBuffer);
             _maxRow = 0;
             if (buffer != null)
-                InternalWrite(buffer, index, count);
+                Write(buffer, index, count);
             _canWrite = writable;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -212,48 +211,6 @@ namespace TWCore.IO
         /// <returns>The total number of bytes read into the buffer. This can be less than the number of bytes requested if that many bytes are not currently available, or zero (0) if the end of the stream has been reached.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
-			=> InternalRead(buffer, offset, count);
-        /// <summary>
-        ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
-        /// </summary>
-        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
-        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
-        /// <param name="count">The number of bytes to be written to the current stream.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
-			=> InternalWrite(buffer, offset, count);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteByte(byte value)
-        {
-            _singleByte[0] = value;
-			InternalWrite(_singleByte, 0, 1);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadByte()
-        {
-			if (_rowIndex == _maxRow)
-			{
-				if (_length > _position)
-					return _currentBuffer[_position++];
-				return -1;
-			}
-			if (_maxLength > _position)
-				return _currentBuffer[_position++];
-			if (_rowIndex < _maxRow)
-			{
-				_rowIndex++;
-				_currentBuffer = _buffer[_rowIndex];
-				_position = 1;
-				return _currentBuffer[0];
-			}
-			return -1;
-        }
-        #endregion
-
-		#region Private Method
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		int InternalRead(byte[] buffer, int offset, int count)
 		{
 			int total = 0;
 			while (count > 0)
@@ -281,8 +238,14 @@ namespace TWCore.IO
 			}
 			return total;
 		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void InternalWrite(byte[] buffer, int offset, int count)
+        /// <summary>
+        ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
+        /// </summary>
+        /// <param name="buffer">An array of bytes. This method copies count bytes from buffer to the current stream.</param>
+        /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
+        /// <param name="count">The number of bytes to be written to the current stream.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Write(byte[] buffer, int offset, int count)
 		{
 			while (count > 0)
 			{
@@ -305,7 +268,48 @@ namespace TWCore.IO
 				if (_position > _length) _length = _position;
 			}
 		}
-		#endregion
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void WriteByte(byte value)
+        {
+			if (_maxLength > _position)
+			{
+				_currentBuffer[_position] = value;
+				_position++;
+				if (_position > _length) _length = _position;
+				return;
+			}
+			_currentBuffer = GetArray();
+			_buffer.Add(_currentBuffer);
+			_maxRow++;
+			_rowIndex++;
+			_position = 1;
+			_length = 1;
+			_currentBuffer[0] = value;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int ReadByte()
+        {
+			if (_rowIndex == _maxRow)
+			{
+				if (_length > _position)
+					return _currentBuffer[_position++];
+				return -1;
+			}
+			if (_maxLength > _position)
+				return _currentBuffer[_position++];
+			if (_rowIndex < _maxRow)
+			{
+				_rowIndex++;
+				_currentBuffer = _buffer[_rowIndex];
+				_position = 1;
+				return _currentBuffer[0];
+			}
+			return -1;
+        }
+
+
+        #endregion
 
         #region Pool Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

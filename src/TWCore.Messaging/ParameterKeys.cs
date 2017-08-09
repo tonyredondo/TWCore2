@@ -34,7 +34,6 @@ namespace TWCore.Messaging
         /// Connection port
         /// </summary>
         public const string Port = "Port";
-
         /// <summary>
         /// Timeout for each try over a message queue on correlationId
         /// </summary>
@@ -47,5 +46,9 @@ namespace TWCore.Messaging
         /// Use message queue lock on read
         /// </summary>
         public const string UseLock = "UseLock";
+        /// <summary>
+        /// Use a single response queue and not one queue per CorrelationId
+        /// </summary>
+        public const string SingleResponseQueue = "SingleResponseQueue";
     }
 }

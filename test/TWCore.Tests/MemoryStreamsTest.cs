@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.IO;
@@ -13,6 +14,59 @@ namespace TWCore.Tests
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting MEMORY STREAMS TEST");
+
+            Core.Log.WriteEmptyLine();
+            Core.Log.InfoBasic("Press Enter to Start RecycleMemoryStream Test.");
+            var xbuffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
+            using (Watch.Create("RecycleMemoryStream"))
+            {
+                for (var m = 0; m < 200000; m++)
+                {
+                    using (var rms = new RecycleMemoryStream())
+                    {
+                        for (var x = 0; x < 1; x++)
+                        {
+                            for (int i = 0; i < 1000; i++)
+                                rms.Write(xbuffer, 0, xbuffer.Length);
+                        }
+                        rms.Position = 0;
+                        for (var x = 0; x < 10; x++)
+                        {
+                            for (byte i = 0; i < 200; i++)
+                            {
+                                var bt = rms.ReadByte();
+                            }
+                        }
+                    }
+                }
+            }
+            Console.ReadLine();
+            Core.Log.WriteEmptyLine();
+            Core.Log.InfoBasic("Press Enter to Start MemoryStream Test.");
+            using (Watch.Create("MemoryStream"))
+            {
+                for (var m = 0; m < 200000; m++)
+                {
+                    using (var rms = new MemoryStream())
+                    {
+                        for (var x = 0; x < 1; x++)
+                        {
+                            for (int i = 0; i < 1000; i++)
+                                rms.Write(xbuffer, 0, xbuffer.Length);
+                        }
+                        rms.Position = 0;
+                        for (var x = 0; x < 10; x++)
+                        {
+                            for (byte i = 0; i < 200; i++)
+                            {
+                                var bt = rms.ReadByte();
+                            }
+                        }
+                    }
+                }
+            }
+
+
 
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("Press Enter to Start CircularBufferStream Test. Press Enter Again to finish the test.");

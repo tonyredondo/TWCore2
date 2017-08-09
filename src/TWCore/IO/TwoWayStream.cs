@@ -25,7 +25,6 @@ namespace TWCore.IO
     /// <summary>
     /// Two Way Stream decorator
     /// </summary>
-	[System.Diagnostics.DebuggerNonUserCode]
     public class TwoWayStream : Stream
     {
         readonly Stream _readStream;

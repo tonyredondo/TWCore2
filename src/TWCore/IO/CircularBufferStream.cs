@@ -24,7 +24,6 @@ namespace TWCore.IO
     /// <summary>
     /// Circular buffer stream
     /// </summary>
-	[System.Diagnostics.DebuggerNonUserCode]
     public class CircularBufferStream : Stream
     {
         #region Fields

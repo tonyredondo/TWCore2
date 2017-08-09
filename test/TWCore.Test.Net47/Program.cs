@@ -22,7 +22,7 @@ namespace TWCore.Test.Net47
 
                 var buffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
 
-                for (var m = 0; m < 100000; m++)
+                for (var m = 0; m < 200000; m++)
                 {
                     //Console.WriteLine("TEST " + m);
                     using (var rms = new RecycleMemoryStream())
@@ -30,7 +30,7 @@ namespace TWCore.Test.Net47
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 200; i++)
+                            for (int i = 0; i < 1000; i++)
                                 rms.Write(buffer, 0, buffer.Length);
                         }
                         rms.Position = 0;

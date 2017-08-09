@@ -25,7 +25,6 @@ namespace TWCore.IO
     /// <summary>
     /// Shared Memory circular stream
     /// </summary>
-	[System.Diagnostics.DebuggerNonUserCode]
     public class SharedMemoryStream : Stream
     {
         #region Fields

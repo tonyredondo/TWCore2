@@ -23,7 +23,6 @@ namespace TWCore.IO
     /// <summary>
     /// Reads primitive data types as binary values in a specific encoding.
     /// </summary>
-	[System.Diagnostics.DebuggerNonUserCode]
     public class FastBinaryReader : BinaryReader
     {
         private bool m_isMemoryStream;

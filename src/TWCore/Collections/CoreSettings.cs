@@ -19,7 +19,7 @@ using TWCore.Settings;
 namespace TWCore.Collections
 {
     /// <summary>
-    /// MApp Collections Settings
+    /// Collections Settings
     /// </summary>
     [SettingsContainer("Core.Collections")]
     public class CoreSettings : SettingsBase

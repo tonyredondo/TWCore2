@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Settings
 {
     /// <summary>
-    /// Class container attribute for MAppSettings parser
+    /// Class container attribute for Settings parser
     /// </summary>
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class SettingsContainerAttribute : Attribute
@@ -31,7 +31,7 @@ namespace TWCore.Settings
         public string Name { get; private set; }
 
         /// <summary>
-        /// Class container attribute for MAppSettings parser
+        /// Class container attribute for Settings parser
         /// </summary>
         /// <param name="name">Container name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

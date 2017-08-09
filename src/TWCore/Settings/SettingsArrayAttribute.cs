@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Settings
 {
     /// <summary>
-    /// Array attribute attribute for MAppSettings parser
+    /// Array attribute attribute for Settings parser
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class SettingsArrayAttribute : Attribute
@@ -31,7 +31,7 @@ namespace TWCore.Settings
         public char[] Separators { get; private set; }
 
         /// <summary>
-        /// Array attribute attribute for MAppSettings parser
+        /// Array attribute attribute for Settings parser
         /// </summary>
         /// <param name="separators">String separator</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -41,7 +41,7 @@ namespace TWCore.Settings
         }
 
         /// <summary>
-        /// Array attribute attribute for MAppSettings parser
+        /// Array attribute attribute for Settings parser
         /// </summary>
         /// <param name="separator">String separator</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -51,7 +51,7 @@ namespace TWCore.Settings
         }
 
         /// <summary>
-        /// Array attribute attribute for MAppSettings parser
+        /// Array attribute attribute for Settings parser
         /// </summary>
         /// <param name="separator">String separator</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

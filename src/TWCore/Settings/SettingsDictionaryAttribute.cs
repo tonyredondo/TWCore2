@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Settings
 {
     /// <summary>
-    /// Dictionary attribute attribute for MAppSettings parser
+    /// Dictionary attribute attribute for Settings parser
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class SettingsDictionaryAttribute : Attribute
@@ -35,7 +35,7 @@ namespace TWCore.Settings
         public char KeyValueSeparator { get; private set; }
 
         /// <summary>
-        /// Dictionary attribute attribute for MAppSettings parser
+        /// Dictionary attribute attribute for Settings parser
         /// </summary>
         /// <param name="itemSeparator">Item separator</param>
         /// <param name="keyValueSeparator">KeyValue separator</param>

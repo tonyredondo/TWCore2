@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Settings
 {
     /// <summary>
-    /// Property settings key attribute for MAppSettings parser
+    /// Property settings key attribute for Settings parser
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class SettingsKeyAttribute : Attribute
@@ -35,7 +35,7 @@ namespace TWCore.Settings
         public bool UseContainerName { get; private set; } = true;
 
         /// <summary>
-        /// Property settings key attribute for MAppSettings parser adding the container name to the key.
+        /// Property settings key attribute for Settings parser adding the container name to the key.
         /// </summary>
         /// <param name="key">Settings key</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,7 +44,7 @@ namespace TWCore.Settings
             SettingsKey = key;
         }
         /// <summary>
-        /// Property settings key attribute for MAppSettings parser
+        /// Property settings key attribute for Settings parser
         /// </summary>
         /// <param name="key">Settings key</param>
         /// <param name="useContainerName">True if the container name should be added to the settings key; otherwise, false.</param>

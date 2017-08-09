@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 namespace TWCore.Settings
 {
     /// <summary>
-    /// Property data format attribute for MAppSettings parser
+    /// Property data format attribute for Settings parser
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public sealed class SettingsDataFormatAttribute : Attribute
@@ -31,7 +31,7 @@ namespace TWCore.Settings
         public string DataFormat { get; private set; }
 
         /// <summary>
-        /// Property data format attribute for MAppSettings parser
+        /// Property data format attribute for Settings parser
         /// </summary>
         /// <param name="dataFormat">Data format</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

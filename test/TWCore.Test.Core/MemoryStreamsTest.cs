@@ -27,13 +27,13 @@ namespace TWCore.Tests
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 1000; i++)
+                            for (int i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {
-                            for (byte i = 0; i < 200; i++)
+                            for (int i = 0; i < 2000; i++)
                             {
                                 var bt = rms.ReadByte();
                             }
@@ -52,13 +52,13 @@ namespace TWCore.Tests
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 1000; i++)
+                            for (int i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {
-                            for (byte i = 0; i < 200; i++)
+                            for (int i = 0; i < 2000; i++)
                             {
                                 var bt = rms.ReadByte();
                             }

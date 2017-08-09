@@ -17,6 +17,7 @@ namespace TWCore.Tests
 
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("Press Enter to Start RecycleMemoryStream Test.");
+            Console.ReadLine();
             var xbuffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             using (Watch.Create("RecycleMemoryStream"))
             {
@@ -26,13 +27,13 @@ namespace TWCore.Tests
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 1000; i++)
+                            for (int i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {
-                            for (byte i = 0; i < 200; i++)
+                            for (int i = 0; i < 2000; i++)
                             {
                                 var bt = rms.ReadByte();
                             }
@@ -40,9 +41,9 @@ namespace TWCore.Tests
                     }
                 }
             }
-            Console.ReadLine();
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("Press Enter to Start MemoryStream Test.");
+            Console.ReadLine();
             using (Watch.Create("MemoryStream"))
             {
                 for (var m = 0; m < 200000; m++)
@@ -51,13 +52,13 @@ namespace TWCore.Tests
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 1000; i++)
+                            for (int i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {
-                            for (byte i = 0; i < 200; i++)
+                            for (int i = 0; i < 2000; i++)
                             {
                                 var bt = rms.ReadByte();
                             }
@@ -114,7 +115,7 @@ namespace TWCore.Tests
                 {
                     var i = 0;
                     while (!cts.Token.IsCancellationRequested)
-                        {
+                    {
                         i++;
                         sharedms.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
                         if (i % 50 == 0)
@@ -127,7 +128,7 @@ namespace TWCore.Tests
                     var i = 0;
                     var buffer = new byte[15];
                     while (!cts.Token.IsCancellationRequested)
-                        {
+                    {
                         i++;
                         sharedms.Read(buffer, 0, 7);
                         if (i % 50 == 0)

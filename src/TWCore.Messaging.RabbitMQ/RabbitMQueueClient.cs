@@ -227,7 +227,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!UseSingleResponseQueue)
             {
                 _receiver.EnsureConnection(false);
-                _receiver.Channel.QueueDeclare(_receiver.Name + "_" + correlationId, false, true, true, null);
+                _receiver.Channel.QueueDeclare(_receiver.Name + "_" + correlationId, false, false, true, null);
                 var tmpConsumer = new EventingBasicConsumer(_receiver.Channel);
                 tmpConsumer.Received += (ch, ea) =>
                 {
@@ -245,7 +245,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!UseSingleResponseQueue)
             {
                 _receiver.Channel.BasicCancel(temporalConsumerTag);
-                _receiver.Close();
+                //_receiver.Close();
             }
             if (waitResult)
             {

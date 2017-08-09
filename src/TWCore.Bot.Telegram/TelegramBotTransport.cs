@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.IO;
 using TBot = Telegram.Bot;
 using TBotApi = Telegram.Bot.TelegramBotClient;
 
@@ -228,13 +229,16 @@ namespace TWCore.Bot.Telegram
             if (!active) return;
             if (!File.Exists(fileName)) throw new FileNotFoundException("The filename doesn't exist", fileName);
 
-            var ms = new MemoryStream();
-            using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
-                await fs.CopyToAsync(ms).ConfigureAwait(false);
-            ms.Position = 0;
-            var fileToSend = new TBot.Types.FileToSend(Path.GetFileName(fileName), ms);
+            using (var ms = new RecycleMemoryStream())
+            {
+                //var ms = new MemoryStream();
+                using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    await fs.CopyToAsync(ms).ConfigureAwait(false);
+                ms.Position = 0;
+                var fileToSend = new TBot.Types.FileToSend(Path.GetFileName(fileName), ms);
 
-            await Bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+                await Bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+            }
         }
         /// <summary>
         /// Sends a photo message

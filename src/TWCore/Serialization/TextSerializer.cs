@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Compression;
+using TWCore.IO;
 
 namespace TWCore.Serialization
 {
@@ -109,11 +110,14 @@ namespace TWCore.Serialization
                 OnSerialize(stream, item, itemType);
                 return;
             }
-            var ms = WriteableMemoryStreamPool.Get();
-            OnSerialize(ms, item, itemType);
-            ms.Position = 0;
-            Compressor.Compress(ms, stream);
-            WriteableMemoryStreamPool.Store(ms);
+            //var ms = WriteableMemoryStreamPool.Get();
+            using (var ms = new RecycleMemoryStream())
+            {
+                OnSerialize(ms, item, itemType);
+                ms.Position = 0;
+                Compressor.Compress(ms, stream);
+            }
+            //WriteableMemoryStreamPool.Store(ms);
         }
         /// <summary>
         /// Deserialize a stream content to a object
@@ -126,12 +130,15 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
                 return OnDeserialize(stream, itemType);
-            var ms = WriteableMemoryStreamPool.Get();
-            Compressor.Decompress(stream, ms);
-            ms.Position = 0;
-            var res = OnDeserialize(ms, itemType);
-            WriteableMemoryStreamPool.Store(ms);
-            return res;
+            using (var ms = new RecycleMemoryStream())
+            {
+                //var ms = WriteableMemoryStreamPool.Get();
+                Compressor.Decompress(stream, ms);
+                ms.Position = 0;
+                var res = OnDeserialize(ms, itemType);
+                //WriteableMemoryStreamPool.Store(ms);
+                return res;
+            }
         }
 
         /// <summary>

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -27,19 +28,32 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static object _lstPoolLock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static Queue<List<byte[]>> _lstPool = new Queue<List<byte[]>>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static int _lstPoolCount = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static object _poolLock = new object();
         static Queue<byte[]> _pool = new Queue<byte[]>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static int _poolCount = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static int _maxLength = 255;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         bool _canWrite = true;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _length = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _maxRow = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _rowIndex = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _position = 0;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         List<byte[]> _buffer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         byte[] _currentBuffer;
 
         #region Properties

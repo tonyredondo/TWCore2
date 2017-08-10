@@ -24,7 +24,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// <summary>
     /// RabbitMQ Queue
     /// </summary>
-    internal class RabbitQueue : MQConnection
+    internal class RabbitMQueue : MQConnection
     {
         #region Properties
         /// <summary>
@@ -47,7 +47,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="queue">MQConnection instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RabbitQueue(MQConnection queue)
+        public RabbitMQueue(MQConnection queue)
         {
             Route = queue.Route;
             Name = queue.Name;

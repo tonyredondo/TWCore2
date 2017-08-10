@@ -37,7 +37,7 @@ namespace TWCore.Messaging.RabbitMQ
         readonly List<Task> _processingTasks = new List<Task>();
         Type _messageType;
         string _name;
-        RabbitQueue _receiver;
+        RabbitMQueue _receiver;
         EventingBasicConsumer _receiverConsumer;
         string _receiverConsumerTag;
         CancellationToken _token;
@@ -81,7 +81,7 @@ namespace TWCore.Messaging.RabbitMQ
         protected override async Task OnListenerTaskStartAsync(CancellationToken token)
         {
             _token = token;
-            _receiver = new RabbitQueue(Connection);
+            _receiver = new RabbitMQueue(Connection);
             _receiver.EnsureConnection(true);
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>

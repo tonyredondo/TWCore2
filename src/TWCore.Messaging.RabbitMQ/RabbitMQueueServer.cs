@@ -62,7 +62,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-                    var rabbitQueue = new RabbitQueue(queue);
+                    var rabbitQueue = new RabbitMQueue(queue);
                     if (!rabbitQueue.EnsureConnection(true)) continue;
                     var props = rabbitQueue.Channel.CreateBasicProperties();
                     props.CorrelationId = correlationId;

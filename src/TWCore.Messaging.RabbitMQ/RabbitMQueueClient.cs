@@ -37,8 +37,8 @@ namespace TWCore.Messaging.RabbitMQ
         static ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
 
         #region Fields
-        List<RabbitQueue> _senders;
-        RabbitQueue _receiver;
+        List<RabbitMQueue> _senders;
+        RabbitMQueue _receiver;
         EventingBasicConsumer _receiverConsumer;
         string _receiverConsumerTag;
         MQClientQueues _clientQueues;
@@ -71,7 +71,7 @@ namespace TWCore.Messaging.RabbitMQ
         protected override void OnInit()
         {
             OnDispose();
-            _senders = new List<RabbitQueue>();
+            _senders = new List<RabbitMQueue>();
             _receiver = null;
 
             if (Config != null)
@@ -90,14 +90,14 @@ namespace TWCore.Messaging.RabbitMQ
                 {
                     foreach (var queue in _clientQueues.SendQueues)
                     {
-                        var rabbitQueue = new RabbitQueue(queue);
+                        var rabbitQueue = new RabbitMQueue(queue);
                         rabbitQueue.EnsureConnection(true);
                         _senders.Add(rabbitQueue);
                     }
                 }
                 if (_clientQueues?.RecvQueue != null)
                 {
-                    var rabbitQueue = new RabbitQueue(_clientQueues.RecvQueue);
+                    var rabbitQueue = new RabbitMQueue(_clientQueues.RecvQueue);
                     _receiver = rabbitQueue;
                     if (UseSingleResponseQueue)
                     {

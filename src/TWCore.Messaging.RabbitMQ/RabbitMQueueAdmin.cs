@@ -21,7 +21,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// <summary>
     /// RabbitMQ administration class
     /// </summary>
-    public class RabbitMQQueueAdmin : IMQueueAdmin
+    public class RabbitMQueueAdmin : IMQueueAdmin
     {
         /// <summary>
         /// Create a new message queue
@@ -32,7 +32,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (!Exist(queue))
             {
-                var rabbitQueue = new RabbitQueue(queue);
+                var rabbitQueue = new RabbitMQueue(queue);
                 return rabbitQueue.EnsureConnection(true);
             }
             return false;
@@ -45,7 +45,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <returns>true if the message queue was deleted; otherwise, false.</returns>
         public bool Delete(MQConnection queue)
         {
-            var rabbitQueue = new RabbitQueue(queue);
+            var rabbitQueue = new RabbitMQueue(queue);
             rabbitQueue.EnsureConnection(false);
             rabbitQueue.Channel.QueueDelete(queue.Name, false, false);
             return true;
@@ -58,7 +58,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <returns>true if the message queue exists; otherwise, false.</returns>
         public bool Exist(MQConnection queue)
         {
-            var rabbitQueue = new RabbitQueue(queue);
+            var rabbitQueue = new RabbitMQueue(queue);
             rabbitQueue.EnsureConnection(false);
             try
             {
@@ -79,7 +79,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (Exist(queue))
             {
-                var rabbitQueue = new RabbitQueue(queue);
+                var rabbitQueue = new RabbitMQueue(queue);
                 rabbitQueue.EnsureConnection(false);
                 rabbitQueue.Channel.QueuePurge(queue.Name);
             }

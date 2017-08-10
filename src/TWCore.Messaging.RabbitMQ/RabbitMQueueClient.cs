@@ -91,7 +91,8 @@ namespace TWCore.Messaging.RabbitMQ
                     foreach (var queue in _clientQueues.SendQueues)
                     {
                         var rabbitQueue = new RabbitMQueue(queue);
-                        rabbitQueue.EnsureConnection(true);
+                        rabbitQueue.EnsureConnection();
+                        rabbitQueue.EnsureExchange();
                         _senders.Add(rabbitQueue);
                     }
                 }
@@ -101,7 +102,8 @@ namespace TWCore.Messaging.RabbitMQ
                     _receiver = rabbitQueue;
                     if (UseSingleResponseQueue)
                     {
-                        _receiver.EnsureConnection(true);
+                        _receiver.EnsureConnection();
+                        _receiver.EnsureQueue();
                         _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
                         _receiverConsumer.Received += (ch, ea) =>
                         {
@@ -193,7 +195,8 @@ namespace TWCore.Messaging.RabbitMQ
 
             foreach (var sender in _senders)
             {
-                if (!sender.EnsureConnection(true)) continue;
+                if (!sender.EnsureConnection()) continue;
+                else sender.EnsureExchange();
                 var props = sender.Channel.CreateBasicProperties();
                 props.CorrelationId = correlationId;
                 props.ReplyTo = replyTo;
@@ -232,7 +235,7 @@ namespace TWCore.Messaging.RabbitMQ
             string temporalConsumerTag = null;
             if (!UseSingleResponseQueue)
             {
-                _receiver.EnsureConnection(false);
+                _receiver.EnsureConnection();
                 _receiver.Channel.QueueDeclare(_receiver.Name + "_" + correlationId, false, false, true, null);
                 var tmpConsumer = new EventingBasicConsumer(_receiver.Channel);
                 tmpConsumer.Received += (ch, ea) =>

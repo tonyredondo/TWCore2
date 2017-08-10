@@ -82,7 +82,8 @@ namespace TWCore.Messaging.RabbitMQ
         {
             _token = token;
             _receiver = new RabbitMQueue(Connection);
-            _receiver.EnsureConnection(true);
+            _receiver.EnsureConnection();
+            _receiver.EnsureQueue();
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {

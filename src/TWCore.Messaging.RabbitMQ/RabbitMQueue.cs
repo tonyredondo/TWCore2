@@ -17,6 +17,7 @@ limitations under the License.
 using RabbitMQ.Client;
 using System;
 using System.Runtime.CompilerServices;
+using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RabbitMQ
@@ -39,6 +40,14 @@ namespace TWCore.Messaging.RabbitMQ
         /// Channel
         /// </summary>
         public IModel Channel { get; private set; }
+        /// <summary>
+        /// Exchange Name
+        /// </summary>
+        public string ExchangeName { get; private set; }
+        /// <summary>
+        /// Exchange Type
+        /// </summary>
+        public string ExchangeType { get; private set; }
         #endregion
 
         #region .ctor
@@ -51,8 +60,10 @@ namespace TWCore.Messaging.RabbitMQ
         {
             Route = queue.Route;
             Name = queue.Name;
-            Parameters = queue.Parameters;
+            Parameters = queue.Parameters ?? new KeyValueCollection();
             Factory = new ConnectionFactory { Uri = new Uri(Route) };
+            ExchangeName = Parameters[nameof(ExchangeName)];
+            ExchangeType = Parameters[nameof(ExchangeType)];
         }
         #endregion
 
@@ -61,7 +72,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// Ensure Connection
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool EnsureConnection(bool declareQueue)
+        public bool EnsureConnection()
         {
             try
             {
@@ -72,8 +83,6 @@ namespace TWCore.Messaging.RabbitMQ
                 }
                 if (Channel == null)
                     Channel = Connection.CreateModel();
-                if (declareQueue)
-                    Channel.QueueDeclare(Name, true, false, false, null);
                 return true;
             }
             catch (Exception ex)
@@ -81,6 +90,24 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.Write(ex);
                 return false;
             }
+        }
+        /// <summary>
+        /// Ensure Queue
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void EnsureQueue()
+        {
+            if (!string.IsNullOrEmpty(Name))
+                Channel.QueueDeclare(Name, true, false, false, null);
+        }
+        /// <summary>
+        /// Ensure Queue
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void EnsureExchange()
+        {
+            if (!string.IsNullOrEmpty(ExchangeName))
+                Channel.ExchangeDeclare(ExchangeName, ExchangeType ?? global::RabbitMQ.Client.ExchangeType.Direct, true, false, null);
         }
         /// <summary>
         /// Close Connection

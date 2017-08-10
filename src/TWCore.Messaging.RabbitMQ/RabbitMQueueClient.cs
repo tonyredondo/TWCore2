@@ -36,7 +36,8 @@ namespace TWCore.Messaging.RabbitMQ
     public class RabbitMQueueClient : MQueueClientBase
     {
         static ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
-        readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> RouteConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>(); 
+        readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> RouteConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
+        readonly ConcurrentDictionary<Guid, string> CorrelationIdConsumers = new ConcurrentDictionary<Guid, string>();
 
         #region Fields
         List<RabbitMQueue> _senders;
@@ -258,7 +259,6 @@ namespace TWCore.Messaging.RabbitMQ
                 cReceiver.EnsureConnection();
                 cReceiver.Channel.QueueDeclare(_recName, false, false, true, null);
                 var tmpConsumer = new EventingBasicConsumer(cReceiver.Channel);
-                string temporalConsumerTag = null;
                 tmpConsumer.Received += (ch, ea) =>
                 {
                     var crId = Guid.Parse(ea.BasicProperties.CorrelationId);
@@ -268,10 +268,11 @@ namespace TWCore.Messaging.RabbitMQ
                     rMessage.Properties = ea.BasicProperties;
                     rMessage.WaitHandler.Set();
                     cReceiver.Channel.BasicAck(ea.DeliveryTag, false);
-                    cReceiver.Channel.BasicCancel(temporalConsumerTag);
+                    if (CorrelationIdConsumers.TryGetValue(crId, out var consumerTag))
+                        cReceiver.Channel.BasicCancel(consumerTag);
                     pool.Store(cReceiver);
                 };
-                temporalConsumerTag = cReceiver.Channel.BasicConsume(_recName, false, tmpConsumer);
+                CorrelationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(_recName, false, tmpConsumer));
             }
 
             if (message.WaitHandler.Wait(timeout, cancellationToken))

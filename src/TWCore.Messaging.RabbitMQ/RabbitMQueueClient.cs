@@ -270,6 +270,7 @@ namespace TWCore.Messaging.RabbitMQ
                     cReceiver.Channel.BasicAck(ea.DeliveryTag, false);
                     if (CorrelationIdConsumers.TryGetValue(crId, out var consumerTag))
                         cReceiver.Channel.BasicCancel(consumerTag);
+                    cReceiver.Channel.QueueDeleteNoWait(_recName);
                     pool.Store(cReceiver);
                 };
                 CorrelationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(_recName, false, tmpConsumer));

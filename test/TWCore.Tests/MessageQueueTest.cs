@@ -127,7 +127,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 500;
+                    var totalQ = 5000;
 
                     Console.WriteLine("Sync Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))

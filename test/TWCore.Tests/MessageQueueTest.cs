@@ -93,11 +93,41 @@ namespace TWCore.Tests
                 };
                 mqServer.StartListeners();
 
+                //using (var mqClient = mqConfig.GetClient())
+                //{
+                //    var totalQ = 5000;
+
+                //    Console.WriteLine("Sync Mode Test, using Unique Response Queue");
+                //    using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
+                //    {
+                //        for (var i = 0; i < totalQ; i++)
+                //        {
+                //            var response = mqClient.SendAndReceive<string>("Hola mundo");
+                //        }
+                //        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                //    }
+                //    Console.ReadLine();
+
+
+                //    Console.WriteLine("Parallel Mode Test, using Unique Response Queue");
+                //    using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
+                //    {
+                //        Parallel.For(0, totalQ, i =>
+                //        {
+                //            var response = mqClient.SendAndReceive<string>("Hola mundo");
+                //        });
+                //        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                //    }
+                //    Console.ReadLine();
+                //}
+
+
+                mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 5000;
+                    var totalQ = 50;
 
-                    Console.WriteLine("Sync Mode Test, using Unique Response Queue");
+                    Console.WriteLine("Sync Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
                     {
                         for (var i = 0; i < totalQ; i++)
@@ -109,7 +139,7 @@ namespace TWCore.Tests
                     Console.ReadLine();
 
 
-                    Console.WriteLine("Parallel Mode Test, using Unique Response Queue");
+                    Console.WriteLine("Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Parallel.For(0, totalQ, i =>

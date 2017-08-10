@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Net.Browser\TWCore.Net.Browser.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj" />

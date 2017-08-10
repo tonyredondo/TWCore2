@@ -173,11 +173,15 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 if (recvQueue != null)
                 {
-                    message.Header.ResponseQueue = recvQueue;
+                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
                     message.Header.ResponseExpected = true;
                     message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
                     if (!UseSingleResponseQueue)
+                    {
                         message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
+                        //_receiver.EnsureConnection();
+                        //_receiver.Channel.QueueDeclare(message.Header.ResponseQueue.Name, false, false, true, null);
+                    }
                 }
                 else
                 {
@@ -236,8 +240,27 @@ namespace TWCore.Messaging.RabbitMQ
             string temporalConsumerTag = null;
             if (!UseSingleResponseQueue)
             {
+                var _recName = _receiver.Name + "_" + correlationId;
+
                 _receiver.EnsureConnection();
-                _receiver.Channel.QueueDeclare(_receiver.Name + "_" + correlationId, false, false, true, null);
+                _receiver.Channel.QueueDeclare(_recName, false, false, true, null);
+                //BasicGetResult resGet = null;
+                //while (resGet == null)
+                //{
+                //    resGet = _receiver.Channel.BasicGet(_recName, true);
+                //    if (resGet != null)
+                //    {
+                //        var crId = Guid.Parse(resGet.BasicProperties.CorrelationId);
+                //        message.CorrelationId = crId;
+                //        message.Body = resGet.Body;
+                //        message.Properties = resGet.BasicProperties;
+                //        message.WaitHandler.Set();
+                //        _receiver.Channel.QueueDeleteNoWait(_recName);
+                //        break;
+                //    }
+                //    Thread.Sleep(100);
+                //}
+
                 var tmpConsumer = new EventingBasicConsumer(_receiver.Channel);
                 tmpConsumer.Received += (ch, ea) =>
                 {
@@ -248,16 +271,13 @@ namespace TWCore.Messaging.RabbitMQ
                     rMessage.Properties = ea.BasicProperties;
                     rMessage.WaitHandler.Set();
                     _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+                    _receiver.Channel.BasicCancel(temporalConsumerTag);
+                    //_receiver.Close();
                 };
-                temporalConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name + "_" + correlationId, false, tmpConsumer);
+                temporalConsumerTag = _receiver.Channel.BasicConsume(_recName, false, tmpConsumer);
+
             }
-            var waitResult = message.WaitHandler.Wait(timeout, cancellationToken);
-            if (!UseSingleResponseQueue)
-            {
-                _receiver.Channel.BasicCancel(temporalConsumerTag);
-                //_receiver.Close();
-            }
-            if (waitResult)
+            if (message.WaitHandler.Wait(timeout, cancellationToken))
             {
                 if (message.Body == null)
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());

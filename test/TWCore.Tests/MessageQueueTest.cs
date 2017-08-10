@@ -85,6 +85,8 @@ namespace TWCore.Tests
             var manager = mqConfig.GetQueueManager();
             manager.CreateClientQueues();
 
+            Core.DebugMode = true;
+
             using (var mqServer = mqConfig.GetServer())
             {
                 mqServer.RequestReceived += (s, e) =>

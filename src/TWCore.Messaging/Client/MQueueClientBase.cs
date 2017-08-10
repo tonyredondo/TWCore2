@@ -177,8 +177,6 @@ namespace TWCore.Messaging.Client
                 OnAfterReceive(rsMsg);
                 Counters.IncrementMessagesReceived();
                 Counters.IncrementReceivingTime(rsMsg.Header.Response.TotalTime);
-                if (rsMsg.Header.Response.NetworkTime.HasValue)
-                    Counters.IncrementTotalNetworkTime(rsMsg.Header.Response.NetworkTime.Value);
                 var rrea = new ResponseReceivedEventArgs(Name, rsMsg);
                 OnResponseReceived?.Invoke(this, rrea);
                 MQueueClientEvents.FireOnResponseReceived(this, rrea);

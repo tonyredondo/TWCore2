@@ -31,7 +31,7 @@ namespace TWCore.Messaging
         /// <summary>
         /// Define a no response message
         /// </summary>
-        public static object NoResponse { get; } = "TWCore.Messaging.ResponseMessage.NoResponse";
+        public static object NoResponse { get; } = "Message[NoResponse]";
 
         /// <summary>
         /// Request identifier
@@ -44,25 +44,15 @@ namespace TWCore.Messaging
         [XmlElement, DataMember]
         public ResponseMessageHeader Header { get; set; }
         /// <summary>
-        /// Total Request+Response Network time (Time between queue sent date and queue arrived date)
-        /// </summary>
-        [NonSerialize]
-        public TimeSpan? _Total_NetworkTime { get { return Header.Response.QueueArrivedDate.HasValue && Header.Request.Header.QueueSentDate.HasValue ? Header.Response.QueueArrivedDate - Header.Request.Header.QueueSentDate : null; } }
-        /// <summary>
         /// Message Request+Response Total Time
         /// </summary>
         [NonSerialize]
-        public TimeSpan _Total_Time { get { return Header.Response.ApplicationReceivedTime - Header.Request.Header.ApplicationSentDate; } }
-        /// <summary>
-        /// Total Request+Response Network time (Time between queue sent date and queue arrived date)
-        /// </summary>
-        [XmlAttribute, NonSerialize]
-        public string _Total_NetworkTimeString { get { return _Total_NetworkTime?.ToString(); } set { } }
+        public TimeSpan Total_Time { get { return Header.Response.ApplicationReceivedTime - Header.Request.Header.ApplicationSentDate; } }
         /// <summary>
         /// Message Request+Response Total Time
         /// </summary>
         [XmlAttribute, NonSerialize]
-        public string _Total_TimeString { get { return _Total_Time.ToString(); } set { } }
+        public string Total_TimeString { get { return Total_Time.ToString(); } set { } }
         /// <summary>
         /// Response body
         /// </summary>

@@ -120,10 +120,6 @@ namespace TWCore.Messaging.Server
         [StatusProperty("Number of exceptions", StatusItemValueStatus.Red)]
         public long TotalExceptions { get; private set; }
         /// <summary>
-        /// Total network time
-        /// </summary>
-        public double TotalNetworkTime { get; private set; }
-        /// <summary>
         /// Total receiving time
         /// </summary>
         public double TotalReceivingTime { get; private set; }
@@ -151,22 +147,12 @@ namespace TWCore.Messaging.Server
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Total network time", TimeSpan.FromMilliseconds(TotalNetworkTime));
                 collection.Add("Total receiving time", TimeSpan.FromMilliseconds(TotalReceivingTime));
             });
         }
         #endregion
 
         #region Public Methods
-        /// <summary>
-        /// Increments the total network time
-        /// </summary>
-        /// <param name="increment">Increment value</param>
-        public void IncrementTotalNetworkTime(TimeSpan increment)
-        {
-            lock (locker)
-                TotalNetworkTime += increment.TotalMilliseconds;
-        }
         /// <summary>
         /// Increments the receiving time
         /// </summary>
@@ -176,6 +162,7 @@ namespace TWCore.Messaging.Server
             lock (locker)
                 TotalReceivingTime += increment.TotalMilliseconds;
         }
+
         /// <summary>
         /// Increments the total exceptions number
         /// </summary>

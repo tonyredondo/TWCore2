@@ -54,25 +54,10 @@ namespace TWCore.Messaging
         [XmlAttribute, DataMember]
         public DateTime ApplicationSentDate { get; set; }
         /// <summary>
-        /// Queue sent date time if is available
-        /// </summary>
-        [XmlElement, DataMember]
-        public DateTime? QueueSentDate { get; set; }
-        /// <summary>
-        /// Queue arrived time if is available
-        /// </summary>
-        [XmlElement, DataMember]
-        public DateTime? QueueArrivedDate { get; set; }
-        /// <summary>
         /// Application received time
         /// </summary>
         [XmlAttribute, DataMember]
         public DateTime ApplicationReceivedTime { get; set; }
-        /// <summary>
-        /// Total Network time (Time between queue sent date and queue arrived date)
-        /// </summary>
-        [NonSerialize]
-        public TimeSpan? NetworkTime { get { return QueueArrivedDate.HasValue && QueueSentDate.HasValue ? QueueArrivedDate - QueueSentDate : null; } }
         /// <summary>
         /// Message Total Time
         /// </summary>
@@ -83,13 +68,6 @@ namespace TWCore.Messaging
         /// </summary>
         [XmlArray("MetaData"), XmlArrayItem("Meta"), DataMember]
         public KeyValueCollection MetaData { get; set; } = new KeyValueCollection();
-
-
-        /// <summary>
-        /// Total Network time (Time between queue sent date and queue arrived date)
-        /// </summary>
-        [XmlAttribute, NonSerialize]
-        public string NetworkTimeString { get { return NetworkTime?.ToString(); } set { } }
         /// <summary>
         /// Message Total Time
         /// </summary>

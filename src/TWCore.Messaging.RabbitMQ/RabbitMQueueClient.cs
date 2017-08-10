@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
@@ -66,6 +67,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// On client initialization
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnInit()
         {
             OnDispose();
@@ -128,6 +130,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// On Dispose
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
             if (_senders != null)
@@ -141,7 +144,8 @@ namespace TWCore.Messaging.RabbitMQ
             }
             if (_receiver != null)
             {
-                _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                if (!string.IsNullOrEmpty(_receiverConsumerTag))
+                    _receiver.Channel.BasicCancel(_receiverConsumerTag);
                 _receiver.Close();
                 _receiver = null;
             }
@@ -153,6 +157,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// On Send message data
         /// </summary>
         /// <param name="message">Request message instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSend(RequestMessage message)
         {
             if (_senders?.Any() != true)
@@ -212,6 +217,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <param name="correlationId">Correlation Id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ResponseMessage OnReceive(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)

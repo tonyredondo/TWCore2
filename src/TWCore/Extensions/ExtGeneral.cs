@@ -387,7 +387,6 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public async static Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
         {
-            // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<object>();
             using (IDisposable registration = cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
             {
@@ -405,7 +404,18 @@ namespace TWCore
                 await readyTask;
             }
         }
-
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        public async static Task WhenCanceledAsync(this CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested) return;
+            var tcs = new TaskCompletionSource<object>();
+            using (IDisposable registration = cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false))
+                await tcs.Task;
+        }
 
         delegate object InvokeDelegate(Delegate @delegate, params object[] args);
         /// <summary>

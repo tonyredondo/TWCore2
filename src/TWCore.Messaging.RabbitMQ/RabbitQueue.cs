@@ -16,6 +16,7 @@ limitations under the License.
 
 using RabbitMQ.Client;
 using System;
+using System.Runtime.CompilerServices;
 using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RabbitMQ
@@ -45,6 +46,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// RabbitMQ Queue
         /// </summary>
         /// <param name="queue">MQConnection instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RabbitQueue(MQConnection queue)
         {
             Route = queue.Route;
@@ -58,6 +60,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Ensure Connection
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool EnsureConnection(bool declareQueue)
         {
             try
@@ -82,6 +85,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Close Connection
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Close()
         {
             if (Channel?.IsOpen == true)

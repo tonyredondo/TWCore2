@@ -85,7 +85,7 @@ namespace TWCore.Tests
             var manager = mqConfig.GetQueueManager();
             manager.CreateClientQueues();
 
-            Core.DebugMode = true;
+            //Core.DebugMode = true;
 
             using (var mqServer = mqConfig.GetServer())
             {
@@ -127,7 +127,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 50;
+                    var totalQ = 500;
 
                     Console.WriteLine("Sync Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))

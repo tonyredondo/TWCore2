@@ -37,6 +37,7 @@ namespace TWCore.Messaging.RabbitMQ
                 {
                     rabbitQueue.EnsureQueue();
                     rabbitQueue.EnsureExchange();
+                    rabbitQueue.Close();
                     return true;
                 }
             }
@@ -53,6 +54,7 @@ namespace TWCore.Messaging.RabbitMQ
             var rabbitQueue = new RabbitMQueue(queue);
             rabbitQueue.EnsureConnection();
             rabbitQueue.Channel.QueueDelete(queue.Name, false, false);
+            rabbitQueue.Close();
             return true;
         }
 
@@ -68,6 +70,7 @@ namespace TWCore.Messaging.RabbitMQ
             try
             {
                 var result = rabbitQueue.Channel.QueueDeclarePassive(queue.Name);
+                rabbitQueue.Close();
                 return result != null;
             }
             catch
@@ -87,6 +90,7 @@ namespace TWCore.Messaging.RabbitMQ
                 var rabbitQueue = new RabbitMQueue(queue);
                 rabbitQueue.EnsureConnection();
                 rabbitQueue.Channel.QueuePurge(queue.Name);
+                rabbitQueue.Close();
             }
         }
         /// <summary>

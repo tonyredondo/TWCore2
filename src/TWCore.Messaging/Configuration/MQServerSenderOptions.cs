@@ -37,11 +37,6 @@ namespace TWCore.Messaging.Configuration
         [XmlAttribute, DataMember]
         public MQMessagePriority MessagePriority { get; set; } = MQMessagePriority.Normal;
         /// <summary>
-        /// Use dead letter queue when the message expires
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public bool UseDeadLetter { get; set; } = true;
-        /// <summary>
         /// Set the message as recoverable in case of server reset.
         /// </summary>
         [XmlAttribute, DataMember]

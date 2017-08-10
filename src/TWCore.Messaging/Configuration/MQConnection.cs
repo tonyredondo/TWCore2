@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
@@ -25,6 +27,7 @@ namespace TWCore.Messaging.Configuration
     /// </summary>
     public class MQConnection
     {
+        string _key = null;
         /// <summary>
         /// Message queue route (path or url)
         /// </summary>
@@ -44,6 +47,7 @@ namespace TWCore.Messaging.Configuration
         /// <summary>
         /// Defines a connection configuration
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MQConnection() { }
         /// <summary>
         /// Defines a connection configuration
@@ -51,11 +55,24 @@ namespace TWCore.Messaging.Configuration
         /// <param name="route">Message queue route (path or url)</param>
         /// <param name="name">Message queue name</param>
         /// <param name="parameters">Message queue connection parameters</param>
-        public MQConnection(string route, string name, params KeyValue<string,string>[] parameters)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public MQConnection(string route, string name, params KeyValue<string, string>[] parameters)
         {
             Route = route;
             Name = name;
             Parameters = new KeyValueCollection(parameters);
+        }
+
+        /// <summary>
+        /// Get the Precalculate Key
+        /// </summary>
+        /// <returns>Key</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string GetKey()
+        {
+            if (_key == null)
+                _key = Route + Name + Parameters?.Select(i => i.Key + i.Value);
+            return _key;
         }
     }
 }

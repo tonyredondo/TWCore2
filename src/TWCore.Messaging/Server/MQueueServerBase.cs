@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Compression;
@@ -87,11 +88,19 @@ namespace TWCore.Messaging.Server
         public event EventHandler<ResponseSentEventArgs> BeforeSendResponse;
         #endregion
 
+        #region .ctor
+        ~MQueueServerBase()
+        {
+            Dispose();
+        }
+        #endregion
+
         #region Public Methods
         /// <summary>
         /// Initialize client with the configuration
         /// </summary>
         /// <param name="config">Message queue client configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
             if (config != null)
@@ -115,6 +124,7 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Start the queue listener for request messages
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StartListeners()
         {
             if (tokenSource != null)
@@ -193,6 +203,7 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Stop the queue listener
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StopListeners()
         {
             if (tokenSource != null)
@@ -210,6 +221,7 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             StopListeners();
@@ -221,27 +233,29 @@ namespace TWCore.Messaging.Server
         #region Private Methods
         void QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
         {
-            var sw = Stopwatch.StartNew();
-            if (serverQueues?.AdditionalSendQueues?.Any() == true)
-                e.ResponseQueues.AddRange(serverQueues.AdditionalSendQueues);
-            e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
-            RequestReceived?.Invoke(sender, e);
-            e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
-            MQueueServerEvents.FireRequestReceived(sender, e);
-
-            if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
+            using (var w = Watch.Create())
             {
-                e.Response.Header.Response.ApplicationSentDate = Core.Now;
-                var rsea = new ResponseSentEventArgs(Name, e.Response);
+                if (serverQueues?.AdditionalSendQueues?.Any() == true)
+                    e.ResponseQueues.AddRange(serverQueues.AdditionalSendQueues);
+                e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
+                RequestReceived?.Invoke(sender, e);
+                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
+                MQueueServerEvents.FireRequestReceived(sender, e);
 
-                OnBeforeSend(e.Response);
-                BeforeSendResponse?.Invoke(this, rsea);
-                MQueueServerEvents.FireBeforeSendResponse(this, rsea);
-                OnSend(e.Response, e.ResponseQueues);
-                ResponseSent?.Invoke(this, rsea);
-                MQueueServerEvents.FireResponseSent(this, rsea);
+                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
+                {
+                    e.Response.Header.Response.ApplicationSentDate = Core.Now;
+                    var rsea = new ResponseSentEventArgs(Name, e.Response);
+
+                    OnBeforeSend(e.Response);
+                    BeforeSendResponse?.Invoke(this, rsea);
+                    MQueueServerEvents.FireBeforeSendResponse(this, rsea);
+                    OnSend(e.Response, e.ResponseQueues);
+                    ResponseSent?.Invoke(this, rsea);
+                    MQueueServerEvents.FireResponseSent(this, rsea);
+                }
+                w.EndTap($"Message Processed with CorrelationId={e?.Request?.CorrelationId}.");
             }
-            Core.Log.InfoDetail("Message with CorrelationId={0} Processed in {1}ms.", e.Request.CorrelationId,  sw.Elapsed.TotalMilliseconds);
         }
         void QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
         {

@@ -25,7 +25,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// <summary>
     /// RabbitMQ Queue
     /// </summary>
-    internal class RabbitMQueue : MQConnection
+    internal class RabbitMQueue : MQConnection, IDisposable
     {
         #region Properties
         /// <summary>
@@ -64,6 +64,10 @@ namespace TWCore.Messaging.RabbitMQ
             Factory = new ConnectionFactory { Uri = new Uri(Route) };
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
+        }
+        ~RabbitMQueue()
+        {
+            Close();
         }
         #endregion
 
@@ -121,6 +125,11 @@ namespace TWCore.Messaging.RabbitMQ
                 Connection.Close();
             Connection = null;
             Channel = null;
+        }
+
+        public void Dispose()
+        {
+            Close();
         }
         #endregion
     }

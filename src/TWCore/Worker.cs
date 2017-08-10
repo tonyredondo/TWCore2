@@ -111,7 +111,10 @@ namespace TWCore
         {
             processHandler.Reset();
             tokenSource = new CancellationTokenSource();
-            _processThread = Task.Factory.StartNew(obj => OneLoopDequeueThread((CancellationToken)obj), tokenSource.Token, tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _processThread = Task.Factory.StartNew(obj =>
+            {
+                OneLoopDequeueThread((CancellationToken)obj);
+            }, tokenSource.Token, tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             Core.Status.Attach(collection =>
             {

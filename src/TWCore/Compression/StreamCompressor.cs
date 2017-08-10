@@ -88,7 +88,7 @@ namespace TWCore.Compression
         /// <param name="source">Byte array source</param>
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async ValueTask<SubArray<byte>> CompressAsync(SubArray<byte> source)
+        public virtual async Task<SubArray<byte>> CompressAsync(SubArray<byte> source)
         {
             using (var msDes = new MemoryStream())
             {
@@ -149,7 +149,7 @@ namespace TWCore.Compression
         /// <param name="source">Compressed byte array source</param>
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual async ValueTask<SubArray<byte>> DecompressAsync(SubArray<byte> source)
+        public virtual async Task<SubArray<byte>> DecompressAsync(SubArray<byte> source)
         {
             using (var msDes = new MemoryStream())
             {

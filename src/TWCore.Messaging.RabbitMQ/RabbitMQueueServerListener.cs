@@ -24,6 +24,7 @@ using RabbitMQ.Client.Events;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Collections.Concurrent;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -33,8 +34,8 @@ namespace TWCore.Messaging.RabbitMQ
     public class RabbitMQueueServerListener : MQueueServerListenerBase
     {
         #region Fields
+        readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
         readonly object _lock = new object();
-        readonly List<Task> _processingTasks = new List<Task>();
         Type _messageType;
         string _name;
         RabbitMQueue _receiver;
@@ -42,6 +43,7 @@ namespace TWCore.Messaging.RabbitMQ
         string _receiverConsumerTag;
         CancellationToken _token;
         Task _monitorTask;
+        bool _exceptionSleep = false;
         #endregion
 
         #region Nested Type
@@ -79,7 +81,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <param name="token">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task OnListenerTaskStartAsync(CancellationToken token)
-        {
+        {          
             _token = token;
             _receiver = new RabbitMQueue(Connection);
             _receiver.EnsureConnection();
@@ -96,24 +98,26 @@ namespace TWCore.Messaging.RabbitMQ
                 lock (_lock)
                 {
                     Counters.IncrementMessages();
-                    _processingTasks.Add(Task.Factory.StartNew(ProcessingTask, message, _token).
+                    _processingTasks.TryAdd(Task.Factory.StartNew(ProcessingTask, message, _token).
                         ContinueWith(tsk =>
                         {
-                            lock (_lock)
-                                _processingTasks.Remove(tsk);
+                            _processingTasks.TryRemove(tsk, out var nobj);
                             Counters.DecrementMessages();
-                        }, TaskContinuationOptions.ExecuteSynchronously));
+                        }, TaskContinuationOptions.ExecuteSynchronously), null);
                 }
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
-            _monitorTask = Task.Run(MonitorProcess);
+            _monitorTask = Task.Run(MonitorProcess, _token);
 
             await token.WhenCanceledAsync().ConfigureAwait(false);
+            if (_receiverConsumerTag != null)
+                _receiver.Channel.BasicCancel(_receiverConsumerTag);
+            _receiver.Close();
 
             Task[] tasksToWait;
             lock (_lock)
-                tasksToWait = _processingTasks.Concat(_monitorTask).ToArray();
+                tasksToWait = _processingTasks.Keys.Concat(_monitorTask).ToArray();
             if (tasksToWait.Length > 0)
                 Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
         }
@@ -126,7 +130,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (_receiver != null)
             {
                 if (!string.IsNullOrEmpty(_receiverConsumerTag))
-                    _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                    _receiver.Channel?.BasicCancel(_receiverConsumerTag);
                 _receiver.Close();
                 _receiver = null;
             }
@@ -144,6 +148,20 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
+                    bool exSleep = false;
+                    lock (_lock)
+                        exSleep = _exceptionSleep;
+                    if (exSleep)
+                    {
+                        if (_receiverConsumerTag != null)
+                            _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                        Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
+                        await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
+                        lock (_lock)
+                            _exceptionSleep = false;
+                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                    }
+
                     if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
                     {
                         if (_receiverConsumerTag != null)
@@ -151,17 +169,19 @@ namespace TWCore.Messaging.RabbitMQ
                         Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
 
                         while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-                            await Task.Delay(1000, _token).ConfigureAwait(false);
+                            await Task.Delay(500, _token).ConfigureAwait(false);
 
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
                     }
 
                     await Task.Delay(100, _token).ConfigureAwait(false);
                 }
+                catch (TaskCanceledException) { }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
-                    await Task.Delay(2000, _token).ConfigureAwait(false);
+                    if (!_token.IsCancellationRequested)
+                        await Task.Delay(2000, _token).ConfigureAwait(false);
                 }
             }
         }
@@ -203,6 +223,8 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 Counters.IncrementTotalExceptions();
                 Core.Log.Write(ex);
+                lock (_lock)
+                    _exceptionSleep = true;
             }
             finally
             {

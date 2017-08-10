@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable 1711
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
 using TWCore.Compression;
@@ -82,6 +83,10 @@ namespace TWCore.Messaging.Client
         {
             Counters = new MQClientCounters();
         }
+        ~MQueueClientBase()
+        {
+            Dispose();
+        }
         #endregion
 
         #region Public Methods
@@ -89,6 +94,7 @@ namespace TWCore.Messaging.Client
         /// Initialize client with the configuration
         /// </summary>
         /// <param name="config">Message queue client configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
             if (config != null)
@@ -112,6 +118,7 @@ namespace TWCore.Messaging.Client
         /// <typeparam name="T">Type of the object to be sent</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send<T>(T obj)
             => Send(obj, Guid.NewGuid());
         /// <summary>
@@ -121,6 +128,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send<T>(T obj, Guid correlationId)
         {
             RequestMessage rqMsg;
@@ -156,6 +164,7 @@ namespace TWCore.Messaging.Client
         /// <typeparam name="T">Type of the object to be received</typeparam>
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId)
         {
             var tSource = new CancellationTokenSource();
@@ -168,6 +177,7 @@ namespace TWCore.Messaging.Client
         /// <param name="correlationId">Correlation id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var rsMsg = OnReceive(correlationId, cancellationToken);
@@ -206,6 +216,7 @@ namespace TWCore.Messaging.Client
         /// <typeparam name="R">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R, T>(T obj)
         {
             var correlationId = Send(obj);
@@ -219,6 +230,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R, T>(T obj, CancellationToken cancellationToken)
         {
             var correlationId = Send(obj);
@@ -232,6 +244,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R, T>(T obj, Guid correlationId)
         {
             correlationId = Send(obj, correlationId);
@@ -246,6 +259,7 @@ namespace TWCore.Messaging.Client
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
         {
             correlationId = Send(obj, correlationId);
@@ -258,6 +272,7 @@ namespace TWCore.Messaging.Client
         /// <typeparam name="R">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R>(object obj)
         {
             var correlationId = Send(obj);
@@ -270,6 +285,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R>(object obj, CancellationToken cancellationToken)
         {
             var correlationId = Send(obj);
@@ -282,6 +298,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R>(object obj, Guid correlationId)
         {
             correlationId = Send(obj, correlationId);
@@ -295,6 +312,7 @@ namespace TWCore.Messaging.Client
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public R SendAndReceive<R>(object obj, Guid correlationId, CancellationToken cancellationToken)
         {
             correlationId = Send(obj, correlationId);
@@ -305,6 +323,7 @@ namespace TWCore.Messaging.Client
         /// </summary>
         /// <param name="messageBody">Message body</param>
         /// <returns>Complete Response message instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ResponseMessage GetCompleteMessage(object messageBody)
         {
             if (messageBody == null)
@@ -316,6 +335,7 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();

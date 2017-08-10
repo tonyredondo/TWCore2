@@ -20,6 +20,7 @@ using TWCore.Messaging.Server;
 using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections.Concurrent;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -28,6 +29,8 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     public class RabbitMQueueServer : MQueueServerBase
     {
+        ConcurrentDictionary<string, RabbitMQueue> rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+
         /// <summary>
         /// On Create all server listeners
         /// </summary>
@@ -62,9 +65,14 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-                    var rabbitQueue = new RabbitMQueue(queue);
+                    var rabbitQueue = rQueue.GetOrAdd(queue.GetKey(), q =>
+                    {
+                        var rq = new RabbitMQueue(queue);
+                        if (rq.EnsureConnection())
+                            rq.EnsureExchange();
+                        return rq;
+                    });
                     if (!rabbitQueue.EnsureConnection()) continue;
-                    else rabbitQueue.EnsureExchange();
                     var props = rabbitQueue.Channel.CreateBasicProperties();
                     props.CorrelationId = correlationId;
                     props.Priority = priority;
@@ -74,7 +82,7 @@ namespace TWCore.Messaging.RabbitMQ
                     props.DeliveryMode = deliveryMode;
                     props.Type = SenderOptions.Label;
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, rabbitQueue.Route + "/" + rabbitQueue.Name, correlationId);
-                    rabbitQueue.Channel.BasicPublish(null, rabbitQueue.Name, props, (byte[])data);
+                    rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, rabbitQueue.Name, props, (byte[])data);
                 }
                 catch (Exception ex)
                 {
@@ -83,6 +91,20 @@ namespace TWCore.Messaging.RabbitMQ
                 }
             }
             return response;
+        }
+
+        /// <summary>
+        /// On Dispose
+        /// </summary>
+        protected override void OnDispose()
+        {
+            if (rQueue != null)
+            {
+                foreach (var queue in rQueue.Values)
+                    queue.Close();
+                rQueue.Clear();
+                rQueue = null;
+            }
         }
     }
 }

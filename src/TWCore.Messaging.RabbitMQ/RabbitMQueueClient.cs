@@ -23,6 +23,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
@@ -84,7 +85,7 @@ namespace TWCore.Messaging.RabbitMQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
-                UseSingleResponseQueue = _receiverOptions.Parameters[ParameterKeys.SingleResponseQueue].ParseTo(false);
+                UseSingleResponseQueue = _receiverOptions.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {
@@ -207,7 +208,7 @@ namespace TWCore.Messaging.RabbitMQ
                 props.DeliveryMode = deliveryMode;
                 props.Type = _senderOptions.Label;
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
-                sender.Channel.BasicPublish(null, sender.Name, props, (byte[])data);
+                sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);
             }
             return true;
         }
@@ -263,9 +264,9 @@ namespace TWCore.Messaging.RabbitMQ
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
                 var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
                 sw = null;
-                Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 return response;
 
             }

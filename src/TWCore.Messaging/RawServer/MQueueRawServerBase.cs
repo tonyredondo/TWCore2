@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
@@ -231,12 +232,12 @@ namespace TWCore.Messaging.RawServer
             if (e.SendResponse && e.Response != null)
             {
                 byte[] response = e.Response;
-                OnBeforeSend(ref response);
+                OnBeforeSend(ref response, e.Metadata);
                 var rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
                 BeforeSendResponse?.Invoke(this, rsea);
                 MQueueRawServerEvents.FireBeforeSendResponse(this, rsea);
                 response = rsea.Message;
-                OnSend(ref response, e.CorrelationId, e.ResponseQueues);
+                OnSend(ref response, e.CorrelationId, e.ResponseQueues, e.Metadata);
                 ResponseSent?.Invoke(this, rsea);
                 MQueueRawServerEvents.FireResponseSent(this, rsea);
             }
@@ -265,7 +266,7 @@ namespace TWCore.Messaging.RawServer
         /// Before send the request message
         /// </summary>
         /// <param name="message">Response message instance</param>
-        protected virtual void OnBeforeSend(ref byte[] message) { }
+        protected virtual void OnBeforeSend(ref byte[] message, KeyValueCollection metadata) { }
         /// <summary>
         /// On Send message data
         /// </summary>
@@ -273,7 +274,7 @@ namespace TWCore.Messaging.RawServer
         /// <param name="correlationId">Correlation Id</param>
         /// <param name="queues">Response queues</param>
         /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(ref byte[] message, Guid correlationId, List<MQConnection> queues);
+        protected abstract bool OnSend(ref byte[] message, Guid correlationId, List<MQConnection> queues, KeyValueCollection metadata);
         /// <summary>
         /// On Dispose
         /// </summary>

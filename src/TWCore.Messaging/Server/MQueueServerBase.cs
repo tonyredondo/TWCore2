@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
@@ -247,10 +248,10 @@ namespace TWCore.Messaging.Server
                     e.Response.Header.Response.ApplicationSentDate = Core.Now;
                     var rsea = new ResponseSentEventArgs(Name, e.Response);
 
-                    OnBeforeSend(e.Response);
+                    OnBeforeSend(e.Response, e.Request, e.Metadata);
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueServerEvents.FireBeforeSendResponse(this, rsea);
-                    OnSend(e.Response, e.ResponseQueues);
+                    OnSend(e.Response, e.ResponseQueues, e.Request, e.Metadata);
                     ResponseSent?.Invoke(this, rsea);
                     MQueueServerEvents.FireResponseSent(this, rsea);
                 }
@@ -280,14 +281,14 @@ namespace TWCore.Messaging.Server
         /// Before send the request message
         /// </summary>
         /// <param name="message">Response message instance</param>
-        protected virtual void OnBeforeSend(ResponseMessage message) { }
+        protected virtual void OnBeforeSend(ResponseMessage message, RequestMessage request, KeyValueCollection metadata) { }
         /// <summary>
         /// On Send message data
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="queues">Response queues</param>
         /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(ResponseMessage message, List<MQConnection> queues);
+        protected abstract bool OnSend(ResponseMessage message, List<MQConnection> queues, RequestMessage request, KeyValueCollection metadata);
         /// <summary>
         /// On Dispose
         /// </summary>

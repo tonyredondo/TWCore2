@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using TWCore.Collections;
 
 namespace TWCore.Messaging.Server
 {
@@ -31,6 +32,10 @@ namespace TWCore.Messaging.Server
         /// Response message received
         /// </summary>
         public ResponseMessage Message { get; private set; }
+        /// <summary>
+        /// Listener Metadata
+        /// </summary>
+        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
         /// <summary>
         /// Event args for response received event

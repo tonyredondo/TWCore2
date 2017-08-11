@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.Server
@@ -60,6 +61,11 @@ namespace TWCore.Messaging.Server
         /// Gets the Cancellation Token when the time to process a response has been reached.
         /// </summary>
         public CancellationToken ProcessResponseTimeoutCancellationToken { get; private set; }
+        /// <summary>
+        /// Listener Metadata
+        /// </summary>
+        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
+
 
         /// <summary>
         /// Event args for request sent event

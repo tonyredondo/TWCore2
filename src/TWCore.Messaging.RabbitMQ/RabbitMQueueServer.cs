@@ -21,6 +21,7 @@ using RabbitMQ.Client;
 using System.Collections.Generic;
 using System.Linq;
 using System.Collections.Concurrent;
+using TWCore.Collections;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -45,7 +46,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="queues">Response queues</param>
-        protected override bool OnSend(ResponseMessage message, List<MQConnection> queues)
+        protected override bool OnSend(ResponseMessage message, List<MQConnection> queues, RequestMessage request, KeyValueCollection metadata)
         {
             if (queues?.Any() == false)
                 return false;

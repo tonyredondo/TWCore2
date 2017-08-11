@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using TWCore.Messaging.RawClient;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
@@ -172,52 +171,37 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Request message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnSend(RequestMessage message)
+        protected override bool OnSend(byte[] message, Guid correlationId)
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
             if (_senderOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
-            var recvQueue = _clientQueues.RecvQueue;
-            if (message.Header.ResponseQueue == null)
-            {
-                if (recvQueue != null)
-                {
-                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
-                    message.Header.ResponseExpected = true;
-                    message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
-                    if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                        var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(() => new RabbitMQueue(_receiver)));
-                        var cReceiver = pool.New();
-                        cReceiver.EnsureConnection();
-                        cReceiver.Channel.QueueDeclare(message.Header.ResponseQueue.Name, false, false, true, null);
-                        pool.Store(cReceiver);
-                    }
-                }
-                else
-                {
-                    message.Header.ResponseExpected = false;
-                    message.Header.ResponseTimeoutInSeconds = -1;
-                }
-            }
-
-            var correlationId = message.CorrelationId.ToString();
-            var data = SenderSerializer.Serialize(message);
-            var replyTo = message.Header.ResponseQueue?.Name;
+            var corrId = correlationId.ToString();
+            string replyTo = null;
             var priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
                 _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
             var expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
             var deliveryMode = (byte)(_senderOptions.Recoverable ? 2 : 1);
+
+            if (!UseSingleResponseQueue)
+            {
+                var recvQueue = _clientQueues.RecvQueue;
+                replyTo = recvQueue.Name + "_" + correlationId;
+                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(() => new RabbitMQueue(_receiver)));
+                var cReceiver = pool.New();
+                cReceiver.EnsureConnection();
+                cReceiver.Channel.QueueDeclare(replyTo, false, false, true, null);
+                pool.Store(cReceiver);
+            }
 
             foreach (var sender in _senders)
             {
                 if (!sender.EnsureConnection()) continue;
                 else sender.EnsureExchange();
                 var props = sender.Channel.CreateBasicProperties();
-                props.CorrelationId = correlationId;
+                props.CorrelationId = corrId;
                 props.ReplyTo = replyTo;
                 props.Priority = priority;
                 props.Expiration = expiration;
@@ -225,8 +209,8 @@ namespace TWCore.Messaging.RabbitMQ
                 props.ContentType = SenderSerializer.MimeTypes[0];
                 props.DeliveryMode = deliveryMode;
                 props.Type = _senderOptions.Label;
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
-                sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Length, sender.Route + "/" + sender.Name, correlationId);
+                sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, message);
             }
             return true;
         }
@@ -240,7 +224,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override ResponseMessage OnReceive(Guid correlationId, CancellationToken cancellationToken)
+        protected override byte[] OnReceive(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
@@ -282,17 +266,14 @@ namespace TWCore.Messaging.RabbitMQ
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
-                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
                 sw = null;
-                return response;
+                return message.Body;
             }
             else
                 throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
         }
         #endregion
-
-
     }
 }

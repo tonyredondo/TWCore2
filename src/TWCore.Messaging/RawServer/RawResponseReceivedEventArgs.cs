@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using TWCore.Collections;
 
 namespace TWCore.Messaging.RawServer
 {
@@ -35,6 +36,11 @@ namespace TWCore.Messaging.RawServer
         /// Response message received
         /// </summary>
         public byte[] Message { get; set; }
+        /// <summary>
+        /// Listener Metadata
+        /// </summary>
+        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
+
 
         /// <summary>
         /// Event args for response received event

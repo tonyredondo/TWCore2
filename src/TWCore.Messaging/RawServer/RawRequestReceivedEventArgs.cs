@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RawServer
@@ -53,6 +54,10 @@ namespace TWCore.Messaging.RawServer
         /// Gets if the response is going to be sent.
         /// </summary>
         public bool SendResponse { get; private set; } = true;
+        /// <summary>
+        /// Listener Metadata
+        /// </summary>
+        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
         /// <summary>
         /// Event args for request sent event

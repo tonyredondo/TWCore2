@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 
@@ -89,6 +90,7 @@ namespace TWCore.Messaging.Client
         /// Increments the total network time
         /// </summary>
         /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalNetworkTime(TimeSpan increment)
         {
             lock (locker)
@@ -98,6 +100,7 @@ namespace TWCore.Messaging.Client
         /// Increments the receiving time
         /// </summary>
         /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementReceivingTime(TimeSpan increment)
         {
             lock (locker)
@@ -106,6 +109,7 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Increments the messages sent
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesSent()
         {
             lock (locker)
@@ -117,6 +121,7 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Increment the message received
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesReceived()
         {
             lock (locker)

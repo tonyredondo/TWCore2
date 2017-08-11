@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.Client
 {
@@ -37,6 +38,7 @@ namespace TWCore.Messaging.Client
         /// </summary>
         /// <param name="name">Client name</param>
         /// <param name="message">Request message sent</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RequestSentEventArgs(string name, RequestMessage message)
         {
             Name = name;

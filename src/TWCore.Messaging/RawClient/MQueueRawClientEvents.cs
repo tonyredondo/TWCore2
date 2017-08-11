@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.RawClient
 {
@@ -36,10 +37,13 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         public static event EventHandler<RawMessageEventArgs> OnResponseReceived;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void FireOnRequestSent(object sender, RawMessageEventArgs e) 
             => OnRequestSent?.Invoke(sender, e);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void FireOnBeforeSendRequest(object sender, RawMessageEventArgs e)
             => OnBeforeSendRequest?.Invoke(sender, e);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void FireOnResponseReceived(object sender, RawMessageEventArgs e)
             => OnResponseReceived?.Invoke(sender, e);
     }

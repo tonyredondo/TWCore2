@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.RawClient
 {
@@ -37,6 +38,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         /// <param name="name">Client name</param>
         /// <param name="message">Raw message</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RawMessageEventArgs(string name, byte[] message)
         {
             Name = name;

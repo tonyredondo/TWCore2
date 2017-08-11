@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable 1711
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
@@ -75,6 +76,7 @@ namespace TWCore.Messaging.RawClient
         /// <summary>
         /// Message Queue client base
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MQueueRawClientBase()
         {
             Counters = new MQRawClientCounters();
@@ -86,6 +88,7 @@ namespace TWCore.Messaging.RawClient
         /// Initialize client with the configuration
         /// </summary>
         /// <param name="config">Message queue client configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
             if (config != null)
@@ -109,6 +112,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send(object obj)
             => Send(obj, Guid.NewGuid());
         /// <summary>
@@ -117,6 +121,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send(object obj, Guid correlationId)
         {
             var bytes = SenderSerializer.Serialize(obj);
@@ -127,6 +132,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid SendBytes(byte[] obj)
             => SendBytes(obj, Guid.NewGuid());
         /// <summary>
@@ -135,6 +141,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Message correlation Id</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid SendBytes(byte[] obj, Guid correlationId)
         {
             RawMessageEventArgs rmea;
@@ -143,7 +150,7 @@ namespace TWCore.Messaging.RawClient
             OnBeforeSendRequest?.Invoke(this, rmea);
             MQueueRawClientEvents.FireOnBeforeSendRequest(this, rmea);
             obj = rmea.Message;
-            if (OnSend(ref obj, correlationId))
+            if (OnSend(obj, correlationId))
             {
                 Counters.IncrementMessagesSent();
                 Counters.IncrementTotalBytesSent(obj.Length);
@@ -160,6 +167,7 @@ namespace TWCore.Messaging.RawClient
         /// <typeparam name="T">Type of the object to be received</typeparam>
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId)
         {
             var tSource = new CancellationTokenSource();
@@ -172,6 +180,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Correlation id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var msg = ReceiveBytes(correlationId, cancellationToken);
@@ -185,6 +194,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ReceiveBytes(Guid correlationId)
         {
             var tSource = new CancellationTokenSource();
@@ -196,6 +206,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Correlation id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ReceiveBytes(Guid correlationId, CancellationToken cancellationToken)
         {
             var bytes = OnReceive(correlationId, cancellationToken);
@@ -214,6 +225,7 @@ namespace TWCore.Messaging.RawClient
         /// <summary>
         /// Dispose all resources
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             OnDispose();
@@ -237,7 +249,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="message">Request message instance</param>
         /// <param name="correlationId">Correlation Id</param>
         /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(ref byte[] message, Guid correlationId);
+        protected abstract bool OnSend(byte[] message, Guid correlationId);
         /// <summary>
         /// On Receive message data
         /// </summary>

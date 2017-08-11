@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 
@@ -85,6 +86,7 @@ namespace TWCore.Messaging.RawClient
         /// Increments the total bytes sent
         /// </summary>
         /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalBytesSent(double increment)
         {
             lock (locker)
@@ -94,6 +96,7 @@ namespace TWCore.Messaging.RawClient
         /// Increments the total bytes received
         /// </summary>
         /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalBytesReceived(double increment)
         {
             lock (locker)
@@ -102,6 +105,7 @@ namespace TWCore.Messaging.RawClient
         /// <summary>
         /// Increments the messages sent
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesSent()
         {
             lock (locker)
@@ -113,6 +117,7 @@ namespace TWCore.Messaging.RawClient
         /// <summary>
         /// Increment the message received
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesReceived()
         {
             lock (locker)

@@ -12,10 +12,10 @@ namespace TWCore.Tests
 {
     public class MessageQueueTest : ContainerParameterService
     {
-        public MessageQueueTest() : base("mqtest", "MessageQueue Test") { }
+        public MessageQueueTest() : base("rabbitmqtest", "RabbitMQ Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting Message Queue Test");
+            Core.Log.Warning("Starting RabbitMQ Test");
 
             #region Set Config
             var mqConfig = new MQPairConfig
@@ -86,7 +86,9 @@ namespace TWCore.Tests
             manager.CreateClientQueues();
 
             //Core.DebugMode = true;
+            Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
+            Core.Log.Warning("Starting with Normal Listener and Client");
             using (var mqServer = mqConfig.GetServer())
             {
                 mqServer.RequestReceived += (s, e) =>
@@ -99,28 +101,33 @@ namespace TWCore.Tests
                 {
                     var totalQ = 5000;
 
-                    Console.WriteLine("Sync Mode Test, using Unique Response Queue");
+                    #region Sync Mode
+                    Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
                             var response = mqClient.SendAndReceive<string>("Hola mundo");
                         }
-                        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
+                    #endregion
 
-
-                    Console.WriteLine("Parallel Mode Test, using Unique Response Queue");
+                    #region Parallel Mode
+                    Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Parallel.For(0, totalQ, i =>
                         {
                             var response = mqClient.SendAndReceive<string>("Hola mundo");
                         });
-                        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
+                    #endregion
                 }
 
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
@@ -128,28 +135,33 @@ namespace TWCore.Tests
                 {
                     var totalQ = 5000;
 
-                    Console.WriteLine("Sync Mode Test, using Multiple Response Queue");
+                    #region Sync Mode
+                    Core.Log.Warning("Sync Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
                             var response = mqClient.SendAndReceive<string>("Hola mundo");
                         }
-                        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
+                    #endregion
 
-
-                    Console.WriteLine("Parallel Mode Test, using Multiple Response Queue");
+                    #region Parallel Mode
+                    Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Parallel.For(0, totalQ, i =>
                         {
                             var response = mqClient.SendAndReceive<string>("Hola mundo");
                         });
-                        Core.Log.InfoBasic("Average time in ms: {0}", (w.GlobalElapsedMilliseconds / totalQ));
+                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
+                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
                     Console.ReadLine();
+                    #endregion
                 }
             }
         }

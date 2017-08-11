@@ -10,9 +10,9 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    public class MessageQueueTest : ContainerParameterService
+    public class RabbitMQTest : ContainerParameterService
     {
-        public MessageQueueTest() : base("rabbitmqtest", "RabbitMQ Test") { }
+        public RabbitMQTest() : base("rabbitmqtest", "RabbitMQ Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting RabbitMQ Test");

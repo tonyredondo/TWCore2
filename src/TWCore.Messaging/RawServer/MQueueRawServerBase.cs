@@ -222,26 +222,32 @@ namespace TWCore.Messaging.RawServer
         #region Private Methods
         void QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
         {
-            var sw = Stopwatch.StartNew();
-            if (serverQueues?.AdditionalSendQueues?.Any() == true)
-                e.ResponseQueues.AddRange(serverQueues.AdditionalSendQueues);
-                        
-            RequestReceived?.Invoke(sender, e);
-            MQueueRawServerEvents.FireRequestReceived(sender, e);
-
-            if (e.SendResponse && e.Response != null)
+            using (var w = Watch.Create())
             {
-                byte[] response = e.Response;
-                OnBeforeSend(ref response, e.Metadata);
-                var rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
-                BeforeSendResponse?.Invoke(this, rsea);
-                MQueueRawServerEvents.FireBeforeSendResponse(this, rsea);
-                response = rsea.Message;
-                OnSend(ref response, e.CorrelationId, e.ResponseQueues, e.Metadata);
-                ResponseSent?.Invoke(this, rsea);
-                MQueueRawServerEvents.FireResponseSent(this, rsea);
+                if (serverQueues?.AdditionalSendQueues?.Any() == true)
+                    e.ResponseQueues.AddRange(serverQueues.AdditionalSendQueues);
+
+                RequestReceived?.Invoke(sender, e);
+                MQueueRawServerEvents.FireRequestReceived(sender, e);
+
+                if (e.SendResponse && e.Response != null)
+                {
+                    byte[] response = e.Response;
+                    OnBeforeSend(ref response, e.Metadata);
+                    var rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
+                    BeforeSendResponse?.Invoke(this, rsea);
+                    MQueueRawServerEvents.FireBeforeSendResponse(this, rsea);
+                    response = rsea.Message;
+                    if (OnSend(response, e))
+                    {
+                        ResponseSent?.Invoke(this, rsea);
+                        MQueueRawServerEvents.FireResponseSent(this, rsea);
+                    }
+                    else
+                        Core.Log.Warning("The message couldn't be sent.");
+                }
+                w.EndTap($"Message Processed with CorrelationId={e.CorrelationId}.");
             }
-            Core.Log.InfoDetail("Message Processed in {0}ms.", sw.Elapsed.TotalMilliseconds);
         }
         void QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
         {
@@ -274,7 +280,7 @@ namespace TWCore.Messaging.RawServer
         /// <param name="correlationId">Correlation Id</param>
         /// <param name="queues">Response queues</param>
         /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(ref byte[] message, Guid correlationId, List<MQConnection> queues, KeyValueCollection metadata);
+        protected abstract bool OnSend(byte[] message, RawRequestReceivedEventArgs e);
         /// <summary>
         /// On Dispose
         /// </summary>

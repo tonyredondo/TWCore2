@@ -251,11 +251,15 @@ namespace TWCore.Messaging.Server
                     OnBeforeSend(e.Response, e.Request, e.Metadata);
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueServerEvents.FireBeforeSendResponse(this, rsea);
-                    OnSend(e.Response, e.ResponseQueues, e.Request, e.Metadata);
-                    ResponseSent?.Invoke(this, rsea);
-                    MQueueServerEvents.FireResponseSent(this, rsea);
+                    if (OnSend(e.Response, e))
+                    {
+                        ResponseSent?.Invoke(this, rsea);
+                        MQueueServerEvents.FireResponseSent(this, rsea);
+                    }
+                    else
+                        Core.Log.Warning("The message couldn't be sent.");
                 }
-                w.EndTap($"Message Processed with CorrelationId={e?.Request?.CorrelationId}.");
+                w.EndTap($"Message Processed with CorrelationId={e.Request?.CorrelationId}.");
             }
         }
         void QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
@@ -288,7 +292,7 @@ namespace TWCore.Messaging.Server
         /// <param name="message">Response message instance</param>
         /// <param name="queues">Response queues</param>
         /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(ResponseMessage message, List<MQConnection> queues, RequestMessage request, KeyValueCollection metadata);
+        protected abstract bool OnSend(ResponseMessage message, RequestReceivedEventArgs e);
         /// <summary>
         /// On Dispose
         /// </summary>

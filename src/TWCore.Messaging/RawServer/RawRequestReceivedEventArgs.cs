@@ -71,6 +71,7 @@ namespace TWCore.Messaging.RawServer
             Name = name;
             Request = request;
             CorrelationId = correlationId;
+            Sender = sender;
         }
     }
 }

@@ -23,9 +23,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using TWCore.Messaging.RawClient;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
+using TWCore.Messaging.RawClient;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -178,8 +178,10 @@ namespace TWCore.Messaging.RabbitMQ
             if (_senderOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
+            var recvQueue = _clientQueues.RecvQueue;
+
             var corrId = correlationId.ToString();
-            string replyTo = null;
+            string replyTo = recvQueue.Name;
             var priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
                 _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
             var expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
@@ -187,7 +189,6 @@ namespace TWCore.Messaging.RabbitMQ
 
             if (!UseSingleResponseQueue)
             {
-                var recvQueue = _clientQueues.RecvQueue;
                 replyTo = recvQueue.Name + "_" + correlationId;
                 var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(() => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
@@ -202,7 +203,8 @@ namespace TWCore.Messaging.RabbitMQ
                 else sender.EnsureExchange();
                 var props = sender.Channel.CreateBasicProperties();
                 props.CorrelationId = corrId;
-                props.ReplyTo = replyTo;
+                if (replyTo != null)
+                    props.ReplyTo = replyTo;
                 props.Priority = priority;
                 props.Expiration = expiration;
                 props.AppId = Core.ApplicationName;

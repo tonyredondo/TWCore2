@@ -124,8 +124,10 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send(object obj, Guid correlationId)
         {
-            var bytes = SenderSerializer.Serialize(obj);
-            return SendBytes((byte[])bytes, correlationId);
+            if (obj is byte[] bytes)
+                return SendBytes(bytes, correlationId);
+            else
+                return SendBytes((byte[])SenderSerializer.Serialize(obj), correlationId);
         }
         /// <summary>
         /// Sends a message and returns the correlation Id
@@ -169,10 +171,7 @@ namespace TWCore.Messaging.RawClient
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId)
-        {
-            var tSource = new CancellationTokenSource();
-            return Receive<T>(correlationId, tSource.Token);
-        }
+            => Receive<T>(correlationId, CancellationToken.None);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -184,10 +183,11 @@ namespace TWCore.Messaging.RawClient
         public T Receive<T>(Guid correlationId, CancellationToken cancellationToken)
         {
             var msg = ReceiveBytes(correlationId, cancellationToken);
-            if (msg != null)
-                return ReceiverSerializer.Deserialize<T>(msg);
+            if (msg == null) return default(T);
+            if (typeof(T) == typeof(byte[]))
+                return (T)(object)msg;
             else
-                return default(T);
+                return ReceiverSerializer.Deserialize<T>(msg);
         }
         /// <summary>
         /// Receive a message from the queue
@@ -196,10 +196,7 @@ namespace TWCore.Messaging.RawClient
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ReceiveBytes(Guid correlationId)
-        {
-            var tSource = new CancellationTokenSource();
-            return ReceiveBytes(correlationId, tSource.Token);
-        }
+            => ReceiveBytes(correlationId, CancellationToken.None);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -220,6 +217,126 @@ namespace TWCore.Messaging.RawClient
                 MQueueRawClientEvents.FireOnResponseReceived(this, rrea);
             }
             return bytes;
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <param name="obj">Object to be sent</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte[] SendAndReceive(byte[] obj)
+        {
+            var correlationId = SendBytes(obj);
+            return ReceiveBytes(correlationId);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be sent</typeparam>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R, T>(T obj)
+        {
+            var correlationId = Send(obj);
+            return Receive<R>(correlationId);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be sent</typeparam>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R, T>(T obj, CancellationToken cancellationToken)
+        {
+            var correlationId = Send(obj);
+            return Receive<R>(correlationId, cancellationToken);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be sent</typeparam>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R, T>(T obj, Guid correlationId)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<R>(correlationId);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be sent</typeparam>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<R>(correlationId, cancellationToken);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="T">Type of the object to be sent</typeparam>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R>(object obj)
+        {
+            var correlationId = Send(obj);
+            return Receive<R>(correlationId);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R>(object obj, CancellationToken cancellationToken)
+        {
+            var correlationId = Send(obj);
+            return Receive<R>(correlationId, cancellationToken);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R>(object obj, Guid correlationId)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<R>(correlationId);
+        }
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public R SendAndReceive<R>(object obj, Guid correlationId, CancellationToken cancellationToken)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<R>(correlationId, cancellationToken);
         }
 
         /// <summary>

@@ -77,6 +77,7 @@ namespace TWCore.Messaging.Server
         {
             Name = name;
             Request = request;
+            Sender = sender;
             SendResponse = request?.Header?.ResponseExpected ?? true;
             ProcessResponseTimeoutInSeconds = request?.Header?.ResponseTimeoutInSeconds ?? -1;
             Response = new ResponseMessage(request, null);

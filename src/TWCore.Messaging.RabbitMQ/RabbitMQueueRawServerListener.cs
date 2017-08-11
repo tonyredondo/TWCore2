@@ -23,19 +23,18 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
-using TWCore.Messaging.Server;
+using TWCore.Messaging.RawServer;
 
 namespace TWCore.Messaging.RabbitMQ
 {
     /// <summary>
     /// RabbitMQ server listener implementation
     /// </summary>
-    public class RabbitMQueueServerListener : MQueueServerListenerBase
+    public class RabbitMQueueRawServerListener : MQueueRawServerListenerBase
     {
         #region Fields
         readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
         readonly object _lock = new object();
-        Type _messageType;
         string _name;
         RabbitMQueue _receiver;
         EventingBasicConsumer _receiverConsumer;
@@ -62,14 +61,9 @@ namespace TWCore.Messaging.RabbitMQ
         /// <param name="server">Message queue server instance</param>
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RabbitMQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(connection, server, responseServer)
+        public RabbitMQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
         {
-            _messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
             _name = server.Name;
-            Core.Status.Attach(collection =>
-            {
-                collection.Add(nameof(_messageType), _messageType);
-            });
         }
         #endregion
 
@@ -195,28 +189,38 @@ namespace TWCore.Messaging.RabbitMQ
                 if (obj is RabbitMessage message)
                 {
                     Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
-                    var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-                    if (messageBody is RequestMessage request && request.Header != null)
+                    Counters.IncrementTotalReceivingBytes(message.Body.Length);
+                    if (ResponseServer)
                     {
-                        request.Header.ApplicationReceivedTime = Core.Now;
-                        Counters.IncrementReceivingTime(request.Header.TotalTime);
-                        if (request.Header.ClientName != Config.Name)
-                            Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request);
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
-                        if (request.Header.ResponseQueue != null)
-                            evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                        OnRequestReceived(evArgs);
-                    }
-                    else if (messageBody is ResponseMessage response && response.Header != null)
-                    {
-                        response.Header.Response.ApplicationReceivedTime = Core.Now;
-                        Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs = new ResponseReceivedEventArgs(_name, response);
+                        var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
+                        evArgs.Metadata["AppId"] = message.Properties.AppId;
+                        evArgs.Metadata["ContentEncoding"] = message.Properties.ContentEncoding;
+                        evArgs.Metadata["ContentType"] = message.Properties.ContentType;
+                        evArgs.Metadata["DeliveryMode"] = message.Properties.DeliveryMode.ToString();
+                        evArgs.Metadata["Expiration"] = message.Properties.Expiration;
+                        evArgs.Metadata["Priority"] = message.Properties.Priority.ToString();
+                        evArgs.Metadata["Timestamp"] = message.Properties.Timestamp.ToString();
+                        evArgs.Metadata["Type"] = message.Properties.Type;
+                        evArgs.Metadata["UserId"] = message.Properties.UserId;
                         evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
                         evArgs.Metadata["MessageId"] = message.Properties.MessageId;
                         OnResponseReceived(evArgs);
+                    }
+                    else
+                    {
+                        var evArgs = new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId);
+                        evArgs.Metadata["AppId"] = message.Properties.AppId;
+                        evArgs.Metadata["ContentEncoding"] = message.Properties.ContentEncoding;
+                        evArgs.Metadata["ContentType"] = message.Properties.ContentType;
+                        evArgs.Metadata["DeliveryMode"] = message.Properties.DeliveryMode.ToString();
+                        evArgs.Metadata["Expiration"] = message.Properties.Expiration;
+                        evArgs.Metadata["Priority"] = message.Properties.Priority.ToString();
+                        evArgs.Metadata["Timestamp"] = message.Properties.Timestamp.ToString();
+                        evArgs.Metadata["Type"] = message.Properties.Type;
+                        evArgs.Metadata["UserId"] = message.Properties.UserId;
+                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
+                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
+                        OnRequestReceived(evArgs);
                     }
                     Counters.IncrementTotalMessagesProccesed();
                 }

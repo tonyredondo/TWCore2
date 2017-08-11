@@ -23,7 +23,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;

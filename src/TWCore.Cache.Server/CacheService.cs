@@ -17,18 +17,15 @@ limitations under the License.
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
-using TWCore.Serialization;
-using TWCore.Services.Configuration;
 
 namespace TWCore.Services
 {
     /// <summary>
     /// Cache RPC Service
     /// </summary>
-    public abstract class CacheService : RPCService, ICoreStart
+    public abstract class CacheService : RPCService
     {
         #region Properties
         /// <summary>
@@ -100,54 +97,6 @@ namespace TWCore.Services
         /// <returns>ITransportServer[] instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected abstract ITransportServer[] GetTransports();
-        #endregion
-
-        #region ICoreStart
-        static bool _init = false;
-        /// <summary>
-        /// Core Init
-        /// </summary>
-        /// <param name="factories"></param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CoreInit(Factories factories)
-        {
-            if (!_init)
-            {
-                _init = true;
-
-                //Cache configuration
-                var cachesConfigFile = Core.Settings["Core.Services.Cache.ConfigFile"];
-                cachesConfigFile = cachesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);
-                cachesConfigFile = cachesConfigFile?.Replace("{MachineName}", Core.MachineName);
-                cachesConfigFile = cachesConfigFile?.Replace("{ApplicationName}", Core.ApplicationName);
-                if (cachesConfigFile.IsNotNullOrWhitespace())
-                {
-                    Core.Log.InfoBasic("Loading cache server options configuration: {0}", cachesConfigFile);
-                    CacheSettings serverCacheSettings;
-                    try
-                    {
-                        var value = cachesConfigFile.ReadTextFromFile(new UTF8Encoding(false));
-                        value = Core.ReplaceSettingsTemplate(value);
-                        var serializer = SerializerManager.GetByFileName<ITextSerializer>(cachesConfigFile);
-                        serverCacheSettings = serializer.DeserializeFromString<CacheSettings>(value);
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new Exception($"The Cache config file: {cachesConfigFile} can't be deserialized.", ex);
-                    }
-                    if (Core.Settings["Core.Services.Cache.ServerName"].IsNotNullOrWhitespace())
-                    {
-                        var serverConfiguration = serverCacheSettings?.Caches?.FirstOrDefault(c => c.Name == Core.Settings["Core.Services.Cache.ServerName"]);
-                        Core.Services.SetCacheServerConfiguration(serverConfiguration);
-                        Core.Services.SetCacheServerOptions(serverConfiguration?.ServerOptionsList?.FirstOrDefault(c => 
-                            c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && 
-                            c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
-                                serverConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
-                                serverConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace()));
-                    }
-                }
-            }
-        }
         #endregion
     }
 }

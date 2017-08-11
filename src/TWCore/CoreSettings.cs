@@ -20,7 +20,7 @@ using TWCore.Settings;
 namespace TWCore
 {
     /// <summary>
-    /// Global TApp Settings
+    /// Global Core Settings
     /// </summary>
     [SettingsContainer("Core")]
     public class CoreSettings : SettingsBase

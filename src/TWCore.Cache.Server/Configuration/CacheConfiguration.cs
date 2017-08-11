@@ -33,11 +33,6 @@ namespace TWCore.Services.Configuration
         [XmlAttribute, DataMember]
         public string Name { get; set; }
         /// <summary>
-        /// Use Shared Memory on local
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public bool UseSharedMemoryOnLocal { get; set; }
-        /// <summary>
         /// Server options list by environment name
         /// </summary>
         [XmlElement("ServerOptions"), DataMember]

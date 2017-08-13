@@ -24,10 +24,10 @@ using TWCore.Services.Messaging;
 
 namespace TWCore.Services
 {
-    /// <summary>
-    /// Messaging Service base class
-    /// </summary>
-    public abstract class MessagingService : IMessagingService
+	/// <summary>
+	/// Messaging Service base class
+	/// </summary>
+	public abstract class MessagingService : IMessagingService
     {
         CancellationTokenSource cTokenSource;
         static readonly ConcurrentDictionary<object, object> receivedMessagesCache = new ConcurrentDictionary<object, object>();
@@ -64,6 +64,11 @@ namespace TWCore.Services
         /// Messaging service counters
         /// </summary>
         public MessagingServiceCounters Counters { get; private set; }
+		/// <summary>
+		/// Gets a value indicating enable messages trace.
+		/// </summary>
+		/// <value><c>true</c> if enable messages trace; otherwise, <c>false</c>.</value>
+		public bool EnableMessagesTrace { get; private set; }
         #endregion
 
         #region Public Methods
@@ -241,7 +246,35 @@ namespace TWCore.Services
         /// On Service Init
         /// </summary>
         /// <param name="args">Service arguments</param>
-        protected virtual void OnInit(string[] args) { }
+        protected virtual void OnInit(string[] args) 
+		{
+			MessageReceived += (sender, e) =>
+			{
+				if (!EnableMessagesTrace) return;
+
+				if (e.Message is RequestMessage reqMsg)
+				{
+					Core.Trace.Write("QueueReceivedRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+				}
+				if (e.Message is ResponseMessage resMsg)
+				{
+					Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
+				}
+			};
+			MessageSent += (sender, e) =>
+			{
+				if (!EnableMessagesTrace) return;
+
+				if (e.Message is RequestMessage reqMsg)
+				{
+					Core.Trace.Write("QueueSentRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+				}
+				if (e.Message is ResponseMessage resMsg)
+				{
+					Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
+				}
+			};
+		}
         /// <summary>
         /// On Service Stop
         /// </summary>

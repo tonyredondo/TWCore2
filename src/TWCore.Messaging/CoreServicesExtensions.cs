@@ -85,7 +85,7 @@ namespace TWCore.Services
 		/// <param name="queuePairName">Queue config pair name</param>
 		/// <returns>IMQueueClient instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueClient GetQueueClient(string queuePairName)
+		public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName)
 		{
 			if (_queues?.Items?.Contains(queuePairName) == true)
 				return _queues.Items[queuePairName].GetClient();
@@ -100,14 +100,14 @@ namespace TWCore.Services
 		/// </summary>
 		/// <returns>IMQueueServer object instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueServer GetQueueServer(bool responseServer = false)
+		public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
 			=> _queueServer.GetServer(responseServer);
 		/// <summary>
 		/// Gets the queue raw server object
 		/// </summary>
 		/// <returns>IMQueueRawServer object instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueRawServer GetQueueRawServer(bool responseServer = false)
+		public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
 			=> _queueServer.GetRawServer(responseServer);
 		#endregion
 

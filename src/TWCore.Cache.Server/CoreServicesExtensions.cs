@@ -32,8 +32,9 @@ namespace TWCore.Services
         static ServerOptions _serverOptions = null;
         static bool _init = false;
 
-        #region Init
-        static void Init()
+		#region Init
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static void Init()
         {
             if (_init) return;
             _init = true;
@@ -47,7 +48,7 @@ namespace TWCore.Services
             cachesConfigFile = cachesConfigFile.Replace("{EnvironmentName}", Core.EnvironmentName);
             cachesConfigFile = cachesConfigFile.Replace("{MachineName}", Core.MachineName);
             cachesConfigFile = cachesConfigFile.Replace("{ApplicationName}", Core.ApplicationName);
-            Core.Log.InfoBasic("Loading cache server options configuration: {0}", cachesConfigFile);
+            Core.Log.InfoBasic("Loading cache server configuration: {0}", cachesConfigFile);
 
             CacheSettings serverCacheSettings;
             try

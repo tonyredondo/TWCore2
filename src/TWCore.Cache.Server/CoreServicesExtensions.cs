@@ -86,6 +86,16 @@ namespace TWCore.Services
             Init();
             return _cacheConfiguration;
         }
+        /// <summary>
+        /// Sets the default cache server configuration
+        /// </summary>
+        /// <param name="configuration">Cache Configuration instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetDefaultCacheServerConfiguration(this CoreServices services, CacheConfiguration configuration)
+        {
+            _init = true;
+            _cacheConfiguration = configuration;
+        }
         #endregion
 
         #region CacheServerOptions
@@ -97,6 +107,16 @@ namespace TWCore.Services
         {
             Init();
             return _serverOptions;
+        }
+        /// <summary>
+        /// Sets the default cache server options
+        /// </summary>
+        /// <param name="options">Cache Server Options instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void SetDefaultCacheServerOptions(this CoreServices services, ServerOptions options)
+        {
+            _init = true;
+            _serverOptions = options;
         }
         #endregion
 

@@ -26,7 +26,7 @@ namespace TWCore.Services
 	public class BusinessMessagesService : MessagingService
 	{
 		Func<IBusiness> _businessFactory;
-		IMQueueServer _queueServer;
+		Func<IMQueueServer> _queueServerFactory;
 
 		#region .ctor
 		/// <summary>
@@ -36,17 +36,17 @@ namespace TWCore.Services
 		public BusinessMessagesService(Func<IBusiness> businessFactory)
 		{
 			_businessFactory = businessFactory;
-			_queueServer = Core.Services.GetQueueServer();
+			_queueServerFactory = () => Core.Services.GetQueueServer();
 		}
 		/// <summary>
 		/// Business messages service.
 		/// </summary>
 		/// <param name="businessFactory">Business factory delegate</param>
-		/// <param name="queueServer">QueueServer instance</param>
-		public BusinessMessagesService(Func<IBusiness> businessFactory, IMQueueServer queueServer)
+		/// <param name="queueServerFactory">QueueServer factory delegate</param>
+		public BusinessMessagesService(Func<IBusiness> businessFactory, Func<IMQueueServer> queueServerFactory)
 		{
 			_businessFactory = businessFactory;
-			_queueServer = queueServer;
+			_queueServerFactory = queueServerFactory;
 		}
 		#endregion
 
@@ -63,7 +63,7 @@ namespace TWCore.Services
 		/// </summary>
 		/// <returns>IMQueueServer object instance</returns>
 		protected override IMQueueServer GetQueueServer()
-			=> _queueServer;
+			=> _queueServerFactory();
 		#endregion
 	}
 }

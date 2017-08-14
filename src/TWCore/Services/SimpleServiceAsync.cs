@@ -22,9 +22,9 @@ using System.Threading.Tasks;
 namespace TWCore.Services
 {
     /// <summary>
-    /// Action Simple Service Base
+    /// Async Simple Service Base
     /// </summary>
-    public abstract class SimpleService : IService
+    public abstract class SimpleServiceAsync : IService
     {
         CancellationTokenSource tokenSource;
         CancellationToken token;
@@ -47,17 +47,17 @@ namespace TWCore.Services
 
         #region .ctor
         /// <summary>
-        /// Action Simple Service Base
+        /// Async Simple Service Base
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SimpleService()
+        public SimpleServiceAsync()
         {
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
         #endregion
 
         #region Abstract Methods
-        protected abstract void OnAction(CancellationToken token);
+        protected abstract Task OnActionAsync(CancellationToken token);
         #endregion
 
         #region IService Methods
@@ -74,11 +74,11 @@ namespace TWCore.Services
                 StartArguments = args;
                 tokenSource = new CancellationTokenSource();
                 token = tokenSource.Token;
-                task = Task.Factory.StartNew(() =>
+                task = Task.Factory.StartNew(async () =>
                 {
                     try
                     {
-                        OnAction(token);
+                        await OnActionAsync(token).ConfigureAwait(false);
                         if (EndAfterTaskFinish)
                             ServiceContainer.ServiceExit();
                     }

@@ -297,6 +297,23 @@ namespace TWCore.Serialization
         }
         #endregion
 
+        #region GetBinarySerializers
+        /// <summary>
+        /// Gets the binary serializers
+        /// </summary>
+        /// <returns>ISerializer array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ISerializer[] GetBinarySerializers()
+            => Serializers.Where(s => s.SerializerType == SerializerType.Binary).ToArray();
+        /// <summary>
+        /// Gets the texts serializers
+        /// </summary>
+        /// <returns>ISerializer array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ISerializer[] GetTextSerializers()
+            => Serializers.Where(s => s.SerializerType == SerializerType.Text).ToArray();
+        #endregion
+
         #region Serialize/Deserialize
         /// <summary>
         /// Serialize object

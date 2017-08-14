@@ -17,7 +17,7 @@ limitations under the License.
 using Microsoft.Extensions.Logging;
 using System;
 
-namespace TWCore.Web
+namespace TWCore.Web.Logger
 {
     /// <summary>
     /// Logger for TWCore Log

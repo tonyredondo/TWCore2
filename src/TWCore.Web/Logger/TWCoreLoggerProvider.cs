@@ -17,7 +17,7 @@ limitations under the License.
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
 
-namespace TWCore.Web
+namespace TWCore.Web.Logger
 {
     /// <summary>
     /// Logger provider for TWCoreLogger

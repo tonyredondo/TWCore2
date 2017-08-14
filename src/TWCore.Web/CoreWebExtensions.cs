@@ -26,7 +26,10 @@ namespace TWCore.Web
         /// <summary>
         /// Adds the TWCore logger provider for Core logging system
         /// </summary>
-        public static void AddTWCoreLogger(this ILoggerFactory loggerFactory)
-            => loggerFactory.AddProvider(new TWCoreLoggerProvider());
+        public static ILoggerFactory AddTWCoreLogger(this ILoggerFactory loggerFactory)
+        {
+            loggerFactory.AddProvider(new TWCoreLoggerProvider());
+            return loggerFactory;
+        }
     }
 }

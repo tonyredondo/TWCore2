@@ -1,10 +1,10 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Messaging.NSQ/NSQueueServerListener.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Messaging.NSQ/NSQueueClient.cs">
     <Files>
-      <File FileName="test/TWCore.Test.Core/NSQTest.cs" Line="86" Column="62" />
-      <File FileName="src/TWCore.Messaging.NSQ/NSQueueClient.cs" Line="152" Column="3" />
-      <File FileName="src/TWCore.Messaging.NSQ/NSQueueServer.cs" Line="37" Column="33" />
-      <File FileName="src/TWCore.Messaging.NSQ/NSQueueServerListener.cs" Line="22" Column="30" />
+      <File FileName="test/TWCore.Test.Core/NSQTest.cs" Line="87" Column="4" />
+      <File FileName="src/TWCore.Messaging.NSQ/NSQueueClient.cs" Line="158" Column="42" />
+      <File FileName="src/TWCore.Messaging.NSQ/NSQueueServer.cs" Line="50" Column="18" />
+      <File FileName="src/TWCore.Messaging.NSQ/NSQueueServerListener.cs" Line="108" Column="6" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

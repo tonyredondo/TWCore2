@@ -75,8 +75,8 @@ namespace TWCore.Messaging.NSQ
 					});
 					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
 					var nsqProducer = nsqProducerPool.New();
-					nsqProducer.PublishAsync(queue.Name, body).WaitAsync();
-					nsqProducerPool.Store(nsqProducer);
+					nsqProducer.PublishAsync(queue.Name, body)
+					           .ContinueWith(tsk => nsqProducerPool.Store(nsqProducer));
 				}
 				catch (Exception ex)
 				{

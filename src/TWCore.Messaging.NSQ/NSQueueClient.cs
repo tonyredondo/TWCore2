@@ -37,7 +37,7 @@ namespace TWCore.Messaging.NSQ
 		readonly ConcurrentDictionary<Guid, INsqConsumer> CorrelationIdConsumers = new ConcurrentDictionary<Guid, INsqConsumer>();
 
 		#region Fields
-		List<(NsqProducer, MQConnection)> _senders;
+		List<(MQConnection, ObjectPool<NsqProducer>)> _senders;
 		INsqConsumer _receiver;
 		MQConnection _receiverConnection;
 		MQClientQueues _clientQueues;
@@ -56,7 +56,7 @@ namespace TWCore.Messaging.NSQ
 		class NSQueueMessage
 		{
 			public Guid CorrelationId;
-			public byte[] Body;
+			public SubArray<byte> Body;
 			public readonly ManualResetEventSlim WaitHandler = new ManualResetEventSlim(false);
 		}
 		#endregion
@@ -69,7 +69,7 @@ namespace TWCore.Messaging.NSQ
 		protected override void OnInit()
 		{
 			OnDispose();
-			_senders = new List<(NsqProducer, MQConnection)>();
+			_senders = new List<(MQConnection, ObjectPool<NsqProducer>)>();
 			_receiver = null;
 
 
@@ -89,12 +89,14 @@ namespace TWCore.Messaging.NSQ
 				{
 					foreach (var queue in _clientQueues.SendQueues)
 					{
-						var options = ConsumerOptions.Parse(queue.Route);
-						options.Topic = queue.Name;
-						options.Channel = queue.Name;
-						var nsqProcuder = new NsqProducer(options.NsqEndPoint.Host, 4151);
-						_senders.Add((nsqProcuder, queue));
-						Core.Log.LibVerbose("Producer for: Host={0}, Port={1}. Created.", options.NsqEndPoint.Host, 4151);
+						var nsqProducerPool = new ObjectPool<NsqProducer>(() =>
+						{
+							var options = ConsumerOptions.Parse(queue.Route);
+							options.Topic = queue.Name;
+							options.Channel = queue.Name;
+							return new NsqProducer(options.NsqEndPoint.Host, 4151);
+						});
+						_senders.Add((queue, nsqProducerPool));
 					}
 				}
 				if (_clientQueues?.RecvQueue != null)
@@ -111,7 +113,7 @@ namespace TWCore.Messaging.NSQ
 						{
 							var body = new SubArray<byte>(message.Body);
 							var correlationId = new Guid((byte[])body.Slice(0, 16));
-							var messageBody = (byte[])body.Slice(16);
+							var messageBody = body.Slice(16);
 							var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
 							rMsg.CorrelationId = correlationId;
 							rMsg.Body = messageBody;
@@ -127,7 +129,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				if (_senders != null)
 					for (var i = 0; i < _senders.Count; i++)
-						collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Item2.Route);
+						collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Item1.Route);
 				if (_receiver != null)
 					collection.Add(nameof(_receiver) + " Path", _clientQueues.RecvQueue.Route);
 			});
@@ -188,10 +190,12 @@ namespace TWCore.Messaging.NSQ
 			Buffer.BlockCopy(message.CorrelationId.ToByteArray(), 0, body, 0, 16);
 			data.CopyTo(body, 16);
 
-			foreach ((var sender, var queue) in _senders)
+			foreach ((var queue, var nsqProducerPool) in _senders)
 			{
 				Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
-				sender.PublishAsync(queue.Name, body).WaitAsync();
+				var nsqProducer = nsqProducerPool.New();
+				nsqProducer.PublishAsync(queue.Name, body)
+				           .ContinueWith(tsk => nsqProducerPool.Store(nsqProducer));
 			}
 			Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
 			return true;
@@ -230,7 +234,7 @@ namespace TWCore.Messaging.NSQ
 				{
 					var body = new SubArray<byte>(msg.Body);
 					var crId = new Guid((byte[])body.Slice(0, 16));
-					var messageBody = (byte[])body.Slice(16);
+					var messageBody = body.Slice(16);
 					var rMsg = ReceivedMessages.GetOrAdd(crId, cId => new NSQueueMessage());
 					rMsg.CorrelationId = crId;
 					rMsg.Body = messageBody;
@@ -247,7 +251,7 @@ namespace TWCore.Messaging.NSQ
 				if (message.Body == null)
 					throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
 
-				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
+				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
 				var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
 				Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
 				sw.Stop();

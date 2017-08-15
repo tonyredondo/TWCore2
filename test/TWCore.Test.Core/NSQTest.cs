@@ -83,7 +83,7 @@ namespace TWCore.Tests
             mqConfig.SerializeToJsonFile("nsqConfig.json");
 
 			Core.DebugMode = false;
-			//Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.LibVerbose;
+			Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
             Core.Log.Warning("Starting with Normal Listener and Client");
             NormalTest(mqConfig);

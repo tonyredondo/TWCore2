@@ -46,7 +46,7 @@ namespace TWCore.Messaging.NSQ
 		class NSQMessage
 		{
 			public Guid CorrelationId;
-			public byte[] Body;
+			public SubArray<byte> Body;
 		}
 		#endregion
 
@@ -125,7 +125,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				var body = new SubArray<byte>(message.Body);
 				var correlationId = new Guid((byte[])body.Slice(0, 16));
-				var messageBody = (byte[])body.Slice(16);
+				var messageBody = body.Slice(16);
 				var rMsg = new NSQMessage()
 				{
 					CorrelationId = correlationId,
@@ -218,7 +218,7 @@ namespace TWCore.Messaging.NSQ
 				Counters.IncrementProcessingThreads();
 				if (obj is NSQMessage message)
 				{
-					Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, Connection.Route + "/" + Connection.Name);
+					Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
 					var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
 					if (messageBody is RequestMessage request && request.Header != null)
 					{

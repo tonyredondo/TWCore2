@@ -35,6 +35,22 @@ namespace TWCore.Messaging.NSQ
 	{
 		static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
 
+		#region Fields
+		List<NsqProducer> _senders;
+		INsqConsumer _receiver;
+		string _receiverConsumerTag;
+		MQClientQueues _clientQueues;
+		MQClientSenderOptions _senderOptions;
+		MQClientReceiverOptions _receiverOptions;
+		#endregion
+
+		#region Properties
+		/// <summary>
+		/// Use Single Response Queue
+		/// </summary>
+		public bool UseSingleResponseQueue { get; private set; }
+		#endregion
+
 		#region Nested Type
 		class NSQueueMessage
 		{
@@ -45,13 +61,34 @@ namespace TWCore.Messaging.NSQ
 		#endregion
 
 		#region Init and Dispose Methods
+		/// <summary>
+		/// On client initialization
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void OnInit()
 		{
+			OnDispose();
+			_senders = new List<NsqProducer>();
+			_receiver = null;
+
 			throw new NotImplementedException();
 		}
+		/// <summary>
+		/// On Dispose
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void OnDispose()
 		{
-			throw new NotImplementedException();
+			if (_senders != null)
+			{
+				_senders.Clear();
+				_senders = null;
+			}
+			if (_receiver != null)
+			{
+				_receiver.Dispose();
+				_receiver = null;
+			}
 		}
 		#endregion
 

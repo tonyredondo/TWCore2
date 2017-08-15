@@ -61,6 +61,17 @@ namespace TWCore.Messaging.NSQ
 		}
 		#endregion
 
+		#region .ctor
+		/// <summary>
+		/// NSQ Queue Client
+		/// </summary>
+		public NSQueueClient()
+		{
+			System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+		}
+		#endregion
+
+
 		#region Init and Dispose Methods
 		/// <summary>
 		/// On client initialization

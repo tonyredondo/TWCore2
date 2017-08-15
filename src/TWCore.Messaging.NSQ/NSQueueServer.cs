@@ -30,6 +30,16 @@ namespace TWCore.Messaging.NSQ
 	{
 		readonly ConcurrentDictionary<string, ObjectPool<NsqProducer>> rQueue = new ConcurrentDictionary<string, ObjectPool<NsqProducer>>();
 
+		#region .ctor
+		/// <summary>
+		/// NSQ Server Implementation
+		/// </summary>
+		public NSQueueServer()
+		{
+			System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+		}
+		#endregion
+
 		/// <summary>
 		/// On Create all server listeners
 		/// </summary>

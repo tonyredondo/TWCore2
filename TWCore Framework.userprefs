@@ -1,7 +1,9 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Messaging.NSQ/NSQueueClient.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TWCore2 Status">
     <Files>
-      <File FileName="src/TWCore.Messaging.NSQ/NSQueueClient.cs" Line="32" Column="22" />
+      <File FileName="src/TWCore.Messaging.NSQ/NSQueueServerListener.cs" Line="139" Column="7" />
+      <File FileName="TWCore2 Status" />
+      <File FileName="src/TWCore.Messaging.RabbitMQ/RabbitMQueueServer.cs" Line="67" Column="20" NotebookId="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

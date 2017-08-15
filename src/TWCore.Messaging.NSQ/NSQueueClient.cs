@@ -25,7 +25,6 @@ using System.Threading;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
-using TWCore.Security;
 
 namespace TWCore.Messaging.NSQ
 {
@@ -41,7 +40,6 @@ namespace TWCore.Messaging.NSQ
 		List<(NsqProducer, MQConnection)> _senders;
 		INsqConsumer _receiver;
 		MQConnection _receiverConnection;
-		string _receiverConsumerTag;
 		MQClientQueues _clientQueues;
 		MQClientSenderOptions _senderOptions;
 		MQClientReceiverOptions _receiverOptions;

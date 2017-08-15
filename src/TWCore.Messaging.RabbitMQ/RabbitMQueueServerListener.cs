@@ -14,23 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-    /// <summary>
-    /// RabbitMQ server listener implementation
-    /// </summary>
-    public class RabbitMQueueServerListener : MQueueServerListenerBase
+	/// <summary>
+	/// RabbitMQ server listener implementation
+	/// </summary>
+	public class RabbitMQueueServerListener : MQueueServerListenerBase
     {
         #region Fields
         readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();

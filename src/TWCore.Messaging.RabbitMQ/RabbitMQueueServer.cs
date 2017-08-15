@@ -14,23 +14,21 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using RabbitMQ.Client;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using TWCore.Collections;
+using RabbitMQ.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-    /// <summary>
-    /// RabbitMQ Server Implementation
-    /// </summary>
-    public class RabbitMQueueServer : MQueueServerBase
+	/// <summary>
+	/// RabbitMQ Server Implementation
+	/// </summary>
+	public class RabbitMQueueServer : MQueueServerBase
     {
-        ConcurrentDictionary<string, RabbitMQueue> rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+        readonly ConcurrentDictionary<string, RabbitMQueue> rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
 
         /// <summary>
         /// On Create all server listeners
@@ -99,13 +97,9 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         protected override void OnDispose()
         {
-            if (rQueue != null)
-            {
-                foreach (var queue in rQueue.Values)
-                    queue.Close();
-                rQueue.Clear();
-                rQueue = null;
-            }
-        }
+			foreach (var queue in rQueue.Values)
+				queue.Close();
+			rQueue.Clear();
+		}
     }
 }

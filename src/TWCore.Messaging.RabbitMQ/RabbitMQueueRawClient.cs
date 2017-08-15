@@ -14,8 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,16 +21,18 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using TWCore.Messaging.RawClient;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-    /// <summary>
-    /// RabbitMQ Queue Raw Client
-    /// </summary>
-    public class RabbitMQueueRawClient : MQueueRawClientBase
+	/// <summary>
+	/// RabbitMQ Queue Raw Client
+	/// </summary>
+	public class RabbitMQueueRawClient : MQueueRawClientBase
     {
 		static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
 		readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> RouteConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();

@@ -14,18 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using RabbitMQ.Client;
 using System;
 using System.Runtime.CompilerServices;
+using RabbitMQ.Client;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-    /// <summary>
-    /// RabbitMQ Queue
-    /// </summary>
-    internal class RabbitMQueue : MQConnection, IDisposable
+	/// <summary>
+	/// RabbitMQ Queue
+	/// </summary>
+	internal class RabbitMQueue : MQConnection, IDisposable
     {
         #region Properties
         /// <summary>

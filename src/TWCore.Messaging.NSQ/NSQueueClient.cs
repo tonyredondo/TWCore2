@@ -34,10 +34,10 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueClient : MQueueClientBase
 	{
 		static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
-		readonly ConcurrentDictionary<Guid, INsqConsumer> CorrelationIdConsumers = new ConcurrentDictionary<Guid, INsqConsumer>();
+		readonly ConcurrentDictionary<Guid, (INsqConsumer, NsqProducer)> CorrelationIdConsumers = new ConcurrentDictionary<Guid, (INsqConsumer, NsqProducer)>();
 
 		#region Fields
-		List<(MQConnection, ObjectPool<NsqProducer>)> _senders;
+		List<(MQConnection, NsqProducer)> _senders;
 		INsqConsumer _receiver;
 		MQConnection _receiverConnection;
 		MQClientQueues _clientQueues;
@@ -80,7 +80,7 @@ namespace TWCore.Messaging.NSQ
 		protected override void OnInit()
 		{
 			OnDispose();
-			_senders = new List<(MQConnection, ObjectPool<NsqProducer>)>();
+			_senders = new List<(MQConnection, NsqProducer)>();
 			_receiver = null;
 
 
@@ -100,14 +100,10 @@ namespace TWCore.Messaging.NSQ
 				{
 					foreach (var queue in _clientQueues.SendQueues)
 					{
-						var nsqProducerPool = new ObjectPool<NsqProducer>(() =>
-						{
-							var options = ConsumerOptions.Parse(queue.Route);
-							options.Topic = queue.Name;
-							options.Channel = queue.Name;
-							return new NsqProducer(options.NsqEndPoint.Host, 4151);
-						});
-						_senders.Add((queue, nsqProducerPool));
+						var options = ConsumerOptions.Parse(queue.Route);
+						options.Topic = queue.Name;
+						options.Channel = queue.Name;
+						_senders.Add((queue, new NsqProducer(options.NsqEndPoint.Host, 4151)));
 					}
 				}
 				if (_clientQueues?.RecvQueue != null)
@@ -129,7 +125,7 @@ namespace TWCore.Messaging.NSQ
 							rMsg.CorrelationId = correlationId;
 							rMsg.Body = messageBody;
 							rMsg.WaitHandler.Set();
-							await message.FinishAsync();
+							await message.FinishAsync().ConfigureAwait(false);
 						}).WaitAsync();
 						_receiver.SetMaxInFlightAsync(1).WaitAsync();
 					}
@@ -201,12 +197,10 @@ namespace TWCore.Messaging.NSQ
 			Buffer.BlockCopy(message.CorrelationId.ToByteArray(), 0, body, 0, 16);
 			data.CopyTo(body, 16);
 
-			foreach ((var queue, var nsqProducerPool) in _senders)
+			foreach ((var queue, var nsqProducer) in _senders)
 			{
 				Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
-				var nsqProducer = nsqProducerPool.New();
-				nsqProducer.PublishAsync(queue.Name, body)
-				           .ContinueWith(tsk => nsqProducerPool.Store(nsqProducer));
+				nsqProducer.PublishAsync(queue.Name, body);
 			}
 			Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
 			return true;
@@ -238,9 +232,10 @@ namespace TWCore.Messaging.NSQ
 				var options = ConsumerOptions.Parse(_receiverConnection.Route);
 				options.Topic = _recName;
 				options.Channel = _recName;
-				var rcv = NsqConsumer.Create(options);
-				CorrelationIdConsumers.TryAdd(correlationId, rcv);
 
+				var rcv = NsqConsumer.Create(options);
+				var pro = new NsqProducer(options.NsqEndPoint.Host, 4151);
+				CorrelationIdConsumers.TryAdd(correlationId, (rcv, pro));
 				rcv.ConnectAndWaitAsync(async msg =>
 				{
 					var body = new SubArray<byte>(msg.Body);
@@ -250,9 +245,12 @@ namespace TWCore.Messaging.NSQ
 					rMsg.CorrelationId = crId;
 					rMsg.Body = messageBody;
 					rMsg.WaitHandler.Set();
-					await msg.FinishAsync();
+					await msg.FinishAsync().ConfigureAwait(false);
 					if (CorrelationIdConsumers.TryRemove(crId, out var _val))
-						_val.Dispose();
+					{
+						_val.Item1.Dispose();
+						await _val.Item2.DeleteTopicAsync(_recName).ConfigureAwait(false);
+					}
 				}).WaitAsync();
 				rcv.SetMaxInFlightAsync(1).WaitAsync();
 			}

@@ -28,7 +28,7 @@ namespace TWCore.Messaging.NSQ
 	/// </summary>
 	public class NSQueueServer : MQueueServerBase
 	{
-		readonly ConcurrentDictionary<string, ObjectPool<NsqProducer>> rQueue = new ConcurrentDictionary<string, ObjectPool<NsqProducer>>();
+		readonly ConcurrentDictionary<string, NsqProducer> rQueue = new ConcurrentDictionary<string, NsqProducer>();
 
 		#region .ctor
 		/// <summary>
@@ -73,20 +73,15 @@ namespace TWCore.Messaging.NSQ
 			{
 				try
 				{
-					var nsqProducerPool = rQueue.GetOrAdd(queue.Route, q =>
+					var nsqProducer = rQueue.GetOrAdd(queue.Route, q =>
 					{
-						return new ObjectPool<NsqProducer>(() =>
-						{
-							var options = ConsumerOptions.Parse(q);
-							options.Topic = queue.Name;
-							options.Channel = queue.Name;
-							return new NsqProducer(options.NsqEndPoint.Host, 4151);
-						});
+						var options = ConsumerOptions.Parse(q);
+						options.Topic = queue.Name;
+						options.Channel = queue.Name;
+						return new NsqProducer(options.NsqEndPoint.Host, 4151);
 					});
 					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
-					var nsqProducer = nsqProducerPool.New();
-					nsqProducer.PublishAsync(queue.Name, body)
-					           .ContinueWith(tsk => nsqProducerPool.Store(nsqProducer));
+					nsqProducer.PublishAsync(queue.Name, body);
 				}
 				catch (Exception ex)
 				{

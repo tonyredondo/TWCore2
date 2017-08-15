@@ -62,13 +62,14 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         [StatusProperty("Total bytes received")]
         public double TotalBytesReceived { get; private set; }
-        #endregion
+		#endregion
 
-        #region .ctor
-        /// <summary>
-        /// Message queue server counters
-        /// </summary>
-        public MQRawClientCounters()
+		#region .ctor
+		/// <summary>
+		/// Message queue server counters
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MQRawClientCounters()
         {
             timer = new Timer(state =>
             {

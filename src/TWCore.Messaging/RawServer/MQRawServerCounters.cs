@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 
@@ -130,13 +131,14 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         [StatusProperty("Total receiving bytes")]
         public double TotalReceivingBytes { get; private set; }
-        #endregion
+		#endregion
 
-        #region .ctor
-        /// <summary>
-        /// Message queue server counters
-        /// </summary>
-        public MQRawServerCounters()
+		#region .ctor
+		/// <summary>
+		/// Message queue server counters
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MQRawServerCounters()
         {
             timer = new Timer(state =>
             {
@@ -152,47 +154,52 @@ namespace TWCore.Messaging.RawServer
                 }
             }, this, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
         }
-        #endregion
+		#endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Increments the total network time
-        /// </summary>
-        /// <param name="increment">Increment value</param>
-        public void IncrementTotalNetworkTime(TimeSpan increment)
+		#region Public Methods
+		/// <summary>
+		/// Increments the total network time
+		/// </summary>
+		/// <param name="increment">Increment value</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalNetworkTime(TimeSpan increment)
         {
             lock (locker)
                 TotalNetworkTime += increment.TotalMilliseconds;
         }
-        /// <summary>
-        /// Increments the total receiving time
-        /// </summary>
-        /// <param name="increment">Increment value</param>
-        public void IncrementTotalReceivingBytes(double increment)
+		/// <summary>
+		/// Increments the total receiving time
+		/// </summary>
+		/// <param name="increment">Increment value</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalReceivingBytes(double increment)
         {
             lock (locker)
                 TotalReceivingBytes += increment;
         }
-        /// <summary>
-        /// Increments the total exceptions number
-        /// </summary>
-        public void IncrementTotalExceptions()
+		/// <summary>
+		/// Increments the total exceptions number
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalExceptions()
         {
             lock (locker)
                 TotalExceptions++;
         }
-        /// <summary>
-        /// Increments the total exceptions number
-        /// </summary>
-        public void IncrementTotalMessagesProccesed()
+		/// <summary>
+		/// Increments the total exceptions number
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalMessagesProccesed()
         {
             lock (locker)
                 TotalMessagesProccesed++;
         }
-        /// <summary>
-        /// Increments the messages
-        /// </summary>
-        public void IncrementMessages()
+		/// <summary>
+		/// Increments the messages
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementMessages()
         {
             lock (locker)
             {
@@ -212,18 +219,20 @@ namespace TWCore.Messaging.RawServer
                 }
             }
         }
-        /// <summary>
-        /// Decrement the current messages
-        /// </summary>
-        public void DecrementMessages()
+		/// <summary>
+		/// Decrement the current messages
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DecrementMessages()
         {
             lock(locker)
                 CurrentMessages--;
         }
-        /// <summary>
-        /// Increment the processing threads
-        /// </summary>
-        public void IncrementProcessingThreads()
+		/// <summary>
+		/// Increment the processing threads
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementProcessingThreads()
         {
             lock (locker)
             {
@@ -242,10 +251,11 @@ namespace TWCore.Messaging.RawServer
                 }
             }
         }
-        /// <summary>
-        /// Decrement the current processing threads
-        /// </summary>
-        public void DecrementProcessingThreads()
+		/// <summary>
+		/// Decrement the current processing threads
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DecrementProcessingThreads()
         {
             lock (locker)
                 CurrentProcessingThreads--;

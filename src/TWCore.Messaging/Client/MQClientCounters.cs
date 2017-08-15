@@ -60,13 +60,14 @@ namespace TWCore.Messaging.Client
         /// Total receiving time
         /// </summary>
         public double TotalReceivingTime { get; private set; }
-        #endregion
+		#endregion
 
-        #region .ctor
-        /// <summary>
-        /// Message queue server counters
-        /// </summary>
-        public MQClientCounters()
+		#region .ctor
+		/// <summary>
+		/// Message queue server counters
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MQClientCounters()
         {
             timer = new Timer(state =>
             {

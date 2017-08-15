@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -86,14 +87,15 @@ namespace TWCore.Messaging.RawServer
         /// Events that fires when a response message is about to be sent
         /// </summary>
         public event EventHandler<RawResponseSentEventArgs> BeforeSendResponse;
-        #endregion
+		#endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Initialize client with the configuration
-        /// </summary>
-        /// <param name="config">Message queue client configuration</param>
-        public void Init(MQPairConfig config)
+		#region Public Methods
+		/// <summary>
+		/// Initialize client with the configuration
+		/// </summary>
+		/// <param name="config">Message queue client configuration</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Init(MQPairConfig config)
         {
             if (config != null)
             {
@@ -113,10 +115,11 @@ namespace TWCore.Messaging.RawServer
                 });
             }
         }
-        /// <summary>
-        /// Start the queue listener for request messages
-        /// </summary>
-        public void StartListeners()
+		/// <summary>
+		/// Start the queue listener for request messages
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void StartListeners()
         {
             if (tokenSource != null)
                 StopListeners();
@@ -191,10 +194,11 @@ namespace TWCore.Messaging.RawServer
             else
                 Core.Log.Warning("There are not server listener to start.");
         }
-        /// <summary>
-        /// Stop the queue listener
-        /// </summary>
-        public void StopListeners()
+		/// <summary>
+		/// Stop the queue listener
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void StopListeners()
         {
             if (tokenSource != null)
             {
@@ -208,19 +212,21 @@ namespace TWCore.Messaging.RawServer
                 Core.Log.InfoBasic("Queue server listeners for {0} stopped", Name);
             }
         }
-        /// <summary>
-        /// Dispose all resources
-        /// </summary>
-        public void Dispose()
+		/// <summary>
+		/// Dispose all resources
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
         {
             StopListeners();
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-        #endregion
+		#endregion
 
-        #region Private Methods
-        void QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
+		#region Private Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
         {
             using (var w = Watch.Create())
             {
@@ -249,42 +255,47 @@ namespace TWCore.Messaging.RawServer
                 w.EndTap($"Message Processed with CorrelationId={e.CorrelationId}.");
             }
         }
-        void QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		void QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
         {
             ResponseReceived?.Invoke(sender, e);
             MQueueRawServerEvents.FireResponseReceived(sender, e);
         }
-        #endregion
+		#endregion
 
-        #region Abstract Methods
-        /// <summary>
-        /// On Create all server listeners
-        /// </summary>
-        /// <param name="connection">Queue server listener</param>
-        /// <param name="responseServer">true if the server is going to act as a response server</param>
-        /// <returns>IMQueueServerListener</returns>
-        protected abstract IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
-        /// <summary>
-        /// On client initialization
-        /// </summary>
-        protected virtual void OnInit() { }
-        /// <summary>
-        /// Before send the request message
-        /// </summary>
-        /// <param name="message">Response message instance</param>
-        protected virtual void OnBeforeSend(ref byte[] message, KeyValueCollection metadata) { }
-        /// <summary>
-        /// On Send message data
-        /// </summary>
-        /// <param name="message">Response message instance</param>
-        /// <param name="correlationId">Correlation Id</param>
-        /// <param name="queues">Response queues</param>
-        /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(byte[] message, RawRequestReceivedEventArgs e);
-        /// <summary>
-        /// On Dispose
-        /// </summary>
-        protected virtual void OnDispose() { }
+		#region Abstract Methods
+		/// <summary>
+		/// On Create all server listeners
+		/// </summary>
+		/// <param name="connection">Queue server listener</param>
+		/// <param name="responseServer">true if the server is going to act as a response server</param>
+		/// <returns>IMQueueServerListener</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
+		/// <summary>
+		/// On client initialization
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void OnInit() { }
+		/// <summary>
+		/// Before send the request message
+		/// </summary>
+		/// <param name="message">Response message instance</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void OnBeforeSend(ref byte[] message, KeyValueCollection metadata) { }
+		/// <summary>
+		/// On Send message data
+		/// </summary>
+		/// <param name="message">Response message instance</param>
+		/// <param name="e">Request event args</param>
+		/// <returns>true if message has been sent; otherwise, false.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract bool OnSend(byte[] message, RawRequestReceivedEventArgs e);
+		/// <summary>
+		/// On Dispose
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void OnDispose() { }
         #endregion
     }
 }

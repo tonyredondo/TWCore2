@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
@@ -59,16 +60,17 @@ namespace TWCore.Messaging.RawServer
         /// Events that fires when a response message is received
         /// </summary>
         public event EventHandler<RawResponseReceivedEventArgs> ResponseReceived;
-        #endregion
+		#endregion
 
-        #region .ctor
-        /// <summary>
-        /// Message queue server listener base
-        /// </summary>
-        /// <param name="connection">Queue server listener</param>
-        /// <param name="server">Message queue server instance</param>
-        /// <param name="responseServer">true if the server is going to act as a response server</param>
-        public MQueueRawServerListenerBase(MQConnection connection, IMQueueRawServer server, bool responseServer)
+		#region .ctor
+		/// <summary>
+		/// Message queue server listener base
+		/// </summary>
+		/// <param name="connection">Queue server listener</param>
+		/// <param name="server">Message queue server instance</param>
+		/// <param name="responseServer">true if the server is going to act as a response server</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MQueueRawServerListenerBase(MQConnection connection, IMQueueRawServer server, bool responseServer)
         {
             Connection = connection;
             Config = server.Config;
@@ -84,53 +86,59 @@ namespace TWCore.Messaging.RawServer
                 Core.Status.AttachChild(Counters, this);
             });
         }
-        #endregion
+		#endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Start the queue listener for request messages
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Task of the method execution</returns>
-        public Task TaskStartAsync(CancellationToken token)
+		#region Public Methods
+		/// <summary>
+		/// Start the queue listener for request messages
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <returns>Task of the method execution</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task TaskStartAsync(CancellationToken token)
         {
             return OnListenerTaskStartAsync(token);
         }
-        /// <summary>
-        /// Dispose all resources
-        /// </summary>
-        public void Dispose()
+		/// <summary>
+		/// Dispose all resources
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Dispose()
         {
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-        #endregion
+		#endregion
 
-        #region Abstract Methods
-        /// <summary>
-        /// Start the queue listener for request messages
-        /// </summary>
-        /// <param name="token">Cancellation token</param>
-        /// <returns>Task of the method execution</returns>
-        protected abstract Task OnListenerTaskStartAsync(CancellationToken token);
-        /// <summary>
-        /// On Dispose
-        /// </summary>
-        protected abstract void OnDispose();
-        #endregion
+		#region Abstract Methods
+		/// <summary>
+		/// Start the queue listener for request messages
+		/// </summary>
+		/// <param name="token">Cancellation token</param>
+		/// <returns>Task of the method execution</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract Task OnListenerTaskStartAsync(CancellationToken token);
+		/// <summary>
+		/// On Dispose
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract void OnDispose();
+		#endregion
 
-        #region Protected Methods
-        /// <summary>
-        /// Fires the RequestReceived event
-        /// </summary>
-        /// <param name="requestReceived">Request received event args</param>
-        protected void OnRequestReceived(RawRequestReceivedEventArgs requestReceived)
+		#region Protected Methods
+		/// <summary>
+		/// Fires the RequestReceived event
+		/// </summary>
+		/// <param name="requestReceived">Request received event args</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void OnRequestReceived(RawRequestReceivedEventArgs requestReceived)
             => RequestReceived?.Invoke(this, requestReceived);
-        /// <summary>
-        /// Fires the ResponseReceived event
-        /// </summary>
-        /// <param name="responseReceived">Response received event args</param>
-        protected void OnResponseReceived(RawResponseReceivedEventArgs responseReceived)
+		/// <summary>
+		/// Fires the ResponseReceived event
+		/// </summary>
+		/// <param name="responseReceived">Response received event args</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected void OnResponseReceived(RawResponseReceivedEventArgs responseReceived)
             => ResponseReceived?.Invoke(this, responseReceived);
         #endregion
     }

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.Server
 {
@@ -32,12 +33,13 @@ namespace TWCore.Messaging.Server
         /// </summary>
         public ResponseMessage Message { get; private set; }
 
-        /// <summary>
-        /// Event args for response received event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="message">Response message received</param>
-        public ResponseSentEventArgs(string name, ResponseMessage message)
+		/// <summary>
+		/// Event args for response received event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="message">Response message received</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ResponseSentEventArgs(string name, ResponseMessage message)
         {
             Name = name;
             Message = message;

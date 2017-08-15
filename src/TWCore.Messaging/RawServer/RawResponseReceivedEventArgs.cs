@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using TWCore.Collections;
 
 namespace TWCore.Messaging.RawServer
@@ -42,13 +43,14 @@ namespace TWCore.Messaging.RawServer
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
 
-        /// <summary>
-        /// Event args for response received event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="message">Response message received</param>
-        /// <param name="correlationId">Correlation Id</param>
-        public RawResponseReceivedEventArgs(string name, byte[] message, Guid correlationId)
+		/// <summary>
+		/// Event args for response received event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="message">Response message received</param>
+		/// <param name="correlationId">Correlation Id</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public RawResponseReceivedEventArgs(string name, byte[] message, Guid correlationId)
         {
             Name = name;
             Message = message;

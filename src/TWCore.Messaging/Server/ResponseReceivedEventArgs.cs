@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using TWCore.Collections;
 
 namespace TWCore.Messaging.Server
@@ -37,12 +38,13 @@ namespace TWCore.Messaging.Server
         /// </summary>
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
-        /// <summary>
-        /// Event args for response received event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="message">Response message received</param>
-        public ResponseReceivedEventArgs(string name, ResponseMessage message)
+		/// <summary>
+		/// Event args for response received event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="message">Response message received</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public ResponseReceivedEventArgs(string name, ResponseMessage message)
         {
             Name = name;
             Message = message;

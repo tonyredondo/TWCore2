@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
@@ -67,13 +68,14 @@ namespace TWCore.Messaging.Server
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
 
-        /// <summary>
-        /// Event args for request sent event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="sender">Sender queue</param>
-        /// <param name="request">Request message</param>
-        public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request)
+		/// <summary>
+		/// Event args for request sent event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="sender">Sender queue</param>
+		/// <param name="request">Request message</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request)
         {
             Name = name;
             Request = request;

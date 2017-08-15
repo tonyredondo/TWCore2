@@ -45,7 +45,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// On Send message data
         /// </summary>
         /// <param name="message">Response message instance</param>
-        /// <param name="queues">Response queues</param>
+        /// <param name="e">Event Args</param>
         protected override bool OnSend(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 
@@ -123,13 +124,14 @@ namespace TWCore.Messaging.Server
         /// Total receiving time
         /// </summary>
         public double TotalReceivingTime { get; private set; }
-        #endregion
+		#endregion
 
-        #region .ctor
-        /// <summary>
-        /// Message queue server counters
-        /// </summary>
-        public MQServerCounters()
+		#region .ctor
+		/// <summary>
+		/// Message queue server counters
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public MQServerCounters()
         {
             timer = new Timer(state =>
             {
@@ -150,39 +152,43 @@ namespace TWCore.Messaging.Server
                 collection.Add("Total receiving time", TimeSpan.FromMilliseconds(TotalReceivingTime));
             });
         }
-        #endregion
+		#endregion
 
-        #region Public Methods
-        /// <summary>
-        /// Increments the receiving time
-        /// </summary>
-        /// <param name="increment">Increment value</param>
-        public void IncrementReceivingTime(TimeSpan increment)
+		#region Public Methods
+		/// <summary>
+		/// Increments the receiving time
+		/// </summary>
+		/// <param name="increment">Increment value</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementReceivingTime(TimeSpan increment)
         {
             lock (locker)
                 TotalReceivingTime += increment.TotalMilliseconds;
         }
 
-        /// <summary>
-        /// Increments the total exceptions number
-        /// </summary>
-        public void IncrementTotalExceptions()
+		/// <summary>
+		/// Increments the total exceptions number
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalExceptions()
         {
             lock (locker)
                 TotalExceptions++;
         }
-        /// <summary>
-        /// Increments the total exceptions number
-        /// </summary>
-        public void IncrementTotalMessagesProccesed()
+		/// <summary>
+		/// Increments the total exceptions number
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementTotalMessagesProccesed()
         {
             lock (locker)
                 TotalMessagesProccesed++;
         }
-        /// <summary>
-        /// Increments the messages
-        /// </summary>
-        public void IncrementMessages()
+		/// <summary>
+		/// Increments the messages
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementMessages()
         {
             lock (locker)
             {
@@ -202,18 +208,20 @@ namespace TWCore.Messaging.Server
                 }
             }
         }
-        /// <summary>
-        /// Decrement the current messages
-        /// </summary>
-        public void DecrementMessages()
+		/// <summary>
+		/// Decrement the current messages
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DecrementMessages()
         {
             lock(locker)
                 CurrentMessages--;
         }
-        /// <summary>
-        /// Increment the processing threads
-        /// </summary>
-        public void IncrementProcessingThreads()
+		/// <summary>
+		/// Increment the processing threads
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void IncrementProcessingThreads()
         {
             lock (locker)
             {
@@ -232,10 +240,11 @@ namespace TWCore.Messaging.Server
                 }
             }
         }
-        /// <summary>
-        /// Decrement the current processing threads
-        /// </summary>
-        public void DecrementProcessingThreads()
+		/// <summary>
+		/// Decrement the current processing threads
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void DecrementProcessingThreads()
         {
             lock (locker)
                 CurrentProcessingThreads--;

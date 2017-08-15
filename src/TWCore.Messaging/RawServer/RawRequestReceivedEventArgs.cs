@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 
@@ -59,14 +60,15 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
-        /// <summary>
-        /// Event args for request sent event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="sender">Sender queue</param>
-        /// <param name="request">Request message</param>
-        /// <param name="correlationId">Correlation Id</param>
-        public RawRequestReceivedEventArgs(string name, MQConnection sender, byte[] request, Guid correlationId)
+		/// <summary>
+		/// Event args for request sent event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="sender">Sender queue</param>
+		/// <param name="request">Request message</param>
+		/// <param name="correlationId">Correlation Id</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public RawRequestReceivedEventArgs(string name, MQConnection sender, byte[] request, Guid correlationId)
         {
             Name = name;
             Request = request;

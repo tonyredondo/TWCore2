@@ -341,40 +341,46 @@ namespace TWCore.Messaging.Client
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-        #endregion
+		#endregion
 
-        #region Abstract Methods
-        /// <summary>
-        /// On client initialization
-        /// </summary>
-        protected abstract void OnInit();
-        /// <summary>
-        /// Before send the request message
-        /// </summary>
-        /// <param name="message">Request message instance</param>
-        protected virtual void OnBeforeSend(RequestMessage message) { }
-        /// <summary>
-        /// On Send message data
-        /// </summary>
-        /// <param name="message">Request message instance</param>
-        /// <returns>true if message has been sent; otherwise, false.</returns>
-        protected abstract bool OnSend(RequestMessage message);
-        /// <summary>
-        /// On Receive message data
-        /// </summary>
-        /// <param name="correlationId">Correlation Id</param>
-        /// <param name="cancellationToken">Cancellation Token</param>
-        /// <returns>Response message instance</returns>
-        protected abstract ResponseMessage OnReceive(Guid correlationId, CancellationToken cancellationToken);
-        /// <summary>
-        /// After a response message has been received
-        /// </summary>
-        /// <param name="message">Response message instance</param>
-        protected virtual void OnAfterReceive(ResponseMessage message) { }
-        /// <summary>
-        /// On Dispose
-        /// </summary>
-        protected abstract void OnDispose();
+		#region Abstract Methods
+		/// <summary>
+		/// On client initialization
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract void OnInit();
+		/// <summary>
+		/// Before send the request message
+		/// </summary>
+		/// <param name="message">Request message instance</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void OnBeforeSend(RequestMessage message) { }
+		/// <summary>
+		/// On Send message data
+		/// </summary>
+		/// <param name="message">Request message instance</param>
+		/// <returns>true if message has been sent; otherwise, false.</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract bool OnSend(RequestMessage message);
+		/// <summary>
+		/// On Receive message data
+		/// </summary>
+		/// <param name="correlationId">Correlation Id</param>
+		/// <param name="cancellationToken">Cancellation Token</param>
+		/// <returns>Response message instance</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract ResponseMessage OnReceive(Guid correlationId, CancellationToken cancellationToken);
+		/// <summary>
+		/// After a response message has been received
+		/// </summary>
+		/// <param name="message">Response message instance</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected virtual void OnAfterReceive(ResponseMessage message) { }
+		/// <summary>
+		/// On Dispose
+		/// </summary>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		protected abstract void OnDispose();
         #endregion
     }
 }

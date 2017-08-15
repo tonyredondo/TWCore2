@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.RawServer
 {
@@ -36,13 +37,14 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         public byte[] Message { get; set; }
 
-        /// <summary>
-        /// Event args for response received event
-        /// </summary>
-        /// <param name="name">Client name</param>
-        /// <param name="message">Response message received</param>
-        /// <param name="correlationId">Correlation id</param>
-        public RawResponseSentEventArgs(string name, byte[] message, Guid correlationId)
+		/// <summary>
+		/// Event args for response received event
+		/// </summary>
+		/// <param name="name">Client name</param>
+		/// <param name="message">Response message received</param>
+		/// <param name="correlationId">Correlation id</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public RawResponseSentEventArgs(string name, byte[] message, Guid correlationId)
         {
             Name = name;
             Message = message;

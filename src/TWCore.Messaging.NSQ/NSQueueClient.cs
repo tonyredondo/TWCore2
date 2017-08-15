@@ -92,8 +92,9 @@ namespace TWCore.Messaging.NSQ
 						var options = ConsumerOptions.Parse(queue.Route);
 						options.Topic = queue.Name;
 						options.Channel = queue.Name;
-						var nsqProcuder = new NsqProducer(options.NsqEndPoint.Host, options.NsqEndPoint.Port);
+						var nsqProcuder = new NsqProducer(options.NsqEndPoint.Host, 4151);
 						_senders.Add((nsqProcuder, queue));
+						Core.Log.LibVerbose("Producer for: Host={0}, Port={1}. Created.", options.NsqEndPoint.Host, 4151);
 					}
 				}
 				if (_clientQueues?.RecvQueue != null)
@@ -102,6 +103,7 @@ namespace TWCore.Messaging.NSQ
 					var options = ConsumerOptions.Parse(_receiverConnection.Route);
 					options.Topic = _receiverConnection.Name;
 					options.Channel = _receiverConnection.Name;
+					options.ClientId = Guid.NewGuid().ToString();
 					_receiver = NsqConsumer.Create(options);
 					if (UseSingleResponseQueue)
 					{
@@ -191,6 +193,7 @@ namespace TWCore.Messaging.NSQ
 				Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
 				sender.PublishAsync(queue.Name, body).WaitAsync();
 			}
+			Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
 			return true;
 		}
 		#endregion

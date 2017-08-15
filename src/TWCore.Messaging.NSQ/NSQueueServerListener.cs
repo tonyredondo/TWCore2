@@ -81,6 +81,7 @@ namespace TWCore.Messaging.NSQ
 			var options = ConsumerOptions.Parse(Connection.Route);
 			options.Topic = Connection.Name;
 			options.Channel = Connection.Name;
+			options.ClientId = Guid.NewGuid().ToString();
 			_receiver = NsqConsumer.Create(options);
 			await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
 			await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);
@@ -119,27 +120,34 @@ namespace TWCore.Messaging.NSQ
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		async Task OnReceive(Message message)
 		{
-			var body = new SubArray<byte>(message.Body);
-			var correlationId = new Guid((byte[])body.Slice(0, 16));
-			var messageBody = (byte[])body.Slice(16);
-			var rMsg = new NSQMessage()
+			Core.Log.LibVerbose("Message received");
+			try
 			{
-				CorrelationId = correlationId,
-				Body = messageBody
-			};
+				var body = new SubArray<byte>(message.Body);
+				var correlationId = new Guid((byte[])body.Slice(0, 16));
+				var messageBody = (byte[])body.Slice(16);
+				var rMsg = new NSQMessage()
+				{
+					CorrelationId = correlationId,
+					Body = messageBody
+				};
 
-			Counters.IncrementMessages();
-			var tsk = Task.Factory.StartNew(ProcessingTask, rMsg, _token);
-			_processingTasks.TryAdd(tsk, null);
+				Counters.IncrementMessages();
+				var tsk = Task.Factory.StartNew(ProcessingTask, rMsg, _token);
+				_processingTasks.TryAdd(tsk, null);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-			tsk.ContinueWith(_tsk =>
-			{
-				_processingTasks.TryRemove(tsk, out var ts);
-				Counters.DecrementMessages();
-			});
+				tsk.ContinueWith(_tsk =>
+				{
+					_processingTasks.TryRemove(tsk, out var ts);
+					Counters.DecrementMessages();
+				});
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-
-			await message.FinishAsync();
+			}
+			catch (Exception ex)
+			{
+				Core.Log.Write(ex);
+			}
+			await message.FinishAsync().ConfigureAwait(false);;
 		}
 		/// <summary>
 		/// Monitors the maximum concurrent message allowed for the listener
@@ -164,6 +172,7 @@ namespace TWCore.Messaging.NSQ
 						var options = ConsumerOptions.Parse(Connection.Route);
 						options.Topic = Connection.Name;
 						options.Channel = Connection.Name;
+						options.ClientId = Guid.NewGuid().ToString();
 						_receiver = NsqConsumer.Create(options);
 						await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
 						await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);
@@ -180,6 +189,7 @@ namespace TWCore.Messaging.NSQ
 						var options = ConsumerOptions.Parse(Connection.Route);
 						options.Topic = Connection.Name;
 						options.Channel = Connection.Name;
+						options.ClientId = Guid.NewGuid().ToString();
 						_receiver = NsqConsumer.Create(options);
 						await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
 						await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);

@@ -35,6 +35,7 @@
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

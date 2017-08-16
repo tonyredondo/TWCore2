@@ -203,7 +203,9 @@ namespace TWCore.Bot.Telegram
         public async Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
         {
             if (!active) return;
-            await Bot.SendTextMessageAsync(chat.Id.ParseTo<long>(-1), message, DisableWebPagePreview, parseMode: (TBot.Types.Enums.ParseMode)parseMode).ConfigureAwait(false);
+            await Bot.SendTextMessageAsync(chat.Id.ParseTo<long>(-1), message, 
+                disableWebPagePreview: DisableWebPagePreview, 
+                parseMode: (TBot.Types.Enums.ParseMode)parseMode).ConfigureAwait(false);
         }
         /// <summary>
         /// Send the typing action to the chat

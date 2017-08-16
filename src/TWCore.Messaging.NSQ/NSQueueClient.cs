@@ -35,7 +35,6 @@ namespace TWCore.Messaging.NSQ
     public class NSQueueClient : MQueueClientBase
     {
         static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
-        static readonly ConcurrentDictionary<Guid, (Consumer, NsqdHttpClient, string)> CorrelationIdConsumers = new ConcurrentDictionary<Guid, (Consumer, NsqdHttpClient, string)>();
         static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
 
         #region Fields
@@ -60,6 +59,9 @@ namespace TWCore.Messaging.NSQ
             public Guid CorrelationId;
             public SubArray<byte> Body;
             public readonly ManualResetEventSlim WaitHandler = new ManualResetEventSlim(false);
+            public Consumer Consumer;
+            public string Route;
+            public string Name;
         }
         class NSQMessageHandler : IHandler
         {
@@ -74,13 +76,6 @@ namespace TWCore.Messaging.NSQ
                 rMsg.CorrelationId = correlationId;
                 rMsg.Body = messageBody;
                 rMsg.WaitHandler.Set();
-
-                if (CorrelationIdConsumers.TryRemove(correlationId, out var _value))
-                {
-                    _value.Item1.Stop();
-                    _value.Item2.DeleteChannel(_value.Item3, _value.Item3);
-                    _value.Item2.DeleteTopic(_value.Item3);
-                }
             }
             public void LogFailedMessage(NsqSharp.IMessage message)
             {
@@ -163,12 +158,19 @@ namespace TWCore.Messaging.NSQ
         {
             if (_senders != null)
             {
+                foreach(var sender in _senders)
+                {
+                    foreach (var i in sender.Item2.GetCurrentObjects())
+                        i.Stop();
+                    sender.Item2.Clear();
+                }
                 _senders.Clear();
                 _senders = null;
             }
             if (_receiver != null)
             {
-                _receiver.Stop();
+                if (UseSingleResponseQueue)
+                    _receiver.Stop();
                 _receiver = null;
             }
         }
@@ -244,12 +246,35 @@ namespace TWCore.Messaging.NSQ
 
             if (!UseSingleResponseQueue)
             {
-                var _recName = _receiverConnection.Name + "_" + correlationId;
-                var rcv = new Consumer(_recName, _recName);
-                rcv.AddHandler(MessageHandler);
-                var pro = new NsqdHttpClient(_receiverConnection.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                CorrelationIdConsumers.TryAdd(correlationId, (rcv, pro, _recName));
-                rcv.ConnectToNsqd(_receiverConnection.Route);
+                message.Name = _receiverConnection.Name + "_" + correlationId;
+                message.Route = _receiverConnection.Route;
+                message.Consumer = new Consumer(message.Name, message.Name);
+                message.Consumer.AddHandler(MessageHandler);
+                message.Consumer.ConnectToNsqd(message.Route);
+
+                var waitResult = message.WaitHandler.Wait(timeout, cancellationToken);
+
+                message.Consumer.Stop();
+                message.Consumer.DisconnectFromNsqd(message.Route);
+                message.Consumer = null;
+                var pro = new NsqdHttpClient(message.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+                pro.DeleteChannel(message.Name, message.Name);
+                pro.DeleteTopic(message.Name);
+
+                if (waitResult)
+                {
+                    if (message.Body == null)
+                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+
+                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
+                    var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+                    Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+                    sw.Stop();
+                    sw = null;
+                    return response;
+                }
+                else
+                    throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
             }
 
             if (message.WaitHandler.Wait(timeout, cancellationToken))

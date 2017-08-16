@@ -97,7 +97,13 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		protected override void OnDispose()
 		{
-			rQueue.Clear();
+            foreach (var q in rQueue)
+            {
+                foreach (var i in q.Value.GetCurrentObjects())
+                    i.Stop();
+                q.Value.Clear();
+            }
+            rQueue.Clear();
 		}
 	}
 }

@@ -59,9 +59,6 @@ namespace TWCore.Tests
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" },
             };
 
-            var mpBytes = lt.SerializeToMsgPack();
-            var objMP = mpBytes.DeserializeFromMsgPack<List<STest>>();
-
             var fByte = lt.SerializeToPWBinary();
             var obj1 = (DynamicDeserializedType)fByte.DeserializeFromPWBinary(null);
 

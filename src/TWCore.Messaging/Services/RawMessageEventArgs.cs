@@ -30,13 +30,13 @@ namespace TWCore.Services
         /// <summary>
         /// Message object instance
         /// </summary>
-        public byte[] Message { get; private set; }
+        public SubArray<byte> Message { get; private set; }
         /// <summary>
         /// Message event args
         /// </summary>
         /// <param name="message">Message object</param>
         /// <param name="correlationId">Correlation Id</param>
-        public RawMessageEventArgs(byte[] message, Guid correlationId)
+        public RawMessageEventArgs(SubArray<byte> message, Guid correlationId)
         {
             CorrelationId = correlationId;
             Message = message;

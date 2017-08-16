@@ -49,7 +49,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
-            public byte[] Body;
+            public SubArray<byte> Body;
         }
         #endregion
 
@@ -188,8 +188,8 @@ namespace TWCore.Messaging.RabbitMQ
                 Counters.IncrementProcessingThreads();
                 if (obj is RabbitMessage message)
                 {
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
-                    Counters.IncrementTotalReceivingBytes(message.Body.Length);
+                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, _receiver.Route + "/" + _receiver.Name);
+                    Counters.IncrementTotalReceivingBytes(message.Body.Count);
                     if (ResponseServer)
                     {
                         var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);

@@ -22,19 +22,18 @@ using System.Threading;
 using System.Threading.Tasks;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
-using TWCore.Messaging.Server;
+using TWCore.Messaging.RawServer;
 
 namespace TWCore.Messaging.NSQ
 {
 	/// <summary>
-	/// NSQ server listener implementation
+	/// NSQ raw server listener implementation
 	/// </summary>
-	public class NSQueueServerListener : MQueueServerListenerBase
+	public class NSQueueRawServerListener : MQueueRawServerListenerBase
 	{
 		#region Fields
 		readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
 		readonly object _lock = new object();
-		Type _messageType;
 		string _name;
 		Consumer _receiver;
 		CancellationToken _token;
@@ -46,12 +45,13 @@ namespace TWCore.Messaging.NSQ
 		class NSQMessage
 		{
 			public Guid CorrelationId;
+            public string Name;
 			public SubArray<byte> Body;
 		}
         class NSQMessageHandler : IHandler
         {
-            NSQueueServerListener _listener;
-            public NSQMessageHandler(NSQueueServerListener listener)
+            NSQueueRawServerListener _listener;
+            public NSQMessageHandler(NSQueueRawServerListener listener)
             {
                 _listener = listener;
             }
@@ -60,11 +60,12 @@ namespace TWCore.Messaging.NSQ
                 Core.Log.LibVerbose("Message received");
                 try
                 {
-                    (var body, var correlationId) = NSQueueClient.GetFromMessageBody(message.Body);
+                    (var body, var correlationId, var name) = NSQueueRawClient.GetFromRawMessageBody(message.Body);
                     var rMsg = new NSQMessage()
                     {
                         CorrelationId = correlationId,
-                        Body = body
+                        Body = body,
+                        Name = name
                     };
                     Try.Do(() => message.Finish(), false);
 
@@ -100,14 +101,9 @@ namespace TWCore.Messaging.NSQ
         /// <param name="server">Message queue server instance</param>
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public NSQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(connection, server, responseServer)
+		public NSQueueRawServerListener(MQConnection connection, IMQueueRawServer server, bool responseServer) : base(connection, server, responseServer)
 		{
-			_messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
 			_name = server.Name;
-			Core.Status.Attach(collection =>
-			{
-				collection.Add(nameof(_messageType), _messageType);
-			});
 		}
 		#endregion
 
@@ -213,27 +209,22 @@ namespace TWCore.Messaging.NSQ
 				if (obj is NSQMessage message)
 				{
 					Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
-					var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-					if (messageBody is RequestMessage request && request.Header != null)
-					{
-						request.Header.ApplicationReceivedTime = Core.Now;
-						Counters.IncrementReceivingTime(request.Header.TotalTime);
-						if (request.Header.ClientName != Config.Name)
-							Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-						var evArgs = new RequestReceivedEventArgs(_name, Connection, request);
-						if (request.Header.ResponseQueue != null)
-							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-						OnRequestReceived(evArgs);
-					}
-					else if (messageBody is ResponseMessage response && response.Header != null)
-					{
-						response.Header.Response.ApplicationReceivedTime = Core.Now;
-						Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-						var evArgs = new ResponseReceivedEventArgs(_name, response);
-						OnResponseReceived(evArgs);
-					}
-					Counters.IncrementTotalMessagesProccesed();
-				}
+                    Counters.IncrementTotalReceivingBytes(message.Body.Count);
+
+                    if (ResponseServer)
+                    {
+                        var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
+                        evArgs.Metadata["ReplyTo"] = message.Name;
+                        OnResponseReceived(evArgs);
+                    }
+                    else
+                    {
+                        var evArgs = new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId);
+                        evArgs.Metadata["ReplyTo"] = message.Name;
+                        OnRequestReceived(evArgs);
+                    }
+                    Counters.IncrementTotalMessagesProccesed();
+                }
 			}
 			catch (Exception ex)
 			{

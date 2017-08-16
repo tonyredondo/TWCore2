@@ -238,7 +238,7 @@ namespace TWCore.Messaging.RawServer
 
                 if (e.SendResponse && e.Response != null)
                 {
-                    byte[] response = e.Response;
+                    SubArray<byte> response = e.Response;
                     OnBeforeSend(ref response, e.Metadata);
                     var rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
                     BeforeSendResponse?.Invoke(this, rsea);
@@ -282,7 +282,7 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnBeforeSend(ref byte[] message, KeyValueCollection metadata) { }
+		protected virtual void OnBeforeSend(ref SubArray<byte> message, KeyValueCollection metadata) { }
 		/// <summary>
 		/// On Send message data
 		/// </summary>
@@ -290,7 +290,7 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="e">Request event args</param>
 		/// <returns>true if message has been sent; otherwise, false.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract bool OnSend(byte[] message, RawRequestReceivedEventArgs e);
+		protected abstract bool OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose
 		/// </summary>

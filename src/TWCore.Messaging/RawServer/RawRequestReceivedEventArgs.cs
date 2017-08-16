@@ -46,11 +46,11 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Request message
         /// </summary>
-        public byte[] Request { get; private set; }
+        public SubArray<byte> Request { get; private set; }
         /// <summary>
         /// Response message
         /// </summary>
-        public byte[] Response { get; set; }
+        public SubArray<byte> Response { get; set; }
         /// <summary>
         /// Gets if the response is going to be sent.
         /// </summary>
@@ -68,7 +68,7 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="request">Request message</param>
 		/// <param name="correlationId">Correlation Id</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RawRequestReceivedEventArgs(string name, MQConnection sender, byte[] request, Guid correlationId)
+		public RawRequestReceivedEventArgs(string name, MQConnection sender, SubArray<byte> request, Guid correlationId)
         {
             Name = name;
             Request = request;

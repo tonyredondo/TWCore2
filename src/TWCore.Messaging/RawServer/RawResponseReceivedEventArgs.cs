@@ -36,7 +36,7 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Response message received
         /// </summary>
-        public byte[] Message { get; set; }
+        public SubArray<byte> Message { get; set; }
         /// <summary>
         /// Listener Metadata
         /// </summary>
@@ -50,7 +50,7 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="message">Response message received</param>
 		/// <param name="correlationId">Correlation Id</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RawResponseReceivedEventArgs(string name, byte[] message, Guid correlationId)
+		public RawResponseReceivedEventArgs(string name, SubArray<byte> message, Guid correlationId)
         {
             Name = name;
             Message = message;

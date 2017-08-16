@@ -20,6 +20,7 @@ using System.Linq;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using System.Threading.Tasks;
 
 namespace TWCore.Messaging.NSQ
 {
@@ -64,9 +65,7 @@ namespace TWCore.Messaging.NSQ
 				throw new ArgumentNullException("ServerSenderOptions");
 
 			var data = SenderSerializer.Serialize(message);
-			var body = new byte[data.Count + 16];
-			Buffer.BlockCopy(message.CorrelationId.ToByteArray(), 0, body, 0, 16);
-			data.CopyTo(body, 16);
+            var body = NSQueueClient.CreateMessageBody(data, message.CorrelationId);
 
 			bool response = true;
 			foreach (var queue in e.ResponseQueues)
@@ -97,12 +96,10 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		protected override void OnDispose()
 		{
-            foreach (var q in rQueue)
-            {
-                foreach (var i in q.Value.GetCurrentObjects())
-                    i.Stop();
-                q.Value.Clear();
-            }
+            var producers = rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
+            Parallel.ForEach(producers, p => p.Stop());
+            foreach (var sender in rQueue)
+                sender.Value.Clear();
             rQueue.Clear();
 		}
 	}

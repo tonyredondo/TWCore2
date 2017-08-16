@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Numerics\TWCore.Numerics.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />

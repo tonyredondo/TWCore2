@@ -6,12 +6,12 @@ using TWCore.Serialization.PWSerializer.Deserializer;
 
 namespace TWCore.Tests
 {
-    public class PwSerializerTest : ContainerParameterService
+    public class SerializerTest : ContainerParameterService
     {
-        public PwSerializerTest() : base("pwserializertest", "PWSerializer Test") { }
+        public SerializerTest() : base("serializertest", "PWSerializer Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting PWSerializer TEST");
+            Core.Log.Warning("Starting Serializer TEST");
 
             var sTest = new STest
             {
@@ -58,6 +58,8 @@ namespace TWCore.Tests
                 new STest { FirstName = "Name1" , LastName = "LName1" , Age = 11 },
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" },
             };
+
+
             var fByte = lt.SerializeToPWBinary();
             var obj1 = (DynamicDeserializedType)fByte.DeserializeFromPWBinary(null);
 

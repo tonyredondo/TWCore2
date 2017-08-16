@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <Title>TWCore.Serialization.MsgPack</Title>
+    <Authors>Daniel Redondo</Authors>
+    <Company />
+    <Description>TWCore Framework.
+A multipurpose framework library for .net core</Description>
+    <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
+    <Version>0.2.5</Version>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
+    <Copyright></Copyright>
+    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MsgPack.Light" Version="1.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TWCore\TWCore.csproj" />
+  </ItemGroup>
+
+</Project>

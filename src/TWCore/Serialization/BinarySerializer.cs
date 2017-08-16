@@ -105,13 +105,11 @@ namespace TWCore.Serialization
                 OnSerialize(stream, item, itemType);
                 return;
             }
-            //var ms = WriteableMemoryStreamPool.Get();
             using (var ms = new RecycleMemoryStream())
             {
                 OnSerialize(ms, item, itemType);
                 ms.Position = 0;
                 Compressor.Compress(ms, stream);
-                //WriteableMemoryStreamPool.Store(ms);
             }
         }
         /// <summary>
@@ -125,13 +123,11 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
                 return OnDeserialize(stream, itemType);
-            //var ms = WriteableMemoryStreamPool.Get();
             using (var ms = new RecycleMemoryStream())
             {
                 Compressor.Decompress(stream, ms);
                 ms.Position = 0;
                 var res = OnDeserialize(ms, itemType);
-                //WriteableMemoryStreamPool.Store(ms);
                 return res;
             }
         }

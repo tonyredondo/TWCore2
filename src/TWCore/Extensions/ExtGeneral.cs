@@ -347,11 +347,12 @@ namespace TWCore
 		/// <returns>Task complete</returns>
 		public static void WaitAsync(this Task task)
 		{
-			Func<Task> ftsk = async () =>
-			{
-				await Task.Run(async () => await task.ConfigureAwait(false)).ConfigureAwait(false);
-			};
-			ftsk().Wait();
+			var wait = new ManualResetEventSlim(false);
+            var continuation = task.ContinueWith(_ =>
+            {
+                wait.Set();
+            });
+            wait.Wait();
 		}
 		/// <summary>
 		/// Handles a cancellation Token for a task without support

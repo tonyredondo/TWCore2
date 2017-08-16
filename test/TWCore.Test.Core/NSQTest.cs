@@ -28,8 +28,8 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						SendQueues = new List<MQConnection> { new MQConnection("nsqd=localhost:4150;", "TEST_RQ", null) },
-						RecvQueue = new MQConnection("nsqd=localhost:4150;", "TEST_RS", null)
+						SendQueues = new List<MQConnection> { new MQConnection("localhost:4150", "TEST_RQ", null) },
+						RecvQueue = new MQConnection("localhost:4150", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -38,7 +38,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						RecvQueues = new List<MQConnection> { new MQConnection("nsqd=localhost:4150;", "TEST_RQ", null) }
+						RecvQueues = new List<MQConnection> { new MQConnection("localhost:4150", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions
@@ -82,8 +82,8 @@ namespace TWCore.Tests
             mqConfig.SerializeToXmlFile("nsqConfig.xml");
             mqConfig.SerializeToJsonFile("nsqConfig.json");
 
-			Core.DebugMode = false;
-			Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
+			//Core.DebugMode = true;
+			//Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
             Core.Log.Warning("Starting with Normal Listener and Client");
             NormalTest(mqConfig);
@@ -102,7 +102,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 500;
+                    var totalQ = 5000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
@@ -136,7 +136,7 @@ namespace TWCore.Tests
                 mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "false";
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 500;
+                    var totalQ = 25;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Multiple Response Queue");

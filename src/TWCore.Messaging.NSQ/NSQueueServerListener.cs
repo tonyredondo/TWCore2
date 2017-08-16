@@ -20,7 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using NSQCore;
+using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 
@@ -36,7 +36,7 @@ namespace TWCore.Messaging.NSQ
 		readonly object _lock = new object();
 		Type _messageType;
 		string _name;
-		INsqConsumer _receiver;
+		Consumer _receiver;
 		CancellationToken _token;
 		Task _monitorTask;
 		bool _exceptionSleep = false;
@@ -48,16 +48,60 @@ namespace TWCore.Messaging.NSQ
 			public Guid CorrelationId;
 			public SubArray<byte> Body;
 		}
-		#endregion
+        class NSQMessageHandler : IHandler
+        {
+            NSQueueServerListener _listener;
+            public NSQMessageHandler(NSQueueServerListener listener)
+            {
+                _listener = listener;
+            }
+            public void HandleMessage(NsqSharp.IMessage message)
+            {
+                Core.Log.LibVerbose("Message received");
+                try
+                {
+                    var body = new SubArray<byte>(message.Body);
+                    var correlationId = new Guid((byte[])body.Slice(0, 16));
+                    var messageBody = body.Slice(16);
+                    var rMsg = new NSQMessage()
+                    {
+                        CorrelationId = correlationId,
+                        Body = messageBody
+                    };
+                    Try.Do(() => message.Finish(), false);
 
-		#region .ctor
-		/// <summary>
-		/// NSQ server listener implementation
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="server">Message queue server instance</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+                    _listener.Counters.IncrementMessages();
+                    var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token);
+                    _listener._processingTasks.TryAdd(tsk, null);
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                    tsk.ContinueWith(_tsk =>
+                    {
+                        _listener._processingTasks.TryRemove(tsk, out var ts);
+                        _listener.Counters.DecrementMessages();
+                    });
+#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+            }
+            public void LogFailedMessage(NsqSharp.IMessage message)
+            {
+            }
+        }
+
+        #endregion
+
+        #region .ctor
+        /// <summary>
+        /// NSQ server listener implementation
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="server">Message queue server instance</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public NSQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(connection, server, responseServer)
 		{
 			_messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
@@ -78,14 +122,10 @@ namespace TWCore.Messaging.NSQ
 		protected override async Task OnListenerTaskStartAsync(CancellationToken token)
 		{
 			_token = token;
-			var options = ConsumerOptions.Parse(Connection.Route);
-			options.Topic = Connection.Name;
-			options.Channel = Connection.Name;
-			options.ClientId = Guid.NewGuid().ToString();
-			_receiver = NsqConsumer.Create(options);
-			await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
-			await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);
-			_monitorTask = Task.Run(MonitorProcess, _token);
+            _receiver = new Consumer(Connection.Name, Connection.Name);
+            _receiver.AddHandler(new NSQMessageHandler(this));
+            _receiver.ConnectToNsqd(Connection.Route);
+            _monitorTask = Task.Run(MonitorProcess, _token);
 			await token.WhenCanceledAsync().ConfigureAwait(false);
 			OnDispose();
 			Task[] tasksToWait;
@@ -104,7 +144,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				try
 				{
-					_receiver.Dispose();
+					_receiver.Stop();
 				}
 				catch { }
 				_receiver = null;
@@ -113,42 +153,6 @@ namespace TWCore.Messaging.NSQ
 		#endregion
 
 		#region Private Methods
-		/// <summary>
-		/// On message receive
-		/// </summary>
-		/// <param name="message">Message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		async Task OnReceive(Message message)
-		{
-			Core.Log.LibVerbose("Message received");
-			try
-			{
-				var body = new SubArray<byte>(message.Body);
-				var correlationId = new Guid((byte[])body.Slice(0, 16));
-				var messageBody = body.Slice(16);
-				var rMsg = new NSQMessage()
-				{
-					CorrelationId = correlationId,
-					Body = messageBody
-				};
-
-				Counters.IncrementMessages();
-				var tsk = Task.Factory.StartNew(ProcessingTask, rMsg, _token);
-				_processingTasks.TryAdd(tsk, null);
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-				tsk.ContinueWith(_tsk =>
-				{
-					_processingTasks.TryRemove(tsk, out var ts);
-					Counters.DecrementMessages();
-				});
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-			}
-			catch (Exception ex)
-			{
-				Core.Log.Write(ex);
-			}
-			await message.FinishAsync().ConfigureAwait(false);;
-		}
 		/// <summary>
 		/// Monitors the maximum concurrent message allowed for the listener
 		/// </summary>
@@ -169,13 +173,9 @@ namespace TWCore.Messaging.NSQ
 						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
 						lock (_lock)
 							_exceptionSleep = false;
-						var options = ConsumerOptions.Parse(Connection.Route);
-						options.Topic = Connection.Name;
-						options.Channel = Connection.Name;
-						options.ClientId = Guid.NewGuid().ToString();
-						_receiver = NsqConsumer.Create(options);
-						await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
-						await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);
+                        _receiver = new Consumer(Connection.Name, Connection.Name);
+                        _receiver.AddHandler(new NSQMessageHandler(this));
+                        _receiver.ConnectToNsqd(Connection.Route);
 					}
 
 					if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
@@ -186,14 +186,10 @@ namespace TWCore.Messaging.NSQ
 						while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
 							await Task.Delay(500, _token).ConfigureAwait(false);
 
-						var options = ConsumerOptions.Parse(Connection.Route);
-						options.Topic = Connection.Name;
-						options.Channel = Connection.Name;
-						options.ClientId = Guid.NewGuid().ToString();
-						_receiver = NsqConsumer.Create(options);
-						await _receiver.ConnectAndWaitAsync(OnReceive).ConfigureAwait(false);
-						await _receiver.SetMaxInFlightAsync(1).ConfigureAwait(false);
-					}
+                        _receiver = new Consumer(Connection.Name, Connection.Name);
+                        _receiver.AddHandler(new NSQMessageHandler(this));
+                        _receiver.ConnectToNsqd(Connection.Route);
+                    }
 
 					await Task.Delay(100, _token).ConfigureAwait(false);
 				}

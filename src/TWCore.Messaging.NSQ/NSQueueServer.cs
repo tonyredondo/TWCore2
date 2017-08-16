@@ -17,7 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using NSQCore;
+using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 
@@ -28,7 +28,7 @@ namespace TWCore.Messaging.NSQ
 	/// </summary>
 	public class NSQueueServer : MQueueServerBase
 	{
-		readonly ConcurrentDictionary<string, NsqProducer> rQueue = new ConcurrentDictionary<string, NsqProducer>();
+        readonly ConcurrentDictionary<string, ObjectPool<Producer>> rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
 
 		#region .ctor
 		/// <summary>
@@ -73,15 +73,15 @@ namespace TWCore.Messaging.NSQ
 			{
 				try
 				{
-					var nsqProducer = rQueue.GetOrAdd(queue.Route, q =>
-					{
-						var options = ConsumerOptions.Parse(q);
-						options.Topic = queue.Name;
-						options.Channel = queue.Name;
-						return new NsqProducer(options.NsqEndPoint.Host, 4151);
-					});
+                    var nsqProducerPool = rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(() =>
+                    {
+                        Core.Log.LibVerbose("New Producer from QueueServer");
+                        return new Producer(q);
+                    }, null, 1));
 					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
-					nsqProducer.PublishAsync(queue.Name, body);
+                    var nsqProducer = nsqProducerPool.New();
+                    nsqProducer.PublishAsync(queue.Name, body).Wait();
+                    nsqProducerPool.Store(nsqProducer);
 				}
 				catch (Exception ex)
 				{

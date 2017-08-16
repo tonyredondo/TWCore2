@@ -26,98 +26,105 @@ using TWCore.Settings;
 
 namespace TWCore.Services
 {
-	/// <summary>
-	/// Core Services Extensions
-	/// </summary>
-	public static class CoreServicesExtensions
-	{
-		static MQueuesConfiguration _queues;
-		static MQPairConfig _queueServer;
-		static bool _init = false;
+    /// <summary>
+    /// Core Services Extensions
+    /// </summary>
+    public static class CoreServicesExtensions
+    {
+        static MQueuesConfiguration _queues;
+        static MQPairConfig _queueServer;
+        static bool _init = false;
 
-		#region Init
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void Init()
-		{
-			if (_init) return;
-			_init = true;
+        #region Init
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        static void Init()
+        {
+            if (_init) return;
+            _init = true;
 
-			var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
-			if (string.IsNullOrEmpty(queueSettings.ConfigFile)) return;
+            var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
+            if (string.IsNullOrEmpty(queueSettings.ConfigFile)) return;
 
-			var queuesConfigFile = queueSettings.ConfigFile;
-			queuesConfigFile = queuesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);
-			queuesConfigFile = queuesConfigFile?.Replace("{MachineName}", Core.MachineName);
-			queuesConfigFile = queuesConfigFile?.Replace("{ApplicationName}", Core.ApplicationName);
-			Core.Log.InfoBasic("Loading queues configuration: {0}", queuesConfigFile);
+            var queuesConfigFile = queueSettings.ConfigFile;
+            queuesConfigFile = queuesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);
+            queuesConfigFile = queuesConfigFile?.Replace("{MachineName}", Core.MachineName);
+            queuesConfigFile = queuesConfigFile?.Replace("{ApplicationName}", Core.ApplicationName);
+            Core.Log.InfoBasic("Loading queues configuration: {0}", queuesConfigFile);
 
-			try
-			{
-				var value = queuesConfigFile.ReadTextFromFile();
-				value = Core.ReplaceSettingsTemplate(value);
-				var serializer = SerializerManager.GetByFileName<ITextSerializer>(queuesConfigFile);
-				_queues = serializer.DeserializeFromString<MQueuesConfiguration>(value);
-			}
-			catch (Exception ex)
-			{
-				throw new Exception($"The Queues config file: {queuesConfigFile} can't be deserialized.", ex);
-			}
+            try
+            {
+                var value = queuesConfigFile.ReadTextFromFile();
+                value = Core.ReplaceSettingsTemplate(value);
+                var serializer = SerializerManager.GetByFileName<ITextSerializer>(queuesConfigFile);
+                _queues = serializer.DeserializeFromString<MQueuesConfiguration>(value);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"The Queues config file: {queuesConfigFile} can't be deserialized.", ex);
+            }
 
-			if (_queues == null)
-			{
-				Core.Log.Warning("The Queues configuration file is null or empty.");
-				return;
-			}
+            if (_queues == null)
+            {
+                Core.Log.Warning("The Queues configuration file is null or empty.");
+                return;
+            }
 
-			if (string.IsNullOrEmpty(queueSettings.ServerName)) return;
+            if (string.IsNullOrEmpty(queueSettings.ServerName)) return;
 
-			if (_queues.Items?.Contains(queueSettings.ServerName) == true)
-				_queueServer = _queues.Items[queueSettings.ServerName];
-			else
-				throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found in the queue configuration file.");
-		}
-		#endregion
+            if (_queues.Items?.Contains(queueSettings.ServerName) == true)
+                _queueServer = _queues.Items[queueSettings.ServerName];
+            else
+                throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found in the queue configuration file.");
+        }
+        #endregion
 
-		#region Queue methods
-		/// <summary>
-		/// Gets a queue client instance
-		/// </summary>
-		/// <param name="queuePairName">Queue config pair name</param>
-		/// <returns>IMQueueClient instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName)
-		{
-			if (_queues?.Items?.Contains(queuePairName) == true)
-				return _queues.Items[queuePairName].GetClient();
-			else
-			{
-				Core.Log.Warning("The Queue Pair Name: {0} not found in the configuration file.", queuePairName);
-				return null;
-			}
-		}
-		/// <summary>
-		/// Gets the queue server object
-		/// </summary>
-		/// <returns>IMQueueServer object instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
-			=> _queueServer.GetServer(responseServer);
-		/// <summary>
-		/// Gets the queue raw server object
-		/// </summary>
-		/// <returns>IMQueueRawServer object instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
-			=> _queueServer.GetRawServer(responseServer);
-		#endregion
+        #region Queue methods
+        /// <summary>
+        /// Gets a queue client instance
+        /// </summary>
+        /// <param name="queuePairName">Queue config pair name</param>
+        /// <returns>IMQueueClient instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName)
+        {
+            if (_queues?.Items?.Contains(queuePairName) == true)
+                return _queues.Items[queuePairName].GetClient();
+            else
+            {
+                Core.Log.Warning("The Queue Pair Name: {0} not found in the configuration file.", queuePairName);
+                return null;
+            }
+        }
+        /// <summary>
+        /// Gets the queue server object
+        /// </summary>
+        /// <returns>IMQueueServer object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
+            => _queueServer.GetServer(responseServer);
+        /// <summary>
+        /// Gets the queue raw server object
+        /// </summary>
+        /// <returns>IMQueueRawServer object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
+            => _queueServer.GetRawServer(responseServer);
+        /// <summary>
+        /// Gets the Default Queues Configuration
+        /// </summary>
+        /// <returns>QueuesConfiguration instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static MQueuesConfiguration GetDefaultQueuesConfiguration(this CoreServices services)
+            => _queues;
+        #endregion
 
-		#region Nested Settings Type
-		[SettingsContainer("Core.Services.Queue")]
-		class QueueConfigurationSettings : SettingsBase
-		{
-			public string ConfigFile { get; set; }
-			public string ServerName { get; set; }
-		}
-		#endregion
-	}
+        #region Nested Settings Type
+        [SettingsContainer("Core.Services.Queue")]
+        class QueueConfigurationSettings : SettingsBase
+        {
+            public string ConfigFile { get; set; }
+            public string ServerName { get; set; }
+        }
+        #endregion
+    }
 }

@@ -84,7 +84,7 @@ namespace TWCore.Web.Logger
                 case LogLevel.None:
                     return;
             }
-            Core.Log.Write(cLogLevel, eventId.Name, formatter(state, exception), _name, exception);
+            Core.Log.Write(cLogLevel, eventId.Id.ToString(), formatter(state, exception), _name, exception, string.Empty, "Logger");
         }
         #endregion
     }

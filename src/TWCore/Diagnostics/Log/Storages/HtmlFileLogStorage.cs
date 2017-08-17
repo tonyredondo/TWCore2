@@ -420,7 +420,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetExceptionDescription(SerializableException itemEx)
         {
-            var desc = string.Format("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+            var desc = string.Format("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
             if (itemEx.InnerException != null)
                 desc += GetExceptionDescription(itemEx.InnerException);
             return desc;
@@ -471,8 +471,8 @@ namespace TWCore.Diagnostics.Log.Storages
 
                 if (!string.IsNullOrEmpty(item.Code))
                     sbuilder.Append("[" + item.Code + "] ");
-
-                sbuilder.Append(item.Message);
+                
+                sbuilder.Append(System.Security.SecurityElement.Escape(item.Message));
 
                 if (item.Exception != null)
                 {

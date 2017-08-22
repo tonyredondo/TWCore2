@@ -39,12 +39,14 @@ namespace TWCore.Injector
     /// </summary>
     public class InjectorEngine : IDisposable
     {
-        readonly ConcurrentDictionary<Tuple<Type, string>, Func<object>> RegisteredDelegates = new ConcurrentDictionary<Tuple<Type, string>, Func<object>>();
+        readonly ConcurrentDictionary<(Type, string), Func<object>> RegisteredDelegates = new ConcurrentDictionary<(Type, string), Func<object>>();
         readonly ConcurrentDictionary<Instantiable, ActivatorItem> InstantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
+        readonly ConcurrentDictionary<Instantiable, object> SingletonObjects = new ConcurrentDictionary<Instantiable, object>();
+        static readonly string[] EmptyStringArray = new string[0];
         InjectorSettings settings = null;
         bool attributesRegistered = false;
         bool useOnlyLoadedAssemblies = true;
-
+        
         #region Events
         /// <summary>
         /// Event occurs when a new instance is requested for a non instantiable type
@@ -137,7 +139,7 @@ namespace TWCore.Injector
             var tmpObj = OnTypeInstanceResolve?.Invoke(type, name);
             if (tmpObj != null)
                 return tmpObj;
-            if (RegisteredDelegates.TryGetValue(Tuple.Create(type, name ?? string.Empty), out var _delegate))
+            if (RegisteredDelegates.TryGetValue((type, name), out var _delegate))
                 return _delegate();
             var typeInfo = type.GetTypeInfo();
             if (typeInfo.IsInterface)
@@ -165,19 +167,18 @@ namespace TWCore.Injector
         public string[] GetNames(Type type)
         {
             var typeInfo = type.GetTypeInfo();
-            NonInstantiable nonInstantiable = null;
             Instantiable instantiable = null;
             if (typeInfo.IsInterface)
-                nonInstantiable = Settings.GetInterfaceDefinition(type.AssemblyQualifiedName);
-            else if (typeInfo.IsAbstract)
-                nonInstantiable = Settings.GetAbstractDefinition(type.AssemblyQualifiedName);
-            else if (typeInfo.IsClass)
+                return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
+            if (typeInfo.IsAbstract)
+                return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
+            if (typeInfo.IsClass)
+            {
                 instantiable = Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName);
-            if (nonInstantiable != null)
-                return nonInstantiable.ClassDefinitions.Select(c => c.Name).ToArray();
-            if (instantiable != null)
-                return new string[] { instantiable.Name };
-            return new string[0];
+                if (instantiable != null)
+                    return new string[] { instantiable.Name };
+            }
+            return EmptyStringArray;
         }
 
         /// <summary>
@@ -358,7 +359,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null)
         {
-            var key = Tuple.Create(noninstantiableType, name ?? string.Empty);
+            var key = (noninstantiableType, name);
             RegisteredDelegates.TryRemove(key, out var _old);
             RegisteredDelegates.TryAdd(key, createInstanceDelegate);
         }
@@ -377,6 +378,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
+            if (instanceDefinition.Singleton)
+                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -391,6 +394,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
+            if (instanceDefinition.Singleton)
+                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -405,6 +410,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
+            if (instanceDefinition.Singleton)
+                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -37,6 +37,11 @@ namespace TWCore.Injector
         [XmlAttribute, DataMember]
         public string Type { get; set; }
         /// <summary>
+        /// Defines if the class should be loaded as a singleton
+        /// </summary>
+        [XmlAttribute]
+        public bool Singleton { get; set; }
+        /// <summary>
         /// Constructor parameters
         /// </summary>
         [XmlElement("Parameter"), DataMember]

@@ -121,8 +121,9 @@ namespace TWCore.Data
                         }
                         var value = rowValues[idx];
                         var valueType = value?.GetType();
-                        var propertyType = prop.PropertyType.GetUnderlyingType();
-                        var defaultValue = prop.PropertyType.GetTypeInfo().IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
+						var propertyType = prop.PropertyUnderlayingType;
+						var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
+						var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
 
                         if (value == null)
                             prop.SetValue(entity, defaultValue);
@@ -134,7 +135,7 @@ namespace TWCore.Data
 
                             if (propertyType == typeof(Guid) && valueType == typeof(string))
                                 result = new Guid((string)value);
-                            else if (propertyType.GetTypeInfo().IsEnum &&
+                            else if (propertyTypeInfo.IsEnum &&
                                 (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                                 result = Enum.Parse(propertyType, value.ToString());
                             else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))

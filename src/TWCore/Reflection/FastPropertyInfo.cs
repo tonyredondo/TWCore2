@@ -46,6 +46,18 @@ namespace TWCore.Reflection
         /// Property Type
         /// </summary>
         public readonly Type PropertyType;
+		/// <summary>
+		/// Property Type Info
+		/// </summary>
+		public readonly TypeInfo PropertyTypeInfo;
+		/// <summary>
+		/// Property Underlaying Type
+		/// </summary>
+		public readonly Type PropertyUnderlayingType;
+		/// <summary>
+		/// Property Underlaying TypeInfo
+		/// </summary>
+		public readonly Type PropertyUnderlayingTypeInfo;
 
         /// <summary>
         /// Faster Property info getter and setter
@@ -57,6 +69,9 @@ namespace TWCore.Reflection
             GetValue = GetAccessorCache.GetOrAdd(prop, p => p.CanRead ? Factory.Accessors.BuildGetAccessor(p) : o => null);
             SetValue = SetAccessorCache.GetOrAdd(prop, p => p.CanWrite ? Factory.Accessors.BuildSetAccessor(p) : (a, b) => { });
             PropertyType = prop.PropertyType;
+			PropertyTypeInfo = PropertyType.GetTypeInfo();
+			PropertyUnderlayingType = PropertyType.GetUnderlyingType();
+			PropertyUnderlayingTypeInfo = PropertyUnderlayingType.GetTypeInfo();
         }
 
         /// <summary>

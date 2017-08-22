@@ -44,7 +44,7 @@ namespace TWCore
     /// <typeparam name="T">Type of element</typeparam>
     [DataContract]
     [Serializable]
-    public struct SubArray<T> : IEquatable<SubArray<T>>
+    public struct SubArray<T>
     {
         /// <summary>
         /// Empty SubArray instance

@@ -36,6 +36,11 @@ using TWCore.Settings;
 
 namespace TWCore
 {
+	/// <summary>
+	/// Service container factory delegate
+	/// </summary>
+	public delegate IServiceContainer ServiceContainerFactoryDelegate(IService service, Action initAction);
+
     /// <summary>
     /// CORE App Static
     /// </summary>
@@ -149,9 +154,15 @@ namespace TWCore
         /// Gets or Sets if the Library is in Debug mode
         /// </summary>
         public static bool DebugMode { get; set; }
-        #endregion
+		/// <summary>
+		/// Gets or sets the service container factory.
+		/// </summary>
+		/// <value>The service container factory.</value>
+		public static ServiceContainerFactoryDelegate ServiceContainerFactory { get; set; } = (service, initAction) => new ServiceContainer(service, initAction);
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		#region Init
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         static void Init(Factories factories)
         {
             if (!_initialized)
@@ -325,17 +336,18 @@ namespace TWCore
             };
             Init(factories);
         }
+		#endregion
 
-        #region Run Service
-        /// <summary>
-        /// Starts the default container with the arguments
-        /// </summary>
-        /// <param name="args">Service arguments</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		#region Run Service
+		/// <summary>
+		/// Starts the default container with the arguments
+		/// </summary>
+		/// <param name="args">Service arguments</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartContainer(string[] args)
         {
             InitDefaults();
-            new ServiceContainer(null).Run(args);
+			ServiceContainerFactory(null, null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container
@@ -346,8 +358,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunService(Action initAction, Func<IService> serviceFunc, string[] args)
         {
-            new ServiceContainer(serviceFunc(), initAction).Run(args);
-        }
+			ServiceContainerFactory(serviceFunc(), initAction).Run(args);
+		}
         /// <summary>
         /// Run IService with the default container
         /// </summary>
@@ -357,7 +369,7 @@ namespace TWCore
         {
             InitDefaults();
             var service = (IService)Activator.CreateInstance<TIService>();
-            new ServiceContainer(service).Run(args);
+			ServiceContainerFactory(service, null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container
@@ -368,7 +380,7 @@ namespace TWCore
         public static void RunService(Func<IService> serviceFunc, string[] args)
         {
             InitDefaults();
-            new ServiceContainer(serviceFunc()).Run(args);
+			ServiceContainerFactory(serviceFunc(), null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container
@@ -380,7 +392,7 @@ namespace TWCore
         public static void RunService(Func<IService> serviceFunc, string[] args, Factories factories)
         {
             Init(factories);
-            new ServiceContainer(serviceFunc()).Run(args);
+			ServiceContainerFactory(serviceFunc(), null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container
@@ -391,8 +403,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunService(Action initAction, Func<IService[]> servicesFunc, string[] args)
         {
-            new ServiceContainer(new ServiceList(servicesFunc()), initAction).Run(args);
-        }
+			ServiceContainerFactory(new ServiceList(servicesFunc()), initAction).Run(args);
+		}
         /// <summary>
         /// Run IService with the default container
         /// </summary>
@@ -402,7 +414,7 @@ namespace TWCore
         public static void RunService(Func<IService[]> servicesFunc, string[] args)
         {
             InitDefaults();
-            new ServiceContainer(new ServiceList(servicesFunc())).Run(args);
+			ServiceContainerFactory(new ServiceList(servicesFunc()), null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container
@@ -414,7 +426,7 @@ namespace TWCore
         public static void RunService(Func<IService[]> servicesFunc, string[] args, Factories factories)
         {
             Init(factories);
-            new ServiceContainer(new ServiceList(servicesFunc())).Run(args);
+			ServiceContainerFactory(new ServiceList(servicesFunc()), null).Run(args);
         }
         #endregion
 

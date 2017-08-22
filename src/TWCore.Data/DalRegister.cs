@@ -34,10 +34,7 @@ namespace TWCore.Data
         {
             var assembly = this.GetAssembly();
             if (Register(assembly) == 0)
-            {
-                Core.Log.Warning("Registering DAL in unsafe mode.");
-                RegisterUnsafe(assembly);
-            }
+                Core.Log.Warning("No IEntityDal found on the assembly, DAL weren't registered.");
         }
 
         /// <summary>
@@ -66,28 +63,28 @@ namespace TWCore.Data
             });
             return res;
         }
-        /// <summary>
-        /// Register the dal on the injector
-        /// </summary>
-        /// <param name="dalAssembly">Data access layer assembly</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int RegisterUnsafe(Assembly dalAssembly)
-        {
-            int res = 0;
-            dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any()).Each(t =>
-            {
-                var iface = t.ImplementedInterfaces.First();
-                try
-                {
-                    res++;
-                    Core.Injector.Register(iface, t.AsType(), t.Name);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-            });
-            return res;
-        }
+        ///// <summary>
+        ///// Register the dal on the injector
+        ///// </summary>
+        ///// <param name="dalAssembly">Data access layer assembly</param>
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //public int RegisterUnsafe(Assembly dalAssembly)
+        //{
+        //    int res = 0;
+        //    dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any()).Each(t =>
+        //    {
+        //        var iface = t.ImplementedInterfaces.First();
+        //        try
+        //        {
+        //            res++;
+        //            Core.Injector.Register(iface, t.AsType(), t.Name);
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            Core.Log.Write(ex);
+        //        }
+        //    });
+        //    return res;
+        //}
     }
 }

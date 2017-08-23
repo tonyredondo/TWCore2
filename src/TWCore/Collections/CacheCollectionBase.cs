@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -50,19 +51,25 @@ namespace TWCore.Collections
     public abstract class CacheCollectionBase<TKey, TValue, TValueNode> : ICacheCollection<TKey, TValue> where TValueNode : CacheCollectionValueNode<TValue>
     {
         #region Fields
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly object _padlock = new object();
 
         /// <summary>
         /// Maximum capacity of the collection
         /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         protected readonly int _capacity;
         /// <summary>
         /// Value Storage
         /// </summary>
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         protected readonly Dictionary<TKey, TValueNode> _valueStorage;
 
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _deletes;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _inserts;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _hits;
         #endregion
 

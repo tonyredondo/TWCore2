@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -33,6 +34,7 @@ namespace TWCore.Collections
     public class TimeoutDictionary<TKey, TValue>
     {
         #region Fields
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
         #endregion
 

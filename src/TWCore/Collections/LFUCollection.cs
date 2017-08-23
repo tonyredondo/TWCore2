@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -30,6 +31,7 @@ namespace TWCore.Collections
     /// <typeparam name="TValue">Value Type</typeparam>
     public class LFUCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LFUCollection<TKey, TValue>.ValueNode>
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static CoreSettings _defaultSettings = Core.GetSettings<CoreSettings>();
 
         #region Nested Type
@@ -65,12 +67,19 @@ namespace TWCore.Collections
         #endregion
 
         #region Fields
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _age;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _agePolicy;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly LinkedList<ValueNode.CountNode> _list;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _currentSlot;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _insertionCount;
         #endregion
 

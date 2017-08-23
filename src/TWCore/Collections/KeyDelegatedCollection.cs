@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -32,6 +33,7 @@ namespace TWCore.Collections
 	[Serializable]
     public class KeyDelegatedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         protected object _ilocker = new object();
 
         #region Statics

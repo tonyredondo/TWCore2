@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -53,9 +54,13 @@ namespace TWCore.Collections
         #endregion
 
         #region Fields
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly LinkedList<TKey> _list;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _currentSlot;
         #endregion
 

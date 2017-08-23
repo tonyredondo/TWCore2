@@ -90,9 +90,13 @@ namespace TWCore
                         var loaded = AppDomain.CurrentDomain.GetAssemblies();
                         foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
                         {
-                            var name = AssemblyName.GetAssemblyName(file);
-                            if (!loaded.Any(l => l.FullName == name.FullName))
-                                AppDomain.CurrentDomain.Load(name);
+                            try
+                            {
+                                var name = AssemblyName.GetAssemblyName(file);
+                                if (!loaded.Any(l => l.FullName == name.FullName))
+                                    AppDomain.CurrentDomain.Load(name);
+                            }
+                            catch { }
                         }
                     }
                     AllAssembliesLoaded = true;

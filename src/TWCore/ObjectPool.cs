@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,12 +30,17 @@ namespace TWCore
     /// <typeparam name="T">Object type</typeparam>
     public sealed class ObjectPool<T>
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly object _padLock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		readonly Stack<T> objectStack;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		Func<ObjectPool<T>, T> createFunc;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         Action<T> resetAction;
         PoolResetMode resetMode;
         int preallocationThreshold;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         bool allocating = false;
 
         /// <summary>

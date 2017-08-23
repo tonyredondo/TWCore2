@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TWCore.Security;
 
@@ -25,8 +27,11 @@ namespace TWCore.Data
     /// </summary>
     public abstract class EntityDal : IEntityDal
     {
+        static ConcurrentDictionary<string, ObjectPool<DalPoolItem>> Pools = new ConcurrentDictionary<string, ObjectPool<DalPoolItem>>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         EntityDalSettings _settings = null;
-        internal ObjectPool<DalPoolItem> _pool = null;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        ObjectPool<DalPoolItem> _pool = null;
 
         #region Properties
         /// <summary>
@@ -46,13 +51,15 @@ namespace TWCore.Data
 
         public EntityDal()
         {
-            _pool = new ObjectPool<DalPoolItem>(pool =>
-            {
-                return new DalPoolItem(this, OnGetDataAccess(Settings))
-                {
-                    Recycle = true
-                };
-            }, item =>  item.disposedValue = false);
+            var poolKey = Settings.GetHashSHA1();
+            _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<DalPoolItem>(pool =>
+             {
+                 return new DalPoolItem(OnGetDataAccess(Settings))
+                 {
+                     Recycle = true,
+                     Pool = pool
+                 };
+             }, item => item.disposedValue = false));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -74,6 +81,7 @@ namespace TWCore.Data
         #endregion
 
         #region IDisposable Support
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private bool disposedValue = false; // Para detectar llamadas redundantes
 
         protected virtual void Dispose(bool disposing)
@@ -82,12 +90,12 @@ namespace TWCore.Data
             {
                 if (_pool != null)
                 {
-                    foreach (var pItem in _pool.GetCurrentObjects())
-                    {
-                        pItem.Recycle = false;
-                        pItem.Dispose();
-                    }
-                    _pool.Clear();
+                    //foreach (var pItem in _pool.GetCurrentObjects())
+                    //{
+                    //    pItem.Recycle = false;
+                    //    pItem.Dispose();
+                    //}
+                    //_pool.Clear();
                     _pool = null;
                 }
                 disposedValue = true;

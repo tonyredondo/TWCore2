@@ -195,9 +195,13 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public class WItem : IDisposable
         {
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             static long _frequency = Stopwatch.Frequency;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             static int _watcherCount;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             static ObjectPool<WItem> itemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             static Worker<LogStatItem> logStatsWorker = new Worker<LogStatItem>(WorkerMethod);
 
             [IgnoreStackFrameLog]
@@ -235,8 +239,11 @@ namespace TWCore
             }
 
 
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             double _initTicks;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             double _ticksTimestamp;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             double _lastTapTicks;
             int _id;
             string _lastMessage = null;
@@ -390,11 +397,12 @@ namespace TWCore
             #endregion
 
             #region IDisposable Support
-            private bool disposedValue = false; // To detect redundant calls
-                                                /// <summary>
-                                                /// Dispose Object
-                                                /// </summary>
-                                                /// <param name="disposing"></param>
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+            private bool disposedValue = false; 
+            /// <summary>
+            /// Dispose Object
+            /// </summary>
+            /// <param name="disposing"></param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected virtual void Dispose(bool disposing)
             {

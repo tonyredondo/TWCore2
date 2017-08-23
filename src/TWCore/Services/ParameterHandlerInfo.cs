@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Services
@@ -23,6 +24,7 @@ namespace TWCore.Services
     /// </summary>
     public class ParameterHandlerInfo
     {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         ServiceContainer _container;
 
         #region Properties

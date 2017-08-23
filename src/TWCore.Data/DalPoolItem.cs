@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
@@ -26,17 +27,18 @@ namespace TWCore.Data
     public class DalPoolItem : IDataAccess, IDisposable
     {
         IDataAccess _dataAccess;
-        EntityDal _entityDal;
-        internal bool Recycle { get; set; } = true;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        internal ObjectPool<DalPoolItem> Pool;
+
+        public bool Recycle { get; internal set; } = true;
 
         /// <summary>
         /// Dal Pool item
         /// </summary>
         /// <param name="dataAccess">DataAccess instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DalPoolItem(EntityDal entityDal, IDataAccess dataAccess)
+        public DalPoolItem(IDataAccess dataAccess)
         {
-            _entityDal = entityDal;
             _dataAccess = dataAccess;
             _dataAccess.OnError += DataAccess_OnError;
         }
@@ -99,13 +101,14 @@ namespace TWCore.Data
         #endregion
 
         #region IDisposable Support
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         internal bool disposedValue = false; // Para detectar llamadas redundantes
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (Recycle)
-                    _entityDal?._pool?.Store(this);
+                    Pool?.Store(this);
                 disposedValue = true;
             }
         }

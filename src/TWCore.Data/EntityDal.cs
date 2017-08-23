@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using TWCore.Security;
 
 namespace TWCore.Data
 {
@@ -25,7 +26,7 @@ namespace TWCore.Data
     public abstract class EntityDal : IEntityDal
     {
         EntityDalSettings _settings = null;
-        ObjectPool<DalPoolItem> _pool = null;
+        internal ObjectPool<DalPoolItem> _pool = null;
 
         #region Properties
         /// <summary>
@@ -41,27 +42,22 @@ namespace TWCore.Data
                 return _settings;
             }
         }
-        /// <summary>
-        /// Data Access Pool Item
-        /// </summary>
-        public DalPoolItem Data
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _pool.New();
-        }
         #endregion
 
         public EntityDal()
         {
             _pool = new ObjectPool<DalPoolItem>(pool =>
             {
-                return new DalPoolItem(OnGetDataAccess(Settings))
+                return new DalPoolItem(this, OnGetDataAccess(Settings))
                 {
-                    Pool = pool,
                     Recycle = true
                 };
-            });
+            }, item =>  item.disposedValue = false);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DalPoolItem GetDataAccess() 
+            => _pool.New();
 
         #region Abstract Methods
         /// <summary>
@@ -86,10 +82,9 @@ namespace TWCore.Data
             {
                 if (_pool != null)
                 {
-                    foreach(var pItem in _pool.GetCurrentObjects())
+                    foreach (var pItem in _pool.GetCurrentObjects())
                     {
                         pItem.Recycle = false;
-                        pItem.Pool = null;
                         pItem.Dispose();
                     }
                     _pool.Clear();

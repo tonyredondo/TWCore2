@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\src\TWCore.Cache.Server\TWCore.Cache.Server.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Cache\TWCore.Cache.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj" />

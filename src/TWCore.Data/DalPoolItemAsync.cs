@@ -27,16 +27,17 @@ namespace TWCore.Data
     public class DalPoolItemAsync : IDataAccessAsync, IDisposable
     {
         IDataAccessAsync _dataAccess;
+        EntityDalAsync _entityDal;
         internal bool Recycle { get; set; } = true;
-        internal ObjectPool<DalPoolItemAsync> Pool { get; set; }
 
         /// <summary>
         /// Dal Pool item
         /// </summary>
         /// <param name="dataAccess">DataAccess instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DalPoolItemAsync(IDataAccessAsync dataAccess)
+        public DalPoolItemAsync(EntityDalAsync entityDal, IDataAccessAsync dataAccess)
         {
+            _entityDal = entityDal;
             _dataAccess = dataAccess;
             _dataAccess.OnError += DataAccess_OnError;
         }
@@ -89,13 +90,13 @@ namespace TWCore.Data
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // Para detectar llamadas redundantes
+        internal bool disposedValue = false; // Para detectar llamadas redundantes
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
-                if (Recycle && Pool != null)
-                    Pool.Store(this);
+                if (Recycle)
+                    _entityDal?._pool?.Store(this);
                 disposedValue = true;
             }
         }

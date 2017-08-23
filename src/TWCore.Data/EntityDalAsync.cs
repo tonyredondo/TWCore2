@@ -25,7 +25,7 @@ namespace TWCore.Data
     public abstract class EntityDalAsync : IEntityDalAsync
     {
         EntityDalSettings _settings = null;
-        ObjectPool<DalPoolItemAsync> _pool = null;
+        internal ObjectPool<DalPoolItemAsync> _pool = null;
 
         #region Properties
         /// <summary>
@@ -41,27 +41,23 @@ namespace TWCore.Data
                 return _settings;
             }
         }
-        /// <summary>
-        /// Data Access
-        /// </summary>
-        public DalPoolItemAsync Data
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _pool.New();
-        }
         #endregion
 
         public EntityDalAsync()
         {
             _pool = new ObjectPool<DalPoolItemAsync>(pool =>
             {
-                return new DalPoolItemAsync(OnGetDataAccess(Settings))
+                return new DalPoolItemAsync(this, OnGetDataAccess(Settings))
                 {
-                    Pool = pool,
                     Recycle = true
                 };
-            });
+            }, item => item.disposedValue = false);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DalPoolItemAsync GetDataAccess()
+            => _pool.New();
+
 
         #region Abstract Methods
         /// <summary>
@@ -89,7 +85,6 @@ namespace TWCore.Data
                     foreach (var pItem in _pool.GetCurrentObjects())
                     {
                         pItem.Recycle = false;
-                        pItem.Pool = null;
                         pItem.Dispose();
                     }
                     _pool.Clear();

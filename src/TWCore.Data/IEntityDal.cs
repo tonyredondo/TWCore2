@@ -24,12 +24,12 @@ namespace TWCore.Data
     public interface IEntityDal : IDisposable
     {
         /// <summary>
-        /// Data Access Pool Item
-        /// </summary>
-        DalPoolItem Data { get; }
-        /// <summary>
         /// Dal Settings
         /// </summary>
         EntityDalSettings Settings { get; }
+        /// <summary>
+        /// Data Access Pool Item
+        /// </summary>
+        DalPoolItem GetDataAccess();
     }
 }

@@ -120,7 +120,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string Get(object obj) => Get((Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault()).Serialize(obj, obj.GetType()));
+        public virtual string Get(object obj) => Get((byte[])(Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault()).Serialize(obj, obj.GetType()));
         /// <summary>
         /// Gets the guid hash value from an object
         /// </summary>

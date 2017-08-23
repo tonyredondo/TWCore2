@@ -26,11 +26,10 @@ namespace TWCore.Data
         /// <summary>
         /// Data Access Async Pool Item
         /// </summary>
-        DalPoolItemAsync Data { get; }
+        DalPoolItemAsync GetDataAccess();
         /// <summary>
         /// Dal Settings
         /// </summary>
         EntityDalSettings Settings { get; }
     }
-
 }

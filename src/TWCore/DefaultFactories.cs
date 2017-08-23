@@ -38,7 +38,7 @@ namespace TWCore
     {
         const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
 
-        List<Assembly> assemblies = null;
+        Assembly[] assemblies = null;
         bool usedResolver = false;
 
         [DllImport("rpcrt4.dll", SetLastError = true)]
@@ -61,12 +61,9 @@ namespace TWCore
             {
                 if (assemblies == null)
                 {
-                    assemblies = new List<Assembly>();
-
-                    var dependencies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+                    assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
                     {
                         if (d.IsDynamic) return false;
-
                         var assemblyName = d.GetName();
                         return !assemblyName.Name.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) &&
                         !assemblyName.Name.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) &&
@@ -75,18 +72,8 @@ namespace TWCore
                         !assemblyName.Name.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) &&
                         !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
                     }).DistinctBy(i => i.Location).ToArray();
-                    foreach (var assembly in dependencies)
-                    {
-                        try
-                        {
-                            assemblies.Add(assembly);
-                        }
-                        catch
-                        {
-                        }
-                    }
                 }
-                return assemblies.ToArray();
+                return assemblies;
             };
             this.GetAllAssemblies = () =>
             {
@@ -111,9 +98,10 @@ namespace TWCore
                         }
                     }
                     AllAssembliesLoaded = true;
+                    assemblies = null;
+                    return this.GetAssemblies();
                 }
-                assemblies = null;
-                return this.GetAssemblies();
+                return assemblies;
             };
         }
 
@@ -186,7 +174,7 @@ namespace TWCore
                     {
                         foreach (var item in fSettings.AppSettings)
                         {
-							if (item.Key.IndexOf(">", StringComparison.Ordinal) > -1)
+                            if (item.Key.IndexOf(">", StringComparison.Ordinal) > -1)
                             {
                                 var keyPair = item.Key.SplitAndTrim(">");
                                 var k1 = keyPair[0].SplitAndTrim(".");

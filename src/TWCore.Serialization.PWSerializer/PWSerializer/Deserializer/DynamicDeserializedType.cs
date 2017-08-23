@@ -26,6 +26,9 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Deserializer
 {
+    /// <summary>
+    /// Dynamic Deserialized Type
+    /// </summary>
     public class DynamicDeserializedType : DynamicObject
     {
         #region Fields

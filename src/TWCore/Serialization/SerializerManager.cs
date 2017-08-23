@@ -58,9 +58,7 @@ namespace TWCore.Serialization
         {
             Core.RunOnInit(() =>
             {
-                if (Factory.GetAllAssemblies == null)
-                    Core.Log.Warning("The PlatformEngine is null.");
-                else
+                if (Factory.GetAllAssemblies != null)
                 {
                     var assemblies = Factory.GetAllAssemblies();
                     var allSerializers = new List<Type>();

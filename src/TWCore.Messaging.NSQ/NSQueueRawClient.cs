@@ -123,7 +123,7 @@ namespace TWCore.Messaging.NSQ
                 {
                     foreach (var queue in _clientQueues.SendQueues)
                     {
-                        _senders.Add((queue, new ObjectPool<Producer>(() =>
+                        _senders.Add((queue, new ObjectPool<Producer>(pool =>
                         {
                             Core.Log.LibVerbose("New Producer from QueueClient");
                             return new Producer(queue.Route);

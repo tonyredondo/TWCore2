@@ -190,7 +190,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!UseSingleResponseQueue)
             {
                 replyTo = recvQueue.Name + "_" + correlationId;
-                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(() => new RabbitMQueue(_receiver)));
+                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
                 cReceiver.EnsureConnection();
                 cReceiver.Channel.QueueDeclare(replyTo, false, false, true, null);
@@ -240,7 +240,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!UseSingleResponseQueue)
             {
                 var _recName = _receiver.Name + "_" + correlationId;
-                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(()=> new RabbitMQueue(_receiver)));
+                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
                 cReceiver.EnsureConnection();
                 cReceiver.Channel.QueueDeclare(_recName, false, false, true, null);

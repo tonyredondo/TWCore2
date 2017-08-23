@@ -39,14 +39,13 @@ namespace TWCore.Injector
     /// </summary>
     public class InjectorEngine : IDisposable
     {
-        readonly ConcurrentDictionary<(Type, string), Func<object>> RegisteredDelegates = new ConcurrentDictionary<(Type, string), Func<object>>();
+        readonly ConcurrentDictionary<(Type, string), RegisteredValues> RegisteredDelegates = new ConcurrentDictionary<(Type, string), RegisteredValues>();
         readonly ConcurrentDictionary<Instantiable, ActivatorItem> InstantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
-        readonly ConcurrentDictionary<Instantiable, object> SingletonObjects = new ConcurrentDictionary<Instantiable, object>();
         static readonly string[] EmptyStringArray = new string[0];
         InjectorSettings settings = null;
         bool attributesRegistered = false;
         bool useOnlyLoadedAssemblies = true;
-        
+
         #region Events
         /// <summary>
         /// Event occurs when a new instance is requested for a non instantiable type
@@ -139,8 +138,17 @@ namespace TWCore.Injector
             var tmpObj = OnTypeInstanceResolve?.Invoke(type, name);
             if (tmpObj != null)
                 return tmpObj;
-            if (RegisteredDelegates.TryGetValue((type, name), out var _delegate))
-                return _delegate();
+            if (RegisteredDelegates.TryGetValue((type, name), out var regValue))
+            {
+                if (!regValue.Singleton)
+                    return regValue.Delegate();
+                else
+                {
+                    if (regValue.SingletonValue == null)
+                        regValue.SingletonValue = regValue.Delegate();
+                    return regValue.SingletonValue;
+                }
+            }
             var typeInfo = type.GetTypeInfo();
             if (typeInfo.IsInterface)
                 return CreateInterfaceInstance(type.AssemblyQualifiedName, name);
@@ -189,7 +197,6 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T[] GetAllInstances<T>()
             => GetNames<T>().Select(n => New<T>(n)).ToArray();
-
         /// <summary>
         /// Get all instances of a type
         /// </summary>
@@ -220,12 +227,34 @@ namespace TWCore.Injector
         /// <summary>
         /// Register a instantiable type to a non instantiable type
         /// </summary>
+        /// <typeparam name="NT">Non instantiable type</typeparam>
+        /// <typeparam name="IT">Instantiable type</typeparam>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Register<NT, IT>(bool singleton, string name, params object[] args)
+            => Register(typeof(NT), typeof(IT), singleton, name, args);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
         /// <param name="noninstantiableType">Non instantiable type</param>
         /// <param name="instantiableType">Instantiable type</param>
         /// <param name="name">Instance name, leave null for instantiable type name</param>
         /// <param name="args">Arguments to register on the constructor</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(Type noninstantiableType, Type instantiableType, string name, params object[] args)
+            => Register(noninstantiableType, instantiableType, false, name, args);
+        /// <summary>
+        /// Register a instantiable type to a non instantiable type
+        /// </summary>
+        /// <param name="noninstantiableType">Non instantiable type</param>
+        /// <param name="instantiableType">Instantiable type</param>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
+        /// <param name="name">Instance name, leave null for instantiable type name</param>
+        /// <param name="args">Arguments to register on the constructor</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
         {
             var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
@@ -257,7 +286,8 @@ namespace TWCore.Injector
                         var inst = new Instantiable
                         {
                             Type = instantiableType.AssemblyQualifiedName,
-                            Name = name ?? instantiableType.Name
+                            Name = name ?? instantiableType.Name,
+                            Singleton = singleton
                         };
                         if (args?.Any() == true)
                         {
@@ -289,7 +319,7 @@ namespace TWCore.Injector
                 }
                 else if (!def.ClassDefinitions.Contains(name))
                 {
-                    var inst = new Instantiable { Type = instantiableType.AssemblyQualifiedName, Name = name ?? instantiableType.Name };
+                    var inst = new Instantiable { Type = instantiableType.AssemblyQualifiedName, Name = name ?? instantiableType.Name, Singleton = singleton };
                     if (args?.Any() == true)
                     {
                         inst.Parameters = new NameCollection<Parameter>();
@@ -356,12 +386,17 @@ namespace TWCore.Injector
         /// <param name="noninstantiableType">Non instantiable type</param>
         /// <param name="createInstanceDelegate">Create instance delegate</param>
         /// <param name="name">Instance name</param>
+        /// <param name="singleton">Indicates that this instantiable type is a singleton</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null)
+        public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null, bool singleton = false)
         {
             var key = (noninstantiableType, name);
             RegisteredDelegates.TryRemove(key, out var _old);
-            RegisteredDelegates.TryAdd(key, createInstanceDelegate);
+            RegisteredDelegates.TryAdd(key, new RegisteredValues
+            {
+                Delegate = createInstanceDelegate,
+                Singleton = singleton
+            });
         }
         #endregion
 
@@ -378,8 +413,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton)
-                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
+            if (instanceDefinition.Singleton && InstantiableCache.TryGetValue(instanceDefinition, out var activator))
+                return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -394,8 +429,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton)
-                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
+            if (instanceDefinition.Singleton && InstantiableCache.TryGetValue(instanceDefinition, out var activator))
+                return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -410,8 +445,8 @@ namespace TWCore.Injector
                 else
                     throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton)
-                return SingletonObjects.GetOrAdd(instanceDefinition, def => CreateInstance(def));
+            if (instanceDefinition.Singleton && InstantiableCache.TryGetValue(instanceDefinition, out var activator))
+                return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -431,7 +466,7 @@ namespace TWCore.Injector
                         {
                             foreach (InjectionAttribute attr in attributes)
                                 if (attr != null)
-                                    Register(attr.NonInstantiableType, attr.InstantiableType, attr.Name);
+                                    Register(attr.NonInstantiableType, attr.InstantiableType, attr.Singleton, attr.Name);
                         }
                     }
                     catch (Exception ex)
@@ -508,6 +543,8 @@ namespace TWCore.Injector
                         }
                     }
                 }
+                if (instanceDefinition.Singleton)
+                    activatorItem.SingletonValue = response;
             }
             return response;
         }
@@ -543,8 +580,9 @@ namespace TWCore.Injector
         #region Nested Class
         class ActivatorItem
         {
-            public Type Type { get; set; }
-            public object[] Arguments { get; set; }
+            public Type Type;
+            public object[] Arguments;
+            public object SingletonValue;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public object CreateInstance()
@@ -554,6 +592,12 @@ namespace TWCore.Injector
                 else
                     return Activator.CreateInstance(Type);
             }
+        }
+        class RegisteredValues
+        {
+            public bool Singleton;
+            public object SingletonValue;
+            public Func<object> Delegate;
         }
         #endregion
 

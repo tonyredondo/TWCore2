@@ -14,14 +14,23 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+
 namespace TWCore.Data
 {
     /// <summary>
     /// Entity Dal async interface
     /// </summary>
-    public interface IEntityDalAsync
+    public interface IEntityDalAsync : IDisposable
     {
-        IDataAccessAsync Data { get; }
+        /// <summary>
+        /// Data Access Async Pool Item
+        /// </summary>
+        DalPoolItemAsync Data { get; }
+        /// <summary>
+        /// Dal Settings
+        /// </summary>
         EntityDalSettings Settings { get; }
     }
+
 }

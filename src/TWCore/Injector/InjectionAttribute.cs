@@ -34,6 +34,10 @@ namespace TWCore.Injector
         /// </summary>
         public Type InstantiableType { get; private set; }
         /// <summary>
+        /// Indicates the instantiable object should be a singleton
+        /// </summary>
+        public bool Singleton { get; private set; }
+        /// <summary>
         /// Instance name
         /// </summary>
         public string Name { get; private set; }
@@ -45,11 +49,12 @@ namespace TWCore.Injector
         /// <param name="instantiableType">Instantiable object type</param>
         /// <param name="name">Instance name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public InjectionAttribute(Type noninstantiableType, Type instantiableType, string name = null)
+        public InjectionAttribute(Type noninstantiableType, Type instantiableType, string name = null, bool singleton = false)
         {
             NonInstantiableType = noninstantiableType;
             InstantiableType = instantiableType;
             Name = name ?? InstantiableType.Name;
+            Singleton = singleton;
         }
     }
 }

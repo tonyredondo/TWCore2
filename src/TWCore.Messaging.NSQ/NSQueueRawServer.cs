@@ -76,7 +76,7 @@ namespace TWCore.Messaging.NSQ
             {
                 try
                 {
-                    var nsqProducerPool = rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(() =>
+                    var nsqProducerPool = rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(pool =>
                     {
                         Core.Log.LibVerbose("New Producer from RawQueueServer");
                         return new Producer(q);

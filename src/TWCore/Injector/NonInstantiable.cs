@@ -37,11 +37,6 @@ namespace TWCore.Injector
         [XmlAttribute]
         public string DefaultClassName { get; set; }
         /// <summary>
-        /// Defines if the class should be loaded as a singleton
-        /// </summary>
-        [XmlAttribute]
-        public bool Singleton { get; set; }
-        /// <summary>
         /// Implementations of the non instantiable object
         /// </summary>
         [XmlElement("Class")]

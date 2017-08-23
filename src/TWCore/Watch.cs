@@ -197,7 +197,7 @@ namespace TWCore
         {
             static long _frequency = Stopwatch.Frequency;
             static int _watcherCount;
-            static ObjectPool<WItem> itemPools = new ObjectPool<WItem>(() => new WItem(), i => i.Reset());
+            static ObjectPool<WItem> itemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
             static Worker<LogStatItem> logStatsWorker = new Worker<LogStatItem>(WorkerMethod);
 
             [IgnoreStackFrameLog]

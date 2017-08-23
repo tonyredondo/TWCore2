@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
@@ -24,7 +25,7 @@ namespace TWCore.Data
     public abstract class EntityDal : IEntityDal
     {
         EntityDalSettings _settings = null;
-        IDataAccess _data = null;
+        ObjectPool<DalPoolItem> _pool = null;
 
         #region Properties
         /// <summary>
@@ -41,19 +42,26 @@ namespace TWCore.Data
             }
         }
         /// <summary>
-        /// Data Access
+        /// Data Access Pool Item
         /// </summary>
-        public IDataAccess Data
+        public DalPoolItem Data
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                if (_data == null)
-                    _data = OnGetDataAccess(Settings);
-                return _data;
-            }
+            get => _pool.New();
         }
         #endregion
+
+        public EntityDal()
+        {
+            _pool = new ObjectPool<DalPoolItem>(pool =>
+            {
+                return new DalPoolItem(OnGetDataAccess(Settings))
+                {
+                    Pool = pool,
+                    Recycle = true
+                };
+            });
+        }
 
         #region Abstract Methods
         /// <summary>
@@ -67,6 +75,40 @@ namespace TWCore.Data
         /// <param name="settings">EntityDal settings</param>
         /// <returns></returns>
         protected abstract IDataAccess OnGetDataAccess(EntityDalSettings settings);
+        #endregion
+
+        #region IDisposable Support
+        private bool disposedValue = false; // Para detectar llamadas redundantes
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (_pool != null)
+                {
+                    foreach(var pItem in _pool.GetCurrentObjects())
+                    {
+                        pItem.Recycle = false;
+                        pItem.Pool = null;
+                        pItem.Dispose();
+                    }
+                    _pool.Clear();
+                    _pool = null;
+                }
+                disposedValue = true;
+            }
+        }
+
+        ~EntityDal()
+        {
+            Dispose(false);
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
         #endregion
     }
 }

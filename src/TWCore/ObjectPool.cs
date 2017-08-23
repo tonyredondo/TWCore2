@@ -31,7 +31,7 @@ namespace TWCore
     {
         readonly object _padLock = new object();
 		readonly Stack<T> objectStack;
-		Func<T> createFunc;
+		Func<ObjectPool<T>, T> createFunc;
         Action<T> resetAction;
         PoolResetMode resetMode;
         int preallocationThreshold;
@@ -51,7 +51,7 @@ namespace TWCore
         /// <param name="resetMode">Pool reset mode</param>
         /// <param name="preallocationThreshold">Number of items limit to create new allocations in another Task. Use 0 to disable, if is greater than the initial buffer then the initial buffer is set twice at this value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
         {
             objectStack = new Stack<T>(12);
             this.createFunc = createFunc;
@@ -72,7 +72,7 @@ namespace TWCore
         {
             for (var i = 0; i < number; i++)
             {
-                var value = createFunc();
+                var value = createFunc(this);
                 lock (_padLock)
                     objectStack.Push(value);
             }
@@ -105,7 +105,7 @@ namespace TWCore
                 }
             }
             if (cNew)
-                return createFunc();
+                return createFunc(this);
             if (resetMode == PoolResetMode.BeforeUse && resetAction != null)
                 resetAction(value);
             return value;

@@ -14,14 +14,22 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+
 namespace TWCore.Data
 {
     /// <summary>
     /// Entity Dal interface
     /// </summary>
-    public interface IEntityDal
+    public interface IEntityDal : IDisposable
     {
-        IDataAccess Data { get; }
+        /// <summary>
+        /// Data Access Pool Item
+        /// </summary>
+        DalPoolItem Data { get; }
+        /// <summary>
+        /// Dal Settings
+        /// </summary>
         EntityDalSettings Settings { get; }
     }
 }

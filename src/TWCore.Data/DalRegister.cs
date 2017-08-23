@@ -53,7 +53,7 @@ namespace TWCore.Data
                     try
                     {
                         res++;
-                        Core.Injector.Register(iface, t.AsType(), t.Name);
+                        Core.Injector.Register(iface, t.AsType(), true, t.Name);
                     }
                     catch (Exception ex)
                     {

@@ -130,7 +130,7 @@ namespace TWCore.Services.Messaging
             Core.Log.LibDebug("Business Initial Count = {0}", BusinessInitialCount);
             Core.Log.LibDebug("Business Preallocation Threshold = {0}", BusinessPreallocationThreshold);
             Dispose();
-            BusinessPool = new ObjectPool<IBusiness>(() =>
+            BusinessPool = new ObjectPool<IBusiness>(pool =>
             {
                 var item = creationFunction();
                 if (item == null)

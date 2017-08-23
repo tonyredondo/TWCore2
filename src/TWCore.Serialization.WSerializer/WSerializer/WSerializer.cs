@@ -37,7 +37,7 @@ namespace TWCore.Serialization.WSerializer
     public class WSerializer
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
-        private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(() =>
+        private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(pool =>
                 Tuple.Create(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
                     i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
                     1,
@@ -718,7 +718,7 @@ namespace TWCore.Serialization.WSerializer
         #endregion
 
         #region Deserializer
-        private static readonly ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>> DCachePool = new ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>>(() =>
+        private static readonly ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>> DCachePool = new ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>>(pool =>
                 Tuple.Create(new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort, TypeDefinitionComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
             i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
             1,

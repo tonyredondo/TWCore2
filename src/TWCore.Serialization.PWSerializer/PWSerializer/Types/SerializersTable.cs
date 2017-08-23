@@ -25,11 +25,11 @@ namespace TWCore.Serialization.PWSerializer.Types
     public class SerializersTable
     {
 		#region Static Pool
-		private static readonly ObjectPool<SerializersTable> CachedUShortTablePool = new ObjectPool<SerializersTable>(() => new SerializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached2048TablePool = new ObjectPool<SerializersTable>(() => new SerializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached1024TablePool = new ObjectPool<SerializersTable>(() => new SerializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached512TablePool = new ObjectPool<SerializersTable>(() => new SerializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> NoCachedTablePool = new ObjectPool<SerializersTable>(() => new SerializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
+		private static readonly ObjectPool<SerializersTable> CachedUShortTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<SerializersTable> Cached2048TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<SerializersTable> Cached1024TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<SerializersTable> Cached512TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<SerializersTable> NoCachedTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
 		
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializersTable GetTable(SerializerMode mode) 
@@ -202,11 +202,11 @@ namespace TWCore.Serialization.PWSerializer.Types
     public class DeserializersTable
     {
         #region Static Pool
-        private static readonly ObjectPool<DeserializersTable> CachedUShortTablePool = new ObjectPool<DeserializersTable>(() => new DeserializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached2048TablePool = new ObjectPool<DeserializersTable>(() => new DeserializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached1024TablePool = new ObjectPool<DeserializersTable>(() => new DeserializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached512TablePool = new ObjectPool<DeserializersTable>(() => new DeserializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> NoCachedTablePool = new ObjectPool<DeserializersTable>(() => new DeserializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> CachedUShortTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> Cached2048TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> Cached1024TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> Cached512TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> NoCachedTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DeserializersTable GetTable(SerializerMode mode)

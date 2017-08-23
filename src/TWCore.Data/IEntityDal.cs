@@ -21,7 +21,7 @@ namespace TWCore.Data
     /// <summary>
     /// Entity Dal interface
     /// </summary>
-    public interface IEntityDal : IDisposable
+    public interface IEntityDal
     {
         /// <summary>
         /// Dal Settings
@@ -30,6 +30,6 @@ namespace TWCore.Data
         /// <summary>
         /// Data Access Pool Item
         /// </summary>
-        DalPoolItem GetDataAccess();
+		DalPoolItem Data { get; }
     }
 }

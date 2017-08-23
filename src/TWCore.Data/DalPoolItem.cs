@@ -24,104 +24,172 @@ namespace TWCore.Data
     /// <summary>
     /// Dal Pool Item
     /// </summary>
-    public class DalPoolItem : IDataAccess, IDisposable
+    public class DalPoolItem : IDataAccess
     {
-        IDataAccess _dataAccess;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal ObjectPool<DalPoolItem> Pool;
-
-        public bool Recycle { get; internal set; } = true;
+        internal ObjectPool<IDataAccess> Pool;
 
         /// <summary>
         /// Dal Pool item
         /// </summary>
-        /// <param name="dataAccess">DataAccess instance</param>
+		/// <param name="pool">ObjectPool instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DalPoolItem(IDataAccess dataAccess)
+        public DalPoolItem(ObjectPool<IDataAccess> pool)
         {
-            _dataAccess = dataAccess;
-            _dataAccess.OnError += DataAccess_OnError;
+			Pool = pool;
         }
-        
-        private void DataAccess_OnError(object sender, EventArgs<Exception> e)
+
+		#region Private Methods
+		private void DataAccess_OnError(object sender, EventArgs<Exception> e)
             => OnError?.Invoke(sender, e);
 
-        #region IDataAccess
-        public event EventHandler<EventArgs<Exception>> OnError;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private IDataAccess GetDataAccess()
+		{
+			var dAccess = Pool.New();
+			dAccess.OnError += DataAccess_OnError;
+			return dAccess;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void StoreDataAccess(IDataAccess daccess)
+		{
+			daccess.OnError -= DataAccess_OnError;
+			Pool.Store(daccess);
+		}
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ExecuteNonQuery(string nameOrQuery, IDictionary<string, object> parameters = null)
-            => _dataAccess.ExecuteNonQuery(nameOrQuery, parameters);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ExecuteNonQuery(string nameOrQuery, object parameters)
-            => _dataAccess.ExecuteNonQuery(nameOrQuery, parameters);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElement(nameOrQuery, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElement(nameOrQuery, parameters, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElement(nameOrQuery, parameters, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElement(nameOrQuery, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElements(nameOrQuery, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElements(nameOrQuery, parameters, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElements(nameOrQuery, parameters, fillMethod);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElements(nameOrQuery, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
-            => _dataAccess.SelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectScalar<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
-            => _dataAccess.SelectScalar<T>(nameOrQuery, parameters);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T SelectScalar<T>(string nameOrQuery, object parameters)
-            => _dataAccess.SelectScalar<T>(nameOrQuery, parameters);
+		#region IDataAccess
+		public event EventHandler<EventArgs<Exception>> OnError;
 
-        #endregion
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int ExecuteNonQuery(string nameOrQuery, IDictionary<string, object> parameters = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.ExecuteNonQuery(nameOrQuery, parameters);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public int ExecuteNonQuery(string nameOrQuery, object parameters)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.ExecuteNonQuery(nameOrQuery, parameters);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = dAccess.SelectElement(nameOrQuery, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElement(nameOrQuery, parameters, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElement(nameOrQuery, parameters, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElement(nameOrQuery, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, parameters, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, parameters, fillMethod);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectScalar<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectScalar<T>(nameOrQuery, parameters);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public T SelectScalar<T>(string nameOrQuery, object parameters)
+		{
+			var dAccess = GetDataAccess();
+            var res = dAccess.SelectScalar<T>(nameOrQuery, parameters);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        #region IDisposable Support
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal bool disposedValue = false; // Para detectar llamadas redundantes
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (Recycle)
-                    Pool?.Store(this);
-                disposedValue = true;
-            }
-        }
-        ~DalPoolItem()
-        {
-            // No cambie este código. Coloque el código de limpieza en el anterior Dispose(colocación de bool).
-            Dispose(false);
-        }
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
         #endregion
     }
 }

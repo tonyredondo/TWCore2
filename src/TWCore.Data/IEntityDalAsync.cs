@@ -21,15 +21,15 @@ namespace TWCore.Data
     /// <summary>
     /// Entity Dal async interface
     /// </summary>
-    public interface IEntityDalAsync : IDisposable
+    public interface IEntityDalAsync
     {
-        /// <summary>
-        /// Data Access Async Pool Item
-        /// </summary>
-        DalPoolItemAsync GetDataAccess();
         /// <summary>
         /// Dal Settings
         /// </summary>
         EntityDalSettings Settings { get; }
-    }
+		/// <summary>
+		/// Data Access Pool Item
+		/// </summary>
+		DalPoolItemAsync Data { get; }
+	}
 }

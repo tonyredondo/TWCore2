@@ -27,11 +27,11 @@ namespace TWCore.Data
     /// </summary>
     public abstract class EntityDal : IEntityDal
     {
-        static ConcurrentDictionary<string, ObjectPool<DalPoolItem>> Pools = new ConcurrentDictionary<string, ObjectPool<DalPoolItem>>();
+        static ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         EntityDalSettings _settings = null;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        ObjectPool<DalPoolItem> _pool = null;
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		DalPoolItem _poolItem = null;
 
         #region Properties
         /// <summary>
@@ -47,24 +47,18 @@ namespace TWCore.Data
                 return _settings;
             }
         }
+		/// <summary>
+		/// Data Access Pool Item
+		/// </summary>
+		public DalPoolItem Data => _poolItem;
         #endregion
 
-        public EntityDal()
+        protected EntityDal()
         {
-            var poolKey = Settings.GetHashSHA1();
-            _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<DalPoolItem>(pool =>
-             {
-                 return new DalPoolItem(OnGetDataAccess(Settings))
-                 {
-                     Recycle = true,
-                     Pool = pool
-                 };
-             }, item => item.disposedValue = false));
+			var poolKey = Settings.GetHashSHA1();
+            var _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pool => OnGetDataAccess(Settings)));
+			_poolItem = new DalPoolItem(_pool);
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DalPoolItem GetDataAccess() 
-            => _pool.New();
 
         #region Abstract Methods
         /// <summary>
@@ -78,40 +72,6 @@ namespace TWCore.Data
         /// <param name="settings">EntityDal settings</param>
         /// <returns></returns>
         protected abstract IDataAccess OnGetDataAccess(EntityDalSettings settings);
-        #endregion
-
-        #region IDisposable Support
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool disposedValue = false; // Para detectar llamadas redundantes
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (_pool != null)
-                {
-                    //foreach (var pItem in _pool.GetCurrentObjects())
-                    //{
-                    //    pItem.Recycle = false;
-                    //    pItem.Dispose();
-                    //}
-                    //_pool.Clear();
-                    _pool = null;
-                }
-                disposedValue = true;
-            }
-        }
-
-        ~EntityDal()
-        {
-            Dispose(false);
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
         #endregion
     }
 }

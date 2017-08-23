@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
@@ -24,92 +25,133 @@ namespace TWCore.Data
     /// <summary>
     /// Dal Pool Item
     /// </summary>
-    public class DalPoolItemAsync : IDataAccessAsync, IDisposable
+    public class DalPoolItemAsync : IDataAccessAsync
     {
-        IDataAccessAsync _dataAccess;
-        EntityDalAsync _entityDal;
-        internal bool Recycle { get; set; } = true;
+		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
+		internal ObjectPool<IDataAccessAsync> Pool;
 
-        /// <summary>
-        /// Dal Pool item
-        /// </summary>
-        /// <param name="dataAccess">DataAccess instance</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DalPoolItemAsync(EntityDalAsync entityDal, IDataAccessAsync dataAccess)
+		/// <summary>
+		/// Dal Pool item
+		/// </summary>
+		/// <param name="pool">ObjectPool instance</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DalPoolItemAsync(ObjectPool<IDataAccessAsync> pool)
         {
-            _entityDal = entityDal;
-            _dataAccess = dataAccess;
-            _dataAccess.OnError += DataAccess_OnError;
+			Pool = pool;
         }
 
-        private void DataAccess_OnError(object sender, EventArgs<Exception> e)
-            => OnError?.Invoke(sender, e);
+		#region Private Methods
+		private void DataAccess_OnError(object sender, EventArgs<Exception> e)
+			=> OnError?.Invoke(sender, e);
 
-        #region IDataAccess
-        public event EventHandler<EventArgs<Exception>> OnError;
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private IDataAccessAsync GetDataAccess()
+		{
+			var dAccess = Pool.New();
+			dAccess.OnError += DataAccess_OnError;
+			return dAccess;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void StoreDataAccess(IDataAccessAsync daccess)
+		{
+			daccess.OnError -= DataAccess_OnError;
+			Pool.Store(daccess);
+		}
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementsAsync(nameOrQuery, fillMethod);
+		#region IDataAccess
+		public event EventHandler<EventArgs<Exception>> OnError;
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementsAsync(nameOrQuery, parameters, fillMethod);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementsAsync(nameOrQuery, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementsAsync(nameOrQuery, parameters, fillMethod);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> SelectElementAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementAsync(nameOrQuery, fillMethod);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> SelectElementAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementAsync(nameOrQuery, parameters, fillMethod);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> SelectElementAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementAsync(nameOrQuery, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> SelectElementAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
-            => _dataAccess.SelectElementAsync(nameOrQuery, parameters, fillMethod);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> SelectElementAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<int> ExecuteNonQueryAsync(string nameOrQuery, IDictionary<string, object> parameters = null)
-            => _dataAccess.ExecuteNonQueryAsync(nameOrQuery, parameters);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> SelectElementAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<int> ExecuteNonQueryAsync(string nameOrQuery, object parameters)
-            => _dataAccess.ExecuteNonQueryAsync(nameOrQuery, parameters);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<int> ExecuteNonQueryAsync(string nameOrQuery, IDictionary<string, object> parameters = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.ExecuteNonQueryAsync(nameOrQuery, parameters).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> SelectScalarAsync<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
-            => _dataAccess.SelectScalarAsync<T>(nameOrQuery, parameters);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<int> ExecuteNonQueryAsync(string nameOrQuery, object parameters)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.ExecuteNonQueryAsync(nameOrQuery, parameters).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<T> SelectScalarAsync<T>(string nameOrQuery, object parameters)
-            => _dataAccess.SelectScalarAsync<T>(nameOrQuery, parameters);
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> SelectScalarAsync<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectScalarAsync<T>(nameOrQuery, parameters).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<T> SelectScalarAsync<T>(string nameOrQuery, object parameters)
+		{
+			var dAccess = GetDataAccess();
+			var res = await dAccess.SelectScalarAsync<T>(nameOrQuery, parameters).ConfigureAwait(false);
+			StoreDataAccess(dAccess);
+			return res;
+		}
         #endregion
 
-        #region IDisposable Support
-        internal bool disposedValue = false; // Para detectar llamadas redundantes
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!disposedValue)
-            {
-                if (Recycle)
-                    _entityDal?._pool?.Store(this);
-                disposedValue = true;
-            }
-        }
-        ~DalPoolItemAsync()
-        {
-            // No cambie este código. Coloque el código de limpieza en el anterior Dispose(colocación de bool).
-            Dispose(false);
-        }
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-        #endregion
     }
 }

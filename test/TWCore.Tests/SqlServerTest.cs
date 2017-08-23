@@ -119,56 +119,31 @@ namespace TWCore.Tests
     public class DalCity : MiddleDatabaseDal, IDalCity
     {
         public IEnumerable<EntCity> GetAll()
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElements<EntCity>("sp_GEO_CITIES_GetAll");
-        }
+			=> Data.SelectElements<EntCity>("sp_GEO_CITIES_GetAll");
 
         public IEnumerable<EntCity> GetAll(string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElements<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo });
-        }
-        public EntCity GetByCityId(Guid cityId)
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElement<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId });
-        }
+        	=> Data.SelectElements<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo });
+
+		public EntCity GetByCityId(Guid cityId)
+			=> Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId });
 
         public EntCity GetByCityId(Guid cityId, string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElement<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo });
-        }
+        	=> Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo });
 
         public EntCity GetByIata(string iata)
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
-        }
+	        => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
 
         public EntCity GetByIata(string iata, string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo });
-        }
+        	=> Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo });
+
         public int Delete(Guid cityId)
-        {
-            using (var data = GetDataAccess())
-                return data.ExecuteNonQuery("sp_GEO_CITIES_Del", new { CityId = cityId });
-        }
+        	=> Data.ExecuteNonQuery("sp_GEO_CITIES_Del", new { CityId = cityId });
 
         public int Insert(EntCity entity)
-        {
-            using (var data = GetDataAccess())
-                return data.ExecuteNonQuery("sp_GEO_CITIES_Ins", entity);
-        }
+        	=> Data.ExecuteNonQuery("sp_GEO_CITIES_Ins", entity);
 
         public int Update(EntCity entity)
-        {
-            using (var data = GetDataAccess())
-                return data.ExecuteNonQuery("sp_GEO_CITIES_Upd", entity);
-        }
+        	=> Data.ExecuteNonQuery("sp_GEO_CITIES_Upd", entity);
     }
 
     public interface IDalCityAsync
@@ -185,57 +160,32 @@ namespace TWCore.Tests
     }
     public class DalCityAsync : MiddleDatabaseDalAsync, IDalCityAsync
     {
-        public async Task<IEnumerable<EntCity>> GetAll()
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAll").ConfigureAwait(false);
-        }
+		public Task<IEnumerable<EntCity>> GetAll()
+			=> Data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAll");
 
-        public async Task<IEnumerable<EntCity>> GetAll(string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo }).ConfigureAwait(false);
-        }
-        public async Task<EntCity> GetByCityId(Guid cityId)
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId }).ConfigureAwait(false);
-        }
+		public Task<IEnumerable<EntCity>> GetAll(string cultureInfo)
+			=> Data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo });
 
-        public async Task<EntCity> GetByCityId(Guid cityId, string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo }).ConfigureAwait(false);
-        }
+		public Task<EntCity> GetByCityId(Guid cityId)
+			=> Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId });
 
-        public async Task<EntCity> GetByIata(string iata)
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata }).ConfigureAwait(false);
-        }
+		public Task<EntCity> GetByCityId(Guid cityId, string cultureInfo)
+			=> Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo });
 
-        public async Task<EntCity> GetByIata(string iata, string cultureInfo)
-        {
-            using (var data = GetDataAccess())
-                return await data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }).ConfigureAwait(false);
-        }
-        public async Task<int> Delete(Guid cityId)
-        {
-            using (var data = GetDataAccess())
-                return await data.ExecuteNonQueryAsync("sp_GEO_CITIES_Del", new { CityId = cityId }).ConfigureAwait(false);
-        }
+		public Task<EntCity> GetByIata(string iata)
+			=> Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
 
-        public async Task<int> Insert(EntCity entity)
-        {
-            using (var data = GetDataAccess())
-                return await data.ExecuteNonQueryAsync("sp_GEO_CITIES_Ins", entity).ConfigureAwait(false);
-        }
+		public Task<EntCity> GetByIata(string iata, string cultureInfo)
+			=> Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo });
 
-        public async Task<int> Update(EntCity entity)
-        {
-            using (var data = GetDataAccess())
-                return await data.ExecuteNonQueryAsync("sp_GEO_CITIES_Upd", entity).ConfigureAwait(false);
-        }
+		public Task<int> Delete(Guid cityId)
+			=> Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Del", new { CityId = cityId });
+
+		public Task<int> Insert(EntCity entity)
+			=> Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Ins", entity);
+
+		public Task<int> Update(EntCity entity)
+			=> Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Upd", entity);
     }
 
 }

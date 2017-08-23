@@ -14,7 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Concurrent;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
 {
@@ -23,18 +25,60 @@ namespace TWCore.Data
     /// </summary>
     public static class DataAccessExtensions
     {
-        /// <summary>
-        /// Gets the Sql query from a embedded resource
-        /// </summary>
-        /// <param name="dAccess">Associated data access</param>
-        /// <param name="assembly">Assembly containing the SQL embedded resources</param>
-        /// <param name="resourceName">Resource name</param>
-        /// <returns>Sql query from the resources</returns>
-        public static string GetSqlResource(this IDataAccess dAccess, Assembly assembly, string resourceName)
-        {
-            return  assembly.GetResourceString(string.Format("Sql.{0}.sql", resourceName)) ??
-                assembly.GetResourceString(string.Format("sql.{0}.sql", resourceName)) ??
-                assembly.GetResourceString(string.Format("{0}.sql", resourceName));
-        }
+		static ConcurrentDictionary<(Assembly, string), string> _resourceCache = new ConcurrentDictionary<(Assembly, string), string>();
+
+		/// <summary>
+		/// Gets the Sql query from a embedded resource
+		/// </summary>
+		/// <param name="dAccess">Associated data access</param>
+		/// <param name="resourceName">Resource name</param>
+		/// <returns>Sql query from the resources</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetSqlResource(this IDataAccess dAccess, string resourceName)
+		{
+			var assembly = Assembly.GetCallingAssembly();
+			return _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+		}
+		/// <summary>
+		/// Gets the Sql query from a embedded resource
+		/// </summary>
+		/// <param name="dAccess">Associated data access</param>
+		/// <param name="assembly">Assembly containing the SQL embedded resources</param>
+		/// <param name="resourceName">Resource name</param>
+		/// <returns>Sql query from the resources</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetSqlResource(this IDataAccess dAccess, Assembly assembly, string resourceName)
+			=> _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+		/// <summary>
+		/// Gets the Sql query from a embedded resource
+		/// </summary>
+		/// <param name="dAccess">Associated data access</param>
+		/// <param name="resourceName">Resource name</param>
+		/// <returns>Sql query from the resources</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetSqlResource(this IDataAccessAsync dAccess, string resourceName)
+		{
+			var assembly = Assembly.GetCallingAssembly();
+			return _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+		}
+		/// <summary>
+		/// Gets the Sql query from a embedded resource
+		/// </summary>
+		/// <param name="dAccess">Associated data access</param>
+		/// <param name="assembly">Assembly containing the SQL embedded resources</param>
+		/// <param name="resourceName">Resource name</param>
+		/// <returns>Sql query from the resources</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public static string GetSqlResource(this IDataAccessAsync dAccess, Assembly assembly, string resourceName)
+			=> _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static string GetStringResource(Assembly assembly, string resourceName)
+		{
+			return assembly.GetResourceString(string.Format("Sql.{0}.sql", resourceName)) ??
+				assembly.GetResourceString(string.Format("sql.{0}.sql", resourceName)) ??
+				assembly.GetResourceString(string.Format("{0}.sql", resourceName));
+		}
     }
 }

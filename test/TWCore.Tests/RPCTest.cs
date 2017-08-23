@@ -20,7 +20,7 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting RPC TEST");
 
-            var serializer = new WBinarySerializer();
+			var serializer = new WBinarySerializer();
             var service = new MyService();
 
             Core.Log.InfoBasic("Setting RPC Server");
@@ -86,6 +86,7 @@ namespace TWCore.Tests
 
 
     #region RPC Server Test
+	[Serializable]
     public class SimplePerson
     {
         public Guid PersonId { get; set; }

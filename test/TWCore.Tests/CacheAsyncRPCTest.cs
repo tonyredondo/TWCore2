@@ -12,44 +12,37 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    public class CacheRPCTest : ContainerParameterServiceAsync
+	public class CacheAsyncRPCTest : ContainerParameterServiceAsync
     {
 		static ISerializer GlobalSerializer = new WBinarySerializer();
 
-        public CacheRPCTest() : base("cacherpcTest", "Cache Test") { }
+		public CacheAsyncRPCTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting CACHE TEST");
+            Core.Log.Warning("Starting CACHE Async TEST");
             info.ShouldEndExecution = false;
 
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);
 
-			using (var cachePool = new CacheClientPool { Serializer = GlobalSerializer })
+			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
 				var cacheClient = await CacheClientProxy.GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
-                cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
+				cachePool.Add("localhost:20051", (IStorageAsync)cacheClient, StorageItemMode.ReadAndWrite);
 
                 string[] keys;
                 for (var i = 0; i < 10; i++)
-                    keys = cachePool.GetKeys();
+					keys = await cachePool.GetKeysAsync().ConfigureAwait(false);
 
                 Console.ReadLine();
 
                 StorageItem value;
-                for (var i = 0; i < 100; i++)
+                for (var i = 0; i < 1000; i++)
                 {
                     string key = "test-" + i;
-                    value = cachePool.Get(key);
-                    cachePool.Set(key, "bla bla bla bla bla");
+					value = await cachePool.GetAsync(key).ConfigureAwait(false);
+					await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
                 }
-				Console.ReadLine();
-				for (var i = 0; i < 100; i++)
-				{
-					string key = "test-" + i;
-					value = cachePool.Get(key);
-					cachePool.Set(key, "bla bla bla bla bla");
-				}
             }
         }
 

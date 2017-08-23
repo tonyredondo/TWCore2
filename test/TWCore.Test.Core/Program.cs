@@ -4,7 +4,7 @@ namespace TWCore.Test.Core
 {
     class Program
     {
-        static unsafe void Main(string[] args)
+        static void Main(string[] args)
         {
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() => {

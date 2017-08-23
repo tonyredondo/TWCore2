@@ -87,14 +87,12 @@ namespace TWCore
                     }
                     else
                     {
-                        var lst = new List<Assembly>();
+                        var loaded = AppDomain.CurrentDomain.GetAssemblies();
                         foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
                         {
-                            try
-                            {
-                                lst.Add(Assembly.LoadFile(file));
-                            }
-                            catch { }
+                            var name = AssemblyName.GetAssemblyName(file);
+                            if (!loaded.Any(l => l.FullName == name.FullName))
+                                AppDomain.CurrentDomain.Load(name);
                         }
                     }
                     AllAssembliesLoaded = true;

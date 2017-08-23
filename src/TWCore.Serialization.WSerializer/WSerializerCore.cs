@@ -34,7 +34,7 @@ namespace TWCore.Serialization.WSerializer
     /// <summary>
     /// Wanhjör Serializer
     /// </summary>
-    public class WSerializer
+    public class WSerializerCore
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
         private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(pool =>
@@ -56,8 +56,8 @@ namespace TWCore.Serialization.WSerializer
         /// </summary>
         public SerializerMode Mode = SerializerMode.Cached2048;
 
-        public WSerializer() { }
-        public WSerializer(SerializerMode mode)
+        public WSerializerCore() { }
+        public WSerializerCore(SerializerMode mode)
         {
             Mode = mode;
         }

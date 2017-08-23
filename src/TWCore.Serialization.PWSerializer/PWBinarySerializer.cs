@@ -18,7 +18,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization
+namespace TWCore.Serialization.PWSerializer
 {
     /// <summary>
     /// PW Binary Serializer
@@ -27,8 +27,8 @@ namespace TWCore.Serialization
     {
         static string[] _extensions = new string[] { ".pwbin" };
         static string[] _mimeTypes = new string[] { SerializerMimeTypes.PWBinary };
-        static ReferencePool<PWSerializer.PWSerializer> _pool = ReferencePool<PWSerializer.PWSerializer>.Shared;
-        PWSerializer.SerializerMode _mode = PWSerializer.SerializerMode.Cached2048;
+        static ReferencePool<PWSerializerCore> _pool = ReferencePool<PWSerializerCore>.Shared;
+        SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
         /// <summary>
@@ -42,7 +42,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Serialization mode
         /// </summary>
-        public PWSerializer.SerializerMode SerializerMode
+        public SerializerMode SerializerMode
         {
             get => _mode;
             set => _mode = value;
@@ -82,94 +82,5 @@ namespace TWCore.Serialization
             };
             return nSerializer;
         }
-    }
-
-    /// <summary>
-    /// PW serializer extensions
-    /// </summary>
-    public static class PWBinarySerializerExtensions
-    {
-        /// <summary>
-        /// Serializer used by the extensions
-        /// </summary>
-        public static PWBinarySerializer Serializer { get; } = new PWBinarySerializer();
-
-        /// <summary>
-        /// Serialize object using PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="item">Object instance to serialize</param>
-        /// <returns>PWBinary serialized object</returns>
-        public static SubArray<byte> SerializeToPWBinary<T>(this T item) => Serializer.Serialize<T>(item);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">PWBinary serialized object</param>
-        /// <returns>Object instance</returns>
-        public static T DeserializeFromPWBinary<T>(this byte[] value) => Serializer.Deserialize<T>(value);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">PWBinary serialized object</param>
-        /// <returns>Object instance</returns>
-        public static T DeserializeFromPWBinary<T>(this SubArray<byte> value) => Serializer.Deserialize<T>(value);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">PWBinary serialized object</param>
-        /// <returns>Object instance</returns>
-        public static object DeserializeFromPWBinary(this byte[] value, Type type) => Serializer.Deserialize(value, type);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="value">PWBinary serialized object</param>
-        /// <returns>Object instance</returns>
-        public static object DeserializeFromPWBinary(this SubArray<byte> value, Type type) => Serializer.Deserialize(value, type);
-        /// <summary>
-        /// Serialize object using PWBinary and write it into the stream
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="item">Object instance to serialize</param>
-        /// <param name="stream">Destination stream</param>
-        public static void SerializeToPWBinary<T>(this T item, Stream stream) => Serializer.Serialize<T>(item, stream);
-        /// <summary>
-        /// Deserialize a stream content using PWBinary and returns an object instance
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="stream">Stream source with the serialized data</param>
-        /// <returns>Object instance</returns>
-        public static T DeserializeFromPWBinary<T>(this Stream stream) => Serializer.Deserialize<T>(stream);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="stream">Stream source with the serialized data</param>
-        /// <returns>Object instance</returns>
-        public static object DeserializeFromPWBinary(this Stream stream, Type type) => Serializer.Deserialize(stream, type);
-        /// <summary>
-        /// Serialize object using PWBinary and write it into a file
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="item">Object instance to serialize</param>
-        /// <param name="filePath">Destination File path</param>
-        public static void SerializeToPWBinaryFile<T>(this T item, string filePath) => Serializer.SerializeToFile<T>(item, filePath);
-        /// <summary>
-        /// Deserialize a file content using PWBinary and returns an object instance
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="filePath">File source with the serialized data</param>
-        /// <returns>Object instance</returns>
-        public static T DeserializeFromPWBinaryFile<T>(this string filePath) => Serializer.DeserializeFromFile<T>(filePath);
-        /// <summary>
-        /// Deserialize an object using the PWBinary serializer
-        /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
-        /// <param name="filePath">File source with the serialized data</param>
-        /// <returns>Object instance</returns>
-        public static object DeserializeFromPWBinaryFile(this string filePath, Type type) => Serializer.DeserializeFromFile(type, filePath);
     }
 }

@@ -33,7 +33,7 @@ namespace TWCore.Serialization.PWSerializer
     /// <summary>
     /// Portable Wanhjör Serializer
     /// </summary>
-    public class PWSerializer
+    public class PWSerializerCore
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
         private static ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
@@ -62,8 +62,8 @@ namespace TWCore.Serialization.PWSerializer
         /// </summary>
         public SerializerMode Mode = SerializerMode.Cached2048;
 
-        public PWSerializer() { }
-        public PWSerializer(SerializerMode mode)
+        public PWSerializerCore() { }
+        public PWSerializerCore(SerializerMode mode)
         {
             Mode = mode;
         }

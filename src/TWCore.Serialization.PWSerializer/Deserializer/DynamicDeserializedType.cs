@@ -200,16 +200,33 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                 var underType = typeInfo.InnerTypes[0];
                 if (typeInfo.IsArray)
                     obj = Array.CreateInstance(underType, ItemListLength);
-                var ilistObj = (IList) obj;
+                var ilistObj = (IList)obj;
                 var idx = 0;
                 foreach (var item in List)
                 {
-                    var value = GetValue(item, underType);
-                    if (!typeInfo.IsArray)
-                        ilistObj.Add(value);
-                    else
-                        ilistObj[idx] = value;
-                    idx++;
+                    object value = null;
+                    try
+                    {
+                        value = GetValue(item, underType);
+                        if (!typeInfo.IsArray)
+                            ilistObj.Add(value);
+                        else
+                            ilistObj[idx] = value;
+                        idx++;
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Error("UnderlayingType   = {0}", underType.AssemblyQualifiedName);
+                        Core.Log.Error("ValueType         = {0}", value?.GetType().AssemblyQualifiedName);
+                        Core.Log.Error("ValueTypeBaseType = {0}", value?.GetType().BaseType.AssemblyQualifiedName);
+                        Core.Log.Error("UnderlayingType Location   = {0}", underType.Assembly.Location);
+                        Core.Log.Error("ValueType Location         = {0}", value?.GetType().Assembly.Location);
+                        Core.Log.Error("TypeInfo          = {0}", typeInfo.Type.AssemblyQualifiedName);
+                        Core.Log.Error("UnderlayingType.AssignableFrom(ValueType) = {0}", underType.IsAssignableFrom(value?.GetType()));
+                        Core.Log.Error("ValueType.AssignableFrom(UnderlayingType) = {0}", value?.GetType().IsAssignableFrom(underType));
+                        Core.Log.Write(ex);
+                        throw;
+                    }
                 }
             }
             if (isIDictionary && typeInfo.IsIDictionary)

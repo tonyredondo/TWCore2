@@ -108,6 +108,22 @@
       <Project>{33545dbf-015f-4d28-b309-2153cc533348}</Project>
       <Name>TWCore.Collections</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Data.MySql\TWCore.Data.MySql.csproj">
+      <Project>{88d3eb37-af9b-4416-850a-278d84719ec5}</Project>
+      <Name>TWCore.Data.MySql</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Data.PostgreSQL\TWCore.Data.PostgreSQL.csproj">
+      <Project>{394cfd8e-4f8c-4cd9-ac8b-46eb08dfb36e}</Project>
+      <Name>TWCore.Data.PostgreSQL</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Data.SQLite\TWCore.Data.SQLite.csproj">
+      <Project>{be1f6ef2-fd84-4873-979c-14ed17ac1727}</Project>
+      <Name>TWCore.Data.SQLite</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj">
+      <Project>{432bf34b-6929-44d2-ac4b-3189d708b3be}</Project>
+      <Name>TWCore.Data.SqlServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj">
       <Project>{26727c2d-58a1-40ea-8218-f74794e8958d}</Project>
       <Name>TWCore.Data</Name>
@@ -115,6 +131,14 @@
     <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj">
       <Project>{8e07c9c2-2274-447d-bdc6-b66bdb597870}</Project>
       <Name>TWCore.Geo</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj">
+      <Project>{75da5ffe-02e4-44a6-95fb-d2feecc4c38a}</Project>
+      <Name>TWCore.Messaging.NSQ</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj">
+      <Project>{41c559fd-04e1-4f75-880d-585ec5392620}</Project>
+      <Name>TWCore.Messaging.RabbitMQ</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj">
       <Project>{ec6b6366-06e2-4052-b353-91cbf0bcab62}</Project>
@@ -155,6 +179,10 @@
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj">
       <Project>{78b31e9b-eed7-41e4-896c-cbc53e3f53d5}</Project>
       <Name>TWCore.Triggers</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Web\TWCore.Web.csproj">
+      <Project>{ee79f165-6e14-48e7-b994-9d7d7a7f2092}</Project>
+      <Name>TWCore.Web</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj">
       <Project>{90b27d63-8183-4a1d-8b02-e9883b0d2537}</Project>

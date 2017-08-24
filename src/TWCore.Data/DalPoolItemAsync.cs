@@ -16,10 +16,10 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Data.Schema;
 
 namespace TWCore.Data
 {
@@ -153,7 +153,7 @@ namespace TWCore.Data
 			return res;
 		}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<DataSet> GetSchemaAsync()
+        public async Task<CatalogSchema> GetSchemaAsync()
         {
             var dAccess = GetDataAccess();
             var res = await dAccess.GetSchemaAsync().ConfigureAwait(false);

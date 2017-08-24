@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Collections;
+using TWCore.Data.Schema;
 
 namespace TWCore.Data
 {
@@ -2354,7 +2355,7 @@ namespace TWCore.Data
         /// </summary>
         /// <returns>DataTable with all schema</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DataSet GetSchema()
+        public CatalogSchema GetSchema()
         {
             using (var connection = GetConnection())
             {
@@ -2370,7 +2371,7 @@ namespace TWCore.Data
         /// </summary>
         /// <returns>DataTable with all schema</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<DataSet> GetSchemaAsync()
+        public async Task<CatalogSchema> GetSchemaAsync()
         {
             using (var connection = GetConnection())
             {
@@ -2388,7 +2389,7 @@ namespace TWCore.Data
         /// <param name="connection">Opened connection</param>
         /// <returns>Schema instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual DataSet OnGetSchema(DbConnection connection)
+        protected virtual CatalogSchema OnGetSchema(DbConnection connection)
         {
             return null;
         }

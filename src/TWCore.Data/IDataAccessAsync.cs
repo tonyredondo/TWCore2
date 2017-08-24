@@ -16,8 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
+using TWCore.Data.Schema;
 
 namespace TWCore.Data
 {
@@ -128,7 +128,7 @@ namespace TWCore.Data
         /// Get Database Schema
         /// </summary>
         /// <returns>DataTable with all schema</returns>
-        Task<DataSet> GetSchemaAsync();
+        Task<CatalogSchema> GetSchemaAsync();
         #endregion
 
     }

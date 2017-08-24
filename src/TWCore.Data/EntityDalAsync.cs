@@ -16,10 +16,10 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
-using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Data.Schema;
 using TWCore.Security;
 
 namespace TWCore.Data
@@ -81,6 +81,6 @@ namespace TWCore.Data
         /// </summary>
         /// <returns>Schema</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<DataSet> GetSchemaAsync() => Data.GetSchemaAsync();
+        public Task<CatalogSchema> GetSchemaAsync() => Data.GetSchemaAsync();
     }
 }

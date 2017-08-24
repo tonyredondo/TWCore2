@@ -7,6 +7,7 @@ using TWCore.Data.SqlServer;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Data;
+using TWCore.Serialization;
 
 namespace TWCore.Tests
 {
@@ -21,6 +22,8 @@ namespace TWCore.Tests
 
 
             var schema = ((EntityDal)dalCity).GetSchema();
+
+            schema.SerializeToXmlFile("dbSchema.xml");
 
             using (var tW = Watch.Create("Sync Test"))
             {

@@ -16,9 +16,9 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
-using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using TWCore.Data.Schema;
 using TWCore.Security;
 
 namespace TWCore.Data
@@ -80,6 +80,6 @@ namespace TWCore.Data
         /// </summary>
         /// <returns>Schema</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DataSet GetSchema() => Data.GetSchema();
+        public CatalogSchema GetSchema() => Data.GetSchema();
     }
 }

@@ -36,6 +36,11 @@ namespace TWCore.Data.Schema
         [DataMember, XmlAttribute]
         public string Provider { get; set; }
         /// <summary>
+        /// Assembly Name
+        /// </summary>
+        [DataMember, XmlAttribute]
+        public string Assembly { get; set; }
+        /// <summary>
         /// Connection String
         /// </summary>
         [DataMember]

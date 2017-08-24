@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -29,6 +30,17 @@ namespace TWCore.Data.Schema.Generator
         CatalogSchema _schema;
         string _namespace;
 
+        /// <summary>
+        /// Gets the EntityName Delegate
+        /// </summary>
+        public Func<string, string> GetEntityNameDelegate { get; set; } = new Func<string, string>(tableName =>
+        {
+            tableName = tableName.Replace("_", " ");
+            tableName = tableName.CapitalizeEachWords();
+            tableName = tableName.Replace("-", "_");
+            return tableName.RemoveSpaces();
+        });
+
         #region .ctor
         /// <summary>
         /// Dal Generator
@@ -41,44 +53,150 @@ namespace TWCore.Data.Schema.Generator
         }
         #endregion
 
-        public string CreateDatabaseEntity()
+        public void Create(string directory)
+        {
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            string fName, fContent;
+
+            (fName, fContent) = CreateProject();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            (fName, fContent) = CreateDatabaseEntity();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            foreach(var table in _schema.Tables)
+            {
+                (fName, fContent) = CreateEntity(table.Name);
+                WriteToDisk(Path.Combine(directory, fName), fContent);
+            }
+        }
+
+
+        (string, string) CreateProject()
+        {
+            string projFile = DalGeneratorConsts.formatProj;
+            projFile = projFile.Replace("($ASSEMBLYNAME$)", _schema.Assembly);
+            return (_schema.Name + Path.DirectorySeparatorChar + "Data." + _schema.Name + ".csproj", projFile);
+        }
+        (string, string) CreateDatabaseEntity()
         {
             string header = DalGeneratorConsts.formatHeader;
+            header += "using " + _schema.Assembly + ";\r\n";
             string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
             databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
             databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
             databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
-            return header + databaseEntities;
-        }
 
-        public string CreateEntity(string tableName)
+            return ( _schema.Name + Path.DirectorySeparatorChar + _schema.Name + ".cs", header + databaseEntities);
+        }
+        (string, string) CreateEntity(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
-            if (table == null) return null;
+            if (table == null) return (null, null);
 
             string header = DalGeneratorConsts.formatHeader;
             string entityWrapper = DalGeneratorConsts.formatEntityWrapper;
             string columnFormat = DalGeneratorConsts.formatEntityColumn;
 
-            var entityColumns = new StringBuilder();
-            foreach(var column in table.Columns)
+            var entityColumns = new List<string>();
+            foreach (var column in table.Columns)
             {
                 var strColumn = columnFormat;
+                bool added = false;
 
                 //We have to check first if the column has a FK
-                strColumn = strColumn.Replace("($COLUMNTYPE$)", column.DataType);
-                strColumn = strColumn.Replace("($COLUMNNAME$)", column.Name);
+                foreach (var fk in table.ForeignKeys)
+                {
+                    var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
+                    if (fkTable != null)
+                    {
+                        var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
+                        if (fkColumn != null)
+                        {
+                            var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                            if (isPK)
+                            {
+                                strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(fkTable.Name));
+                                var name = column.Name;
+                                if (name.EndsWith("Id"))
+                                    name = name.SubstringToLast("Id") + "Item";
+                                else
+                                    name = fkTable.Name;
+                                strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
+                                
+                                if (!entityColumns.Contains(strColumn))
+                                    entityColumns.Add(strColumn);
+                                added = true;
+                                break;
+                            }
+                        }
+                    }
+                }
 
-                entityColumns.Append(strColumn);
+                if (!added)
+                {
+                    //We try to find other entity to match the Id (without FK)
+                    if (column.Name != "Id" && column.Name.EndsWith("Id") && !column.IndexesName.Any(i => i.StartsWith("PK")))
+                    {
+                        foreach (var t in _schema.Tables)
+                        {
+                            var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
+                            if (iPk?.Columns?.Count == 1)
+                            {
+                                if (iPk.Columns[0].ColumnName == column.Name)
+                                {
+                                    strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(t.Name));
+                                    var name = column.Name.SubstringToLast("Id") + "Item";
+                                    strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
+                                    strColumn += "          // TODO: This property should have a ForeignKey in DB table.";
+                                    entityColumns.Add(strColumn);
+                                    added = true;
+                                    break;
+
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!added)
+                {
+                    strColumn = strColumn.Replace("($COLUMNTYPE$)", column.DataType);
+                    strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(column.Name));
+                    entityColumns.Add(strColumn);
+                }
             }
+
+
 
             entityWrapper = entityWrapper.Replace("($NAMESPACE$)", _namespace);
             entityWrapper = entityWrapper.Replace("($DATABASENAME$)", _schema.Name);
-            entityWrapper = entityWrapper.Replace("($TABLENAME$)", table.Name);
-            entityWrapper = entityWrapper.Replace("($COLUMNS$)", entityColumns.ToString());
+            entityWrapper = entityWrapper.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
+            entityWrapper = entityWrapper.Replace("($COLUMNS$)", string.Join(string.Empty, entityColumns.ToArray()));
 
-            return header + entityWrapper;
+
+            var filePath = Path.Combine(_schema.Name, "Entities");
+            filePath = Path.Combine(filePath, GetEntityNameDelegate(table.Name) + ".cs");
+            return (filePath, header + entityWrapper);
+        }
+
+        void WriteToDisk(string fileName, string content)
+        {
+            var dname = Path.GetDirectoryName(fileName);
+            if (!Directory.Exists(dname))
+                Directory.CreateDirectory(dname);
+            if (!File.Exists(fileName))
+                File.WriteAllText(fileName, content);
+        }
+        
+        string GetName(string name)
+        {
+            name = name.Replace("-", "_");
+            name = name.Replace(" ", "_");
+            name = name.Replace("__", "_");
+            return name;
         }
     }
 }

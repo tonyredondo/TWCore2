@@ -19,12 +19,26 @@ limitations under the License.
 /// </summary>
 internal class DalGeneratorConsts
 {
-    public const string formatHeader = @"
-/*
+
+    public const string formatProj = @"
+<Project Sdk=""Microsoft.NET.Sdk"">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include=""TWCore"" Version=""0.2.5"" />
+    <PackageReference Include=""TWCore.Data"" Version=""0.2.5"" />
+    <PackageReference Include=""($ASSEMBLYNAME$)"" Version=""0.2.5"" />
+  </ItemGroup>
+</Project>
+";
+
+    public const string formatHeader = @"/*
     DalGenerator
 */    
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
 using TWCore.Data;
 ";
 

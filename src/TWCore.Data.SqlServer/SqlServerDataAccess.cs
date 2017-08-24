@@ -82,7 +82,13 @@ namespace TWCore.Data.SqlServer
             var indexColumns = connection.GetSchema("IndexColumns");
 
             var tableRows = tables.Rows.Cast<DataRow>().ToArray();
-            var catalog = new CatalogSchema { ConnectionString = connection.ConnectionString, Name = (string)tableRows.FirstOrDefault()?["TABLE_CATALOG"], Provider = nameof(SqlServerDataAccess) };
+            var catalog = new CatalogSchema
+            {
+                ConnectionString = connection.ConnectionString,
+                Name = (string)tableRows.FirstOrDefault()?["TABLE_CATALOG"],
+                Provider = nameof(SqlServerDataAccess),
+                Assembly = typeof(SqlServerDataAccess).Assembly.GetName().Name
+            };
 
             #region Create Tables
             foreach (DataRow column in columns.Rows)

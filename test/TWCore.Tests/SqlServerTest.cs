@@ -6,6 +6,7 @@ using TWCore.Data;
 using TWCore.Data.SqlServer;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Data;
 
 namespace TWCore.Tests
 {
@@ -17,6 +18,9 @@ namespace TWCore.Tests
             Core.Log.Warning("Starting SQL Server Test");
 
             IDalCity dalCity = new DalCity();
+
+
+            var schema = ((EntityDal)dalCity).GetSchema();
 
             using (var tW = Watch.Create("Sync Test"))
             {

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 
 namespace TWCore.Data
 {
@@ -186,6 +187,14 @@ namespace TWCore.Data
         /// <param name="parameters">Inputs and outputs parameters</param>
         /// <returns>Number of rows</returns>
         T SelectScalar<T>(string nameOrQuery, object parameters);
+        #endregion
+
+        #region GetSchema
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>DataTable with all schema</returns>
+        DataSet GetSchema();
         #endregion
     }
 }

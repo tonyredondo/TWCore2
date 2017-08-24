@@ -2346,5 +2346,53 @@ namespace TWCore.Data
             }
         }
         #endregion
+
+
+        #region GetSchema
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>DataTable with all schema</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DataSet GetSchema()
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                connection.Open();
+                var table = connection.GetSchema("Tables");
+                var columns = connection.GetSchema("AllColumns");
+                var foreignKeys = connection.GetSchema("ForeignKeys");
+                var indexes = connection.GetSchema("Indexes");
+                var indexColumns = connection.GetSchema("IndexColumns");
+                connection.Close();
+                DataSet dset = new DataSet("Schema");
+                dset.Tables.AddRange(new DataTable[] { table, columns, foreignKeys, indexes, indexColumns });
+                return dset;
+            }
+        }
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>DataTable with all schema</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<DataSet> GetSchemaAsync()
+        {
+            using (var connection = GetConnection())
+            {
+                connection.ConnectionString = ConnectionString;
+                await connection.OpenAsync().ConfigureAwait(false);
+                var table = connection.GetSchema("Tables");
+                var columns = connection.GetSchema("AllColumns");
+                var foreignKeys = connection.GetSchema("ForeignKeys");
+                var indexes = connection.GetSchema("Indexes");
+                var indexColumns = connection.GetSchema("IndexColumns");
+                connection.Close();
+                DataSet dset = new DataSet("Schema");
+                dset.Tables.AddRange(new DataTable[] { table, columns, foreignKeys, indexes, indexColumns });
+                return dset;
+            }
+        }
+        #endregion
     }
 }

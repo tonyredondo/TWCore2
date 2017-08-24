@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Threading.Tasks;
 
 namespace TWCore.Data
@@ -121,5 +122,14 @@ namespace TWCore.Data
         /// <returns>Number of rows</returns>
         Task<T> SelectScalarAsync<T>(string nameOrQuery, object parameters);
         #endregion
+
+        #region GetSchema
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>DataTable with all schema</returns>
+        Task<DataSet> GetSchemaAsync();
+        #endregion
+
     }
 }

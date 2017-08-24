@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using TWCore.Security;
@@ -30,8 +31,8 @@ namespace TWCore.Data
         static ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         EntityDalSettings _settings = null;
-		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		DalPoolItem _poolItem = null;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        DalPoolItem _poolItem = null;
 
         #region Properties
         /// <summary>
@@ -47,17 +48,17 @@ namespace TWCore.Data
                 return _settings;
             }
         }
-		/// <summary>
-		/// Data Access Pool Item
-		/// </summary>
-		public IDataAccess Data => _poolItem;
+        /// <summary>
+        /// Data Access Pool Item
+        /// </summary>
+        public IDataAccess Data => _poolItem;
         #endregion
 
         protected EntityDal()
         {
-			var poolKey = Settings.GetHashSHA1();
+            var poolKey = Settings.GetHashSHA1();
             var _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pool => OnGetDataAccess(Settings)));
-			_poolItem = new DalPoolItem(_pool);
+            _poolItem = new DalPoolItem(_pool);
         }
 
         #region Abstract Methods
@@ -73,5 +74,12 @@ namespace TWCore.Data
         /// <returns></returns>
         protected abstract IDataAccess OnGetDataAccess(EntityDalSettings settings);
         #endregion
+
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>Schema</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DataSet GetSchema() => Data.GetSchema();
     }
 }

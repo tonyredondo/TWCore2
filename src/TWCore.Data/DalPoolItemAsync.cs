@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -151,6 +152,14 @@ namespace TWCore.Data
 			StoreDataAccess(dAccess);
 			return res;
 		}
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<DataSet> GetSchemaAsync()
+        {
+            var dAccess = GetDataAccess();
+            var res = await dAccess.GetSchemaAsync().ConfigureAwait(false);
+            StoreDataAccess(dAccess);
+            return res;
+        }
         #endregion
 
     }

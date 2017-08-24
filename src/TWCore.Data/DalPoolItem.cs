@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
@@ -189,7 +190,14 @@ namespace TWCore.Data
 			StoreDataAccess(dAccess);
 			return res;
 		}
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DataSet GetSchema()
+        {
+            var dAccess = GetDataAccess();
+            var res = dAccess.GetSchema();
+            StoreDataAccess(dAccess);
+            return res;
+        }
         #endregion
     }
 }

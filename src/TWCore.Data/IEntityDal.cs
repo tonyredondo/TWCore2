@@ -30,6 +30,6 @@ namespace TWCore.Data
         /// <summary>
         /// Data Access Pool Item
         /// </summary>
-		DalPoolItem Data { get; }
+		IDataAccess Data { get; }
     }
 }

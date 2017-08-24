@@ -50,7 +50,7 @@ namespace TWCore.Data
 		/// <summary>
 		/// Data Access Pool Item
 		/// </summary>
-		public DalPoolItem Data => _poolItem;
+		public IDataAccess Data => _poolItem;
         #endregion
 
         protected EntityDal()

@@ -27,9 +27,9 @@ namespace TWCore.Data
         /// Dal Settings
         /// </summary>
         EntityDalSettings Settings { get; }
-		/// <summary>
-		/// Data Access Pool Item
-		/// </summary>
-		DalPoolItemAsync Data { get; }
+        /// <summary>
+        /// Data Access Pool Item
+        /// </summary>
+        IDataAccessAsync Data { get; }
 	}
 }

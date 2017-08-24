@@ -25,6 +25,10 @@ namespace TWCore.Tests
 
             schema.SerializeToXmlFile("dbSchema.xml");
 
+
+            var dGen = new TWCore.Data.Schema.Generator.DalGenerator(schema, "MrFly.Data");
+            var dbEntity = dGen.CreateDatabaseEntity();
+
             using (var tW = Watch.Create("Sync Test"))
             {
                 for (var i = 0; i < 30; i++)

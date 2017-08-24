@@ -26,6 +26,21 @@ namespace TWCore.Data.Schema
     public class CatalogSchema
     {
         /// <summary>
+        /// Catalog Name
+        /// </summary>
+        [DataMember, XmlAttribute]
+        public string Name { get; set; }
+        /// <summary>
+        /// Provider Name
+        /// </summary>
+        [DataMember, XmlAttribute]
+        public string Provider { get; set; }
+        /// <summary>
+        /// Connection String
+        /// </summary>
+        [DataMember]
+        public string ConnectionString { get; set; }
+        /// <summary>
         /// Tables Schemas
         /// </summary>
         [DataMember, XmlArray("Tables"), XmlArrayItem("Table")]

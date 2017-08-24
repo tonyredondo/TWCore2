@@ -2360,14 +2360,8 @@ namespace TWCore.Data
             {
                 connection.ConnectionString = ConnectionString;
                 connection.Open();
-                var table = connection.GetSchema("Tables");
-                var columns = connection.GetSchema("AllColumns");
-                var foreignKeys = connection.GetSchema("ForeignKeys");
-                var indexes = connection.GetSchema("Indexes");
-                var indexColumns = connection.GetSchema("IndexColumns");
+                var dset = OnGetSchema(connection);
                 connection.Close();
-                DataSet dset = new DataSet("Schema");
-                dset.Tables.AddRange(new DataTable[] { table, columns, foreignKeys, indexes, indexColumns });
                 return dset;
             }
         }
@@ -2382,16 +2376,21 @@ namespace TWCore.Data
             {
                 connection.ConnectionString = ConnectionString;
                 await connection.OpenAsync().ConfigureAwait(false);
-                var table = connection.GetSchema("Tables");
-                var columns = connection.GetSchema("AllColumns");
-                var foreignKeys = connection.GetSchema("ForeignKeys");
-                var indexes = connection.GetSchema("Indexes");
-                var indexColumns = connection.GetSchema("IndexColumns");
+                var dset = OnGetSchema(connection);
                 connection.Close();
-                DataSet dset = new DataSet("Schema");
-                dset.Tables.AddRange(new DataTable[] { table, columns, foreignKeys, indexes, indexColumns });
                 return dset;
             }
+        }
+
+        /// <summary>
+        /// On GetSchema
+        /// </summary>
+        /// <param name="connection">Opened connection</param>
+        /// <returns>Schema instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual DataSet OnGetSchema(DbConnection connection)
+        {
+            return null;
         }
         #endregion
     }

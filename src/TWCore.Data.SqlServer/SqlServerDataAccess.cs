@@ -14,8 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Runtime.CompilerServices;
 
 namespace TWCore.Data.SqlServer
 {
@@ -65,6 +67,19 @@ namespace TWCore.Data.SqlServer
             AccessType = accessType;
             ParametersBinder = new SqlServerParametersBinder(this);
             EntityValueConverter = new SqlServerEntityValueConverter(this);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override DataSet OnGetSchema(DbConnection connection)
+        {
+            var table = connection.GetSchema("Tables");
+            var columns = connection.GetSchema("AllColumns");
+            var foreignKeys = connection.GetSchema("ForeignKeys");
+            var indexes = connection.GetSchema("Indexes");
+            var indexColumns = connection.GetSchema("IndexColumns");
+            DataSet dset = new DataSet("Schema");
+            dset.Tables.AddRange(new DataTable[] { table, columns, foreignKeys, indexes, indexColumns });
+            return dset;
         }
     }
 }

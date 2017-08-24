@@ -65,4 +65,19 @@ namespace ($NAMESPACE$).($DATABASENAME$)
 }
 ";
 
+
+    public const string formatEntityWrapper = @"
+namespace ($NAMESPACE$).($DATABASENAME$).Entities
+{
+    [DataContract]
+    public class Ent($TABLENAME$)
+    {($COLUMNS$)
+    }
+}     
+";
+
+    public const string formatEntityColumn = @"
+        [DataMember]
+        public ($COLUMNTYPE$) ($COLUMNNAME$) { get; set; }";
+
 }

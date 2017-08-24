@@ -29,6 +29,8 @@ namespace TWCore.Tests
             var dGen = new TWCore.Data.Schema.Generator.DalGenerator(schema, "MrFly.Data");
             var dbEntity = dGen.CreateDatabaseEntity();
 
+            var entity = dGen.CreateEntity("GEO_CITIES");
+
             using (var tW = Watch.Create("Sync Test"))
             {
                 for (var i = 0; i < 30; i++)

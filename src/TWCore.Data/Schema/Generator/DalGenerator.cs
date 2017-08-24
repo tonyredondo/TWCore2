@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace TWCore.Data.Schema.Generator
@@ -51,11 +52,33 @@ namespace TWCore.Data.Schema.Generator
             return header + databaseEntities;
         }
 
-        public List<string> CreateEntity(string tableName)
+        public string CreateEntity(string tableName)
         {
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return null;
 
-            return null;
+            string header = DalGeneratorConsts.formatHeader;
+            string entityWrapper = DalGeneratorConsts.formatEntityWrapper;
+            string columnFormat = DalGeneratorConsts.formatEntityColumn;
+
+            var entityColumns = new StringBuilder();
+            foreach(var column in table.Columns)
+            {
+                var strColumn = columnFormat;
+
+                //We have to check first if the column has a FK
+                strColumn = strColumn.Replace("($COLUMNTYPE$)", column.DataType);
+                strColumn = strColumn.Replace("($COLUMNNAME$)", column.Name);
+
+                entityColumns.Append(strColumn);
+            }
+
+            entityWrapper = entityWrapper.Replace("($NAMESPACE$)", _namespace);
+            entityWrapper = entityWrapper.Replace("($DATABASENAME$)", _schema.Name);
+            entityWrapper = entityWrapper.Replace("($TABLENAME$)", table.Name);
+            entityWrapper = entityWrapper.Replace("($COLUMNS$)", entityColumns.ToString());
+
+            return header + entityWrapper;
         }
     }
 }
-

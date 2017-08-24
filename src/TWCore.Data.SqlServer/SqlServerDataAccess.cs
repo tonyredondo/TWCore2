@@ -280,9 +280,13 @@ namespace TWCore.Data.SqlServer
                 var table = catalog.Tables.FirstOrDefault(t => t.Name == tableName && t.Schema == tableSchema);
                 if (table == null) continue;
 
+                var fkTable = constraintName.Replace(tableName, string.Empty);
+                fkTable = fkTable.Substring(4);
+
                 table.ForeignKeys.Add(new ForeignKeySchema
                 {
-                    ConstraintName = constraintName
+                    ConstraintName = constraintName,
+                    ForeignTable = fkTable
                 });
             }
             #endregion

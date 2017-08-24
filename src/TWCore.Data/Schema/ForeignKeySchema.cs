@@ -29,5 +29,10 @@ namespace TWCore.Data.Schema
         /// </summary>
         [DataMember, XmlAttribute]
         public string ConstraintName { get; set; }
+        /// <summary>
+        /// Foreign Table
+        /// </summary>
+        [DataMember, XmlAttribute]
+        public string ForeignTable { get; set; }
     }
 }

@@ -53,7 +53,7 @@ namespace TWCore.Data.Schema.Generator
         }
         #endregion
 
-        public void Create(string directory)
+        public void CreateEntities(string directory)
         {
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
@@ -65,23 +65,42 @@ namespace TWCore.Data.Schema.Generator
             (fName, fContent) = CreateDatabaseEntity();
             WriteToDisk(Path.Combine(directory, fName), fContent);
 
-            foreach(var table in _schema.Tables)
+            foreach (var table in _schema.Tables)
             {
                 (fName, fContent) = CreateEntity(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
             }
         }
+        public void CreateInterfaces(string directory)
+        {
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            string fName, fContent;
+
+            (fName, fContent) = CreateProject();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            (fName, fContent) = CreateDatabaseEntity();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            foreach (var table in _schema.Tables)
+            {
+                (fName, fContent) = CreateInterface(table.Name);
+                WriteToDisk(Path.Combine(directory, fName), fContent);
+            }
+        }
+
 
 
         (string, string) CreateProject()
         {
             string projFile = DalGeneratorConsts.formatProj;
             projFile = projFile.Replace("($ASSEMBLYNAME$)", _schema.Assembly);
-            return (_schema.Name + Path.DirectorySeparatorChar + "Data." + _schema.Name + ".csproj", projFile);
+            return (_schema.Name + Path.DirectorySeparatorChar + _namespace + "." + _schema.Name + ".csproj", projFile);
         }
         (string, string) CreateDatabaseEntity()
         {
-            string header = DalGeneratorConsts.formatHeader;
+            string header = DalGeneratorConsts.formatEntityHeader;
             header += "using " + _schema.Assembly + ";\r\n";
             string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
             databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
@@ -89,14 +108,14 @@ namespace TWCore.Data.Schema.Generator
             databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
             databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
 
-            return ( _schema.Name + Path.DirectorySeparatorChar + _schema.Name + ".cs", header + databaseEntities);
+            return (_schema.Name + Path.DirectorySeparatorChar + _schema.Name + ".cs", header + databaseEntities);
         }
         (string, string) CreateEntity(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
             if (table == null) return (null, null);
 
-            string header = DalGeneratorConsts.formatHeader;
+            string header = DalGeneratorConsts.formatEntityHeader;
             string entityWrapper = DalGeneratorConsts.formatEntityWrapper;
             string columnFormat = DalGeneratorConsts.formatEntityColumn;
 
@@ -125,7 +144,7 @@ namespace TWCore.Data.Schema.Generator
                                 else
                                     name = fkTable.Name;
                                 strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
-                                
+
                                 if (!entityColumns.Contains(strColumn))
                                     entityColumns.Add(strColumn);
                                 added = true;
@@ -170,17 +189,66 @@ namespace TWCore.Data.Schema.Generator
             }
 
 
-
-            entityWrapper = entityWrapper.Replace("($NAMESPACE$)", _namespace);
-            entityWrapper = entityWrapper.Replace("($DATABASENAME$)", _schema.Name);
-            entityWrapper = entityWrapper.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
-            entityWrapper = entityWrapper.Replace("($COLUMNS$)", string.Join(string.Empty, entityColumns.ToArray()));
-
+            var body = header + entityWrapper;
+            body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($DATABASENAME$)", _schema.Name);
+            body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
+            body = body.Replace("($COLUMNS$)", string.Join(string.Empty, entityColumns.ToArray()));
 
             var filePath = Path.Combine(_schema.Name, "Entities");
-            filePath = Path.Combine(filePath, GetEntityNameDelegate(table.Name) + ".cs");
-            return (filePath, header + entityWrapper);
+            filePath = Path.Combine(filePath, "Ent" + GetEntityNameDelegate(table.Name) + ".cs");
+            return (filePath, body);
         }
+        (string, string) CreateInterface(string tableName)
+        {
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return (null, null);
+
+            string header = DalGeneratorConsts.formatDalInterfaceHeader;
+            string interfaceWrapper = DalGeneratorConsts.formatDalInterfaceWrapper;
+            string interfaceMethod = DalGeneratorConsts.formatDalInterfaceMethod;
+
+
+            var methods = new List<string>();
+
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAll").Replace("($METHODPARAMETERS$)", ""));
+
+            foreach (var index in table.Indexes)
+            {
+                var names = new List<string>();
+                var parameters = new List<string>();
+                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
+                {
+                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
+                    names.Add(GetName(col.ColumnName));
+                    parameters.Add(column.DataType + " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1)));
+                }
+
+                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
+                {
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Ent" + GetEntityNameDelegate(table.Name)).Replace("($METHODNAME$)", "GetBy" + string.Join("And", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+                else
+                {
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAllBy" + string.Join("And", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+            }
+
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "void").Replace("($METHODNAME$)", "Insert").Replace("($METHODPARAMETERS$)", "Ent" + GetEntityNameDelegate(table.Name) + " value"));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "void").Replace("($METHODNAME$)", "Update").Replace("($METHODPARAMETERS$)", "Ent" + GetEntityNameDelegate(table.Name) + " value"));
+
+
+            var body = header + interfaceWrapper;
+            body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($DATABASENAME$)", _schema.Name);
+            body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
+
+            var filePath = Path.Combine(_schema.Name, "Abstractions");
+            filePath = Path.Combine(filePath, "IDal" + GetEntityNameDelegate(table.Name) + ".cs");
+            return (filePath, body);
+        }
+
 
         void WriteToDisk(string fileName, string content)
         {
@@ -190,7 +258,7 @@ namespace TWCore.Data.Schema.Generator
             if (!File.Exists(fileName))
                 File.WriteAllText(fileName, content);
         }
-        
+
         string GetName(string name)
         {
             name = name.Replace("-", "_");

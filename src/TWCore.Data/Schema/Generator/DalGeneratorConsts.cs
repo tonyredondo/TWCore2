@@ -33,11 +33,12 @@ internal class DalGeneratorConsts
 </Project>
 ";
 
-    public const string formatHeader = @"/*
+    public const string formatEntityHeader = @"/*
     DalGenerator
 */    
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using TWCore.Data;
 ";
@@ -93,5 +94,33 @@ namespace ($NAMESPACE$).($DATABASENAME$).Entities
     public const string formatEntityColumn = @"
         [DataMember]
         public ($COLUMNTYPE$) ($COLUMNNAME$) { get; set; }";
+
+
+
+
+
+
+    public const string formatDalInterfaceHeader = @"/*
+    DalGenerator
+*/    
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.Serialization;
+using TWCore.Data;
+using ($NAMESPACE$).($DATABASENAME$).Entities;
+";
+
+    public const string formatDalInterfaceWrapper = @"
+namespace ($NAMESPACE$).($DATABASENAME$).Dal
+{
+    public interface IDal($TABLENAME$)
+    {($METHODS$)
+    }
+}     
+";
+
+    public const string formatDalInterfaceMethod = @"
+        ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$));";
 
 }

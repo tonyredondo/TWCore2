@@ -35,7 +35,8 @@ namespace TWCore.Tests
                 return name.RemoveSpaces();
             };
 
-            dGen.Create("c:\\temp\\dalTest");
+            dGen.CreateEntities("c:\\temp\\dalTest");
+            dGen.CreateInterfaces("c:\\temp\\dalTest");
 
             using (var tW = Watch.Create("Sync Test"))
             {

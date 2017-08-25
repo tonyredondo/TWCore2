@@ -43,6 +43,7 @@ namespace TWCore.Data.SqlServer
         public static bool DefaultUseStructuredDataType { get; set; } = false;
         #endregion
 
+        #region Properties
         /// <summary>
         /// Gets the database connection object
         /// </summary>
@@ -61,7 +62,20 @@ namespace TWCore.Data.SqlServer
         /// Use structured data type on DataTable instances
         /// </summary>
         public bool UseStructuredDataType { get; set; } = DefaultUseStructuredDataType;
+        #endregion
 
+        #region .ctor
+        /// <summary>
+        /// Sql Server Data access
+        /// </summary>
+        /// <param name="connectionString">Connection string</param>
+        /// <param name="accessType">Data access type</param>
+        public SqlServerDataAccess()
+        {
+            AccessType = DataAccessType.Query;
+            ParametersBinder = new SqlServerParametersBinder(this);
+            EntityValueConverter = new SqlServerEntityValueConverter(this);
+        }
         /// <summary>
         /// Sql Server Data access
         /// </summary>
@@ -74,6 +88,7 @@ namespace TWCore.Data.SqlServer
             ParametersBinder = new SqlServerParametersBinder(this);
             EntityValueConverter = new SqlServerEntityValueConverter(this);
         }
+        #endregion
 
         #region GetSchema
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

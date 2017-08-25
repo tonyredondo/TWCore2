@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using TWCore.Diagnostics.Log;
 
 namespace TWCore.Data.Schema.Generator
 {
@@ -60,9 +61,16 @@ namespace TWCore.Data.Schema.Generator
         {
             _schema = schema;
             _namespace = @namespace;
-            var dagenType = Core.GetType(_schema.AssemblyQualifiedName);
-            if (dagenType != null)
-                dataAccessGenerator = Activator.CreateInstance(dagenType) as IDataAccessDynamicGenerator;
+            try
+            {
+                var dagenType = Core.GetType(_schema.AssemblyQualifiedName);
+                if (dagenType != null)
+                    dataAccessGenerator = Activator.CreateInstance(dagenType) as IDataAccessDynamicGenerator;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(LogLevel.Warning, ex);
+            }
         }
         #endregion
 
@@ -588,7 +596,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElementsAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName + "Async": "")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName + "Async" : "")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }

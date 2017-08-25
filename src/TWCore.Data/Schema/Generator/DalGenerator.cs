@@ -62,9 +62,6 @@ namespace TWCore.Data.Schema.Generator
             (fName, fContent) = CreateAbstractionProject();
             WriteToDisk(Path.Combine(directory, fName), fContent);
 
-            //(fName, fContent) = CreateDatabaseEntity();
-            //WriteToDisk(Path.Combine(directory, fName), fContent);
-
             foreach (var table in _schema.Tables)
             {
                 (fName, fContent) = CreateEntity(table.Name);
@@ -80,22 +77,43 @@ namespace TWCore.Data.Schema.Generator
             (fName, fContent) = CreateAbstractionProject();
             WriteToDisk(Path.Combine(directory, fName), fContent);
 
-            //(fName, fContent) = CreateDatabaseEntity();
-            //WriteToDisk(Path.Combine(directory, fName), fContent);
-
             foreach (var table in _schema.Tables)
             {
                 (fName, fContent) = CreateInterface(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
+                (fName, fContent) = CreateInterfaceAsync(table.Name);
+                WriteToDisk(Path.Combine(directory, fName), fContent);
             }
         }
+        public void CreateDal(string directory)
+        {
+            if (!Directory.Exists(directory))
+                Directory.CreateDirectory(directory);
+            string fName, fContent;
 
+            (fName, fContent) = CreateSolution();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            (fName, fContent) = CreateDalProject();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            (fName, fContent) = CreateDatabaseEntity();
+            WriteToDisk(Path.Combine(directory, fName), fContent);
+
+            foreach (var table in _schema.Tables)
+            {
+                (fName, fContent) = CreateClass(table.Name);
+                WriteToDisk(Path.Combine(directory, fName), fContent);
+                (fName, fContent) = CreateClassAsync(table.Name);
+                WriteToDisk(Path.Combine(directory, fName), fContent);
+            }
+        }
 
         #region Abstractions
         (string, string) CreateAbstractionProject()
         {
             string projFile = DalGeneratorConsts.formatAbstractionsProject;
-            projFile = projFile.Replace("($ASSEMBLYNAME$)", _schema.Assembly);
+            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", _schema.Assembly);
             projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
             var filePath = Path.Combine(_schema.Name, "Abstractions", _namespace + "." + _schema.Name + ".Abstractions.csproj");
             return (filePath, projFile);
@@ -212,10 +230,12 @@ namespace TWCore.Data.Schema.Generator
             string interfaceWrapper = DalGeneratorConsts.formatDalInterfaceWrapper;
             string interfaceMethod = DalGeneratorConsts.formatDalInterfaceMethod;
 
+            var entityTableName = GetEntityNameDelegate(table.Name);
+            var entityName = "Ent" + entityTableName;
 
             var methods = new List<string>();
 
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAll").Replace("($METHODPARAMETERS$)", ""));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>").Replace("($METHODNAME$)", "GetAll").Replace("($METHODPARAMETERS$)", ""));
 
             foreach (var index in table.Indexes)
             {
@@ -233,32 +253,112 @@ namespace TWCore.Data.Schema.Generator
                 methods.Add(indexAttribute);
                 if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
                 {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Ent" + GetEntityNameDelegate(table.Name)).Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", entityName).Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
                 }
                 else
                 {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
                 }
             }
 
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "void").Replace("($METHODNAME$)", "Insert").Replace("($METHODPARAMETERS$)", "Ent" + GetEntityNameDelegate(table.Name) + " value"));
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "void").Replace("($METHODNAME$)", "Update").Replace("($METHODPARAMETERS$)", "Ent" + GetEntityNameDelegate(table.Name) + " value"));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Insert").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Update").Replace("($METHODPARAMETERS$)", entityName + " value"));
 
 
             var body = header + interfaceWrapper;
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
-            body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
+            body = body.Replace("($TABLENAME$)", entityTableName);
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
 
             var filePath = Path.Combine(_schema.Name, "Abstractions", "Interfaces");
-            filePath = Path.Combine(filePath, "IDal" + GetEntityNameDelegate(table.Name) + ".cs");
+            filePath = Path.Combine(filePath, "IDal" + entityTableName + ".cs");
             return (filePath, body);
         }
+        (string, string) CreateInterfaceAsync(string tableName)
+        {
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return (null, null);
+
+            string header = DalGeneratorConsts.formatDalInterfaceHeader;
+            header += "using System.Threading.Tasks;\r\n";
+
+            string interfaceWrapper = DalGeneratorConsts.formatDalInterfaceWrapper;
+            string interfaceMethod = DalGeneratorConsts.formatDalInterfaceMethod;
+
+            var entityTableName = GetEntityNameDelegate(table.Name);
+            var entityName = "Ent" + entityTableName;
+
+            var methods = new List<string>();
+
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllAsync").Replace("($METHODPARAMETERS$)", ""));
+
+            foreach (var index in table.Indexes)
+            {
+                var columnNames = new List<string>();
+                var names = new List<string>();
+                var parameters = new List<string>();
+                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
+                {
+                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
+                    columnNames.Add(col.ColumnName);
+                    names.Add(GetName(col.ColumnName));
+                    parameters.Add(column.DataType + " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1)));
+                }
+                var indexAttribute = $"\r\n        [IndexSchema(ColumnsNames=\"{string.Join(", ", columnNames.ToArray())}\")]";
+                methods.Add(indexAttribute);
+                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
+                {
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<{entityName}>").Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+                else
+                {
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+            }
+
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "InsertAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "UpdateAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
+
+
+            var body = header + interfaceWrapper;
+            body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($DATABASENAME$)", _schema.Name);
+            body = body.Replace("($TABLENAME$)", entityTableName + "Async");
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
+
+            var filePath = Path.Combine(_schema.Name, "Abstractions", "Interfaces");
+            filePath = Path.Combine(filePath, "IDal" + entityTableName + "Async.cs");
+            return (filePath, body);
+        }
+
         #endregion
 
+        #region Dal
+        (string, string) CreateSolution()
+        {
+            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            string projFile = DalGeneratorConsts.formatSolution;
+            projFile = projFile.Replace("($NAMESPACE$)", _namespace);
+            projFile = projFile.Replace("($CATALOGNAME$)", _schema.Name);
+            projFile = projFile.Replace("($PROVIDERNAME$)", prov);
+            var filePath = Path.Combine(_schema.Name, _namespace + "." + _schema.Name + ".sln");
+            return (filePath, projFile);
+        }
+        (string, string) CreateDalProject()
+        {
+            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            string projFile = DalGeneratorConsts.formatDalProject;
+            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", _schema.Assembly);
+            projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
+            projFile = projFile.Replace("($NAMESPACE$)", _namespace);
+            projFile = projFile.Replace("($CATALOGNAME$)", _schema.Name);
+            var filePath = Path.Combine(_schema.Name, "Dal." + prov, _namespace + "." + _schema.Name + "." + prov + ".csproj");
+            return (filePath, projFile);
+        }
         (string, string) CreateDatabaseEntity()
         {
+            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             string header = DalGeneratorConsts.formatEntityHeader;
             header += "using " + _schema.Assembly + ";\r\n";
             string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
@@ -266,10 +366,215 @@ namespace TWCore.Data.Schema.Generator
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
             databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
             databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
-            var filePath = Path.Combine(_schema.Name, _schema.Name + ".cs");
+            var filePath = Path.Combine(_schema.Name, "Dal." + prov, _schema.Name + ".cs");
             return (filePath, header + databaseEntities);
         }
+        (string, string) CreateClass(string tableName)
+        {
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return (null, null);
 
+            string header = DalGeneratorConsts.formatDalHeader;
+            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
+            string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
+            string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
+
+            var entityTableName = GetEntityNameDelegate(table.Name);
+            var entityName = "Ent" + entityTableName;
+
+            var methods = new List<string>();
+
+            methods.Add(dalSelectMethod
+                .Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>")
+                .Replace("($METHODNAME$)", "GetAll")
+                .Replace("($METHODPARAMETERS$)", "")
+                .Replace("($DATASELECT$)", "SelectElements")
+                .Replace("($DATARETURN$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.GetAll")
+                .Replace("($DATAPARAMETERS$)", "")
+                );
+
+            foreach (var index in table.Indexes)
+            {
+                var columnNames = new List<string>();
+                var names = new List<string>();
+                var parameters = new List<string>();
+                var objParameters = new List<string>();
+                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
+                {
+                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
+                    columnNames.Add(col.ColumnName);
+                    names.Add(GetName(col.ColumnName));
+                    var pName = " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1));
+                    parameters.Add(column.DataType + pName);
+                    objParameters.Add($"{GetName(col.ColumnName)} = {pName}");
+                }
+                var mName = string.Join("", names.ToArray());
+                var mParameters = string.Join(", ", parameters.ToArray());
+                var oParameters = "new { " + string.Join(", ", objParameters.ToArray()) + " }";
+                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
+                {
+                    methods.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", entityName)
+                        .Replace("($METHODNAME$)", "GetBy" + mName)
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "SelectElement")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", $":{entityTableName}.GetBy" + mName)
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+                }
+                else
+                {
+                    methods.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>")
+                        .Replace("($METHODNAME$)", "GetAllBy" + mName)
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "SelectElements")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", $":{entityTableName}.GetAllBy" + mName)
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+                }
+            }
+
+            methods.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "int")
+                .Replace("($METHODNAME$)", "Insert")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.Insert")
+                );
+
+            methods.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "int")
+                .Replace("($METHODNAME$)", "Update")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.Update")
+                );
+
+
+            var body = header + dalWrapper;
+            body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($DATABASENAME$)", _schema.Name);
+            body = body.Replace("($TABLENAME$)", entityTableName);
+            body = body.Replace("($DATATYPE$)", entityName);
+            body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
+            body = body.Replace("($ASYNC$)", "");
+
+            /*FillEntity*/
+
+            /*PrepareEntity*/
+
+            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var filePath = Path.Combine(_schema.Name, "Dal." + prov);
+            filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
+            return (filePath, body);
+        }
+        (string, string) CreateClassAsync(string tableName)
+        {
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return (null, null);
+
+            string header = DalGeneratorConsts.formatDalHeader;
+            header += "using System.Threading.Tasks;\r\n";
+            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
+            string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
+            string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
+
+            var entityTableName = GetEntityNameDelegate(table.Name);
+            var entityName = "Ent" + entityTableName;
+
+            var methods = new List<string>();
+
+            methods.Add(dalSelectMethod
+                .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
+                .Replace("($METHODNAME$)", "GetAllAsync")
+                .Replace("($METHODPARAMETERS$)", "")
+                .Replace("($DATASELECT$)", "SelectElementsAsync")
+                .Replace("($DATARETURN$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.GetAllAsync")
+                .Replace("($DATAPARAMETERS$)", "")
+                );
+
+            foreach (var index in table.Indexes)
+            {
+                var columnNames = new List<string>();
+                var names = new List<string>();
+                var parameters = new List<string>();
+                var objParameters = new List<string>();
+                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
+                {
+                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
+                    columnNames.Add(col.ColumnName);
+                    names.Add(GetName(col.ColumnName));
+                    var pName = " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1));
+                    parameters.Add(column.DataType + pName);
+                    objParameters.Add($"{GetName(col.ColumnName)} = {pName}");
+                }
+                var mName = string.Join("", names.ToArray());
+                var mParameters = string.Join(", ", parameters.ToArray());
+                var oParameters = "new { " + string.Join(", ", objParameters.ToArray()) + " }";
+                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
+                {
+                    methods.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", $"Task<{entityName}>")
+                        .Replace("($METHODNAME$)", "GetBy" + mName + "Async")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "SelectElementAsync")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", $":{entityTableName}.GetBy" + mName + "Async")
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+                }
+                else
+                {
+                    methods.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
+                        .Replace("($METHODNAME$)", "GetAllBy" + mName + "Async")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "SelectElementsAsync")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", $":{entityTableName}.GetAllBy" + mName + "Async")
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+                }
+            }
+
+            methods.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "Task<int>")
+                .Replace("($METHODNAME$)", "InsertAsync")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.InsertAsync")
+                );
+
+            methods.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "Task<int>")
+                .Replace("($METHODNAME$)", "UpdateAsync")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($DATASQL$)", $":{entityTableName}.UpdateAsync")
+                );
+
+
+            var body = header + dalWrapper;
+            body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($DATABASENAME$)", _schema.Name);
+            body = body.Replace("($TABLENAME$)", entityTableName + "Async");
+            body = body.Replace("($DATATYPE$)", entityName);
+            body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
+            body = body.Replace("($ASYNC$)", "Async");
+
+            /*FillEntity*/
+
+            /*PrepareEntity*/
+
+            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var filePath = Path.Combine(_schema.Name, "Dal." + prov);
+            filePath = Path.Combine(filePath, "Dal" + entityTableName + "Async.cs");
+            return (filePath, body);
+        }
+        #endregion
 
         void WriteToDisk(string fileName, string content)
         {

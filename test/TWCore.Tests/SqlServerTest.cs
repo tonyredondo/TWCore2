@@ -37,6 +37,9 @@ namespace TWCore.Tests
 
             dGen.CreateEntities("c:\\temp\\dalTest");
             dGen.CreateInterfaces("c:\\temp\\dalTest");
+            dGen.CreateDal("c:\\temp\\dalTest");
+
+            return;
 
             using (var tW = Watch.Create("Sync Test"))
             {
@@ -155,7 +158,7 @@ namespace TWCore.Tests
             => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
 
         public EntCity GetByIata(string iata, string cultureInfo)
-            => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo });
+            => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
 
         public int Delete(Guid cityId)
             => Data.ExecuteNonQuery("sp_GEO_CITIES_Del", new { CityId = cityId });
@@ -165,6 +168,13 @@ namespace TWCore.Tests
 
         public int Update(EntCity entity)
             => Data.ExecuteNonQuery("sp_GEO_CITIES_Upd", entity);
+
+        EntCity FillEntity(EntityBinder binder, object[] rowValues)
+        {
+            var EntCity = binder.Bind<EntCity>(rowValues);
+            return EntCity;
+        }
+
     }
 
     public interface IDalCityAsync

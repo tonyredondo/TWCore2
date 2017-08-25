@@ -263,6 +263,7 @@ namespace TWCore.Data.Schema.Generator
 
 
             var body = header + entityWrapper;
+            body = body.Replace("($TABLESCHEMA$)", $"TableSchema(Name=\"{tableName}\")");
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
             body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
@@ -382,7 +383,6 @@ namespace TWCore.Data.Schema.Generator
             filePath = Path.Combine(filePath, "IDal" + entityTableName + "Async.cs");
             return (filePath, body);
         }
-
         #endregion
 
         #region Dal

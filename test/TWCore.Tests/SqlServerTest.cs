@@ -20,33 +20,6 @@ namespace TWCore.Tests
 
             IDalCity dalCity = new DalCity();
 
-
-            var schema = ((EntityDal)dalCity).GetSchema();
-
-            schema.SerializeToXmlFile("dbSchema.xml");
-
-
-            var dGen = new TWCore.Data.Schema.Generator.DalGenerator(schema, "MrFly.Data");
-            dGen.GetEntityNameDelegate = name =>
-            {
-                name = name.Replace("_", " ");
-                name = name.Substring(0, 3) + "_" + name.Substring(4).CapitalizeEachWords();
-                name = name.Replace("-", "_");
-                return name.RemoveSpaces();
-            };
-
-            dGen.Create("c:\\temp\\dalTest");
-
-            //var cols = dGen.GetSelectFromTable("GEO_CITIES");
-
-            return;
-
-
-
-
-
-
-
             using (var tW = Watch.Create("Sync Test"))
             {
                 for (var i = 0; i < 30; i++)

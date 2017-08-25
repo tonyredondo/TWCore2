@@ -99,6 +99,7 @@ using TWCore.Data.Schema;
     public const string formatEntityWrapper = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Entities
 {
+    [($TABLESCHEMA$)]
     [DataContract]
     public class Ent($TABLENAME$)
     {($COLUMNS$)

@@ -202,16 +202,14 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
         #region Private Methods
         Dictionary<string, object> PrepareEntity(($DATATYPE$) value, string transaction)
         {
-            switch(transaction)
-            {
-                default:
-                    break;
-            }
-            return null;
+            var param = new Dictionary<string, object>();
+($PREPAREENTITY$)
+            return param;
         }
         ($DATATYPE$) FillEntity(EntityBinder binder, object[] rowValues)
         {
             var ($DATATYPE2$) = binder.Bind<($DATATYPE$)>(rowValues);
+($FILLENTITY$)
             return ($DATATYPE2$);
         }
         #endregion

@@ -454,6 +454,17 @@ namespace TWCore.Data.Schema.Generator
 
 
             var body = header + dalWrapper;
+
+            /*FillEntity*/
+            var fillEntities = GetFillMethodSentences(table);
+
+            /*PrepareEntity*/
+            var prepareEntities = GetPrepareEntitySentences(table);
+
+
+
+            body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
+            body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
             body = body.Replace("($TABLENAME$)", entityTableName);
@@ -462,15 +473,14 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
             body = body.Replace("($ASYNC$)", "");
 
-            /*FillEntity*/
-
-            /*PrepareEntity*/
 
             var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
             filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
             return (filePath, body);
         }
+
+
         (string, string) CreateClassAsync(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
@@ -555,8 +565,17 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($DATASQL$)", $":{entityTableName}.UpdateAsync")
                 );
 
-
             var body = header + dalWrapper;
+
+            /*FillEntity*/
+            var fillEntities = GetFillMethodSentences(table);
+
+            /*PrepareEntity*/
+            var prepareEntities = GetPrepareEntitySentences(table);
+
+
+            body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
+            body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
             body = body.Replace("($TABLENAME$)", entityTableName + "Async");
@@ -565,15 +584,169 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
             body = body.Replace("($ASYNC$)", "Async");
 
-            /*FillEntity*/
-
-            /*PrepareEntity*/
 
             var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
             filePath = Path.Combine(filePath, "Dal" + entityTableName + "Async.cs");
             return (filePath, body);
         }
+
+
+        private List<string> GetFillMethodSentences(TableSchema table)
+        {
+            var fillEntities = new List<string>();
+            foreach (var column in table.Columns)
+            {
+                bool added = false;
+
+                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                {
+                    //We have to check first if the column has a FK
+                    foreach (var fk in table.ForeignKeys)
+                    {
+                        var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
+                        if (fkTable != null)
+                        {
+                            var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
+                            if (fkColumn != null)
+                            {
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                if (isPK)
+                                {
+                                    var name = column.Name;
+                                    if (name.EndsWith("Id"))
+                                        name = name.SubstringToLast("Id") + "Item";
+                                    else
+                                        name = fkTable.Name;
+                                    name = GetName(name);
+                                    var tName = GetEntityNameDelegate(fkTable.Name);
+                                    var type = "Ent" + tName;
+
+                                    var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{tName}.%\");\r\n";
+                                    if (!fillEntities.Contains(fill))
+                                        fillEntities.Add(fill);
+
+                                    added = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!added)
+                    {
+                        //We try to find other entity to match the Id (without FK)
+                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        {
+                            foreach (var t in _schema.Tables)
+                            {
+                                var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
+                                if (iPk?.Columns?.Count == 1)
+                                {
+                                    if (iPk.Columns[0].ColumnName == column.Name)
+                                    {
+                                        var name = column.Name.SubstringToLast("Id") + "Item";
+                                        name = GetName(name);
+                                        var tName = GetEntityNameDelegate(t.Name);
+                                        var type = "Ent" + tName;
+
+                                        var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{tName}.%\");\r\n";
+                                        if (!fillEntities.Contains(fill))
+                                            fillEntities.Add(fill);
+
+                                        added = true;
+                                        break;
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            return fillEntities;
+        }
+        private List<string> GetPrepareEntitySentences(TableSchema table)
+        {
+            var prepareEntities = new List<string>();
+            foreach (var column in table.Columns)
+            {
+                bool added = false;
+
+                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                {
+                    //We have to check first if the column has a FK
+                    foreach (var fk in table.ForeignKeys)
+                    {
+                        var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
+                        if (fkTable != null)
+                        {
+                            var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
+                            if (fkColumn != null)
+                            {
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                if (isPK)
+                                {
+                                    var name = column.Name;
+                                    if (name.EndsWith("Id"))
+                                        name = name.SubstringToLast("Id") + "Item";
+                                    else
+                                        name = fkTable.Name;
+                                    name = GetName(name);
+                                    var tName = GetEntityNameDelegate(fkTable.Name);
+                                    var type = "Ent" + tName;
+
+                                    var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
+                                    prepareEntities.Add(fill);
+
+                                    added = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!added)
+                    {
+                        //We try to find other entity to match the Id (without FK)
+                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        {
+                            foreach (var t in _schema.Tables)
+                            {
+                                var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
+                                if (iPk?.Columns?.Count == 1)
+                                {
+                                    if (iPk.Columns[0].ColumnName == column.Name)
+                                    {
+                                        var name = column.Name.SubstringToLast("Id") + "Item";
+                                        name = GetName(name);
+                                        var tName = GetEntityNameDelegate(t.Name);
+                                        var type = "Ent" + tName;
+
+                                        var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
+                                        prepareEntities.Add(fill);
+
+                                        added = true;
+                                        break;
+
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!added)
+                {
+                    var fill = "            param[\"@" + column.Name + "\"] = value." + GetName(column.Name) + ";\r\n";
+                    prepareEntities.Add(fill);
+                }
+            }
+            return prepareEntities;
+        }
+
         #endregion
 
         void WriteToDisk(string fileName, string content)

@@ -212,6 +212,32 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
 ($FILLENTITY$)
             return ($DATATYPE2$);
         }
+        const string SelectBaseSql = @""
+($SELECTBASESQL$)"";
+        #endregion
+    }
+}     
+";
+
+    public const string formatDalDynamicWrapper = @"
+namespace ($NAMESPACE$).($DATABASENAME$).Dal
+{
+    public class Dal($TABLENAME$) : ($DATABASENAME$)DBDal($ASYNC$), IDal($TABLENAME$)
+    {($METHODS$)
+
+        #region Private Methods
+        Dictionary<string, object> PrepareEntity(($DATATYPE$) value, string transaction)
+        {
+            var param = new Dictionary<string, object>();
+($PREPAREENTITY$)
+            return param;
+        }
+        ($DATATYPE$) FillEntity(EntityBinder binder, object[] rowValues)
+        {
+            var ($DATATYPE2$) = binder.Bind<($DATATYPE$)>(rowValues);
+($FILLENTITY$)
+            return ($DATATYPE2$);
+        }
         #endregion
     }
 }     

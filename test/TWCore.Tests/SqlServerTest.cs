@@ -35,9 +35,9 @@ namespace TWCore.Tests
                 return name.RemoveSpaces();
             };
 
-            dGen.CreateEntities("c:\\temp\\dalTest");
-            dGen.CreateInterfaces("c:\\temp\\dalTest");
-            dGen.CreateDal("c:\\temp\\dalTest");
+            dGen.Create("c:\\temp\\dalTest");
+
+            //var cols = dGen.GetSelectFromTable("GEO_CITIES");
 
             return;
 

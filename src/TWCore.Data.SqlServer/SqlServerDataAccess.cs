@@ -15,12 +15,15 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using TWCore.Data.Schema;
+using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data.SqlServer
 {
@@ -72,6 +75,7 @@ namespace TWCore.Data.SqlServer
             EntityValueConverter = new SqlServerEntityValueConverter(this);
         }
 
+        #region GetSchema
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override CatalogSchema OnGetSchema(DbConnection connection)
         {
@@ -87,7 +91,8 @@ namespace TWCore.Data.SqlServer
                 ConnectionString = connection.ConnectionString,
                 Name = (string)tableRows.FirstOrDefault()?["TABLE_CATALOG"],
                 Provider = nameof(SqlServerDataAccess),
-                Assembly = typeof(SqlServerDataAccess).Assembly.GetName().Name
+                Assembly = typeof(SqlServerDataAccess).Assembly.GetName().Name,
+                AssemblyQualifiedName = typeof(SqlServerDataAccess).AssemblyQualifiedName
             };
 
             #region Create Tables
@@ -299,5 +304,30 @@ namespace TWCore.Data.SqlServer
 
             return catalog;
         }
+        #endregion
+
+        #region IDataAccessDynamicGenerator
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override string GetSelectFromContainer(GeneratorSelectionContainer container)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("SELECT");
+
+            var cols = new List<string>();
+            foreach (var col in container.Columns)
+                cols.Add($"   [{col.Table}].[{col.Column}] as '{col.Alias}'");
+            sb.AppendLine(string.Join(", \r\n", cols.ToArray()));
+            sb.AppendLine("FROM " + container.From);
+
+            if (container.Joins.Count > 0)
+            {
+                var joins = new List<string>();
+                foreach (var join in container.Joins)
+                    joins.Add($"LEFT JOIN [{join.Table}] ON [{container.From}].[{join.FromColumn}] = [{join.Table}].[{join.TableColumn}]");
+                sb.AppendLine(string.Join("\r\n", joins.ToArray()));
+            }
+            return sb.ToString();
+        }
+        #endregion
     }
 }

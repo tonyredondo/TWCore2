@@ -25,13 +25,14 @@ using System.Text;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Data.Schema;
+using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data
 {
     /// <summary>
     /// Data access connection base class
     /// </summary>
-    public abstract class DataAccessBase : IDataAccess, IDataAccessAsync
+    public abstract class DataAccessBase : IDataAccess, IDataAccessAsync, IDataAccessDynamicGenerator
     {
         readonly static TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
         readonly static DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
@@ -2419,9 +2420,25 @@ namespace TWCore.Data
         }
         #endregion
 
-        protected virtual string GetDynamicQuery(string queryName)
+        #region IDataAccessDynamicGenerator
+        /// <summary>
+        /// Get a dynamic query from a Dal created using the DalGenerator
+        /// </summary>
+        /// <param name="queryName">Dynamic query key</param>
+        /// <returns>Query</returns>
+        public virtual string GetDynamicQuery(string queryName)
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
+        /// <summary>
+        /// Get the Select Base Sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Select base sql query</returns>
+        public virtual string GetSelectFromContainer(GeneratorSelectionContainer container)
+        {
+            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        #endregion
     }
 }

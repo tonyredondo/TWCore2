@@ -41,6 +41,11 @@ namespace TWCore.Data.Schema
         [DataMember, XmlAttribute]
         public string Assembly { get; set; }
         /// <summary>
+        /// AssemblyQualified Name
+        /// </summary>
+        [DataMember, XmlAttribute]
+        public string AssemblyQualifiedName { get; set; }
+        /// <summary>
         /// Connection String
         /// </summary>
         [DataMember]

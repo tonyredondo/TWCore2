@@ -29,7 +29,9 @@ namespace TWCore.Data.Schema.Generator
     {
         CatalogSchema _schema;
         string _namespace;
+        IDataAccessDynamicGenerator dataAccessGenerator = null;
 
+        #region Properties
         /// <summary>
         /// Gets the EntityName Delegate
         /// </summary>
@@ -41,6 +43,14 @@ namespace TWCore.Data.Schema.Generator
             return tableName.RemoveSpaces();
         });
 
+        public bool EnableAsync { get; set; } = true;
+        public bool EnableCreateEntities { get; set; } = true;
+        public bool EnableCreateInterfaces { get; set; } = true;
+        public bool EnableCreateSolution { get; set; } = true;
+        public bool EnableCreateDal { get; set; } = true;
+        public bool EnableDynamicDal { get; set; } = false;
+        #endregion
+
         #region .ctor
         /// <summary>
         /// Dal Generator
@@ -50,11 +60,32 @@ namespace TWCore.Data.Schema.Generator
         {
             _schema = schema;
             _namespace = @namespace;
+            var dagenType = Core.GetType(_schema.AssemblyQualifiedName);
+            if (dagenType != null)
+                dataAccessGenerator = Activator.CreateInstance(dagenType) as IDataAccessDynamicGenerator;
         }
         #endregion
 
-        public void CreateEntities(string directory)
+        #region Public Methods
+        /// <summary>
+        /// Create Dal
+        /// </summary>
+        /// <param name="directory">Folder path</param>
+        public void Create(string directory)
         {
+            if (dataAccessGenerator == null)
+                EnableDynamicDal = true;
+            CreateEntities(directory);
+            CreateInterfaces(directory);
+            CreateDal(directory);
+        }
+        #endregion
+
+        #region Private Methods
+        void CreateEntities(string directory)
+        {
+            if (!EnableCreateEntities) return;
+
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
             string fName, fContent;
@@ -68,8 +99,10 @@ namespace TWCore.Data.Schema.Generator
                 WriteToDisk(Path.Combine(directory, fName), fContent);
             }
         }
-        public void CreateInterfaces(string directory)
+        void CreateInterfaces(string directory)
         {
+            if (!EnableCreateInterfaces) return;
+
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
             string fName, fContent;
@@ -81,18 +114,24 @@ namespace TWCore.Data.Schema.Generator
             {
                 (fName, fContent) = CreateInterface(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
-                (fName, fContent) = CreateInterfaceAsync(table.Name);
-                WriteToDisk(Path.Combine(directory, fName), fContent);
+                if (EnableAsync)
+                {
+                    (fName, fContent) = CreateInterfaceAsync(table.Name);
+                    WriteToDisk(Path.Combine(directory, fName), fContent);
+                }
             }
         }
-        public void CreateDal(string directory)
+        void CreateDal(string directory)
         {
             if (!Directory.Exists(directory))
                 Directory.CreateDirectory(directory);
             string fName, fContent;
 
-            (fName, fContent) = CreateSolution();
-            WriteToDisk(Path.Combine(directory, fName), fContent);
+            if (EnableCreateSolution)
+            {
+                (fName, fContent) = CreateSolution();
+                WriteToDisk(Path.Combine(directory, fName), fContent);
+            }
 
             (fName, fContent) = CreateDalProject();
             WriteToDisk(Path.Combine(directory, fName), fContent);
@@ -104,10 +143,14 @@ namespace TWCore.Data.Schema.Generator
             {
                 (fName, fContent) = CreateClass(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
-                (fName, fContent) = CreateClassAsync(table.Name);
-                WriteToDisk(Path.Combine(directory, fName), fContent);
+                if (EnableAsync)
+                {
+                    (fName, fContent) = CreateClassAsync(table.Name);
+                    WriteToDisk(Path.Combine(directory, fName), fContent);
+                }
             }
         }
+
 
         #region Abstractions
         (string, string) CreateAbstractionProject()
@@ -375,7 +418,7 @@ namespace TWCore.Data.Schema.Generator
             if (table == null) return (null, null);
 
             string header = DalGeneratorConsts.formatDalHeader;
-            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
+            string dalWrapper = EnableDynamicDal ? DalGeneratorConsts.formatDalDynamicWrapper : DalGeneratorConsts.formatDalWrapper;
             string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
             string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
 
@@ -390,7 +433,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "SelectElements")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.GetAll")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAll" : "")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
 
@@ -420,7 +463,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElement")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", $":{entityTableName}.GetBy" + mName)
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetBy" + mName : "")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -432,7 +475,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElements")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", $":{entityTableName}.GetAllBy" + mName)
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName : "")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -442,27 +485,29 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Insert")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.Insert")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.Insert" : "")
                 );
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Update")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.Update")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.Update" : "")
                 );
 
 
             var body = header + dalWrapper;
 
-            /*FillEntity*/
+            //FillEntity
             var fillEntities = GetFillMethodSentences(table);
 
-            /*PrepareEntity*/
+            //PrepareEntity
             var prepareEntities = GetPrepareEntitySentences(table);
 
+            //SelectBaseSQL
+            var selectBaseSQL = EnableDynamicDal ? string.Empty : dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
 
-
+            body = body.Replace("($SELECTBASESQL$)", selectBaseSQL);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
@@ -479,8 +524,6 @@ namespace TWCore.Data.Schema.Generator
             filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
             return (filePath, body);
         }
-
-
         (string, string) CreateClassAsync(string tableName)
         {
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
@@ -488,7 +531,7 @@ namespace TWCore.Data.Schema.Generator
 
             string header = DalGeneratorConsts.formatDalHeader;
             header += "using System.Threading.Tasks;\r\n";
-            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
+            string dalWrapper = EnableDynamicDal ? DalGeneratorConsts.formatDalDynamicWrapper : DalGeneratorConsts.formatDalWrapper;
             string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
             string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
 
@@ -503,7 +546,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "SelectElementsAsync")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.GetAllAsync")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllAsync" : "")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
 
@@ -533,7 +576,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElementAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", $":{entityTableName}.GetBy" + mName + "Async")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetBy" + mName + "Async" : "")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -545,7 +588,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElementsAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", $":{entityTableName}.GetAllBy" + mName + "Async")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName + "Async": "")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -555,14 +598,14 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($RETURNTYPE$)", "Task<int>")
                 .Replace("($METHODNAME$)", "InsertAsync")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.InsertAsync")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.InsertAsync" : "")
                 );
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "Task<int>")
                 .Replace("($METHODNAME$)", "UpdateAsync")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", $":{entityTableName}.UpdateAsync")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.UpdateAsync" : "")
                 );
 
             var body = header + dalWrapper;
@@ -573,7 +616,10 @@ namespace TWCore.Data.Schema.Generator
             /*PrepareEntity*/
             var prepareEntities = GetPrepareEntitySentences(table);
 
+            //SelectBaseSQL
+            var selectBaseSQL = EnableDynamicDal ? string.Empty : dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
 
+            body = body.Replace("($SELECTBASESQL$)", selectBaseSQL);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
@@ -592,7 +638,7 @@ namespace TWCore.Data.Schema.Generator
         }
 
 
-        private List<string> GetFillMethodSentences(TableSchema table)
+        List<string> GetFillMethodSentences(TableSchema table)
         {
             var fillEntities = new List<string>();
             foreach (var column in table.Columns)
@@ -668,7 +714,7 @@ namespace TWCore.Data.Schema.Generator
 
             return fillEntities;
         }
-        private List<string> GetPrepareEntitySentences(TableSchema table)
+        List<string> GetPrepareEntitySentences(TableSchema table)
         {
             var prepareEntities = new List<string>();
             foreach (var column in table.Columns)
@@ -746,8 +792,96 @@ namespace TWCore.Data.Schema.Generator
             }
             return prepareEntities;
         }
+        GeneratorSelectionContainer GetSelectColumns(string tableName)
+        {
+            var container = new GeneratorSelectionContainer();
+            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
+            if (table == null) return container;
 
+            container.From = table.Name;
+            foreach (var column in table.Columns)
+            {
+                bool added = false;
+
+                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                {
+                    foreach (var fk in table.ForeignKeys)
+                    {
+                        var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
+                        if (fkTable != null)
+                        {
+                            var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
+                            if (fkColumn != null)
+                            {
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                if (isPK)
+                                {
+                                    foreach (var foreignColumn in fkTable.Columns)
+                                        container.Columns.Add(new GeneratorSelectionColumn
+                                        {
+                                            Table = fkTable.Name,
+                                            Column = foreignColumn.Name,
+                                            Alias = $"{fkTable.Name}.{foreignColumn.Name}"
+                                        });
+
+                                    container.Joins.Add(new GeneratorSelectionJoin
+                                    {
+                                        Table = fkTable.Name,
+                                        TableColumn = fkColumn.Name,
+                                        FromColumn = column.Name
+                                    });
+                                    added = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (!added)
+                    {
+                        //We try to find other entity to match the Id (without FK)
+                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        {
+                            foreach (var t in _schema.Tables)
+                            {
+                                var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
+                                if (iPk?.Columns?.Count == 1)
+                                {
+                                    if (iPk.Columns[0].ColumnName == column.Name)
+                                    {
+                                        foreach (var foreignColumn in t.Columns)
+                                            container.Columns.Add(new GeneratorSelectionColumn
+                                            {
+                                                Table = t.Name,
+                                                Column = foreignColumn.Name,
+                                                Alias = $"{t.Name}.{foreignColumn.Name}"
+                                            });
+                                        container.Joins.Add(new GeneratorSelectionJoin
+                                        {
+                                            Table = t.Name,
+                                            TableColumn = iPk.Columns[0].ColumnName,
+                                            FromColumn = column.Name
+                                        });
+                                        added = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                if (!added)
+                    container.Columns.Add(new GeneratorSelectionColumn
+                    {
+                        Table = table.Name,
+                        Column = column.Name,
+                        Alias = column.Name
+                    });
+            }
+            return container;
+        }
         #endregion
+
 
         void WriteToDisk(string fileName, string content)
         {
@@ -757,7 +891,6 @@ namespace TWCore.Data.Schema.Generator
             if (!File.Exists(fileName))
                 File.WriteAllText(fileName, content);
         }
-
         string GetName(string name)
         {
             name = name.Replace("-", "_");
@@ -765,5 +898,6 @@ namespace TWCore.Data.Schema.Generator
             name = name.Replace("__", "_");
             return name;
         }
+        #endregion
     }
 }

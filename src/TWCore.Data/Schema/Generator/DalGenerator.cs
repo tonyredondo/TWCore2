@@ -59,11 +59,11 @@ namespace TWCore.Data.Schema.Generator
                 Directory.CreateDirectory(directory);
             string fName, fContent;
 
-            (fName, fContent) = CreateProject();
+            (fName, fContent) = CreateAbstractionProject();
             WriteToDisk(Path.Combine(directory, fName), fContent);
 
-            (fName, fContent) = CreateDatabaseEntity();
-            WriteToDisk(Path.Combine(directory, fName), fContent);
+            //(fName, fContent) = CreateDatabaseEntity();
+            //WriteToDisk(Path.Combine(directory, fName), fContent);
 
             foreach (var table in _schema.Tables)
             {
@@ -77,11 +77,11 @@ namespace TWCore.Data.Schema.Generator
                 Directory.CreateDirectory(directory);
             string fName, fContent;
 
-            (fName, fContent) = CreateProject();
+            (fName, fContent) = CreateAbstractionProject();
             WriteToDisk(Path.Combine(directory, fName), fContent);
 
-            (fName, fContent) = CreateDatabaseEntity();
-            WriteToDisk(Path.Combine(directory, fName), fContent);
+            //(fName, fContent) = CreateDatabaseEntity();
+            //WriteToDisk(Path.Combine(directory, fName), fContent);
 
             foreach (var table in _schema.Tables)
             {
@@ -91,24 +91,14 @@ namespace TWCore.Data.Schema.Generator
         }
 
 
-
-        (string, string) CreateProject()
+        #region Abstractions
+        (string, string) CreateAbstractionProject()
         {
-            string projFile = DalGeneratorConsts.formatProj;
+            string projFile = DalGeneratorConsts.formatAbstractionsProject;
             projFile = projFile.Replace("($ASSEMBLYNAME$)", _schema.Assembly);
-            return (_schema.Name + Path.DirectorySeparatorChar + _namespace + "." + _schema.Name + ".csproj", projFile);
-        }
-        (string, string) CreateDatabaseEntity()
-        {
-            string header = DalGeneratorConsts.formatEntityHeader;
-            header += "using " + _schema.Assembly + ";\r\n";
-            string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
-            databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
-            databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
-            databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
-            databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
-
-            return (_schema.Name + Path.DirectorySeparatorChar + _schema.Name + ".cs", header + databaseEntities);
+            projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
+            var filePath = Path.Combine(_schema.Name, "Abstractions", _namespace + "." + _schema.Name + ".Abstractions.csproj");
+            return (filePath, projFile);
         }
         (string, string) CreateEntity(string tableName)
         {
@@ -125,65 +115,79 @@ namespace TWCore.Data.Schema.Generator
                 var strColumn = columnFormat;
                 bool added = false;
 
-                //We have to check first if the column has a FK
-                foreach (var fk in table.ForeignKeys)
-                {
-                    var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
-                    if (fkTable != null)
-                    {
-                        var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
-                        if (fkColumn != null)
-                        {
-                            var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
-                            if (isPK)
-                            {
-                                strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(fkTable.Name));
-                                var name = column.Name;
-                                if (name.EndsWith("Id"))
-                                    name = name.SubstringToLast("Id") + "Item";
-                                else
-                                    name = fkTable.Name;
-                                strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
+                var columnAttribute = $"\r\n        [ColumnSchema(Name=\"{column.Name}\")]";
 
-                                if (!entityColumns.Contains(strColumn))
-                                    entityColumns.Add(strColumn);
-                                added = true;
-                                break;
+                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                {
+                    //We have to check first if the column has a FK
+                    foreach (var fk in table.ForeignKeys)
+                    {
+                        var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
+                        if (fkTable != null)
+                        {
+                            var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
+                            if (fkColumn != null)
+                            {
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                if (isPK)
+                                {
+                                    strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(fkTable.Name));
+                                    var name = column.Name;
+                                    if (name.EndsWith("Id"))
+                                        name = name.SubstringToLast("Id") + "Item";
+                                    else
+                                        name = fkTable.Name;
+                                    strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
+
+                                    if (!entityColumns.Contains(strColumn))
+                                    {
+                                        entityColumns.Add(columnAttribute);
+                                        entityColumns.Add(strColumn);
+                                    }
+                                    else
+                                    {
+                                        var idx = entityColumns.IndexOf(strColumn);
+                                        entityColumns.Insert(idx, columnAttribute);
+                                    }
+                                    added = true;
+                                    break;
+                                }
                             }
                         }
                     }
-                }
 
-                if (!added)
-                {
-                    //We try to find other entity to match the Id (without FK)
-                    if (column.Name != "Id" && column.Name.EndsWith("Id") && !column.IndexesName.Any(i => i.StartsWith("PK")))
+                    if (!added)
                     {
-                        foreach (var t in _schema.Tables)
+                        //We try to find other entity to match the Id (without FK)
+                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
                         {
-                            var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
-                            if (iPk?.Columns?.Count == 1)
+                            foreach (var t in _schema.Tables)
                             {
-                                if (iPk.Columns[0].ColumnName == column.Name)
+                                var iPk = t.Indexes.FirstOrDefault(i => i.Type == IndexType.PrimaryKey);
+                                if (iPk?.Columns?.Count == 1)
                                 {
-                                    strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(t.Name));
-                                    var name = column.Name.SubstringToLast("Id") + "Item";
-                                    strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
-                                    strColumn += "          // TODO: This property should have a ForeignKey in DB table.";
-                                    entityColumns.Add(strColumn);
-                                    added = true;
-                                    break;
+                                    if (iPk.Columns[0].ColumnName == column.Name)
+                                    {
+                                        strColumn = strColumn.Replace("($COLUMNTYPE$)", "Ent" + GetEntityNameDelegate(t.Name));
+                                        var name = column.Name.SubstringToLast("Id") + "Item";
+                                        strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(name));
+                                        strColumn += "          // TODO: This property should have a ForeignKey in DB table.";
+                                        entityColumns.Add(columnAttribute);
+                                        entityColumns.Add(strColumn);
+                                        added = true;
+                                        break;
 
+                                    }
                                 }
                             }
                         }
                     }
                 }
-
                 if (!added)
                 {
                     strColumn = strColumn.Replace("($COLUMNTYPE$)", column.DataType);
                     strColumn = strColumn.Replace("($COLUMNNAME$)", GetName(column.Name));
+                    entityColumns.Add(columnAttribute);
                     entityColumns.Add(strColumn);
                 }
             }
@@ -195,7 +199,7 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
             body = body.Replace("($COLUMNS$)", string.Join(string.Empty, entityColumns.ToArray()));
 
-            var filePath = Path.Combine(_schema.Name, "Entities");
+            var filePath = Path.Combine(_schema.Name, "Abstractions", "Entities");
             filePath = Path.Combine(filePath, "Ent" + GetEntityNameDelegate(table.Name) + ".cs");
             return (filePath, body);
         }
@@ -215,22 +219,25 @@ namespace TWCore.Data.Schema.Generator
 
             foreach (var index in table.Indexes)
             {
+                var columnNames = new List<string>();
                 var names = new List<string>();
                 var parameters = new List<string>();
                 foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
                 {
                     var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
+                    columnNames.Add(col.ColumnName);
                     names.Add(GetName(col.ColumnName));
                     parameters.Add(column.DataType + " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1)));
                 }
-
+                var indexAttribute = $"\r\n        [IndexSchema(ColumnsNames=\"{string.Join(", ", columnNames.ToArray())}\")]";
+                methods.Add(indexAttribute);
                 if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
                 {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Ent" + GetEntityNameDelegate(table.Name)).Replace("($METHODNAME$)", "GetBy" + string.Join("And", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Ent" + GetEntityNameDelegate(table.Name)).Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
                 }
                 else
                 {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAllBy" + string.Join("And", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "IEnumerable<Ent" + GetEntityNameDelegate(table.Name) + ">").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
                 }
             }
 
@@ -244,9 +251,23 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($TABLENAME$)", GetEntityNameDelegate(table.Name));
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
 
-            var filePath = Path.Combine(_schema.Name, "Abstractions");
+            var filePath = Path.Combine(_schema.Name, "Abstractions", "Interfaces");
             filePath = Path.Combine(filePath, "IDal" + GetEntityNameDelegate(table.Name) + ".cs");
             return (filePath, body);
+        }
+        #endregion
+
+        (string, string) CreateDatabaseEntity()
+        {
+            string header = DalGeneratorConsts.formatEntityHeader;
+            header += "using " + _schema.Assembly + ";\r\n";
+            string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
+            databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
+            databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
+            databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
+            databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
+            var filePath = Path.Combine(_schema.Name, _schema.Name + ".cs");
+            return (filePath, header + databaseEntities);
         }
 
 

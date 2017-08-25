@@ -20,15 +20,15 @@ limitations under the License.
 internal class DalGeneratorConsts
 {
 
-    public const string formatProj = @"
+    public const string formatAbstractionsProject = @"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include=""TWCore"" Version=""0.2.5"" />
-    <PackageReference Include=""TWCore.Data"" Version=""0.2.5"" />
-    <PackageReference Include=""($ASSEMBLYNAME$)"" Version=""0.2.5"" />
+    <PackageReference Include=""TWCore"" Version=""($VERSION$)"" />
+    <PackageReference Include=""TWCore.Data"" Version=""($VERSION$)"" />
+    <PackageReference Include=""($ASSEMBLYNAME$)"" Version=""($VERSION$)"" />
   </ItemGroup>
 </Project>
 ";
@@ -41,6 +41,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using TWCore.Data;
+using TWCore.Data.Schema;
 ";
 
 
@@ -108,6 +109,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
 using TWCore.Data;
+using TWCore.Data.Schema;
 using ($NAMESPACE$).($DATABASENAME$).Entities;
 ";
 

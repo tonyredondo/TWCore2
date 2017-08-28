@@ -518,7 +518,10 @@ namespace TWCore.Data.Schema.Generator
 			{
 				var container = GetSelectColumns(tableName);
 				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectBaseSql = @\"\n{sbSQL}\";";
+				otherSqls = $"\t\tconst string SelectBaseSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
+				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
+				foreach(var w in wheresList)
+					otherSqls += $"\t\tconst string {w.Item1} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
 			}
 
 			body = body.Replace("($OTHERSQLS$)", otherSqls);
@@ -635,10 +638,10 @@ namespace TWCore.Data.Schema.Generator
 			{
 				var container = GetSelectColumns(tableName);
 				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectBaseSql = @\"\n{sbSQL}\";";
-
+				otherSqls = $"\t\tconst string SelectBaseSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
 				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
-
+				foreach (var w in wheresList)
+					otherSqls += $"\t\tconst string {w.Item1} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
 			}
 
 			body = body.Replace("($OTHERSQLS$)", otherSqls);
@@ -689,7 +692,7 @@ namespace TWCore.Data.Schema.Generator
                                     var tName = GetEntityNameDelegate(fkTable.Name);
                                     var type = "Ent" + tName;
 
-                                    var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{tName}.%\");\r\n";
+                                    var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{fkTable.Name}.%\");\r\n";
                                     if (!fillEntities.Contains(fill))
                                         fillEntities.Add(fill);
 
@@ -717,7 +720,7 @@ namespace TWCore.Data.Schema.Generator
                                         var tName = GetEntityNameDelegate(t.Name);
                                         var type = "Ent" + tName;
 
-                                        var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{tName}.%\");\r\n";
+                                        var fill = $"            ($DATATYPE2$).{name} = binder.Bind<{type}>(rowValues, \"{t.Name}.%\");\r\n";
                                         if (!fillEntities.Contains(fill))
                                             fillEntities.Add(fill);
 

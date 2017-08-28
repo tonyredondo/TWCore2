@@ -14,18 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System.Collections.Generic;
 
 namespace TWCore.Data.Schema.Generator
 {
-    /// <summary>
-    /// Generator Selection Container
-    /// </summary>
-    public class GeneratorSelectionContainer
-    {
-        public List<GeneratorSelectionColumn> Columns { get; } = new List<GeneratorSelectionColumn>();
-        public string From { get; set; }
-        public List<GeneratorSelectionJoin> Joins { get; } = new List<GeneratorSelectionJoin>();
-		public List<GeneratorWhereIndex> Wheres { get; } = new List<GeneratorWhereIndex>();
-    }
+	/// <summary>
+	/// Generator where field.
+	/// </summary>
+	public class GeneratorWhereField
+	{
+		public string TableName { get; set; }
+		public string FieldName { get; set; }
+	}
 }

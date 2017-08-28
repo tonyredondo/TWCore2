@@ -18,14 +18,12 @@ using System.Collections.Generic;
 
 namespace TWCore.Data.Schema.Generator
 {
-    /// <summary>
-    /// Generator Selection Container
-    /// </summary>
-    public class GeneratorSelectionContainer
-    {
-        public List<GeneratorSelectionColumn> Columns { get; } = new List<GeneratorSelectionColumn>();
-        public string From { get; set; }
-        public List<GeneratorSelectionJoin> Joins { get; } = new List<GeneratorSelectionJoin>();
-		public List<GeneratorWhereIndex> Wheres { get; } = new List<GeneratorWhereIndex>();
-    }
+	/// <summary>
+	/// Generator where index.
+	/// </summary>
+	public class GeneratorWhereIndex
+	{
+		public string Name { get; set; }
+		public List<GeneratorWhereField> Fields { get; } = new List<GeneratorWhereField>();
+	}
 }

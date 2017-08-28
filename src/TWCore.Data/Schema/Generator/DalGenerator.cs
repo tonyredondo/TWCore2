@@ -23,10 +23,10 @@ using TWCore.Diagnostics.Log;
 
 namespace TWCore.Data.Schema.Generator
 {
-    /// <summary>
-    /// Dal Generator
-    /// </summary>
-    public class DalGenerator
+	/// <summary>
+	/// Dal Generator
+	/// </summary>
+	public class DalGenerator
     {
         CatalogSchema _schema;
         string _namespace;
@@ -516,9 +516,9 @@ namespace TWCore.Data.Schema.Generator
 			var otherSqls = string.Empty;
 			if (!EnableDynamicDal)
 			{
-				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
-				otherSqls = @"		const string SelectBaseSql = @""
-{sbSQL}"";";
+				var container = GetSelectColumns(tableName);
+				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
+				otherSqls = $"\t\tconst string SelectBaseSql = @\"\n{sbSQL}\";";
 			}
 
 			body = body.Replace("($OTHERSQLS$)", otherSqls);
@@ -633,9 +633,9 @@ namespace TWCore.Data.Schema.Generator
 			var otherSqls = string.Empty;
 			if (!EnableDynamicDal)
 			{
-				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
-				otherSqls = @"		const string SelectBaseSql = @""
-{sbSQL}"";";
+				var container = GetSelectColumns(tableName);
+				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
+				otherSqls = $"\t\tconst string SelectBaseSql = @\"\n{sbSQL}\";";
 			}
 
 			body = body.Replace("($OTHERSQLS$)", otherSqls);
@@ -815,8 +815,8 @@ namespace TWCore.Data.Schema.Generator
             var container = new GeneratorSelectionContainer();
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
             if (table == null) return container;
-
             container.From = table.Name;
+
             foreach (var column in table.Columns)
             {
                 bool added = false;
@@ -896,6 +896,27 @@ namespace TWCore.Data.Schema.Generator
                         Alias = column.Name
                     });
             }
+
+			foreach (var index in table.Indexes)
+			{
+				var whereIdx = new GeneratorWhereIndex()
+				{
+					Name = index.ConstraintName
+				};
+				container.Wheres.Add(whereIdx);
+				foreach (var column in index.Columns)
+				{
+					var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
+					if (tColumn == null) continue;
+
+					whereIdx.Fields.Add(new GeneratorWhereField
+					{
+						FieldName = tColumn.Column,
+						TableName = tColumn.Table
+					});
+				}
+			}
+
             return container;
         }
         #endregion

@@ -26,5 +26,4 @@ namespace TWCore.Data.Schema.Generator
         public string Column { get; set; }
         public string Alias { get; set; }
     }
-
 }

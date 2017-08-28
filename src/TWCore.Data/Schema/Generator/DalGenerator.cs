@@ -441,7 +441,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "SelectElements")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAll" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAll\"" : "SelectSql")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
 
@@ -471,7 +471,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElement")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetBy" + mName : "")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -483,7 +483,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElements")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName : "")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -493,14 +493,14 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Insert")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.Insert" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Insert\"" : "\"\"")
                 );
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Update")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.Update" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Update\"" : "\"\"")
                 );
 
 
@@ -518,7 +518,7 @@ namespace TWCore.Data.Schema.Generator
 			{
 				var container = GetSelectColumns(tableName);
 				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectBaseSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
+				otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
 				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
 				foreach(var w in wheresList)
 					otherSqls += $"\t\tconst string {w.Item1} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
@@ -562,7 +562,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "SelectElementsAsync")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllAsync" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllAsync\"" : "SelectSql")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
 
@@ -592,7 +592,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElementAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetBy" + mName + "Async" : "")
+					            .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "Async\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -604,7 +604,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "SelectElementsAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.GetAllBy" + mName + "Async" : "")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "Async\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -614,14 +614,14 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($RETURNTYPE$)", "Task<int>")
                 .Replace("($METHODNAME$)", "InsertAsync")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.InsertAsync" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.InsertAsync\"" : "\"\"")
                 );
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "Task<int>")
                 .Replace("($METHODNAME$)", "UpdateAsync")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $":{entityTableName}.UpdateAsync" : "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.UpdateAsync\"" : "\"\"")
                 );
 
             var body = header + dalWrapper;
@@ -638,7 +638,7 @@ namespace TWCore.Data.Schema.Generator
 			{
 				var container = GetSelectColumns(tableName);
 				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectBaseSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
+				otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
 				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
 				foreach (var w in wheresList)
 					otherSqls += $"\t\tconst string {w.Item1} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
@@ -823,7 +823,7 @@ namespace TWCore.Data.Schema.Generator
             if (table == null) return container;
             container.From = table.Name;
 
-            foreach (var column in table.Columns)
+			foreach (var column in table.Columns.OrderBy(c => c.Position))
             {
                 bool added = false;
 
@@ -894,22 +894,23 @@ namespace TWCore.Data.Schema.Generator
                         }
                     }
                 }
-                if (!added)
-                    container.Columns.Add(new GeneratorSelectionColumn
-                    {
-                        Table = table.Name,
-                        Column = column.Name,
-                        Alias = column.Name
-                    });
+				if (!added)
+				{
+					container.Columns.Add(new GeneratorSelectionColumn
+					{
+						Table = table.Name,
+						Column = column.Name,
+						Alias = column.Name
+					});
+				}
             }
 
 			foreach (var index in table.Indexes)
 			{
 				var names = new List<string>();
-
 				var whereIdx = new GeneratorWhereIndex();
 				container.Wheres.Add(whereIdx);
-				foreach (var column in index.Columns)
+				foreach (var column in index.Columns.OrderBy(c => c.ColumnPosition))
 				{
 					var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
 					if (tColumn == null) continue;

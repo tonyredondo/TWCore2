@@ -1,16 +1,12 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Data/Schema/Generator/DalGenerator.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TWCore2 Status">
     <Files>
-      <File FileName="src/TWCore.Data/Schema/Generator/DalGenerator.cs" Line="641" Column="5" />
-      <File FileName="src/TWCore.Data/IDataAccessDynamicGenerator.cs" Line="47" Column="1" />
-      <File FileName="src/TWCore.Data.SqlServer/SqlServerDataAccess.cs" Line="344" Column="10" />
+      <File FileName="TWCore2 Status" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.DebuggingService.Breakpoints>
-    <BreakpointStore>
-      <Breakpoint file="/Users/danielredondo/Repo/Github/TWCore2/src/TWCore.Data/Schema/Generator/DalGenerator.cs" relfile="src/TWCore.Data/Schema/Generator/DalGenerator.cs" line="642" column="1" />
-    </BreakpointStore>
+    <BreakpointStore />
   </MonoDevelop.Ide.DebuggingService.Breakpoints>
   <MonoDevelop.Ide.DebuggingService.PinnedWatches />
   <MultiItemStartupConfigurations />

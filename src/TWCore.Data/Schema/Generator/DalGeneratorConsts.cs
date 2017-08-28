@@ -221,11 +221,11 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
 
     public const string formatDalSelectMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$)) 
-            => Data.($DATASELECT$)(""($DATASQL$)""($DATAPARAMETERS$), FillEntity);
+            => Data.($DATASELECT$)(($DATASQL$)($DATAPARAMETERS$), FillEntity);
 ";
 
     public const string formatDalExecuteMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($DATATYPE$) value) 
-            => Data.ExecuteNonQuery($ASYNC$)(""($DATASQL$)"", PrepareEntity(value, ""($METHODNAME$)""));
+            => Data.ExecuteNonQuery($ASYNC$)(($DATASQL$), PrepareEntity(value, ""($METHODNAME$)""));
 ";
 }

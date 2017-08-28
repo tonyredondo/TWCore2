@@ -909,7 +909,6 @@ namespace TWCore.Data.Schema.Generator
 			{
 				var names = new List<string>();
 				var whereIdx = new GeneratorWhereIndex();
-				container.Wheres.Add(whereIdx);
 				foreach (var column in index.Columns.OrderBy(c => c.ColumnPosition))
 				{
 					var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
@@ -923,6 +922,9 @@ namespace TWCore.Data.Schema.Generator
 				}
 				var mName = string.Join("", names.ToArray());
 				whereIdx.Name = "By" + mName;
+
+				if (!container.Wheres.Any(w => w.Name == whereIdx.Name))
+					container.Wheres.Add(whereIdx);
 			}
 
             return container;

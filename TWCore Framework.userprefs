@@ -1,7 +1,7 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
   <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Data/Schema/Generator/DalGenerator.cs">
     <Files>
-      <File FileName="src/TWCore.Data/Schema/Generator/DalGenerator.cs" Line="421" Column="57" />
+      <File FileName="src/TWCore.Data/Schema/Generator/DalGenerator.cs" Line="496" Column="17" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

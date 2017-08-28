@@ -426,7 +426,7 @@ namespace TWCore.Data.Schema.Generator
             if (table == null) return (null, null);
 
             string header = DalGeneratorConsts.formatDalHeader;
-            string dalWrapper = EnableDynamicDal ? DalGeneratorConsts.formatDalDynamicWrapper : DalGeneratorConsts.formatDalWrapper;
+            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
             string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
             string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
 
@@ -512,10 +512,16 @@ namespace TWCore.Data.Schema.Generator
             //PrepareEntity
             var prepareEntities = GetPrepareEntitySentences(table);
 
-            //SelectBaseSQL
-            var selectBaseSQL = EnableDynamicDal ? string.Empty : dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
+			//SelectBaseSQL
+			var otherSqls = string.Empty;
+			if (!EnableDynamicDal)
+			{
+				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
+				otherSqls = @"		const string SelectBaseSql = @""
+{sbSQL}"";";
+			}
 
-            body = body.Replace("($SELECTBASESQL$)", selectBaseSQL);
+			body = body.Replace("($OTHERSQLS$)", otherSqls);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
@@ -525,7 +531,6 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
             body = body.Replace("($ASYNC$)", "");
-
 
             var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
@@ -539,7 +544,7 @@ namespace TWCore.Data.Schema.Generator
 
             string header = DalGeneratorConsts.formatDalHeader;
             header += "using System.Threading.Tasks;\r\n";
-            string dalWrapper = EnableDynamicDal ? DalGeneratorConsts.formatDalDynamicWrapper : DalGeneratorConsts.formatDalWrapper;
+            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
             string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
             string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
 
@@ -624,11 +629,17 @@ namespace TWCore.Data.Schema.Generator
             /*PrepareEntity*/
             var prepareEntities = GetPrepareEntitySentences(table);
 
-            //SelectBaseSQL
-            var selectBaseSQL = EnableDynamicDal ? string.Empty : dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
+			//SelectBaseSQL
+			var otherSqls = string.Empty;
+			if (!EnableDynamicDal)
+			{
+				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(GetSelectColumns(tableName)).Replace("\"", "\"\"");
+				otherSqls = @"		const string SelectBaseSql = @""
+{sbSQL}"";";
+			}
 
-            body = body.Replace("($SELECTBASESQL$)", selectBaseSQL);
-            body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
+			body = body.Replace("($OTHERSQLS$)", otherSqls);
+			body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
@@ -637,7 +648,6 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
             body = body.Replace("($ASYNC$)", "Async");
-
 
             var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
@@ -653,7 +663,7 @@ namespace TWCore.Data.Schema.Generator
             {
                 bool added = false;
 
-                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+				if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
                 {
                     //We have to check first if the column has a FK
                     foreach (var fk in table.ForeignKeys)
@@ -664,11 +674,11 @@ namespace TWCore.Data.Schema.Generator
                             var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
                             if (fkColumn != null)
                             {
-                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                                 if (isPK)
                                 {
                                     var name = column.Name;
-                                    if (name.EndsWith("Id"))
+                                    if (name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                                         name = name.SubstringToLast("Id") + "Item";
                                     else
                                         name = fkTable.Name;
@@ -690,7 +700,7 @@ namespace TWCore.Data.Schema.Generator
                     if (!added)
                     {
                         //We try to find other entity to match the Id (without FK)
-                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        if (column.Name != "Id" && column.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
                             foreach (var t in _schema.Tables)
                             {
@@ -729,7 +739,7 @@ namespace TWCore.Data.Schema.Generator
             {
                 bool added = false;
 
-                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
                 {
                     //We have to check first if the column has a FK
                     foreach (var fk in table.ForeignKeys)
@@ -740,11 +750,11 @@ namespace TWCore.Data.Schema.Generator
                             var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
                             if (fkColumn != null)
                             {
-                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                                 if (isPK)
                                 {
                                     var name = column.Name;
-                                    if (name.EndsWith("Id"))
+                                    if (name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                                         name = name.SubstringToLast("Id") + "Item";
                                     else
                                         name = fkTable.Name;
@@ -765,7 +775,7 @@ namespace TWCore.Data.Schema.Generator
                     if (!added)
                     {
                         //We try to find other entity to match the Id (without FK)
-                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        if (column.Name != "Id" && column.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
                             foreach (var t in _schema.Tables)
                             {
@@ -811,7 +821,7 @@ namespace TWCore.Data.Schema.Generator
             {
                 bool added = false;
 
-                if (!column.IndexesName.Any(i => i.StartsWith("PK")))
+                if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
                 {
                     foreach (var fk in table.ForeignKeys)
                     {
@@ -821,7 +831,7 @@ namespace TWCore.Data.Schema.Generator
                             var fkColumn = fkTable.Columns.FirstOrDefault(c => c.Name == column.Name);
                             if (fkColumn != null)
                             {
-                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK"));
+                                var isPK = fkColumn.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase));
                                 if (isPK)
                                 {
                                     foreach (var foreignColumn in fkTable.Columns)
@@ -848,7 +858,7 @@ namespace TWCore.Data.Schema.Generator
                     if (!added)
                     {
                         //We try to find other entity to match the Id (without FK)
-                        if (column.Name != "Id" && column.Name.EndsWith("Id"))
+                        if (column.Name != "Id" && column.Name.EndsWith("Id", StringComparison.OrdinalIgnoreCase))
                         {
                             foreach (var t in _schema.Tables)
                             {

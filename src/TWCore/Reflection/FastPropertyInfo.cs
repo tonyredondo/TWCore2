@@ -66,8 +66,8 @@ namespace TWCore.Reflection
         FastPropertyInfo(PropertyInfo prop)
         {
             Name = prop.Name;
-            GetValue = GetAccessorCache.GetOrAdd(prop, p => p.CanRead ? Factory.Accessors.BuildGetAccessor(p) : o => null);
-            SetValue = SetAccessorCache.GetOrAdd(prop, p => p.CanWrite ? Factory.Accessors.BuildSetAccessor(p) : (a, b) => { });
+			GetValue = GetAccessorCache.GetOrAdd(prop, GetDelegate);
+			SetValue = SetAccessorCache.GetOrAdd(prop, SetDelegate);
             PropertyType = prop.PropertyType;
 			PropertyTypeInfo = PropertyType.GetTypeInfo();
 			PropertyUnderlayingType = PropertyType.GetUnderlyingType();
@@ -82,5 +82,13 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static FastPropertyInfo Get(PropertyInfo prop)
             => Infos.GetOrAdd(prop, p => new FastPropertyInfo(p));
+
+
+		static GetAccessorDelegate GetDelegate(PropertyInfo prop)
+			=> prop.CanRead ? Factory.Accessors.BuildGetAccessor(prop) : EmptyGet;
+		static SetAccessorDelegate SetDelegate(PropertyInfo prop)
+			=> prop.CanWrite ? Factory.Accessors.BuildSetAccessor(prop) : EmptySet;
+		static object EmptyGet(object value) => null;
+		static void EmptySet(object value, object arg) { }
     }
 }

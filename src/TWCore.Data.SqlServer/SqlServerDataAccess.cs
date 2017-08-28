@@ -326,12 +326,11 @@ namespace TWCore.Data.SqlServer
         public override string GetSelectFromContainer(GeneratorSelectionContainer container)
         {
             var sb = new StringBuilder();
-            sb.AppendLine("SELECT");
-
+			sb.AppendLine("SELECT");
             var cols = new List<string>();
             foreach (var col in container.Columns)
                 cols.Add($"   [{col.Table}].[{col.Column}] as '{col.Alias}'");
-            sb.AppendLine(string.Join(", \r\n", cols.ToArray()));
+            sb.AppendLine(string.Join(", " + Environment.NewLine, cols.ToArray()));
             sb.AppendLine("FROM " + container.From);
 
             if (container.Joins.Count > 0)
@@ -339,10 +338,26 @@ namespace TWCore.Data.SqlServer
                 var joins = new List<string>();
                 foreach (var join in container.Joins)
                     joins.Add($"LEFT JOIN [{join.Table}] ON [{container.From}].[{join.FromColumn}] = [{join.Table}].[{join.TableColumn}]");
-                sb.AppendLine(string.Join("\r\n", joins.ToArray()));
+                sb.AppendLine(string.Join(Environment.NewLine, joins.ToArray()));
             }
             return sb.ToString();
         }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public override List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container)
+		{
+			var lst = new List<(string, string)>();
+			foreach (var w in container.Wheres)
+			{
+				var sb = new StringBuilder();
+				sb.AppendLine("WHERE");
+				var lFields = new List<string>();
+				foreach (var f in w.Fields)
+					lFields.Add($"[{f.TableName}].[{f.FieldName}] = @{f.FieldName}");
+				sb.AppendLine(string.Join(" AND" + Environment.NewLine, lFields.ToArray()));
+				lst.Add((w.Name, sb.ToString()));
+			}
+			return lst;
+		}
         #endregion
     }
 }

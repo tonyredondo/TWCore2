@@ -2439,6 +2439,15 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
-        #endregion
-    }
+		/// <summary>
+		/// Get the Where from Sql from GeneratorSelectionContainer instance
+		/// </summary>
+		/// <param name="container">Container object</param>
+		/// <returns>The where list.</returns>
+		public virtual List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container)
+		{
+			throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+		}
+		#endregion
+	}
 }

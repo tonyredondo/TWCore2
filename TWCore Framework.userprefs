@@ -1,9 +1,9 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="TWCore2 Status">
+  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Data.SqlServer/SqlServerDataAccess.cs">
     <Files>
-      <File FileName="src/TWCore.Data/Schema/Generator/DalGenerator.cs" Line="637" Column="94" />
-      <File FileName="src/TWCore.Data/IDataAccessDynamicGenerator.cs" Line="33" Column="21" />
-      <File FileName="TWCore2 Status" />
+      <File FileName="src/TWCore.Data/Schema/Generator/DalGenerator.cs" Line="640" Column="4" />
+      <File FileName="src/TWCore.Data/IDataAccessDynamicGenerator.cs" Line="47" Column="1" />
+      <File FileName="src/TWCore.Data.SqlServer/SqlServerDataAccess.cs" Line="346" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />

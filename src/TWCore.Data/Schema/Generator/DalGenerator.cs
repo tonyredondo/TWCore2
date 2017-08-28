@@ -636,6 +636,9 @@ namespace TWCore.Data.Schema.Generator
 				var container = GetSelectColumns(tableName);
 				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
 				otherSqls = $"\t\tconst string SelectBaseSql = @\"\n{sbSQL}\";";
+
+				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
+
 			}
 
 			body = body.Replace("($OTHERSQLS$)", otherSqls);
@@ -899,22 +902,23 @@ namespace TWCore.Data.Schema.Generator
 
 			foreach (var index in table.Indexes)
 			{
-				var whereIdx = new GeneratorWhereIndex()
-				{
-					Name = index.ConstraintName
-				};
+				var names = new List<string>();
+
+				var whereIdx = new GeneratorWhereIndex();
 				container.Wheres.Add(whereIdx);
 				foreach (var column in index.Columns)
 				{
 					var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
 					if (tColumn == null) continue;
-
+					names.Add(tColumn.Column);
 					whereIdx.Fields.Add(new GeneratorWhereField
 					{
 						FieldName = tColumn.Column,
 						TableName = tColumn.Table
 					});
 				}
+				var mName = string.Join("", names.ToArray());
+				whereIdx.Name = "By" + mName;
 			}
 
             return container;

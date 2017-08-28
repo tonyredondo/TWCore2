@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Generic;
 using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data
@@ -35,5 +36,11 @@ namespace TWCore.Data
         /// <param name="container">Container object</param>
         /// <returns>Select base sql query</returns>
         string GetSelectFromContainer(GeneratorSelectionContainer container);
+		/// <summary>
+		/// Get the Sql wheres from the GeneratorSelectionContainer instance.
+		/// </summary>
+		/// <param name="container">Container object</param>
+		/// <returns>List of index name and where statement</returns>
+		List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container);
     }
 }

@@ -105,8 +105,6 @@ namespace TWCore.Data.SqlServer
             {
                 ConnectionString = connection.ConnectionString,
                 Name = (string)tableRows.FirstOrDefault()?["TABLE_CATALOG"],
-                Provider = nameof(SqlServerDataAccess),
-                Assembly = typeof(SqlServerDataAccess).Assembly.GetName().Name,
                 AssemblyQualifiedName = typeof(SqlServerDataAccess).AssemblyQualifiedName
             };
 

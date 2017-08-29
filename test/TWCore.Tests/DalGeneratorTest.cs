@@ -11,6 +11,8 @@ using TWCore.Serialization;
 using TWCore.Data.Schema.Generator;
 using System.IO;
 using TWCore.Data.Schema;
+using TWCore.Data.PostgreSQL;
+using TWCore.Data.MySql;
 
 namespace TWCore.Tests
 {
@@ -46,8 +48,19 @@ namespace TWCore.Tests
             dGen.GeneratorType = DalGeneratorType.Embedded;
 
 
-            Core.Log.InfoBasic("Generating Dal: {0}", folder);
+            Core.Log.InfoBasic("Generating SQLServer Dal: {0}", folder);
             dGen.Create(folder);
+
+            Core.Log.InfoBasic("Generating PostgreSQL Dal: {0}", folder);
+            string connectionString2 = "Server=10.10.1.50;Port=5432;Database=FLY_MIDDLE;User Id=postgres;Password=genesis;";
+            var pdal = new PostgreSQLDataAccess(connectionString2, DataAccessType.Query);
+            dGen.Create(folder, pdal);
+
+
+            Core.Log.InfoBasic("Generating MySql Dal: {0}", folder);
+            string connectionString3 = "MySqlConnString";
+            var sdal = new MySqlDataAccess(connectionString3, DataAccessType.Query);
+            dGen.Create(folder, sdal);
         }
     }
 }

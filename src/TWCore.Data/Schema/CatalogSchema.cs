@@ -31,16 +31,6 @@ namespace TWCore.Data.Schema
         [DataMember, XmlAttribute]
         public string Name { get; set; }
         /// <summary>
-        /// Provider Name
-        /// </summary>
-        [DataMember, XmlAttribute]
-        public string Provider { get; set; }
-        /// <summary>
-        /// Assembly Name
-        /// </summary>
-        [DataMember, XmlAttribute]
-        public string Assembly { get; set; }
-        /// <summary>
         /// AssemblyQualified Name
         /// </summary>
         [DataMember, XmlAttribute]

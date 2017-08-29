@@ -31,6 +31,7 @@ namespace TWCore.Data.Schema.Generator
         CatalogSchema _schema;
         string _namespace;
         IDataAccessDynamicGenerator dataAccessGenerator = null;
+        
 
         #region Properties
         /// <summary>
@@ -67,16 +68,6 @@ namespace TWCore.Data.Schema.Generator
         {
             _schema = schema;
             _namespace = @namespace;
-            try
-            {
-                var dagenType = Core.GetType(_schema.AssemblyQualifiedName);
-                if (dagenType != null)
-                    dataAccessGenerator = Activator.CreateInstance(dagenType) as IDataAccessDynamicGenerator;
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Write(LogLevel.Warning, ex);
-            }
         }
         #endregion
 
@@ -85,8 +76,23 @@ namespace TWCore.Data.Schema.Generator
         /// Create Dal
         /// </summary>
         /// <param name="directory">Folder path</param>
-        public void Create(string directory)
+        public void Create(string directory, IDataAccessDynamicGenerator generator = null)
         {
+            try
+            {
+                if (generator != null)
+                    dataAccessGenerator = generator;
+                else
+                {
+                    var dagenType = Core.GetType(_schema.AssemblyQualifiedName);
+                    if (dagenType != null)
+                        dataAccessGenerator = Activator.CreateInstance(dagenType) as IDataAccessDynamicGenerator;
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(LogLevel.Warning, ex);
+            }
             if (dataAccessGenerator == null)
                 GeneratorType = DalGeneratorType.StoredProcedure;
             CreateEntities(directory);
@@ -159,8 +165,9 @@ namespace TWCore.Data.Schema.Generator
         #region Abstractions
         (string, string) CreateAbstractionProject()
         {
+            var dag = dataAccessGenerator.GetType();
             string projFile = DalGeneratorConsts.formatAbstractionsProject;
-            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", _schema.Assembly);
+            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", dag.Assembly.GetName().Name);
             projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
             var filePath = Path.Combine(_schema.Name, "Abstractions", _namespace + "." + _schema.Name + ".Abstractions.csproj");
             return (filePath, projFile);
@@ -338,7 +345,7 @@ namespace TWCore.Data.Schema.Generator
         #region Dal
         (string, string) CreateSolution()
         {
-            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var prov = dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
             string projFile = DalGeneratorConsts.formatSolution;
             projFile = projFile.Replace("($NAMESPACE$)", _namespace);
             projFile = projFile.Replace("($CATALOGNAME$)", _schema.Name);
@@ -348,9 +355,10 @@ namespace TWCore.Data.Schema.Generator
         }
         (string, string) CreateDalProject()
         {
-            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var dag = dataAccessGenerator.GetType();
+            var prov = dag.Name.Replace("DataAccess", string.Empty);
             string projFile = DalGeneratorConsts.formatDalProject;
-            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", _schema.Assembly);
+            projFile = projFile.Replace("($DATAASSEMBLYNAME$)", dag.Assembly.GetName().Name);
             projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
             projFile = projFile.Replace("($NAMESPACE$)", _namespace);
             projFile = projFile.Replace("($CATALOGNAME$)", _schema.Name);
@@ -359,14 +367,15 @@ namespace TWCore.Data.Schema.Generator
         }
         (string, string) CreateDatabaseEntity()
         {
-            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var dag = dataAccessGenerator.GetType();
+            var prov = dag.Name.Replace("DataAccess", string.Empty);
             string header = DalGeneratorConsts.formatEntityHeader;
-            header += "using " + _schema.Assembly + ";\r\n";
+            header += "using " + dag.Assembly.GetName().Name + ";\r\n";
             string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
             databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
-            databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
-            databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
+            databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", (dataAccessGenerator as DataAccessBase)?.ConnectionString ?? _schema.ConnectionString);
+            databaseEntities = databaseEntities.Replace("($PROVIDER$)", dag.Name);
             if (GeneratorType == DalGeneratorType.StoredProcedure)
                 databaseEntities = databaseEntities.Replace("($QUERYTYPE$)", "StoredProcedure");
             else
@@ -591,7 +600,7 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.Concat(methods2).ToArray()));
 
-            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
+            var prov = dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
             filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
             return (filePath, body);

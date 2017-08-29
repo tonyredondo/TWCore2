@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Data.Schema;
 using TWCore.Security;
 
@@ -29,10 +30,14 @@ namespace TWCore.Data
     public abstract class EntityDal : IEntityDal
     {
         static ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
+		static ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         EntityDalSettings _settings = null;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         DalPoolItem _poolItem = null;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        DalPoolItemAsync _poolAsyncItem = null;
 
         #region Properties
         /// <summary>
@@ -52,14 +57,21 @@ namespace TWCore.Data
         /// Data Access Pool Item
         /// </summary>
         public IDataAccess Data => _poolItem;
+        /// <summary>
+        /// DataAsync Access Pool Item
+        /// </summary>
+        public IDataAccessAsync DataAsync => _poolAsyncItem;
         #endregion
 
+        #region .ctor
         protected EntityDal()
         {
             var poolKey = Settings.GetHashSHA1();
             var _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pool => OnGetDataAccess(Settings)));
+			var _poolAsyncItem = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pool => OnGetDataAccessAsync(Settings)));
             _poolItem = new DalPoolItem(_pool);
         }
+        #endregion
 
         #region Abstract Methods
         /// <summary>
@@ -73,13 +85,27 @@ namespace TWCore.Data
         /// <param name="settings">EntityDal settings</param>
         /// <returns></returns>
         protected abstract IDataAccess OnGetDataAccess(EntityDalSettings settings);
+        /// <summary>
+        /// On Get DataAccess instance.
+        /// </summary>
+        /// <param name="settings">EntityDal settings</param>
+        /// <returns></returns>
+        protected abstract IDataAccessAsync OnGetDataAccessAsync(EntityDalSettings settings);
         #endregion
 
+        #region GetSchema
         /// <summary>
         /// Get Database Schema
         /// </summary>
         /// <returns>Schema</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CatalogSchema GetSchema() => Data.GetSchema();
+        /// <summary>
+        /// Get Database Schema
+        /// </summary>
+        /// <returns>Schema</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<CatalogSchema> GetSchemaAsync() => DataAsync.GetSchemaAsync();
+        #endregion
     }
 }

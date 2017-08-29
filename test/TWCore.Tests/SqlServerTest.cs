@@ -39,15 +39,13 @@ namespace TWCore.Tests
 
             Task.Run(async () =>
             {
-                IDalCityAsync dalCityAsync = new DalCityAsync();
-
                 using (var tW = Watch.Create("Async Test"))
                 {
                     for (var i = 0; i < 30; i++)
                     {
                         using (var w = Watch.Create())
                         {
-                            var values = await dalCityAsync.GetAll().ConfigureAwait(false);
+                            var values = await dalCity.GetAllAsync().ConfigureAwait(false);
                             w.Tap("GetAll");
                             var arr = values.ToArray();
                             w.Tap($"Entity Binding: {arr.Length} items");
@@ -74,15 +72,7 @@ namespace TWCore.Tests
             Core.Log.Warning("Creating DataAccess Object");
             return new SqlServerDataAccess(Settings.ConnectionString, settings.QueryType);
         }
-        protected override EntityDalSettings OnGetSettings()
-        {
-            Core.Log.Warning("Creating Settings Object");
-            return new MiddleDalSettings();
-        }
-    }
-    public class MiddleDatabaseDalAsync : EntityDalAsync
-    {
-        protected override IDataAccessAsync OnGetDataAccess(EntityDalSettings settings)
+        protected override IDataAccessAsync OnGetDataAccessAsync(EntityDalSettings settings)
         {
             Core.Log.Warning("Creating DataAccess Object");
             return new SqlServerDataAccess(Settings.ConnectionString, settings.QueryType);
@@ -118,6 +108,17 @@ namespace TWCore.Tests
         int Delete(Guid cityId);
         int Insert(EntCity entity);
         int Update(EntCity entity);
+
+        Task<IEnumerable<EntCity>> GetAllAsync();
+        Task<IEnumerable<EntCity>> GetAllAsync(string cultureInfo);
+        Task<EntCity> GetByCityIdAsync(Guid cityId);
+        Task<EntCity> GetByCityIdAsync(Guid cityId, string cultureInfo);
+        Task<EntCity> GetByIataAsync(string iata);
+        Task<EntCity> GetByIataAsync(string iata, string cultureInfo);
+        Task<int> DeleteAsync(Guid cityId);
+        Task<int> InsertAsync(EntCity entity);
+        Task<int> UpdateAsync(EntCity entity);
+
     }
     public class DalCity : MiddleDatabaseDal, IDalCity
     {
@@ -148,6 +149,37 @@ namespace TWCore.Tests
         public int Update(EntCity entity)
             => Data.ExecuteNonQuery("sp_GEO_CITIES_Upd", entity);
 
+        //
+
+        public Task<IEnumerable<EntCity>> GetAllAsync()
+            => DataAsync.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAll");
+
+        public Task<IEnumerable<EntCity>> GetAllAsync(string cultureInfo)
+            => DataAsync.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo });
+
+        public Task<EntCity> GetByCityIdAsync(Guid cityId)
+            => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId });
+
+        public Task<EntCity> GetByCityIdAsync(Guid cityId, string cultureInfo)
+            => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo });
+
+        public Task<EntCity> GetByIataAsync(string iata)
+            => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
+
+        public Task<EntCity> GetByIataAsync(string iata, string cultureInfo)
+            => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
+
+        public Task<int> DeleteAsync(Guid cityId)
+            => DataAsync.ExecuteNonQueryAsync("sp_GEO_CITIES_Del", new { CityId = cityId });
+
+        public Task<int> InsertAsync(EntCity entity)
+            => DataAsync.ExecuteNonQueryAsync("sp_GEO_CITIES_Ins", entity);
+
+        public Task<int> UpdateAsync(EntCity entity)
+            => DataAsync.ExecuteNonQueryAsync("sp_GEO_CITIES_Upd", entity);
+
+
+
         EntCity FillEntity(EntityBinder binder, object[] rowValues)
         {
             var EntCity = binder.Bind<EntCity>(rowValues);
@@ -155,47 +187,6 @@ namespace TWCore.Tests
         }
 
     }
-
-    public interface IDalCityAsync
-    {
-        Task<IEnumerable<EntCity>> GetAll();
-        Task<IEnumerable<EntCity>> GetAll(string cultureInfo);
-        Task<EntCity> GetByCityId(Guid cityId);
-        Task<EntCity> GetByCityId(Guid cityId, string cultureInfo);
-        Task<EntCity> GetByIata(string iata);
-        Task<EntCity> GetByIata(string iata, string cultureInfo);
-        Task<int> Delete(Guid cityId);
-        Task<int> Insert(EntCity entity);
-        Task<int> Update(EntCity entity);
-    }
-    public class DalCityAsync : MiddleDatabaseDalAsync, IDalCityAsync
-    {
-        public Task<IEnumerable<EntCity>> GetAll()
-            => Data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAll");
-
-        public Task<IEnumerable<EntCity>> GetAll(string cultureInfo)
-            => Data.SelectElementsAsync<EntCity>("sp_GEO_CITIES_GetAllCultureInfo", new { CultureInfo = cultureInfo });
-
-        public Task<EntCity> GetByCityId(Guid cityId)
-            => Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityId", new { CityId = cityId });
-
-        public Task<EntCity> GetByCityId(Guid cityId, string cultureInfo)
-            => Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByCityIdCultureInfo", new { CityId = cityId, CultureInfo = cultureInfo });
-
-        public Task<EntCity> GetByIata(string iata)
-            => Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
-
-        public Task<EntCity> GetByIata(string iata, string cultureInfo)
-            => Data.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo });
-
-        public Task<int> Delete(Guid cityId)
-            => Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Del", new { CityId = cityId });
-
-        public Task<int> Insert(EntCity entity)
-            => Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Ins", entity);
-
-        public Task<int> Update(EntCity entity)
-            => Data.ExecuteNonQueryAsync("sp_GEO_CITIES_Upd", entity);
-    }
+    
 
 }

@@ -23,10 +23,10 @@ using TWCore.Diagnostics.Log;
 
 namespace TWCore.Data.Schema.Generator
 {
-	/// <summary>
-	/// Dal Generator
-	/// </summary>
-	public class DalGenerator
+    /// <summary>
+    /// Dal Generator
+    /// </summary>
+    public class DalGenerator
     {
         CatalogSchema _schema;
         string _namespace;
@@ -44,7 +44,6 @@ namespace TWCore.Data.Schema.Generator
             return tableName.RemoveSpaces();
         });
 
-        public bool EnableAsync { get; set; } = true;
         public bool EnableCreateEntities { get; set; } = true;
         public bool EnableCreateInterfaces { get; set; } = true;
         public bool EnableCreateSolution { get; set; } = true;
@@ -122,11 +121,6 @@ namespace TWCore.Data.Schema.Generator
             {
                 (fName, fContent) = CreateInterface(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
-                if (EnableAsync)
-                {
-                    (fName, fContent) = CreateInterfaceAsync(table.Name);
-                    WriteToDisk(Path.Combine(directory, fName), fContent);
-                }
             }
         }
         void CreateDal(string directory)
@@ -151,11 +145,6 @@ namespace TWCore.Data.Schema.Generator
             {
                 (fName, fContent) = CreateClass(table.Name);
                 WriteToDisk(Path.Combine(directory, fName), fContent);
-                if (EnableAsync)
-                {
-                    (fName, fContent) = CreateClassAsync(table.Name);
-                    WriteToDisk(Path.Combine(directory, fName), fContent);
-                }
             }
         }
 
@@ -286,8 +275,10 @@ namespace TWCore.Data.Schema.Generator
             var entityName = "Ent" + entityTableName;
 
             var methods = new List<string>();
+            var methods2 = new List<string> { Environment.NewLine, Environment.NewLine };
 
             methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>").Replace("($METHODNAME$)", "GetAll").Replace("($METHODPARAMETERS$)", ""));
+            methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllAsync").Replace("($METHODPARAMETERS$)", ""));
 
             foreach (var index in table.Indexes)
             {
@@ -301,6 +292,7 @@ namespace TWCore.Data.Schema.Generator
                     names.Add(GetName(col.ColumnName));
                     parameters.Add(column.DataType + " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1)));
                 }
+                //NORMAL
                 var indexAttribute = $"\r\n        [IndexSchema(ColumnsNames=\"{string.Join(", ", columnNames.ToArray())}\")]";
                 methods.Add(indexAttribute);
                 if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
@@ -311,76 +303,41 @@ namespace TWCore.Data.Schema.Generator
                 {
                     methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray())).Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
                 }
+                //ASYNC
+                methods2.Add(indexAttribute);
+                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
+                {
+                    methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<{entityName}>").Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+                else
+                {
+                    methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
+
+
+                if (index.Type == IndexType.PrimaryKey)
+                {
+                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Delete").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                    methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "DeleteAsync").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
+                }
             }
 
             methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Insert").Replace("($METHODPARAMETERS$)", entityName + " value"));
             methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Update").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "int").Replace("($METHODNAME$)", "Delete").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "InsertAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "UpdateAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
+            methods2.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "DeleteAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
 
 
             var body = header + interfaceWrapper;
             body = body.Replace("($NAMESPACE$)", _namespace);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
             body = body.Replace("($TABLENAME$)", entityTableName);
-            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.Concat(methods2).ToArray()));
 
             var filePath = Path.Combine(_schema.Name, "Abstractions", "Interfaces");
             filePath = Path.Combine(filePath, "IDal" + entityTableName + ".cs");
-            return (filePath, body);
-        }
-        (string, string) CreateInterfaceAsync(string tableName)
-        {
-            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
-            if (table == null) return (null, null);
-
-            string header = DalGeneratorConsts.formatDalInterfaceHeader;
-            header += "using System.Threading.Tasks;\r\n";
-
-            string interfaceWrapper = DalGeneratorConsts.formatDalInterfaceWrapper;
-            string interfaceMethod = DalGeneratorConsts.formatDalInterfaceMethod;
-
-            var entityTableName = GetEntityNameDelegate(table.Name);
-            var entityName = "Ent" + entityTableName;
-
-            var methods = new List<string>();
-
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllAsync").Replace("($METHODPARAMETERS$)", ""));
-
-            foreach (var index in table.Indexes)
-            {
-                var columnNames = new List<string>();
-                var names = new List<string>();
-                var parameters = new List<string>();
-                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
-                {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
-                    columnNames.Add(col.ColumnName);
-                    names.Add(GetName(col.ColumnName));
-                    parameters.Add(column.DataType + " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1)));
-                }
-                var indexAttribute = $"\r\n        [IndexSchema(ColumnsNames=\"{string.Join(", ", columnNames.ToArray())}\")]";
-                methods.Add(indexAttribute);
-                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
-                {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<{entityName}>").Replace("($METHODNAME$)", "GetBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
-                }
-                else
-                {
-                    methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>").Replace("($METHODNAME$)", "GetAllBy" + string.Join("", names.ToArray()) + "Async").Replace("($METHODPARAMETERS$)", string.Join(", ", parameters.ToArray())));
-                }
-            }
-
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "InsertAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
-            methods.Add(interfaceMethod.Replace("($RETURNTYPE$)", "Task<int>").Replace("($METHODNAME$)", "UpdateAsync").Replace("($METHODPARAMETERS$)", entityName + " value"));
-
-
-            var body = header + interfaceWrapper;
-            body = body.Replace("($NAMESPACE$)", _namespace);
-            body = body.Replace("($DATABASENAME$)", _schema.Name);
-            body = body.Replace("($TABLENAME$)", entityTableName + "Async");
-            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
-
-            var filePath = Path.Combine(_schema.Name, "Abstractions", "Interfaces");
-            filePath = Path.Combine(filePath, "IDal" + entityTableName + "Async.cs");
             return (filePath, body);
         }
         #endregion
@@ -429,21 +386,33 @@ namespace TWCore.Data.Schema.Generator
             string dalWrapper = DalGeneratorConsts.formatDalWrapper;
             string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
             string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
+            string dalDeleteExecuteMethod = DalGeneratorConsts.formatDalDeleteExecuteMethod;
 
             var entityTableName = GetEntityNameDelegate(table.Name);
             var entityName = "Ent" + entityTableName;
 
             var methods = new List<string>();
+            var methods2 = new List<string> { Environment.NewLine, Environment.NewLine };
 
             methods.Add(dalSelectMethod
                 .Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>")
                 .Replace("($METHODNAME$)", "GetAll")
                 .Replace("($METHODPARAMETERS$)", "")
-                .Replace("($DATASELECT$)", "SelectElements")
+                .Replace("($DATASELECT$)", "Data.SelectElements")
                 .Replace("($DATARETURN$)", entityName)
                 .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAll\"" : "SelectSql")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
+            methods2.Add(dalSelectMethod
+                .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
+                .Replace("($METHODNAME$)", "GetAllAsync")
+                .Replace("($METHODPARAMETERS$)", "")
+                .Replace("($DATASELECT$)", "DataAsync.SelectElementsAsync")
+                .Replace("($DATARETURN$)", entityName)
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllAsync\"" : "SelectSql")
+                .Replace("($DATAPARAMETERS$)", "")
+                );
+
 
             foreach (var index in table.Indexes)
             {
@@ -469,9 +438,18 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($RETURNTYPE$)", entityName)
                         .Replace("($METHODNAME$)", "GetBy" + mName)
                         .Replace("($METHODPARAMETERS$)", mParameters)
-                        .Replace("($DATASELECT$)", "SelectElement")
+                        .Replace("($DATASELECT$)", "Data.SelectElement")
                         .Replace("($DATARETURN$)", entityName)
                         .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "\"" : "SelectSql + By" + mName)
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+                    methods2.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", $"Task<{entityName}>")
+                        .Replace("($METHODNAME$)", "GetBy" + mName + "Async")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "DataAsync.SelectElementAsync")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "Async\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -481,26 +459,100 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($RETURNTYPE$)", $"IEnumerable<{entityName}>")
                         .Replace("($METHODNAME$)", "GetAllBy" + mName)
                         .Replace("($METHODPARAMETERS$)", mParameters)
-                        .Replace("($DATASELECT$)", "SelectElements")
+                        .Replace("($DATASELECT$)", "Data.SelectElements")
                         .Replace("($DATARETURN$)", entityName)
                         .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "\"" : "SelectSql + By" + mName)
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
+                    methods2.Add(dalSelectMethod
+                        .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
+                        .Replace("($METHODNAME$)", "GetAllBy" + mName + "Async")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATASELECT$)", "DataAsync.SelectElementsAsync")
+                        .Replace("($DATARETURN$)", entityName)
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "Async\"" : "SelectSql + By" + mName)
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+
+                }
+
+
+                if (index.Type == IndexType.PrimaryKey)
+                {
+                    methods.Add(dalDeleteExecuteMethod
+                        .Replace("($RETURNTYPE$)", "int")
+                        .Replace("($METHODNAME$)", "Delete")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATATYPE$)", entityName)
+                        .Replace("($ASYNC$)", "")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Delete\"" : "DeleteSQL")
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+
+                    methods2.Add(dalDeleteExecuteMethod
+                        .Replace("($RETURNTYPE$)", "Task<int>")
+                        .Replace("($METHODNAME$)", "DeleteAsync")
+                        .Replace("($METHODPARAMETERS$)", mParameters)
+                        .Replace("($DATATYPE$)", entityName)
+                        .Replace("($ASYNC$)", "Async")
+                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.DeleteAsync\"" : "DeleteSQL")
+                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
+                        );
+
                 }
             }
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Insert")
+                .Replace("($METHODNAME2$)", "Insert")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Insert\"" : "\"\"")
+                .Replace("($ASYNC$)", "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Insert\"" : "InsertSQL")
                 );
 
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "int")
                 .Replace("($METHODNAME$)", "Update")
+                .Replace("($METHODNAME2$)", "Update")
                 .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Update\"" : "\"\"")
+                .Replace("($ASYNC$)", "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Update\"" : "UpdateSQL")
+                );
+            methods.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "int")
+                .Replace("($METHODNAME$)", "Delete")
+                .Replace("($METHODNAME2$)", "Delete")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($ASYNC$)", "")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Delete\"" : "DeleteSQL")
+                );
+
+
+            methods2.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "Task<int>")
+                .Replace("($METHODNAME$)", "InsertAsync")
+                .Replace("($METHODNAME2$)", "Insert")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($ASYNC$)", "Async")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.InsertAsync\"" : "InsertSQL")
+                );
+
+            methods2.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "Task<int>")
+                .Replace("($METHODNAME$)", "UpdateAsync")
+                .Replace("($METHODNAME2$)", "Update")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($ASYNC$)", "Async")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.UpdateAsync\"" : "UpdateSQL")
+                );
+            methods2.Add(dalExecuteMethod
+                .Replace("($RETURNTYPE$)", "Task<int>")
+                .Replace("($METHODNAME$)", "DeleteAsync")
+                .Replace("($METHODNAME2$)", "Delete")
+                .Replace("($DATATYPE$)", entityName)
+                .Replace("($ASYNC$)", "Async")
+                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.DeleteAsync\"" : "DeleteSQL")
                 );
 
 
@@ -512,19 +564,28 @@ namespace TWCore.Data.Schema.Generator
             //PrepareEntity
             var prepareEntities = GetPrepareEntitySentences(table);
 
-			//SelectBaseSQL
-			var otherSqls = string.Empty;
-			if (!EnableDynamicDal)
-			{
-				var container = GetSelectColumns(tableName);
-				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
-				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
-				foreach(var w in wheresList)
-					otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
-			}
+            //SelectBaseSQL
+            var otherSqls = string.Empty;
+            if (!EnableDynamicDal)
+            {
+                var container = GetSelectColumns(tableName);
+                var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
+                otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
+                var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
+                foreach (var w in wheresList)
+                    otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
 
-			body = body.Replace("($OTHERSQLS$)", otherSqls);
+                var insertSQL = dataAccessGenerator?.GetInsertFromContainer(container).Replace("\"", "\"\"");
+                otherSqls += $"\t\tconst string InsertSQL = @\"{Environment.NewLine}{insertSQL}\";{Environment.NewLine}";
+
+                var updateSql = dataAccessGenerator?.GetUpdateFromContainer(container).Replace("\"", "\"\"");
+                otherSqls += $"\t\tconst string UpdateSQL = @\"{Environment.NewLine}{updateSql}\";{Environment.NewLine}";
+
+                var deleteSql = dataAccessGenerator?.GetDeleteFromContainer(container).Replace("\"", "\"\"");
+                otherSqls += $"\t\tconst string DeleteSql = @\"{Environment.NewLine}{deleteSql}\";{Environment.NewLine}";
+            }
+
+            body = body.Replace("($OTHERSQLS$)", otherSqls);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
@@ -532,135 +593,13 @@ namespace TWCore.Data.Schema.Generator
             body = body.Replace("($TABLENAME$)", entityTableName);
             body = body.Replace("($DATATYPE$)", entityName);
             body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
-            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
-            body = body.Replace("($ASYNC$)", "");
+            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.Concat(methods2).ToArray()));
 
             var prov = _schema.Provider.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
             filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
             return (filePath, body);
         }
-        (string, string) CreateClassAsync(string tableName)
-        {
-            var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
-            if (table == null) return (null, null);
-
-            string header = DalGeneratorConsts.formatDalHeader;
-            header += "using System.Threading.Tasks;\r\n";
-            string dalWrapper = DalGeneratorConsts.formatDalWrapper;
-            string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
-            string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
-
-            var entityTableName = GetEntityNameDelegate(table.Name);
-            var entityName = "Ent" + entityTableName;
-
-            var methods = new List<string>();
-
-            methods.Add(dalSelectMethod
-                .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
-                .Replace("($METHODNAME$)", "GetAllAsync")
-                .Replace("($METHODPARAMETERS$)", "")
-                .Replace("($DATASELECT$)", "SelectElementsAsync")
-                .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllAsync\"" : "SelectSql")
-                .Replace("($DATAPARAMETERS$)", "")
-                );
-
-            foreach (var index in table.Indexes)
-            {
-                var columnNames = new List<string>();
-                var names = new List<string>();
-                var parameters = new List<string>();
-                var objParameters = new List<string>();
-                foreach (var col in index.Columns.OrderBy(c => c.ColumnPosition))
-                {
-                    var column = table.Columns.FirstOrDefault(c => c.Name == col.ColumnName);
-                    columnNames.Add(col.ColumnName);
-                    names.Add(GetName(col.ColumnName));
-                    var pName = " @" + GetName(col.ColumnName.Substring(0, 1).ToLowerInvariant() + col.ColumnName.Substring(1));
-                    parameters.Add(column.DataType + pName);
-                    objParameters.Add($"{GetName(col.ColumnName)} = {pName}");
-                }
-                var mName = string.Join("", names.ToArray());
-                var mParameters = string.Join(", ", parameters.ToArray());
-                var oParameters = "new { " + string.Join(", ", objParameters.ToArray()) + " }";
-                if (index.Type == IndexType.PrimaryKey || index.Type == IndexType.UniqueKey || index.Type == IndexType.UniqueIndex || index.Type == IndexType.UniqueClusteredIndex)
-                {
-                    methods.Add(dalSelectMethod
-                        .Replace("($RETURNTYPE$)", $"Task<{entityName}>")
-                        .Replace("($METHODNAME$)", "GetBy" + mName + "Async")
-                        .Replace("($METHODPARAMETERS$)", mParameters)
-                        .Replace("($DATASELECT$)", "SelectElementAsync")
-                        .Replace("($DATARETURN$)", entityName)
-					            .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "Async\"" : "SelectSql + By" + mName)
-                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
-                        );
-                }
-                else
-                {
-                    methods.Add(dalSelectMethod
-                        .Replace("($RETURNTYPE$)", $"Task<IEnumerable<{entityName}>>")
-                        .Replace("($METHODNAME$)", "GetAllBy" + mName + "Async")
-                        .Replace("($METHODPARAMETERS$)", mParameters)
-                        .Replace("($DATASELECT$)", "SelectElementsAsync")
-                        .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "Async\"" : "SelectSql + By" + mName)
-                        .Replace("($DATAPARAMETERS$)", ", " + oParameters)
-                        );
-                }
-            }
-
-            methods.Add(dalExecuteMethod
-                .Replace("($RETURNTYPE$)", "Task<int>")
-                .Replace("($METHODNAME$)", "InsertAsync")
-                .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.InsertAsync\"" : "\"\"")
-                );
-
-            methods.Add(dalExecuteMethod
-                .Replace("($RETURNTYPE$)", "Task<int>")
-                .Replace("($METHODNAME$)", "UpdateAsync")
-                .Replace("($DATATYPE$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.UpdateAsync\"" : "\"\"")
-                );
-
-            var body = header + dalWrapper;
-
-            /*FillEntity*/
-            var fillEntities = GetFillMethodSentences(table);
-
-            /*PrepareEntity*/
-            var prepareEntities = GetPrepareEntitySentences(table);
-
-			//SelectBaseSQL
-			var otherSqls = string.Empty;
-			if (!EnableDynamicDal)
-			{
-				var container = GetSelectColumns(tableName);
-				var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-				otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
-				var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
-				foreach (var w in wheresList)
-					otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
-			}
-
-			body = body.Replace("($OTHERSQLS$)", otherSqls);
-			body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
-            body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
-            body = body.Replace("($NAMESPACE$)", _namespace);
-            body = body.Replace("($DATABASENAME$)", _schema.Name);
-            body = body.Replace("($TABLENAME$)", entityTableName + "Async");
-            body = body.Replace("($DATATYPE$)", entityName);
-            body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
-            body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.ToArray()));
-            body = body.Replace("($ASYNC$)", "Async");
-
-            var prov = _schema.Provider.Replace("DataAccess", string.Empty);
-            var filePath = Path.Combine(_schema.Name, "Dal." + prov);
-            filePath = Path.Combine(filePath, "Dal" + entityTableName + "Async.cs");
-            return (filePath, body);
-        }
-
 
         List<string> GetFillMethodSentences(TableSchema table)
         {
@@ -669,7 +608,7 @@ namespace TWCore.Data.Schema.Generator
             {
                 bool added = false;
 
-				if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
+                if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
                 {
                     //We have to check first if the column has a FK
                     foreach (var fk in table.ForeignKeys)
@@ -823,12 +762,14 @@ namespace TWCore.Data.Schema.Generator
             if (table == null) return container;
             container.From = table.Name;
 
-			foreach (var column in table.Columns.OrderBy(c => c.Position))
+            foreach (var column in table.Columns.OrderBy(c => c.Position))
             {
                 bool added = false;
 
                 if (!column.IndexesName.Any(i => i.StartsWith("PK", StringComparison.OrdinalIgnoreCase)))
                 {
+                    container.TableColumns.Add((column.Name, GetName(column.Name)));
+
                     foreach (var fk in table.ForeignKeys)
                     {
                         var fkTable = _schema.Tables.FirstOrDefault(t => t.Name == fk.ForeignTable);
@@ -854,6 +795,7 @@ namespace TWCore.Data.Schema.Generator
                                         TableColumn = fkColumn.Name,
                                         FromColumn = column.Name
                                     });
+
                                     added = true;
                                     break;
                                 }
@@ -894,38 +836,41 @@ namespace TWCore.Data.Schema.Generator
                         }
                     }
                 }
-				if (!added)
-				{
-					container.Columns.Add(new GeneratorSelectionColumn
-					{
-						Table = table.Name,
-						Column = column.Name,
-						Alias = column.Name
-					});
-				}
+                else
+                    container.TableColumns.Add(("*" + column.Name, GetName(column.Name)));
+
+                if (!added)
+                {
+                    container.Columns.Add(new GeneratorSelectionColumn
+                    {
+                        Table = table.Name,
+                        Column = column.Name,
+                        Alias = column.Name
+                    });
+                }
             }
 
-			foreach (var index in table.Indexes)
-			{
-				var names = new List<string>();
-				var whereIdx = new GeneratorWhereIndex();
-				foreach (var column in index.Columns.OrderBy(c => c.ColumnPosition))
-				{
-					var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
-					if (tColumn == null) continue;
-					names.Add(tColumn.Column);
-					whereIdx.Fields.Add(new GeneratorWhereField
-					{
-						FieldName = tColumn.Column,
-						TableName = tColumn.Table
-					});
-				}
-				var mName = string.Join("", names.ToArray());
-				whereIdx.Name = "By" + mName;
+            foreach (var index in table.Indexes)
+            {
+                var names = new List<string>();
+                var whereIdx = new GeneratorWhereIndex();
+                foreach (var column in index.Columns.OrderBy(c => c.ColumnPosition))
+                {
+                    var tColumn = container.Columns.FirstOrDefault(c => c.Column == column.ColumnName);
+                    if (tColumn == null) continue;
+                    names.Add(tColumn.Column);
+                    whereIdx.Fields.Add(new GeneratorWhereField
+                    {
+                        FieldName = tColumn.Column,
+                        TableName = tColumn.Table
+                    });
+                }
+                var mName = string.Join("", names.ToArray());
+                whereIdx.Name = "By" + mName;
 
-				if (!container.Wheres.Any(w => w.Name == whereIdx.Name))
-					container.Wheres.Add(whereIdx);
-			}
+                if (!container.Wheres.Any(w => w.Name == whereIdx.Name))
+                    container.Wheres.Add(whereIdx);
+            }
 
             return container;
         }

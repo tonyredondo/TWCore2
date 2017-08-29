@@ -42,5 +42,23 @@ namespace TWCore.Data
 		/// <param name="container">Container object</param>
 		/// <returns>List of index name and where statement</returns>
 		List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container);
+        /// <summary>
+        /// Get the Insert sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        string GetInsertFromContainer(GeneratorSelectionContainer container);
+        /// <summary>
+        /// Get the Update sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        string GetUpdateFromContainer(GeneratorSelectionContainer container);
+        /// <summary>
+        /// Get the Delete sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        string GetDeleteFromContainer(GeneratorSelectionContainer container);
     }
 }

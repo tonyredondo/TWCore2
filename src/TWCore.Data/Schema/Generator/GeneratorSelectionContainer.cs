@@ -27,5 +27,6 @@ namespace TWCore.Data.Schema.Generator
         public string From { get; set; }
         public List<GeneratorSelectionJoin> Joins { get; } = new List<GeneratorSelectionJoin>();
 		public List<GeneratorWhereIndex> Wheres { get; } = new List<GeneratorWhereIndex>();
+        public List<(string, string)> TableColumns { get; } = new List<(string, string)>();
     }
 }

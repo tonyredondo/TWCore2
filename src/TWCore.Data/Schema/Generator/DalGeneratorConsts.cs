@@ -90,6 +90,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using TWCore.Data;
 using TWCore.Data.Schema;
 ";
@@ -122,6 +123,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using TWCore.Data;
 using TWCore.Data.Schema;
 using ($NAMESPACE$).($DATABASENAME$).Entities;
@@ -159,14 +161,7 @@ namespace ($NAMESPACE$).($DATABASENAME$)
         {
             return new ($PROVIDER$)(Settings.ConnectionString, settings.QueryType);
         }
-        protected override EntityDalSettings OnGetSettings()
-        {
-            return new ($DATABASENAME$)DalSettings();
-        }
-    }
-    public class ($DATABASENAME$)DBDalAsync : EntityDalAsync
-    {
-        protected override IDataAccessAsync OnGetDataAccess(EntityDalSettings settings)
+        protected override IDataAccessAsync OnGetDataAccessAsync(EntityDalSettings settings)
         {
             return new ($PROVIDER$)(Settings.ConnectionString, settings.QueryType);
         }
@@ -188,6 +183,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using TWCore.Data;
 using TWCore.Data.Schema;
 using ($NAMESPACE$).($DATABASENAME$).Entities;
@@ -197,7 +193,7 @@ using ($NAMESPACE$).($DATABASENAME$).Entities;
     public const string formatDalWrapper = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Dal
 {
-    public class Dal($TABLENAME$) : ($DATABASENAME$)DBDal($ASYNC$), IDal($TABLENAME$)
+    public class Dal($TABLENAME$) : ($DATABASENAME$)DBDal, IDal($TABLENAME$)
     {($METHODS$)
 
         #region Private Methods
@@ -221,11 +217,16 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
 
     public const string formatDalSelectMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$)) 
-            => Data.($DATASELECT$)(($DATASQL$)($DATAPARAMETERS$), FillEntity);
+            => ($DATASELECT$)(($DATASQL$)($DATAPARAMETERS$), FillEntity);
 ";
 
     public const string formatDalExecuteMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($DATATYPE$) value) 
-            => Data.ExecuteNonQuery($ASYNC$)(($DATASQL$), PrepareEntity(value, ""($METHODNAME$)""));
+            => Data($ASYNC$).ExecuteNonQuery($ASYNC$)(($DATASQL$), PrepareEntity(value, ""($METHODNAME2$)""));
+";
+
+    public const string formatDalDeleteExecuteMethod = @"
+        public ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$)) 
+            => Data($ASYNC$).ExecuteNonQuery($ASYNC$)(($DATASQL$)($DATAPARAMETERS$));
 ";
 }

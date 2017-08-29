@@ -2448,6 +2448,33 @@ namespace TWCore.Data
 		{
 			throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
 		}
-		#endregion
-	}
+        /// <summary>
+        /// Get the Insert sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        public virtual string GetInsertFromContainer(GeneratorSelectionContainer container)
+        {
+            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        /// <summary>
+        /// Get the Update sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        public virtual string GetUpdateFromContainer(GeneratorSelectionContainer container)
+        {
+            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        /// <summary>
+        /// Get the Delete sql from a GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>Sql query</returns>
+        public virtual string GetDeleteFromContainer(GeneratorSelectionContainer container)
+        {
+            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
+        #endregion
+    }
 }

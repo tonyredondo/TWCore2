@@ -68,8 +68,9 @@ namespace TWCore.Data
         {
             var poolKey = Settings.GetHashSHA1();
             var _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pool => OnGetDataAccess(Settings)));
-			var _poolAsyncItem = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pool => OnGetDataAccessAsync(Settings)));
+			var _poolAsync = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pool => OnGetDataAccessAsync(Settings)));
             _poolItem = new DalPoolItem(_pool);
+            _poolAsyncItem = new DalPoolItemAsync(_poolAsync);
         }
         #endregion
 

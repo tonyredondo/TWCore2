@@ -10,6 +10,7 @@ using System.Data;
 using TWCore.Serialization;
 using TWCore.Data.Schema.Generator;
 using System.IO;
+using TWCore.Data.Schema;
 
 namespace TWCore.Tests
 {

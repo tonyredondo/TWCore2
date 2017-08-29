@@ -24,6 +24,5 @@ namespace TWCore.Data.Schema.Generator
     {
         Embedded,
         StoredProcedure,
-        Dynamic
     }
 }

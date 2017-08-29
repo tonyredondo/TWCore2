@@ -48,7 +48,7 @@ namespace TWCore.Data.Schema.Generator
         public bool EnableCreateInterfaces { get; set; } = true;
         public bool EnableCreateSolution { get; set; } = true;
         public bool EnableCreateDal { get; set; } = true;
-        public bool EnableDynamicDal { get; set; } = false;
+        public DalGeneratorType GeneratorType { get; set; } = DalGeneratorType.Embedded;
         #endregion
 
         #region .ctor
@@ -80,8 +80,8 @@ namespace TWCore.Data.Schema.Generator
         /// <param name="directory">Folder path</param>
         public void Create(string directory)
         {
-            if (dataAccessGenerator == null)
-                EnableDynamicDal = true;
+            if (dataAccessGenerator == null && GeneratorType == DalGeneratorType.Embedded)
+                GeneratorType = DalGeneratorType.Dynamic;
             CreateEntities(directory);
             CreateInterfaces(directory);
             CreateDal(directory);
@@ -400,7 +400,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "Data.SelectElements")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAll\"" : "SelectSql")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetAll\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql" : "\"SP\"")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
             methods2.Add(dalSelectMethod
@@ -409,7 +409,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODPARAMETERS$)", "")
                 .Replace("($DATASELECT$)", "DataAsync.SelectElementsAsync")
                 .Replace("($DATARETURN$)", entityName)
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllAsync\"" : "SelectSql")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetAll\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql" : "\"SP\"")
                 .Replace("($DATAPARAMETERS$)", "")
                 );
 
@@ -440,7 +440,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "Data.SelectElement")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "\"" : "SelectSql + By" + mName)
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetBy" + mName + "\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql + By" + mName : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                     methods2.Add(dalSelectMethod
@@ -449,7 +449,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "DataAsync.SelectElementAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetBy" + mName + "Async\"" : "SelectSql + By" + mName)
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetBy" + mName + "\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql + By" + mName : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                 }
@@ -461,7 +461,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "Data.SelectElements")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "\"" : "SelectSql + By" + mName)
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetAllBy" + mName + "\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql + By" + mName : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
                     methods2.Add(dalSelectMethod
@@ -470,10 +470,9 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATASELECT$)", "DataAsync.SelectElementsAsync")
                         .Replace("($DATARETURN$)", entityName)
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.GetAllBy" + mName + "Async\"" : "SelectSql + By" + mName)
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.GetAllBy" + mName + "\"" : GeneratorType == DalGeneratorType.Embedded ? "SelectSql + By" + mName : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
-
                 }
 
 
@@ -485,7 +484,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATATYPE$)", entityName)
                         .Replace("($ASYNC$)", "")
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Delete\"" : "DeleteSQL")
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Delete\"" : GeneratorType == DalGeneratorType.Embedded ? "DeleteSQL" : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
 
@@ -495,7 +494,7 @@ namespace TWCore.Data.Schema.Generator
                         .Replace("($METHODPARAMETERS$)", mParameters)
                         .Replace("($DATATYPE$)", entityName)
                         .Replace("($ASYNC$)", "Async")
-                        .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.DeleteAsync\"" : "DeleteSQL")
+                        .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Delete\"" : GeneratorType == DalGeneratorType.Embedded ? "DeleteSQL" : "\"SP\"")
                         .Replace("($DATAPARAMETERS$)", ", " + oParameters)
                         );
 
@@ -508,7 +507,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Insert")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Insert\"" : "InsertSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Insert\"" : GeneratorType == DalGeneratorType.Embedded ? "InsertSQL" : "\"SP\"")
                 );
 
             methods.Add(dalExecuteMethod
@@ -517,7 +516,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Update")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Update\"" : "UpdateSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Update\"" : GeneratorType == DalGeneratorType.Embedded ? "UpdateSQL" : "\"SP\"")
                 );
             methods.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "int")
@@ -525,7 +524,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Delete")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.Delete\"" : "DeleteSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Delete\"" : GeneratorType == DalGeneratorType.Embedded ? "DeleteSQL" : "\"SP\"")
                 );
 
 
@@ -535,7 +534,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Insert")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "Async")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.InsertAsync\"" : "InsertSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Insert\"" : GeneratorType == DalGeneratorType.Embedded ? "InsertSQL" : "\"SP\"")
                 );
 
             methods2.Add(dalExecuteMethod
@@ -544,7 +543,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Update")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "Async")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.UpdateAsync\"" : "UpdateSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Update\"" : GeneratorType == DalGeneratorType.Embedded ? "UpdateSQL" : "\"SP\"")
                 );
             methods2.Add(dalExecuteMethod
                 .Replace("($RETURNTYPE$)", "Task<int>")
@@ -552,7 +551,7 @@ namespace TWCore.Data.Schema.Generator
                 .Replace("($METHODNAME2$)", "Delete")
                 .Replace("($DATATYPE$)", entityName)
                 .Replace("($ASYNC$)", "Async")
-                .Replace("($DATASQL$)", EnableDynamicDal ? $"\":{entityTableName}.DeleteAsync\"" : "DeleteSQL")
+                .Replace("($DATASQL$)", GeneratorType == DalGeneratorType.Dynamic ? $"\":{entityTableName}.Delete\"" : GeneratorType == DalGeneratorType.Embedded ? "DeleteSQL" : "\"SP\"")
                 );
 
 
@@ -566,7 +565,7 @@ namespace TWCore.Data.Schema.Generator
 
             //SelectBaseSQL
             var otherSqls = string.Empty;
-            if (!EnableDynamicDal)
+            if (GeneratorType == DalGeneratorType.Embedded)
             {
                 var container = GetSelectColumns(tableName);
                 var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");

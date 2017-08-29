@@ -36,44 +36,44 @@ namespace TWCore
         /// <summary>
         /// Activation helper
         /// </summary>
-        public static IAccessorsFactory Accessors => _factories?.Accessors;
+        public static IAccessorsFactory Accessors => _factories?.Accessors ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Log Item Factory
         /// </summary>
-        public static CreateLogItemDelegate CreateLogItem => _factories?.CreateLogItem;
+        public static CreateLogItemDelegate CreateLogItem => _factories?.CreateLogItem ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Default LogEngine factory
         /// </summary>
-        public static CreateLogEngineDelegate CreateLogEngine => _factories?.CreateLogEngine;
+        public static CreateLogEngineDelegate CreateLogEngine => _factories?.CreateLogEngine ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Trace Item Factory
         /// </summary>
-        public static CreateTraceItemDelegate CreateTraceItem => _factories?.CreateTraceItem;
+        public static CreateTraceItemDelegate CreateTraceItem => _factories?.CreateTraceItem ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Default TraceEngine factory
         /// </summary>
-        public static CreateTraceEngineDelegate CreateTraceEngine => _factories?.CreateTraceEngine;
+        public static CreateTraceEngineDelegate CreateTraceEngine => _factories?.CreateTraceEngine ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Default StatusEngine factory
         /// </summary>
-        public static CreateStatusEngineDelegate CreateStatusEngine => _factories?.CreateStatusEngine;
+        public static CreateStatusEngineDelegate CreateStatusEngine => _factories?.CreateStatusEngine ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Gets the available assemblies loaded on the AppDomain
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public static GetAssembliesDelegate GetAssemblies => _factories?.GetAssemblies;
+        public static GetAssembliesDelegate GetAssemblies => _factories?.GetAssemblies ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Gets the available assemblies on the folder
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public static GetAssembliesDelegate GetAllAssemblies => _factories?.GetAllAssemblies;
+        public static GetAssembliesDelegate GetAllAssemblies => _factories?.GetAllAssemblies ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Compare for equality two byte arrays
         /// </summary>
         /// <param name="a">Array a</param>
         /// <param name="b">Array b</param>
         /// <returns>True if the arrays are equals; otherwise, false.</returns>
-        public static EqualsBytesDelegate BytesEquals => _factories?.BytesEquals;
+        public static EqualsBytesDelegate BytesEquals => _factories?.BytesEquals ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Gets the platform type
         /// </summary>
@@ -81,19 +81,19 @@ namespace TWCore
         /// <summary>
         /// Sequential Guid Generator
         /// </summary>
-        public static GuidGeneratorDelegate SequentialGuidGenerator => _factories?.SequentialGuidGenerator;
+        public static GuidGeneratorDelegate SequentialGuidGenerator => _factories?.SequentialGuidGenerator ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Get New Guid
         /// </summary>
-        public static GetGuidDelegate NewGuid => _factories?.NewGuid;
+        public static GetGuidDelegate NewGuid => _factories?.NewGuid ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Thread helper methods
         /// </summary>
-        public static IThread Thread => _factories?.Thread;
+        public static IThread Thread => _factories?.Thread ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Converter factory
         /// </summary>
-        public static IConverterFactory Converter => _factories?.Converter;
+        public static IConverterFactory Converter => _factories?.Converter ?? throw new FrameworkNotInitializedException();
         #endregion
 
         #region Methods
@@ -116,7 +116,7 @@ namespace TWCore
         /// <param name="basePath">Base path to calculate the absolute path</param>
         /// <returns>Absolute path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetAbsolutePath(string relativePath, string basePath = null) => _factories?.GetAbsolutePath(relativePath, basePath);
+        public static string GetAbsolutePath(string relativePath, string basePath = null) => _factories?.GetAbsolutePath(relativePath, basePath) ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Get the relative path from a absolute path
         /// </summary>
@@ -124,7 +124,7 @@ namespace TWCore
         /// <param name="basePath">Base path to calculate the relative path</param>
         /// <returns>Relative path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string GetRelativePath(string absolutePath, string basePath = null) => _factories?.GetRelativePath(absolutePath, basePath);
+        public static string GetRelativePath(string absolutePath, string basePath = null) => _factories?.GetRelativePath(absolutePath, basePath) ?? throw new FrameworkNotInitializedException();
         #endregion
 
         #region Sockets

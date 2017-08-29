@@ -41,6 +41,27 @@ namespace TWCore.Data.SQLite
         /// <returns>A DbCommand object</returns>
         protected override DbCommand GetCommand() => new SqliteCommand();
 
+        #region .ctor
+        /// <summary>
+        /// Sql Server Data access
+        /// </summary>
+        /// <param name="connectionString">Connection string</param>
+        /// <param name="accessType">Data access type</param>
+        public SQLiteDataAccess()
+        {
+            AccessType = DataAccessType.Query;
+        }
+        /// <summary>
+        /// Sql Server Data access
+        /// </summary>
+        /// <param name="connectionString">Connection string</param>
+        /// <param name="accessType">Data access type</param>
+        public SQLiteDataAccess(string connectionString, DataAccessType accessType = DataAccessType.Query)
+        {
+            ConnectionString = connectionString;
+            AccessType = DataAccessType.Query;
+        }
+        #endregion
 
         #region IDataAccessDynamicGenerator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -123,6 +144,5 @@ namespace TWCore.Data.SQLite
             return sb.ToString();
         }
         #endregion
-
     }
 }

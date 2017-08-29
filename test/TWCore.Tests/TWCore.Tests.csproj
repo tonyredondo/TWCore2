@@ -14,6 +14,7 @@
     <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data.MySql\TWCore.Data.MySql.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data.PostgreSQL\TWCore.Data.PostgreSQL.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Data.SQLite\TWCore.Data.SQLite.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Data\TWCore.Data.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Geo\TWCore.Geo.csproj" />

@@ -145,7 +145,7 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
 
 
     public const string formatDatabaseEntities = @"
-namespace ($NAMESPACE$).($DATABASENAME$)
+namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 {
     public class ($DATABASENAME$)DalSettings : EntityDalSettings
     {
@@ -191,7 +191,7 @@ using ($NAMESPACE$).($DATABASENAME$).Entities;
 
 
     public const string formatDalWrapper = @"
-namespace ($NAMESPACE$).($DATABASENAME$).Dal
+namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 {
     public class Dal($TABLENAME$) : ($DATABASENAME$)DBDal, IDal($TABLENAME$)
     {($METHODS$)

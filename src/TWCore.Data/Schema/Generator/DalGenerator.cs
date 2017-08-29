@@ -373,6 +373,7 @@ namespace TWCore.Data.Schema.Generator
             header += "using " + dag.Assembly.GetName().Name + ";\r\n";
             string databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
             databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
+            databaseEntities = databaseEntities.Replace("($PROVIDERNAME$)", prov);
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
             databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", (dataAccessGenerator as DataAccessBase)?.ConnectionString ?? _schema.ConnectionString);
             databaseEntities = databaseEntities.Replace("($PROVIDER$)", dag.Name);
@@ -589,18 +590,19 @@ namespace TWCore.Data.Schema.Generator
                 var deleteSql = dataAccessGenerator?.GetDeleteFromContainer(container).Replace("\"", "\"\"");
                 otherSqls += $"\t\tconst string DeleteSQL = @\"{Environment.NewLine}{deleteSql}\";{Environment.NewLine}";
             }
+            var prov = dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
 
             body = body.Replace("($OTHERSQLS$)", otherSqls);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
             body = body.Replace("($PREPAREENTITY$)", string.Join("", prepareEntities.ToArray()));
             body = body.Replace("($NAMESPACE$)", _namespace);
+            body = body.Replace("($PROVIDERNAME$)", prov);
             body = body.Replace("($DATABASENAME$)", _schema.Name);
             body = body.Replace("($TABLENAME$)", entityTableName);
             body = body.Replace("($DATATYPE$)", entityName);
             body = body.Replace("($DATATYPE2$)", "ent" + entityTableName);
             body = body.Replace("($METHODS$)", string.Join(string.Empty, methods.Concat(methods2).ToArray()));
 
-            var prov = dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
             var filePath = Path.Combine(_schema.Name, "Dal." + prov);
             filePath = Path.Combine(filePath, "Dal" + entityTableName + ".cs");
             return (filePath, body);

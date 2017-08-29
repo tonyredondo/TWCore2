@@ -13,6 +13,7 @@ using System.IO;
 using TWCore.Data.Schema;
 using TWCore.Data.PostgreSQL;
 using TWCore.Data.MySql;
+using TWCore.Data.SQLite;
 
 namespace TWCore.Tests
 {
@@ -61,6 +62,12 @@ namespace TWCore.Tests
             string connectionString3 = "MySqlConnString";
             var sdal = new MySqlDataAccess(connectionString3, DataAccessType.Query);
             dGen.Create(folder, sdal);
+
+
+            Core.Log.InfoBasic("Generating Sqlite Dal: {0}", folder);
+            string connectionString4 = "SqliteConnString";
+            var sldal = new SQLiteDataAccess(connectionString4);
+            dGen.Create(folder, sldal);
         }
     }
 }

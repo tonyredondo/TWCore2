@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0679-4AD7-A184-BD3CCC7A5C10}"
 	ProjectSection(SolutionItems) = preProject
@@ -71,7 +71,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Web", "src\TWCore.We
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.NSQ", "src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj", "{75DA5FFE-02E4-44A6-95FB-D2FEECC4C38A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.MsgPack", "src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj", "{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.MsgPack", "src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj", "{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Discovery", "src\TWCore.Net.Discovery\TWCore.Net.Discovery.csproj", "{5DE59439-9F78-4957-B427-C61531CF4829}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -195,6 +197,10 @@ Global
 		{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5DE59439-9F78-4957-B427-C61531CF4829}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5DE59439-9F78-4957-B427-C61531CF4829}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5DE59439-9F78-4957-B427-C61531CF4829}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5DE59439-9F78-4957-B427-C61531CF4829}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -229,6 +235,7 @@ Global
 		{EE79F165-6E14-48E7-B994-9D7D7A7F2092} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{75DA5FFE-02E4-44A6-95FB-D2FEECC4C38A} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{5DE59439-9F78-4957-B427-C61531CF4829} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

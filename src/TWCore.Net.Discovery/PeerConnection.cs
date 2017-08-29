@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Net;
 using System.Net.Sockets;
+using TWCore.Collections;
 
 namespace TWCore.Net.Discovery
 {
@@ -25,6 +26,8 @@ namespace TWCore.Net.Discovery
     /// </summary>
     public class PeerConnection
     {
+        static readonly TimeoutDictionary<Guid, byte[]> ReceivedMessagesDatagram = new TimeoutDictionary<Guid, byte[]>();
+        readonly int packetSize = 512;
         UdpClient _client;
         IPAddress _multicastIp;
         IPEndPoint _sendEndpoint;
@@ -41,7 +44,7 @@ namespace TWCore.Net.Discovery
         public string MulticastIp { get; set; } = "230.023.012.083";
         #endregion
 
-        #region Methods
+        #region Public Methods
         /// <summary>
         /// Connect and join the peer group
         /// </summary>
@@ -66,6 +69,17 @@ namespace TWCore.Net.Discovery
         {
             _client.DropMulticastGroup(_multicastIp);
             _client.Client.Close();
+        }
+        #endregion
+
+        #region Private Methods
+        byte[][] GetDatagrams(byte[] message)
+        {
+            return null;
+        }
+        byte[] GetMessages(byte[] datagram)
+        {
+            return null;
         }
         #endregion
     }

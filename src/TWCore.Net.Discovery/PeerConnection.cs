@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.Net;
+using System.Net.Sockets;
 
 namespace TWCore.Net.Discovery
 {
@@ -23,5 +25,48 @@ namespace TWCore.Net.Discovery
     /// </summary>
     public class PeerConnection
     {
+        UdpClient _client;
+        IPAddress _multicastIp;
+        IPEndPoint _sendEndpoint;
+        IPEndPoint _receiveEndpoint;
+
+        #region Properties
+        /// <summary>
+        /// Port number
+        /// </summary>
+        public int Port { get; set; } = 23128;
+        /// <summary>
+        /// Multicast Ip Address
+        /// </summary>
+        public string MulticastIp { get; set; } = "230.023.012.083";
+        #endregion
+
+        #region Methods
+        /// <summary>
+        /// Connect and join the peer group
+        /// </summary>
+        public void Connect()
+        {
+            _multicastIp = IPAddress.Parse(MulticastIp);
+            _sendEndpoint = new IPEndPoint(_multicastIp, Port);
+            _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
+
+            _client = new UdpClient();
+            _client.ExclusiveAddressUse = false;
+            _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _client.ExclusiveAddressUse = false;
+            _client.Client.Bind(_receiveEndpoint);
+            _client.MulticastLoopback = false;
+            _client.JoinMulticastGroup(_multicastIp);
+        }
+        /// <summary>
+        /// Disconnect and leave the peer group
+        /// </summary>
+        public void Disconnect()
+        {
+            _client.DropMulticastGroup(_multicastIp);
+            _client.Client.Close();
+        }
+        #endregion
     }
 }

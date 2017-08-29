@@ -153,6 +153,7 @@ namespace ($NAMESPACE$).($DATABASENAME$)
         public ($DATABASENAME$)DalSettings()
         {
             ConnectionString = ""($CONNECTIONSTRING$)"";
+            QueryType = DataAccessType.($QUERYTYPE$);
         }
     }
     public class ($DATABASENAME$)DBDal : EntityDal

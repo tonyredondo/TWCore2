@@ -381,6 +381,10 @@ namespace TWCore.Data.Schema.Generator
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
             databaseEntities = databaseEntities.Replace("($CONNECTIONSTRING$)", _schema.ConnectionString);
             databaseEntities = databaseEntities.Replace("($PROVIDER$)", _schema.Provider);
+            if (GeneratorType == DalGeneratorType.StoredProcedure)
+                databaseEntities = databaseEntities.Replace("($QUERYTYPE$)", "StoredProcedure");
+            else
+                databaseEntities = databaseEntities.Replace("($QUERYTYPE$)", "Query");
             var filePath = Path.Combine(_schema.Name, "Dal." + prov, _schema.Name + ".cs");
             return (filePath, header + databaseEntities);
         }

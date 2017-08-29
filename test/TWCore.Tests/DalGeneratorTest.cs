@@ -42,7 +42,7 @@ namespace TWCore.Tests
                 name = name.Replace("-", "_");
                 return name.RemoveSpaces();
             };
-            dGen.GeneratorType = DalGeneratorType.StoredProcedure;
+            dGen.GeneratorType = DalGeneratorType.Embedded;
 
 
             Core.Log.InfoBasic("Generating Dal: {0}", folder);

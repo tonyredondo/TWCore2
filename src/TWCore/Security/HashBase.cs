@@ -113,21 +113,21 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual byte[] GetBytes(object obj) => GetBytes((Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault()).Serialize(obj, obj.GetType()));
+        public virtual byte[] GetBytes(object obj) => GetBytes(GetSerializer().Serialize(obj, obj.GetType()));
         /// <summary>
         /// Gets the hash string value from an object
         /// </summary>
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string Get(object obj) => Get((byte[])(Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault()).Serialize(obj, obj.GetType()));
+        public virtual string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
         /// <summary>
         /// Gets the guid hash value from an object
         /// </summary>
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Guid GetGuid(object obj) => GetGuid((Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault()).Serialize(obj, obj.GetType()));
+        public virtual Guid GetGuid(object obj) => GetGuid(GetSerializer().Serialize(obj, obj.GetType()));
 
         /// <summary>
         /// Gets the hash bytes from a string value
@@ -150,7 +150,15 @@ namespace TWCore.Security
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual Guid GetGuid(string obj) => StringGuidHashCache.GetOrAdd(_instanceName + obj, key => GetGuid(Encoding.GetBytes(obj)));
+        #endregion
 
+        #region Private Method
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        ISerializer GetSerializer()
+        {
+            return Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault() ??
+                throw new NullReferenceException("The aren't any default Serializer loaded.");
+        }
         #endregion
     }
 }

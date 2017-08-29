@@ -578,7 +578,7 @@ namespace TWCore.Data.Schema.Generator
                 otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
                 var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
                 foreach (var w in wheresList)
-                    otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2}\";{Environment.NewLine}";
+                    otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2.Replace("\"", "\"\"")}\";{Environment.NewLine}";
 
                 var insertSQL = dataAccessGenerator?.GetInsertFromContainer(container).Replace("\"", "\"\"");
                 otherSqls += $"\t\tconst string InsertSQL = @\"{Environment.NewLine}{insertSQL}\";{Environment.NewLine}";

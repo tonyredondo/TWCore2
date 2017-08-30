@@ -1,4 +1,5 @@
-﻿using TWCore.Diagnostics.Status.Transports;
+﻿using System;
+using TWCore.Diagnostics.Status.Transports;
 
 namespace TWCore.Test.Core
 {
@@ -11,6 +12,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
             });
             TWCore.Core.StartContainer(args);
+            Console.ReadLine();
         }
     }
 }

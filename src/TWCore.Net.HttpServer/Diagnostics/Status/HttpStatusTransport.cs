@@ -89,8 +89,8 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 var services = DiscoveryService.GetRegisteredServices();
                 var statusServices = services.Where(s => s.Category == DiscoveryService.FRAMEWORK_CATEGORY && s.Name == "STATUS").ToArray();
-                ctx.Response.WriteLine("<html><body><h1>Discovered status services:</h1>");
-                foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }))
+                ctx.Response.WriteLine("<html><body style='padding:30px;'><h1>Discovered status services:</h1>");
+                foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
                 {
                     ctx.Response.WriteLine($"<h2>Environment: {g.Key.EnvironmentName} - Machine: {g.Key.MachineName}</h2>");
                     ctx.Response.WriteLine("<ul>");

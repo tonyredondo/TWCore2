@@ -62,6 +62,9 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region .ctor
+        /// <summary>
+        /// Peer Connection
+        /// </summary>
         public PeerConnection()
         {
             _tokenSource = new CancellationTokenSource();
@@ -87,9 +90,18 @@ namespace TWCore.Net.Multicast
             _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
 
             _client = new UdpClient();
-            _client.ExclusiveAddressUse = false;
-            _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            _client.ExclusiveAddressUse = false;
+
+            if (Factory.PlatformType == PlatformType.Windows)
+            {
+                _client.ExclusiveAddressUse = false;
+                _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                _client.ExclusiveAddressUse = false;
+            }
+            else
+            {
+                _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            }
+
             if (EnableReceive)
                 _client.Client.Bind(_receiveEndpoint);
             _client.MulticastLoopback = true;

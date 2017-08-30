@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.WindowsService\TWCore.WindowsService.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
   </ItemGroup>
 

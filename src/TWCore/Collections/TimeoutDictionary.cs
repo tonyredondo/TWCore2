@@ -188,6 +188,22 @@ namespace TWCore.Collections
             => _dictionary.ToArray().Select(k => new KeyValuePair<TKey, TValue>(k.Key, k.Value.Value)).ToArray();
 
         /// <summary>
+        /// Copies the values in the TimeoutDictionary to a new array.
+        /// </summary>
+        /// <returns>A new array containing a snapshot of the values copied from the TimeoutDictionary.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TValue[] ToValueArray()
+            => _dictionary.ToArray().Select(k => k.Value.Value).ToArray();
+
+        /// <summary>
+        /// Copies the keys in the TimeoutDictionary to a new array.
+        /// </summary>
+        /// <returns>A new array containing a snapshot of the keys copied from the TimeoutDictionary.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TKey[] ToKeyArray()
+            => _dictionary.ToArray().Select(k => k.Key).ToArray();
+
+        /// <summary>
         /// Attempts to add the specified key and value to the TimeoutDictionary
         /// </summary>
         /// <param name="key">The key of the element to add.</param>
@@ -222,6 +238,8 @@ namespace TWCore.Collections
         public bool TryRemove(TKey key, out TValue value)
         {
             var res = _dictionary.TryRemove(key, out var val);
+            if (res)
+                val?.TokenSource?.Cancel();
             value = val != null ? val.Value : default(TValue);
             return res;
         }

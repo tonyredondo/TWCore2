@@ -102,8 +102,6 @@ namespace TWCore.Serialization
                     collection.Add("DefaultKnownTypes Count", DefaultKnownTypes.Count);
                     collection.Add("Serializers Count", Serializers.Count);
                     collection.Add("Serializers", Serializers.Join(", "));
-                    foreach (var ser in Serializers)
-                        Core.Status.AttachChild(ser, item);
                     return item;
                 });
             });

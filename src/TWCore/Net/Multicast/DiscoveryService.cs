@@ -38,6 +38,10 @@ namespace TWCore.Net.Multicast
         static CancellationToken _token;
         static bool _connected;
 
+        #region Consts
+        public const string FRAMEWORK_CATEGORY = "FRAMEWORK";
+        #endregion
+
         #region Events
         /// <summary>
         /// Service received event
@@ -66,6 +70,10 @@ namespace TWCore.Net.Multicast
         /// Messages Serializer
         /// </summary>
         public static ISerializer Serializer { get; set; } = SerializerManager.DefaultBinarySerializer;
+        /// <summary>
+        /// Has a registered local service
+        /// </summary>
+        public static bool HasRegisteredLocalService => _localServices.Count > 0;
         #endregion
 
         #region .ctor
@@ -83,6 +91,15 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Public Methods
+        /// <summary>
+        /// Connect to the multicast group
+        /// </summary>
+        /// <param name="multicastIp">Multicast Ip address</param>
+        /// <param name="port">Port</param>
+        public static void Connect()
+        {
+            Connect(MulticastIp, Port);
+        }
         /// <summary>
         /// Connect to the multicast group
         /// </summary>
@@ -139,6 +156,15 @@ namespace TWCore.Net.Multicast
             lock (_localServices)
                 _localServices.Add(service);
         }
+        /// <summary>
+        /// Register service
+        /// </summary>
+        /// <param name="category">Service category</param>
+        /// <param name="name">Service name</param>
+        /// <param name="description">Service description</param>
+        /// <param name="data">Service additional data</param>
+        public static void RegisterService(string category, string name, string description, Dictionary<string, object> data)
+            => RegisterService(category, name, description, new SerializedObject(data));
         /// <summary>
         /// Get registered services
         /// </summary>

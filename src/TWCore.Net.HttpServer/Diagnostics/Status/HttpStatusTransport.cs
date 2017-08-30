@@ -15,9 +15,12 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Net.HttpServer;
+using TWCore.Net.Multicast;
 using TWCore.Serialization;
+using TWCore.Settings;
 
 namespace TWCore.Diagnostics.Status.Transports
 {
@@ -100,7 +103,20 @@ namespace TWCore.Diagnostics.Status.Transports
                 }
             }
             if (!connected)
+            {
                 Core.Log.Error("There was a problem trying to bind the Http Server on port {0}, please check the exception messages", port);
+            }
+            else
+            {
+                var settings = Core.GetSettings<HttpStatusSettings>();
+                if (settings.Discovery)
+                {
+                    DiscoveryService.RegisterService(DiscoveryService.FRAMEWORK_CATEGORY, "STATUS", "Status engine http transport service", new Dictionary<string, object>
+                    {
+                        ["Port"] = port
+                    });
+                }
+            }
             Core.Status.DeAttachObject(httpServer);
         }
         /// <summary>
@@ -122,6 +138,18 @@ namespace TWCore.Diagnostics.Status.Transports
                 httpServer?.StopAsync().Wait();
                 httpServer = null;
             }, false);
+        }
+        #endregion
+
+        #region Nested Type
+        [SettingsContainer("Core")]
+        class HttpStatusSettings : SettingsBase
+        {
+            /// <summary>
+            /// Enable or disable the discovery of the status transport
+            /// </summary>
+            [SettingsKey("Status.Http.Discovery")]
+            public bool Discovery { get; set; } = true;
         }
         #endregion
     }

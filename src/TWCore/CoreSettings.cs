@@ -36,6 +36,30 @@ namespace TWCore
         [SettingsKey("SettingsReloadTimeInMinutes")]
         public int SettingsReloadTimeInMinutes { get; set; } = 0;
 
+
+        //Discovery Settings
+        /// <summary>
+        /// Enable Discovery
+        /// </summary>
+        [SettingsKey("Discovery.Enabled")]
+        public bool EnableDiscovery { get; set; } = true;
+        /// <summary>
+        /// Discovery Port number
+        /// </summary>
+        [SettingsKey("Discovery.Port")]
+        public int DiscoveryPort { get; private set; } = 64128;
+        /// <summary>
+        /// Discovery Multicast Ip Address
+        /// </summary>
+        [SettingsKey("Discovery.MulticastIp")]
+        public string DiscoveryMulticastIp { get; private set; } = "230.23.12.83";
+        /// <summary>
+        /// Discovery SerializerMimeType
+        /// </summary>
+        [SettingsKey("Discovery.SerializerMimeType")]
+        public string DiscoverySerializerMimeType { get; private set; }
+
+
         //Worker Settings
         /// <summary>
         /// Default Worker WaitTimeout

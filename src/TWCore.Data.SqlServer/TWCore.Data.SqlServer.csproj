@@ -15,6 +15,7 @@ A multipurpose framework library for .net core
     <Copyright></Copyright>
     <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
     <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
+    <IncludeSymbols>True</IncludeSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

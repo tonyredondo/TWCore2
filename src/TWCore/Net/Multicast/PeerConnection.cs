@@ -44,17 +44,17 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// On receive message event
         /// </summary>
-        public event EventHandler<EventArgs<byte[]>> OnReceive;
+        public event EventHandler<PeerConnectionMessageReceivedEventArgs> OnReceive;
 
         #region Properties
         /// <summary>
         /// Port number
         /// </summary>
-        public int Port { get; set; } = 64128;
+        public int Port { get; private set; }
         /// <summary>
         /// Multicast Ip Address
         /// </summary>
-        public string MulticastIp { get; set; } = "230.23.12.83";
+        public string MulticastIp { get; private set; }
         /// <summary>
         /// Enable Receive
         /// </summary>
@@ -75,9 +75,12 @@ namespace TWCore.Net.Multicast
         /// Connect and join the peer group
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Connect(bool enableReceive = true)
+        public void Connect(string multicastIp, int port, bool enableReceive = true)
         {
             Disconnect();
+            _connected = true;
+            MulticastIp = multicastIp;
+            Port = port;
             EnableReceive = enableReceive;
             _multicastIp = IPAddress.Parse(MulticastIp);
             _sendEndpoint = new IPEndPoint(_multicastIp, Port);
@@ -113,6 +116,7 @@ namespace TWCore.Net.Multicast
             _token = _tokenSource.Token;
             _client.DropMulticastGroup(_multicastIp);
             _client.Client.Close();
+            _connected = false;
         }
         /// <summary>
         /// Send byte array
@@ -167,7 +171,8 @@ namespace TWCore.Net.Multicast
 
             while (!_token.IsCancellationRequested)
             {
-                var datagram =_client.Receive(ref _receiveEndpoint);
+                var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
+                var datagram = _client.Receive(ref rcvEndpoint);
                 Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                 var guid = new Guid(guidBytes);
                 var numMsgs = BitConverter.ToUInt16(datagram, 16);
@@ -188,13 +193,14 @@ namespace TWCore.Net.Multicast
                             var objArray = (object[])obj;
                             var pcnn = (PeerConnection)objArray[0];
                             var pcbf = (byte[])objArray[1];
-                            pcnn.OnReceive?.Invoke(pcnn, new EventArgs<byte[]>(pcbf));
+                            var pcip = (IPEndPoint)objArray[2];
+                            pcnn.OnReceive?.Invoke(pcnn, new PeerConnectionMessageReceivedEventArgs(pcip.Address, pcbf));
                         }
                         catch (Exception ex)
                         {
                             Core.Log.Write(ex);
                         }
-                    }, new object[] { this, buffer });
+                    }, new object[] { this, buffer, rcvEndpoint });
                 }
             }
         }

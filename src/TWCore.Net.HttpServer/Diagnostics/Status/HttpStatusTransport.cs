@@ -89,15 +89,15 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 var services = DiscoveryService.GetRegisteredServices();
                 var statusServices = services.Where(s => s.Category == DiscoveryService.FRAMEWORK_CATEGORY && s.Name == "STATUS").ToArray();
-                ctx.Response.WriteLine("<html><body><h1>Status services discovered:</h1>");
+                ctx.Response.WriteLine("<html><body><h1>Discovered status services:</h1>");
                 foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }))
                 {
-                    ctx.Response.WriteLine($"<h2>Environment: {g.Key.EnvironmentName}, Machine: {g.Key.MachineName}</h2>");
+                    ctx.Response.WriteLine($"<h2>Environment: {g.Key.EnvironmentName} - Machine: {g.Key.MachineName}</h2>");
                     ctx.Response.WriteLine("<ul>");
                     foreach (var ss in g)
                     {
                         var dct = (Dictionary<string, object>)ss.Data.GetValue();
-                        ctx.Response.WriteLine($"<li><a href='http://{ss.Address.ToString()}:{dct["Port"]}/' target='_blank'>{ss.ApplicationName}</a></li>");
+                        ctx.Response.WriteLine($"<li><a href='http://{ss.Address.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ss.ApplicationName}</a></li>");
                     }
                     ctx.Response.WriteLine("</ul>");
                 }

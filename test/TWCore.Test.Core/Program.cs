@@ -13,7 +13,6 @@ namespace TWCore.Test.Core
             TWCore.Core.RunOnInit(() => {
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
 
-
                 //DiscoveryService.RegisterService("CACHE", "CACHENAME", "DESCRIPTION", null);
                 //DiscoveryService.RegisterService("CACHE", "CACHENAME2", "DESCRIPTION", null);
                 DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;

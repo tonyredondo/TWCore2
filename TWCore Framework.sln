@@ -73,7 +73,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.NSQ", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.MsgPack", "src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj", "{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.WindowsService", "src\TWCore.WindowsService\TWCore.WindowsService.csproj", "{07650787-FBCE-452A-8AA3-EABEAFC5869C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Services.Windows", "src\TWCore.WindowsService\TWCore.Services.Windows.csproj", "{07650787-FBCE-452A-8AA3-EABEAFC5869C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

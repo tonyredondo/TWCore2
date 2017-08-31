@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Title>TWCore.WindowsService</Title>
+    <Title>TWCore.Services.Windows</Title>
     <Authors>Daniel Redondo</Authors>
     <Company />
     <Description>TWCore Framework.

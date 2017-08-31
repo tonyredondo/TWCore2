@@ -68,22 +68,33 @@ namespace TWCore.Services
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Default service container
         /// </summary>
         /// <param name="service">Service instance</param>
         /// <param name="initAction">Init Action</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(IService service, Action initAction) : this(Core.ApplicationDisplayName, service)
+        public ServiceContainer(IService service, Action initAction) : this(Core.ApplicationDisplayName, service, initAction)
         {
-            this.initAction = initAction;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Default service container
         /// </summary>
         /// <param name="service">Service instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(IService service) : this(Core.ApplicationDisplayName, service)
+        public ServiceContainer(IService service) : this(Core.ApplicationDisplayName, service, null)
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Default service container
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="service">Service instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ServiceContainer(string serviceName, IService service) : this(serviceName, service, null)
         {
         }
         /// <summary>
@@ -93,18 +104,9 @@ namespace TWCore.Services
         /// <param name="service">Service instance</param>
         /// <param name="initAction">Init Action</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(string serviceName, IService service, Action initAction) : this(serviceName, service)
+        public ServiceContainer(string serviceName, IService service, Action initAction)
         {
             this.initAction = initAction;
-        }
-        /// <summary>
-        /// Default service container
-        /// </summary>
-        /// <param name="serviceName">Service name</param>
-        /// <param name="service">Service instance</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(string serviceName, IService service)
-        {
             ServiceName = serviceName;
             Service = service;
         }

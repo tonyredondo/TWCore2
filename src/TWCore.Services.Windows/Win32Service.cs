@@ -15,9 +15,6 @@ limitations under the License.
  */
 
 using DasMulli.Win32.ServiceUtils;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace TWCore.Services.Windows
 {

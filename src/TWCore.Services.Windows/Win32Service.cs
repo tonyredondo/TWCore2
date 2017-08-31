@@ -26,14 +26,17 @@ namespace TWCore.Services.Windows
     /// </summary>
     internal class Win32Service : IWin32Service
     {
-        IService _service;
-        string _serviceName;
+        readonly IService _service;
 
         #region Properties
         /// <summary>
         /// Get the Service Name
         /// </summary>
-        public string ServiceName => _serviceName;
+        public string ServiceName { get; }
+        /// <summary>
+        /// Service can Pause and Continue
+        /// </summary>
+        public bool CanPauseAndContinue => _service.CanPauseAndContinue;
         #endregion
 
         #region .ctor
@@ -45,7 +48,7 @@ namespace TWCore.Services.Windows
         public Win32Service(string serviceName, IService service)
         {
             _service = service;
-            _serviceName = serviceName;
+            ServiceName = serviceName;
         }
         #endregion
 
@@ -70,8 +73,16 @@ namespace TWCore.Services.Windows
                 Core.Dispose();
             }
             catch
-            { }
+            {
+                // ignored
+            }
         }
+
+        public void OnPause()
+            => _service.OnPause();
+
+        public void OnContinue()
+            => _service.OnContinue();
         #endregion
     }
 }

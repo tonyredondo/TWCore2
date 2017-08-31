@@ -18,7 +18,10 @@
             {
                 serviceImplementation.Start(startupArguments, HandleServiceImplementationStoppedOnItsOwn);
 
-                statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode: 0, waitHint: 0);
+                if (serviceImplementation.CanPauseAndContinue)
+                    statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode: 0, waitHint: 0);
+                else
+                    statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode: 0, waitHint: 0);
             }
             catch
             {
@@ -28,22 +31,56 @@
 
         public void OnCommand(ServiceControlCommand command, uint commandSpecificEventType)
         {
-            if (command == ServiceControlCommand.Stop)
+            switch (command)
             {
-                statusReportCallback(ServiceState.StopPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 3000);
-
-                var win32ExitCode = 0;
-
-                try
+                case ServiceControlCommand.Stop:
                 {
-                    serviceImplementation.Stop();
+                    statusReportCallback(ServiceState.StopPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 60000);
+                    var win32ExitCode = 0;
+                    try
+                    {
+                        serviceImplementation.Stop();
+                    }
+                    catch
+                    {
+                        win32ExitCode = -1;
+                    }
+                    statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    break;
                 }
-                catch
+                case ServiceControlCommand.Pause:
                 {
-                    win32ExitCode = -1;
+                    statusReportCallback(ServiceState.PausePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    var win32ExitCode = 0;
+                    try
+                    {
+                        serviceImplementation.OnPause();
+                    }
+                    catch
+                    {
+                        win32ExitCode = -1;
+                    }
+                    statusReportCallback(ServiceState.Paused, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    break;
                 }
-
-                statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                case ServiceControlCommand.Continue:
+                {
+                    statusReportCallback(ServiceState.ContinuePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    var win32ExitCode = 0;
+                    try
+                    {
+                        serviceImplementation.OnContinue();
+                    }
+                    catch
+                    {
+                        win32ExitCode = -1;
+                    }
+                    if (serviceImplementation.CanPauseAndContinue)
+                        statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode, waitHint: 0);
+                    else
+                        statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0);
+                        break;
+                }
             }
         }
 

@@ -114,7 +114,7 @@ namespace DasMulli.Win32.ServiceUtils
                 return;
             }
 
-            ReportServiceStatus(ServiceState.StartPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 3000);
+            ReportServiceStatus(ServiceState.StartPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 60000);
 
             try
             {

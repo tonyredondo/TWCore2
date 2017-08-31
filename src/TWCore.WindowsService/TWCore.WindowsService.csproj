@@ -29,10 +29,4 @@ A multipurpose framework library for .net core</Description>
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="DasMulli.Win32.ServiceUtils">
-      <HintPath>lib\DasMulli.Win32.ServiceUtils.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
 </Project>

@@ -55,6 +55,10 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("Generating PostgreSQL Dal: {0}", folder);
             string connectionString2 = "Server=10.10.1.50;Port=5432;Database=FLY_MIDDLE;User Id=postgres;Password=genesis;";
             var pdal = new PostgreSQLDataAccess(connectionString2, DataAccessType.Query);
+
+
+            var postgresSchema = pdal.GetSchema();
+
             dGen.Create(folder, pdal);
 
 

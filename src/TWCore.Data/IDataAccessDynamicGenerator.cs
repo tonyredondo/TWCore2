@@ -25,12 +25,6 @@ namespace TWCore.Data
     public interface IDataAccessDynamicGenerator
     {
         /// <summary>
-        /// Get a dynamic query from a Dal created using the DalGenerator
-        /// </summary>
-        /// <param name="queryName">Dynamic query key</param>
-        /// <returns>Query</returns>
-        string GetDynamicQuery(string queryName);
-        /// <summary>
         /// Get the Select Base Sql from a GeneratorSelectionContainer instance
         /// </summary>
         /// <param name="container">Container object</param>

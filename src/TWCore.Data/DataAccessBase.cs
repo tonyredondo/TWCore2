@@ -351,8 +351,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual IEnumerable<T> OnSelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -507,8 +505,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod, out object returnValue)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             returnValue = null;
             try
             {
@@ -668,8 +664,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual int OnExecuteNonQuery(string nameOrQuery, IDictionary<string, object> parameters = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -756,8 +750,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnExecuteNonQuery(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -859,8 +851,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual T OnSelectScalar<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1281,8 +1271,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void OnSelectElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             returnValue = null;
 
             using (var connection = GetConnection())
@@ -1456,8 +1444,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task<IEnumerable<T>> OnSelectElementsAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1603,8 +1589,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task<T> OnSelectElementAsync<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1709,8 +1693,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task<int> OnExecuteNonQueryAsync(string nameOrQuery, IDictionary<string, object> parameters = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1797,8 +1779,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task OnExecuteNonQueryAsync(string nameOrQuery, IEnumerable<IDictionary<string, object>> parametersIEnumerable = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1900,8 +1880,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task<T> OnSelectScalarAsync<T>(string nameOrQuery, IDictionary<string, object> parameters = null)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -2286,8 +2264,6 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task OnSelectElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
         {
-            if (nameOrQuery.StartsWith(":"))
-                nameOrQuery = GetDynamicQuery(nameOrQuery);
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -2422,15 +2398,6 @@ namespace TWCore.Data
 
         #region IDataAccessDynamicGenerator
         /// <summary>
-        /// Get a dynamic query from a Dal created using the DalGenerator
-        /// </summary>
-        /// <param name="queryName">Dynamic query key</param>
-        /// <returns>Query</returns>
-        public virtual string GetDynamicQuery(string queryName)
-        {
-            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
-        }
-        /// <summary>
         /// Get the Select Base Sql from a GeneratorSelectionContainer instance
         /// </summary>
         /// <param name="container">Container object</param>
@@ -2439,15 +2406,15 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
-		/// <summary>
-		/// Get the Where from Sql from GeneratorSelectionContainer instance
-		/// </summary>
-		/// <param name="container">Container object</param>
-		/// <returns>The where list.</returns>
-		public virtual List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container)
-		{
-			throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
-		}
+        /// <summary>
+        /// Get the Where from Sql from GeneratorSelectionContainer instance
+        /// </summary>
+        /// <param name="container">Container object</param>
+        /// <returns>The where list.</returns>
+        public virtual List<(string, string)> GetWhereFromContainer(GeneratorSelectionContainer container)
+        {
+            throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
+        }
         /// <summary>
         /// Get the Insert sql from a GeneratorSelectionContainer instance
         /// </summary>

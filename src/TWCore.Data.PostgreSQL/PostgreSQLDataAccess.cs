@@ -22,6 +22,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Data.Schema.Generator;
+using TWCore.Data.Schema;
+using System.Data;
 
 namespace TWCore.Data.PostgreSQL
 {
@@ -52,6 +54,231 @@ namespace TWCore.Data.PostgreSQL
             AccessType = accessType;
         }
 
+        #region GetSchema
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected override CatalogSchema OnGetSchema(DbConnection connection)
+        {
+            var schemas = connection.GetSchema();
+            var tables = connection.GetSchema("Tables");
+            var columns = connection.GetSchema("Columns");
+            var indexColumns = connection.GetSchema("IndexColumns");
+
+            var tableRows = tables.Rows.Cast<DataRow>().ToArray();
+            var catalog = new CatalogSchema
+            {
+                ConnectionString = connection.ConnectionString,
+                Name = (string)tableRows.FirstOrDefault()?["TABLE_CATALOG"],
+                AssemblyQualifiedName = typeof(PostgreSQLDataAccess).AssemblyQualifiedName
+            };
+
+            #region Create Tables
+            foreach (DataRow column in columns.Rows)
+            {
+                var tableCatalog = (string)column["TABLE_CATALOG"];
+                var tableSchema = (string)column["TABLE_SCHEMA"];
+                var tableName = (string)column["TABLE_NAME"];
+                var columnName = (string)column["COLUMN_NAME"];
+                var ordinalPosition = (int)column["ORDINAL_POSITION"];
+                var columnDefault = (string)(column["COLUMN_DEFAULT"] != DBNull.Value ? column["COLUMN_DEFAULT"] : null);
+                var isNullable = (string)column["IS_NULLABLE"];
+                var dataType = (string)column["DATA_TYPE"];
+                var maxCharsLength = (int?)(column["CHARACTER_MAXIMUM_LENGTH"] != DBNull.Value ? column["CHARACTER_MAXIMUM_LENGTH"] : null);
+                var maxBytesLength = (int?)(column["CHARACTER_OCTET_LENGTH"] != DBNull.Value ? column["CHARACTER_OCTET_LENGTH"] : null);
+                var numericPrecision = (int?)(column["NUMERIC_PRECISION"] != DBNull.Value ? column["NUMERIC_PRECISION"] : null);
+                var numericPrecisionRadix = (int?)(column["NUMERIC_PRECISION_RADIX"] != DBNull.Value ? column["NUMERIC_PRECISION_RADIX"] : null);
+                var numericScale = (int?)(column["NUMERIC_SCALE"] != DBNull.Value ? column["NUMERIC_SCALE"] : null);
+
+                if (tableSchema != "public") continue;
+
+                var tableRow = tableRows.FirstOrDefault(dRow => (string)dRow["TABLE_NAME"] == tableName);
+
+                var table = catalog.Tables.FirstOrDefault(t => t.Name == tableName && t.Schema == tableSchema);
+                if (table == null)
+                {
+                    table = new TableSchema { Name = tableName, Schema = tableSchema };
+                    switch ((string)tableRow?["TABLE_TYPE"])
+                    {
+                        case "BASE TABLE":
+                            table.Type = TableType.Table;
+                            break;
+                        case "VIEW":
+                            table.Type = TableType.View;
+                            break;
+                    }
+                    catalog.Tables.Add(table);
+                }
+
+                var tableColumn = table.Columns.FirstOrDefault(c => c.Name == columnName);
+                if (tableColumn == null)
+                {
+                    tableColumn = new TableColumnSchema
+                    {
+                        Name = columnName,
+                        Position = ordinalPosition,
+                        IsNullable = isNullable == "YES",
+                        NumericPrecision = numericPrecision,
+                        NumericPrecisionRadix = numericPrecisionRadix
+                    };
+
+                    #region DataType Switch
+                    switch (dataType)
+                    {
+                        case "uniqueidentifier":
+                        case "uuid":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "Guid?" : "Guid");
+                            break;
+                        case "char":
+                        case "bpchar":
+                        case "nchar":
+                        case "varchar":
+                        case "nvarchar":
+                        case "text":
+                        case "character":
+                        case "character varying":
+                            tableColumn.DataType = "string";
+                            tableColumn.MaxLength = maxCharsLength;
+                            break;
+                        case "varbinary":
+                        case "binary":
+                        case "rowversion":
+                        case "bytea":
+                            tableColumn.DataType = "byte[]";
+                            tableColumn.MaxLength = maxBytesLength;
+                            break;
+                        case "bigint":
+                        case "int8":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "long?" : "long");
+                            break;
+                        case "int":
+                        case "integer":
+                        case "int4":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "int?" : "int");
+                            break;
+                        case "smallint":
+                        case "int2":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "short?" : "short");
+                            break;
+                        case "tinyint":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "byte?" : "byte");
+                            break;
+                        case "bit":
+                        case "boolean":
+                        case "bool":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "bool?" : "bool");
+                            break;
+                        case "real":
+                        case "float4":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "float?" : "float");
+                            break;
+                        case "float":
+                        case "double precision":
+                        case "double":
+                        case "float8":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "double?" : "double");
+                            break;
+                        case "smallmoney":
+                        case "money":
+                        case "numeric":
+                        case "decimal":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "decimal?" : "decimal");
+                            break;
+                        case "date":
+                        case "smalldatetime":
+                        case "datetime":
+                        case "time":
+                        case "timetz":
+                        case "timestamp":
+                        case "timestamptz":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "DateTime?" : "DateTime");
+                            break;
+                        case "geography":
+                            tableColumn.DataType = "object";
+                            break;
+                        case "interval":
+                            tableColumn.DataType = (tableColumn.IsNullable ? "TimeSpan?" : "TimeSpan");
+                            break;
+                        default:
+                            break;
+                    }
+                    #endregion
+
+                    table.Columns.Add(tableColumn);
+                }
+            }
+            #endregion
+
+            #region Create Indexes
+            foreach (DataRow indexColumn in indexColumns.Rows)
+            {
+                var tableCatalog = (string)indexColumn["table_catalog"];
+                var tableSchema = (string)indexColumn["table_schema"];
+                var tableName = (string)indexColumn["table_name"];
+                var columnName = (string)indexColumn["column_name"];
+                var indexName = (string)indexColumn["index_name"];
+
+
+                var table = catalog.Tables.FirstOrDefault(t => t.Name == tableName && t.Schema == tableSchema);
+                if (table == null) continue;
+
+                var tIndex = table.Indexes.FirstOrDefault(i => i.Name == indexName);
+                if (tIndex == null)
+                {
+                    tIndex = new TableIndexSchema { Name = indexName, ConstraintName = indexName };
+                    if (indexName.StartsWith("PK_"))
+                    {
+                        tIndex.Type = IndexType.PrimaryKey;
+                    }
+                    else if (indexName.StartsWith("UK_"))
+                    {
+                        tIndex.Type = IndexType.UniqueKey;
+                    }
+                    else if (indexName.StartsWith("IX_"))
+                    {
+                        tIndex.Type = IndexType.NonClusteredNonUniqueIndex;
+                    }
+                    else if (indexName.StartsWith("UX_"))
+                    {
+                        tIndex.Type = IndexType.UniqueIndex;
+                    }
+                    else if (indexName.StartsWith("AK_"))
+                    {
+                        tIndex.Type = IndexType.AlternateIndex;
+                    }
+                    else if (indexName.StartsWith("CLIX_"))
+                    {
+                        tIndex.Type = IndexType.ClusteredIndex;
+                    }
+                    else if (indexName.StartsWith("COVIX_"))
+                    {
+                        tIndex.Type = IndexType.CoveringIndex;
+                    }
+                    else if (indexName.StartsWith("UC_"))
+                    {
+                        tIndex.Type = IndexType.UniqueClusteredIndex;
+                    }
+                    else
+                    {
+
+                    }
+                    table.Indexes.Add(tIndex);
+                }
+
+                var tColumn = new TableIndexColumnSchema
+                {
+                    ColumnName = columnName,
+                };
+                tIndex.Columns.Add(tColumn);
+
+
+                var column = table.Columns.FirstOrDefault(cName => cName.Name == columnName);
+                if (column != null && !column.IndexesName.Contains(indexName))
+                    column.IndexesName.Add(indexName);
+            }
+            #endregion
+
+            return catalog;
+        }
+        #endregion
 
         #region IDataAccessDynamicGenerator
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

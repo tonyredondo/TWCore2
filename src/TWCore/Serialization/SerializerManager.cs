@@ -31,14 +31,54 @@ namespace TWCore.Serialization
     /// </summary>
     public static class SerializerManager
     {
+        static ISerializer _defaultBinarySerializer = null;
+        static ITextSerializer _defaultTextSerializer = null;
+
+
         /// <summary>
         /// Default Binary Serializer
         /// </summary>
-        public static ISerializer DefaultBinarySerializer = null;
+        public static ISerializer DefaultBinarySerializer
+        {
+            get
+            {
+                if (_defaultBinarySerializer != null)
+                    return _defaultBinarySerializer;
+                foreach(var mime in DefaultBinarySerializerMimeTypes)
+                {
+                    var serializer = GetByMimeType(mime);
+                    if (serializer != null)
+                        return serializer;
+                }
+                return Serializers.FirstOrDefault(s => s.SerializerType == SerializerType.Binary);
+            }
+            set
+            {
+                _defaultBinarySerializer = value;
+            }
+        }
         /// <summary>
         /// Default Text Serializer
         /// </summary>
-        public static ITextSerializer DefaultTextSerializer = null;
+        public static ITextSerializer DefaultTextSerializer
+        {
+            get
+            {
+                if (_defaultTextSerializer != null)
+                    return _defaultTextSerializer;
+                foreach (var mime in DefaultBinarySerializerMimeTypes)
+                {
+                    var serializer = GetByMimeType(mime);
+                    if (serializer != null)
+                        return (ITextSerializer)serializer;
+                }
+                return (ITextSerializer)Serializers.FirstOrDefault(s => s.SerializerType == SerializerType.Text);
+            }
+            set
+            {
+                _defaultTextSerializer = value;
+            }
+        }
         /// <summary>
         /// All registered serializers
         /// </summary>
@@ -51,6 +91,15 @@ namespace TWCore.Serialization
         /// Supress the file extension warning from the log
         /// </summary>
         public static bool SupressFileExtensionWarning = false;
+        /// <summary>
+        /// Default Binary Serializer MimeTypes Load array
+        /// </summary>
+        public static string[] DefaultBinarySerializerMimeTypes = new string[] { SerializerMimeTypes.WBinary, SerializerMimeTypes.PWBinary, SerializerMimeTypes.BinaryFormatter };
+        /// <summary>
+        /// Default Text Serializer MimeTypes Load array
+        /// </summary>
+        public static string[] DefaultTextSerializerMimeTypes = new string[] { SerializerMimeTypes.Json, SerializerMimeTypes.Xml };
+
 
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,7 +110,6 @@ namespace TWCore.Serialization
                 if (Factory.GetAllAssemblies != null)
                 {
                     var assemblies = Factory.GetAllAssemblies();
-                    var allSerializers = new List<Type>();
                     foreach (var assembly in assemblies)
                     {
                         try
@@ -69,23 +117,23 @@ namespace TWCore.Serialization
                             foreach (var type in assembly.DefinedTypes)
                             {
                                 if (!type.IsInterface && !type.IsAbstract && type.ImplementedInterfaces.Any(i => i == typeof(ISerializer)))
-                                    allSerializers.Add(type.AsType());
+                                {
+                                    var serType = type.AsType();
+                                    try
+                                    {
+                                        Register((ISerializer)Activator.CreateInstance(serType));
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
+                                    }
+
+                                }
                             }
                         }
                         catch (Exception ex)
                         {
                             Core.Log.Write(LogLevel.Warning, $"An error occurs when loading the types for '{assembly.FullName}' assembly, the assembly was ignored.", ex);
-                        }
-                    }
-                    foreach (var serType in allSerializers.OrderByDescending(t => t.Name))
-                    {
-                        try
-                        {
-                            Register((ISerializer)Activator.CreateInstance(serType));
-                        }
-                        catch(Exception ex)
-                        {
-                            Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
                         }
                     }
                 }
@@ -117,17 +165,8 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Register(ISerializer serializer)
         {
-            if (serializer != null)
-            {
-                if (!Serializers.Contains(serializer.GetType()))
-                    Serializers.Add(serializer);
-
-                if (DefaultBinarySerializer == null && serializer.SerializerType == SerializerType.Binary)
-                    DefaultBinarySerializer = serializer;
-
-                if (DefaultTextSerializer == null && serializer.SerializerType == SerializerType.Text)
-                    DefaultTextSerializer = (ITextSerializer)serializer;
-            }
+            if (serializer != null && !Serializers.Contains(serializer.GetType()))
+                Serializers.Add(serializer);
         }
         /// <summary>
         /// Deregister a serializer
@@ -142,11 +181,11 @@ namespace TWCore.Serialization
                 if (Serializers.Contains(key))
                     Serializers.Remove(key);
 
-                if (DefaultBinarySerializer == serializer)
-                    DefaultBinarySerializer = Serializers.FirstOrDefault(i => i.SerializerType == SerializerType.Binary);
+                if (_defaultBinarySerializer == serializer)
+                    _defaultBinarySerializer = null;
 
-                if (DefaultTextSerializer == serializer)
-                    DefaultTextSerializer = (ITextSerializer)Serializers.FirstOrDefault(i => i.SerializerType == SerializerType.Text);
+                if (_defaultTextSerializer == serializer)
+                    _defaultTextSerializer = null;
             }
         }
         #endregion

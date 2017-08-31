@@ -31,10 +31,6 @@ namespace TWCore.Serialization
         /// </summary>
         public static readonly string BinaryFormatter = "application/binary-formatter";
         /// <summary>
-        /// TSerializer binary mime type
-        /// </summary>
-        public static readonly string TBinary = "application/t-binary";
-        /// <summary>
         /// WSerializer binary mime type
         /// </summary>
         public static readonly string WBinary = "application/w-binary";

@@ -28,6 +28,7 @@ namespace TWCore.Services.Windows
         {
             if (factories.PlatformType != PlatformType.Windows) return;
             Core.ServiceContainerFactory = (service, action) => new WindowsServiceContainer(service, action);
+            Console.WriteLine("WINDOWS SERVICE CORE INIT");
         }
     }
 

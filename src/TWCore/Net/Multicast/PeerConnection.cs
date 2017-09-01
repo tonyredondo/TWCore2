@@ -277,7 +277,7 @@ namespace TWCore.Net.Multicast
                     Core.Log.InfoBasic("Waiting data on Endpoint: {0}", socket.LocalEndPoint);
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     EndPoint socketEndpoint = rcvEndpoint;
-                    socket.ReceiveFrom(datagram, packetSize, SocketFlags.None, ref socketEndpoint);
+                    socket.ReceiveFrom(datagram, ref socketEndpoint);
                     rcvEndpoint = (IPEndPoint)socketEndpoint;
                     Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);

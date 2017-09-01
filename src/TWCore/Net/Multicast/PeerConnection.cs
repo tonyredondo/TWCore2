@@ -193,8 +193,9 @@ namespace TWCore.Net.Multicast
                     try
                     {
                         c.SendTo(datagram, _sendEndpoint);
+                        Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.LocalEndPoint);
                     }
-                    catch(Exception)
+                    catch (Exception)
                     {
                         Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.LocalEndPoint);
                     }
@@ -264,16 +265,17 @@ namespace TWCore.Net.Multicast
 
         void ReceiveSocketThread(object socketObject)
         {
-            try
+            var guidBytes = new byte[16];
+            var socket = (Socket)socketObject;
+            var datagram = new byte[packetSize];
+            while (!_token.IsCancellationRequested)
             {
-                var guidBytes = new byte[16];
-                var socket = (Socket)socketObject;
-                var datagram = new byte[packetSize];
-                while (!_token.IsCancellationRequested)
+                try
                 {
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     EndPoint socketEndpoint = rcvEndpoint;
                     socket.ReceiveFrom(datagram, packetSize, SocketFlags.None, ref socketEndpoint);
+                    Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
                     rcvEndpoint = (IPEndPoint)socketEndpoint;
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                     var guid = new Guid(guidBytes);
@@ -304,11 +306,12 @@ namespace TWCore.Net.Multicast
                         }
                     }, new object[] { this, buffer, rcvEndpoint });
                 }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
-            catch (Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
+
         }
 
         #endregion

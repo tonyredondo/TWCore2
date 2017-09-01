@@ -125,13 +125,10 @@ namespace TWCore.Net.Multicast
 
             //****
             foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName()).Where(i => i.AddressFamily == AddressFamily.InterNetwork))
-            //var localIp = IPAddress.Parse("10.10.1.60");
             {
                 var sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                if (Factory.PlatformType == PlatformType.Windows)
-                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp, localIp));
-                else
-                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp));
+                var multicastOption = new MulticastOption(_multicastIp, localIp);
+                sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multicastOption);
                 sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 sendSocket.Bind(new IPEndPoint(localIp, Port));
@@ -154,7 +151,7 @@ namespace TWCore.Net.Multicast
                 }
                 catch
                 {
-                    // ignored
+                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, multicastOption);
                 }
             }
         }

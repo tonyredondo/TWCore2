@@ -275,8 +275,8 @@ namespace TWCore.Net.Multicast
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     EndPoint socketEndpoint = rcvEndpoint;
                     socket.ReceiveFrom(datagram, packetSize, SocketFlags.None, ref socketEndpoint);
-                    Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
                     rcvEndpoint = (IPEndPoint)socketEndpoint;
+                    Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                     var guid = new Guid(guidBytes);
                     var numMsgs = BitConverter.ToUInt16(datagram, 16);

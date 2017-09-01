@@ -181,7 +181,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 sWriter = logStreams.GetOrAdd(currentFileName, fname =>
                 {
                     var folder = Path.GetDirectoryName(fname);
-                    if (!Directory.Exists(folder))
+                    if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
                         Directory.CreateDirectory(folder);
                     var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
                     {

@@ -91,61 +91,54 @@ namespace TWCore.Net.Multicast
             _sendEndpoint = new IPEndPoint(_multicastIp, Port);
             _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
 
-            if (Factory.PlatformType == PlatformType.Windows)
-            {
-                foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
-                    .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
-                {
-                    var client = new UdpClient();
-                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
-                    if (EnableReceive)
-                        client.Client.Bind(new IPEndPoint(localIp, Port));
-                    client.MulticastLoopback = true;
-                    client.JoinMulticastGroup(_multicastIp, localIp);
-
-                    try
-                    {
-                        client.Send(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }, 5, _sendEndpoint);
-
-                        if (EnableReceive)
-                        {
-                            var thread = new Thread(ReceiveSocketThread)
-                            {
-                                Name = "PeerConnectionReceiveThread:" + localIp,
-                                IsBackground = true
-                            };
-                            thread.Start(client);
-                            _clientsReceiveThreads.Add(thread);
-                        }
-                        _clients.Add(client);
-                    }
-                    catch
-                    {
-                        //
-                    }
-                }
-            }
-            else
+            foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
+                .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
             {
                 var client = new UdpClient();
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 if (EnableReceive)
-                    client.Client.Bind(_receiveEndpoint);
+                    client.Client.Bind(new IPEndPoint(localIp, Port));
                 client.MulticastLoopback = true;
-                client.JoinMulticastGroup(_multicastIp);
-                if (EnableReceive)
+                client.JoinMulticastGroup(_multicastIp, localIp);
+
+                try
                 {
-                    var thread = new Thread(ReceiveSocketThread)
+                    client.Send(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }, 5, _sendEndpoint);
+
+                    if (EnableReceive)
                     {
-                        Name = "PeerConnectionReceiveThread",
-                        IsBackground = true
-                    };
-                    thread.Start(client);
-                    _clientsReceiveThreads.Add(thread);
+                        var thread = new Thread(ReceiveSocketThread)
+                        {
+                            Name = "PeerConnectionReceiveThread:" + localIp,
+                            IsBackground = true
+                        };
+                        thread.Start(client);
+                        _clientsReceiveThreads.Add(thread);
+                    }
+                    _clients.Add(client);
                 }
-                _clients.Add(client);
+                catch
+                {
+                    //
+                }
+            }
+
+            if (EnableReceive)
+            {
+                var basicReceiver = new UdpClient();
+                basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                basicReceiver.Client.Bind(_receiveEndpoint);
+                //basicReceiver.MulticastLoopback = true;
+                //basicReceiver.JoinMulticastGroup(_multicastIp);
+                var thread = new Thread(ReceiveSocketThread)
+                {
+                    Name = "PeerConnectionReceiveThread",
+                    IsBackground = true
+                };
+                thread.Start(basicReceiver);
+                _clientsReceiveThreads.Add(thread);
             }
         }
         /// <summary>

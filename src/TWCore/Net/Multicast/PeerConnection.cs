@@ -91,67 +91,60 @@ namespace TWCore.Net.Multicast
             EnableReceive = enableReceive;
             _multicastIp = IPAddress.Parse(MulticastIp);
             _sendEndpoint = new IPEndPoint(_multicastIp, Port);
-            //_receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
+            _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
 
-            //_client = new UdpClient();
-
-            //if (Factory.PlatformType == PlatformType.Windows)
-            //{
-            //    //_client.ExclusiveAddressUse = false;
-            //    _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            //    //_client.ExclusiveAddressUse = false;
-            //}
-            //else
-            //{
-            //    _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            //}
-            //_client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 128);
-
-            //if (EnableReceive)
-            //    _client.Client.Bind(_receiveEndpoint);
-            //_client.MulticastLoopback = true;
-            //_client.JoinMulticastGroup(_multicastIp);
-            //if (EnableReceive)
-            //{
-            //    _receiveThread = new Thread(ReceiveThread)
-            //    {
-            //        Name = "PeerConnectionReceiveThread",
-            //        IsBackground = true
-            //    };
-            //    _receiveThread.Start();
-            //}
-
-
-
-            //****
-            foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName()).Where(i => i.AddressFamily == AddressFamily.InterNetwork))
+            if (Factory.PlatformType == PlatformType.Windows)
             {
-                var sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                var multicastOption = new MulticastOption(_multicastIp, localIp);
-                sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multicastOption);
-                sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
-                sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                sendSocket.Bind(new IPEndPoint(localIp, Port));
-                sendSocket.MulticastLoopback = true;
-                try
+                foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
+                    .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    sendSocket.SendTo(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }, _sendEndpoint);
-
-                    if (EnableReceive)
+                    var sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    var multicastOption = new MulticastOption(_multicastIp, localIp);
+                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multicastOption);
+                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                    sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    sendSocket.Bind(new IPEndPoint(localIp, Port));
+                    sendSocket.MulticastLoopback = true;
+                    try
                     {
-                        var thread = new Thread(ReceiveSocketThread)
+                        sendSocket.SendTo(new byte[] {0x01, 0x02, 0x03, 0x04, 0x05}, _sendEndpoint);
+
+                        if (EnableReceive)
                         {
-                            Name = "PeerConnectionReceiveThread:" + localIp,
-                            IsBackground = true
-                        };
-                        thread.Start(sendSocket);
-                        _receiveThreads.Add(thread);
+                            var thread = new Thread(ReceiveSocketThread)
+                            {
+                                Name = "PeerConnectionReceiveThread:" + localIp,
+                                IsBackground = true
+                            };
+                            thread.Start(sendSocket);
+                            _receiveThreads.Add(thread);
+                        }
+                        _sendSockets.Add(sendSocket);
                     }
-                    _sendSockets.Add(sendSocket);
+                    catch
+                    {
+                        sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership,
+                            multicastOption);
+                    }
                 }
-                catch
+            }
+            else
+            {
+                _client = new UdpClient();
+                _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                _client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                if (EnableReceive)
+                    _client.Client.Bind(_receiveEndpoint);
+                _client.MulticastLoopback = true;
+                _client.JoinMulticastGroup(_multicastIp);
+                if (EnableReceive)
                 {
-                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership, multicastOption);
+                    _receiveThread = new Thread(ReceiveThread)
+                    {
+                        Name = "PeerConnectionReceiveThread",
+                        IsBackground = true
+                    };
+                    _receiveThread.Start();
                 }
             }
         }
@@ -193,21 +186,26 @@ namespace TWCore.Net.Multicast
                 Buffer.BlockCopy(BitConverter.GetBytes((ushort)i), 0, datagram, 18, 2);
                 Buffer.BlockCopy(BitConverter.GetBytes((ushort)csize), 0, datagram, 20, 2);
                 Buffer.BlockCopy(buffer, offset, datagram, 22, csize);
-                //var sentBytes = _client.Send(datagram, packetSize, _sendEndpoint);
 
-                foreach (var c in _sendSockets)
+                if (Factory.PlatformType == PlatformType.Windows)
                 {
-                    try
+                    foreach (var c in _sendSockets)
                     {
-                        c.SendTo(datagram, _sendEndpoint);
-                        Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.LocalEndPoint);
-                    }
-                    catch (Exception)
-                    {
-                        Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.LocalEndPoint);
+                        try
+                        {
+                            c.SendTo(datagram, _sendEndpoint);
+                            Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.LocalEndPoint);
+                        }
+                        catch (Exception)
+                        {
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.LocalEndPoint);
+                        }
                     }
                 }
-
+                else
+                {
+                    _client.Send(datagram, packetSize, _sendEndpoint);
+                }
                 remain -= dtsize;
                 offset += csize;
             }

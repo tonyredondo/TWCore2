@@ -30,20 +30,18 @@ namespace TWCore.Net.Multicast
     /// </summary>
     public class PeerConnection
     {
-        readonly TimeoutDictionary<Guid, byte[][]> ReceivedMessagesDatagram = new TimeoutDictionary<Guid, byte[][]>();
-        readonly int packetSize = 512;
-        UdpClient _client;
+        const int PacketSize = 512;
+        readonly TimeoutDictionary<Guid, byte[][]> _receivedMessagesDatagram = new TimeoutDictionary<Guid, byte[][]>();
+        readonly List<UdpClient> _clients = new List<UdpClient>();
+        readonly List<Thread> _clientsReceiveThreads = new List<Thread>();
+        readonly TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
+
         IPAddress _multicastIp;
         IPEndPoint _sendEndpoint;
         IPEndPoint _receiveEndpoint;
-        Thread _receiveThread;
         CancellationTokenSource _tokenSource;
         CancellationToken _token;
         bool _connected;
-        TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
-
-        List<Socket> _sendSockets = new List<Socket>();
-        List<Thread> _receiveThreads = new List<Thread>();
 
         /// <summary>
         /// On receive message event
@@ -98,16 +96,17 @@ namespace TWCore.Net.Multicast
                 foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
                     .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
                 {
-                    var sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    var multicastOption = new MulticastOption(_multicastIp, localIp);
-                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, multicastOption);
-                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
-                    sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                    sendSocket.Bind(new IPEndPoint(localIp, Port));
-                    sendSocket.MulticastLoopback = true;
+                    var client = new UdpClient();
+                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                    if (EnableReceive)
+                        client.Client.Bind(new IPEndPoint(localIp, Port));
+                    client.MulticastLoopback = true;
+                    client.JoinMulticastGroup(_multicastIp, localIp);
+
                     try
                     {
-                        sendSocket.SendTo(new byte[] {0x01, 0x02, 0x03, 0x04, 0x05}, _sendEndpoint);
+                        client.Send(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }, 5, _sendEndpoint);
 
                         if (EnableReceive)
                         {
@@ -116,36 +115,37 @@ namespace TWCore.Net.Multicast
                                 Name = "PeerConnectionReceiveThread:" + localIp,
                                 IsBackground = true
                             };
-                            thread.Start(sendSocket);
-                            _receiveThreads.Add(thread);
+                            thread.Start(client);
+                            _clientsReceiveThreads.Add(thread);
                         }
-                        _sendSockets.Add(sendSocket);
+                        _clients.Add(client);
                     }
                     catch
                     {
-                        sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.DropMembership,
-                            multicastOption);
+                        //
                     }
                 }
             }
             else
             {
-                _client = new UdpClient();
-                _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                _client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                var client = new UdpClient();
+                client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 if (EnableReceive)
-                    _client.Client.Bind(_receiveEndpoint);
-                _client.MulticastLoopback = true;
-                _client.JoinMulticastGroup(_multicastIp);
+                    client.Client.Bind(_receiveEndpoint);
+                client.MulticastLoopback = true;
+                client.JoinMulticastGroup(_multicastIp);
                 if (EnableReceive)
                 {
-                    _receiveThread = new Thread(ReceiveThread)
+                    var thread = new Thread(ReceiveSocketThread)
                     {
                         Name = "PeerConnectionReceiveThread",
                         IsBackground = true
                     };
-                    _receiveThread.Start();
+                    thread.Start(client);
+                    _clientsReceiveThreads.Add(thread);
                 }
+                _clients.Add(client);
             }
         }
         /// <summary>
@@ -158,8 +158,11 @@ namespace TWCore.Net.Multicast
             _tokenSource?.Cancel();
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
-            _client.DropMulticastGroup(_multicastIp);
-            _client.Client.Close();
+            foreach (var client in _clients)
+            {
+                client.DropMulticastGroup(_multicastIp);
+                client.Client.Close();
+            }
             _connected = false;
         }
         /// <summary>
@@ -171,7 +174,7 @@ namespace TWCore.Net.Multicast
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send(byte[] buffer, int offset, int count)
         {
-            var dtsize = packetSize - 16 - 2 - 2 - 2;
+            var dtsize = PacketSize - 16 - 2 - 2 - 2;
             var numMsgs = (int)Math.Ceiling((double)count / dtsize);
             if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
             var guidBytes = Guid.NewGuid().ToByteArray();
@@ -179,7 +182,7 @@ namespace TWCore.Net.Multicast
             var remain = count;
             for (var i = 0; i < numMsgs; i++)
             {
-                var datagram = new byte[packetSize];
+                var datagram = new byte[PacketSize];
                 var csize = remain >= dtsize ? dtsize : remain;
                 Buffer.BlockCopy(guidBytes, 0, datagram, 0, 16);
                 Buffer.BlockCopy(numMsgsBytes, 0, datagram, 16, 2);
@@ -187,25 +190,19 @@ namespace TWCore.Net.Multicast
                 Buffer.BlockCopy(BitConverter.GetBytes((ushort)csize), 0, datagram, 20, 2);
                 Buffer.BlockCopy(buffer, offset, datagram, 22, csize);
 
-                if (Factory.PlatformType == PlatformType.Windows)
+                foreach (var c in _clients)
                 {
-                    foreach (var c in _sendSockets)
+                    try
                     {
-                        try
-                        {
-                            c.SendTo(datagram, _sendEndpoint);
-                            Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.LocalEndPoint);
-                        }
-                        catch (Exception)
-                        {
-                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.LocalEndPoint);
-                        }
+                        c.Send(datagram, PacketSize, _sendEndpoint);
+                        Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.Client.LocalEndPoint);
+                    }
+                    catch (Exception)
+                    {
+                        Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                 }
-                else
-                {
-                    _client.Send(datagram, packetSize, _sendEndpoint);
-                }
+
                 remain -= dtsize;
                 offset += csize;
             }
@@ -228,61 +225,18 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Private Methods
-        void ReceiveThread()
+        void ReceiveSocketThread(object clientObject)
         {
             var guidBytes = new byte[16];
-
-            while (!_token.IsCancellationRequested)
-            {
-                var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
-                var datagram = _client.Receive(ref rcvEndpoint);
-                Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
-                var guid = new Guid(guidBytes);
-                var numMsgs = BitConverter.ToUInt16(datagram, 16);
-                var currentMsg = BitConverter.ToUInt16(datagram, 18);
-                var dataSize = BitConverter.ToUInt16(datagram, 20);
-                var buffer = new byte[dataSize];
-                Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
-                var datagrams = ReceivedMessagesDatagram.GetOrAdd(guid, _guid => (new byte[numMsgs][], _messageTimeout));
-                datagrams[currentMsg] = buffer;
-                if (datagrams.All(i => i != null))
-                {
-                    ReceivedMessagesDatagram.TryRemove(guid, out var @out);
-                    buffer = datagrams.SelectMany(i => i).ToArray();
-                    ThreadPool.QueueUserWorkItem(obj =>
-                    {
-                        try
-                        {
-                            var objArray = (object[])obj;
-                            var pcnn = (PeerConnection)objArray[0];
-                            var pcbf = (byte[])objArray[1];
-                            var pcip = (IPEndPoint)objArray[2];
-                            pcnn.OnReceive?.Invoke(pcnn, new PeerConnectionMessageReceivedEventArgs(pcip.Address, pcbf));
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }, new object[] { this, buffer, rcvEndpoint });
-                }
-            }
-        }
-
-        void ReceiveSocketThread(object socketObject)
-        {
-            var guidBytes = new byte[16];
-            var socket = (Socket)socketObject;
-            var datagram = new byte[packetSize];
+            var client = (UdpClient)clientObject;
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
-                    Core.Log.InfoBasic("Waiting data on Endpoint: {0}", socket.LocalEndPoint);
+                    Core.Log.InfoBasic("Waiting data on Endpoint: {0}", client.Client.LocalEndPoint);
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
-                    EndPoint socketEndpoint = rcvEndpoint;
-                    var num = socket.ReceiveFrom(datagram, ref socketEndpoint);
-                    rcvEndpoint = (IPEndPoint)socketEndpoint;
-                    if (num < 22)
+                    var datagram = client.Receive(ref rcvEndpoint);
+                    if (datagram.Length < 22)
                         continue;
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                     var guid = new Guid(guidBytes);
@@ -294,10 +248,10 @@ namespace TWCore.Net.Multicast
 
                     Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
 
-                    var datagrams = ReceivedMessagesDatagram.GetOrAdd(guid, mguid => (new byte[numMsgs][], _messageTimeout));
+                    var datagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => (new byte[numMsgs][], _messageTimeout));
                     datagrams[currentMsg] = buffer;
                     if (datagrams.Any(i => i == null)) continue;
-                    ReceivedMessagesDatagram.TryRemove(guid, out var @out);
+                    _receivedMessagesDatagram.TryRemove(guid, out var @out);
                     buffer = datagrams.SelectMany(i => i).ToArray();
 
                     ThreadPool.QueueUserWorkItem(obj =>
@@ -324,7 +278,6 @@ namespace TWCore.Net.Multicast
             }
 
         }
-
         #endregion
     }
 }

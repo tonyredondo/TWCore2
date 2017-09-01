@@ -101,6 +101,7 @@ namespace TWCore.Net.Multicast
             {
                 _client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
             }
+            _client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 128);
 
             if (EnableReceive)
                 _client.Client.Bind(_receiveEndpoint);

@@ -189,7 +189,16 @@ namespace TWCore.Net.Multicast
                 //var sentBytes = _client.Send(datagram, packetSize, _sendEndpoint);
 
                 foreach (var c in _sendSockets)
-                    c.SendTo(datagram, _sendEndpoint);
+                {
+                    try
+                    {
+                        c.SendTo(datagram, _sendEndpoint);
+                    }
+                    catch(Exception)
+                    {
+                        Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.LocalEndPoint);
+                    }
+                }
 
                 remain -= dtsize;
                 offset += csize;

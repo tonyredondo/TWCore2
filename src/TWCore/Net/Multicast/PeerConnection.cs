@@ -130,8 +130,8 @@ namespace TWCore.Net.Multicast
                 basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 basicReceiver.Client.Bind(_receiveEndpoint);
-                //basicReceiver.MulticastLoopback = true;
-                //basicReceiver.JoinMulticastGroup(_multicastIp);
+                basicReceiver.MulticastLoopback = true;
+                basicReceiver.JoinMulticastGroup(_multicastIp);
                 var thread = new Thread(ReceiveSocketThread)
                 {
                     Name = "PeerConnectionReceiveThread",

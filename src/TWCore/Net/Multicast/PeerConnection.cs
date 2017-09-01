@@ -43,6 +43,7 @@ namespace TWCore.Net.Multicast
         TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
 
         List<Socket> _sendSockets = new List<Socket>();
+        List<Thread> _receiveThreads = new List<Thread>();
 
         /// <summary>
         /// On receive message event
@@ -137,10 +138,11 @@ namespace TWCore.Net.Multicast
                 {
                     var thread = new Thread(ReceiveSocketThread)
                     {
-                        Name = "PeerConnectionReceiveThread",
+                        Name = "PeerConnectionReceiveThread:" + localIp,
                         IsBackground = true
                     };
                     thread.Start(sendSocket);
+                    _receiveThreads.Add(thread);
                 }
                 _sendSockets.Add(sendSocket);
             }
@@ -272,6 +274,7 @@ namespace TWCore.Net.Multicast
             {
                 try
                 {
+                    Core.Log.InfoBasic("Waiting data on Endpoint: {0}", socket.LocalEndPoint);
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     EndPoint socketEndpoint = rcvEndpoint;
                     socket.ReceiveFrom(datagram, packetSize, SocketFlags.None, ref socketEndpoint);

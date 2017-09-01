@@ -131,24 +131,29 @@ namespace TWCore.Net.Multicast
                 sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp, localIp));
                 sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                if (EnableReceive)
-                    sendSocket.MulticastLoopback = true;
                 sendSocket.Bind(new IPEndPoint(localIp, Port));
-                if (EnableReceive)
+                sendSocket.MulticastLoopback = true;
+                try
                 {
-                    var thread = new Thread(ReceiveSocketThread)
+                    sendSocket.SendTo(new byte[] {0x66}, _sendEndpoint);
+
+                    if (EnableReceive)
                     {
-                        Name = "PeerConnectionReceiveThread:" + localIp,
-                        IsBackground = true
-                    };
-                    thread.Start(sendSocket);
-                    _receiveThreads.Add(thread);
+                        var thread = new Thread(ReceiveSocketThread)
+                        {
+                            Name = "PeerConnectionReceiveThread:" + localIp,
+                            IsBackground = true
+                        };
+                        thread.Start(sendSocket);
+                        _receiveThreads.Add(thread);
+                    }
+                    _sendSockets.Add(sendSocket);
                 }
-                _sendSockets.Add(sendSocket);
+                catch
+                {
+                    // ignored
+                }
             }
-
-
-
         }
         /// <summary>
         /// Disconnect and leave the peer group
@@ -280,6 +285,8 @@ namespace TWCore.Net.Multicast
                     socket.ReceiveFrom(datagram, ref socketEndpoint);
                     rcvEndpoint = (IPEndPoint)socketEndpoint;
                     Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
+                    if (datagram.Length < 22)
+                        continue;
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                     var guid = new Guid(guidBytes);
                     var numMsgs = BitConverter.ToUInt16(datagram, 16);

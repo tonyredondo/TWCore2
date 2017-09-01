@@ -16,7 +16,10 @@ limitations under the License.
 
 using DasMulli.Win32.ServiceUtils;
 using System;
+using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
+using TWCore.Settings;
 
 namespace TWCore.Services.Windows
 {
@@ -26,22 +29,18 @@ namespace TWCore.Services.Windows
     /// </summary>
     internal class WindowsServiceContainer : ServiceContainer
     {
+        WindowsServiceSettings _settings;
+
         #region .ctor
-        public WindowsServiceContainer(IService service, Action initAction) : 
+        public WindowsServiceContainer(IService service, Action initAction) :
             base(service, initAction) => Init();
-        public WindowsServiceContainer(IService service) : 
+        public WindowsServiceContainer(IService service) :
             base(service) => Init();
-        public WindowsServiceContainer(string serviceName, IService service) : 
+        public WindowsServiceContainer(string serviceName, IService service) :
             base(serviceName, service) => Init();
-        public WindowsServiceContainer(string serviceName, IService service, Action initAction) : 
+        public WindowsServiceContainer(string serviceName, IService service, Action initAction) :
             base(serviceName, service, initAction) => Init();
         #endregion
-
-        void Init()
-        {
-            RegisterParametersHandler("service-install", "Install Windows Service", InstallService);
-            RegisterParametersHandler("service-uninstall", "Uninstall Windows Service", UninstallService);
-        }
 
         #region Override Methods
 
@@ -50,9 +49,12 @@ namespace TWCore.Services.Windows
             ShowHeader();
             Console.WriteLine("Parameters:");
             Console.WriteLine("  {0,-30}  : {1}", "/help | /?", "This Help.");
-            Console.WriteLine("  {0,-30}  : {1}", "/service-install", "Install Windows Service.");
-            Console.WriteLine("  {0,-30}  : {1}", "/service-uninstall", "Uninstall Windows Service.");
-            Console.WriteLine("  {0,-30}  : {1}", "/service-run", "Run as a Windows Service.");
+            if (Service != null)
+            {
+                Console.WriteLine("  {0,-30}  : {1}", "/service-install", "Install Windows Service.");
+                Console.WriteLine("  {0,-30}  : {1}", "/service-uninstall", "Uninstall Windows Service.");
+                Console.WriteLine("  {0,-30}  : {1}", "/service-run", "Run as a Windows Service.");
+            }
             Console.WriteLine("  {0,-30}  : {1}", "/showsettings | /w", "Show all loaded settings from app.config and settings.xml file.");
             Console.WriteLine("  {0,-30}  : {1}", "/version", "Show all loaded assemblies version.");
             if (ParametersHandlers?.Any() == true)
@@ -76,9 +78,23 @@ namespace TWCore.Services.Windows
 
         public override void Run(string[] args)
         {
+            if (args.Length > 0)
+            {
+                switch (args[0])
+                {
+                    case "/service-install":
+                        InstallService(null);
+                        Core.Dispose();
+                        return;
+                    case "/service-uninstall":
+                        UninstallService(null);
+                        Core.Dispose();
+                        return;
+                }
+            }
             if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase) && Service == null)
             {
-                Core.Log.Warning("THERE IS NO SERVICE TO START.");
+                Core.Log.Error("THERE IS NO SERVICE TO START.");
                 return;
             }
             base.Run(args);
@@ -97,7 +113,7 @@ namespace TWCore.Services.Windows
                     var serviceHost = new Win32ServiceHost(win32Service);
                     serviceHost.Run();
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                 }
@@ -109,13 +125,115 @@ namespace TWCore.Services.Windows
         #endregion
 
         #region Install/Uninstall Service
-        static void InstallService(ParameterHandlerInfo parameterHandlerInfo)
+        void Init()
         {
-            throw new NotImplementedException();
+            if (Service == null) return;
+            _settings = Core.GetSettings<WindowsServiceSettings>();
+            RegisterParametersHandler("service-install", "Install Windows Service", InstallService);
+            RegisterParametersHandler("service-uninstall", "Uninstall Windows Service", UninstallService);
         }
-        static void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
+        void InstallService(ParameterHandlerInfo parameterHandlerInfo)
         {
-            throw new NotImplementedException();
+            try
+            {
+                // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
+                var remainingArgs = Environment.GetCommandLineArgs()
+                    .Where(arg => arg != "/service-install")
+                    .Select(EscapeCommandLineArgument)
+                    .Append("/service-run");
+
+                var host = Process.GetCurrentProcess().MainModule.FileName;
+                if (!host.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    // For self-contained apps, skip the dll path
+                    remainingArgs = remainingArgs.Skip(1);
+                }
+                var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
+
+
+                _settings.DisplayName = _settings.DisplayName ?? ServiceName;
+                _settings.Description = _settings.Description ?? ServiceName;
+
+                Win32ServiceCredentials credentials;
+                switch (_settings.Credentials)
+                {
+                    case ServiceCredentials.LocalSystem:
+                        credentials = Win32ServiceCredentials.LocalSystem;
+                        break;
+                    case ServiceCredentials.LocalService:
+                        credentials = Win32ServiceCredentials.LocalService;
+                        break;
+                    case ServiceCredentials.NetworkService:
+                        credentials = Win32ServiceCredentials.NetworkService;
+                        break;
+                    case ServiceCredentials.Custom:
+                        credentials = new Win32ServiceCredentials(_settings.Username, _settings.Password);
+                        break;
+                    default:
+                        throw new ArgumentException("The Credentials enum has a wrong value.");
+                }
+
+
+                var serviceManager = new Win32ServiceManager();
+                serviceManager.CreateOrUpdateService(
+                    ServiceName,
+                    _settings.DisplayName,
+                    _settings.Description,
+                    fullServiceCommand,
+                    credentials,
+                    autoStart: _settings.AutoStart,
+                    startImmediately: false,
+                    errorSeverity: ErrorSeverity.Normal
+                );
+
+                Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Error(ex.Message);
+            }
+        }
+        void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
+        {
+            try
+            {
+                var serviceManager = new Win32ServiceManager();
+                serviceManager.DeleteService(ServiceName);
+                Core.Log.Warning($"The Service \"{ServiceName}\" was uninstalled successfully.");
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Error(ex.Message);
+            }
+        }
+
+        static string EscapeCommandLineArgument(string arg)
+        {
+            // http://stackoverflow.com/a/6040946/784387
+            arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1$1\" + "\"");
+            arg = "\"" + Regex.Replace(arg, @"(\\+)$", @"$1$1") + "\"";
+            return arg;
+        }
+        #endregion
+
+
+        #region Nested Types
+        public class WindowsServiceSettings : SettingsBase
+        {
+            public string DisplayName { get; set; }
+            public string Description { get; set; }
+            public ServiceCredentials Credentials { get; set; }
+            public string Username { get; set; }
+            public string Password { get; set; }
+            public bool AutoStart { get; set; }
+        }
+
+        public enum ServiceCredentials
+        {
+            LocalSystem,
+            LocalService,
+            NetworkService,
+            Custom
         }
         #endregion
     }

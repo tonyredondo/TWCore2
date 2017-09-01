@@ -15,7 +15,7 @@ namespace TWCore.Test.Core
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() => {
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
-
+                TWCore.Core.Log.AddSimpleFileStorage("testlog.txt");
                 //DiscoveryService.RegisterService("CACHE", "CACHENAME", "DESCRIPTION", null);
                 //DiscoveryService.RegisterService("CACHE", "CACHENAME2", "DESCRIPTION", null);
                 DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
@@ -26,7 +26,6 @@ namespace TWCore.Test.Core
             });
             //TWCore.Core.StartContainer(args);
             TWCore.Core.RunService<TestService>(args);
-            Console.ReadLine();
         }
 
         private static void DiscoveryService_OnServiceExpired(object sender, EventArgs<DiscoveryService.ReceivedService> e)

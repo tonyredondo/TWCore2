@@ -28,35 +28,6 @@ namespace TWCore.Services.Windows
         {
             if (factories.PlatformType != PlatformType.Windows) return;
             Core.ServiceContainerFactory = (service, action) => new WindowsServiceContainer(service, action);
-            Console.WriteLine("WINDOWS SERVICE CORE INIT");
         }
-    }
-
-    /// <inheritdoc />
-    /// <summary>
-    /// Windows Service container
-    /// </summary>
-    internal class WindowsServiceContainer : ServiceContainer
-    {
-        #region .ctor
-        public WindowsServiceContainer(IService service, Action initAction) : base(service, initAction) { }
-        public WindowsServiceContainer(IService service) : base(service) { }
-        public WindowsServiceContainer(string serviceName, IService service) : base(serviceName, service) { }
-        public WindowsServiceContainer(string serviceName, IService service, Action initAction) : base(serviceName, service, initAction)
-        {
-            RegisterParametersHandler("i", "Install Windows Service", InstallService);
-            RegisterParametersHandler("u", "Uninstall Windows Service", UninstallService);
-        }
-        #endregion
-
-        static void InstallService(ParameterHandlerInfo parameterHandlerInfo)
-        {
-            throw new NotImplementedException();
-        }
-        static void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
-        {
-            throw new NotImplementedException();
-        }
-
     }
 }

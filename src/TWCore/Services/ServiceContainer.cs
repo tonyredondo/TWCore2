@@ -31,7 +31,7 @@ namespace TWCore.Services
     public class ServiceContainer : IServiceContainer
     {
         #region Statics
-        static ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
+        protected static ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
         static string[] currentArgs;
         static volatile bool serviceEndAfterStart = false;
         /// <summary>
@@ -54,7 +54,7 @@ namespace TWCore.Services
         }
         #endregion
 
-        internal Action initAction;
+        protected internal Action initAction;
 
         #region Properties
         /// <summary>
@@ -120,12 +120,13 @@ namespace TWCore.Services
         public static void ServiceExit()
             => serviceEndAfterStart = true;
 
+        /// <inheritdoc />
         /// <summary>
         /// Execute the service
         /// </summary>
         /// <param name="args">Arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Run(string[] args)
+        public virtual void Run(string[] args)
         {
             currentArgs = args ?? new string[0];
 
@@ -141,8 +142,8 @@ namespace TWCore.Services
                 return;
             }
 
-            bool exec = false;
-            foreach (string param in currentArgs)
+            var exec = false;
+            foreach (var param in currentArgs)
             {
                 var lParam = param.Trim().ToLowerInvariant();
                 string value = null;
@@ -186,10 +187,7 @@ namespace TWCore.Services
             if (Service != null)
             {
                 RegisterDiscovery();
-                if (HasConsole)
-                    RunAsConsole(args);
-                else
-                    RunWithNoConsole(args);
+                InternalRun(args);
             }
             else if (!exec)
             {
@@ -271,7 +269,6 @@ namespace TWCore.Services
             }
             Core.Log.InfoBasic("**************************************************************************************");
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowHelp()
         {
@@ -319,75 +316,73 @@ namespace TWCore.Services
                 Console.WriteLine("There aren't any settings configured for this app.");
             }
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal void RunAsConsole(string[] args)
+        protected internal virtual void InternalRun(string[] args)
         {
             initAction?.Invoke();
             ShowFullHeader();
-            Core.Log.InfoBasic("Available Console Commands:");
-            Core.Log.InfoBasic("\t ESC = Stop the service.");
-            if (Service.CanPauseAndContinue)
+
+            if (HasConsole)
             {
-                Core.Log.InfoBasic("\t P = Pause a running service.");
-                Core.Log.InfoBasic("\t C = Continue a paused service.");
-            }
-            Core.Log.InfoBasic("**************************************************************************************");
-            Service.OnStart(null);
-            bool paused = false;
-            while (!serviceEndAfterStart)
-            {
-                var key = Console.ReadKey().Key;
+                Core.Log.InfoBasic("Available Console Commands:");
+                Core.Log.InfoBasic("\t ESC = Stop the service.");
                 if (Service.CanPauseAndContinue)
                 {
-                    if (key == ConsoleKey.P && !paused)
-                    {
-                        Core.Log.InfoBasic("*** Pausing Service ***");
-                        Service.OnPause();
-                        paused = true;
-                        Core.Log.InfoBasic("*** Service Paused ***");
-                    }
-                    if (key == ConsoleKey.C && paused)
-                    {
-                        Core.Log.InfoBasic("*** Restoring Service ***");
-                        Service.OnContinue();
-                        paused = false;
-                        Core.Log.InfoBasic("*** Service Restored ***");
-                    }
+                    Core.Log.InfoBasic("\t P = Pause a running service.");
+                    Core.Log.InfoBasic("\t C = Continue a paused service.");
                 }
-                if (key == ConsoleKey.Escape)
-                    break;
+                Core.Log.InfoBasic("**************************************************************************************");
+                Service.OnStart(null);
+                var paused = false;
+                while (!serviceEndAfterStart)
+                {
+                    var key = Console.ReadKey().Key;
+                    if (Service.CanPauseAndContinue)
+                    {
+                        if (key == ConsoleKey.P && !paused)
+                        {
+                            Core.Log.InfoBasic("*** Pausing Service ***");
+                            Service.OnPause();
+                            paused = true;
+                            Core.Log.InfoBasic("*** Service Paused ***");
+                        }
+                        if (key == ConsoleKey.C && paused)
+                        {
+                            Core.Log.InfoBasic("*** Restoring Service ***");
+                            Service.OnContinue();
+                            paused = false;
+                            Core.Log.InfoBasic("*** Service Restored ***");
+                        }
+                    }
+                    if (key == ConsoleKey.Escape)
+                        break;
+                }
+                Core.Log.InfoBasic("*** Stopping Service ***");
+                Service.OnStop();
+                Core.Log.InfoBasic("*** Service Stopped ***");
+                Core.Log.InfoBasic("**************************************************************************************");
+                if (!serviceEndAfterStart)
+                {
+                    Core.Log.WriteEmptyLine();
+                    Core.Log.InfoBasic("Press ENTER to exit.");
+                    Console.ReadLine();
+                }
             }
-            Core.Log.InfoBasic("*** Stopping Service ***");
-            Service.OnStop();
-            Core.Log.InfoBasic("*** Service Stopped ***");
-            Core.Log.InfoBasic("**************************************************************************************");
-            if (!serviceEndAfterStart)
+            else
             {
-                Core.Log.WriteEmptyLine();
-                Core.Log.InfoBasic("Press ENTER to exit.");
-                Console.ReadLine();
+                var mres = new ManualResetEventSlim(false);
+                AppDomain.CurrentDomain.ProcessExit += (s, e) => mres.Set();
+                Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit for AppDomain to Stop.");
+                Core.Log.InfoBasic("**************************************************************************************");
+                Service.OnStart(null);
+                mres.Wait();
+                Core.Log.InfoBasic("*** Stopping Service ***");
+                Service.OnStop();
+                Core.Log.InfoBasic("*** Service Stopped ***");
+                Core.Log.InfoBasic("**************************************************************************************");
+                if (!serviceEndAfterStart)
+                    Core.Log.WriteEmptyLine();
             }
-            Core.Dispose();
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected internal void RunWithNoConsole(string[] args)
-        {
-            ManualResetEventSlim mres = new ManualResetEventSlim(false);
-            AppDomain.CurrentDomain.ProcessExit += (s, e) => mres.Set();
-
-            initAction?.Invoke();
-            ShowFullHeader();
-            Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit for AppDomain to Stop.");
-            Core.Log.InfoBasic("**************************************************************************************");
-            Service.OnStart(null);
-            mres.Wait();
-            Core.Log.InfoBasic("*** Stopping Service ***");
-            Service.OnStop();
-            Core.Log.InfoBasic("*** Service Stopped ***");
-            Core.Log.InfoBasic("**************************************************************************************");
-            if (!serviceEndAfterStart)
-                Core.Log.WriteEmptyLine();
             Core.Dispose();
         }
         #endregion

@@ -171,7 +171,7 @@ namespace TWCore
                         }
                     }
                 }
-                if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level != LogLevel.Error)
+                if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.InfoDetail)
                     return null;
 
                 var lItem = new LogItem
@@ -343,7 +343,6 @@ namespace TWCore
         {
 			if (PlatformType == PlatformType.Windows)
 			{
-				Core.Log.InfoMedium("Setting Loopback FastPath Mode");
 	            try
 	            {
 	                var optionInValue = BitConverter.GetBytes(1);

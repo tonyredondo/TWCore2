@@ -52,10 +52,7 @@ namespace TWCore.Serialization
                 }
                 return Serializers.FirstOrDefault(s => s.SerializerType == SerializerType.Binary);
             }
-            set
-            {
-                _defaultBinarySerializer = value;
-            }
+            set => _defaultBinarySerializer = value;
         }
         /// <summary>
         /// Default Text Serializer
@@ -66,18 +63,15 @@ namespace TWCore.Serialization
             {
                 if (_defaultTextSerializer != null)
                     return _defaultTextSerializer;
-                foreach (var mime in DefaultBinarySerializerMimeTypes)
+                foreach (var mime in DefaultTextSerializerMimeTypes)
                 {
                     var serializer = GetByMimeType(mime);
-                    if (serializer != null)
-                        return (ITextSerializer)serializer;
+                    if (serializer is ITextSerializer tser)
+                        return tser;
                 }
                 return (ITextSerializer)Serializers.FirstOrDefault(s => s.SerializerType == SerializerType.Text);
             }
-            set
-            {
-                _defaultTextSerializer = value;
-            }
+            set => _defaultTextSerializer = value;
         }
         /// <summary>
         /// All registered serializers

@@ -31,7 +31,7 @@ namespace TWCore.Net.Multicast
     public class PeerConnection
     {
         const int PacketSize = 512;
-        readonly TimeoutDictionary<Guid, byte[][]> _receivedMessagesDatagram = new TimeoutDictionary<Guid, byte[][]>();
+        readonly TimeoutDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<Guid, ReceivedDatagrams>();
         readonly List<UdpClient> _clients = new List<UdpClient>();
         readonly List<UdpClient> _sendClients = new List<UdpClient>();
         readonly List<Thread> _clientsReceiveThreads = new List<Thread>();
@@ -194,7 +194,7 @@ namespace TWCore.Net.Multicast
                     try
                     {
                         c.Send(datagram, PacketSize, _sendEndpoint);
-                        Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.Client.LocalEndPoint);
+                        //Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                     catch (Exception)
                     {
@@ -232,7 +232,7 @@ namespace TWCore.Net.Multicast
             {
                 try
                 {
-                    Core.Log.InfoBasic("Waiting data on Endpoint: {0}", client.Client.LocalEndPoint);
+                    //Core.Log.InfoBasic("Waiting data on Endpoint: {0}", client.Client.LocalEndPoint);
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     var datagram = client.Receive(ref rcvEndpoint);
                     if (datagram.Length < 22)
@@ -245,13 +245,17 @@ namespace TWCore.Net.Multicast
                     var buffer = new byte[dataSize];
                     Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
 
-                    Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
+                    //Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
 
-                    var datagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => (new byte[numMsgs][], _messageTimeout));
-                    datagrams[currentMsg] = buffer;
-                    if (datagrams.Any(i => i == null)) continue;
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => (new ReceivedDatagrams(numMsgs, rcvEndpoint.Address), _messageTimeout));
+                    if (receivedDatagrams.Address != rcvEndpoint.Address.ToString())
+                        continue;
+                    receivedDatagrams.Datagrams[currentMsg] = buffer;
+                    if (!receivedDatagrams.Complete)
+                        continue;
                     _receivedMessagesDatagram.TryRemove(guid, out var @out);
-                    buffer = datagrams.SelectMany(i => i).ToArray();
+
+                    buffer = receivedDatagrams.GetMessage();
 
                     ThreadPool.QueueUserWorkItem(obj =>
                     {
@@ -276,6 +280,23 @@ namespace TWCore.Net.Multicast
                 }
             }
 
+        }
+        #endregion
+
+        #region Nested Types
+        class ReceivedDatagrams
+        {
+            public byte[][] Datagrams { get; }
+            public string Address { get; }
+            public bool Complete => Datagrams.All(i => i != null);
+            public ReceivedDatagrams(int numMessages, IPAddress address)
+            {
+                Datagrams = new byte[numMessages][];
+                Address = address.ToString();
+            }
+
+            public byte[] GetMessage()
+                => Datagrams.SelectMany(i => i).ToArray();
         }
         #endregion
     }

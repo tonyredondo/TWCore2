@@ -128,14 +128,17 @@ namespace TWCore.Net.Multicast
             //var localIp = IPAddress.Parse("10.10.1.60");
             {
                 var sendSocket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp, localIp));
+                if (Factory.PlatformType == PlatformType.Windows)
+                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp, localIp));
+                else
+                    sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.AddMembership, new MulticastOption(_multicastIp));
                 sendSocket.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
                 sendSocket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 sendSocket.Bind(new IPEndPoint(localIp, Port));
                 sendSocket.MulticastLoopback = true;
                 try
                 {
-                    sendSocket.SendTo(new byte[] {0x66}, _sendEndpoint);
+                    sendSocket.SendTo(new byte[] { 0x01, 0x02, 0x03, 0x04, 0x05 }, _sendEndpoint);
 
                     if (EnableReceive)
                     {
@@ -282,10 +285,9 @@ namespace TWCore.Net.Multicast
                     Core.Log.InfoBasic("Waiting data on Endpoint: {0}", socket.LocalEndPoint);
                     var rcvEndpoint = new IPEndPoint(IPAddress.Any, Port);
                     EndPoint socketEndpoint = rcvEndpoint;
-                    socket.ReceiveFrom(datagram, ref socketEndpoint);
+                    var num = socket.ReceiveFrom(datagram, ref socketEndpoint);
                     rcvEndpoint = (IPEndPoint)socketEndpoint;
-                    Core.Log.InfoBasic("Data received from: {0}", rcvEndpoint);
-                    if (datagram.Length < 22)
+                    if (num < 22)
                         continue;
                     Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
                     var guid = new Guid(guidBytes);
@@ -294,11 +296,15 @@ namespace TWCore.Net.Multicast
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
                     var buffer = new byte[dataSize];
                     Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
+
+                    Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
+
                     var datagrams = ReceivedMessagesDatagram.GetOrAdd(guid, mguid => (new byte[numMsgs][], _messageTimeout));
                     datagrams[currentMsg] = buffer;
                     if (datagrams.Any(i => i == null)) continue;
                     ReceivedMessagesDatagram.TryRemove(guid, out var @out);
                     buffer = datagrams.SelectMany(i => i).ToArray();
+
                     ThreadPool.QueueUserWorkItem(obj =>
                     {
                         try

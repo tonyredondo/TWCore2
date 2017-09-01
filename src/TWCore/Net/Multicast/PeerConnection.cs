@@ -33,6 +33,7 @@ namespace TWCore.Net.Multicast
         const int PacketSize = 512;
         readonly TimeoutDictionary<Guid, byte[][]> _receivedMessagesDatagram = new TimeoutDictionary<Guid, byte[][]>();
         readonly List<UdpClient> _clients = new List<UdpClient>();
+        readonly List<UdpClient> _sendClients = new List<UdpClient>();
         readonly List<Thread> _clientsReceiveThreads = new List<Thread>();
         readonly TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
 
@@ -117,6 +118,7 @@ namespace TWCore.Net.Multicast
                         _clientsReceiveThreads.Add(thread);
                     }
                     _clients.Add(client);
+                    _sendClients.Add(client);
                 }
                 catch
                 {
@@ -139,6 +141,7 @@ namespace TWCore.Net.Multicast
                 };
                 thread.Start(basicReceiver);
                 _clientsReceiveThreads.Add(thread);
+                _clients.Add(basicReceiver);
             }
         }
         /// <summary>
@@ -156,6 +159,9 @@ namespace TWCore.Net.Multicast
                 client.DropMulticastGroup(_multicastIp);
                 client.Client.Close();
             }
+            _clients.Clear();
+            _sendClients.Clear();
+            _clientsReceiveThreads.Clear();
             _connected = false;
         }
         /// <summary>
@@ -183,7 +189,7 @@ namespace TWCore.Net.Multicast
                 Buffer.BlockCopy(BitConverter.GetBytes((ushort)csize), 0, datagram, 20, 2);
                 Buffer.BlockCopy(buffer, offset, datagram, 22, csize);
 
-                foreach (var c in _clients)
+                foreach (var c in _sendClients)
                 {
                     try
                     {

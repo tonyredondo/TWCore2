@@ -428,8 +428,8 @@ namespace TWCore
 		/// <returns>Task with cancellation token support</returns>
 		public static Task<object> DynamicInvokeAsync(this Delegate @delegate, CancellationToken cancellationToken, params object[] args)
 		{
-			var nDelegate = new InvokeDelegate((_del, _args) => _del.DynamicInvoke(_args));
-			return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke).HandleCancellationAsync<object>(cancellationToken);
+			var nDelegate = new InvokeDelegate((del, mArgs) => del.DynamicInvoke(mArgs));
+			return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke).HandleCancellationAsync(cancellationToken);
 		}
 		/// <summary>
 		/// Invoke a delegate as an Async Task

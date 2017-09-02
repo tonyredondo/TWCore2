@@ -210,7 +210,7 @@ namespace TWCore.Net.RPC.Server
             public void BindToServiceType()
             {
                 #region OnClientConnect Method
-                OnClientConnectMethod = ServiceType.GetRuntimeMethods().FirstOrDefault(m => m.GetCustomAttribute(typeof(RPCOnClientConnectAttribute)) != null); ;
+                OnClientConnectMethod = ServiceType.GetRuntimeMethods().FirstOrDefault(m => m.GetCustomAttribute(typeof(RPCOnClientConnectAttribute)) != null);
                 if (OnClientConnectMethod != null)
                     Core.Log.LibDebug("Binding OnClientConnectMethod in the service {0}", Descriptor.Name);
                 #endregion

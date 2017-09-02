@@ -14,16 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
+using Newtonsoft.Json;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
 
@@ -32,15 +34,14 @@ namespace TWCore
     /// <summary>
     /// Default Factories
     /// </summary>
-    public class DefaultFactories : Factories
+    public sealed class DefaultFactories : Factories
     {
-        const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
-
-        Assembly[] assemblies = null;
-        bool usedResolver = false;
+        private const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
+        private Assembly[] _assemblies;
+        private bool _usedResolver;
 
         [DllImport("rpcrt4.dll", SetLastError = true)]
-        static extern int UuidCreateSequential(out Guid guid);
+        private static extern int UuidCreateSequential(out Guid guid);
 
         /// <summary>
         /// Sets the current directory to the base assembly location
@@ -49,17 +50,17 @@ namespace TWCore
         /// <summary>
         /// Bool indicating if all assemblies were loaded.
         /// </summary>
-        protected bool AllAssembliesLoaded { get; private set; } = false;
+        private bool AllAssembliesLoaded { get; set; }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DefaultFactories()
         {
-            this.Accessors = new CompleteAccessorsFactory();
-            this.GetAssemblies = () =>
+            Accessors = new CompleteAccessorsFactory();
+            GetAssemblies = () =>
             {
-                if (assemblies == null)
+                if (_assemblies == null)
                 {
-                    assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+                    _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
                     {
                         if (d.IsDynamic) return false;
                         var assemblyName = d.GetName();
@@ -71,17 +72,17 @@ namespace TWCore
                         !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
                     }).DistinctBy(i => i.Location).ToArray();
                 }
-                return assemblies;
+                return _assemblies;
             };
-            this.GetAllAssemblies = () =>
+            GetAllAssemblies = () =>
             {
                 var resolver = AssemblyResolverManager.GetAssemblyResolver();
-                if (!AllAssembliesLoaded || (!usedResolver && resolver != null))
+                if (!AllAssembliesLoaded || (!_usedResolver && resolver != null))
                 {
                     if (resolver != null)
                     {
                         var lst = resolver.Assemblies.AsParallel().Select(a => a.Instance).RemoveNulls().ToList();
-                        usedResolver = true;
+                        _usedResolver = true;
                     }
                     else
                     {
@@ -91,17 +92,20 @@ namespace TWCore
                             try
                             {
                                 var name = AssemblyName.GetAssemblyName(file);
-                                if (!loaded.Any(l => l.FullName == name.FullName))
+                                if (loaded.All(l => l.FullName != name.FullName))
                                     AppDomain.CurrentDomain.Load(name);
                             }
-                            catch { }
+                            catch
+                            {
+                                // ignored
+                            }
                         }
                     }
                     AllAssembliesLoaded = true;
-                    assemblies = null;
-                    return this.GetAssemblies();
+                    _assemblies = null;
+                    return GetAssemblies();
                 }
-                return assemblies;
+                return _assemblies;
             };
         }
 
@@ -230,7 +234,7 @@ namespace TWCore
             });
             Core.Status.Attach(() =>
             {
-                var process = System.Diagnostics.Process.GetCurrentProcess();
+                var process = Process.GetCurrentProcess();
                 var sItem = new StatusItem { Name = "Process Information" };
                 sItem.Values.Add(nameof(process.BasePriority), process.BasePriority);
                 sItem.Values.Add(nameof(process.Id), process.Id);
@@ -265,50 +269,53 @@ namespace TWCore
                     sItem.Values.Add("Collection Count Gen " + i, GC.CollectionCount(i));
                 }
                 sItem.Values.Add("Memory allocated", GC.GetTotalMemory(false).ToReadeableBytes());
-                sItem.Values.Add("Is Server GC", System.Runtime.GCSettings.IsServerGC);
-                sItem.Values.Add("Latency Mode", System.Runtime.GCSettings.LatencyMode);
+                sItem.Values.Add("Is Server GC", GCSettings.IsServerGC);
+                sItem.Values.Add("Latency Mode", GCSettings.LatencyMode);
                 return sItem;
             });
         }
 
         #region LargeObjectHeap Compact Timeout Method
-        static int lastValue = 0;
-        static Timer largeObjectTimer;
+
+        private static int _lastValue;
+        private static Timer _largeObjectTimer;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void SetLargeObjectHeapCompactTimeout()
+        private static void SetLargeObjectHeapCompactTimeout()
         {
             Core.GlobalSettings.OnSettingsReload += Settings_OnSettingsReload;
             Settings_OnSettingsReload(null, EventArgs.Empty);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Settings_OnSettingsReload(object sender, EventArgs e)
+        private static void Settings_OnSettingsReload(object sender, EventArgs e)
         {
-            if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes != lastValue)
+            if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes == _lastValue) return;
+            if (_largeObjectTimer != null)
             {
-                if (largeObjectTimer != null)
+                try
                 {
-                    try
-                    {
-                        largeObjectTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                        largeObjectTimer.Dispose();
-                        largeObjectTimer = null;
-                    }
-                    catch { }
+                    _largeObjectTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _largeObjectTimer.Dispose();
+                    _largeObjectTimer = null;
                 }
-                if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes > 0)
+                catch
                 {
-                    if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes != 60)
-                        Core.Log.InfoBasic("Setting the Large Object Heap Compact timeout every {0} minutes.", Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
-                    var time = TimeSpan.FromMinutes(Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
-                    largeObjectTimer = new Timer(obj =>
-                    {
-                        Core.Log.Warning("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
-                        System.Runtime.GCSettings.LargeObjectHeapCompactionMode = System.Runtime.GCLargeObjectHeapCompactionMode.CompactOnce;
-                        GC.Collect();
-                    }, null, time, time);
+                    // ignored
                 }
-                lastValue = Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes;
             }
+            if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes > 0)
+            {
+                if (Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes != 60)
+                    Core.Log.InfoBasic("Setting the Large Object Heap Compact timeout every {0} minutes.", Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
+                var time = TimeSpan.FromMinutes(Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
+                _largeObjectTimer = new Timer(obj =>
+                {
+                    Core.Log.Warning("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
+                    GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                    GC.Collect();
+                }, null, time, time);
+            }
+            _lastValue = Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes;
         }
         #endregion
 

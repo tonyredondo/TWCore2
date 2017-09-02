@@ -86,7 +86,7 @@ namespace TWCore.Net.HttpServer
             if (delimiterEndIndex > -1)
             {
 				string delimiter = content.Substring(0, content.IndexOf("\r\n", StringComparison.OrdinalIgnoreCase));
-                string[] sections = content.Split(new string[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
+                string[] sections = content.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
 
                 foreach (string s in sections)
                 {
@@ -109,8 +109,8 @@ namespace TWCore.Net.HttpServer
                             if (contentTypeMatch.Success && filenameMatch.Success)
                             {
                                 // Set properties
-                                this.ContentType = contentTypeMatch.Value.Trim();
-                                this.Filename = filenameMatch.Value.Trim();
+                                ContentType = contentTypeMatch.Value.Trim();
+                                Filename = filenameMatch.Value.Trim();
 
                                 // Get the start & end indexes of the file contents
                                 int startIndex = contentTypeMatch.Index + contentTypeMatch.Length + "\r\n\r\n".Length;
@@ -125,14 +125,14 @@ namespace TWCore.Net.HttpServer
 
                                 Buffer.BlockCopy(bytes, startIndex, fileData, 0, contentLength);
 
-                                this.FileContents = fileData;
+                                FileContents = fileData;
                             }
                         }
                         else if (!string.IsNullOrWhiteSpace(name))
                         {
                             // Get the start & end indexes of the file contents
                             int startIndex = nameMatch.Index + nameMatch.Length + "\r\n\r\n".Length;
-                            Parameters.Add(name, s.Substring(startIndex).TrimEnd(new char[] { '\r', '\n' }).Trim());
+                            Parameters.Add(name, s.Substring(startIndex).TrimEnd('\r', '\n').Trim());
                         }
                     }
                 }
@@ -159,7 +159,7 @@ namespace TWCore.Net.HttpServer
                     }
                     else
                     {
-                        startPos = Array.IndexOf<byte>(searchWithin, serachFor[0], startPos + index);
+                        startPos = Array.IndexOf(searchWithin, serachFor[0], startPos + index);
                         if (startPos == -1)
                             return -1;
                         index = 0;

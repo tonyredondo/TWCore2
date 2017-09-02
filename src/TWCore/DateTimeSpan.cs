@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 
 namespace TWCore
 {
@@ -25,15 +26,15 @@ namespace TWCore
     public struct DateTimeSpan : IEquatable<DateTimeSpan>
     {
         #region Private fields
-        readonly int years;
-        readonly int months;
-        readonly int days;
-        readonly int hours;
-        readonly int minutes;
-        readonly int seconds;
-        readonly int milliseconds;
-
-        enum Phase { Years, Months, Days, Done }
+        private readonly int _years;
+        private readonly int _months;
+        private readonly int _days;
+        private readonly int _hours;
+        private readonly int _minutes;
+        private readonly int _seconds;
+        private readonly int _milliseconds;
+        private readonly int _hashCode;
+        private enum Phase { Years, Months, Days, Done }
         #endregion
 
         #region .ctor
@@ -50,25 +51,14 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTimeSpan(int years, int months, int days, int hours, int minutes, int seconds, int milliseconds)
         {
-            this.years = years;
-            this.months = months;
-            this.days = days;
-            this.hours = hours;
-            this.minutes = minutes;
-            this.seconds = seconds;
-            this.milliseconds = milliseconds;
-        }
-        #endregion
-
-        #region Equality
-        /// <summary>
-        /// Get Hash Code
-        /// </summary>
-        /// <returns>Hash code for the instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int GetHashCode()
-        {
-            int hash = 13;
+            _years = years;
+            _months = months;
+            _days = days;
+            _hours = hours;
+            _minutes = minutes;
+            _seconds = seconds;
+            _milliseconds = milliseconds;
+            var hash = 13;
             hash = (hash * 7) + years.GetHashCode();
             hash = (hash * 7) + months.GetHashCode();
             hash = (hash * 7) + days.GetHashCode();
@@ -76,8 +66,19 @@ namespace TWCore
             hash = (hash * 7) + minutes.GetHashCode();
             hash = (hash * 7) + seconds.GetHashCode();
             hash = (hash * 7) + milliseconds.GetHashCode();
-            return hash;
+            _hashCode = hash;
         }
+        #endregion
+
+        #region Equality
+
+        /// <summary>
+        /// Get Hash Code
+        /// </summary>
+        /// <returns>Hash code for the instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode()
+            => _hashCode;
         /// <summary>
         /// Check if this DateTimeSpan is equal to other
         /// </summary>
@@ -86,13 +87,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(DateTimeSpan other)
         {
-            if (this.years != other.years) return false;
-            if (this.months != other.months) return false;
-            if (this.days != other.days) return false;
-            if (this.hours != other.hours) return false;
-            if (this.minutes != other.minutes) return false;
-            if (this.seconds != other.seconds) return false;
-            if (this.milliseconds != other.milliseconds) return false;
+            if (_years != other._years) return false;
+            if (_months != other._months) return false;
+            if (_days != other._days) return false;
+            if (_hours != other._hours) return false;
+            if (_minutes != other._minutes) return false;
+            if (_seconds != other._seconds) return false;
+            if (_milliseconds != other._milliseconds) return false;
             return true;
         }
         /// <summary>
@@ -103,7 +104,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
         {
-            if (obj == null || this.GetType() != obj.GetType())
+            if (obj == null || GetType() != obj.GetType())
                 return false;
             return Equals((DateTimeSpan)obj);
         }
@@ -135,31 +136,31 @@ namespace TWCore
         /// <summary>
         /// Year component of the structure
         /// </summary>
-        public int Years { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return years; } }
+        public int Years => _years;
         /// <summary>
         /// Month component of the structure
         /// </summary>
-        public int Months { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return months; } }
+        public int Months => _months;
         /// <summary>
         /// Days component of the structure
         /// </summary>
-        public int Days { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return days; } }
+        public int Days => _days;
         /// <summary>
         /// Hours component of the structure
         /// </summary>
-        public int Hours { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return hours; } }
+        public int Hours => _hours;
         /// <summary>
         /// Minutes component of the structure
         /// </summary>
-        public int Minutes { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return minutes; } }
+        public int Minutes => _minutes;
         /// <summary>
         /// Seconds component of the structure
         /// </summary>
-        public int Seconds { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return seconds; } }
+        public int Seconds => _seconds;
         /// <summary>
         /// Milliseconds component of the structure
         /// </summary>
-        public int Milliseconds { [MethodImpl(MethodImplOptions.AggressiveInlining)] get { return milliseconds; } }
+        public int Milliseconds => _milliseconds;
         #endregion
 
         #region Methods
@@ -179,13 +180,12 @@ namespace TWCore
                 date2 = sub;
             }
 
-            DateTime current = date1;
-            int years = 0;
-            int months = 0;
-            int days = 0;
-
-            Phase phase = Phase.Years;
-            DateTimeSpan span = new DateTimeSpan();
+            var current = date1;
+            var years = 0;
+            var months = 0;
+            var days = 0;
+            var phase = Phase.Years;
+            var span = new DateTimeSpan();
 
             while (phase != Phase.Done)
             {
@@ -220,9 +220,12 @@ namespace TWCore
                         else
                             days++;
                         break;
+                    case Phase.Done:
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
                 }
             }
-
             return span;
         }
         #endregion

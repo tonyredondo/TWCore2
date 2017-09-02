@@ -135,7 +135,7 @@ namespace TWCore.Tests
             => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
 
         public EntCity GetByIata(string iata, string cultureInfo)
-            => Data.SelectElement<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
+            => Data.SelectElement("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
 
         public int Delete(Guid cityId)
             => Data.ExecuteNonQuery("sp_GEO_CITIES_Del", new { CityId = cityId });
@@ -164,7 +164,7 @@ namespace TWCore.Tests
             => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIata", new { Iata = iata });
 
         public Task<EntCity> GetByIataAsync(string iata, string cultureInfo)
-            => DataAsync.SelectElementAsync<EntCity>("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
+            => DataAsync.SelectElementAsync("sp_GEO_CITIES_GetByIataCultureInfo", new { Iata = iata, CultureInfo = cultureInfo }, FillEntity);
 
         public Task<int> DeleteAsync(Guid cityId)
             => DataAsync.ExecuteNonQueryAsync("sp_GEO_CITIES_Del", new { CityId = cityId });

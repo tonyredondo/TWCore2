@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -551,7 +552,7 @@ namespace TWCore.Cache
                     expDate = dateNow.Add(MaximumItemDuration.Value);
             }
 
-            Core.Log.LibVerbose("{0}-Set: {1}, with expiration: {2}", mName, key, expDate.HasValue ? expDate.Value.ToString() : "NO EXPIRE");
+            Core.Log.LibVerbose("{0}-Set: {1}, with expiration: {2}", mName, key, expDate.HasValue ? expDate.Value.ToString(CultureInfo.CurrentCulture) : "NO EXPIRE");
 
             var sMeta = new StorageItemMeta
             {

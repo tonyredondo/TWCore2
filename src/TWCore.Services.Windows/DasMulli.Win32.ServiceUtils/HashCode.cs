@@ -24,12 +24,12 @@ namespace DasMulli.Win32.ServiceUtils
         }
         public HashCode And<T>(T item)
         {
-            return new HashCode(CombineHashCodes(this.value, GetHashCode(item)));
+            return new HashCode(CombineHashCodes(value, GetHashCode(item)));
         }
         public HashCode AndEach<T>(IEnumerable<T> items)
         {
             int hashCode = items.Select(GetHashCode).Aggregate(CombineHashCodes);
-            return new HashCode(CombineHashCodes(this.value, hashCode));
+            return new HashCode(CombineHashCodes(value, hashCode));
         }
         private static int CombineHashCodes(int h1, int h2)
         {

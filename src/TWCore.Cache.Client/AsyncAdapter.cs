@@ -86,7 +86,7 @@ namespace TWCore.Cache.Client
             Ensure.ArgumentNotNull(storage, "The storage can't be null.");
             _storage = storage;
             _existKeyAsync = FuncDelegate.CreateAsync<string, bool>(_storage.ExistKey);
-            _getKeysAsync = FuncDelegate.CreateAsync<string[]>(_storage.GetKeys);
+            _getKeysAsync = FuncDelegate.CreateAsync(_storage.GetKeys);
 
             _getCreationDateAsync = FuncDelegate.CreateAsync<string, DateTime?>(_storage.GetCreationDate);
             _getExpirationDateAsync = FuncDelegate.CreateAsync<string, DateTime?>(_storage.GetExpirationDate);
@@ -121,8 +121,8 @@ namespace TWCore.Cache.Client
             _getOrSetAsync3 = FuncDelegate.CreateAsync<string, SerializedObject, DateTime, StorageItem>(_storage.GetOrSet);
             _getOrSetAsync4 = FuncDelegate.CreateAsync<string, SerializedObject, DateTime?, string[], StorageItem>(_storage.GetOrSet);
 
-            _isEnabledAsync = FuncDelegate.CreateAsync<bool>(_storage.IsEnabled);
-            _isReadyAsync = FuncDelegate.CreateAsync<bool>(_storage.IsReady);
+            _isEnabledAsync = FuncDelegate.CreateAsync(_storage.IsEnabled);
+            _isReadyAsync = FuncDelegate.CreateAsync(_storage.IsReady);
         }
 
         public void Dispose()

@@ -30,8 +30,8 @@ namespace TWCore.Triggers
         public DateTime DateTime { get; private set; }
 
         #region Private Fields
-        CancellationTokenSource tokenSource = null;
-        Timer timer = null;
+        CancellationTokenSource tokenSource;
+        Timer timer;
         #endregion
 
         #region .ctor
@@ -56,16 +56,14 @@ namespace TWCore.Triggers
         /// </summary>
         protected override void OnInit()
         {
-            Core.Log.LibVerbose("{0}: OnInit() for DateTime {1}", this.GetType().Name, DateTime);
+            Core.Log.LibVerbose("{0}: OnInit() for DateTime {1}", GetType().Name, DateTime);
             tokenSource = new CancellationTokenSource();
             timer = new Timer(obj =>
             {
                 var tSource = (CancellationTokenSource)obj;
-                if (!tSource.Token.IsCancellationRequested)
-                {
-                    Core.Log.LibVerbose("{0}: Trigger call", this.GetType().Name);
-                    Trigger();
-                }
+                if (tSource.Token.IsCancellationRequested) return;
+                Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
+                Trigger();
             }, tokenSource, Core.Now.Subtract(DateTime), Timeout.InfiniteTimeSpan);
         }
         /// <summary>
@@ -73,15 +71,12 @@ namespace TWCore.Triggers
         /// </summary>
         protected override void OnFinalize()
         {
-            Core.Log.LibVerbose("{0}: OnFinalize()", this.GetType().Name);
-            if (tokenSource != null)
-                tokenSource.Cancel();
-            if (timer != null)
-            {
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
-                timer.Dispose();
-                timer = null;
-            }
+            Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
+            tokenSource?.Cancel();
+            if (timer == null) return;
+            timer.Change(Timeout.Infinite, Timeout.Infinite);
+            timer.Dispose();
+            timer = null;
         }
         #endregion
     }

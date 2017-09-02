@@ -120,7 +120,7 @@ namespace TWCore
                 collection.Add(nameof(Exceptions) + " Count", Exceptions?.Count);
                 collection.Add("Queue Count", _queue?.Count);
                 collection.Add("Status", status);
-                collection.Add("Started Active", this.startActive);
+                collection.Add("Started Active", startActive);
             });
         }
         #endregion

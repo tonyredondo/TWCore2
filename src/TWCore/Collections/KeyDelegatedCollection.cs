@@ -34,7 +34,7 @@ namespace TWCore.Collections
     public class KeyDelegatedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected object _ilocker = new object();
+        protected object Ilocker = new object();
 
         #region Statics
         /// <summary>
@@ -116,6 +116,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key selector</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyDelegatedCollection(Func<TItem, TKey> keySelector, bool throwExceptionOnDuplicateKeys) 
@@ -129,6 +130,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key selector</param>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyDelegatedCollection(Func<TItem, TKey> keySelector, IEnumerable<TItem> enumerable) : this(keySelector)
@@ -138,6 +140,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key selector</param>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -169,7 +172,7 @@ namespace TWCore.Collections
                 base.Add(item);
             else
             {
-                lock (_ilocker)
+                lock (Ilocker)
                 {
                     if (!Contains(KeySelector(item)))
                         base.Add(item);
@@ -186,7 +189,7 @@ namespace TWCore.Collections
             if (enumerable != null)
             {
                 foreach (var item in enumerable)
-                    this.Add(item);
+                    Add(item);
             }
         }
         /// <summary>
@@ -197,31 +200,30 @@ namespace TWCore.Collections
         public void AddAndCombine(TItem item)
         {
             var key = KeySelector(item);
-            lock (_ilocker)
+            lock (Ilocker)
             {
                 if (Contains(key))
                 {
                     var oItem = this[key];
                     var nItem = CombineDelegate(oItem, item);
-                    base.Remove(key);
+                    Remove(key);
                     base.Add(nItem);
                 }
                 else
                     base.Add(item);
             }
         }
+
         /// <summary>
         /// Adds an IEnumerable to the collection and if there is items with the same key, combine it.
         /// </summary>
-        /// <param name="item">Item to add or combine with</param>
+        /// <param name="enumerable">Enumerable</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddAndCombine(IEnumerable<TItem> enumerable)
         {
-            if (enumerable != null)
-            {
-                foreach (var item in enumerable)
-                    this.AddAndCombine(item);
-            }
+            if (enumerable == null) return;
+            foreach (var item in enumerable)
+                AddAndCombine(item);
         }
         /// <summary>
         /// Try Gets a value inside the collection
@@ -233,15 +235,12 @@ namespace TWCore.Collections
         public bool TryGet(TKey key, out TItem item)
         {
             item = default(TItem);
-            lock (_ilocker)
+            lock (Ilocker)
             {
-                if (Contains(key))
-                {
-                    item = this[key];
-                    return true;
-                }
+                if (!Contains(key)) return false;
+                item = this[key];
+                return true;
             }
-            return false;
         }
         #endregion
 

@@ -184,7 +184,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>Serialized xml value</returns>
-        public static string SerializeToXml<T>(this T item) => Serializer.SerializeToString<T>(item);
+        public static string SerializeToXml<T>(this T item) => Serializer.SerializeToString(item);
         /// <summary>
         /// Deserialize xml value to an object instance
         /// </summary>
@@ -198,7 +198,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>Serialized xml value</returns>
-        public static SubArray<byte> SerializeToXmlBytes<T>(this T item) => Serializer.Serialize<T>(item);
+        public static SubArray<byte> SerializeToXmlBytes<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize xml value to an object instance
         /// </summary>
@@ -220,7 +220,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="stream">Destination stream</param>
-        public static void SerializeToXml<T>(this T item, Stream stream) => Serializer.Serialize<T>(item, stream);
+        public static void SerializeToXml<T>(this T item, Stream stream) => Serializer.Serialize(item, stream);
         /// <summary>
         /// Deserialize a stream content in xml and returns an object instance
         /// </summary>
@@ -234,7 +234,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="filePath">Destination File path</param>
-        public static void SerializeToXmlFile<T>(this T item, string filePath) => Serializer.SerializeToFile<T>(item, filePath);
+        public static void SerializeToXmlFile<T>(this T item, string filePath) => Serializer.SerializeToFile(item, filePath);
         /// <summary>
         /// Deserialize a file content in xml and returns an object instance
         /// </summary>

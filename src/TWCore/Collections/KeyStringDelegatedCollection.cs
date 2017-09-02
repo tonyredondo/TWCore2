@@ -79,18 +79,21 @@ namespace TWCore.Collections
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key Selector</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(Func<TItem, string> keySelector, bool throwExceptionOnDuplicateKeys) : base(keySelector, throwExceptionOnDuplicateKeys) { }
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key Selector</param>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(Func<TItem, string> keySelector, IEnumerable<TItem> enumerable) : base(keySelector, enumerable) { }
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
+        /// <param name="keySelector">Key Selector</param>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -104,18 +107,18 @@ namespace TWCore.Collections
         protected override void OnInit()
         {
             base.OnInit();
-            KeySelector = KeySelector ?? DefaultKeySelector ?? new Func<TItem, string>(item => IndexOf(item).ToString());
+            KeySelector = KeySelector ?? DefaultKeySelector ?? (item => IndexOf(item).ToString());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void ClearItems()
         {
-            partialKeys.Clear();
+            _partialKeys.Clear();
             base.ClearItems();
         }
         #endregion
 
         #region Public Methods
-        readonly ConcurrentDictionary<string, string> partialKeys = new ConcurrentDictionary<string, string>();
+        private readonly ConcurrentDictionary<string, string> _partialKeys = new ConcurrentDictionary<string, string>();
         /// <summary>
         /// Get if part of the name is contained on the key.
         /// </summary>
@@ -124,43 +127,39 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ContainsPartialKey(string partialKey)
         {
-            if (!this.Contains(partialKey))
+            if (!Contains(partialKey))
             {
-                var fullKey = partialKeys.GetOrAdd(partialKey, _partialKey =>
+                var fullKey = _partialKeys.GetOrAdd(partialKey, pKey =>
                 {
-                    var _kSeparator = new string[] { KeyArraySeparator };
+                    var kSeparator = new[] { KeyArraySeparator };
                     foreach (var i in Items)
                     {
                         var iFullKey = GetKeyForItem(i);
-                        var partials = iFullKey?.Trim()?.Split(_kSeparator, StringSplitOptions.RemoveEmptyEntries);
-                        if (Array.IndexOf<string>(partials, _partialKey) > -1)
+                        var partials = iFullKey?.Trim()?.Split(kSeparator, StringSplitOptions.RemoveEmptyEntries);
+                        if (Array.IndexOf(partials, pKey) > -1)
                             return iFullKey;
                     }
                     return null;
                 });
                 return fullKey != null;
             }
-            else
-            {
-                partialKeys.GetOrAdd(partialKey, partialKey);
-                return true;
-            }
+            _partialKeys.GetOrAdd(partialKey, partialKey);
+            return true;
         }
+
         /// <summary>
         /// Get value from a partial key of the key string array
         /// </summary>
         /// <param name="partialKey">Part of the key</param>
+        /// <param name="item">ITem</param>
         /// <returns>True or false</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetByPartialKey(string partialKey, out TItem item)
         {
             item = default(TItem);
-            if (ContainsPartialKey(partialKey))
-            {
-                item = this[partialKeys[partialKey]];
-                return true;
-            }
-            return false;
+            if (!ContainsPartialKey(partialKey)) return false;
+            item = this[_partialKeys[partialKey]];
+            return true;
         }
         #endregion
     }

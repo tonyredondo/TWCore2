@@ -28,17 +28,18 @@ namespace DasMulli.Win32.ServiceUtils
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is ServiceFailureActions && Equals((ServiceFailureActions)obj);
+            var srvFailure = obj as ServiceFailureActions;
+            return srvFailure != null && Equals(srvFailure);
         }
 
 
         public override int GetHashCode()
         {
             return HashCode
-                .Of(this.ResetPeriod)
-                .And(this.RebootMessage)
-                .And(this.RestartCommand)
-                .AndEach(this.Actions);
+                .Of(ResetPeriod)
+                .And(RebootMessage)
+                .And(RestartCommand)
+                .AndEach(Actions);
         }
 
         public bool Equals(ServiceFailureActions other)
@@ -47,7 +48,7 @@ namespace DasMulli.Win32.ServiceUtils
             {
                 return false;
             }
-            return this.GetHashCode() == other.GetHashCode();
+            return GetHashCode() == other.GetHashCode();
         }
     }
 }

@@ -35,7 +35,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <returns>WBinary serialized object</returns>
-        public static SubArray<byte> SerializeToWBinary<T>(this T item) => Serializer.Serialize<T>(item);
+        public static SubArray<byte> SerializeToWBinary<T>(this T item) => Serializer.Serialize(item);
         /// <summary>
         /// Deserialize an object using the WBinary serializer
         /// </summary>
@@ -56,7 +56,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="stream">Destination stream</param>
-        public static void SerializeToWBinary<T>(this T item, Stream stream) => Serializer.Serialize<T>(item, stream);
+        public static void SerializeToWBinary<T>(this T item, Stream stream) => Serializer.Serialize(item, stream);
         /// <summary>
         /// Deserialize a stream content using WBinary and returns an object instance
         /// </summary>
@@ -70,7 +70,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Object type</typeparam>
         /// <param name="item">Object instance to serialize</param>
         /// <param name="filePath">Destination File path</param>
-        public static void SerializeToWBinaryFile<T>(this T item, string filePath) => Serializer.SerializeToFile<T>(item, filePath);
+        public static void SerializeToWBinaryFile<T>(this T item, string filePath) => Serializer.SerializeToFile(item, filePath);
         /// <summary>
         /// Deserialize a file content using WBinary and returns an object instance
         /// </summary>

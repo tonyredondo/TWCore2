@@ -42,9 +42,9 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<TKey, TValue> dictionary) : base(i => i.Key)
         {
-            if (dictionary != null)
-                foreach (var item in dictionary)
-                    this.Add(new KeyValue<TKey, TValue>(item));
+            if (dictionary == null) return;
+            foreach (var item in dictionary)
+                Add(new KeyValue<TKey, TValue>(item));
         }
         /// <summary>
         /// Key/Value Collection
@@ -53,10 +53,11 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<TKey, TValue>> col) : base(i => i.Key)
         {
-            if (col?.Any() == true)
-                foreach (var item in col)
-                    if (!this.Contains(item.Key))
-                        this.Add(item);
+            var keyValues = col as KeyValue<TKey, TValue>[] ?? col.ToArray();
+            if (keyValues?.Any() != true) return;
+            foreach (var item in keyValues)
+                if (!Contains(item.Key))
+                    Add(item);
         }
         #endregion
 
@@ -66,7 +67,7 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="key">Key</param>
         /// <returns>Value</returns>
-        new public TValue this[TKey key]
+        public new TValue this[TKey key]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -79,10 +80,10 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                lock (_ilocker)
+                lock (Ilocker)
                 {
                     if (Contains(key))
-                        base.Remove(key);
+                        Remove(key);
                     Add(key, value);
                 }
             }
@@ -132,9 +133,9 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<string, string> dictionary) : base(i => i.Key)
         {
-            if (dictionary != null)
-                foreach (var item in dictionary)
-                    this.Add(new KeyValue<string, string>(item.Key, item.Value));
+            if (dictionary == null) return;
+            foreach (var item in dictionary)
+                Add(new KeyValue<string, string>(item.Key, item.Value));
         }
         /// <summary>
         /// Key/Value Collection
@@ -144,9 +145,9 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IDictionary<string, string> dictionary, bool throwExceptionOnDuplicateKeys) : base(i => i.Key, throwExceptionOnDuplicateKeys)
         {
-            if (dictionary != null)
-                foreach (var item in dictionary)
-                    this.Add(new KeyValue<string, string>(item.Key, item.Value));
+            if (dictionary == null) return;
+            foreach (var item in dictionary)
+                Add(new KeyValue<string, string>(item.Key, item.Value));
         }
         /// <summary>
         /// Key/Value Collection
@@ -155,10 +156,11 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<string, string>> col) : base(i => i.Key)
         {
-            if (col?.Any() == true)
-                foreach (var item in col)
-                    if (!this.Contains(item.Key))
-                        this.Add(new KeyValue<string, string>(item.Key, item.Value));
+            var keyValues = col as KeyValue<string, string>[] ?? col.ToArray();
+            if (keyValues?.Any() != true) return;
+            foreach (var item in keyValues)
+                if (!Contains(item.Key))
+                    Add(new KeyValue<string, string>(item.Key, item.Value));
         }
         /// <summary>
         /// Key/Value Collection
@@ -168,10 +170,11 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<string, string>> col, bool throwExceptionOnDuplicateKeys) : base(i => i.Key, throwExceptionOnDuplicateKeys)
         {
-            if (col?.Any() == true)
-                foreach (var item in col)
-                    if (!this.Contains(item.Key))
-                        this.Add(new KeyValue<string, string>(item.Key, item.Value));
+            var keyValues = col as KeyValue<string, string>[] ?? col.ToArray();
+            if (keyValues?.Any() != true) return;
+            foreach (var item in keyValues)
+                if (!Contains(item.Key))
+                    Add(new KeyValue<string, string>(item.Key, item.Value));
         }
         #endregion
 
@@ -181,7 +184,7 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="key">Key</param>
         /// <returns>Value</returns>
-        new public string this[string key]
+        public new string this[string key]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -192,10 +195,10 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                lock (_ilocker)
+                lock (Ilocker)
                 {
                     if (Contains(key))
-                        base.Remove(key);
+                        Remove(key);
                     Add(key, value);
                 }
             }

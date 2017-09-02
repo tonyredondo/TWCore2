@@ -48,7 +48,7 @@ namespace TWCore.Settings
             var container = containerAttribute?.Name ?? type.Name;
             string shortContainer = null;
             if (container.EndsWith("Settings"))
-                shortContainer = container.Substring(0, container.LastIndexOf("Settings"));
+                shortContainer = container.Substring(0, container.LastIndexOf("Settings", StringComparison.Ordinal));
             var props = type.GetProperties().Where(p => p.CanRead && p.CanWrite && !p.IsSpecialName);
             var provider = System.Globalization.CultureInfo.InvariantCulture;
             props.Each(p =>

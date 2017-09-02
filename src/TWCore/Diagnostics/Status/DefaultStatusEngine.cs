@@ -263,7 +263,7 @@ namespace TWCore.Diagnostics.Status
                     else
                         sItem.Name = string.Format("{0}", sItem.Name);
                     if (sItem.Values.SortValues)
-                        sItem.Values.Sort((a, b) => a.Key.CompareTo(b.Key));
+                        sItem.Values.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
                     return sItem;
                 }).RemoveNulls().ToArray() ?? new StatusItem[0];
             }
@@ -323,7 +323,7 @@ namespace TWCore.Diagnostics.Status
                     item.Childrens.AddRange(allList.Where(i => object.Equals(i.ObjRef, item)).ToList());
                     collection.Items.Add(item);
                 });
-                collection.Items.Sort((a, b) => a.Name.CompareTo(b.Name));
+                collection.Items.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
                 var remainings = allList.Where(i => i.ObjRef != null).ToList();
                 FillHierarchy(allList, collection.Items, ObjectsHierarchy);

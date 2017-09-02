@@ -43,7 +43,7 @@ namespace TWCore.Tests
                     var rHClient = (string)hClient.SayHi("MyName");
                     w.Tap("Say Hi: {0}".ApplyFormat(rHClient));
                 }
-            };
+            }
 
             //IMyService test
             Core.Log.InfoBasic("IMyService test");

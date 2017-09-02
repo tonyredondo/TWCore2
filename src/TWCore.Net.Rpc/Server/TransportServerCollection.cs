@@ -87,7 +87,7 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TransportServerCollection()
         {
-            this.CollectionChanged += (s, e) =>
+            CollectionChanged += (s, e) =>
             {                
                 if ((e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace) && e.NewItems != null)
                 {

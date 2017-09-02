@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace TWCore.Numerics
@@ -230,7 +231,7 @@ namespace TWCore.Numerics
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
         public IEnumerator<KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue>> GetEnumerator()
         {
-            return this.m_dictionary.GetEnumerator();
+            return m_dictionary.GetEnumerator();
         }
 
         #endregion
@@ -241,9 +242,9 @@ namespace TWCore.Numerics
         /// The non-generic IEnumerator GetEnumerator method
         /// </summary>
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.m_dictionary.GetEnumerator();
+            return m_dictionary.GetEnumerator();
         }
 
         #endregion

@@ -135,7 +135,7 @@ namespace TWCore.Services
                 {
                     lastMinuteProcessTimes.Clear();
                     PeakLastMinuteProcessAverageTime = 0;
-                    PeakLastMinuteProcessAverageTimeLastDate = DateTime.MinValue; ;
+                    PeakLastMinuteProcessAverageTimeLastDate = DateTime.MinValue;
 
                     LastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;
                     PeakLastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;

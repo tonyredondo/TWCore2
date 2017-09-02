@@ -371,14 +371,14 @@ namespace TWCore.Numerics
         /// <returns>Linear equation solver status value</returns>
         public static LinearEquationSolverStatus SolveEquations(IEnumerable<string> equations, Dictionary<string, double> response)
         {
-            Sparse2DMatrix<int, int, double> aMatrix = new Sparse2DMatrix<int, int, double>();
-            SparseArray<int, double> bVector = new SparseArray<int, double>();
-            SparseArray<string, int> variableNameIndexMap = new SparseArray<string, int>();
-            int numberOfEquations = 0;
+            var aMatrix = new Sparse2DMatrix<int, int, double>();
+            var bVector = new SparseArray<int, double>();
+            var variableNameIndexMap = new SparseArray<string, int>();
+            var numberOfEquations = 0;
 
-            LinearEquationParser parser = new LinearEquationParser();
-            LinearEquationParserStatus parserStatus = LinearEquationParserStatus.Success;
-            LinearEquationSolverStatus solverStatus = LinearEquationSolverStatus.IllConditioned;
+            var parser = new LinearEquationParser();
+            var parserStatus = LinearEquationParserStatus.Success;
+            var solverStatus = LinearEquationSolverStatus.IllConditioned;
 
             foreach (var line in equations)
             {
@@ -387,18 +387,18 @@ namespace TWCore.Numerics
             }
             if (numberOfEquations == variableNameIndexMap.Count)
             {
-                SparseArray<int, double> xVector = new SparseArray<int, double>();
-                solverStatus = LinearEquationSolver.Solve(numberOfEquations, aMatrix, bVector, xVector);
-                if (solverStatus == LinearEquationSolverStatus.Success)
+                var xVector = new SparseArray<int, double>();
+                solverStatus = Solve(numberOfEquations, aMatrix, bVector, xVector);
+                switch (solverStatus)
                 {
-                    foreach (KeyValuePair<string, int> pair in variableNameIndexMap)
-                        response.Add(pair.Key, xVector[pair.Value]);
-                }
-                else if (solverStatus == LinearEquationSolverStatus.IllConditioned)
-                {
-                }
-                else if (solverStatus == LinearEquationSolverStatus.Singular)
-                {
+                    case LinearEquationSolverStatus.Success:
+                        foreach (var pair in variableNameIndexMap)
+                            response.Add(pair.Key, xVector[pair.Value]);
+                        break;
+                    case LinearEquationSolverStatus.IllConditioned:
+                        break;
+                    case LinearEquationSolverStatus.Singular:
+                        break;
                 }
             }
             return solverStatus;

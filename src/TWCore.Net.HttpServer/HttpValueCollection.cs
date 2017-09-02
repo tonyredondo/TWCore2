@@ -109,7 +109,7 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string ToString(bool urlencoded, IDictionary excludeKeys = null)
         {
-            if (this.Count == 0)
+            if (Count == 0)
                 return string.Empty;
 
             StringBuilder stringBuilder = new StringBuilder();

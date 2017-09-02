@@ -130,8 +130,8 @@ namespace TWCore.Net
             using (var stream = new StreamReader(response.GetResponseStream()))
                 address = stream.ReadToEnd();
             //Search for the ip in the html
-            int first = address.IndexOf("Address: ") + 9;
-            int last = address.LastIndexOf("</body>");
+            int first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;
+            int last = address.LastIndexOf("</body>", StringComparison.Ordinal);
             address = address.SubstringIndex(first, last);
             Core.Log.LibVerbose("The Ip address is: {0}", address);
             return address;

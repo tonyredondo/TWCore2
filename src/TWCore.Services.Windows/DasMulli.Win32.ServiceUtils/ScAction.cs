@@ -35,8 +35,8 @@ namespace DasMulli.Win32.ServiceUtils
         public override int GetHashCode()
         {
             return HashCode
-                .Of(this.Delay)
-                .And(this.Type);
+                .Of(Delay)
+                .And(Type);
         }
     }
 }

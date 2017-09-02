@@ -63,7 +63,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
         {
-            this.objectStack = new Stack<T>(12);
+            objectStack = new Stack<T>(12);
             this.resetAction = resetAction;
             this.onetimeInitAction = onetimeInitAction;
             this.resetMode = resetMode;

@@ -958,7 +958,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>) SelectElements<T1, T2>(string nameOrQuery, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElements<T1, T2>(nameOrQuery, null, fillMethod1, fillMethod2);
+            => SelectElements(nameOrQuery, null, fillMethod1, fillMethod2);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -994,7 +994,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>) SelectElements<T1, T2>(string nameOrQuery, object parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElements<T1, T2>(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2);
+            => SelectElements(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -1007,7 +1007,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>) SelectElements<T1, T2>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElements<T1, T2>(nameOrQuery, parameters, fillMethod1, fillMethod2, out object returnValue);
+            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, out object returnValue);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -1116,7 +1116,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>) SelectElements<T1, T2, T3>(string nameOrQuery, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElements<T1, T2, T3>(nameOrQuery, null, fillMethod1, fillMethod2, fillMethod3);
+            => SelectElements(nameOrQuery, null, fillMethod1, fillMethod2, fillMethod3);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>
@@ -1170,7 +1170,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>) SelectElements<T1, T2, T3>(string nameOrQuery, object parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElements<T1, T2, T3>(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2, fillMethod3);
+            => SelectElements(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2, fillMethod3);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>
@@ -1185,7 +1185,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>) SelectElements<T1, T2, T3>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElements<T1, T2, T3>(nameOrQuery, parameters, fillMethod1, fillMethod2, fillMethod3, out object returnValue);
+            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, fillMethod3, out object returnValue);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>
@@ -1987,7 +1987,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<(IEnumerable<T1>, IEnumerable<T2>)> SelectElementsAsync<T1, T2>(string nameOrQuery, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElementsAsync<T1, T2>(nameOrQuery, null, fillMethod1, fillMethod2);
+            => SelectElementsAsync(nameOrQuery, null, fillMethod1, fillMethod2);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -2023,7 +2023,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<(IEnumerable<T1>, IEnumerable<T2>)> SelectElementsAsync<T1, T2>(string nameOrQuery, object parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElementsAsync<T1, T2>(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2);
+            => SelectElementsAsync(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -2129,7 +2129,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<(IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>)> SelectElementsAsync<T1, T2, T3>(string nameOrQuery, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElementsAsync<T1, T2, T3>(nameOrQuery, null, fillMethod1, fillMethod2, fillMethod3);
+            => SelectElementsAsync(nameOrQuery, null, fillMethod1, fillMethod2, fillMethod3);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>
@@ -2183,7 +2183,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<(IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>)> SelectElementsAsync<T1, T2, T3>(string nameOrQuery, object parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElementsAsync<T1, T2, T3>(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2, fillMethod3);
+            => SelectElementsAsync(nameOrQuery, GetCommandParameters(parameters), fillMethod1, fillMethod2, fillMethod3);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>

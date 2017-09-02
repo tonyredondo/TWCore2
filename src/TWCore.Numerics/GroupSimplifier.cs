@@ -295,7 +295,7 @@ namespace TWCore.Numerics
             {
                 string strSign = string.Format("{0}${1}", string.Join(",", other.Keys.ToArray()), string.Join(",", other.Values.ToArray()));
                 string strSign2 = string.Format("{0}${1}", string.Join(",", Keys.ToArray()), string.Join(",", Values.ToArray()));
-                return strSign2.CompareTo(strSign);
+                return string.Compare(strSign2, strSign, StringComparison.Ordinal);
             }
             #endregion
         }

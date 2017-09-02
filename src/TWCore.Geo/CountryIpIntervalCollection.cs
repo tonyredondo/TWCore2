@@ -84,7 +84,7 @@ namespace TWCore.Geo
             if (string.IsNullOrEmpty(address))
                 return null;
             var number = IpHelper.IpToInt(address);
-            return this.Query(number).FirstOrDefault();
+            return Query(number).FirstOrDefault();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetCountry(string address)

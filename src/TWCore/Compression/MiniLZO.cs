@@ -384,7 +384,6 @@ namespace TWCore.Compression
                     {
                         gt_match_done = false;
                         goto match_done;
-                        ;
                     }
                     if (t >= 64)
                     {

@@ -55,7 +55,7 @@ namespace TWCore.Collections
                         var rItem = innerItem.Combine(oItem);
                         lst.Add(rItem);
                     }
-                };
+                }
             }
             return lst;
         }

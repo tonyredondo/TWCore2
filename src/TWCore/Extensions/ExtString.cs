@@ -345,7 +345,7 @@ namespace TWCore
         /// <returns>Substring value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringFromFirst(this string item, string stringStart)
-            => item.Substring(item.IndexOf(stringStart));
+            => item.Substring(item.IndexOf(stringStart, StringComparison.Ordinal));
         /// <summary>
         /// Gets a substring from the last appearance of a char
         /// </summary>
@@ -363,7 +363,7 @@ namespace TWCore
         /// <returns>Substring value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringFromLast(this string item, string stringStart)
-            => item.Substring(item.LastIndexOf(stringStart));
+            => item.Substring(item.LastIndexOf(stringStart, StringComparison.Ordinal));
         /// <summary>
         /// Gets a substring from the start of the string until the first appearance of a char
         /// </summary>
@@ -381,7 +381,7 @@ namespace TWCore
         /// <returns>Substring value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringToFirst(this string item, string stringStart)
-            => item.Substring(0, item.IndexOf(stringStart));
+            => item.Substring(0, item.IndexOf(stringStart, StringComparison.Ordinal));
         /// <summary>
         /// Gets a substring from the start of the string until the last appearance of a char
         /// </summary>
@@ -399,7 +399,7 @@ namespace TWCore
         /// <returns>Substring value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string SubstringToLast(this string item, string stringStart)
-            => item.Substring(0, item.LastIndexOf(stringStart));
+            => item.Substring(0, item.LastIndexOf(stringStart, StringComparison.Ordinal));
         #endregion
 
         #region Hexadecimal

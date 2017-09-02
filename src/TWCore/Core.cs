@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -44,19 +46,16 @@ namespace TWCore
     /// <summary>
     /// CORE App Static
     /// </summary>
-    public static partial class Core
+    public static class Core
     {
-        const string settingsTemplateFormat = "{{Settings:{0}}}";
-        static object locker = new object();
-        static ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
-        static ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
-        static CoreSettings _globalSettings = null;
-        [ThreadStatic]
-        static Dictionary<string, object> threadData = new Dictionary<string, object>();
-        [ThreadStatic]
-        static Dictionary<object, object> threadObjectData = new Dictionary<object, object>();
-        volatile static bool _initialized = false;
-        static Queue<Action> _oninitActions = new Queue<Action>();
+        private const string SettingsTemplateFormat = "{{Settings:{0}}}";
+        private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
+        private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
+        private static CoreSettings _globalSettings;
+        [ThreadStatic] private static Dictionary<string, object> _threadData;
+        [ThreadStatic] private static Dictionary<object, object> _threadObjectData;
+        private static volatile bool _initialized;
+        private static readonly Queue<Action> OninitActions = new Queue<Action>();
 
         #region Properties
         /// <summary>
@@ -106,11 +105,27 @@ namespace TWCore
         /// <summary>
         /// Thread global data dictionary
         /// </summary>
-        public static Dictionary<string, object> ThreadData => threadData;
+        public static Dictionary<string, object> ThreadData
+        {
+            get
+            {
+                if (_threadData == null)
+                    _threadData = new Dictionary<string, object>();
+                return _threadData;
+            }
+        }
         /// <summary>
         /// Thread global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ThreadObjectData => threadObjectData;
+        public static Dictionary<object, object> ThreadObjectData
+        {
+            get
+            {
+                if (_threadObjectData == null)
+                    _threadObjectData = new Dictionary<object, object>();
+                return _threadObjectData;
+            }
+        }
         /// <summary>
         /// Current Framework version
         /// </summary>
@@ -163,157 +178,148 @@ namespace TWCore
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Init(Factories factories)
+		private static void Init(Factories factories)
         {
-            if (!_initialized)
+            if (_initialized) return;
+            _initialized = true;
+            UpdateLocalUtc();
+            Factory.SetFactories(factories);
+            Status = Factory.CreateStatusEngine();
+            Log = Factory.CreateLogEngine();
+            Trace = Factory.CreateTraceEngine();
+            AssemblyResolverManager.RegisterDomain();
+            factories.Init();
+            GlobalSettings.ReloadSettings();
+            DebugMode = DebugMode || GlobalSettings.DebugMode;
+            if (DebugMode)
             {
-                _initialized = true;
-                UpdateLocalUtc();
-                Factory.SetFactories(factories);
-                Status = Factory.CreateStatusEngine();
-                Log = Factory.CreateLogEngine();
-                Trace = Factory.CreateTraceEngine();
-                AssemblyResolverManager.RegisterDomain();
-                factories.Init();
-                GlobalSettings.ReloadSettings();
-                DebugMode = DebugMode || GlobalSettings.DebugMode;
-                if (DebugMode)
+                Log.InfoBasic("Core Init - Platform: {0} - OS: {1}", Factory.PlatformType, RuntimeInformation.OSDescription);
+            }
+            if (ServiceContainer.HasConsole)
+                Log.AddConsoleStorage();
+
+            if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
+            {
+                //Init Log
+                Log.Debug("Loading log engine configuration");
+                var logStorages = Injector.GetNames<ILogStorage>();
+                if (logStorages?.Any() == true)
                 {
-                    Log.InfoBasic("Core Init - Platform: {0} - OS: {1}", Factory.PlatformType, System.Runtime.InteropServices.RuntimeInformation.OSDescription);
+                    foreach (var name in logStorages)
+                    {
+                        if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
+                        Log.Debug("Loading log storage: {0}", name);
+                        Log.Storage.Add(Injector.New<ILogStorage>(name), Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
+                    }
                 }
-                if (ServiceContainer.HasConsole)
-                    Log.AddConsoleStorage();
+                var logStorage = Log.Storage.Get(typeof(ConsoleLogStorage));
+                if (!Settings["Core.Log.Storage.Console.Enabled"].ParseTo(true))
+                    Log.Storage.Remove(logStorage);
+                Log.Storage.ChangeStorageLogLevel(logStorage, Settings["Core.Log.Storage.Console.LogLevel"].ParseTo(LogStorageCollection.AllLevels));
+                Log.MaxLogLevel = (LogLevel)GlobalSettings.LogMaxLogLevel;
+                Log.Enabled = GlobalSettings.LogEnabled;
 
-                if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
+                //Init Trace
+                Log.Debug("Loading trace engine configuration");
+                var traceStorages = Injector.GetNames<ITraceStorage>();
+                if (traceStorages?.Any() == true)
                 {
-                    //Init Log
-                    Log.Debug("Loading log engine configuration");
-                    var logStorages = Injector.GetNames<ILogStorage>();
-                    if (logStorages?.Any() == true)
+                    foreach (var name in traceStorages)
                     {
-                        foreach (var name in logStorages)
-                        {
-                            if (Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false))
-                            {
-                                Log.Debug("Loading log storage: {0}", name);
-                                Log.Storage.Add(Injector.New<ILogStorage>(name), Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
-                            }
-                        }
+                        if (!Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false)) continue;
+                        Log.Debug("Loading trace storage: {0}", name);
+                        Trace.Storage.Add(Injector.New<ITraceStorage>(name));
                     }
-                    var logStorage = Log.Storage.Get(typeof(ConsoleLogStorage));
-                    if (!Settings["Core.Log.Storage.Console.Enabled"].ParseTo(true))
-                        Log.Storage.Remove(logStorage);
-                    Log.Storage.ChangeStorageLogLevel(logStorage, Settings["Core.Log.Storage.Console.LogLevel"].ParseTo(LogStorageCollection.AllLevels));
-                    Log.MaxLogLevel = (LogLevel)GlobalSettings.LogMaxLogLevel;
-                    Log.Enabled = GlobalSettings.LogEnabled;
-
-                    //Init Trace
-                    Log.Debug("Loading trace engine configuration");
-                    var traceStorages = Injector.GetNames<ITraceStorage>();
-                    if (traceStorages?.Any() == true)
-                    {
-                        foreach (var name in traceStorages)
-                        {
-                            if (Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false))
-                            {
-                                Log.Debug("Loading trace storage: {0}", name);
-                                Trace.Storage.Add(Injector.New<ITraceStorage>(name));
-                            }
-                        }
-                    }
-                    Trace.Enabled = GlobalSettings.TraceEnabled;
-
-                    //Init Status
-                    Log.Debug("Loading status engine configuration");
-                    var statusTransports = Injector.GetNames<IStatusTransport>();
-                    if (statusTransports?.Any() == true)
-                    {
-                        foreach (var name in statusTransports)
-                        {
-                            if (Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false))
-                            {
-                                Log.Debug("Loading status transport: {0}", name);
-                                Status.Transports.Add(Injector.New<IStatusTransport>(name));
-                            }
-                        }
-                    }
-                    Status.Enabled = GlobalSettings.StatusEnabled;
                 }
+                Trace.Enabled = GlobalSettings.TraceEnabled;
 
-                try
+                //Init Status
+                Log.Debug("Loading status engine configuration");
+                var statusTransports = Injector.GetNames<IStatusTransport>();
+                if (statusTransports?.Any() == true)
                 {
-                    var allAssemblies = Factory.GetAllAssemblies();
-                    var types = allAssemblies.SelectMany(a =>
+                    foreach (var name in statusTransports)
+                    {
+                        if (!Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false)) continue;
+                        Log.Debug("Loading status transport: {0}", name);
+                        Status.Transports.Add(Injector.New<IStatusTransport>(name));
+                    }
+                }
+                Status.Enabled = GlobalSettings.StatusEnabled;
+            }
+
+            try
+            {
+                var allAssemblies = Factory.GetAllAssemblies();
+                var types = allAssemblies.SelectMany(a =>
+                {
+                    try
+                    {
+                        return a.DefinedTypes;
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                    return new TypeInfo[0];
+                }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
+                if (types?.Any() == true)
+                {
+                    foreach (var type in types)
                     {
                         try
                         {
-                            return a.DefinedTypes;
-                        }
-                        catch { }
-                        return new TypeInfo[0];
-                    }).Where(t => !t.IsAbstract && t.IsClass && t.ImplementedInterfaces.Contains(typeof(ICoreStart))).ToArray();
-                    if (types?.Any() == true)
-                    {
-                        foreach (var type in types)
-                        {
-                            try
-                            {
-                                var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
-                                Log.Debug("Loading CoreStart from: {0}", instance);
-                                instance.CoreInit(factories);
-                            }
-                            catch (Exception ex)
-                            {
-                                Log.Write(ex);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-
-                Status.Attach(() =>
-                {
-                    if (Settings != null)
-                    {
-                        var sItem = new StatusItem()
-                        {
-                            Name = "Settings"
-                        };
-                        Settings.OrderBy(i => i.Key).Each(i => sItem.Values.Add(i.Key, i.Value));
-                        return sItem;
-                    }
-                    return null;
-                });
-
-                bool onError = false;
-                lock (_oninitActions)
-                {
-                    while (_oninitActions.Count > 0)
-                    {
-                        try
-                        {
-                            _oninitActions.Dequeue()();
+                            var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
+                            Log.Debug("Loading CoreStart from: {0}", instance);
+                            instance.CoreInit(factories);
                         }
                         catch (Exception ex)
                         {
-                            Core.Log.Write(ex);
-                            onError = true;
+                            Log.Write(ex);
                         }
                     }
                 }
-                Log.Start();
-
-                factories.Thread.Sleep(25);
-                var dlog = (Log as DefaultLogEngine);
-                if (dlog != null)
-                    dlog.LogDoneTask.WaitAsync();
-
-                if (onError)
-                    throw new Exception("Error initializing the application.");
             }
+            catch (Exception ex)
+            {
+                Log.Write(ex);
+            }
+
+            Status.Attach(() =>
+            {
+                if (Settings == null) return null;
+                var sItem = new StatusItem
+                {
+                    Name = "Settings"
+                };
+                Settings.OrderBy(i => i.Key).Each(i => sItem.Values.Add(i.Key, i.Value));
+                return sItem;
+            });
+
+            var onError = false;
+            lock (OninitActions)
+            {
+                while (OninitActions.Count > 0)
+                {
+                    try
+                    {
+                        OninitActions.Dequeue()();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Write(ex);
+                        onError = true;
+                    }
+                }
+            }
+            Log.Start();
+
+            factories.Thread.Sleep(25);
+            var dlog = (Log as DefaultLogEngine);
+            dlog?.LogDoneTask.WaitAsync();
+
+            if (onError)
+                throw new Exception("Error initializing the application.");
         }
 
         /// <summary>
@@ -330,7 +336,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void InitAspNet()
         {
-            var factories = new DefaultFactories()
+            var factories = new DefaultFactories
             {
                 SetDirectoryToBaseAssembly = false
             };
@@ -441,8 +447,8 @@ namespace TWCore
             if (_initialized)
                 action();
             else
-                lock (_oninitActions)
-                    _oninitActions.Enqueue(action);
+                lock (OninitActions)
+                    OninitActions.Enqueue(action);
         }
         #endregion  
 
@@ -463,15 +469,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetLogEngine(ILogEngine engine)
         {
-            if (engine != null)
-            {
-                ILogItem[] prevItems = null;
-                if (engine != null)
-                    prevItems = Log?.GetPendingItems();
-                Log = engine;
-                if (engine != null && prevItems != null)
-                    engine.EnqueueItemsArray(prevItems);
-            }
+            if (engine == null) return;
+            var prevItems = Log?.GetPendingItems();
+            Log = engine;
+            if (prevItems != null)
+                engine.EnqueueItemsArray(prevItems);
         }
         /// <summary>
         /// Sets a new Trace Engine
@@ -518,12 +520,12 @@ namespace TWCore
             settingsFilePath = settingsFilePath?.Replace("{MachineName}", MachineName);
             settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", ApplicationName);
             Ensure.ExistFile(settingsFilePath);
-            var serializer = SerializerManager.GetByFileExtension(System.IO.Path.GetExtension(settingsFilePath));
+            var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
             GlobalSettings globalSettings;
             try
             {
-                globalSettings = ((ISerializer)serializer).DeserializeFromFile<GlobalSettings>(settingsFilePath);
+                globalSettings = serializer.DeserializeFromFile<GlobalSettings>(settingsFilePath);
             }
             catch (Exception ex)
             {
@@ -556,7 +558,7 @@ namespace TWCore
         {
             StringBuilder sb = new StringBuilder(source, source.Length * 2);
             foreach (var setting in Settings)
-                sb = sb.Replace(settingsTemplateFormat.ApplyFormat(setting.Key), setting.Value);
+                sb = sb.Replace(SettingsTemplateFormat.ApplyFormat(setting.Key), setting.Value);
             return sb.ToString();
         }
         /// <summary>
@@ -593,7 +595,7 @@ namespace TWCore
             settingsFilePath = settingsFilePath?.Replace("{MachineName}", MachineName);
             settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", ApplicationName);
             Ensure.ExistFile(settingsFilePath);
-            var serializer = SerializerManager.GetByFileExtension(System.IO.Path.GetExtension(settingsFilePath));
+            var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
             InjectorGlobalSettings globalSettings;
             try
@@ -627,7 +629,6 @@ namespace TWCore
         /// <summary>
         /// Apply Settings on object
         /// </summary>
-        /// <typeparam name="T">Settings object type</typeparam>
         /// <returns>Settings object type instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ApplySettings(object instance)
@@ -675,12 +676,7 @@ namespace TWCore
         /// <returns>Return value of one of the executed Func</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Iif<T>(this bool conditionResult, Func<T> trueAction, Func<T> falseAction = null) where T : class
-        {
-            if (conditionResult)
-                return trueAction?.Invoke() ?? default(T);
-            else
-                return falseAction?.Invoke() ?? default(T);
-        }
+            => conditionResult ? trueAction?.Invoke() : falseAction?.Invoke();
         /// <summary>
         /// One line if method
         /// </summary>
@@ -690,12 +686,7 @@ namespace TWCore
         /// <returns>Return value of one of the executed Func</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Iif<T>(Func<bool> condition, Func<T> trueAction, Func<T> falseAction = null) where T : class
-        {
-            if (condition())
-                return trueAction?.Invoke() ?? default(T);
-            else
-                return falseAction?.Invoke() ?? default(T);
-        }
+            => condition() ? trueAction?.Invoke() : falseAction?.Invoke();
         /// <summary>
         /// Get type from a type name, using internal cache for faster get.
         /// </summary>
@@ -709,21 +700,19 @@ namespace TWCore
             {
                 if (throwOnError)
                     throw new ArgumentNullException("The TypeName is null");
-                else
-                    return null;
+                return null;
             }
-            var type = TypesCache.GetOrAdd(typeName, _typeName =>
+            var type = TypesCache.GetOrAdd(typeName, tName =>
             {
                 try
                 {
-                    return Type.GetType(_typeName, throwOnError);
+                    return Type.GetType(tName, throwOnError);
                 }
                 catch (Exception)
                 {
                     if (throwOnError)
                         throw;
-                    else
-                        return null;
+                    return null;
                 }
             });
             if (type == null)

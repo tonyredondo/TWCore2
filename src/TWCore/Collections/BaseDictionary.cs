@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
@@ -30,15 +31,15 @@ namespace TWCore.Collections
     /// Provides the plumbing for the portions of IDictionary[TKey TValue] which can reasonably be implemented without any
     /// dependency on the underlying representation of the dictionary.
     /// </remarks>
-    [DebuggerDisplay("Count = {Count}")]
-    [DebuggerTypeProxy(PREFIX + "DictionaryDebugView`2" + SUFFIX)]
+    [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
+    [DebuggerTypeProxy(Prefix + "DictionaryDebugView`2" + Suffix)]
     public abstract class BaseDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {
-        private const string PREFIX = "System.Collections.Generic.Mscorlib_";
-        private const string SUFFIX = ", mscorlib, Version = 2.0.0.0, Culture = neutral, PublicKeyToken = b77a5c561934e089";
+        private const string Prefix = "System.Collections.Generic.Mscorlib_";
+        private const string Suffix = ", mscorlib, Version = 2.0.0.0, Culture = neutral, PublicKeyToken = b77a5c561934e089";
 
-        private KeyCollection keys;
-        private ValueCollection values;
+        private KeyCollection _keys;
+        private ValueCollection _values;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected BaseDictionary() { }
@@ -63,9 +64,9 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (this.keys == null)
-                    this.keys = new KeyCollection(this);
-                return this.keys;
+                if (_keys == null)
+                    _keys = new KeyCollection(this);
+                return _keys;
             }
         }
 
@@ -74,9 +75,9 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (this.values == null)
-                    this.values = new ValueCollection(this);
-                return this.values;
+                if (_values == null)
+                    _values = new ValueCollection(this);
+                return _values;
             }
         }
 
@@ -85,7 +86,7 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (!this.TryGetValue(key, out var value))
+                if (!TryGetValue(key, out var value))
                     throw new KeyNotFoundException();
                 return value;
             }
@@ -99,13 +100,13 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(KeyValuePair<TKey, TValue> item)
         {
-            this.Add(item.Key, item.Value);
+            Add(item.Key, item.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            if (!this.TryGetValue(item.Key, out var value))
+            if (!TryGetValue(item.Key, out var value))
                 return false;
 
             return EqualityComparer<TValue>.Default.Equals(value, item.Value);
@@ -120,40 +121,36 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (!this.Contains(item))
+            if (!Contains(item))
                 return false;
 
 
-            return this.Remove(item.Key);
+            return Remove(item.Key);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+        IEnumerator IEnumerable.GetEnumerator()
         {
-            return this.GetEnumerator();
+            return GetEnumerator();
         }
 
         private abstract class Collection<T> : ICollection<T>
         {
-            protected readonly IDictionary<TKey, TValue> dictionary;
+            protected readonly IDictionary<TKey, TValue> Dictionary;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected Collection(IDictionary<TKey, TValue> dictionary)
             {
-                this.dictionary = dictionary;
+                Dictionary = dictionary;
             }
 
             public int Count
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get { return this.dictionary.Count; }
+                get { return Dictionary.Count; }
             }
 
-            public bool IsReadOnly
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get { return true; }
-            }
+            public bool IsReadOnly => true;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void CopyTo(T[] array, int arrayIndex)
@@ -164,7 +161,7 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public virtual bool Contains(T item)
             {
-                foreach (T element in this)
+                foreach (var element in this)
                     if (EqualityComparer<T>.Default.Equals(element, item))
                         return true;
                 return false;
@@ -173,7 +170,7 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public IEnumerator<T> GetEnumerator()
             {
-                foreach (KeyValuePair<TKey, TValue> pair in this.dictionary)
+                foreach (var pair in Dictionary)
                     yield return GetItem(pair);
             }
 
@@ -198,14 +195,14 @@ namespace TWCore.Collections
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
+            IEnumerator IEnumerable.GetEnumerator()
             {
-                return this.GetEnumerator();
+                return GetEnumerator();
             }
         }
 
-        [DebuggerDisplay("Count = {Count}")]
-        [DebuggerTypeProxy(PREFIX + "DictionaryKeyCollectionDebugView`2" + SUFFIX)]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
+        [DebuggerTypeProxy(Prefix + "DictionaryKeyCollectionDebugView`2" + Suffix)]
         private class KeyCollection : Collection<TKey>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -220,12 +217,12 @@ namespace TWCore.Collections
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public override bool Contains(TKey item)
             {
-                return this.dictionary.ContainsKey(item);
+                return Dictionary.ContainsKey(item);
             }
         }
 
-        [DebuggerDisplay("Count = {Count}")]
-        [DebuggerTypeProxy(PREFIX + "DictionaryValueCollectionDebugView`2" + SUFFIX)]
+        [DebuggerDisplay("Count = {" + nameof(Count) + "}")]
+        [DebuggerTypeProxy(Prefix + "DictionaryValueCollectionDebugView`2" + Suffix)]
         private class ValueCollection : Collection<TValue>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -233,10 +230,8 @@ namespace TWCore.Collections
                     : base(dictionary) { }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected override TValue GetItem(KeyValuePair<TKey, TValue> pair)
-            {
-                return pair.Value;
-            }
+            protected override TValue GetItem(KeyValuePair<TKey, TValue> pair) 
+                => pair.Value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -251,7 +246,7 @@ namespace TWCore.Collections
             if (array.Length - arrayIndex < source.Count)
                 throw new ArgumentException("Destination array is not large enough.Check array.Length and arrayIndex.");
 
-            foreach (T item in source)
+            foreach (var item in source)
                 array[arrayIndex++] = item;
         }
 

@@ -185,7 +185,7 @@ namespace TWCore.Serialization
                 }
             }
             if (string.Equals(fPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
-                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", this.GetType().Name, filePath, fPath);
+                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath);
             lock (_filePathLocker.GetLock(fPath))
             {
                 using (var stream = File.Open(fPath, FileMode.Create, FileAccess.Write))
@@ -235,7 +235,7 @@ namespace TWCore.Serialization
                     fPath = filePath;
             }
             if (string.Equals(fPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
-                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", this.GetType().Name, filePath, fPath);
+                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath);
             lock (_filePathLocker.GetLock(fPath))
             {
                 object obj;

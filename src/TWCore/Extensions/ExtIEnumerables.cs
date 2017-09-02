@@ -627,7 +627,7 @@ namespace TWCore
 		/// Remove items from the collection using the predicate.
 		/// </summary>
 		/// <param name="collection">Collection object source</param>
-		public static void RemoveCollectionNulls<T>(this ICollection<T> collection) where T : class => RemoveCollection<T>(collection, item => item == null);
+		public static void RemoveCollectionNulls<T>(this ICollection<T> collection) where T : class => RemoveCollection(collection, item => item == null);
 		#endregion
 
 		#region Others

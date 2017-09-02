@@ -53,15 +53,11 @@ namespace TWCore
         protected virtual void SetValue(object value, [CallerMemberName] string propertyName = null)
         {
             var property = Item.GetType().GetRuntimeProperty(propertyName);
-            if (property != null && property.CanWrite && property.CanRead)
-            {
-                var propValue = property.GetValue(Item);
-                if (!Object.Equals(propValue, value))
-                {
-                    property.SetValue(Item, value);
-                    OnPropertyChanged(propertyName);
-                }
-            }
+            if (property == null || !property.CanWrite || !property.CanRead) return;
+            var propValue = property.GetValue(Item);
+            if (Equals(propValue, value)) return;
+            property.SetValue(Item, value);
+            OnPropertyChanged(propertyName);
         }
         #endregion
     }

@@ -89,11 +89,11 @@ namespace TWCore.Numerics
         /// </returns>
         public int CompareTo(ComparableTuple2<TItem0, TItem1> group)
         {
-            int result = this.Item0.CompareTo(group.Item0);
+            int result = Item0.CompareTo(group.Item0);
 
             if (result == 0)
             {
-                result = this.Item1.CompareTo(group.Item1);
+                result = Item1.CompareTo(group.Item1);
             }
 
             return result;

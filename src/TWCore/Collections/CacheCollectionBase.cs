@@ -43,16 +43,18 @@ namespace TWCore.Collections
             Value = value;
         }
     }
+
     /// <summary>
     /// Cache Collection Object Base
     /// </summary>
     /// <typeparam name="TKey">Collection Key</typeparam>
     /// <typeparam name="TValue">Collection Value</typeparam>
+    /// <typeparam name="TValueNode">Valuenode type</typeparam>
     public abstract class CacheCollectionBase<TKey, TValue, TValueNode> : ICacheCollection<TKey, TValue> where TValueNode : CacheCollectionValueNode<TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly object _padlock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
+        private readonly object _padlock = new object();
 
         /// <summary>
         /// Maximum capacity of the collection

@@ -715,10 +715,10 @@ namespace TWCore.Data
         /// <summary>
         /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         /// <param name="nameOrQuery">Procedure name or sql query</param>
         /// <param name="parametersArray">Inputs parameters</param>
         /// <returns>Number of rows</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteNonQuery(string nameOrQuery, object[] parametersArray)
             => ExecuteNonQuery(nameOrQuery, parametersArray.Select(parameters => GetCommandParameters(parameters)));
         /// <summary>

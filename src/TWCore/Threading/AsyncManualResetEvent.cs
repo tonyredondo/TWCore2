@@ -25,7 +25,7 @@ namespace TWCore.Threading
     /// </summary>
     public class AsyncManualResetEvent
     {
-        volatile TaskCompletionSource<bool> m_tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
         /// <summary>
         /// Async Manual Reset Event
@@ -42,7 +42,7 @@ namespace TWCore.Threading
         public AsyncManualResetEvent(bool initialState)
         {
             if (initialState)
-                m_tcs.SetResult(true);
+                _mTcs.SetResult(true);
         }
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync()
-            => m_tcs.Task;
+            => _mTcs.Task;
 
         /// <summary>
         /// Wait Async for the set event
@@ -60,7 +60,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync(CancellationToken cancellationToken)
-            => m_tcs.Task.HandleCancellationAsync(cancellationToken);
+            => _mTcs.Task.HandleCancellationAsync(cancellationToken);
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
@@ -70,7 +70,7 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(int milliseconds)
         {
             var delayTask = Task.Delay(milliseconds);
-            var finalTask = await Task.WhenAny(delayTask, m_tcs.Task).ConfigureAwait(false);
+            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
             return finalTask != delayTask;
         }
         /// <summary>
@@ -83,7 +83,7 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
             var delayTask = Task.Delay(milliseconds);
-            var finalTask = await Task.WhenAny(delayTask, m_tcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
+            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
             return finalTask != delayTask;
         }
 
@@ -93,7 +93,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set()
         {
-            var tcs = m_tcs;
+            var tcs = _mTcs;
             Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
             tcs.Task.Wait();
         }
@@ -103,7 +103,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task SetAsync()
         {
-            var tcs = m_tcs;
+            var tcs = _mTcs;
             Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
             return tcs.Task;
         }
@@ -116,10 +116,12 @@ namespace TWCore.Threading
         {
             while (true)
             {
-                var tcs = m_tcs;
+                var tcs = _mTcs;
                 if (!tcs.Task.IsCompleted)
                     return;
-                if (Interlocked.CompareExchange(ref m_tcs, new TaskCompletionSource<bool>(), tcs) == tcs)
+#pragma warning disable 420
+                if (Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(), tcs) == tcs)
+#pragma warning restore 420
                     return;
             }
         }

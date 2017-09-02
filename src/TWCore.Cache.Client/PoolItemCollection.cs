@@ -277,25 +277,31 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public T Read<T>(StorageFuncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
 			=> Read((object)null, (object)null, (item, a1, a2) => function(item), responseCondition).Item1;
-		/// <summary>
-		/// Read action on the Pool.
-		/// </summary>
-		/// <typeparam name="T">Return value type</typeparam>
-		/// <param name="function">Function to execute on the storage pool item</param>
-		/// <param name="responseCondition">Function to check if the result is good or not.</param>
-		/// <returns>Return value</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public (T, PoolItem) Read<T, A1>(A1 arg1, StorageFuncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
+	    /// <summary>
+	    /// Read action on the Pool.
+	    /// </summary>
+	    /// <typeparam name="T">Return value type</typeparam>
+	    /// <typeparam name="TA1">Argument type</typeparam>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="function">Function to execute on the storage pool item</param>
+	    /// <param name="responseCondition">Function to check if the result is good or not.</param>
+	    /// <returns>Return value</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public (T, PoolItem) Read<T, TA1>(TA1 arg1, StorageFuncDelegate<T, TA1> function, ResponseConditionDelegate<T> responseCondition)
 			=> Read(arg1, (object)null, (item, a1, a2) => function(item, a1), responseCondition);
-		/// <summary>
-		/// Read action on the Pool.
-		/// </summary>
-		/// <typeparam name="T">Return value type</typeparam>
-		/// <param name="function">Function to execute on the storage pool item</param>
-		/// <param name="responseCondition">Function to check if the result is good or not.</param>
-		/// <returns>Return value</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public (T, PoolItem) Read<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
+	    /// <summary>
+	    /// Read action on the Pool.
+	    /// </summary>
+	    /// <typeparam name="T">Return value type</typeparam>
+	    /// <typeparam name="TA1">Argument 1 type</typeparam>
+	    /// <typeparam name="TA2">Argument 2 type</typeparam>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="arg2">Argument 2</param>
+	    /// <param name="function">Function to execute on the storage pool item</param>
+	    /// <param name="responseCondition">Function to check if the result is good or not.</param>
+	    /// <returns>Return value</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public (T, PoolItem) Read<T, TA1, TA2>(TA1 arg1, TA2 arg2, StorageFuncDelegate<T, TA1, TA2> function, ResponseConditionDelegate<T> responseCondition)
 		{
 			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
 			var items = WaitAndGetEnabled(StorageItemMode.Read);

@@ -277,12 +277,11 @@ namespace TWCore
                 else
                 {
                     currentObjectPlanTypes.Add(iType);
-
                     var ifaces = typeInfo.ImplementedInterfaces;
-
-                    var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                    var ifacesArray = ifaces as Type[] ?? ifaces.ToArray();
+                    var ilist = ifacesArray.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                     var isIList = ilist != null;
-                    var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                    var idictio = ifacesArray.FirstOrDefault(i => i == typeof(IDictionary) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                     var isIDictionary = idictio != null;
 
                     var lPlan = new List<ObjectPlanItem>();
@@ -344,7 +343,7 @@ namespace TWCore
                     #region List
                     if (isIList)
                     {
-                        Type innerType = null, innerType2 = null;
+                        Type innerType = null;
                         if (type.IsArray)
                             innerType = type.GetElementType();
                         else
@@ -357,7 +356,7 @@ namespace TWCore
                         }
                         var innerTypeInfo = innerType.GetTypeInfo();
                         var innerIsNullable = innerTypeInfo.IsGenericType && innerTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
-                        innerType2 = innerType;
+                        var innerType2 = innerType;
                         if (innerIsNullable)
                             innerType2 = Nullable.GetUnderlyingType(innerType2);
                         var innerIsValue = IsValueType(innerType2, innerType2.GetTypeInfo());
@@ -461,14 +460,14 @@ namespace TWCore
         }
 
         #region Scope
-        class Scope : ObjectPlan
+        private class Scope : ObjectPlan
         {
-            public int Index;
+            private int _index;
             public object SourceValue;
             public object DestinationValue;
             public IList DestinationIListValue;
             public IDictionary DestinationIDictionaryValue;
-            public int DestinationIListIndex = 0;
+            //public int DestinationIListIndex = 0;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Init()
@@ -477,7 +476,7 @@ namespace TWCore
                 Type = null;
                 PlanLength = 0;
                 SourceValue = null;
-                Index = 0;
+                _index = 0;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Init(ObjectPlan plan, object value)
@@ -491,7 +490,7 @@ namespace TWCore
                     PlanLength = plan.Plan.Length;
                 }
                 SourceValue = value;
-                Index = 0;
+                _index = 0;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Init(RuntimeValuePlanItem[] runtimePlan, Type type)
@@ -504,7 +503,7 @@ namespace TWCore
                     IsIDictionary = false;
                     PlanLength = runtimePlan.Length;
                 }
-                Index = 0;
+                _index = 0;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -512,17 +511,17 @@ namespace TWCore
             {
                 Plan = plan;
                 PlanLength = plan?.Length ?? 0;
-                Index = 0;
+                _index = 0;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectPlanItem Next() => Plan[Index++];
+            public ObjectPlanItem Next() => Plan[_index++];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectPlanItem Current() => Plan[Index - 1];
+            public ObjectPlanItem Current() => Plan[_index - 1];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool HasPendingIndex() => Index < PlanLength;
+            public bool HasPendingIndex() => _index < PlanLength;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectPlanItem NextIfAvailable() => Index < PlanLength ? Plan[Index++] : null;
+            public ObjectPlanItem NextIfAvailable() => _index < PlanLength ? Plan[_index++] : null;
         }
         #endregion
 
@@ -757,7 +756,6 @@ namespace TWCore
                 SourceValue = null;
                 IsValue = false;
                 DestinationValue = null;
-
             }
         }
         #endregion

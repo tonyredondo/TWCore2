@@ -28,6 +28,7 @@ namespace TWCore.Services
         /// Parameter Name
         /// </summary>
         public string Name { get; protected set; }
+
         /// <summary>
         /// Parameter Description
         /// </summary>
@@ -37,7 +38,7 @@ namespace TWCore.Services
         /// Container Parameter Service
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ContainerParameterServiceAsync(string name, string description)
+        protected ContainerParameterServiceAsync(string name, string description)
         {
             Name = name;
             Description = description;

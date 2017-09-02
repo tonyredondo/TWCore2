@@ -66,7 +66,7 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
-                    Try.Do(() => message.Finish(), false);
+                    Try.Do(message.Finish, false);
 
 
                     _listener.Counters.IncrementMessages();

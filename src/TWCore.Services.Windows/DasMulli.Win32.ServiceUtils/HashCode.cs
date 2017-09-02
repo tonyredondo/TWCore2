@@ -5,18 +5,17 @@ namespace DasMulli.Win32.ServiceUtils
 {
     /// <summary>
     /// Simplifies the work of hashing.
-    /// Taken from <see cref="https://rehansaeed.com/gethashcode-made-easy/"/>, and modified with Reshaper
     /// </summary>
     public struct HashCode
     {
-        private readonly int value;
+        private readonly int _value;
         private HashCode(int value)
         {
-            this.value = value;
+            _value = value;
         }
         public static implicit operator int(HashCode hashCode)
         {
-            return hashCode.value;
+            return hashCode._value;
         }
         public static HashCode Of<T>(T item)
         {
@@ -24,12 +23,12 @@ namespace DasMulli.Win32.ServiceUtils
         }
         public HashCode And<T>(T item)
         {
-            return new HashCode(CombineHashCodes(value, GetHashCode(item)));
+            return new HashCode(CombineHashCodes(_value, GetHashCode(item)));
         }
         public HashCode AndEach<T>(IEnumerable<T> items)
         {
-            int hashCode = items.Select(GetHashCode).Aggregate(CombineHashCodes);
-            return new HashCode(CombineHashCodes(value, hashCode));
+            var hashCode = items.Select(GetHashCode).Aggregate(CombineHashCodes);
+            return new HashCode(CombineHashCodes(_value, hashCode));
         }
         private static int CombineHashCodes(int h1, int h2)
         {

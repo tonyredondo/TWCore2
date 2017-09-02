@@ -170,8 +170,8 @@ namespace TWCore.Collections
         
         public WeakDictionary(IEqualityComparer<TKey> comparer)
         {
-            this._comparer = new WeakKeyComparer<TKey>(comparer);
-            _dictionary = new ConcurrentDictionary<object, WeakReference<TValue>>(this._comparer);
+            _comparer = new WeakKeyComparer<TKey>(comparer);
+            _dictionary = new ConcurrentDictionary<object, WeakReference<TValue>>(_comparer);
             _removeWeakReferencesInNull = new Action(RemoveCollectedEntries).CreateThrottledAction(DefaultSettings.WeakDictionaryRemoveReferenceThrottledTimeInMs);
         }
 

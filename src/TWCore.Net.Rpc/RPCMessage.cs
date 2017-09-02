@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Xml.Serialization;
 
 namespace TWCore.Net.RPC
 {
@@ -36,6 +35,6 @@ namespace TWCore.Net.RPC
         /// RPC Message base class
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCMessage() => MessageId = Factory.NewGuid();
+        protected RPCMessage() => MessageId = Factory.NewGuid();
     }
 }

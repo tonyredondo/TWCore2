@@ -15,8 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Reflection;

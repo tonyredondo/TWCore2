@@ -17,8 +17,6 @@ limitations under the License.
 #pragma warning disable 0067
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;

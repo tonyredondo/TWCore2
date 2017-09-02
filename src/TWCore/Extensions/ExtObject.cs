@@ -21,7 +21,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
-using TWCore.Serialization;
 
 namespace TWCore
 {

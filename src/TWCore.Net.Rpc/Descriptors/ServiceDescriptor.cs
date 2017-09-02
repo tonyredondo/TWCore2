@@ -21,7 +21,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Xml.Serialization;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Security;
 

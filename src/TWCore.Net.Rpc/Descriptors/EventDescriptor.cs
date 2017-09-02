@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;

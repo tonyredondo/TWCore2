@@ -21,7 +21,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Client
 {

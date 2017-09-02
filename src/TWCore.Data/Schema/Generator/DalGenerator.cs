@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using TWCore.Diagnostics.Log;
 
 namespace TWCore.Data.Schema.Generator

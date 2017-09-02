@@ -30,15 +30,16 @@ namespace TWCore.Net.RPC.Server
     /// </summary>
     public class TransportServerCollection : ObservableCollection<ITransportServer>, ITransportServer
     {
+        #region Properties
         /// <summary>
         /// true if the transport server can send the service descriptor; otherwise, false
         /// </summary>
         public bool EnableGetDescriptors
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return this.Any(i => i.EnableGetDescriptors); }
+            get => this.Any(i => i.EnableGetDescriptors);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set { this.Each(i => i.EnableGetDescriptors = value); }
+            set => this.Each(i => i.EnableGetDescriptors = value); 
         }
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
@@ -46,15 +47,17 @@ namespace TWCore.Net.RPC.Server
         public ISerializer Serializer
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return this.FirstOrDefault()?.Serializer; }
+            get => this.FirstOrDefault()?.Serializer;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set { this.Each(i => i.Serializer = value); }
+            set => this.Each(i => i.Serializer = value);
         }
         /// <summary>
         /// Transport Counters
         /// </summary>
         public RPCTransportCounters Counters { get; } = null;
-
+        #endregion
+        
+        #region Events
         /// <summary>
         /// Event that fires when a Descriptor request is received.
         /// </summary>
@@ -67,53 +70,61 @@ namespace TWCore.Net.RPC.Server
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
-
+        /// <summary>
+        /// Collection Changed
+        /// </summary>
+        public sealed override event NotifyCollectionChangedEventHandler CollectionChanged
+        {
+            add => base.CollectionChanged += value;
+            remove => base.CollectionChanged -= value;
+        }
+        #endregion
+        
+        #region .ctor
         /// <summary>
         /// Collection of transport servers
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TransportServerCollection()
         {
-            CollectionChanged += (s, e) =>
-            {
-                if (e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace)
+            this.CollectionChanged += (s, e) =>
+            {                
+                if ((e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace) && e.NewItems != null)
                 {
-                    if (e.NewItems != null)
+                    foreach (ITransportServer item in e.NewItems)
                     {
-                        foreach (ITransportServer item in e.NewItems)
-                        {
-                            Core.Log.LibVerbose("Adding {0} transport server", item.GetType().Name);
-                            item.OnClientConnect += Item_OnClientConnect;
-                            item.OnGetDescriptorsRequest += Item_OnGetDescriptorsRequest;
-                            item.OnMethodCall += Item_OnMethodCall;
-                        }
+                        Core.Log.LibVerbose("Adding {0} transport server", item.GetType().Name);
+                        item.OnClientConnect += Item_OnClientConnect;
+                        item.OnGetDescriptorsRequest += Item_OnGetDescriptorsRequest;
+                        item.OnMethodCall += Item_OnMethodCall;
                     }
                 }
-                if (e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace)
+                if ((e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace) && e.OldItems != null)
                 {
-                    if (e.OldItems != null)
+                    foreach (ITransportServer item in e.OldItems)
                     {
-                        foreach (ITransportServer item in e.OldItems)
-                        {
-                            Core.Log.LibVerbose("Removing {0} transport server", item.GetType().Name);
-                            item.OnClientConnect -= Item_OnClientConnect;
-                            item.OnGetDescriptorsRequest -= Item_OnGetDescriptorsRequest;
-                            item.OnMethodCall -= Item_OnMethodCall;
-                        }
+                        Core.Log.LibVerbose("Removing {0} transport server", item.GetType().Name);
+                        item.OnClientConnect -= Item_OnClientConnect;
+                        item.OnGetDescriptorsRequest -= Item_OnGetDescriptorsRequest;
+                        item.OnMethodCall -= Item_OnMethodCall;
                     }
                 }
             };
         }
-
-        void Item_OnClientConnect(object sender, ClientConnectEventArgs e)
+        #endregion
+        
+        #region Private Methods
+        private void Item_OnClientConnect(object sender, ClientConnectEventArgs e)
             => OnClientConnect?.Invoke(sender, e);
 
-        void Item_OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
+        private void Item_OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
             => OnGetDescriptorsRequest?.Invoke(sender, e);
 
-        void Item_OnMethodCall(object sender, MethodEventArgs e)
+        private void Item_OnMethodCall(object sender, MethodEventArgs e)
             => OnMethodCall?.Invoke(sender, e);
-
+        #endregion
+        
+        #region Public Methods
         /// <summary>
         /// Send a fire event trigger to a RPC client.
         /// </summary>
@@ -129,7 +140,6 @@ namespace TWCore.Net.RPC.Server
             foreach (var item in this)
                 item.FireEvent(eventAttribute, clientId, serviceName, eventName, sender, e);
         }
-
         /// <summary>
         /// Starts the server listener
         /// </summary>
@@ -150,5 +160,6 @@ namespace TWCore.Net.RPC.Server
             foreach (var item in this)
                 await item.StopListenerAsync().ConfigureAwait(false);
         }
+        #endregion
     }
 }

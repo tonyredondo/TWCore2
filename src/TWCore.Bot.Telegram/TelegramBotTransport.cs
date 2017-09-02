@@ -16,9 +16,7 @@ limitations under the License.
 
 using System;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
 using TWCore.IO;
 using TBot = Telegram.Bot;

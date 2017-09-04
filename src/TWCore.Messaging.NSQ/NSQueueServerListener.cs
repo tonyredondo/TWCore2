@@ -138,15 +138,16 @@ namespace TWCore.Messaging.NSQ
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected override void OnDispose()
 		{
-			if (_receiver != null)
+			if (_receiver == null) return;
+			try
 			{
-				try
-				{
-					_receiver.Stop();
-				}
-				catch { }
-				_receiver = null;
+				_receiver.Stop();
 			}
+			catch
+			{
+				// ignored
+			}
+			_receiver = null;
 		}
 		#endregion
 

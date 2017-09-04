@@ -493,7 +493,10 @@ namespace TWCore.Net.HttpServer
                             context.Response.StatusCode = HttpResponse.HttpStatusCode.Internal_Server_Error;
                             context.Response.Write("500 Internal Server Error");
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                 }
 

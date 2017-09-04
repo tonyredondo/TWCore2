@@ -497,7 +497,7 @@ namespace TWCore.Serialization.PWSerializer
                 else
                 {
                     currentSerializerPlanTypes.Add(iType);
-                    var tStart = new SerializerPlanItem.TypeStart(iType, typeInfo);
+                    var tStart = new SerializerPlanItem.TypeStart(iType);
                     plan.Add(tStart);
                     var endBytes = new List<byte>();
 

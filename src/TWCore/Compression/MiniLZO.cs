@@ -17,6 +17,8 @@ limitations under the License.
 #pragma warning disable CS0164 // No existe ninguna referencia a esta etiqueta
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedParameter.Local
+// ReSharper disable UnusedMethodReturnValue.Local
 
 namespace TWCore.Compression
 {

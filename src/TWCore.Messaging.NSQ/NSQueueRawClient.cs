@@ -117,7 +117,7 @@ namespace TWCore.Messaging.NSQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
-                UseSingleResponseQueue = _receiverOptions.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
+                UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
                 {

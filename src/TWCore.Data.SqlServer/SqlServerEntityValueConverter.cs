@@ -58,12 +58,12 @@ namespace TWCore.Data.SqlServer
             {
                 if (valueType.Name == "SqlGeometry" && valueType.Namespace == "Microsoft.SqlServer.Types")
                 {
-                    propertyValue = value.ToString();
+                    propertyValue = value?.ToString();
                     return true;
                 }
                 if (valueType.Name == "SqlGeography" && valueType.Namespace == "Microsoft.SqlServer.Types")
                 {
-                    propertyValue = value.ToString();
+                    propertyValue = value?.ToString();
                     return true;
                 }
             }

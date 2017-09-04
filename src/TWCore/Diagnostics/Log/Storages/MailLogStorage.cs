@@ -248,10 +248,13 @@ namespace TWCore.Diagnostics.Log.Storages
                 foreach (var innerItem in buffer)
                 {
                     msg += string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", innerItem.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), innerItem.MachineName, innerItem.EnvironmentName, innerItem.ApplicationName, innerItem.Message);
-                    if (!string.IsNullOrEmpty(innerItem.Exception?.ExceptionType))
-                        msg += "\r\nException: " + innerItem.Exception.ExceptionType;
-                    if (!string.IsNullOrEmpty(innerItem.Exception?.StackTrace))
-                        msg += "\r\nStack Trace: " + innerItem.Exception.StackTrace;
+                    if (innerItem.Exception != null)
+                    {
+                        if (!string.IsNullOrEmpty(innerItem.Exception.ExceptionType))
+                            msg += "\r\nException: " + innerItem.Exception.ExceptionType;
+                        if (!string.IsNullOrEmpty(innerItem.Exception.StackTrace))
+                            msg += "\r\nStack Trace: " + innerItem.Exception.StackTrace;
+                    }
                     if (innerItem != buffer.Last())
                         msg += "\r\n-------------------------------\r\n";
                 }
@@ -259,20 +262,18 @@ namespace TWCore.Diagnostics.Log.Storages
             }
             _message.Body = msg;
 
-            if (_smtp != null)
+            if (_smtp == null) return;
+            try
             {
-                try
-                {
-                    _smtp.Send(_message);
-                }
-                catch (Exception e)
-                {
-                    Core.Log.Error("SMTPERROR: {0}", e.Message);
-                }
-                finally
-                {
-                    _waiting = false;
-                }
+                _smtp.Send(_message);
+            }
+            catch (Exception e)
+            {
+                Core.Log.Error("SMTPERROR: {0}", e.Message);
+            }
+            finally
+            {
+                _waiting = false;
             }
         }
 

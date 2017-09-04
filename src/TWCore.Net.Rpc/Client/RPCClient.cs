@@ -364,7 +364,7 @@ namespace TWCore.Net.RPC.Client
             {
                 if (Descriptors.Items.TryGetValue(kTuple.Item1, out var descriptor))
                 {
-                    var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args.Length).ToArray();
+                    var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args?.Length).ToArray();
                     switch (methods.Length)
                     {
                         case 0:
@@ -377,7 +377,7 @@ namespace TWCore.Net.RPC.Client
                                 for (var i = 0; i < m.Parameters.Length; i++)
                                 {
                                     var p1 = m.Parameters[i].Parameter;
-                                    var v2 = args[i];
+                                    var v2 = args?[i];
                                     if (v2 != null && !p1.ParameterType.GetTypeInfo().IsAssignableFrom(v2.GetType().GetTypeInfo()))
                                         return false;
                                     if (v2 == null && p1.ParameterType.GetTypeInfo().IsValueType)
@@ -394,7 +394,7 @@ namespace TWCore.Net.RPC.Client
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
             var parameters = new List<object>(args);
-            if (args.Length == 0 && mDesc.Parameters?.Length == 1)
+            if (args?.Length == 0 && mDesc.Parameters?.Length == 1)
                 parameters.Add(null);
 
             RPCRequestMessage rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();

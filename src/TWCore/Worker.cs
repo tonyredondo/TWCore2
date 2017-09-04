@@ -240,15 +240,16 @@ namespace TWCore
                             Exceptions.Add((ex, item));
                     }
                 }
-                if (workDone && OnWorkDone != null)
-                    Try.Do(() => OnWorkDone.Invoke(this, new EventArgs()));
-                if (!token.IsCancellationRequested) 
+                if (workDone)
+                    Try.Do(() => OnWorkDone?.Invoke(this, new EventArgs()));
+                if (token.IsCancellationRequested) continue;
+                try
                 {
-                    try
-                    {
-                        processHandler.Reset();
-                    }
-                    catch { }
+                    processHandler.Reset();
+                }
+                catch
+                {
+                    // ignored
                 }
             }
         }

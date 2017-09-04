@@ -121,15 +121,13 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
-                if (_stack.Count > 0)
-                {
-                    var objValue = _stack.Where(item => item.Sender == sender).FirstOrDefault();
-                    if (objValue != null)
-                        objValue.Value = value;
+                if (_stack.Count <= 0) return;
+                var objValue = _stack.FirstOrDefault(item => item.Sender == sender);
+                if (objValue != null)
+                    objValue.Value = value;
 
-                    if (_stack.Peek() == objValue)
-                        ChangeValueAction(objValue.Sender, objValue.Value);
-                }
+                if (_stack.Peek() == objValue && objValue != null)
+                    ChangeValueAction(objValue.Sender, objValue.Value);
             }
         }
         /// <summary>

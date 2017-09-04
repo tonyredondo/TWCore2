@@ -184,20 +184,21 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Dispose()
         {
-            if (pingTask != null)
-            {
-                Core.Status.DeAttachObject(this);
-                tokenSource.Cancel();
-                try
-                {
-                    pingTask.Wait(10000);
-                }
-                catch { }
-                tokenSource = null;
-                pingTask = null;
-                Storage.Dispose();
-                Storage = null;
-            }
+	        if (pingTask == null) return;
+	        Core.Status.DeAttachObject(this);
+	        tokenSource.Cancel();
+	        try
+	        {
+		        pingTask.Wait(10000);
+	        }
+	        catch
+	        {
+		        // ignored
+	        }
+	        tokenSource = null;
+	        pingTask = null;
+	        Storage.Dispose();
+	        Storage = null;
         }
         #endregion
     }

@@ -365,8 +365,11 @@ namespace TWCore.Net.RPC.Client
             {
                 _client?.Dispose();
             }
-            catch { }
-            _client = null;
+	        catch
+	        {
+		        // ignored
+	        }
+	        _client = null;
             Core.Status.DeAttachObject(this);
         }
     }

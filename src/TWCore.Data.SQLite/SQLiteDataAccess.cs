@@ -54,6 +54,7 @@ namespace TWCore.Data.SQLite
         /// </summary>
         /// <param name="connectionString">Connection string</param>
         /// <param name="accessType">Data access type</param>
+        // ReSharper disable once UnusedParameter.Local
         public SQLiteDataAccess(string connectionString, DataAccessType accessType = DataAccessType.Query)
         {
             ConnectionString = connectionString;

@@ -517,7 +517,7 @@ namespace TWCore.Net.RPC.Client.Transports
             TargetConnectionStatus targetStatus = TargetConnectionStatus.Disconnected;
             SocketStatus socketStatus = SocketStatus.Disconnected;
 
-            public bool IsConnected => connectionStatus == ConnectionStatus.Connected;
+            //public bool IsConnected => connectionStatus == ConnectionStatus.Connected;
 
             CancellationTokenSource connectionTokenSource;
             CancellationToken connectionToken;
@@ -681,7 +681,10 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         ConnectionTask.Wait(1000);
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                     ConnectionTask = null;
                     PingTimer?.Change(Timeout.Infinite, Timeout.Infinite);
                     PingTimer = null;
@@ -689,7 +692,10 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         ReceiveTask.Wait(1000);
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                     ReceiveTask = null;
                     connectionTokenSource = null;
 
@@ -724,7 +730,10 @@ namespace TWCore.Net.RPC.Client.Transports
                         {
                             connectionEvent.Wait(5000, connectionToken);
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                     else
                         await ConnectAsync().ConfigureAwait(false);
@@ -746,7 +755,10 @@ namespace TWCore.Net.RPC.Client.Transports
                         {
                             connectionEvent.Wait(5000, connectionToken);
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
                     else
                         ConnectAsync().WaitAsync();

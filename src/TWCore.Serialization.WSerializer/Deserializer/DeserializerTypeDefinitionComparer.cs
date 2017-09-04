@@ -30,7 +30,7 @@ namespace TWCore.Serialization.WSerializer.Deserializer
                 return false;
             if (x?.Type == null && y?.Type == null)
                 return true;
-            return x.Type.Equals(y.Type);
+            return x?.Type != null && x.Type == y?.Type;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -86,11 +86,14 @@ namespace TWCore.Text
         public RadixEncoding(string digits = _charset, EndianFormat bytesEndian = EndianFormat.Little, bool includeProceedingZeros = false)
         {
             Ensure.Requires<ArgumentNullException>(digits != null);
-            int radix = digits.Length;
+            if (digits != null)
+            {
+                var radix = digits.Length;
 
-            kDigits = digits;
-            kBitsPerDigit = System.Math.Log(radix, 2);
-            kRadixBig = new BigInteger(radix);
+                kDigits = digits;
+                kBitsPerDigit = System.Math.Log(radix, 2);
+                kRadixBig = new BigInteger(radix);
+            }
             kEndian = bytesEndian;
             kIncludeProceedingZeros = includeProceedingZeros;
         }
@@ -116,7 +119,8 @@ namespace TWCore.Text
         public string Encode(byte[] bytes)
         {
             Ensure.Requires<ArgumentNullException>(bytes != null);
-
+            if (bytes == null) return null;
+            
             // Don't really have to do this, our code will build this result (empty string),
             // but why not catch the condition before doing work?
             if (bytes.Length == 0) return string.Empty;

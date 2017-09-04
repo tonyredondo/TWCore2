@@ -120,7 +120,7 @@ namespace TWCore
 
                     GetterCache[key] = getter;
                 }
-                return getter(source);
+                return getter?.Invoke(source);
             }
             return null;
         }

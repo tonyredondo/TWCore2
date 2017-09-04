@@ -53,7 +53,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             public string[] TypeParts;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public TypeStart(Type type, TypeInfo typeInfo)
+            public TypeStart(Type type)
             {
                 PlanType = SerializerPlanItemType.TypeStart;
                 Type = type;

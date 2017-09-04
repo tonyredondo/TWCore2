@@ -127,19 +127,18 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async void Write(ILogItem item)
         {
-            if (LevelAllowed.HasFlag(item.Level))
+            if (!LevelAllowed.HasFlag(item.Level)) return;
+            var msg = string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), item.MachineName, item.EnvironmentName, item.ApplicationName, item.Message);
+            if (item.Exception != null)
             {
-                var msg = string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), item.MachineName, item.EnvironmentName, item.ApplicationName, item.Message);
-                if (!string.IsNullOrEmpty(item.Exception?.ExceptionType))
+                if (!string.IsNullOrEmpty(item.Exception.ExceptionType))
                     msg += "\r\nException: " + item.Exception.ExceptionType;
                 if (SendStackTrace && !string.IsNullOrEmpty(item.Exception?.StackTrace))
                     msg += "\r\nStack Trace: " + item.Exception.StackTrace;
-
-                if (item.Exception != null && item.Exception.StackTrace.Contains("TelegramBotTransport.<<ConnectAsync>"))
+                if (item.Exception.StackTrace.Contains("TelegramBotTransport.<<ConnectAsync>"))
                     return;
-
-                await Bot.SendTextMessageToTrackedChatsAsync(msg).ConfigureAwait(false);
             }
+            await Bot.SendTextMessageToTrackedChatsAsync(msg).ConfigureAwait(false);
         }
         /// <summary>
         /// Writes a log item empty line

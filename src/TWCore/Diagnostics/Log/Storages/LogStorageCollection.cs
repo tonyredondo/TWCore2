@@ -182,7 +182,10 @@ namespace TWCore.Diagnostics.Log.Storages
                     if (sto.Item2.HasFlag(item.Level))
                         sto.Item1.Write(item);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
         }
         /// <summary>
@@ -205,13 +208,16 @@ namespace TWCore.Diagnostics.Log.Storages
                 {
                     sto.Item1.WriteEmptyLine();
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             }
         }
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose the current object resources
         /// </summary>
@@ -219,20 +225,18 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (_disposedValue) return;
+            if (disposing)
             {
-                if (disposing)
+                lock (locker)
                 {
-                    lock (locker)
-                    {
-                        Items.ParallelEach(t => Try.Do(() => t.Item1.Dispose(), false));
-                        Items?.Clear();
-                        CItems?.Clear();
-                        IsDirty = true;
-                    }
+                    Items.ParallelEach(t => Try.Do(() => t.Item1.Dispose(), false));
+                    Items?.Clear();
+                    CItems?.Clear();
+                    IsDirty = true;
                 }
-                disposedValue = true;
             }
+            _disposedValue = true;
         }
 
         /// <summary>

@@ -152,6 +152,7 @@ namespace TWCore.Net.RPC.Server
         public void AddService(object serviceInstance)
         {
             var interfaces = serviceInstance?.GetType()?.GetInterfaces().Where(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
+            if (interfaces == null) return;
             foreach (var iface in interfaces)
                 AddService(iface, serviceInstance);
         }

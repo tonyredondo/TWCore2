@@ -57,7 +57,8 @@ namespace TWCore.Data.MySql
 
             if (valueType == typeof(MySqlGeometry))
             {
-                propertyValue = ((MySqlGeometry)value).GetWKT();
+                if (value != null) 
+                    propertyValue = ((MySqlGeometry) value).GetWKT();
                 return true;
             }
 

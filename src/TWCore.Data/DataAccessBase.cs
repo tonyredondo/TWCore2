@@ -777,16 +777,19 @@ namespace TWCore.Data
                         command.CommandText = nameOrQuery;
                         #endregion
 
-                        foreach (var parameters in parametersIEnumerable)
+                        if (parametersIEnumerable != null)
                         {
-                            #region Bind parameters
-                            //Bind parameters
-                            ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
-                            #endregion
+                            foreach (var parameters in parametersIEnumerable)
+                            {
+                                #region Bind parameters
+                                //Bind parameters
+                                ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+                                #endregion
 
-                            #region Command Execution
-                            command.ExecuteNonQuery();
-                            #endregion
+                                #region Command Execution
+                                command.ExecuteNonQuery();
+                                #endregion
+                            }
                         }
 
                         try
@@ -1185,7 +1188,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>, IEnumerable<T3>) SelectElements<T1, T2, T3>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2, FillDataDelegate<T3> fillMethod3)
-            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, fillMethod3, out object returnValue);
+            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, fillMethod3, out object _);
         /// <summary>
         /// Selects a three result sets with a collection of elements from the data source
         /// </summary>
@@ -1272,7 +1275,7 @@ namespace TWCore.Data
         protected virtual void OnSelectElements(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets, out object returnValue)
         {
             returnValue = null;
-
+            if (resultSets == null) return;
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -1309,7 +1312,7 @@ namespace TWCore.Data
                     #endregion
 
                     #region Sets EntityBinder and FillMethod
-                    resultSets?.Each(r => r.PrepareSet(EntityValueConverter));
+                    resultSets.Each(r => r.PrepareSet(EntityValueConverter));
                     #endregion
 
                     try
@@ -1806,18 +1809,25 @@ namespace TWCore.Data
                         command.CommandText = nameOrQuery;
                         #endregion
 
-                        foreach (var parameters in parametersIEnumerable)
+                        if (parametersIEnumerable != null)
                         {
-                            #region Bind parameters
-                            //Bind parameters
-                            ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
-                            #endregion
+                            foreach (var parameters in parametersIEnumerable)
+                            {
+                                #region Bind parameters
 
-                            #region Command Execution
-                            await command.ExecuteNonQueryAsync().ConfigureAwait(false);
-                            #endregion
+                                //Bind parameters
+                                ParametersBinder.BindParameters(command, parameters, ParametersPrefix);
+
+                                #endregion
+
+                                #region Command Execution
+
+                                await command.ExecuteNonQueryAsync().ConfigureAwait(false);
+
+                                #endregion
+                            }
                         }
-
+                        
                         try
                         {
                             transaction.Commit();
@@ -2264,6 +2274,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual async Task OnSelectElementsAsync(string nameOrQuery, IDictionary<string, object> parameters, IResultSet[] resultSets)
         {
+            if (resultSets == null) return;
             using (var connection = GetConnection())
             {
                 connection.ConnectionString = ConnectionString;
@@ -2290,7 +2301,7 @@ namespace TWCore.Data
                     #endregion
 
                     #region Sets EntityBinder and FillMethod
-                    resultSets?.Each(r => r.PrepareSet(EntityValueConverter));
+                    resultSets.Each(r => r.PrepareSet(EntityValueConverter));
                     #endregion
 
                     try

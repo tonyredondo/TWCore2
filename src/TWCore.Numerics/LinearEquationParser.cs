@@ -279,6 +279,7 @@ namespace TWCore.Numerics
         /// This should be called if the IsCompleteEquation() method returns false.
         /// </summary>
         /// <returns>An enum value of type 'LinearEquationParserStatus'</returns>
+        // ReSharper disable once UnusedMember.Local
         private LinearEquationParserStatus GetEquationStatus()
         {
             var status = LinearEquationParserStatus.Success;

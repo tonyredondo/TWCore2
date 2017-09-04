@@ -295,33 +295,35 @@ namespace TWCore.Serialization
                 try
                 {
                     var ov = p.GetValue(item);
-                    if (ov != null)
-                    {
-                        var ovType = ov.GetType();
-                        if (ovType.IsConstructedGenericType)
-                            ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
-                        if (ovType == typeof(object))
-                            FillExtraTypes(extraTypes, ov, p.PropertyType);
-                        else
-                            extraTypes.Add(ov.GetType());
-                    }
+                    if (ov == null) return;
+                    var ovType = ov.GetType();
+                    if (ovType.IsConstructedGenericType)
+                        ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
+                    if (ovType == typeof(object))
+                        FillExtraTypes(extraTypes, ov, p.PropertyType);
+                    else
+                        extraTypes.Add(ov.GetType());
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             });
             fields.Each(f =>
             {
                 try
                 {
                     var ov = f.GetValue(item);
-                    if (ov != null)
-                    {
-                        var ovType = ov.GetType();
-                        if (ovType.IsConstructedGenericType)
-                            ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
-                        extraTypes.Add(ov.GetType());
-                    }
+                    if (ov == null) return;
+                    var ovType = ov.GetType();
+                    if (ovType.IsConstructedGenericType)
+                        ovType.GenericTypeArguments.Each(t => extraTypes.Add(t));
+                    extraTypes.Add(ov.GetType());
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
             });
         }
         #endregion

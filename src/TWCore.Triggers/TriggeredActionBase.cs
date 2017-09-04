@@ -203,7 +203,10 @@ namespace TWCore.Triggers
                 {
                     triggerTask.Wait(token);
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
                 triggerTask = null;
                 tokenSource = null;
             }

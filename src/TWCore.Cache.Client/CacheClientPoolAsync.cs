@@ -748,7 +748,7 @@ namespace TWCore.Cache.Client
         public void Dispose()
         {
             Pool?.Items?.Each(i => AllItems.Items.Remove(i));
-            Pool.Dispose();
+            Pool?.Dispose();
             Core.Status.DeAttachObject(this);
         }
         #endregion

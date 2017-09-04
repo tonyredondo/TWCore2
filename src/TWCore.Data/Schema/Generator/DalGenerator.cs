@@ -576,14 +576,17 @@ namespace TWCore.Data.Schema.Generator
             if (GeneratorType == DalGeneratorType.Embedded)
             {
                 var container = GetSelectColumns(tableName);
-                var sbSQL = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
-                otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSQL}\";{Environment.NewLine}";
+                var sbSql = dataAccessGenerator?.GetSelectFromContainer(container).Replace("\"", "\"\"");
+                otherSqls = $"\t\tconst string SelectSql = @\"{Environment.NewLine}{sbSql}\";{Environment.NewLine}";
                 var wheresList = dataAccessGenerator?.GetWhereFromContainer(container);
-                foreach (var w in wheresList)
-                    otherSqls += $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2.Replace("\"", "\"\"")}\";{Environment.NewLine}";
-
-                var insertSQL = dataAccessGenerator?.GetInsertFromContainer(container).Replace("\"", "\"\"");
-                otherSqls += $"\t\tconst string InsertSQL = @\"{Environment.NewLine}{insertSQL}\";{Environment.NewLine}";
+                if (wheresList != null)
+                {
+                    foreach (var w in wheresList)
+                        otherSqls +=
+                            $"\t\tconst string {GetName(w.Item1)} = @\"{Environment.NewLine}{w.Item2.Replace("\"", "\"\"")}\";{Environment.NewLine}";
+                }
+                var insertSql = dataAccessGenerator?.GetInsertFromContainer(container).Replace("\"", "\"\"");
+                otherSqls += $"\t\tconst string InsertSQL = @\"{Environment.NewLine}{insertSql}\";{Environment.NewLine}";
 
                 var updateSql = dataAccessGenerator?.GetUpdateFromContainer(container).Replace("\"", "\"\"");
                 otherSqls += $"\t\tconst string UpdateSQL = @\"{Environment.NewLine}{updateSql}\";{Environment.NewLine}";
@@ -591,7 +594,7 @@ namespace TWCore.Data.Schema.Generator
                 var deleteSql = dataAccessGenerator?.GetDeleteFromContainer(container).Replace("\"", "\"\"");
                 otherSqls += $"\t\tconst string DeleteSQL = @\"{Environment.NewLine}{deleteSql}\";{Environment.NewLine}";
             }
-            var prov = dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
+            var prov = dataAccessGenerator?.GetType().Name.Replace("DataAccess", string.Empty);
 
             body = body.Replace("($OTHERSQLS$)", otherSqls);
             body = body.Replace("($FILLENTITY$)", string.Join("", fillEntities.ToArray()));
@@ -712,7 +715,6 @@ namespace TWCore.Data.Schema.Generator
                                     else
                                         name = fkTable.Name;
                                     name = GetName(name);
-                                    var tName = GetEntityNameDelegate(fkTable.Name);
 
                                     var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
                                     prepareEntities.Add(fill);
@@ -738,7 +740,6 @@ namespace TWCore.Data.Schema.Generator
                                     {
                                         var name = column.Name.SubstringToLast("Id") + "Item";
                                         name = GetName(name);
-                                        var tName = GetEntityNameDelegate(t.Name);
 
                                         var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
                                         prepareEntities.Add(fill);

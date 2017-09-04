@@ -152,8 +152,8 @@ namespace TWCore.Collections
                         mid = mid.Next;
                     } while (mid != null);
                 }
-                nCount = countValue.Count + 1;
-                countValue.List.Remove(keyNode);
+                nCount = countValue?.Count + 1 ?? 1;
+                countValue?.List.Remove(keyNode);
                 ReportHit(key, value);
             }
             else

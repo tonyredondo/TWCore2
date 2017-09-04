@@ -22,6 +22,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable UnusedMember.Local
 
 namespace TWCore
 {

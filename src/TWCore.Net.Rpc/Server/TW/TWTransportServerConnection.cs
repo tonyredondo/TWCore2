@@ -179,7 +179,10 @@ namespace TWCore.Net.RPC.Server.Transports
                     {
                         Client.Dispose();
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                     if (!disconnectionEventSent)
                     {
                         OnSessionDisconnected?.Invoke(this);
@@ -368,13 +371,19 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 ReceiveTask.Wait(1000);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
             Server = null;
             try
             {
                 Client?.Dispose();
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
             Client = null;
         }
         #endregion       

@@ -135,7 +135,8 @@ namespace TWCore
         /// <returns>true if have the gzip magic number; otherwise, false.</returns>
         public static bool IsGzip(this byte[] value)
         {
-            if (value?.Length > 2 == true)
+            if (value == null) return false;
+            if (value.Length > 2 == true)
                 return (value[0] == 0x1f && value[1] == 0x8b);
             return false;
         }

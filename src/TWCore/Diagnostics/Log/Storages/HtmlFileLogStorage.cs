@@ -385,7 +385,10 @@ namespace TWCore.Diagnostics.Log.Storages
                     sWriter?.Dispose();
                     sWriter = null;
                 }
-                catch { }
+                catch
+                {
+                    // ignored
+                }
                 if (logStreams.TryRemove(oldFileName, out var oldWriter))
                 {
                     try
@@ -393,7 +396,10 @@ namespace TWCore.Diagnostics.Log.Storages
                         oldWriter?.Dispose();
                         oldWriter = null;
                     }
-                    catch { }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
                 #endregion
 
@@ -514,15 +520,19 @@ namespace TWCore.Diagnostics.Log.Storages
                 sWriter?.Dispose();
                 sWriter = null;
             }
-            catch { }
-            if (logStreams.TryRemove(currentFileName, out var oldWriter))
+            catch
             {
-                try
-                {
-                    oldWriter?.Dispose();
-                    oldWriter = null;
-                }
-                catch { }
+                // ignored
+            }
+            if (!logStreams.TryRemove(currentFileName, out var oldWriter)) return;
+            try
+            {
+                oldWriter?.Dispose();
+                oldWriter = null;
+            }
+            catch
+            {
+                // ignored
             }
         }
     }

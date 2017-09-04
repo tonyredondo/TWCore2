@@ -254,47 +254,7 @@ namespace TWCore.Cache
 			return ret;
 		}
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private List<TR> ExecuteInAllStackAndReturn<TR>(Func<IStorage, TR> functionPushData)
-        {
-            var responses = new List<TR>();
-            foreach (var storage in storages)
-            {
-                if (!storage.IsEnabled() || !storage.IsReady()) continue;
-                var result = default(TR);
-                try
-                {
-                    result = functionPushData(storage);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-                responses.Add(result);
-            }
-            return responses;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private List<TR> ExecuteInAllStackAndReturn<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionPushData)
-		{
-			var responses = new List<TR>();
-			foreach (var storage in storages)
-			{
-				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				var result = default(TR);
-				try
-				{
-					result = functionPushData(storage, arg1);
-				}
-				catch (Exception ex)
-				{
-					Core.Log.Write(ex);
-				}
-				responses.Add(result);
-			}
-			return responses;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
 		{
 			var responses = new List<TR>();

@@ -24,7 +24,7 @@ namespace TWCore.Data
     /// <typeparam name="T">Type of the entity</typeparam>
     public class EntityDataRow<T>
     {
-        volatile bool _bound = false;
+        volatile bool _bound;
         T entity;
 
         #region Properties

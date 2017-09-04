@@ -24,7 +24,7 @@ namespace TWCore.Net.RPC.Client.Grid
     /// </summary>
     public class NodeProxy : RPCProxy, IGridNode
     {
-        NodeInfo _info = null;
+        NodeInfo _info;
 
         /// <summary>
         /// Node information

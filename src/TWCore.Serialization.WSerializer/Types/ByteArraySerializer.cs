@@ -57,7 +57,6 @@ namespace TWCore.Serialization.WSerializer.Types
         /// Gets if the type serializer can write the type
         /// </summary>
         /// <param name="type">Type of the value to write</param>
-        /// <param name="typeInfo">TypeInfo of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)

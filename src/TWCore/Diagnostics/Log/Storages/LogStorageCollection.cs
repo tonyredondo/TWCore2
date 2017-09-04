@@ -29,8 +29,8 @@ namespace TWCore.Diagnostics.Log.Storages
         public static LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
 
         readonly object locker = new object();
-        volatile bool IsDirty = false;
-        List<Tuple<ILogStorage, LogLevel>> CItems = null;
+        volatile bool IsDirty;
+        List<Tuple<ILogStorage, LogLevel>> CItems;
         readonly List<Tuple<ILogStorage, LogLevel>> Items = new List<Tuple<ILogStorage, LogLevel>>();
         LogLevel lastMaxLogLevel = LogLevel.Error;
 
@@ -211,7 +211,7 @@ namespace TWCore.Diagnostics.Log.Storages
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

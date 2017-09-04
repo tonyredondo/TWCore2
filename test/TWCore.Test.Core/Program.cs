@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status.Transports;
@@ -11,6 +12,7 @@ namespace TWCore.Test.Core
     {
         static void Main(string[] args)
         {
+            Console.WriteLine("MAIN");
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() => {
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));

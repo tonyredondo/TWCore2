@@ -177,12 +177,13 @@ namespace TWCore.Collections
         /// Update List algorithm method
         /// </summary>
         /// <param name="key">Key object</param>
-        /// <param name="value">ValueNode object</param>
+        /// <param name="node">Value node</param>
         protected abstract void UpdateList(TKey key, TValueNode node);
         /// <summary>
         /// Create TValueNode instance
         /// </summary>
-        /// <param name="value">Value object</param>
+        /// <param name="key">Key object instance</param>
+        /// <param name="value">Value object instance</param>
         /// <returns>TValueNode object</returns>
         protected abstract TValueNode CreateNode(TKey key, TValue value);
         /// <summary>
@@ -249,7 +250,6 @@ namespace TWCore.Collections
         /// <summary>
         /// Gets or sets the value associated with the specified key.
         /// </summary>
-        /// <param name="key">The key of the value to get or set.</param>
         /// <returns>The value of the key/value pair at the specified index.</returns>
         public TValue this[int index]
         {

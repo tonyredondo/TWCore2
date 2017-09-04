@@ -59,7 +59,7 @@ namespace TWCore.Net.RPC.Server.Transports
         readonly Task ReceiveTask;
         readonly long socketErrorsToDisconnection = 2;
         long socketErrors;
-        bool disconnectionEventSent = false;
+        bool disconnectionEventSent;
         CancellationTokenSource tokenSource;
         CancellationToken token;
         BufferedStream ReadStream;
@@ -92,7 +92,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Gets true if the SessionRequest was already received and accepted.
         /// </summary>
         [StatusProperty]
-        public bool IsOnSession { get; private set; } = false;
+        public bool IsOnSession { get; private set; }
         /// <summary>
         /// Gets the datetime when the user was disconnected
         /// </summary>
@@ -222,7 +222,7 @@ namespace TWCore.Net.RPC.Server.Transports
         {
             var messageRequest = message as RPCRequestMessage;
             if (messageRequest == null) return;
-            using (var watch = Watch.Create($"Processing Request Message"))
+            using (Watch.Create($"Processing Request Message"))
             {
                 if (!IsOnSession)
                 {

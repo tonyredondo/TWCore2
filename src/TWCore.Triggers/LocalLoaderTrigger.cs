@@ -25,6 +25,5 @@ namespace TWCore.Triggers
         protected override void OnFinalize()
         {
         }
-        public LocalLoaderTrigger() { }
     }
 }

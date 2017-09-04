@@ -150,9 +150,8 @@ namespace TWCore.Services.Messaging
         public async Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
-            var sw = Stopwatch.StartNew();
             var item = BusinessPool.New();
-            object response = ResponseMessage.NoResponse;
+            var response = ResponseMessage.NoResponse;
             try
             {
                 response = await item.ProcessAsync(message, cancellationToken).ConfigureAwait(false);
@@ -170,13 +169,11 @@ namespace TWCore.Services.Messaging
         /// </summary>
         public void Dispose()
         {
-            if (BusinessPool != null)
-            {
-                var businesses = BusinessPool.GetCurrentObjects();
-                foreach (var item in businesses)
-                    item.Dispose();
-                BusinessPool.Clear();
-            }
+            if (BusinessPool == null) return;
+            var businesses = BusinessPool.GetCurrentObjects();
+            foreach (var item in businesses)
+                item.Dispose();
+            BusinessPool.Clear();
         }
         #endregion
     }

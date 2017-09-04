@@ -33,7 +33,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         static ConcurrentDictionary<string, StreamWriter> logStreams = new ConcurrentDictionary<string, StreamWriter>();
 
-        StreamWriter sWriter = null;
+        StreamWriter sWriter;
         string currentFileName;
 
         #region Properties

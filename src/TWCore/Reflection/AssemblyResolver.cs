@@ -30,7 +30,7 @@ namespace TWCore.Reflection
     /// </summary>
     public class AssemblyResolver
     {
-        bool assembliesInfoLoaded = false;
+        bool assembliesInfoLoaded;
 
         #region Properties
         /// <summary>
@@ -164,7 +164,7 @@ namespace TWCore.Reflection
             /// </summary>
             public string FullName => AssemblyName?.FullName;
 
-            Assembly _instance = null;
+            Assembly _instance;
             /// <summary>
             /// Assembly instance
             /// </summary>
@@ -187,7 +187,7 @@ namespace TWCore.Reflection
                     return null;
                 }
             }
-            Assembly _reflectionOnlyInstance = null;
+            Assembly _reflectionOnlyInstance;
             /// <summary>
             /// Assembly instance in the reflection only context
             /// </summary>

@@ -45,15 +45,15 @@ namespace TWCore
 			object[] attrs;
 			if (objTypeInfo.IsEnum)
 				attrs = objType.GetRuntimeField(obj.ToString()).GetCustomAttributes(true);
-			else if (obj as PropertyInfo != null)
-				attrs = ((PropertyInfo)obj).GetCustomAttributes(true);
-			else if (obj as FieldInfo != null)
-				attrs = ((FieldInfo)obj).GetCustomAttributes(true);
+			else if (obj is PropertyInfo pinfo)
+				attrs = pinfo.GetCustomAttributes(true);
+			else if (obj is FieldInfo finfo)
+				attrs = finfo.GetCustomAttributes(true);
 			else
 				attrs = objTypeInfo.GetCustomAttributes(true);
 			foreach (var item in attrs)
-				if (item as T != null)
-					return item as T;
+				if (item is T titem)
+					return titem;
 			return null;
 		}
 		#endregion
@@ -66,27 +66,19 @@ namespace TWCore
 		/// <returns>IDictionary instance</returns>
 		public static IDictionary<string, object> ToDictionary(this object source)
 		{
-			if (source != null)
+			if (source == null) return null;
+			var sType = source.GetType();
+			var sTypeInfo = sType.GetTypeInfo();
+			if (sTypeInfo.IsValueType) return null;
+			var dct = new Dictionary<string, object>();
+			var props = sType.GetRuntimeProperties();
+			foreach (var prop in props)
 			{
-				var sType = source.GetType();
-				var sTypeInfo = sType.GetTypeInfo();
-				if (!sTypeInfo.IsValueType)
-				{
-					var dct = new Dictionary<string, object>();
-
-					var props = sType.GetRuntimeProperties();
-					foreach (var prop in props)
-					{
-						if (prop.CanRead)
-						{
-							var value = prop.GetValue(source, null);
-							dct.Add(prop.Name, value);
-						}
-					}
-					return dct;
-				}
+				if (!prop.CanRead) continue;
+				var value = prop.GetValue(source, null);
+				dct.Add(prop.Name, value);
 			}
-			return null;
+			return dct;
 		}
 
 		/// <summary>
@@ -96,19 +88,15 @@ namespace TWCore
 		/// <param name="target">Target object</param>
 		public static void FromDictionary(this object target, IDictionary<string, object> source)
 		{
-			if (source != null && target != null)
+			if (source == null || target == null) return;
+			var sType = target.GetType();
+			var sTypeInfo = sType.GetTypeInfo();
+			if (sTypeInfo.IsValueType) return;
+			foreach (var item in source)
 			{
-				var sType = target.GetType();
-				var sTypeInfo = sType.GetTypeInfo();
-				if (!sTypeInfo.IsValueType)
-				{
-					foreach (var item in source)
-					{
-						var prop = sType.GetRuntimeProperty(item.Key);
-						if (prop != null && prop.CanWrite)
-							prop.SetValue(target, item.Value, null);
-					}
-				}
+				var prop = sType.GetRuntimeProperty(item.Key);
+				if (prop != null && prop.CanWrite)
+					prop.SetValue(target, item.Value, null);
 			}
 		}
 		#endregion
@@ -123,29 +111,20 @@ namespace TWCore
 		/// <returns>Dictionary</returns>
 		public static Dictionary<string, string> ToStringDictionary(this object source, Func<object, Type, string> objectToStringFunction)
 		{
-			if (source != null)
+			if (source == null) return null;
+			var sType = source.GetType();
+			var sTypeInfo = sType.GetTypeInfo();
+			if (sTypeInfo.IsValueType) return null;
+			var dct = new Dictionary<string, string>();
+			var props = sType.GetRuntimeProperties();
+			foreach (var prop in props)
 			{
-				var sType = source.GetType();
-				var sTypeInfo = sType.GetTypeInfo();
-
-				if (!sTypeInfo.IsValueType)
-				{
-					var dct = new Dictionary<string, string>();
-
-					var props = sType.GetRuntimeProperties();
-					foreach (var prop in props)
-					{
-						if (prop.CanRead)
-						{
-							var value = prop.GetValue(source, null);
-							var nValue = objectToStringFunction(value, prop.PropertyType);
-							dct[prop.Name] = nValue;
-						}
-					}
-					return dct;
-				}
+				if (!prop.CanRead) continue;
+				var value = prop.GetValue(source, null);
+				var nValue = objectToStringFunction(value, prop.PropertyType);
+				dct[prop.Name] = nValue;
 			}
-			return null;
+			return dct;
 		}
 		/// <summary>
 		/// Sets the object properties with values from the Dictionary
@@ -155,22 +134,16 @@ namespace TWCore
 		/// <param name="stringToObjectFunction">Function to convert a string value to an object value</param>
 		public static void FromStringDictionary(this object target, Dictionary<string, string> source, Func<string, Type, object> stringToObjectFunction)
 		{
-			if (source != null && target != null)
+			if (source == null || target == null) return;
+			var sType = target.GetType();
+			var sTypeInfo = sType.GetTypeInfo();
+			if (sTypeInfo.IsValueType) return;
+			foreach (var item in source)
 			{
-				var sType = target.GetType();
-				var sTypeInfo = sType.GetTypeInfo();
-				if (!sTypeInfo.IsValueType)
-				{
-					foreach (var item in source)
-					{
-						var prop = sType.GetRuntimeProperty(item.Key);
-						if (prop != null && prop.CanWrite)
-						{
-							var nValue = stringToObjectFunction(item.Value, prop.PropertyType);
-							prop.SetValue(target, nValue, null);
-						}
-					}
-				}
+				var prop = sType.GetRuntimeProperty(item.Key);
+				if (prop == null || !prop.CanWrite) continue;
+				var nValue = stringToObjectFunction(item.Value, prop.PropertyType);
+				prop.SetValue(target, nValue, null);
 			}
 		}
 		/// <summary>
@@ -183,10 +156,7 @@ namespace TWCore
 			FromStringDictionary(target, source, (strValue, type) =>
 			{
 				var typeInfo = type.GetTypeInfo();
-				if (typeInfo.IsValueType)
-					return strValue.ParseTo(type, Activator.CreateInstance(type), null);
-				else
-					return strValue.ParseTo(type, (object)null, null);
+				return strValue.ParseTo(type, typeInfo.IsValueType ? Activator.CreateInstance(type) : null);
 			});
 		}
 		#endregion
@@ -236,10 +206,7 @@ namespace TWCore
 				return default(T);
 			try
 			{
-				if (task.Wait(millisecondsTimeout))
-					return task.Result;
-				else
-					return default(T);
+				return task.Wait(millisecondsTimeout) ? task.Result : default(T);
 			}
 			catch (AggregateException ex)
 			{
@@ -270,10 +237,7 @@ namespace TWCore
 				return default(T);
 			try
 			{
-				if (task.Wait(timeout))
-					return task.Result;
-				else
-					return default(T);
+				return task.Wait(timeout) ? task.Result : default(T);
 			}
 			catch (AggregateException ex)
 			{
@@ -348,9 +312,9 @@ namespace TWCore
 		public static void WaitAsync(this Task task)
 		{
 			var wait = new ManualResetEventSlim(false);
-            var continuation = task.ContinueWith(_ =>
+            task.ContinueWith(_ =>
             {
-                wait.Set();
+	            wait.Set();
             });
             wait.Wait();
 		}
@@ -360,11 +324,11 @@ namespace TWCore
 		/// <param name="asyncTask">Async task without cancellation token</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns>Task with cancellation token support</returns>
-		public async static Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
+		public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
 		{
 			// Create another task that completes as soon as cancellation is requested.
 			var tcs = new TaskCompletionSource<TResult>();
-			using (IDisposable registration = cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+			using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
 			{
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
@@ -386,10 +350,10 @@ namespace TWCore
 		/// <param name="asyncTask">Async task without cancellation token</param>
 		/// <param name="cancellationToken">Cancellation token</param>
 		/// <returns>Task with cancellation token support</returns>
-		public async static Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
+		public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
 		{
 			var tcs = new TaskCompletionSource<object>();
-			using (IDisposable registration = cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+			using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
 			{
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
@@ -410,15 +374,14 @@ namespace TWCore
 		/// </summary>
 		/// <param name="cancellationToken">Cancellation token instance</param>
 		/// <returns>Task to await the cancellation</returns>
-		public async static Task WhenCanceledAsync(this CancellationToken cancellationToken)
+		public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
 		{
 			if (cancellationToken.IsCancellationRequested) return;
 			var tcs = new TaskCompletionSource<object>();
-			using (IDisposable registration = cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false))
-				await tcs.Task;
+			using (cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false)) await tcs.Task;
 		}
 
-		delegate object InvokeDelegate(Delegate @delegate, params object[] args);
+		private delegate object InvokeDelegate(Delegate @delegate, params object[] args);
 		/// <summary>
 		/// Invoke a delegate as an Async Task
 		/// </summary>
@@ -439,7 +402,7 @@ namespace TWCore
 		/// <returns>Task with cancellation token support</returns>
 		public static Task<object> DynamicInvokeAsync(this Delegate @delegate, params object[] args)
 		{
-			var nDelegate = new InvokeDelegate((_del, _args) => _del.DynamicInvoke(_args));
+			var nDelegate = new InvokeDelegate((mDel, mArgs) => mDel.DynamicInvoke(mArgs));
 			return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
 		}
 		#endregion
@@ -463,7 +426,7 @@ namespace TWCore
 		/// Gets the string from a byte array using an Encoding
 		/// </summary>
 		/// <param name="encoding">Encoding used to get the string</param>
-		/// <param name="bytes">Byte array with the bytes to decode</param>
+		/// <param name="subArray">Byte array with the bytes to decode</param>
 		/// <returns>A string value with the result of the encoding</returns>
 		public static string GetString(this Encoding encoding, SubArray<byte> subArray)
 			=> encoding.GetString(subArray.Array, subArray.Offset, subArray.Count);
@@ -475,7 +438,7 @@ namespace TWCore
 		/// <returns>Formatted Datetime string</returns>
 		public static string GetTimeSpanFormat(this DateTime time)
 		{
-			char[] dateData = new char[21];
+			var dateData = new char[21];
 			dateData[0] = (char)(time.Day / 10 + '0');
 			dateData[1] = (char)(time.Day % 10 + '0');
 			dateData[2] = '/';
@@ -516,7 +479,7 @@ namespace TWCore
 		/// <param name="cancellationToken">Cancellation token.</param>
 		public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
 		{
-			int n = WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout);
+			var n = WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout);
 			switch (n)
 			{
 				case WaitHandle.WaitTimeout:
@@ -556,7 +519,7 @@ namespace TWCore
 		public static async Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
 		{
 			RegisteredWaitHandle registeredHandle = null;
-			CancellationTokenRegistration tokenRegistration = default(CancellationTokenRegistration);
+			var tokenRegistration = default(CancellationTokenRegistration);
 			try
 			{
 				var tcs = new TaskCompletionSource<bool>();
@@ -573,8 +536,7 @@ namespace TWCore
 			}
 			finally
 			{
-				if (registeredHandle != null)
-					registeredHandle.Unregister(null);
+				registeredHandle?.Unregister(null);
 				tokenRegistration.Dispose();
 			}
 		}

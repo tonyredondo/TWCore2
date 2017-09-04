@@ -28,7 +28,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         readonly object locker = new object();
         volatile bool IsDirty;
         readonly List<ITraceStorage> Items = new List<ITraceStorage>();
-        List<ITraceStorage> CItems = null;
+        List<ITraceStorage> CItems;
 
         #region .ctor
         /// <summary>

@@ -57,7 +57,7 @@ namespace TWCore.Messaging.NSQ
         #endregion
 
         #region Nested Type
-        class NSQueueMessage
+        private class NSQueueMessage
         {
             public Guid CorrelationId;
             public SubArray<byte> Body;
@@ -66,12 +66,12 @@ namespace TWCore.Messaging.NSQ
             public string Route;
             public string Name;
         }
-        class NSQMessageHandler : IHandler
+        private class NSQMessageHandler : IHandler
         {
             public void HandleMessage(NsqSharp.IMessage message)
             {
-                (var body, var correlationId, var name) = GetFromRawMessageBody(message.Body);
-                Try.Do(() => message.Finish(), false);
+                (var body, var correlationId, var _) = GetFromRawMessageBody(message.Body);
+                Try.Do(message.Finish, false);
 
                 var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
                 rMsg.CorrelationId = correlationId;
@@ -180,6 +180,7 @@ namespace TWCore.Messaging.NSQ
         /// On Send message data
         /// </summary>
         /// <param name="message">Request message instance</param>
+        /// <param name="correlationId">Message CorrelationId</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSend(byte[] message, Guid correlationId)
         {

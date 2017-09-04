@@ -253,7 +253,7 @@ namespace TWCore.Net.Multicast
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    _receivedMessagesDatagram.TryRemove(guid, out var @out);
+                    _receivedMessagesDatagram.TryRemove(guid, out var _);
 
                     buffer = receivedDatagrams.GetMessage();
 

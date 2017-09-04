@@ -39,7 +39,7 @@ namespace TWCore.Messaging.NSQ
 		Consumer _receiver;
 		CancellationToken _token;
 		Task _monitorTask;
-		bool _exceptionSleep = false;
+		bool _exceptionSleep;
 		#endregion
 
 		#region Nested Type
@@ -73,9 +73,9 @@ namespace TWCore.Messaging.NSQ
                     var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token);
                     _listener._processingTasks.TryAdd(tsk, null);
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-                    tsk.ContinueWith(_tsk =>
+                    tsk.ContinueWith(mTsk =>
                     {
-                        _listener._processingTasks.TryRemove(tsk, out var ts);
+                        _listener._processingTasks.TryRemove(tsk, out var _);
                         _listener.Counters.DecrementMessages();
                     });
 #pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed

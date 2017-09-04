@@ -93,7 +93,6 @@ namespace TWCore.Serialization.PWSerializer
             var serPool = SerPool.New();
             var currentSerializerPlanTypes = serPool.Item1;
             var serializersTable = SerializersTable.GetTable(Mode);
-            var stringSerializer = serializersTable.StringSerializer;
             var numberSerializer = serializersTable.NumberSerializer;
             var tuple = OPool.New();
             var typesCache = tuple.Item1;

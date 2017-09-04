@@ -246,7 +246,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
             double _lastTapTicks;
             int _id;
-            string _lastMessage = null;
+            string _lastMessage;
 
             #region Properties
             /// <summary>
@@ -398,7 +398,7 @@ namespace TWCore
 
             #region IDisposable Support
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private bool disposedValue = false; 
+            private bool disposedValue; 
             /// <summary>
             /// Dispose Object
             /// </summary>

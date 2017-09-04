@@ -21,7 +21,6 @@ namespace TWCore.Tests
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting CACHE Async TEST");
-            info.ShouldEndExecution = false;
 
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);

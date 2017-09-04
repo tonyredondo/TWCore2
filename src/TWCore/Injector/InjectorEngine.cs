@@ -42,8 +42,8 @@ namespace TWCore.Injector
         readonly ConcurrentDictionary<(Type, string), RegisteredValues> RegisteredDelegates = new ConcurrentDictionary<(Type, string), RegisteredValues>();
         readonly ConcurrentDictionary<Instantiable, ActivatorItem> InstantiableCache = new ConcurrentDictionary<Instantiable, ActivatorItem>();
         static readonly string[] EmptyStringArray = new string[0];
-        InjectorSettings settings = null;
-        bool attributesRegistered = false;
+        InjectorSettings settings;
+        bool attributesRegistered;
         bool useOnlyLoadedAssemblies = true;
 
         #region Events
@@ -391,7 +391,7 @@ namespace TWCore.Injector
         public void Register(Type noninstantiableType, Func<object> createInstanceDelegate, string name = null, bool singleton = false)
         {
             var key = (noninstantiableType, name);
-            RegisteredDelegates.TryRemove(key, out var _old);
+            RegisteredDelegates.TryRemove(key, out var _);
             RegisteredDelegates.TryAdd(key, new RegisteredValues
             {
                 Delegate = createInstanceDelegate,

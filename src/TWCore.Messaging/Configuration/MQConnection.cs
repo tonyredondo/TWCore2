@@ -27,7 +27,7 @@ namespace TWCore.Messaging.Configuration
     /// </summary>
     public class MQConnection
     {
-        string _key = null;
+        string _key;
         /// <summary>
         /// Message queue route (path or url)
         /// </summary>

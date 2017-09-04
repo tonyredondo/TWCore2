@@ -149,9 +149,8 @@ namespace TWCore.Services.Messaging
         public object Process(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
-            var sw = Stopwatch.StartNew();
             var item = BusinessPool.New();
-            object response = ResponseMessage.NoResponse;
+            var response = ResponseMessage.NoResponse;
             try
             {
                 response = item.Process(message, cancellationToken);

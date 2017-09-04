@@ -29,7 +29,7 @@ namespace TWCore.Geo
     [DataContract]
     public class CountryIpInterval : IRangeProvider<uint>
     {
-        Range<uint> _range = new Range<uint>();
+        Range<uint> _range;
 
         #region Properties
         [XmlAttribute, DataMember]

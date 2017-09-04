@@ -21,7 +21,7 @@ namespace TWCore.Services
     /// <summary>
     /// Core Services
     /// </summary>
-    public partial class CoreServices
+    public class CoreServices
     {
         /// <summary>
         /// Services Data

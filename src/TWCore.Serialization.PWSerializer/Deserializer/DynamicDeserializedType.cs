@@ -41,7 +41,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly object[] PropertiesValues;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private Dictionary<string, object> _properties = null;
+        private Dictionary<string, object> _properties;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int PropertiesLength;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -283,7 +283,6 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                             {
                                 if (p.GetIndexParameters().Length > 0)
                                     return false;
-                                var cAttr = p.GetCustomAttributes();
                             }
                             return ok;
                         }).Select(p => new DeserializerTypeInfo.FPropertyInfo

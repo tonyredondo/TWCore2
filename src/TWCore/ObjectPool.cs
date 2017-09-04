@@ -39,7 +39,7 @@ namespace TWCore
         PoolResetMode resetMode;
         int preallocationThreshold;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        bool allocating = false;
+        bool allocating;
 
         /// <summary>
         /// Get the number of objects in the queue

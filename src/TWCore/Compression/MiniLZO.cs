@@ -251,7 +251,7 @@ namespace TWCore.Compression
             => MultiplyDeBruijnBitPosition[((uint)((v & -v) * 0x077CB531U)) >> 27];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe static int Lzo1x_1_compress(byte* @in, uint in_len, byte* @out, ref uint out_len, byte* wrkmem)
+        static unsafe int Lzo1x_1_compress(byte* @in, uint in_len, byte* @out, ref uint out_len, byte* wrkmem)
         {
             byte* ip = @in;
             byte* op = @out;
@@ -305,7 +305,7 @@ namespace TWCore.Compression
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe static int Lzo1x_decompress(byte* @in, uint in_len, byte* @out, ref uint out_len, void* wrkmem)
+        static unsafe int Lzo1x_decompress(byte* @in, uint in_len, byte* @out, ref uint out_len, void* wrkmem)
         {
             byte* op;
             byte* ip;

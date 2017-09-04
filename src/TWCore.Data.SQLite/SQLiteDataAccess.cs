@@ -45,8 +45,6 @@ namespace TWCore.Data.SQLite
         /// <summary>
         /// Sql Server Data access
         /// </summary>
-        /// <param name="connectionString">Connection string</param>
-        /// <param name="accessType">Data access type</param>
         public SQLiteDataAccess()
         {
             AccessType = DataAccessType.Query;

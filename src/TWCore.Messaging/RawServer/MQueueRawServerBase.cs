@@ -33,10 +33,10 @@ namespace TWCore.Messaging.RawServer
     /// </summary>
     public abstract class MQueueRawServerBase : IMQueueRawServer
     {
-        CancellationTokenSource tokenSource = null;
+        CancellationTokenSource tokenSource;
         readonly List<Task> listenerTasks = new List<Task>();
-        MQClientQueues clientQueues = null;
-        MQServerQueues serverQueues = null;
+        MQClientQueues clientQueues;
+        MQServerQueues serverQueues;
 
         #region Properties
         /// <summary>
@@ -276,11 +276,12 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void OnInit() { }
-		/// <summary>
-		/// Before send the request message
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    /// <summary>
+	    /// Before send the request message
+	    /// </summary>
+	    /// <param name="message">Response message instance</param>
+	    /// <param name="metadata">Metadata</param>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void OnBeforeSend(ref SubArray<byte> message, KeyValueCollection metadata) { }
 		/// <summary>
 		/// On Send message data

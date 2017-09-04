@@ -33,7 +33,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         public object Value;
         public IList IListValue;
         public IDictionary IDictionaryValue;
-        public int IListIndex = 0;
+        public int IListIndex;
 
         object _tmpDictionary;
         public int ItemDictionaryIdx;
@@ -184,7 +184,6 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                             {
                                 if (p.GetIndexParameters().Length > 0)
                                     return false;
-                                var cAttr = p.GetCustomAttributes();
                             }
                             return ok;
                         }).Select(p => new DeserializerTypeInfo.FPropertyInfo

@@ -156,7 +156,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 foreach (var sTimeout in sessionsTimeout)
                 {
                     Core.Log.LibVerbose("Removing SessionId={0}", sTimeout.SessionId);
-                    sessions.TryRemove(sTimeout.SessionId, out var twc);
+                    sessions.TryRemove(sTimeout.SessionId, out var _);
                 }
             }, this, 10000, 10000);
             Core.Log.LibVerbose("Transport Listener Started");

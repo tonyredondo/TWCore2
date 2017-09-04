@@ -42,8 +42,8 @@ namespace TWCore.Net.RPC.Client.Transports
         readonly ConcurrentDictionary<Guid, RPCResponseHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCResponseHandler>();
         readonly HashSet<Guid> _messageRetries = new HashSet<Guid>();
         readonly LRU2QCollection<Guid, object> previousMessages = new LRU2QCollection<Guid, object>(2048);
-        volatile int _connectedSocketsCount = 0;
-        int _socketTurn = 0;
+        int _connectedSocketsCount;
+        int _socketTurn;
         byte _socketsPerClient = 2;
         CancellationTokenSource _tokenSource;
         CancellationToken _token;
@@ -280,7 +280,7 @@ namespace TWCore.Net.RPC.Client.Transports
 
                 socketConnection.ResetConnection();
                 _messageRetries.Add(messageId);
-                _messageResponsesHandlers.TryRemove(messageId, out var old);
+                _messageResponsesHandlers.TryRemove(messageId, out var _);
                 return await InvokeMethodAsync(messageRQ).ConfigureAwait(false);
             }
         }
@@ -318,7 +318,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 Core.Log.Warning("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}, Retrying one more time...".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
                 socketConnection.ResetConnection();
                 _messageRetries.Add(messageId);
-                _messageResponsesHandlers.TryRemove(messageId, out var old);
+                _messageResponsesHandlers.TryRemove(messageId, out var _);
                 return InvokeMethod(messageRQ);
             }
         }
@@ -461,7 +461,7 @@ namespace TWCore.Net.RPC.Client.Transports
             {
                 wh.Message = message;
                 wh.Event.Set();
-                _messageResponsesHandlers.TryRemove(message.RequestMessageId, out var whOld);
+                _messageResponsesHandlers.TryRemove(message.RequestMessageId, out var _);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -544,7 +544,7 @@ namespace TWCore.Net.RPC.Client.Transports
 			public int _sendBufferSize = 16384;
             public RPCTransportCounters _counters;
             public Guid SessionId { get; private set; }
-            public bool IsOnSession { get; private set; } = false;
+            public bool IsOnSession { get; private set; }
             public Action<RPCResponseMessage> OnResponseMessageReceivedHandler;
             public Action<RPCEventMessage> OnEventMessageReceivedHandler;
             public Action<RPCPushMessage> OnPushMessageReceivedHandler;

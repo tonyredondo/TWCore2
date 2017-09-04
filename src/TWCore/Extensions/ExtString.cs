@@ -504,8 +504,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNumeric(this string value)
         {
-            if (string.IsNullOrWhiteSpace(value)) return false;
-            return int.TryParse(value, out int i);
+            return !string.IsNullOrWhiteSpace(value) && int.TryParse(value, out int _);
         }
         /// <summary>
         /// Parse a string to another type.
@@ -587,24 +586,28 @@ namespace TWCore
         /// </summary>
         /// <param name="source">Source string</param>
         /// <param name="pattern">Pattern string</param>
+        /// <param name="startIndex">Start index</param>
         /// <returns>Index of</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FastIndexOf(this string source, string pattern, int startIndex = 0)
         {
             if (pattern == null) throw new ArgumentNullException();
-            if (pattern.Length == 0)
-                return 0;
-            if (pattern.Length == 1)
-                return source.IndexOf(pattern[0], startIndex);
+            switch (pattern.Length)
+            {
+                case 0:
+                    return 0;
+                case 1:
+                    return source.IndexOf(pattern[0], startIndex);
+            }
 
             bool found;
             int limit = (source.Length - pattern.Length + 1) - startIndex;
             if (limit < 1) return -1;
             // Store the first 2 characters of "pattern"
-            char c0 = pattern[0];
-            char c1 = pattern[1];
+            var c0 = pattern[0];
+            var c1 = pattern[1];
             // Find the first occurrence of the first character
-            int first = source.IndexOf(c0, startIndex, limit);
+            var first = source.IndexOf(c0, startIndex, limit);
             while (first != -1)
             {
                 // Check if the following character is the same like
@@ -616,7 +619,7 @@ namespace TWCore
                 }
                 // Check the rest of "pattern" (starting with the 3rd character)
                 found = true;
-                for (int j = 2; j < pattern.Length; j++)
+                for (var j = 2; j < pattern.Length; j++)
                     if (source[first + j] != pattern[j])
                     {
                         found = false;

@@ -170,6 +170,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// On Send message data
         /// </summary>
         /// <param name="message">Request message instance</param>
+        /// <param name="correlationId">Message CorrelationId</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSend(byte[] message, Guid correlationId)
         {

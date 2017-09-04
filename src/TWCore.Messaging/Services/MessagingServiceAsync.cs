@@ -108,7 +108,7 @@ namespace TWCore.Services
                             Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
                             Counters.DecrementCurrentMessagesBeingProcessed();
                             Counters.IncrementTotalMessagesProccesed();
-                            receivedMessagesCache.TryRemove(e.Message.Body, out object _out);
+                            receivedMessagesCache.TryRemove(e.Message.Body, out object _);
                         }
                     };
                 }
@@ -137,7 +137,7 @@ namespace TWCore.Services
                             Counters.DecrementCurrentMessagesBeingProcessed();
                             Counters.IncrementTotalMessagesProccesed();
                             e.Response.Body = result;
-                            receivedMessagesCache.TryRemove(e.Request.Body, out object _out);
+                            receivedMessagesCache.TryRemove(e.Request.Body, out object _);
                         }
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>

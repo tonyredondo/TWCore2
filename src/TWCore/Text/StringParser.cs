@@ -34,7 +34,6 @@ namespace TWCore.Text
         /// <param name="value">String to parse</param>
         /// <param name="defaultValue">Default value</param>
         /// <param name="dataFormat">Data format</param>
-        /// <param name="style">Number Style</param>
         /// <param name="provider">Number Provider</param>
         /// <returns>Type instance as result of the string parser</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

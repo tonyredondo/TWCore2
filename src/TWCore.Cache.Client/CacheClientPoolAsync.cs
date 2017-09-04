@@ -25,7 +25,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client connection pool
     /// </summary>
-    public class CacheClientPoolAsync : IStorageAsync, IDisposable
+    public class CacheClientPoolAsync : IStorageAsync
     {
         #region Statics
         static object shared = new object();
@@ -390,7 +390,7 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
-        /// <param name="key">StorageItem</param>
+        /// <param name="item">StorageItem</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(StorageItem item)
@@ -570,7 +570,7 @@ namespace TWCore.Cache.Client
                 var sto = await GetAsync(key).ConfigureAwait(false);
                 if (sto == null)
                 {
-					var res = await Pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
+                    await Pool.WriteAsync(key, data, (item, arg1, arg2) => item.Storage.SetAsync(arg1, arg2)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
                 }
 				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
@@ -592,7 +592,7 @@ namespace TWCore.Cache.Client
                 var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
                 if (sto == null)
                 {
-					var res = await Pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                    await Pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
                 }
 				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
@@ -615,7 +615,7 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
                 if (sto == null)
                 {
-					var res = await Pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                    await Pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
                 }
 				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
@@ -637,7 +637,7 @@ namespace TWCore.Cache.Client
                 var sto = await GetAsync(key, expirationDate).ConfigureAwait(false);
                 if (sto == null)
                 {
-					var res = await Pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                    await Pool.WriteAsync(key, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetAsync(arg1, arg2, arg3)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
                 }
 				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);
@@ -660,7 +660,7 @@ namespace TWCore.Cache.Client
                 var sto = expirationDate.HasValue ? await GetAsync(key, expirationDate.Value).ConfigureAwait(false) : await GetAsync(key).ConfigureAwait(false);
                 if (sto == null)
                 {
-					var res = await Pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                    await Pool.WriteAsync(key, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
                     sto = await GetAsync(key).ConfigureAwait(false);
                 }
 				Counters.IncrementGetOrSet(w.ElapsedMilliseconds);

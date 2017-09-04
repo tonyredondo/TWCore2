@@ -29,8 +29,8 @@ namespace TWCore.Services
 	/// </summary>
 	public static class CoreServicesExtensions
 	{
-		static CacheSettings _settings = null;
-		static bool _init = false;
+		static CacheSettings _settings;
+		static bool _init;
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -61,15 +61,13 @@ namespace TWCore.Services
 				throw new Exception($"The Cache config file: {cachesConfigFile} can't be deserialized.", ex);
 			}
 
-			if (_settings == null)
-			{
-				Core.Log.Warning("The Cache configuration file is null or empty.");
-				return;
-			}
+			if (_settings != null) return;
+			Core.Log.Warning("The Cache configuration file is null or empty.");
 		}
 		/// <summary>
 		/// Sets the default cache client settings
 		/// </summary>
+		/// <param name="services">CoreServices instance</param>
 		/// <param name="settings">CacheSettings instance</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static void SetDefaultCacheClientSettings(this CoreServices services, CacheSettings settings)

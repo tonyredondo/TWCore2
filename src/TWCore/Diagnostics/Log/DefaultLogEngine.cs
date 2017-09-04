@@ -115,6 +115,7 @@ namespace TWCore.Diagnostics.Log
                 }
                 catch (Exception)
                 {
+                    // ignored
                 }
             }, false);
             _itemsWorker.OnWorkDone += (s, e) => completationHandler.Set();
@@ -123,11 +124,14 @@ namespace TWCore.Diagnostics.Log
                 try
                 {
                     if (lastLogItems.Count > 10)
-                        lastLogItems.TryDequeue(out var oItem);
+                        lastLogItems.TryDequeue(out var _);
                     if (!(item is NewLineLogItem))
                         lastLogItems.Enqueue(item);
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+                    // ignored
+                }
             }, false);
             Core.Status.AttachObject(this);
             Core.Status.AttachChild(_itemsWorker, this);
@@ -157,7 +161,7 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose the instance resources
         /// </summary>

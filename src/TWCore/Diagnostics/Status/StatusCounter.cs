@@ -74,7 +74,7 @@ namespace TWCore.Diagnostics.Status
 
         private class NumberItem
         {
-            private ItemValue<double> _lastestValue = null;
+            private ItemValue<double> _lastestValue;
             private readonly ItemInterval<double> _lastMinuteValues = new ItemInterval<double>(TimeSpan.FromMinutes(1), val => (decimal)val.Value);
             private readonly ItemInterval<double> _last10MinutesValues = new ItemInterval<double>(TimeSpan.FromMinutes(10), val => (decimal)val.Value);
             private readonly ItemInterval<double> _last20MinutesValues = new ItemInterval<double>(TimeSpan.FromMinutes(20), val => (decimal)val.Value);
@@ -192,15 +192,15 @@ namespace TWCore.Diagnostics.Status
             Func<ItemValue<T>, decimal> _funcToAverage;
             CancellationTokenSource tokenSource;
             Task tsk;
-            bool dirty = false;
+            bool dirty;
 
-            public double CallsQuantity = 0;
+            public double CallsQuantity;
             public DateTime LastDate;
-            public ItemValue<T> LowestValue = null;
-            public ItemValue<T> HighestValue = null;
-            public decimal? AverageValue = null;
-            public double? StandardDeviation = null;
-            public List<ItemPercentil> Percentils = null;
+            public ItemValue<T> LowestValue;
+            public ItemValue<T> HighestValue;
+            public decimal? AverageValue;
+            public double? StandardDeviation;
+            public List<ItemPercentil> Percentils;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ItemInterval(TimeSpan sinceSlideTime, Func<ItemValue<T>, decimal> funcToAverage) : this(sinceSlideTime, funcToAverage, Comparer<T>.Default) { }

@@ -32,11 +32,11 @@ namespace TWCore.Data
 		static ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        EntityDalSettings _settings = null;
+        EntityDalSettings _settings;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        DalPoolItem _poolItem = null;
+        DalPoolItem _poolItem;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        DalPoolItemAsync _poolAsyncItem = null;
+        DalPoolItemAsync _poolAsyncItem;
 
         #region Properties
         /// <summary>

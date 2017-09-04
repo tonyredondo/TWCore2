@@ -25,7 +25,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client connection pool
     /// </summary>
-    public class CacheClientPool : IStorage, IDisposable
+    public class CacheClientPool : IStorage
     {
         #region Statics
         static object shared = new object();

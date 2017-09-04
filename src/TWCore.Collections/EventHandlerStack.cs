@@ -29,11 +29,11 @@ namespace TWCore.Collections
         /// <summary>
         /// EventHandler stack
         /// </summary>
-        Stack<EventHandler> _eventHandlersStack = null;
+        Stack<EventHandler> _eventHandlersStack;
         /// <summary>
         /// EventHandler internal delegate
         /// </summary>
-        public EventHandler EventHandlerDelegate = null;
+        public EventHandler EventHandlerDelegate;
         /// <summary>
         /// The sync lock.
         /// </summary>
@@ -123,11 +123,11 @@ namespace TWCore.Collections
         /// <summary>
         /// EventHandler stack
         /// </summary>
-        Stack<EventHandler<T>> _eventHandlersStack = null;
+        Stack<EventHandler<T>> _eventHandlersStack;
         /// <summary>
         /// EventHandler internal delegate
         /// </summary>
-        public EventHandler<T> EventHandlerDelegate = null;
+        public EventHandler<T> EventHandlerDelegate;
         /// <summary>
         /// The sync lock.
         /// </summary>

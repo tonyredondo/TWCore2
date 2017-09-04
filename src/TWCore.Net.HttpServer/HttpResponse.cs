@@ -58,7 +58,7 @@ namespace TWCore.Net.HttpServer
         };
         TcpClient client;
         HttpContext Context;
-        bool headersSent = false;
+        bool headersSent;
         internal EventStream EventStream;
 
         #region Properties

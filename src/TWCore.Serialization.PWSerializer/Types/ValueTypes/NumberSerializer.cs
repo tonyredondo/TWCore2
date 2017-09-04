@@ -844,7 +844,6 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Reads a value from the serialized stream.
         /// </summary>
         /// <param name="reader">Binary reader of the stream</param>
-        /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadValue(FastBinaryReader reader)

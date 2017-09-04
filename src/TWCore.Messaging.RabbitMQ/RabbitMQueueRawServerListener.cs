@@ -41,7 +41,7 @@ namespace TWCore.Messaging.RabbitMQ
         string _receiverConsumerTag;
         CancellationToken _token;
         Task _monitorTask;
-        bool _exceptionSleep = false;
+        bool _exceptionSleep;
         #endregion
 
         #region Nested Type
@@ -91,9 +91,9 @@ namespace TWCore.Messaging.RabbitMQ
                 Counters.IncrementMessages();
                 var tsk = Task.Factory.StartNew(ProcessingTask, message, _token);
                 _processingTasks.TryAdd(tsk, null);
-                tsk.ContinueWith(_tsk =>
+                tsk.ContinueWith(mTsk =>
                 {
-                    _processingTasks.TryRemove(tsk, out var ts);
+                    _processingTasks.TryRemove(tsk, out var _);
                     Counters.DecrementMessages();
                 });
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);

@@ -33,10 +33,10 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerBase : IMQueueServer
     {
-        CancellationTokenSource tokenSource = null;
+        CancellationTokenSource tokenSource;
         readonly List<Task> listenerTasks = new List<Task>();
-        MQClientQueues clientQueues = null;
-        MQServerQueues serverQueues = null;
+        MQClientQueues clientQueues;
+        MQServerQueues serverQueues;
 
         #region Properties
         /// <summary>
@@ -284,19 +284,21 @@ namespace TWCore.Messaging.Server
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void OnInit() { }
-		/// <summary>
-		/// Before send the request message
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// Before send the request message
+        /// </summary>
+        /// <param name="message">Response message instance</param>
+        /// <param name="request">Request message instance</param>
+        /// <param name="metadata">Request metadata</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void OnBeforeSend(ResponseMessage message, RequestMessage request, KeyValueCollection metadata) { }
-		/// <summary>
-		/// On Send message data
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		/// <param name="queues">Response queues</param>
-		/// <returns>true if message has been sent; otherwise, false.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <summary>
+        /// On Send message data
+        /// </summary>
+        /// <param name="message">Response message instance</param>
+        /// <param name="e">Request received event args</param>
+        /// <returns>true if message has been sent; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract bool OnSend(ResponseMessage message, RequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose

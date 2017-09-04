@@ -50,7 +50,7 @@ namespace TWCore.Serialization.WSerializer
         /// <summary>
         /// Include Inner KnownTypes
         /// </summary>
-        public bool IncludeInnerKnownTypes { get; set; } = false;
+        public bool IncludeInnerKnownTypes { get; set; }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

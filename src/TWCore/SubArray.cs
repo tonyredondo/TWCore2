@@ -255,22 +255,25 @@ namespace TWCore
 			for(var i = _offset; i < (_offset + _count); i++)
 				@delegate(ref _array[i]);
 		}
-		/// <summary>
-		/// For each method in the inner array by reference
-		/// </summary>
-		/// <param name="delegate">ForEach delegate</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void ForEach<A1>(SubArrayForEach<T, A1> @delegate, ref A1 arg1)
+        /// <summary>
+        /// For each method in the inner array by reference
+        /// </summary>
+        /// <param name="delegate">ForEach delegate</param>
+        /// <param name="arg1">Argument 1</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void ForEach<TA1>(SubArrayForEach<T, TA1> @delegate, ref TA1 arg1)
 		{
 			for(var i = _offset; i < (_offset + _count); i++)
 				@delegate(ref _array[i], ref arg1);
 		}
         /// <summary>
-		/// For each method in the inner array by reference
-		/// </summary>
-		/// <param name="delegate">ForEach delegate</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ForEach<A1, A2>(SubArrayForEach<T, A1, A2> @delegate, ref A1 arg1, ref A2 arg2)
+        /// For each method in the inner array by reference
+        /// </summary>
+        /// <param name="delegate">ForEach delegate</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ForEach<TA1, TA2>(SubArrayForEach<T, TA1, TA2> @delegate, ref TA1 arg1, ref TA2 arg2)
         {
             for (var i = _offset; i < (_offset + _count); i++)
                 @delegate(ref _array[i], ref arg1, ref arg2);

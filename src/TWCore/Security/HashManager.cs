@@ -22,7 +22,7 @@ namespace TWCore.Security
     /// <summary>
     /// Global Hash Manager
     /// </summary>
-    public static partial class HashManager
+    public static class HashManager
     {
         /// <summary>
         /// Registered hashes list

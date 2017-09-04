@@ -27,9 +27,9 @@ namespace TWCore.IO
     /// <typeparam name="T">Object type of the instance</typeparam>
     public class FileObject<T> where T : class
     {
-        FileSystemWatcher fwatcher = null;
+        FileSystemWatcher fwatcher;
         object locker = new object();
-        T instance = null;
+        T instance;
         Guid id = Guid.Empty;
 
         #region Properties

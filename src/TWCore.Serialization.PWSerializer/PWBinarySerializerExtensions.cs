@@ -55,15 +55,15 @@ namespace TWCore.Serialization
         /// <summary>
         /// Deserialize an object using the PWBinary serializer
         /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">PWBinary serialized object</param>
+        /// <param name="type">Object type</param>
         /// <returns>Object instance</returns>
         public static object DeserializeFromPWBinary(this byte[] value, Type type) => Serializer.Deserialize(value, type);
         /// <summary>
         /// Deserialize an object using the PWBinary serializer
         /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
         /// <param name="value">PWBinary serialized object</param>
+        /// <param name="type">Object type</param>
         /// <returns>Object instance</returns>
         public static object DeserializeFromPWBinary(this SubArray<byte> value, Type type) => Serializer.Deserialize(value, type);
         /// <summary>
@@ -83,8 +83,8 @@ namespace TWCore.Serialization
         /// <summary>
         /// Deserialize an object using the PWBinary serializer
         /// </summary>
-        /// <typeparam name="T">Object type</typeparam>
         /// <param name="stream">Stream source with the serialized data</param>
+        /// <param name="type">Object type</param>
         /// <returns>Object instance</returns>
         public static object DeserializeFromPWBinary(this Stream stream, Type type) => Serializer.Deserialize(stream, type);
         /// <summary>

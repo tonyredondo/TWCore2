@@ -52,11 +52,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Gets or sets if the serialized json result should be indented
         /// </summary>
-        public bool Indent { get; set; } = false;
+        public bool Indent { get; set; }
         /// <summary>
         /// Gets or sets if the properties should be serialized in CammelCase, false if is PascalCase
         /// </summary>
-        public bool UseCamelCase { get; set; } = false;
+        public bool UseCamelCase { get; set; }
         /// <summary>
         /// Ignore Null Values
         /// </summary>
@@ -68,7 +68,7 @@ namespace TWCore.Serialization
 		/// <summary>
 		/// Gets or sets the setting for serializing Enums as integer or as string.
 		/// </summary>
-		public bool EnumsAsStrings { get; set; } = false;
+		public bool EnumsAsStrings { get; set; }
         #endregion
 
         #region .ctor

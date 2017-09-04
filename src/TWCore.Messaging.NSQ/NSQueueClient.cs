@@ -38,7 +38,6 @@ namespace TWCore.Messaging.NSQ
     {
         static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
         static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
-        static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields
         List<(MQConnection, ObjectPool<Producer>)> _senders;

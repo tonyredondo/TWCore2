@@ -94,8 +94,6 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Connect to the multicast group
         /// </summary>
-        /// <param name="multicastIp">Multicast Ip address</param>
-        /// <param name="port">Port</param>
         public static void Connect()
         {
             Connect(MulticastIp, Port);
@@ -198,7 +196,7 @@ namespace TWCore.Net.Multicast
             bool exist;
             lock (_receivedServices)
             {
-                exist = _receivedServices.TryRemove(received.ServiceId, out var @out);
+                exist = _receivedServices.TryRemove(received.ServiceId, out var _);
                 _receivedServices.TryAdd(received.ServiceId, received, _serviceTimeout);
             }
             var eArgs = new EventArgs<ReceivedService>(received);

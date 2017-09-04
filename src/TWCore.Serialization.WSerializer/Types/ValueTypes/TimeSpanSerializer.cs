@@ -112,7 +112,6 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         /// </summary>
         /// <param name="reader">Binary reader of the stream</param>
         /// <param name="type">DataType</param>
-        /// <param name="declaredType">Declared type on the class</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Read(BinaryReader reader, byte type)
@@ -122,7 +121,6 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         /// </summary>
         /// <param name="reader">Binary reader of the stream</param>
         /// <param name="type">DataType</param>
-        /// <param name="declaredType">Declared type on the class</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TimeSpan ReadValue(BinaryReader reader, byte type)
@@ -153,8 +151,6 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         /// Reads a value from the serialized stream.
         /// </summary>
         /// <param name="reader">Binary reader of the stream</param>
-        /// <param name="type">DataType</param>
-        /// <param name="declaredType">Declared type on the class</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override TimeSpan ReadValue(BinaryReader reader)

@@ -257,7 +257,7 @@ namespace TWCore
 		/// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
 		/// </summary>
 		/// <typeparam name="T">Type of item</typeparam>
-		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="source">IEnumerable source object</param>
 		/// <param name="predicates">Predicates to compare</param>
 		/// <returns>The item if is found</returns>
 		public static T FindFirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)

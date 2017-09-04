@@ -33,7 +33,7 @@ namespace TWCore.Services
         #region Statics
         protected static ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
         static string[] currentArgs;
-        static volatile bool serviceEndAfterStart = false;
+        static volatile bool serviceEndAfterStart;
         /// <summary>
         /// Gets if the Console is available
         /// </summary>
@@ -388,7 +388,7 @@ namespace TWCore.Services
         #endregion
 
         #region Protected Methods
-        bool discovery = false;
+        bool discovery;
         protected virtual void RegisterDiscovery()
         {
             if (Core.GlobalSettings.EnableDiscovery && DiscoveryService.HasRegisteredLocalService && !discovery)

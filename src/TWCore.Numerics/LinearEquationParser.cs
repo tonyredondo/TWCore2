@@ -87,14 +87,6 @@ namespace TWCore.Numerics
             Reset();
         }
 
-
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        ~LinearEquationParser()
-        {
-        }
-
         /// <summary>
         /// This function parses line that contains all or part of a simple
         /// linear equation. The equation contains terms separated by operators.
@@ -289,7 +281,7 @@ namespace TWCore.Numerics
         /// <returns>An enum value of type 'LinearEquationParserStatus'</returns>
         private LinearEquationParserStatus GetEquationStatus()
         {
-            LinearEquationParserStatus status = LinearEquationParserStatus.Success;
+            var status = LinearEquationParserStatus.Success;
 
             if ((!m_equalSignInEquationFlag)
                 && (!m_termBeforeEqualSignExistsFlag)

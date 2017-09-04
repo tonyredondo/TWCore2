@@ -28,7 +28,7 @@ namespace TWCore.Net.RPC.Client
     public class DynamicProxy : DynamicObject
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly RPCClient _client = null;
+        readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         readonly ServiceDescriptor _descriptor;
 

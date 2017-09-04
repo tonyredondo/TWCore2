@@ -325,7 +325,7 @@ namespace TWCore.Diagnostics.Status
                 });
                 collection.Items.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
-                var remainings = allList.Where(i => i.ObjRef != null).ToList();
+                allList.Where(i => i.ObjRef != null).ToList();
                 FillHierarchy(allList, collection.Items, ObjectsHierarchy);
 
                 return collection;
@@ -368,7 +368,7 @@ namespace TWCore.Diagnostics.Status
         }
 
         bool bindFirstTime = true;
-        bool bounded = false;
+        bool bounded;
         static ConcurrentBag<WeakReference> alreadyAdded = new ConcurrentBag<WeakReference>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void BindPropertiesFromAnObject(object childObject)

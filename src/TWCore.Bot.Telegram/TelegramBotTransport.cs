@@ -29,7 +29,7 @@ namespace TWCore.Bot.Telegram
     /// </summary>
     public class TelegramBotTransport : IBotTransport
     {
-        volatile bool active = false;
+        volatile bool active;
         readonly TBotApi Bot;
 
         #region Events

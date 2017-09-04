@@ -72,8 +72,6 @@ namespace TWCore
         /// <summary>
         /// Compare for equality two byte arrays
         /// </summary>
-        /// <param name="a">Array a</param>
-        /// <param name="b">Array b</param>
         /// <returns>True if the arrays are equals; otherwise, false.</returns>
         public virtual EqualsBytesDelegate BytesEquals { get; protected set; }
         PlatformType _platformType = PlatformType.Unknown;

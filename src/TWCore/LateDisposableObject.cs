@@ -27,8 +27,8 @@ namespace TWCore
     public abstract class LateDisposableObject : IDisposable
     {
         #region Fields
-        long _locks = 0;
-        volatile bool _disposeCalled = false;
+        long _locks;
+        volatile bool _disposeCalled;
         CancellationTokenSource cancellationTokenSource;
         CancellationToken cancellationToken;
         Task disposeTask;

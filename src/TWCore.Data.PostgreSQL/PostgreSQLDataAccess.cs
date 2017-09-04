@@ -58,7 +58,6 @@ namespace TWCore.Data.PostgreSQL
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override CatalogSchema OnGetSchema(DbConnection connection)
         {
-            var schemas = connection.GetSchema();
             var tables = connection.GetSchema("Tables");
             var columns = connection.GetSchema("Columns");
             var indexColumns = connection.GetSchema("IndexColumns");
@@ -74,19 +73,16 @@ namespace TWCore.Data.PostgreSQL
             #region Create Tables
             foreach (DataRow column in columns.Rows)
             {
-                var tableCatalog = (string)column["TABLE_CATALOG"];
                 var tableSchema = (string)column["TABLE_SCHEMA"];
                 var tableName = (string)column["TABLE_NAME"];
                 var columnName = (string)column["COLUMN_NAME"];
                 var ordinalPosition = (int)column["ORDINAL_POSITION"];
-                var columnDefault = (string)(column["COLUMN_DEFAULT"] != DBNull.Value ? column["COLUMN_DEFAULT"] : null);
                 var isNullable = (string)column["IS_NULLABLE"];
                 var dataType = (string)column["DATA_TYPE"];
                 var maxCharsLength = (int?)(column["CHARACTER_MAXIMUM_LENGTH"] != DBNull.Value ? column["CHARACTER_MAXIMUM_LENGTH"] : null);
                 var maxBytesLength = (int?)(column["CHARACTER_OCTET_LENGTH"] != DBNull.Value ? column["CHARACTER_OCTET_LENGTH"] : null);
                 var numericPrecision = (int?)(column["NUMERIC_PRECISION"] != DBNull.Value ? column["NUMERIC_PRECISION"] : null);
                 var numericPrecisionRadix = (int?)(column["NUMERIC_PRECISION_RADIX"] != DBNull.Value ? column["NUMERIC_PRECISION_RADIX"] : null);
-                var numericScale = (int?)(column["NUMERIC_SCALE"] != DBNull.Value ? column["NUMERIC_SCALE"] : null);
 
                 if (tableSchema != "public") continue;
 
@@ -210,12 +206,10 @@ namespace TWCore.Data.PostgreSQL
             #region Create Indexes
             foreach (DataRow indexColumn in indexColumns.Rows)
             {
-                var tableCatalog = (string)indexColumn["table_catalog"];
                 var tableSchema = (string)indexColumn["table_schema"];
                 var tableName = (string)indexColumn["table_name"];
                 var columnName = (string)indexColumn["column_name"];
                 var indexName = (string)indexColumn["index_name"];
-
 
                 var table = catalog.Tables.FirstOrDefault(t => t.Name == tableName && t.Schema == tableSchema);
                 if (table == null) continue;

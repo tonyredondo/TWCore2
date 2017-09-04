@@ -52,7 +52,7 @@ namespace TWCore.Settings
         public SettingsKeyAttribute(string key, bool useContainerName)
         {
             SettingsKey = key;
-            UseContainerName = true;
+            UseContainerName = useContainerName;
         }
     }
 }

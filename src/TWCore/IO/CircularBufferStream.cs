@@ -28,7 +28,7 @@ namespace TWCore.IO
     {
         #region Fields
         int start = 9;
-        int length = 0;
+        int length;
         byte[] _buffer;
         readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(false);
         readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(false);

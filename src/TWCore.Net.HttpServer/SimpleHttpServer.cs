@@ -39,7 +39,7 @@ namespace TWCore.Net.HttpServer
         Task tskListener;
         long RequestCount;
         int Port;
-        volatile bool active = false;
+        volatile bool active;
 
         #region Properties
         /// <summary>
@@ -510,7 +510,7 @@ namespace TWCore.Net.HttpServer
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose method
         /// </summary>

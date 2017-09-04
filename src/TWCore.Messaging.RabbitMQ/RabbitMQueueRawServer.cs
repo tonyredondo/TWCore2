@@ -42,7 +42,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// On Send message data
         /// </summary>
         /// <param name="message">Response message instance</param>
-        /// <param name="queues">Response queues</param>
+        /// <param name="e">RawRequest received event args</param>
         protected override bool OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
@@ -52,18 +52,18 @@ namespace TWCore.Messaging.RabbitMQ
                 Parameters = e.Sender.Parameters
             });
 
-            var SenderOptions = Config.ResponseOptions.ServerSenderOptions;
-            if (SenderOptions == null)
+            var senderOptions = Config.ResponseOptions.ServerSenderOptions;
+            if (senderOptions == null)
                 throw new ArgumentNullException("ServerSenderOptions");
 
             var crId = e.CorrelationId.ToString();
-            var priority = (byte)(SenderOptions.MessagePriority == MQMessagePriority.High ? 9 :
-                            SenderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
-            var expiration = (SenderOptions.MessageExpirationInSec * 1000).ToString();
-            var deliveryMode = (byte)(SenderOptions.Recoverable ? 2 : 1);
+            var priority = (byte)(senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
+                            senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
+            var expiration = (senderOptions.MessageExpirationInSec * 1000).ToString();
+            var deliveryMode = (byte)(senderOptions.Recoverable ? 2 : 1);
             var replyTo = e.Metadata["ReplyTo"];
 
-            bool response = true;
+            var response = true;
             foreach (var queue in queues)
             {
                 try
@@ -83,7 +83,7 @@ namespace TWCore.Messaging.RabbitMQ
                     props.AppId = Core.ApplicationName;
                     props.ContentType = SenderSerializer.MimeTypes[0];
                     props.DeliveryMode = deliveryMode;
-                    props.Type = SenderOptions.Label;
+                    props.Type = senderOptions.Label;
                     if (!string.IsNullOrEmpty(replyTo))
                     {
                         if (string.IsNullOrEmpty(queue.Name))

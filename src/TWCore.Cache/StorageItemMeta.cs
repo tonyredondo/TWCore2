@@ -32,7 +32,7 @@ namespace TWCore.Cache
     public class StorageItemMeta : IDisposable
     {
         #region Static Timer
-        static bool _expirationTimerSetted = false;
+        static bool _expirationTimerSetted;
         static HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
         static Timer globalExpirationTimer;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

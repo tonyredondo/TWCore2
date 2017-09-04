@@ -32,24 +32,24 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static Queue<List<byte[]>> _lstPool = new Queue<List<byte[]>>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static int _lstPoolCount = 0;
+        static int _lstPoolCount;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static object _poolLock = new object();
         static Queue<byte[]> _pool = new Queue<byte[]>();
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static int _poolCount = 0;
+        static int _poolCount;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static int _maxLength = 255;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         bool _canWrite = true;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _length = 0;
+        int _length;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _maxRow = 0;
+        int _maxRow;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _rowIndex = 0;
+        int _rowIndex;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _position = 0;
+        int _position;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         List<byte[]> _buffer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

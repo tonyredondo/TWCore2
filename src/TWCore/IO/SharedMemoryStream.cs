@@ -29,7 +29,7 @@ namespace TWCore.IO
     {
         #region Fields
         int start = 9;
-        int length = 0;
+        int length;
         MemoryMappedFile _mmfBuffer;
         MemoryMappedViewAccessor _view;
         EventWaitHandle readEvent;
@@ -74,9 +74,9 @@ namespace TWCore.IO
             var readEventName = "Global\\CoreStream." + name + ".Read";
             var writeEventName = "Global\\CoreStream." + name + ".Write";
             if (!EventWaitHandle.TryOpenExisting(readEventName, out readEvent))
-                readEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readEventName, out bool readCreated);
+                readEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readEventName, out bool _);
             if (!EventWaitHandle.TryOpenExisting(writeEventName, out writeEvent))
-                writeEvent = new EventWaitHandle(false, EventResetMode.ManualReset, writeEventName, out bool writeCreated);
+                writeEvent = new EventWaitHandle(false, EventResetMode.ManualReset, writeEventName, out bool _);
         }
         #endregion
 

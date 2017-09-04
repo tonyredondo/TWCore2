@@ -40,7 +40,7 @@ namespace TWCore
         Action<T> onetimeInitAction;
         PoolResetMode resetMode;
         int preallocationThreshold;
-        bool allocating = false;
+        bool allocating;
 
         /// <summary>
         /// Get the number of objects in the queue

@@ -25,7 +25,7 @@ namespace TWCore.IO
     /// </summary>
     public class LimitedStream : Stream
     {
-		Stream _baseStream = null;
+		Stream _baseStream;
 
         #region Properties
         /// <summary>

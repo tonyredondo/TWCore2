@@ -428,7 +428,7 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
-        /// <param name="key">StorageItem</param>
+        /// <param name="item">StorageItem</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> SetAsync(StorageItem item) => InvokeAsync<bool>(item);

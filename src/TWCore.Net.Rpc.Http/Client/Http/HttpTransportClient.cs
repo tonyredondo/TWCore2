@@ -33,8 +33,7 @@ namespace TWCore.Net.RPC.Client.Transports
     public class HttpTransportClient : ITransportClient
     {
 		readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
-		ServiceDescriptorCollection _descriptors = null;
-
+		ServiceDescriptorCollection _descriptors;
         HttpClient httpClient;
 
         #region Properties

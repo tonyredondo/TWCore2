@@ -46,8 +46,7 @@ namespace TWCore.Collections
     /// </summary>
     /// <typeparam name="TKey">The type of keys in the dictionary.</typeparam>
     /// <typeparam name="TValue">The type of values in the dictionary.</typeparam>
-    public class LurchTable<TKey, TValue> : IDictionary<TKey, TValue>,
-                IDictionaryEx<TKey, TValue>, IConcurrentDictionary<TKey, TValue>
+    public class LurchTable<TKey, TValue> : IConcurrentDictionary<TKey, TValue>
     {
         /// <summary> Method signature for the ItemUpdated event </summary>
         public delegate void ItemUpdatedMethod(KeyValuePair<TKey, TValue> previous, KeyValuePair<TKey, TValue> next);
@@ -228,7 +227,7 @@ namespace TWCore.Collections
         public bool ContainsKey(TKey key)
         {
             if (_entries == null) throw new ObjectDisposedException(GetType().Name);
-            return TryGetValue(key, out var value);
+            return TryGetValue(key, out var _);
         }
 
         /// <summary>
@@ -1156,7 +1155,7 @@ namespace TWCore.Collections
 
             if (added > _limit && _ordering != LurchTableOrder.None)
             {
-                TryDequeue(out var ignore);
+                TryDequeue(out var _);
             }
             return result;
         }

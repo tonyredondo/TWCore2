@@ -454,17 +454,17 @@ namespace TWCore.Net
             var response = await PostAsync(requestUri, data, headers).ConfigureAwait(false);
             return GetResponseObject<T>(response);
         }
+
         /// <summary>
         /// Sends a POST request to the specified url with the additional headers if are available
         /// </summary>
-        /// <typeparam name="T">Type of object to expect</typeparam>
         /// <param name="requestUri">Request url to make the request</param>
         /// <param name="data">Data to be serialized and send to the url</param>
         /// <param name="responseType">Response object type</param>
         /// <param name="headers">Additional headers to append the default ones, null for no additional headers</param>
         /// <returns>Response object for the sent request</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<RestClientResponse<object>> PostAsync<T>(string requestUri, object data, Type responseType, object headers)
+        public Task<RestClientResponse<object>> PostAsync(string requestUri, object data, Type responseType, object headers)
             => PostAsync(requestUri, data, responseType, headers.ToDictionary().ToDictionary(k => k.Key, v => v.Value?.ToString()));
         /// <summary>
         /// Sends a POST request to the specified url with the additional headers if are available
@@ -603,7 +603,7 @@ namespace TWCore.Net
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose all object resources
         /// </summary>

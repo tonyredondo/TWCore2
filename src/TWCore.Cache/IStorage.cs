@@ -142,7 +142,7 @@ namespace TWCore.Cache
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
-        /// <param name="key">StorageItem</param>
+        /// <param name="item">StorageItem</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         bool Set(StorageItem item);
         /// <summary>

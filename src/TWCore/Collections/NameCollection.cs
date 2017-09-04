@@ -21,7 +21,6 @@ namespace TWCore.Collections
     /// <summary>
     /// Interface for NameCollection items
     /// </summary>
-    /// <typeparam name="TKey"></typeparam>
     public interface INameItem
     {
         /// <summary>

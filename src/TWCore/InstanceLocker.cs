@@ -48,7 +48,7 @@ namespace TWCore
             TResult res;
             lock (_lockDict.GetOrAdd(key, s => new object()))
                 res = body();
-            _lockDict.TryRemove(key, out var _val);
+            _lockDict.TryRemove(key, out var _);
             return res;
         }
 
@@ -62,7 +62,7 @@ namespace TWCore
         {
             lock (_lockDict.GetOrAdd(key, s => new object()))
                 body();
-            _lockDict.TryRemove(key, out var _val);
+            _lockDict.TryRemove(key, out var _);
         }
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RemoveLock(T key)
         {
-            _lockDict.TryRemove(key, out object o);
+            _lockDict.TryRemove(key, out object _);
         }
     }
 }

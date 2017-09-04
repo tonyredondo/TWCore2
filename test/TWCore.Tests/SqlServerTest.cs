@@ -17,7 +17,7 @@ namespace TWCore.Tests
 
             IDalCity dalCity = new DalCity();
 
-            using (var tW = Watch.Create("Sync Test"))
+            using (Watch.Create("Sync Test"))
             {
                 for (var i = 0; i < 30; i++)
                 {
@@ -36,7 +36,7 @@ namespace TWCore.Tests
 
             Task.Run(async () =>
             {
-                using (var tW = Watch.Create("Async Test"))
+                using (Watch.Create("Async Test"))
                 {
                     for (var i = 0; i < 30; i++)
                     {

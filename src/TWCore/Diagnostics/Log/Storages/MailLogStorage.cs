@@ -187,7 +187,7 @@ namespace TWCore.Diagnostics.Log.Storages
 
 
         private readonly List<ILogItem> buffer = new List<ILogItem>();
-        private static bool _waiting = false;
+        private static bool _waiting;
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>

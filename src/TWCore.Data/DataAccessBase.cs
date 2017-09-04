@@ -272,7 +272,7 @@ namespace TWCore.Data
         /// <returns>IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => SelectElements(nameOrQuery, parameters, fillMethod, out object returnValue);
+            => SelectElements(nameOrQuery, parameters, fillMethod, out object _);
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -467,7 +467,7 @@ namespace TWCore.Data
         /// <returns>Single entity from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
-            => SelectElement(nameOrQuery, parameters, fillMethod, out object returnValue);
+            => SelectElement(nameOrQuery, parameters, fillMethod, out object _);
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -1007,7 +1007,7 @@ namespace TWCore.Data
         /// <returns>A Tuple with IEnumerable of entity type with the results from the data source</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public (IEnumerable<T1>, IEnumerable<T2>) SelectElements<T1, T2>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T1> fillMethod1, FillDataDelegate<T2> fillMethod2)
-            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, out object returnValue);
+            => SelectElements(nameOrQuery, parameters, fillMethod1, fillMethod2, out object _);
         /// <summary>
         /// Selects a two result sets with a collection of elements from the data source
         /// </summary>
@@ -1026,7 +1026,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 1)
                 {
                     var rs1 = new ResultSet<T1>(fillMethod1);
                     var rs2 = new ResultSet<T2>(fillMethod2);
@@ -1206,7 +1206,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 1)
                 {
                     var rs1 = new ResultSet<T1>(fillMethod1);
                     var rs2 = new ResultSet<T2>(fillMethod2);

@@ -33,8 +33,6 @@ namespace TWCore.Collections
         /// <summary>
         /// LRU Collection Value Node
         /// </summary>
-        /// <typeparam name="TKey">Collection Key</typeparam>
-        /// <typeparam name="TValue">Collection Value</typeparam>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
             public int Slot;

@@ -31,13 +31,13 @@ namespace TWCore.Services
     /// </summary>
     public static class CoreServicesExtensions
     {
-        static MQueuesConfiguration _queues;
-        static MQPairConfig _queueServer;
-        static bool _init = false;
+        private static MQueuesConfiguration _queues;
+        private static MQPairConfig _queueServer;
+        private static bool _init;
 
         #region Init
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Init()
+        private static void Init()
         {
             if (_init) return;
             _init = true;
@@ -82,18 +82,17 @@ namespace TWCore.Services
         /// <summary>
         /// Gets a queue client instance
         /// </summary>
+        /// <param name="services">CoreServices instance</param>
         /// <param name="queuePairName">Queue config pair name</param>
         /// <returns>IMQueueClient instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IMQueueClient GetQueueClient(this CoreServices services, string queuePairName)
         {
+            Init();
             if (_queues?.Items?.Contains(queuePairName) == true)
                 return _queues.Items[queuePairName].GetClient();
-            else
-            {
-                Core.Log.Warning("The Queue Pair Name: {0} not found in the configuration file.", queuePairName);
-                return null;
-            }
+            Core.Log.Warning("The Queue Pair Name: {0} not found in the configuration file.", queuePairName);
+            return null;
         }
         /// <summary>
         /// Gets the queue server object
@@ -101,26 +100,37 @@ namespace TWCore.Services
         /// <returns>IMQueueServer object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
-            => _queueServer.GetServer(responseServer);
+        {
+            Init();
+            return _queueServer.GetServer(responseServer);
+        }
+
         /// <summary>
         /// Gets the queue raw server object
         /// </summary>
         /// <returns>IMQueueRawServer object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
-            => _queueServer.GetRawServer(responseServer);
+        {
+            Init();
+            return _queueServer.GetRawServer(responseServer);
+        }
+
         /// <summary>
         /// Gets the Default Queues Configuration
         /// </summary>
         /// <returns>QueuesConfiguration instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MQueuesConfiguration GetDefaultQueuesConfiguration(this CoreServices services)
-            => _queues;
+        {
+            Init();
+            return _queues;
+        }
         #endregion
 
         #region Nested Settings Type
         [SettingsContainer("Core.Services.Queue")]
-        class QueueConfigurationSettings : SettingsBase
+        private class QueueConfigurationSettings : SettingsBase
         {
             public string ConfigFile { get; set; }
             public string ServerName { get; set; }

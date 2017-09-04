@@ -23,7 +23,7 @@ namespace TWCore.Triggers
     /// </summary>
     public class DayPlanTrigger : TriggerBase
     {
-        TimeOfDayTrigger[] Triggers = null;
+        TimeOfDayTrigger[] Triggers;
 
         #region .ctor
         /// <summary>

@@ -27,7 +27,7 @@ namespace TWCore.Reflection
     /// </summary>
     public class CompleteAccessorsFactory : IAccessorsFactory
     {
-        static MethodInfo ChangeTypeMethodInfo = null;
+        static MethodInfo ChangeTypeMethodInfo;
 
         /// <summary>
         /// Create an activator delegate to a constructor info, faster than Activator.CreateInstance

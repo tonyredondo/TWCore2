@@ -32,10 +32,10 @@ namespace TWCore.Net.RPC.Client
     public class RPCClient : IRPCClient, IRPCClientAsync, IDisposable
     {
         readonly ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor> MethodDescriptorCache = new ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor>();
-        ITransportClient _transport = null;
-        bool _transportInit = false;
-        ServiceDescriptorCollection _serverDescriptors = null;
-        ServiceDescriptorCollection _descriptors = null;
+        ITransportClient _transport;
+        bool _transportInit;
+        ServiceDescriptorCollection _serverDescriptors;
+        ServiceDescriptorCollection _descriptors;
 
         #region Properties
         /// <summary>

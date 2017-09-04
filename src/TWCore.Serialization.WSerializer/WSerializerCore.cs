@@ -87,15 +87,14 @@ namespace TWCore.Serialization.WSerializer
             var serializersTable = SerializersTable.GetTable(Mode);
             var stringSerializer = serializersTable.StringSerializer;
             var numberSerializer = serializersTable.NumberSerializer;
-            var boolSerializer = SerializersTable.BoolSerializer;
             var cacheTuple = CachePool.New();
             var typesCache = cacheTuple.Item1;
             var objectCache = cacheTuple.Item2;
 
             var plan = GetSerializerPlan(serializersTable, type);
-            var _scopeStack = StackPool.New();
+            var scopeStack = StackPool.New();
             var scope = new SerializerScope(plan, value);
-            _scopeStack.Push(scope);
+            scopeStack.Push(scope);
 
             var mStream = new MemoryStream(1024);
             var bw = new FastBinaryWriter(mStream, DefaultUTF8Encoding, true);
@@ -105,8 +104,8 @@ namespace TWCore.Serialization.WSerializer
                 #region Get the Current Scope
                 if (scope.Index >= scope.PlanLength)
                 {
-                    _scopeStack.Pop();
-                    scope = (_scopeStack.Count > 0) ? _scopeStack.Peek() : null;
+                    scopeStack.Pop();
+                    scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                     continue;
                 }
                 #endregion
@@ -198,8 +197,8 @@ namespace TWCore.Serialization.WSerializer
                                     break;
                             }
                             #endregion
-                            _scopeStack.Pop();
-                            scope = (_scopeStack.Count > 0) ? _scopeStack.Peek() : null;
+                            scopeStack.Pop();
+                            scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                             continue;
                         }
                         else
@@ -306,7 +305,7 @@ namespace TWCore.Serialization.WSerializer
                                     aPlan[i] = new SerializerPlanItem.RuntimeValue(itemType, serializersTable.GetSerializerByValueType(itemType)?.GetType(), itemList);
                                 }
                                 scope = new SerializerScope(aPlan, scope.Type);
-                                _scopeStack.Push(scope);
+                                scopeStack.Push(scope);
                             }
                             else
                             {
@@ -338,7 +337,7 @@ namespace TWCore.Serialization.WSerializer
                                     aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(valueValue?.GetType() ?? dictioItem.ValueType, dictioItem.ValueSerializerType, valueValue);
                                 }
                                 scope = new SerializerScope(aPlan, scope.Type);
-                                _scopeStack.Push(scope);
+                                scopeStack.Push(scope);
                             }
                             else
                             {
@@ -381,7 +380,7 @@ namespace TWCore.Serialization.WSerializer
                             aPlan[0] = new SerializerPlanItem.RuntimeValue(keyVal?.GetType() ?? kvpItem.KeyType, kvpItem.KeySerializerType, keyVal);
                             aPlan[1] = new SerializerPlanItem.RuntimeValue(valueVal?.GetType() ?? kvpItem.ValueType, kvpItem.ValueSerializerType, valueVal);
                             scope = new SerializerScope(aPlan, scope.Type);
-                            _scopeStack.Push(scope);
+                            scopeStack.Push(scope);
                         }
                         continue;
 
@@ -404,7 +403,7 @@ namespace TWCore.Serialization.WSerializer
                                 aPlan[i] = new SerializerPlanItem.RuntimeValue(val?.GetType() ?? tupleItem.Types[i], ser, val);
                             }
                             scope = new SerializerScope(aPlan, scope.Type);
-                            _scopeStack.Push(scope);
+                            scopeStack.Push(scope);
                         }
                         continue;
 
@@ -436,7 +435,7 @@ namespace TWCore.Serialization.WSerializer
                         {
                             rVal = ResolveLinqEnumerables(rVal);
                             scope = new SerializerScope(GetSerializerPlan(serializersTable, rVal?.GetType() ?? rItem.Type), rVal);
-                            _scopeStack.Push(scope);
+                            scopeStack.Push(scope);
                         }
                         continue;
 
@@ -454,7 +453,7 @@ namespace TWCore.Serialization.WSerializer
                         else
                         {
                             scope = new SerializerScope(GetSerializerPlan(serializersTable, scope.Value?.GetType() ?? vItem.Type), scope.Value);
-                            _scopeStack.Push(scope);
+                            scopeStack.Push(scope);
                         }
                         continue;
 
@@ -472,7 +471,7 @@ namespace TWCore.Serialization.WSerializer
                         else
                         {
                             scope = new SerializerScope(GetSerializerPlan(serializersTable, rvItem.Value?.GetType() ?? rvItem.Type), rvItem.Value);
-                            _scopeStack.Push(scope);
+                            scopeStack.Push(scope);
                         }
                         continue;
 
@@ -484,7 +483,7 @@ namespace TWCore.Serialization.WSerializer
             } while (scope != null);
 
             SerializersTable.ReturnTable(serializersTable);
-            StackPool.Store(_scopeStack);
+            StackPool.Store(scopeStack);
 
             var globalBW = new FastBinaryWriter(stream, DefaultUTF8Encoding, true);
             mStream.Position = 0;
@@ -1225,7 +1224,6 @@ namespace TWCore.Serialization.WSerializer
                             {
                                 if (p.GetIndexParameters().Length > 0)
                                     return false;
-                                var cAttr = p.GetCustomAttributes();
                             }
                             return ok;
                         }).Select(p => p.GetFastPropertyInfo()).ToDictionary(k => k.Name, v => v)

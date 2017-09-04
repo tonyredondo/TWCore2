@@ -29,7 +29,7 @@ namespace TWCore.Data.Schema.Generator
     {
         CatalogSchema _schema;
         string _namespace;
-        IDataAccessDynamicGenerator dataAccessGenerator = null;
+        IDataAccessDynamicGenerator dataAccessGenerator;
         
 
         #region Properties
@@ -63,6 +63,7 @@ namespace TWCore.Data.Schema.Generator
         /// Dal Generator
         /// </summary>
         /// <param name="schema">Catalog schema</param>
+        /// <param name="namespace">Namespace name</param>
         public DalGenerator(CatalogSchema schema, string @namespace)
         {
             _schema = schema;
@@ -75,6 +76,7 @@ namespace TWCore.Data.Schema.Generator
         /// Create Dal
         /// </summary>
         /// <param name="directory">Folder path</param>
+        /// <param name="generator">IDataAccessDynamicGenerator instance to create the sql queries of the DAL</param>
         public void Create(string directory, IDataAccessDynamicGenerator generator = null)
         {
             try
@@ -711,7 +713,6 @@ namespace TWCore.Data.Schema.Generator
                                         name = fkTable.Name;
                                     name = GetName(name);
                                     var tName = GetEntityNameDelegate(fkTable.Name);
-                                    var type = "Ent" + tName;
 
                                     var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
                                     prepareEntities.Add(fill);
@@ -738,7 +739,6 @@ namespace TWCore.Data.Schema.Generator
                                         var name = column.Name.SubstringToLast("Id") + "Item";
                                         name = GetName(name);
                                         var tName = GetEntityNameDelegate(t.Name);
-                                        var type = "Ent" + tName;
 
                                         var fill = "            param[\"@" + column.Name + "\"] = value." + name + "." + GetName(column.Name) + ";\r\n";
                                         prepareEntities.Add(fill);

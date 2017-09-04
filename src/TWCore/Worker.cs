@@ -34,8 +34,8 @@ namespace TWCore
         Action<T> _action;
         Func<bool> _precondition;
         Task _processThread;
-        CancellationTokenSource tokenSource = null;
-        volatile bool startActive = false;
+        CancellationTokenSource tokenSource;
+        volatile bool startActive;
         volatile WorkerStatus status = WorkerStatus.Stopped;
         ManualResetEventSlim processHandler = new ManualResetEventSlim(false);
         #endregion
@@ -76,6 +76,7 @@ namespace TWCore
         /// Action to process a Queue of elements in a new thread.
         /// </summary>
         /// <param name="action">Action to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Worker(Action<T> action, bool startActive = true)
         {
@@ -93,6 +94,7 @@ namespace TWCore
         /// </summary>
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         /// <param name="action">Action to process each element of the queue</param>
+        /// <param name="startActive">Start active flag, default value is true</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Worker(Func<bool> precondition, Action<T> action, bool startActive = true)
         {

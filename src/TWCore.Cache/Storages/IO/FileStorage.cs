@@ -180,12 +180,12 @@ namespace TWCore.Cache.Storages.IO
             Dictionary<string, SerializedObject> _pendingItems;
             Dictionary<string, StorageItemMeta> _metas;
             Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
-            int _currentTransactionLogLength = 0;
-            string _transactionLogFilePath = null;
-            string _indexFilePath = null;
-            Action SaveMetadataBuffered = null;
-            FileStream _transactionStream = null;
-            FileStorageMetaLog _currentTransaction = null;
+            int _currentTransactionLogLength;
+            string _transactionLogFilePath;
+            string _indexFilePath;
+            Action SaveMetadataBuffered;
+            FileStream _transactionStream;
+            FileStorageMetaLog _currentTransaction;
             #endregion
 
             #region Properties
@@ -268,7 +268,6 @@ namespace TWCore.Cache.Storages.IO
                             try
                             {
                                 if (_token.IsCancellationRequested) return;
-                                var serializerExtension = Serializer.Extensions[0];
 
                                 #region Loading index file
                                 bool indexLoaded = false;
@@ -561,7 +560,7 @@ namespace TWCore.Cache.Storages.IO
                 foreach (var item in expiredItems)
                 {
                     Core.Log.InfoDetail("Removing: {0}", item.Key);
-                    OnRemove(item.Key, out var meta);
+                    OnRemove(item.Key, out var _);
                 }
                 Core.Log.InfoMedium("All expired items where removed.");
                 SaveMetadata();
@@ -631,7 +630,7 @@ namespace TWCore.Cache.Storages.IO
                     _pendingItems[meta.Key] = value;
                 lock (_metasLock)
                 {
-                    if (_metas.TryGetValue(meta.Key, out var oldmeta))
+                    if (_metas.TryGetValue(meta.Key, out var _))
                     {
                         _metas.Remove(meta.Key);
                         meta.Dispose();
@@ -692,7 +691,7 @@ namespace TWCore.Cache.Storages.IO
             #endregion
 
             #region IDisposable Support
-            private bool disposedValue = false;
+            private bool disposedValue;
 
             // To detect redundant calls
 

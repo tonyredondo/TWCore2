@@ -34,8 +34,6 @@ namespace TWCore.Collections
         /// <summary>
         /// LFU Collection Value Node
         /// </summary>
-        /// <typeparam name="TKey">Collection Key</typeparam>
-        /// <typeparam name="TValue">Collection Value</typeparam>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
             public int Slot;
@@ -115,7 +113,7 @@ namespace TWCore.Collections
         #endregion
 
         #region Overrides
-        LinkedListNode<ValueNode.CountNode> _insertionPoint = null;
+        LinkedListNode<ValueNode.CountNode> _insertionPoint;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateList(TKey key, ValueNode node)

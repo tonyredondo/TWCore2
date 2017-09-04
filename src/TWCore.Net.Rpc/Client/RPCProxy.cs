@@ -41,12 +41,12 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
-        /// <summary>
-        /// Sets the RPC client to the proxy
-        /// </summary>
-        /// <param name="client">RPCClient object instance</param>
-        /// <param name="descriptor">Service descriptor</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    /// <summary>
+	    /// Sets the RPC client to the proxy
+	    /// </summary>
+	    /// <param name="client">RPCClient object instance</param>
+	    /// <param name="serviceName">Service name</param>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void SetClient(RPCClient client, string serviceName)
         {
             Ensure.ArgumentNotNull(client, "RPC Client can't be null.");

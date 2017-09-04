@@ -28,9 +28,9 @@ namespace TWCore.Services
     /// </summary>
     public static class CoreServicesExtensions
     {
-        static CacheConfiguration _cacheConfiguration = null;
-        static ServerOptions _serverOptions = null;
-        static bool _init = false;
+        static CacheConfiguration _cacheConfiguration;
+        static ServerOptions _serverOptions;
+        static bool _init;
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -90,6 +90,7 @@ namespace TWCore.Services
         /// <summary>
         /// Sets the default cache server configuration
         /// </summary>
+        /// <param name="services">CoreServices instance</param>
         /// <param name="configuration">Cache Configuration instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDefaultCacheServerConfiguration(this CoreServices services, CacheConfiguration configuration)
@@ -112,6 +113,7 @@ namespace TWCore.Services
         /// <summary>
         /// Sets the default cache server options
         /// </summary>
+        /// <param name="services">CoreServices instance</param>
         /// <param name="options">Cache Server Options instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void SetDefaultCacheServerOptions(this CoreServices services, ServerOptions options)
@@ -123,7 +125,7 @@ namespace TWCore.Services
 
         #region Nested Settings Type
         [SettingsContainer("Core.Services.Cache")]
-        class CacheConfigurationSettings : SettingsBase
+        private class CacheConfigurationSettings : SettingsBase
         {
             public string ConfigFile { get; set; }
             public string ServerName { get; set; }

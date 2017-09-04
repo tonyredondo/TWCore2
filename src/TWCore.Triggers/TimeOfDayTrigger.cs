@@ -30,8 +30,8 @@ namespace TWCore.Triggers
         public TimeSpan Time { get; private set; }
 
         #region Private Fields
-        CancellationTokenSource tokenSource = null;
-        Timer timer = null;
+        CancellationTokenSource tokenSource;
+        Timer timer;
         #endregion
 
         #region .ctor

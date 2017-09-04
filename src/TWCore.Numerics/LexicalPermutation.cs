@@ -30,27 +30,27 @@ namespace TWCore.Numerics
         /// <summary>
         /// The source collection of elements for which we are calculating the lexical permutation.
         /// </summary>
-        private readonly List<T> sourceList = null;
+        private readonly List<T> sourceList;
 
         /// <summary>
         /// Keep a list of pre-compouted factorial numbers to increase running time.
         /// </summary>
-        private readonly long[] knownFactorials = null;
+        private readonly long[] knownFactorials;
 
         /// <summary>
         /// The number of elements in the Lexical permutation.
         /// </summary>
-        private readonly long nPermutations = 0;
+        private readonly long nPermutations;
 
         /// <summary>
         /// The factoradic number corresponding to the current Lehmer code
         /// </summary>
-        private readonly int[] currentFactorialNumber = null;
+        private readonly int[] currentFactorialNumber;
 
         /// <summary>
         /// Keep track of which elements have been used in the Lehmer code reversal so far.
         /// </summary>
-        private readonly bool[] currentFactorialElements = null;
+        private readonly bool[] currentFactorialElements;
         #endregion
 
         #region .ctor

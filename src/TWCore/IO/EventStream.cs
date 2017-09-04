@@ -27,7 +27,7 @@ namespace TWCore.IO
     /// </summary>
     public class EventStream : Stream
     {
-		Stream _baseStream = null;
+		Stream _baseStream;
 
         #region Properties
         /// <summary>

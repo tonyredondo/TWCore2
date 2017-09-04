@@ -48,6 +48,7 @@ namespace TWCore.Injector
         /// <param name="noninstantiableType">Non instantiable object type</param>
         /// <param name="instantiableType">Instantiable object type</param>
         /// <param name="name">Instance name</param>
+        /// <param name="singleton">Injection instance is a singleton instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public InjectionAttribute(Type noninstantiableType, Type instantiableType, string name = null, bool singleton = false)
         {

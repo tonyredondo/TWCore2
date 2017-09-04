@@ -33,7 +33,7 @@ namespace TWCore.Net.RPC.Server
     {
 		readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
 		readonly Dictionary<Guid, (ServiceItem, MethodDescriptor)> _methods = new Dictionary<Guid, (ServiceItem, MethodDescriptor)>(100);
-        ITransportServer transport = null;
+        ITransportServer transport;
 
         #region Properties
         /// <summary>

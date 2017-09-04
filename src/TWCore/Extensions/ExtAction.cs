@@ -169,6 +169,7 @@ namespace TWCore
         /// Invoke an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
+        /// <param name="value">Argument value</param>
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync<T>(this Action<T> action, T value)
             => InvokeAsync(() => action(value));
@@ -176,6 +177,8 @@ namespace TWCore
         /// Invoke an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
+        /// <param name="value1">Argument 1 value</param>
+        /// <param name="value2">Argument 2 value</param>
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync<T1, T2>(this Action<T1, T2> action, T1 value1, T2 value2)
             => InvokeAsync(() => action(value1, value2));
@@ -183,6 +186,9 @@ namespace TWCore
         /// Invoke an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
+        /// <param name="value1">Argument 1 value</param>
+        /// <param name="value2">Argument 2 value</param>
+        /// <param name="value3">Argument 3 value</param>
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync<T1, T2, T3>(this Action<T1, T2, T3> action, T1 value1, T2 value2, T3 value3)
             => InvokeAsync(() => action(value1, value2, value3));
@@ -190,6 +196,10 @@ namespace TWCore
         /// Invoke an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
+        /// <param name="value1">Argument 1 value</param>
+        /// <param name="value2">Argument 2 value</param>
+        /// <param name="value3">Argument 3 value</param>
+        /// <param name="value4">Argument 4 value</param>
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action, T1 value1, T2 value2, T3 value3, T4 value4)
             => InvokeAsync(() => action(value1, value2, value3, value4));
@@ -197,13 +207,18 @@ namespace TWCore
         /// Invoke an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
+        /// <param name="value1">Argument 1 value</param>
+        /// <param name="value2">Argument 2 value</param>
+        /// <param name="value3">Argument 3 value</param>
+        /// <param name="value4">Argument 4 value</param>
+        /// <param name="value5">Argument 5 value</param>
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, T1 value1, T2 value2, T3 value3, T4 value4, T5 value5)
             => InvokeAsync(() => action(value1, value2, value3, value4, value5));
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<TResult>(this Func<TResult> func)
         {
@@ -224,35 +239,50 @@ namespace TWCore
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
+        /// <param name="value">Func argument</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<T1, TResult>(this Func<T1, TResult> func, T1 value)
             => InvokeAsync(() => func(value));
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
+        /// <param name="value1">Func argument 1</param>
+        /// <param name="value2">Func argument 2</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<T1, T2, TResult>(this Func<T1, T2, TResult> func, T1 value1, T2 value2)
             => InvokeAsync(() => func(value1, value2));
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
+        /// <param name="value1">Func argument 1</param>
+        /// <param name="value2">Func argument 2</param>
+        /// <param name="value3">Func argument 3</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<T1, T2, T3, TResult>(this Func<T1, T2, T3, TResult> func, T1 value1, T2 value2, T3 value3)
             => InvokeAsync(() => func(value1, value2, value3));
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
+        /// <param name="value1">Func argument 1</param>
+        /// <param name="value2">Func argument 2</param>
+        /// <param name="value3">Func argument 3</param>
+        /// <param name="value4">Func argument 4</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<T1, T2, T3, T4, TResult>(this Func<T1, T2, T3, T4, TResult> func, T1 value1, T2 value2, T3 value3, T4 value4)
             => InvokeAsync(() => func(value1, value2, value3, value4));
         /// <summary>
         /// Invoke a Func in Async Task
         /// </summary>
-        /// <param name="action">Action to invoke</param>
+        /// <param name="func">Func to invoke</param>
+        /// <param name="value1">Func argument 1</param>
+        /// <param name="value2">Func argument 2</param>
+        /// <param name="value3">Func argument 3</param>
+        /// <param name="value4">Func argument 4</param>
+        /// <param name="value5">Func argument 5</param>
         /// <returns>Task of the invocation</returns>
         public static Task<TResult> InvokeAsync<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func, T1 value1, T2 value2, T3 value3, T4 value4, T5 value5)
             => InvokeAsync(() => func(value1, value2, value3, value4, value5));

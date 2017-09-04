@@ -68,8 +68,6 @@ namespace TWCore.Data.SqlServer
         /// <summary>
         /// Sql Server Data access
         /// </summary>
-        /// <param name="connectionString">Connection string</param>
-        /// <param name="accessType">Data access type</param>
         public SqlServerDataAccess()
         {
             AccessType = DataAccessType.Query;
@@ -94,7 +92,6 @@ namespace TWCore.Data.SqlServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override CatalogSchema OnGetSchema(DbConnection connection)
         {
-            var schemas = connection.GetSchema();
             var tables = connection.GetSchema("Tables");
             var columns = connection.GetSchema("AllColumns");
             var foreignKeys = connection.GetSchema("ForeignKeys");
@@ -111,19 +108,16 @@ namespace TWCore.Data.SqlServer
             #region Create Tables
             foreach (DataRow column in columns.Rows)
             {
-                var tableCatalog = (string)column["TABLE_CATALOG"];
                 var tableSchema = (string)column["TABLE_SCHEMA"];
                 var tableName = (string)column["TABLE_NAME"];
                 var columnName = (string)column["COLUMN_NAME"];
                 var ordinalPosition = (int)column["ORDINAL_POSITION"];
-                var columnDefault = (string)(column["COLUMN_DEFAULT"] != DBNull.Value ? column["COLUMN_DEFAULT"] : null);
                 var isNullable = (string)column["IS_NULLABLE"];
                 var dataType = (string)column["DATA_TYPE"];
                 var maxCharsLength = (int?)(column["CHARACTER_MAXIMUM_LENGTH"] != DBNull.Value ? column["CHARACTER_MAXIMUM_LENGTH"] : null);
                 var maxBytesLength = (int?)(column["CHARACTER_OCTET_LENGTH"] != DBNull.Value ? column["CHARACTER_OCTET_LENGTH"] : null);
                 var numericPrecision = (byte?)(column["NUMERIC_PRECISION"] != DBNull.Value ? column["NUMERIC_PRECISION"] : null);
                 var numericPrecisionRadix = (short?)(column["NUMERIC_PRECISION_RADIX"] != DBNull.Value ? column["NUMERIC_PRECISION_RADIX"] : null);
-                var numericScale = (int?)(column["NUMERIC_SCALE"] != DBNull.Value ? column["NUMERIC_SCALE"] : null);
 
                 var tableRow = tableRows.FirstOrDefault(dRow => (string)dRow["TABLE_NAME"] == tableName);
 
@@ -222,10 +216,7 @@ namespace TWCore.Data.SqlServer
             #region Create Indexes
             foreach (DataRow indexColumn in indexColumns.Rows)
             {
-                var constraintCatalog = (string)indexColumn["constraint_catalog"];
-                var constraintSchema = (string)indexColumn["constraint_schema"];
                 var constraintName = (string)indexColumn["constraint_name"];
-                var tableCatalog = (string)indexColumn["table_catalog"];
                 var tableSchema = (string)indexColumn["table_schema"];
                 var tableName = (string)indexColumn["table_name"];
                 var columnName = (string)indexColumn["column_name"];
@@ -294,10 +285,7 @@ namespace TWCore.Data.SqlServer
             #region Create ForeignKeys
             foreach (DataRow foreignKey in foreignKeys.Rows)
             {
-                var constraintCatalog = (string)foreignKey["CONSTRAINT_CATALOG"];
-                var constraintSchema = (string)foreignKey["CONSTRAINT_SCHEMA"];
                 var constraintName = (string)foreignKey["CONSTRAINT_NAME"];
-                var tableCatalog = (string)foreignKey["TABLE_CATALOG"];
                 var tableSchema = (string)foreignKey["TABLE_SCHEMA"];
                 var tableName = (string)foreignKey["TABLE_NAME"];
 

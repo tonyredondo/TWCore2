@@ -31,9 +31,9 @@ namespace TWCore.Diagnostics.Log.Storages
         /// All file log storage writers
         /// </summary>
         static ConcurrentDictionary<string, StreamWriter> logStreams = new ConcurrentDictionary<string, StreamWriter>();
-        StreamWriter sWriter = null;
+        StreamWriter sWriter;
         string currentFileName;
-        int numbersOfFiles = 0;
+        int numbersOfFiles;
         volatile bool firstWrite = true;
 
         #region Properties
@@ -52,7 +52,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// True if a new log file is created when a maximum length is reached; otherwise, false.
         /// </summary>
-        public bool UseMaxLength { get; private set; } = false;
+        public bool UseMaxLength { get; private set; }
         /// <summary>
         /// Maximun length in bytes for a single file. Default value is 4Mb
         /// </summary>

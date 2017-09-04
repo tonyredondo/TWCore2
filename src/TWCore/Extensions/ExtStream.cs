@@ -115,11 +115,12 @@ namespace TWCore
         /// </summary>
         /// <param name="stream">Stream source</param>
         /// <param name="bufferSize">Buffer size</param>
+        /// <param name="timeout">Timeout</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, int timeout)
         {
-            CancellationTokenSource cts = new CancellationTokenSource();
+            var cts = new CancellationTokenSource();
             using (var ms = new MemoryStream())
             {
                 cts.CancelAfter(timeout);
@@ -132,6 +133,7 @@ namespace TWCore
         /// </summary>
         /// <param name="stream">Stream source</param>
         /// <param name="bufferSize">Buffer size</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)

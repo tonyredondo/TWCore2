@@ -167,6 +167,7 @@ namespace TWCore.Bot
         /// </summary>
         /// <param name="chat">Chat where the message will be sent</param>
         /// <param name="message">Message to send</param>
+        /// <param name="parseMode">Message parse mode</param>
         /// <returns>Async task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
@@ -180,6 +181,7 @@ namespace TWCore.Bot
         /// Sends a text message to all tracked chats
         /// </summary>
         /// <param name="message">Message to send</param>
+        /// <param name="parseMode">Message parse mode</param>
         /// <returns>Async task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async Task SendTextMessageToTrackedChatsAsync(string message, MessageParseMode parseMode = MessageParseMode.Default)

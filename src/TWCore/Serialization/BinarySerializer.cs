@@ -29,7 +29,7 @@ namespace TWCore.Serialization
     /// </summary>
     public abstract class BinarySerializer : ISerializer
     {
-        static InstanceLocker<string> _filePathLocker = new InstanceLocker<string>();
+        private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
 
         #region Properties
         /// <summary>
@@ -64,7 +64,7 @@ namespace TWCore.Serialization
         /// Binary serializer base class
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public BinarySerializer()
+        protected BinarySerializer()
         {
             SerializerManager.Register(this);
         }
@@ -165,32 +165,32 @@ namespace TWCore.Serialization
         public void SerializeToFile(object item, Type itemType, string filePath)
         {
             filePath = Factory.GetAbsolutePath(filePath);
-            var fPath = filePath;
+            string[] fPath = { filePath };
             if (UseFileExtensions)
             {
                 if (Compressor != null)
                 {
                     var compExt = Compressor.FileExtension;
-                    if (!Extensions.Any(ext => fPath.EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    if (!Extensions.Any(ext => fPath[0].EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
                     {
-                        if (!Extensions.Any(ext => fPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-                            fPath = filePath + Extensions.FirstOrDefault() + compExt;
+                        if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                            fPath[0] = filePath + Extensions.FirstOrDefault() + compExt;
                         else
-                            fPath = filePath + compExt;
+                            fPath[0] = filePath + compExt;
                     }
                 }
-                else if (!Extensions.Any(ext => fPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                else if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
                 {
-                    fPath = filePath + Extensions.FirstOrDefault();
+                    fPath[0] = filePath + Extensions.FirstOrDefault();
                 }
             }
-            if (string.Equals(fPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
-                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath);
-            lock (_filePathLocker.GetLock(fPath))
+            if (!string.Equals(fPath[0], filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
+                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath[0]);
+            lock (FilePathLocker.GetLock(fPath[0]))
             {
-                using (var stream = File.Open(fPath, FileMode.Create, FileAccess.Write))
+                using (var stream = File.Open(fPath[0], FileMode.Create, FileAccess.Write))
                     Serialize(item, itemType, stream);
-                _filePathLocker.RemoveLock(fPath);
+                FilePathLocker.RemoveLock(fPath[0]);
             }
         }
         /// <summary>
@@ -207,41 +207,37 @@ namespace TWCore.Serialization
             if (UseFileExtensions && !File.Exists(fPath))
             {
                 fPath = Path.Combine(Path.GetDirectoryName(filePath), Path.GetFileNameWithoutExtension(filePath));
-                bool exist = false;
+                var exist = false;
                 foreach (var ext in Extensions)
                 {
                     var tPath = fPath + ext + Compressor?.FileExtension;
-                    if (File.Exists(tPath))
-                    {
-                        exist = true;
-                        fPath = tPath;
-                        break;
-                    }
+                    if (!File.Exists(tPath)) continue;
+                    exist = true;
+                    fPath = tPath;
+                    break;
                 }
                 if (!exist && Compressor != null)
                 {
                     foreach (var ext in Extensions)
                     {
                         var tPath = fPath + ext;
-                        if (File.Exists(tPath))
-                        {
-                            exist = true;
-                            fPath = tPath;
-                            break;
-                        }
+                        if (!File.Exists(tPath)) continue;
+                        exist = true;
+                        fPath = tPath;
+                        break;
                     }
                 }
                 if (!exist)
                     fPath = filePath;
             }
-            if (string.Equals(fPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
+            if (!string.Equals(fPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
                 Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath);
-            lock (_filePathLocker.GetLock(fPath))
+            lock (FilePathLocker.GetLock(fPath))
             {
                 object obj;
                 using (var stream = File.Open(fPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     obj = Deserialize(stream, itemType);
-                _filePathLocker.RemoveLock(fPath);
+                FilePathLocker.RemoveLock(fPath);
                 return obj;
             }
         }

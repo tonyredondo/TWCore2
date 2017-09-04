@@ -25,10 +25,10 @@ namespace TWCore.Cache
     /// <summary>
     /// Storage Manager
     /// </summary>
-    public class StorageManager : IStorage, IDisposable
+    public class StorageManager : IStorage
     {
         readonly Stack<IStorage> StorageStack = new Stack<IStorage>();
-        IStorage[] storages = null;
+        IStorage[] storages;
 
 		/// <summary>
 		/// Gets the Storage Type
@@ -255,13 +255,13 @@ namespace TWCore.Cache
 		}
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        List<R> ExecuteInAllStackAndReturn<R>(Func<IStorage, R> functionPushData)
+        private List<TR> ExecuteInAllStackAndReturn<TR>(Func<IStorage, TR> functionPushData)
         {
-            var responses = new List<R>();
+            var responses = new List<TR>();
             foreach (var storage in storages)
             {
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
-                R result = default(R);
+                var result = default(TR);
                 try
                 {
                     result = functionPushData(storage);
@@ -275,13 +275,13 @@ namespace TWCore.Cache
             return responses;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		List<R> ExecuteInAllStackAndReturn<R, A1>(A1 arg1, Func<IStorage, A1, R> functionPushData)
+        private List<TR> ExecuteInAllStackAndReturn<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionPushData)
 		{
-			var responses = new List<R>();
+			var responses = new List<TR>();
 			foreach (var storage in storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				R result = default(R);
+				var result = default(TR);
 				try
 				{
 					result = functionPushData(storage, arg1);
@@ -295,13 +295,13 @@ namespace TWCore.Cache
 			return responses;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		List<R> ExecuteInAllStackAndReturn<R, A1, A2>(A1 arg1, A2 arg2, Func<IStorage, A1, A2, R> functionPushData)
+		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
 		{
-			var responses = new List<R>();
+			var responses = new List<TR>();
 			foreach (var storage in storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				R result = default(R);
+				var result = default(TR);
 				try
 				{
 					result = functionPushData(storage, arg1, arg2);
@@ -551,7 +551,6 @@ namespace TWCore.Cache
         /// <param name="key">Item Key</param>
         /// <param name="data">Item Data</param>
         /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, DateTime expirationDate)
@@ -737,26 +736,24 @@ namespace TWCore.Cache
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Release all resources
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    StorageStack.Each(s =>
-                    {
-                        var sM = s as StorageBase;
-                        sM?.Dispose();
-                    });
-                    StorageStack.Clear();
-                }
-                disposedValue = true;
-            }
+	        if (_disposedValue) return;
+	        if (disposing)
+	        {
+		        StorageStack.Each(s =>
+		        {
+			        var sM = s as StorageBase;
+			        sM?.Dispose();
+		        });
+		        StorageStack.Clear();
+	        }
+	        _disposedValue = true;
         }
         /// <summary>
         /// Release all resources

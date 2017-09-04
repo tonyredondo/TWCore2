@@ -28,16 +28,15 @@ namespace TWCore.Cache
     /// <summary>
     /// Storage Base class
     /// </summary>
-    public abstract partial class StorageBase : IStorage
+    public abstract class StorageBase : IStorage
     {
-        static StorageItemMeta[] EmptyMeta = new StorageItemMeta[0];
-        static StorageItem[] EmptyItem = new StorageItem[0];
-        static string[] EmptyStrings = new string[0];
-        ManualResetEventSlim _readyEventSlim = new ManualResetEventSlim(false);
-        int expirationCheckTimeInMinutes = 30;
-        bool _init = false;
-        Timer expirationTimer;
-        string mName;
+        private static readonly StorageItemMeta[] EmptyMeta = new StorageItemMeta[0];
+        private static readonly StorageItem[] EmptyItem = new StorageItem[0];
+        private readonly ManualResetEventSlim _readyEventSlim = new ManualResetEventSlim(false);
+        private readonly string _name;
+        private int _expirationCheckTimeInMinutes = 30;
+        private bool _init;
+        private Timer _expirationTimer;
 
         #region Properties
         /// <summary>
@@ -51,7 +50,11 @@ namespace TWCore.Cache
         /// <summary>
         /// Gets or sets the time in minutes to check if some items has expired.
         /// </summary>
-        public int ExpirationCheckTimeInMinutes { get { return expirationCheckTimeInMinutes; } set { expirationCheckTimeInMinutes = value; SetExpirationTimeout(); } }
+        public int ExpirationCheckTimeInMinutes 
+        { 
+            get => _expirationCheckTimeInMinutes;
+            set { _expirationCheckTimeInMinutes = value; SetExpirationTimeout(); } 
+        }
         /// <summary>
         /// Maximum duration per storage item
         /// </summary>
@@ -86,7 +89,7 @@ namespace TWCore.Cache
         {
             Enabled = true;
             SetExpirationTimeout();
-            mName = GetType().Name;
+            _name = GetType().Name;
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Enabled), Enabled, Enabled ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
@@ -110,11 +113,11 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void SetExpirationTimeout()
         {
-            expirationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
+            _expirationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
             if (ExpirationCheckTimeInMinutes > 0)
             {
                 var timeout = TimeSpan.FromMinutes(ExpirationCheckTimeInMinutes);
-                expirationTimer = new Timer(item => CheckItemExpiration(), this, timeout, timeout);
+                _expirationTimer = new Timer(item => CheckItemExpiration(), this, timeout, timeout);
             }
         }
         /// <summary>
@@ -132,17 +135,13 @@ namespace TWCore.Cache
                 foreach (var item in expiredItems)
                 {
                     var key = item.Key;
-                    if (!string.IsNullOrEmpty(key))
-                    {
-						Core.Log.LibVerbose("Remove: {0}, on: {1}", key, mName);
-                        if (OnRemove(key, out var meta) && !initial)
-                        {
-                            if (meta != null)
-                                meta.OnExpire -= OnItemExpire;
-                            ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
-                            meta?.Dispose();
-                        }
-                    }
+                    if (string.IsNullOrEmpty(key)) continue;
+                    Core.Log.LibVerbose("Remove: {0}, on: {1}", key, _name);
+                    if (!OnRemove(key, out var meta) || initial) continue;
+                    if (meta != null)
+                        meta.OnExpire -= OnItemExpire;
+                    ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
+                    meta?.Dispose();
                 }
             }
             catch (Exception ex)
@@ -299,8 +298,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetKeys()
         {
-            if (!Ready) return null;
-            return OnGetKeys();
+            return !Ready ? null : OnGetKeys();
         }
         #endregion
 
@@ -466,13 +464,10 @@ namespace TWCore.Cache
         public bool Set(StorageItem item)
         {
             if (!Ready || item == null) return false;
-            if (OnSet(item.Meta, item.Data))
-            {
-                item.Meta.OnExpire -= OnItemExpire;
-                item.Meta.OnExpire += OnItemExpire;
-                return true;
-            }
-            return false;
+            if (!OnSet(item.Meta, item.Data)) return false;
+            item.Meta.OnExpire -= OnItemExpire;
+            item.Meta.OnExpire += OnItemExpire;
+            return true;
         }
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -552,7 +547,7 @@ namespace TWCore.Cache
                     expDate = dateNow.Add(MaximumItemDuration.Value);
             }
 
-            Core.Log.LibVerbose("{0}-Set: {1}, with expiration: {2}", mName, key, expDate.HasValue ? expDate.Value.ToString(CultureInfo.CurrentCulture) : "NO EXPIRE");
+            Core.Log.LibVerbose("{0}-Set: {1}, with expiration: {2}", _name, key, expDate.HasValue ? expDate.Value.ToString(CultureInfo.CurrentCulture) : "NO EXPIRE");
 
             var sMeta = new StorageItemMeta
             {
@@ -561,12 +556,9 @@ namespace TWCore.Cache
                 Key = key,
                 Tags = tags?.Distinct().ToList()
             };
-            if (OnSet(sMeta, data))
-            {
-                sMeta.OnExpire += OnItemExpire;
-                return true;
-            }
-            return false;
+            if (!OnSet(sMeta, data)) return false;
+            sMeta.OnExpire += OnItemExpire;
+            return true;
         }
         #endregion
 
@@ -582,8 +574,7 @@ namespace TWCore.Cache
         {
             if (!Ready || string.IsNullOrEmpty(key)) return false;
             var meta = GetMeta(key);
-            if (meta == null) return false;
-            return OnSet(meta, data);
+            return meta != null && OnSet(meta, data);
         }
         /// <summary>
         /// Removes a StorageItem with the Key specified.
@@ -594,15 +585,12 @@ namespace TWCore.Cache
         public bool Remove(string key)
         {
             if (!Ready || string.IsNullOrEmpty(key)) return false;
-            if (OnRemove(key, out var meta))
-            {
-                if (meta != null)
-                    meta.OnExpire -= OnItemExpire;
-                ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
-                meta?.Dispose();
-                return true;
-            }
-            return false;
+            if (!OnRemove(key, out var meta)) return false;
+            if (meta != null)
+                meta.OnExpire -= OnItemExpire;
+            ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
+            meta?.Dispose();
+            return true;
         }
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
@@ -626,15 +614,12 @@ namespace TWCore.Cache
             if (stoMetas == null || stoMetas.Length == 0) return null;
             return stoMetas.Select(s =>
             {
-                if (OnRemove(s.Key, out var meta))
-                {
-                    if (meta != null)
-                        meta.OnExpire -= OnItemExpire;
-                    ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(s.Key));
-                    meta?.Dispose();
-                    return s.Key;
-                }
-                return null;
+                if (!OnRemove(s.Key, out var meta)) return null;
+                if (meta != null)
+                    meta.OnExpire -= OnItemExpire;
+                ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(s.Key));
+                meta?.Dispose();
+                return s.Key;
             }).RemoveNulls().ToArray();
         }
         #endregion
@@ -693,15 +678,12 @@ namespace TWCore.Cache
             => InternalGetOrSet(key, data, expirationDate, tags);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        StorageItem InternalGetOrSet(string key, SerializedObject data, DateTime? expirationDate = null, string[] tags = null)
+        private StorageItem InternalGetOrSet(string key, SerializedObject data, DateTime? expirationDate = null, string[] tags = null)
         {
             if (!Ready || string.IsNullOrEmpty(key)) return null;
-            if (!OnTryGet(key, out var value))
-            {
-                Set(key, data, expirationDate, tags);
-                return Get(key);
-            }
-            return value;
+            if (OnTryGet(key, out var value)) return value;
+            Set(key, data, expirationDate, tags);
+            return Get(key);
         }
         #endregion
 
@@ -720,26 +702,24 @@ namespace TWCore.Cache
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Release all resources
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (_disposedValue) return;
+            if (disposing)
             {
-                if (disposing)
+                if (_expirationTimer != null)
                 {
-                    if (expirationTimer != null)
-                    {
-                        expirationTimer.Change(Timeout.Infinite, Timeout.Infinite);
-                        expirationTimer = null;
-                    }
+                    _expirationTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    _expirationTimer = null;
                 }
-				OnDispose();
-                disposedValue = true;
             }
+            OnDispose();
+            _disposedValue = true;
         }
         /// <summary>
         /// Release all resources

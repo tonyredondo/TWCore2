@@ -49,6 +49,7 @@ namespace TWCore.Web
         /// <summary>
         /// Adds the ISerializer instance as an OutputFormatter
         /// </summary>
+        /// <param name="options">MvcOptions instance</param>
         /// <param name="serializer">ISerializer instance</param>
         public static MvcOptions AddISerializerOutputFormatter(this MvcOptions options, ISerializer serializer)
         {
@@ -58,6 +59,7 @@ namespace TWCore.Web
         /// <summary>
         /// Adds the ISerializer instance as an InputFormatter
         /// </summary>
+        /// <param name="options">MvcOptions instance</param>
         /// <param name="serializer">ISerializer instance</param>
         public static MvcOptions AddISerializerInputFormatter(this MvcOptions options, ISerializer serializer)
         {

@@ -2,10 +2,12 @@ using TWCore.Services;
 using TWCore.Serialization;
 using System.Text;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using TWCore.Serialization.PWSerializer.Deserializer;
 
 namespace TWCore.Tests
 {
+    [SuppressMessage("ReSharper", "UnusedVariable")]
     public class SerializerTest : ContainerParameterService
     {
         public SerializerTest() : base("serializertest", "PWSerializer Test") { }

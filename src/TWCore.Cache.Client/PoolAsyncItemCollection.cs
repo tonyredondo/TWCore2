@@ -26,19 +26,19 @@ namespace TWCore.Cache.Client
 	/// <summary>
 	/// Storage action async delegate.
 	/// </summary>
-	public delegate Task StorageActionAsyncDelegate<A1>(PoolAsyncItem item, A1 arg1);
+	public delegate Task StorageActionAsyncDelegate<in TA1>(PoolAsyncItem item, TA1 arg1);
 	/// <summary>
 	/// Storage action async delegate.
 	/// </summary>
-	public delegate Task StorageActionAsyncDelegate<A1, A2>(PoolAsyncItem item, A1 arg1, A2 arg2);
+	public delegate Task StorageActionAsyncDelegate<in TA1, in TA2>(PoolAsyncItem item, TA1 arg1, TA2 arg2);
 	/// <summary>
 	/// Storage action async delegate.
 	/// </summary>
-	public delegate Task StorageActionAsyncDelegate<A1, A2, A3>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3);
+	public delegate Task StorageActionAsyncDelegate<in TA1, in TA2, in TA3>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3);
 	/// <summary>
 	/// Storage action async delegate.
 	/// </summary>
-	public delegate Task StorageActionAsyncDelegate<A1, A2, A3, A4>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
+	public delegate Task StorageActionAsyncDelegate<in TA1, in TA2, in TA3, in TA4>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4);
 	/// <summary>
 	/// Storage func async delegate.
 	/// </summary>
@@ -46,29 +46,29 @@ namespace TWCore.Cache.Client
 	/// <summary>
 	/// Storage func async delegate.
 	/// </summary>
-	public delegate Task<T> StorageFuncAsyncDelegate<T, A1>(PoolAsyncItem item, A1 arg1);
+	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1>(PoolAsyncItem item, TA1 arg1);
 	/// <summary>
 	/// Storage func async delegate.
 	/// </summary>
-	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2>(PoolAsyncItem item, A1 arg1, A2 arg2);
+	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1, in TA2>(PoolAsyncItem item, TA1 arg1, TA2 arg2);
 	/// <summary>
 	/// Storage func async delegate.
 	/// </summary>
-	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2, A3>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3);
+	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1, in TA2, in TA3>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3);
 	/// <summary>
 	/// Storage func async delegate.
 	/// </summary>
-	public delegate Task<T> StorageFuncAsyncDelegate<T, A1, A2, A3, A4>(PoolAsyncItem item, A1 arg1, A2 arg2, A3 arg3, A4 arg4);
+	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1, in TA2, in TA3, in TA4>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4);
 
     /// <summary>
     /// Cache pool item collection
     /// </summary>
     public class PoolAsyncItemCollection : IDisposable
     {
-        ActionWorker Worker;
-        internal List<PoolAsyncItem> Items;
-        bool firstTime = true;
-		bool hasMemoryStorage = false;
+	    private ActionWorker _worker;
+	    private bool _firstTime = true;
+	    private bool _hasMemoryStorage;
+	    internal List<PoolAsyncItem> Items;
 
         #region Properties
         /// <summary>
@@ -103,19 +103,19 @@ namespace TWCore.Cache.Client
 		/// Gets is the pool has a memory storage
 		/// </summary>
 		/// <value><c>true</c> if has memory storage; otherwise, <c>false</c>.</value>
-		public bool HasMemoryStorage => hasMemoryStorage;
+		public bool HasMemoryStorage => _hasMemoryStorage;
         #endregion
 
 		#region Nested Type
-		class WriteItem<A1, A2, A3, A4>
+	    private class WriteItem<TA1, TA2, TA3, TA4>
 		{
 			public int Index;
 			public PoolAsyncItem[] Items;
-			public A1 Arg1;
-			public A2 Arg2;
-			public A3 Arg3;
-			public A4 Arg4;
-			public StorageActionAsyncDelegate<A1, A2, A3, A4> Action;
+			public TA1 Arg1;
+			public TA2 Arg2;
+			public TA3 Arg3;
+			public TA4 Arg4;
+			public StorageActionAsyncDelegate<TA1, TA2, TA3, TA4> Action;
 		}
 		#endregion
 
@@ -137,7 +137,7 @@ namespace TWCore.Cache.Client
             ReadMode = readMode;
             SelectionOrder = selectionOrder;
             IndexOrder = indexOrder?.SplitAndTrim(",")?.Select(s => s.ParseTo(-1)).Where(s => s > 0).Distinct().ToArray();
-            Worker = new ActionWorker();
+            _worker = new ActionWorker();
             Items = new List<PoolAsyncItem>();
 
             Core.Status.Attach(collection =>
@@ -149,7 +149,7 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(SelectionOrder), SelectionOrder);
                 collection.Add(nameof(IndexOrder), IndexOrder?.Join(","));
                 collection.Add(nameof(ForceAtLeastOneNetworkItemEnabled), ForceAtLeastOneNetworkItemEnabled);
-                Core.Status.AttachChild(Worker, this);
+                Core.Status.AttachChild(_worker, this);
                 if (Items != null)
                 {
                     collection.Add(nameof(Items.Count), Items.Count);
@@ -172,7 +172,7 @@ namespace TWCore.Cache.Client
                 item.PingDelay = PingDelay;
                 item.PingDelayOnError = PingDelayOnError;
                 Items.Add(item);
-				hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
+				_hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
             }
         }
         /// <summary>
@@ -212,9 +212,9 @@ namespace TWCore.Cache.Client
 			var sw = Stopwatch.StartNew();
 
 			//Sort index according the IndexOrder
-			if (firstTime && SelectionOrder == PoolOrder.Index && IndexOrder?.Any() == true)
+			if (_firstTime && SelectionOrder == PoolOrder.Index && IndexOrder?.Any() == true)
 			{
-				firstTime = false;
+				_firstTime = false;
 				var lstItems = new List<PoolAsyncItem>(Items);
 				var nItems = new List<PoolAsyncItem>();
 				foreach(var idx in IndexOrder)
@@ -238,23 +238,22 @@ namespace TWCore.Cache.Client
 			{
 				IEnumerable<PoolAsyncItem> iWhere;
 
-				if (onlyMemoryStorages)
-					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory);
-				else
-					iWhere = Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
+				iWhere = onlyMemoryStorages ? 
+					Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory) : 
+					Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
 
 				if (SelectionOrder == PoolOrder.PingTime)
 					iWhere = iWhere.OrderBy(i => i.PingTime);
 
-				if (!ForceAtLeastOneNetworkItemEnabled && iWhere.Any())
-					return iWhere.ToArray();
+				var poolAsyncItems = iWhere.ToArray();
+				if (!ForceAtLeastOneNetworkItemEnabled && poolAsyncItems.Any())
+					return poolAsyncItems;
 
-				var tmp = iWhere.ToArray();
-				if (ForceAtLeastOneNetworkItemEnabled && tmp.Any(i => i.Storage.Type != StorageType.Memory))
-					return tmp;
+				if (ForceAtLeastOneNetworkItemEnabled && poolAsyncItems.Any(i => i.Storage.Type != StorageType.Memory))
+					return poolAsyncItems;
 
 				if (onlyMemoryStorages)
-					return tmp;
+					return poolAsyncItems;
 
 				Factory.Thread.Sleep(250);
 			}
@@ -274,25 +273,31 @@ namespace TWCore.Cache.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public async Task<T> ReadAsync<T>(StorageFuncAsyncDelegate<T> function, ResponseConditionDelegate<T> responseCondition)
 			=> (await ReadAsync(null, null, (PoolAsyncItem item, object a1, object a2) => function(item), responseCondition).ConfigureAwait(false)).Item1;
-		/// <summary>
-		/// Read action on the Pool.
-		/// </summary>
-		/// <typeparam name="T">Return value type</typeparam>
-		/// <param name="function">Function to execute on the storage pool item</param>
-		/// <param name="responseCondition">Function to check if the result is good or not.</param>
-		/// <returns>Return value</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task<(T, PoolAsyncItem)> ReadAsync<T, A1>(A1 arg1, StorageFuncAsyncDelegate<T, A1> function, ResponseConditionDelegate<T> responseCondition)
-			=> ReadAsync(arg1, null, (PoolAsyncItem item, A1 a1, object a2) => function(item, a1), responseCondition);
-		/// <summary>
-		/// Read action on the Pool.
-		/// </summary>
-		/// <typeparam name="T">Return value type</typeparam>
-		/// <param name="function">Function to execute on the storage pool item</param>
-		/// <param name="responseCondition">Function to check if the result is good or not.</param>
-		/// <returns>Return value</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task<(T, PoolAsyncItem)> ReadAsync<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncAsyncDelegate<T, A1, A2> function, ResponseConditionDelegate<T> responseCondition)
+	    /// <summary>
+	    /// Read action on the Pool.
+	    /// </summary>
+	    /// <typeparam name="T">Return value type</typeparam>
+	    /// <typeparam name="TA1">Argument 1 type</typeparam>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="function">Function to execute on the storage pool item</param>
+	    /// <param name="responseCondition">Function to check if the result is good or not.</param>
+	    /// <returns>Return value</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task<(T, PoolAsyncItem)> ReadAsync<T, TA1>(TA1 arg1, StorageFuncAsyncDelegate<T, TA1> function, ResponseConditionDelegate<T> responseCondition)
+			=> ReadAsync(arg1, null, (PoolAsyncItem item, TA1 a1, object a2) => function(item, a1), responseCondition);
+	    /// <summary>
+	    /// Read action on the Pool.
+	    /// </summary>
+	    /// <typeparam name="T">Return value type</typeparam>
+	    /// <typeparam name="TA1">Argument 1 type</typeparam>
+	    /// <typeparam name="TA2">Argument 2 type</typeparam>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="arg2">Argument 2</param>
+	    /// <param name="function">Function to execute on the storage pool item</param>
+	    /// <param name="responseCondition">Function to check if the result is good or not.</param>
+	    /// <returns>Return value</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<(T, PoolAsyncItem)> ReadAsync<T, TA1, TA2>(TA1 arg1, TA2 arg2, StorageFuncAsyncDelegate<T, TA1, TA2> function, ResponseConditionDelegate<T> responseCondition)
 		{
 			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
 			var items = WaitAndGetEnabled(StorageItemMode.Read);
@@ -321,40 +326,51 @@ namespace TWCore.Cache.Client
 		#endregion
 
 		#region WriteAsync Methods
-		/// <summary>
-		/// Write action on the Pool
-		/// </summary>
-		/// <param name="action">Action to execute in the pool item</param>
-		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task WriteAsync<A1>(A1 arg1, StorageActionAsyncDelegate<A1> action, bool onlyMemoryStorages = false)
+
+	    /// <summary>
+	    /// Write action on the Pool
+	    /// </summary>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="action">Action to execute in the pool item</param>
+	    /// <param name="onlyMemoryStorages">Write only on memory storages</param>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task WriteAsync<TA1>(TA1 arg1, StorageActionAsyncDelegate<TA1> action, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, null, null, null, 
-		             (PoolAsyncItem item, A1 a1, object a2, object a3, object a4) => action(item, a1), onlyMemoryStorages);
-		/// <summary>
-		/// Write action on the Pool
-		/// </summary>
-		/// <param name="action">Action to execute in the pool item</param>
-		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task WriteAsync<A1, A2>(A1 arg1, A2 arg2, StorageActionAsyncDelegate<A1, A2> action, bool onlyMemoryStorages = false)
+		             (PoolAsyncItem item, TA1 a1, object a2, object a3, object a4) => action(item, a1), onlyMemoryStorages);
+	    /// <summary>
+	    /// Write action on the Pool
+	    /// </summary>
+	    /// <param name="arg1">Argument 1</param>
+	    /// <param name="arg2">Argument 2</param>
+	    /// <param name="action">Action to execute in the pool item</param>
+	    /// <param name="onlyMemoryStorages">Write only on memory storages</param>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public Task WriteAsync<TA1, TA2>(TA1 arg1, TA2 arg2, StorageActionAsyncDelegate<TA1, TA2> action, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, arg2, null, null, 
-		             (PoolAsyncItem item, A1 a1, A2 a2, object a3, object a4) => action(item, a1, a2), onlyMemoryStorages);
+		             (PoolAsyncItem item, TA1 a1, TA2 a2, object a3, object a4) => action(item, a1, a2), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
+		/// <param name="arg2">Argument 2</param>
+		/// <param name="arg3">Argument 3</param>
 		/// <param name="action">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task WriteAsync<A1, A2, A3>(ref A1 arg1, ref A2 arg2, ref A3 arg3, StorageActionAsyncDelegate<A1, A2, A3> action, bool onlyMemoryStorages = false)
+		public Task WriteAsync<TA1, TA2, TA3>(ref TA1 arg1, ref TA2 arg2, ref TA3 arg3, StorageActionAsyncDelegate<TA1, TA2, TA3> action, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, arg2, arg3, null, 
-		             (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, object a4) => action(item, a1, a2, a3), onlyMemoryStorages);
+		             (PoolAsyncItem item, TA1 a1, TA2 a2, TA3 a3, object a4) => action(item, a1, a2, a3), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
+		/// <param name="arg2">Argument 2</param>
+		/// <param name="arg3">Argument 3</param>
+		/// <param name="arg4">Argument 4</param>
 		/// <param name="action">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task WriteAsync<A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageActionAsyncDelegate<A1, A2, A3, A4> action, bool onlyMemoryStorages = false)
+		public async Task WriteAsync<TA1, TA2, TA3, TA4>(TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4, StorageActionAsyncDelegate<TA1, TA2, TA3, TA4> action, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
 			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
@@ -398,7 +414,7 @@ namespace TWCore.Cache.Client
 				idx++;
 				if (idx < arrEnabled.Length) 
 				{
-					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> 
+					_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
 					{ 
 						Action = action, 
 						Arg1 = arg1, 
@@ -416,45 +432,55 @@ namespace TWCore.Cache.Client
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
 		/// <param name="function">Function to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		/// <returns>Return value from the function</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task<T> WriteAsync<T, A1>(A1 arg1, StorageFuncAsyncDelegate<T, A1> function, bool onlyMemoryStorages = false)
+		public Task<T> WriteAsync<T, TA1>(TA1 arg1, StorageFuncAsyncDelegate<T, TA1> function, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, null, null, null, 
-		             (PoolAsyncItem item, A1 a1, object a2, object a3, object a4) => function(item, a1), onlyMemoryStorages);
+		             (PoolAsyncItem item, TA1 a1, object a2, object a3, object a4) => function(item, a1), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
+		/// <param name="arg2">Argument 2</param>
 		/// <param name="function">Function to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		/// <returns>Return value from the function</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task<T> WriteAsync<T, A1, A2>(A1 arg1, A2 arg2, StorageFuncAsyncDelegate<T, A1, A2> function, bool onlyMemoryStorages = false)
+		public Task<T> WriteAsync<T, TA1, TA2>(TA1 arg1, TA2 arg2, StorageFuncAsyncDelegate<T, TA1, TA2> function, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, arg2, null, null, 
-		             (PoolAsyncItem item, A1 a1, A2 a2, object a3, object a4) => function(item, a1, a2), onlyMemoryStorages);
+		             (PoolAsyncItem item, TA1 a1, TA2 a2, object a3, object a4) => function(item, a1, a2), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
+		/// <param name="arg2">Argument 2</param>
+		/// <param name="arg3">Argument 3</param>
 		/// <param name="function">Function to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		/// <returns>Return value from the function</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task<T> WriteAsync<T, A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3, StorageFuncAsyncDelegate<T, A1, A2, A3> function, bool onlyMemoryStorages = false)
+		public Task<T> WriteAsync<T, TA1, TA2, TA3>(TA1 arg1, TA2 arg2, TA3 arg3, StorageFuncAsyncDelegate<T, TA1, TA2, TA3> function, bool onlyMemoryStorages = false)
 			=> WriteAsync(arg1, arg2, arg3, null, 
-		         (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, object a4) => function(item, a1, a2, a3), onlyMemoryStorages);
+		         (PoolAsyncItem item, TA1 a1, TA2 a2, TA3 a3, object a4) => function(item, a1, a2, a3), onlyMemoryStorages);
 		/// <summary>
 		/// Write action on the Pool
 		/// </summary>
+		/// <param name="arg1">Argument 1</param>
+		/// <param name="arg2">Argument 2</param>
+		/// <param name="arg3">Argument 3</param>
+		/// <param name="arg4">Argument 4</param>
 		/// <param name="function">Action to execute in the pool item</param>
 		/// <param name="onlyMemoryStorages">Write only on memory storages</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public async Task<T> WriteAsync<T, A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, StorageFuncAsyncDelegate<T, A1, A2, A3, A4> function, bool onlyMemoryStorages = false)
+		public async Task<T> WriteAsync<T, TA1, TA2, TA3, TA4>(TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4, StorageFuncAsyncDelegate<T, TA1, TA2, TA3, TA4> function, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
 			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
-			T response = default(T);
+			var response = default(T);
 
 			if (WriteMode == PoolWriteMode.WritesAllInSync)
 			{
@@ -495,9 +521,9 @@ namespace TWCore.Cache.Client
 				idx++;
 				if (idx < arrEnabled.Length) 
 				{
-					Worker.Enqueue(WorkerHandler, new WriteItem<A1, A2, A3, A4> 
+					_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
 					{ 
-						Action = async (PoolAsyncItem item, A1 a1, A2 a2, A3 a3, A4 a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
+						Action = async (PoolAsyncItem item, TA1 a1, TA2 a2, TA3 a3, TA4 a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
 						Arg1 = arg1, 
 						Arg2 = arg2, 
 						Arg3 = arg3, 
@@ -511,7 +537,7 @@ namespace TWCore.Cache.Client
 			return response;
 		}
 
-		static void WorkerHandler<A1, A2, A3, A4>(WriteItem<A1, A2, A3, A4> wItem)
+	    private static void WorkerHandler<TA1, TA2, TA3, TA4>(WriteItem<TA1, TA2, TA3, TA4> wItem)
 		{
 			for(; wItem.Index < wItem.Items.Length; wItem.Index++)
 			{
@@ -537,8 +563,8 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Dispose()
         {
-            Worker?.Dispose();
-            Worker = null;
+            _worker?.Dispose();
+            _worker = null;
             Items?.Each(i => i.Dispose());
             Items = null;
             Core.Status.DeAttachObject(this);

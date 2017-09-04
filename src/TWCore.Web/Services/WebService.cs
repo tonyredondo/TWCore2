@@ -45,7 +45,7 @@ namespace TWCore.Services
             var webHost = _webHostFactory(StartArguments);
             await webHost.StartAsync(token).ConfigureAwait(false);
             var hostingEnvironment = (IHostingEnvironment)webHost.Services.GetService(typeof(IHostingEnvironment));
-            var applicationLifetime = (IApplicationLifetime)webHost.Services.GetService(typeof(IApplicationLifetime));
+            //var applicationLifetime = (IApplicationLifetime)webHost.Services.GetService(typeof(IApplicationLifetime));
             Core.Log.InfoBasic($"WebService Hosting environment: {hostingEnvironment.EnvironmentName}");
             Core.Log.InfoBasic($"WebService Content root path: {hostingEnvironment.ContentRootPath}");
             var serverAddresses = webHost.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;

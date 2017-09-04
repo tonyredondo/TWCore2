@@ -42,7 +42,7 @@ namespace TWCore.Services.Messaging
     /// Defines a business instance for message processing
     /// </summary>
     /// <typeparam name="T">Message Type</typeparam>
-    public interface IBusinessAsync<T> : IBusinessAsync, IDisposable
+    public interface IBusinessAsync<T> : IBusinessAsync
     {
         /// <summary>
         /// Process message

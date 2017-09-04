@@ -31,8 +31,8 @@ namespace TWCore.Serialization
     /// </summary>
     public static class SerializerManager
     {
-        static ISerializer _defaultBinarySerializer = null;
-        static ITextSerializer _defaultTextSerializer = null;
+        static ISerializer _defaultBinarySerializer;
+        static ITextSerializer _defaultTextSerializer;
 
 
         /// <summary>
@@ -356,6 +356,7 @@ namespace TWCore.Serialization
         /// </summary>
         /// <param name="item">Object instance</param>
         /// <returns>SerializedObject instance</returns>
+        /// <param name="serializer">Serializer object instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject Serialize(object item, ISerializer serializer) => new SerializedObject(item, serializer);
         /// <summary>
@@ -369,6 +370,7 @@ namespace TWCore.Serialization
         /// Serialize object
         /// </summary>
         /// <param name="item">Object instance</param>
+        /// <param name="serializer">Serializer object instance</param>
         /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject Serialize<T>(T item, ISerializer serializer) => new SerializedObject(item, serializer);

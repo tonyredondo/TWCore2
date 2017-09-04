@@ -13,11 +13,11 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    public class CacheRPCTest : ContainerParameterServiceAsync
+    public class CacheRpcTest : ContainerParameterServiceAsync
     {
 		static ISerializer GlobalSerializer = new WBinarySerializer();
 
-        public CacheRPCTest() : base("cacherpcTest", "Cache Test") { }
+        public CacheRpcTest() : base("cacherpcTest", "Cache Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting CACHE TEST");

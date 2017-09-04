@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+// ReSharper disable RedundantAssignment
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -143,36 +144,36 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Handles an OnBeginRequest event
         /// </summary>
         /// <param name="context">Http context</param>
+        /// <param name="handled">Get if the request was handled</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void HttpServer_OnBeginRequest(HttpContext context, ref bool handled)
+        private void HttpServer_OnBeginRequest(HttpContext context, ref bool handled)
         {
-            var Request = context.Request;
-            var Response = context.Response;
-            Core.Log.LibVerbose("Request received from {0}:{1} to {2} {3}", Request.RemoteAddress, Request.RemotePort, Request.Method, Request.RawUrl);
+            var request = context.Request;
+            var response = context.Response;
+            Core.Log.LibVerbose("Request received from {0}:{1} to {2} {3}", request.RemoteAddress, request.RemotePort, request.Method, request.RawUrl);
 
             var clientId = Guid.NewGuid();
             OnClientConnect?.Invoke(this, new ClientConnectEventArgs(clientId));
 
             context.Response.ContentType = Serializer.MimeTypes[0];
-            SubArray<byte> responseBuffer = default(SubArray<byte>);
+            var responseBuffer = default(SubArray<byte>);
 
             if (context.Request.Method == HttpMethod.GET && EnableGetDescriptors && OnGetDescriptorsRequest != null)
             {
                 var eArgs = new ServerDescriptorsEventArgs();
                 OnGetDescriptorsRequest(this, eArgs);
-                if (eArgs != null)
-                    responseBuffer = Serializer.Serialize(eArgs.Descriptors);
+                responseBuffer = Serializer.Serialize(eArgs.Descriptors);
             }
             if (context.Request.Method == HttpMethod.POST && OnMethodCall != null)
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
-                var messageRQ = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
-                var eArgs = new MethodEventArgs(clientId, messageRQ);
+                var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
+                var eArgs = new MethodEventArgs(clientId, messageRq);
                 OnMethodCall(this, eArgs);
                 if (eArgs.Response != null)
                     responseBuffer = Serializer.Serialize(eArgs.Response);
             }
-            Response.Write(responseBuffer.Array, responseBuffer.Offset, responseBuffer.Count);
+            response.Write(responseBuffer.Array, responseBuffer.Offset, responseBuffer.Count);
             Counters.IncrementBytesSent(responseBuffer.Count);
             handled = true;
         }

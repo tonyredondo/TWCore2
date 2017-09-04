@@ -27,7 +27,7 @@ namespace TWCore.Messaging.RabbitMQ
 	/// </summary>
 	public class RabbitMQueueRawServer : MQueueRawServerBase
     {
-        readonly ConcurrentDictionary<string, RabbitMQueue> rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+        private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
 
         /// <summary>
         /// On Create all server listeners
@@ -68,7 +68,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 try
                 {
-                    var rabbitQueue = rQueue.GetOrAdd(queue.Route, q =>
+                    var rabbitQueue = _rQueue.GetOrAdd(queue.Route, q =>
                     {
                         var rq = new RabbitMQueue(queue);
                         rq.EnsureConnection();
@@ -117,9 +117,9 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         protected override void OnDispose()
         {
-			foreach (var queue in rQueue.Values)
+			foreach (var queue in _rQueue.Values)
 				queue.Close();
-			rQueue.Clear();
+			_rQueue.Clear();
 		}
     }
 }

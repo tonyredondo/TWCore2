@@ -5,9 +5,9 @@ namespace DasMulli.Win32.ServiceUtils
 {
     public sealed class Win32ServiceManager
     {
-        private readonly string machineName;
-        private readonly string databaseName;
-        private readonly INativeInterop nativeInterop;
+        private readonly string _machineName;
+        private readonly string _databaseName;
+        private readonly INativeInterop _nativeInterop;
 
         public Win32ServiceManager(string machineName = null, string databaseName = null)
             : this(machineName, databaseName, Win32Interop.Wrapper)
@@ -16,9 +16,9 @@ namespace DasMulli.Win32.ServiceUtils
         
         internal Win32ServiceManager(string machineName, string databaseName, INativeInterop nativeInterop)
         {
-            this.machineName = machineName;
-            this.databaseName = databaseName;
-            this.nativeInterop = nativeInterop;
+            _machineName = machineName;
+            _databaseName = databaseName;
+            _nativeInterop = nativeInterop;
         }
 
         public void CreateService(string serviceName, string displayName, string description, string binaryPath, Win32ServiceCredentials credentials,
@@ -40,7 +40,7 @@ namespace DasMulli.Win32.ServiceUtils
 
             try
             {
-                using (var mgr = ServiceControlManager.Connect(nativeInterop, machineName, databaseName, ServiceControlManagerAccessRights.All))
+                using (var mgr = ServiceControlManager.Connect(_nativeInterop, _machineName, _databaseName, ServiceControlManagerAccessRights.All))
                 {
                     DoCreateService(mgr, serviceName, displayName, description, binaryPath, credentials, autoStart, startImmediately, errorSeverity, serviceFailureActions, failureActionsOnNonCrashFailures);
                 }
@@ -94,7 +94,7 @@ namespace DasMulli.Win32.ServiceUtils
 
             try
             {
-                using (var mgr = ServiceControlManager.Connect(nativeInterop, machineName, databaseName, ServiceControlManagerAccessRights.All))
+                using (var mgr = ServiceControlManager.Connect(_nativeInterop, _machineName, _databaseName, ServiceControlManagerAccessRights.All))
                 {
                     ServiceHandle existingService;
                     Win32Exception errorException;
@@ -140,7 +140,7 @@ namespace DasMulli.Win32.ServiceUtils
 
             try
             {
-                using (var mgr = ServiceControlManager.Connect(nativeInterop, machineName, databaseName, ServiceControlManagerAccessRights.All))
+                using (var mgr = ServiceControlManager.Connect(_nativeInterop, _machineName, _databaseName, ServiceControlManagerAccessRights.All))
                 {
                     using (var svc = mgr.OpenService(serviceName, ServiceControlAccessRights.All))
                     {

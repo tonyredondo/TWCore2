@@ -28,7 +28,7 @@ namespace TWCore.Messaging.RabbitMQ
 	/// </summary>
 	public class RabbitMQueueServer : MQueueServerBase
     {
-        readonly ConcurrentDictionary<string, RabbitMQueue> rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+        private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
 
         /// <summary>
         /// On Create all server listeners
@@ -49,22 +49,22 @@ namespace TWCore.Messaging.RabbitMQ
             if (e.ResponseQueues?.Any() != true)
                 return false;
 
-            var SenderOptions = Config.ResponseOptions.ServerSenderOptions;
-            if (SenderOptions == null)
+            var senderOptions = Config.ResponseOptions.ServerSenderOptions;
+            if (senderOptions == null)
                 throw new ArgumentNullException("ServerSenderOptions");
 
             var correlationId = message.CorrelationId.ToString();
             var data = SenderSerializer.Serialize(message);
-            var priority = (byte)(SenderOptions.MessagePriority == MQMessagePriority.High ? 9 :
-                            SenderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
-            var expiration = (SenderOptions.MessageExpirationInSec * 1000).ToString();
-            var deliveryMode = (byte)(SenderOptions.Recoverable ? 2 : 1);
-            bool response = true;
+            var priority = (byte)(senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
+                            senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
+            var expiration = (senderOptions.MessageExpirationInSec * 1000).ToString();
+            var deliveryMode = (byte)(senderOptions.Recoverable ? 2 : 1);
+            var response = true;
             foreach (var queue in e.ResponseQueues)
             {
                 try
                 {
-                    var rabbitQueue = rQueue.GetOrAdd(queue.Route, q =>
+                    var rabbitQueue = _rQueue.GetOrAdd(queue.Route, q =>
                     {
                         var rq = new RabbitMQueue(queue);
                         rq.EnsureConnection();
@@ -79,7 +79,7 @@ namespace TWCore.Messaging.RabbitMQ
                     props.AppId = Core.ApplicationName;
                     props.ContentType = SenderSerializer.MimeTypes[0];
                     props.DeliveryMode = deliveryMode;
-                    props.Type = SenderOptions.Label;
+                    props.Type = senderOptions.Label;
                     Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, rabbitQueue.Route + "/" + queue.Name, correlationId);
                     rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, (byte[])data);
                 }
@@ -97,9 +97,9 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         protected override void OnDispose()
         {
-			foreach (var queue in rQueue.Values)
+			foreach (var queue in _rQueue.Values)
 				queue.Close();
-			rQueue.Clear();
+			_rQueue.Clear();
 		}
     }
 }

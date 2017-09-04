@@ -31,7 +31,7 @@ namespace TWCore.Cache.Storages.IO
     /// </summary>
     public class FileStorage : StorageBase
     {
-        FolderStorage[] Storages;
+        private FolderStorage[] _storages;
 
         #region Properties
         /// <summary>
@@ -81,18 +81,16 @@ namespace TWCore.Cache.Storages.IO
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Green : NumberOfSubFolders > 2 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Red);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
-                if (Storages != null)
-                {
-                    foreach (var sto in Storages)
-                        Core.Status.AttachChild(sto, this);
-                }
+                if (_storages == null) return;
+                foreach (var sto in _storages)
+                    Core.Status.AttachChild(sto, this);
             });
         }
         #endregion
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int GetFolderNumber(string key)
+        private int GetFolderNumber(string key)
             => (int?)(key?.GetJenkinsHash() % NumberOfSubFolders) ?? 0;
         #endregion
 
@@ -103,11 +101,11 @@ namespace TWCore.Cache.Storages.IO
         protected override void OnInit()
         {
             Core.Log.InfoBasic("Initializing FileStorage...");
-            if (Storages?.Any() == true)
+            if (_storages?.Any() == true)
             {
                 Core.Log.InfoBasic("Disposing previous instances...");
-                Storages.Each(fsto => fsto.Dispose());
-                Storages = null;
+                _storages.Each(fsto => fsto.Dispose());
+                _storages = null;
             }
             if (!Directory.Exists(BasePath))
             {
@@ -115,15 +113,15 @@ namespace TWCore.Cache.Storages.IO
                 Directory.CreateDirectory(BasePath);
             }
             Core.Log.InfoBasic("Configuring {0} Subfolders", NumberOfSubFolders);
-            Storages = new FolderStorage[NumberOfSubFolders];
-            for (int i = 0; i < NumberOfSubFolders; i++)
+            _storages = new FolderStorage[NumberOfSubFolders];
+            for (var i = 0; i < NumberOfSubFolders; i++)
             {
                 var folder = Path.Combine(BasePath, i.ToString());
                 Core.Log.InfoBasic("Initializing Subfolder: {0}", i);
-                Storages[i] = new FolderStorage(folder, this);
+                _storages[i] = new FolderStorage(folder, this);
             }
             Core.Log.InfoBasic("Waiting the storages to be loaded.");
-            while (Storages.Any(s => !s.Loaded))
+            while (_storages.Any(s => !s.Loaded))
                 Thread.Sleep(100);
             Core.Log.InfoBasic("All folder storages are loaded, Index Count: {0}", Metas.Count());
             SetReady(true);
@@ -131,45 +129,43 @@ namespace TWCore.Cache.Storages.IO
         protected override IEnumerable<StorageItemMeta> Metas
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Storages.SelectMany(s => s.Metas).ToArray();
+            get => _storages.SelectMany(s => s.Metas).ToArray();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
-            => Storages[GetFolderNumber(key)].OnExistKey(key);
+            => _storages[GetFolderNumber(key)].OnExistKey(key);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-            => Storages.SelectMany(s => s.OnGetKeys()).ToArray();
+            => _storages.SelectMany(s => s.OnGetKeys()).ToArray();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
-            => Storages[GetFolderNumber(key)].OnRemove(key, out meta);
+            => _storages[GetFolderNumber(key)].OnRemove(key, out meta);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => Storages[GetFolderNumber(meta.Key)].OnSet(meta, value);
+            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
-            => Storages[GetFolderNumber(key)].OnTryGet(key, out value, condition);
+            => _storages[GetFolderNumber(key)].OnTryGet(key, out value, condition);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
-            => Storages[GetFolderNumber(key)].OnTryGetMeta(key, out value, condition);
+            => _storages[GetFolderNumber(key)].OnTryGetMeta(key, out value, condition);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (Storages != null)
-            {
-                Core.Log.InfoBasic("Disposing...");
-                Storages.ParallelEach(s => s.Dispose());
-                Storages = null;
-            }
+            if (_storages == null) return;
+            Core.Log.InfoBasic("Disposing...");
+            _storages.ParallelEach(s => s.Dispose());
+            _storages = null;
         }
         #endregion
 
         #region Inner Types
-        class FolderStorage : IDisposable
+        private sealed class FolderStorage : IDisposable
         {
-            static byte[] BytesEmpty = new byte[0];
-            const string IndexFileName = "Index";
-            const string TransactionLogFileName = "Index.journal";
-            const string DataExtension = ".data";
+            private static readonly byte[] BytesEmpty = new byte[0];
+            private const string IndexFileName = "Index";
+            private const string TransactionLogFileName = "Index.journal";
+            private const string DataExtension = ".data";
 
             #region Fields
             CancellationTokenSource _tokenSource;
@@ -696,7 +692,7 @@ namespace TWCore.Cache.Storages.IO
 
             // To detect redundant calls
 
-            protected virtual void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 if (!disposedValue)
                 {

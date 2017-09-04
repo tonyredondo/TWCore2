@@ -24,6 +24,7 @@ using System.Text;
 using TWCore.Data.Schema.Generator;
 using TWCore.Data.Schema;
 using System.Data;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Data.PostgreSQL
 {
@@ -192,8 +193,6 @@ namespace TWCore.Data.PostgreSQL
                             break;
                         case "interval":
                             tableColumn.DataType = (tableColumn.IsNullable ? "TimeSpan?" : "TimeSpan");
-                            break;
-                        default:
                             break;
                     }
                     #endregion

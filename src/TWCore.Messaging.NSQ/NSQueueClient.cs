@@ -26,9 +26,9 @@ using NsqSharp.Api;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
-using System.Text;
 using System.Threading.Tasks;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NSQ
 {
@@ -37,16 +37,16 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueClient : MQueueClientBase
     {
-        static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
-        static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
+        private static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
+        private static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
 
         #region Fields
-        List<(MQConnection, ObjectPool<Producer>)> _senders;
-        Consumer _receiver;
-        MQConnection _receiverConnection;
-        MQClientQueues _clientQueues;
-        MQClientSenderOptions _senderOptions;
-        MQClientReceiverOptions _receiverOptions;
+        private List<(MQConnection, ObjectPool<Producer>)> _senders;
+        private Consumer _receiver;
+        private MQConnection _receiverConnection;
+        private MQClientQueues _clientQueues;
+        private MQClientSenderOptions _senderOptions;
+        private MQClientReceiverOptions _receiverOptions;
         #endregion
 
         #region Properties
@@ -57,7 +57,7 @@ namespace TWCore.Messaging.NSQ
         #endregion
 
         #region Nested Type
-        class NSQueueMessage
+        private class NSQueueMessage
         {
             public Guid CorrelationId;
             public SubArray<byte> Body;
@@ -66,12 +66,12 @@ namespace TWCore.Messaging.NSQ
             public string Route;
             public string Name;
         }
-        class NSQMessageHandler : IHandler
+        private class NSQMessageHandler : IHandler
         {
             public void HandleMessage(NsqSharp.IMessage message)
             {
                 (var body, var correlationId) = GetFromMessageBody(message.Body);
-                Try.Do(() => message.Finish(), false);
+                Try.Do(message.Finish, false);
                 var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
                 rMsg.CorrelationId = correlationId;
                 rMsg.Body = body;
@@ -165,12 +165,10 @@ namespace TWCore.Messaging.NSQ
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiver != null)
-            {
-                if (UseSingleResponseQueue)
-                    _receiver.Stop();
-                _receiver = null;
-            }
+            if (_receiver == null) return;
+            if (UseSingleResponseQueue)
+                _receiver.Stop();
+            _receiver = null;
         }
         #endregion
 
@@ -266,7 +264,6 @@ namespace TWCore.Messaging.NSQ
                     var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                     Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                     sw.Stop();
-                    sw = null;
                     return response;
                 }
                 else
@@ -282,7 +279,6 @@ namespace TWCore.Messaging.NSQ
                 var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                sw = null;
                 return response;
             }
             else

@@ -16,6 +16,7 @@ limitations under the License.
 
 using Microsoft.Extensions.Logging;
 using System.Collections.Concurrent;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Web.Logger
 {
@@ -24,7 +25,7 @@ namespace TWCore.Web.Logger
     /// </summary>
     public class TWCoreLoggerProvider : ILoggerProvider
     {
-        readonly ConcurrentDictionary<string, TWCoreLogger> _loggers = new ConcurrentDictionary<string, TWCoreLogger>();
+        private readonly ConcurrentDictionary<string, TWCoreLogger> _loggers = new ConcurrentDictionary<string, TWCoreLogger>();
 
         /// <summary>
         /// Creates a new Microsoft.Extensions.Logging.ILogger instance.

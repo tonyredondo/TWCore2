@@ -16,6 +16,7 @@ limitations under the License.
 
 using TWCore.Collections;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Cache.Storages
 {

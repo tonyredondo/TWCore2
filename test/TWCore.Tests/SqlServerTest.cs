@@ -5,6 +5,7 @@ using TWCore.Data;
 using TWCore.Data.SqlServer;
 using System.Linq;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Tests
 {

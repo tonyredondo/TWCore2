@@ -29,7 +29,7 @@ namespace TWCore.Cache.Storages
     /// </summary>
     public class CacheCollectionStorage : StorageBase
     {
-        ICacheCollection<string, (StorageItemMeta, SerializedObject)> Storage;
+        private ICacheCollection<string, (StorageItemMeta, SerializedObject)> _storage;
 
 		/// <summary>
 		/// Gets the Storage Type
@@ -44,17 +44,17 @@ namespace TWCore.Cache.Storages
         /// <param name="cacheCollection">ICacheCollection instance</param>
         public CacheCollectionStorage(ICacheCollection<string, (StorageItemMeta, SerializedObject)> cacheCollection)
         {
-            Storage = cacheCollection;
+            _storage = cacheCollection;
             Core.Status.Attach(collection =>
             {
-                if (Storage == null)
+                if (_storage == null)
                     return;
-                var percent = (double)Storage.Count / Storage.Capacity;
-                collection.Add(nameof(Storage.Capacity), Storage.Capacity);
-                collection.Add(nameof(Storage.Count), Storage.Count, percent <= 0.8 ? StatusItemValueStatus.Green : percent > 0.75 && percent < 1 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Green);
-                collection.Add(nameof(Storage.Hits), Storage.Hits);
-                collection.Add(nameof(Storage.Inserts), Storage.Inserts);
-                collection.Add(nameof(Storage.Deletes), Storage.Deletes);
+                var percent = (double)_storage.Count / _storage.Capacity;
+                collection.Add(nameof(_storage.Capacity), _storage.Capacity);
+                collection.Add(nameof(_storage.Count), _storage.Count, percent <= 0.8 ? StatusItemValueStatus.Green : percent > 0.75 && percent < 1 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Green);
+                collection.Add(nameof(_storage.Hits), _storage.Hits);
+                collection.Add(nameof(_storage.Inserts), _storage.Inserts);
+                collection.Add(nameof(_storage.Deletes), _storage.Deletes);
             });
         }
         #endregion
@@ -67,7 +67,7 @@ namespace TWCore.Cache.Storages
 		protected override IEnumerable<StorageItemMeta> Metas 
 		{ 
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get => Storage.Values.Select(v => v.Item1);
+			get => _storage.Values.Select(v => v.Item1);
 		}
         /// <summary>
         /// Checks if a key exist on the storage.
@@ -76,14 +76,14 @@ namespace TWCore.Cache.Storages
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
-            => Storage.ContainsKey(key);
+            => _storage.ContainsKey(key);
         /// <summary>
         /// Get all storage keys.
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-            => Storage.Keys.ToArray();
+            => _storage.Keys.ToArray();
         /// <summary>
         /// Tries to set the data to the storage
         /// </summary>
@@ -94,7 +94,7 @@ namespace TWCore.Cache.Storages
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
         {
             if (meta == null) return false;
-            Storage.AddOrUpdate(meta.Key, (meta, value), (k, v) => (meta, value));
+            _storage.AddOrUpdate(meta.Key, (meta, value), (k, v) => (meta, value));
             return true;
         }
         /// <summary>
@@ -106,7 +106,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {
-            if (Storage.TryRemove(key, out var value))
+            if (_storage.TryRemove(key, out var value))
             {
                 meta = value.Item1;
                 return true;
@@ -124,7 +124,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            if (Storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
+            if (_storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
             {
                 value = new StorageItem(item.Item1, item.Item2);
                 return true;
@@ -142,7 +142,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
-            if (Storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
+            if (_storage.TryGetValue(key, out var item) && (condition == null || condition(item.Item1)))
             {
                 value = item.Item1;
                 return true;
@@ -166,8 +166,8 @@ namespace TWCore.Cache.Storages
         protected override void OnDispose()
         {
             SetReady(false);
-            Storage?.Clear();
-            Storage = null;
+            _storage?.Clear();
+            _storage = null;
             Core.Status.DeAttachObject(this);
         }
 		#endregion

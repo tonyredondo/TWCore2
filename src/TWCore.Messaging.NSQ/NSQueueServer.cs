@@ -21,6 +21,7 @@ using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NSQ
 {
@@ -29,7 +30,7 @@ namespace TWCore.Messaging.NSQ
 	/// </summary>
 	public class NSQueueServer : MQueueServerBase
 	{
-        readonly ConcurrentDictionary<string, ObjectPool<Producer>> rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
+		private readonly ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
 
 		#region .ctor
 		/// <summary>
@@ -60,19 +61,19 @@ namespace TWCore.Messaging.NSQ
 			if (e.ResponseQueues?.Any() != true)
 				return false;
 
-			var SenderOptions = Config.ResponseOptions.ServerSenderOptions;
-			if (SenderOptions == null)
+			var senderOptions = Config.ResponseOptions.ServerSenderOptions;
+			if (senderOptions == null)
 				throw new ArgumentNullException("ServerSenderOptions");
 
 			var data = SenderSerializer.Serialize(message);
             var body = NSQueueClient.CreateMessageBody(data, message.CorrelationId);
 
-			bool response = true;
+			var response = true;
 			foreach (var queue in e.ResponseQueues)
 			{
 				try
 				{
-                    var nsqProducerPool = rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(pool =>
+                    var nsqProducerPool = _rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(pool =>
                     {
                         Core.Log.LibVerbose("New Producer from QueueServer");
                         return new Producer(q);
@@ -96,11 +97,11 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		protected override void OnDispose()
 		{
-            var producers = rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
+            var producers = _rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
             Parallel.ForEach(producers, p => p.Stop());
-            foreach (var sender in rQueue)
+            foreach (var sender in _rQueue)
                 sender.Value.Clear();
-            rQueue.Clear();
+            _rQueue.Clear();
 		}
 	}
 }

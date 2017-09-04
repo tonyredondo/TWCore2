@@ -16,6 +16,7 @@ limitations under the License.
 
 using Microsoft.Extensions.Logging;
 using System;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Web.Logger
 {
@@ -24,7 +25,7 @@ namespace TWCore.Web.Logger
     /// </summary>
     public class TWCoreLogger : ILogger
     {
-        string _name;
+        private readonly string _name;
 
         #region .ctor
         /// <summary>
@@ -60,7 +61,7 @@ namespace TWCore.Web.Logger
         /// <param name="formatter">Function to create a string message of the state and exception.</param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            Diagnostics.Log.LogLevel cLogLevel = Diagnostics.Log.LogLevel.LibVerbose;
+            Diagnostics.Log.LogLevel cLogLevel;
             switch(logLevel)
             {
                 case LogLevel.Critical:
@@ -83,6 +84,9 @@ namespace TWCore.Web.Logger
                     break;
                 case LogLevel.None:
                     return;
+                default:
+                    cLogLevel = Diagnostics.Log.LogLevel.Verbose;
+                    break;
             }
             Core.Log.Write(cLogLevel, eventId.Id.ToString(), formatter(state, exception), _name, exception, string.Empty, "Logger");
         }

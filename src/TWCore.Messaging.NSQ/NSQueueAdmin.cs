@@ -17,6 +17,7 @@ limitations under the License.
 using NsqSharp.Api;
 using System;
 using TWCore.Messaging.Configuration;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NSQ
 {
@@ -32,14 +33,11 @@ namespace TWCore.Messaging.NSQ
         /// <returns>true if the message queue was created; otherwise, false.</returns>
         public bool Create(MQConnection queue)
         {
-            if (!Exist(queue))
-            {
-                var client = new NsqdHttpClient(queue.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                client.CreateTopic(queue.Name);
-                client.CreateChannel(queue.Name, queue.Name);
-                return true;
-            }
-            return false;
+            if (Exist(queue)) return false;
+            var client = new NsqdHttpClient(queue.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+            client.CreateTopic(queue.Name);
+            client.CreateChannel(queue.Name, queue.Name);
+            return true;
         }
 
         /// <summary>
@@ -71,12 +69,10 @@ namespace TWCore.Messaging.NSQ
         /// <param name="queue">Message Queue connection instance</param>
         public void Purge(MQConnection queue)
         {
-            if (Exist(queue))
-            {
-                var client = new NsqdHttpClient(queue.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
-                client.EmptyChannel(queue.Name, queue.Name);
-                client.EmptyTopic(queue.Name);
-            }
+            if (!Exist(queue)) return;
+            var client = new NsqdHttpClient(queue.Route.Replace(":4150", ":4151"), TimeSpan.FromSeconds(60));
+            client.EmptyChannel(queue.Name, queue.Name);
+            client.EmptyTopic(queue.Name);
         }
         /// <summary>
         /// Set permission for a user in a queue

@@ -23,6 +23,8 @@ using System.Threading.Tasks;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+// ReSharper disable InconsistentNaming
+#pragma warning disable CS4014 // Because a call is not awaited
 
 namespace TWCore.Messaging.NSQ
 {
@@ -32,13 +34,13 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueRawServerListener : MQueueRawServerListenerBase
 	{
 		#region Fields
-		readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
-		readonly object _lock = new object();
-		string _name;
-		Consumer _receiver;
-		CancellationToken _token;
-		Task _monitorTask;
-		bool _exceptionSleep;
+		private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+		private readonly object _lock = new object();
+		private readonly string _name;
+		private Consumer _receiver;
+		private CancellationToken _token;
+		private Task _monitorTask;
+		private bool _exceptionSleep;
 		#endregion
 
 		#region Nested Type
@@ -50,7 +52,7 @@ namespace TWCore.Messaging.NSQ
 		}
         class NSQMessageHandler : IHandler
         {
-            NSQueueRawServerListener _listener;
+	        private readonly NSQueueRawServerListener _listener;
             public NSQMessageHandler(NSQueueRawServerListener listener)
             {
                 _listener = listener;
@@ -69,17 +71,14 @@ namespace TWCore.Messaging.NSQ
                     };
                     Try.Do(message.Finish, false);
 
-
                     _listener.Counters.IncrementMessages();
                     var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token);
                     _listener._processingTasks.TryAdd(tsk, null);
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     tsk.ContinueWith(mTsk =>
                     {
                         _listener._processingTasks.TryRemove(tsk, out var _);
                         _listener.Counters.DecrementMessages();
                     });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
                 catch (Exception ex)
                 {
@@ -152,13 +151,13 @@ namespace TWCore.Messaging.NSQ
 		/// Monitors the maximum concurrent message allowed for the listener
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		async Task MonitorProcess()
+		private async Task MonitorProcess()
 		{
 			while (!_token.IsCancellationRequested)
 			{
 				try
 				{
-					bool exSleep = false;
+					bool exSleep;
 					lock (_lock)
 						exSleep = _exceptionSleep;
 					if (exSleep)
@@ -202,30 +201,28 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		/// <param name="obj">Object message instance</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void ProcessingTask(object obj)
+		private void ProcessingTask(object obj)
 		{
 			try
 			{
 				Counters.IncrementProcessingThreads();
-				if (obj is NSQMessage message)
-				{
-					Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
-                    Counters.IncrementTotalReceivingBytes(message.Body.Count);
+				if (!(obj is NSQMessage message)) return;
+				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
+				Counters.IncrementTotalReceivingBytes(message.Body.Count);
 
-                    if (ResponseServer)
-                    {
-                        var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
-                        evArgs.Metadata["ReplyTo"] = message.Name;
-                        OnResponseReceived(evArgs);
-                    }
-                    else
-                    {
-                        var evArgs = new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId);
-                        evArgs.Metadata["ReplyTo"] = message.Name;
-                        OnRequestReceived(evArgs);
-                    }
-                    Counters.IncrementTotalMessagesProccesed();
-                }
+				if (ResponseServer)
+				{
+					var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
+					evArgs.Metadata["ReplyTo"] = message.Name;
+					OnResponseReceived(evArgs);
+				}
+				else
+				{
+					var evArgs = new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId);
+					evArgs.Metadata["ReplyTo"] = message.Name;
+					OnRequestReceived(evArgs);
+				}
+				Counters.IncrementTotalMessagesProccesed();
 			}
 			catch (Exception ex)
 			{

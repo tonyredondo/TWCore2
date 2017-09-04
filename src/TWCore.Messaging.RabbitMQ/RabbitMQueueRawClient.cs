@@ -35,18 +35,18 @@ namespace TWCore.Messaging.RabbitMQ
 	/// </summary>
 	public class RabbitMQueueRawClient : MQueueRawClientBase
     {
-		static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
-		readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> RouteConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
-        readonly ConcurrentDictionary<Guid, string> CorrelationIdConsumers = new ConcurrentDictionary<Guid, string>();
+        private static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
+        private readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
+        private readonly ConcurrentDictionary<Guid, string> _correlationIdConsumers = new ConcurrentDictionary<Guid, string>();
 
         #region Fields
-        List<RabbitMQueue> _senders;
-        RabbitMQueue _receiver;
-        EventingBasicConsumer _receiverConsumer;
-        string _receiverConsumerTag;
-        MQClientQueues _clientQueues;
-        MQClientSenderOptions _senderOptions;
-        MQClientReceiverOptions _receiverOptions;
+        private List<RabbitMQueue> _senders;
+        private RabbitMQueue _receiver;
+        private EventingBasicConsumer _receiverConsumer;
+        private string _receiverConsumerTag;
+        private MQClientQueues _clientQueues;
+        private MQClientSenderOptions _senderOptions;
+        private MQClientReceiverOptions _receiverOptions;
         #endregion
 
         #region Properties
@@ -57,7 +57,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Nested Type
-        class RabbitResponseMessage
+        private class RabbitResponseMessage
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
@@ -154,7 +154,7 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiver.Close();
                 _receiver = null;
             }
-            foreach (var pools in RouteConnection)
+            foreach (var pools in _routeConnection)
             {
                 var pool = pools.Value;
                 var connections = pool.GetCurrentObjects();
@@ -162,7 +162,7 @@ namespace TWCore.Messaging.RabbitMQ
                     connection.Close();
                 pool.Clear();
             }
-            RouteConnection.Clear();
+            _routeConnection.Clear();
         }
         #endregion
 
@@ -183,7 +183,7 @@ namespace TWCore.Messaging.RabbitMQ
             var recvQueue = _clientQueues.RecvQueue;
 
             var corrId = correlationId.ToString();
-            string replyTo = recvQueue.Name;
+            var replyTo = recvQueue.Name;
             var priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
                 _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
             var expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
@@ -192,7 +192,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!UseSingleResponseQueue)
             {
                 replyTo = recvQueue.Name + "_" + correlationId;
-                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
+                var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
                 cReceiver.EnsureConnection();
                 cReceiver.Channel.QueueDeclare(replyTo, false, false, true, null);
@@ -241,11 +241,11 @@ namespace TWCore.Messaging.RabbitMQ
 
             if (!UseSingleResponseQueue)
             {
-                var _recName = _receiver.Name + "_" + correlationId;
-                var pool = RouteConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
+                var recName = _receiver.Name + "_" + correlationId;
+                var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
                 cReceiver.EnsureConnection();
-                cReceiver.Channel.QueueDeclare(_recName, false, false, true, null);
+                cReceiver.Channel.QueueDeclare(recName, false, false, true, null);
                 var tmpConsumer = new EventingBasicConsumer(cReceiver.Channel);
                 tmpConsumer.Received += (ch, ea) =>
                 {
@@ -256,27 +256,23 @@ namespace TWCore.Messaging.RabbitMQ
                     rMessage.Properties = ea.BasicProperties;
                     rMessage.WaitHandler.Set();
                     cReceiver.Channel.BasicAck(ea.DeliveryTag, false);
-                    if (CorrelationIdConsumers.TryGetValue(crId, out var consumerTag))
+                    if (_correlationIdConsumers.TryGetValue(crId, out var consumerTag))
                         cReceiver.Channel.BasicCancel(consumerTag);
-                    cReceiver.Channel.QueueDeleteNoWait(_recName);
+                    cReceiver.Channel.QueueDeleteNoWait(recName);
                     pool.Store(cReceiver);
                 };
-                CorrelationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(_recName, false, tmpConsumer));
+                _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
             }
 
-            if (message.WaitHandler.Wait(timeout, cancellationToken))
-            {
-                if (message.Body == null)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
-
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
-                Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
-                sw.Stop();
-                sw = null;
-                return message.Body;
-            }
-            else
+            if (!message.WaitHandler.Wait(timeout, cancellationToken))
                 throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (message.Body == null)
+                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
+            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+            sw.Stop();
+            return message.Body;
         }
         #endregion
     }

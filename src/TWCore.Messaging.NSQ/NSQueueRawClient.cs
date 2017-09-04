@@ -29,6 +29,7 @@ using TWCore.Messaging.Exceptions;
 using System.Text;
 using System.Threading.Tasks;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NSQ
 {
@@ -37,17 +38,17 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueRawClient : MQueueRawClientBase
     {
-        static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
-        static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
-        static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
+        private static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
+        private static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
+        private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields
-        List<(MQConnection, ObjectPool<Producer>)> _senders;
-        Consumer _receiver;
-        MQConnection _receiverConnection;
-        MQClientQueues _clientQueues;
-        MQClientSenderOptions _senderOptions;
-        MQClientReceiverOptions _receiverOptions;
+        private List<(MQConnection, ObjectPool<Producer>)> _senders;
+        private Consumer _receiver;
+        private MQConnection _receiverConnection;
+        private MQClientQueues _clientQueues;
+        private MQClientSenderOptions _senderOptions;
+        private MQClientReceiverOptions _receiverOptions;
         #endregion
 
         #region Properties
@@ -167,12 +168,10 @@ namespace TWCore.Messaging.NSQ
                 _senders.Clear();
                 _senders = null;
             }
-            if (_receiver != null)
-            {
-                if (UseSingleResponseQueue)
-                    _receiver.Stop();
-                _receiver = null;
-            }
+            if (_receiver == null) return;
+            if (UseSingleResponseQueue)
+                _receiver.Stop();
+            _receiver = null;
         }
         #endregion
 
@@ -250,7 +249,6 @@ namespace TWCore.Messaging.NSQ
                     Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                     Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                     sw.Stop();
-                    sw = null;
                     return (byte[])message.Body;
                 }
                 else
@@ -262,7 +260,6 @@ namespace TWCore.Messaging.NSQ
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                sw = null;
                 return (byte[])message.Body;
             }
             else

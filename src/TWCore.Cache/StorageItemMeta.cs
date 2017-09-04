@@ -32,23 +32,23 @@ namespace TWCore.Cache
     public class StorageItemMeta : IDisposable
     {
         #region Static Timer
-        static bool _expirationTimerSetted;
-        static HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
-        static Timer globalExpirationTimer;
+        private static readonly HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
+        private static bool _expirationTimerSetted;
+        private static Timer _globalExpirationTimer;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void SetExpirationTimer()
+        private static void SetExpirationTimer()
         {
             if (_expirationTimerSetted) return;
             _expirationTimerSetted = true;
-            globalExpirationTimer?.Dispose();
-            globalExpirationTimer = new Timer(i =>
+            _globalExpirationTimer?.Dispose();
+            _globalExpirationTimer = new Timer(i =>
             {
                 lock (AllMetas)
                     AllMetas.Where(m => m.IsExpired).Each(m => Try.Do(m.FireOnExpire));
             }, null, 5000, 5000);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void RegisterMeta(StorageItemMeta meta)
+        private static void RegisterMeta(StorageItemMeta meta)
         {
             lock (AllMetas)
             {
@@ -57,7 +57,7 @@ namespace TWCore.Cache
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void DeregisterMeta(StorageItemMeta meta)
+        private static void DeregisterMeta(StorageItemMeta meta)
         {
             lock (AllMetas)
                 AllMetas.Remove(meta);
@@ -129,7 +129,7 @@ namespace TWCore.Cache
 
         #region Protected Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void FireOnExpire()
+        protected void FireOnExpire()
         {
             Core.Log.LibVerbose("On Expire timer for key: {0}", Key);
             OnExpire?.Invoke(this, EventArgs.Empty);

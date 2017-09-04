@@ -1,3 +1,4 @@
+// ReSharper disable InconsistentNaming
 namespace DasMulli.Win32.ServiceUtils
 {
     internal static class KnownWin32ErrorCoes

@@ -23,6 +23,9 @@ using System.Threading.Tasks;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+// ReSharper disable InconsistentNaming
+#pragma warning disable 414
+#pragma warning disable CS4014 // Because a call is not awaited
 
 namespace TWCore.Messaging.NSQ
 {
@@ -32,25 +35,25 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueServerListener : MQueueServerListenerBase
 	{
 		#region Fields
-		readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
-		readonly object _lock = new object();
-		Type _messageType;
-		string _name;
-		Consumer _receiver;
-		CancellationToken _token;
-		Task _monitorTask;
-		bool _exceptionSleep;
+		private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+		private readonly object _lock = new object();
+		private readonly Type _messageType;
+		private readonly string _name;
+		private Consumer _receiver;
+		private CancellationToken _token;
+		private Task _monitorTask;
+		private bool _exceptionSleep;
 		#endregion
 
 		#region Nested Type
-		class NSQMessage
+		private class NSQMessage
 		{
 			public Guid CorrelationId;
 			public SubArray<byte> Body;
 		}
-        class NSQMessageHandler : IHandler
+		private class NSQMessageHandler : IHandler
         {
-            NSQueueServerListener _listener;
+	        private readonly NSQueueServerListener _listener;
             public NSQMessageHandler(NSQueueServerListener listener)
             {
                 _listener = listener;
@@ -72,13 +75,11 @@ namespace TWCore.Messaging.NSQ
                     _listener.Counters.IncrementMessages();
                     var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token);
                     _listener._processingTasks.TryAdd(tsk, null);
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     tsk.ContinueWith(mTsk =>
                     {
                         _listener._processingTasks.TryRemove(tsk, out var _);
                         _listener.Counters.DecrementMessages();
                     });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                 }
                 catch (Exception ex)
                 {
@@ -156,13 +157,13 @@ namespace TWCore.Messaging.NSQ
 		/// Monitors the maximum concurrent message allowed for the listener
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		async Task MonitorProcess()
+		private async Task MonitorProcess()
 		{
 			while (!_token.IsCancellationRequested)
 			{
 				try
 				{
-					bool exSleep = false;
+					bool exSleep;
 					lock (_lock)
 						exSleep = _exceptionSleep;
 					if (exSleep)
@@ -206,35 +207,33 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		/// <param name="obj">Object message instance</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void ProcessingTask(object obj)
+		private void ProcessingTask(object obj)
 		{
 			try
 			{
 				Counters.IncrementProcessingThreads();
-				if (obj is NSQMessage message)
+				if (!(obj is NSQMessage message)) return;
+				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
+				var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
+				if (messageBody is RequestMessage request && request.Header != null)
 				{
-					Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
-					var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-					if (messageBody is RequestMessage request && request.Header != null)
-					{
-						request.Header.ApplicationReceivedTime = Core.Now;
-						Counters.IncrementReceivingTime(request.Header.TotalTime);
-						if (request.Header.ClientName != Config.Name)
-							Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-						var evArgs = new RequestReceivedEventArgs(_name, Connection, request);
-						if (request.Header.ResponseQueue != null)
-							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-						OnRequestReceived(evArgs);
-					}
-					else if (messageBody is ResponseMessage response && response.Header != null)
-					{
-						response.Header.Response.ApplicationReceivedTime = Core.Now;
-						Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-						var evArgs = new ResponseReceivedEventArgs(_name, response);
-						OnResponseReceived(evArgs);
-					}
-					Counters.IncrementTotalMessagesProccesed();
+					request.Header.ApplicationReceivedTime = Core.Now;
+					Counters.IncrementReceivingTime(request.Header.TotalTime);
+					if (request.Header.ClientName != Config.Name)
+						Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+					var evArgs = new RequestReceivedEventArgs(_name, Connection, request);
+					if (request.Header.ResponseQueue != null)
+						evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+					OnRequestReceived(evArgs);
 				}
+				else if (messageBody is ResponseMessage response && response.Header != null)
+				{
+					response.Header.Response.ApplicationReceivedTime = Core.Now;
+					Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+					var evArgs = new ResponseReceivedEventArgs(_name, response);
+					OnResponseReceived(evArgs);
+				}
+				Counters.IncrementTotalMessagesProccesed();
 			}
 			catch (Exception ex)
 			{

@@ -28,20 +28,20 @@ namespace TWCore.Serialization.MsgPack
     /// </summary>
     public class MsgPackSerializer : BinarySerializer
     {
-        static readonly string[] _extensions = new string[] { ".msgpack" };
-        static readonly string[] _mimeTypes = new string[] { "application/msgpack", "application/x-msgpack" };
-        static readonly MethodInfo DeserializeMethod;
-        static readonly MethodInfo SerializeMethod;
+        private static readonly string[] SExtensions = { ".msgpack" };
+        private static readonly string[] SMimeTypes = { "application/msgpack", "application/x-msgpack" };
+        private static readonly MethodInfo DeserializeMethod;
+        private static readonly MethodInfo SerializeMethod;
 
         #region Properties
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions => _extensions;
+        public override string[] Extensions => SExtensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes => _mimeTypes;
+        public override string[] MimeTypes => SMimeTypes;
         #endregion
 
         static MsgPackSerializer()
@@ -73,7 +73,7 @@ namespace TWCore.Serialization.MsgPack
         {
             try
             {
-                var data = (byte[])SerializeMethod.MakeGenericMethod(itemType).Invoke(null, new object[] { item });
+                var data = (byte[])SerializeMethod.MakeGenericMethod(itemType).Invoke(null, new[] { item });
                 stream.WriteBytes(data);
             }
             catch (TargetInvocationException tie)

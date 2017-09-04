@@ -26,9 +26,8 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class PoolItem : IDisposable
     {
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        Task pingTask;
+	    private CancellationTokenSource _tokenSource;
+	    private Task _pingTask;
 
         #region Properties
         /// <summary>
@@ -84,14 +83,14 @@ namespace TWCore.Cache.Client
         /// <param name="pingDelayOnError">Delay after a ping error for next try</param>
         public PoolItem(string name, IStorage storage, StorageItemMode mode, int pingDelay = 5000, int pingDelayOnError = 30000)
         {
-            Storage = storage;
+	        Storage = storage;
             Mode = mode;
             PingTime = 0;
             PingDelay = pingDelay;
             PingDelayOnError = pingDelayOnError;
             Enabled = false;
-            tokenSource = new CancellationTokenSource();
-            token = tokenSource.Token;
+            _tokenSource = new CancellationTokenSource();
+            var token = _tokenSource.Token;
             Name = name ?? storage?.ToString();
 			if (storage?.Type == StorageType.Memory)
 			{
@@ -100,7 +99,7 @@ namespace TWCore.Cache.Client
 			}
 			else
 			{
-	            pingTask = Task.Factory.StartNew(async () =>
+	            _pingTask = Task.Factory.StartNew(async () =>
 	            {
 	                try
 	                {
@@ -112,7 +111,7 @@ namespace TWCore.Cache.Client
 	                            {
 	                                using (var watch = Watch.Create())
 	                                {
-	                                    bool enabled = true;
+	                                    bool enabled;
 	                                    Enabled = false;
 	                                    try
 	                                    {
@@ -181,19 +180,19 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Dispose()
         {
-	        if (pingTask == null) return;
+	        if (_pingTask == null) return;
 	        Core.Status.DeAttachObject(this);
-	        tokenSource.Cancel();
+	        _tokenSource.Cancel();
 	        try
 	        {
-		        pingTask.Wait(10000);
+		        _pingTask.Wait(10000);
 	        }
 	        catch
 	        {
 		        // ignored
 	        }
-	        tokenSource = null;
-	        pingTask = null;
+	        _tokenSource = null;
+	        _pingTask = null;
 	        try
 	        {
 		        Storage.Dispose();

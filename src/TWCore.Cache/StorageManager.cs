@@ -27,8 +27,8 @@ namespace TWCore.Cache
     /// </summary>
     public class StorageManager : IStorage
     {
-        readonly Stack<IStorage> StorageStack = new Stack<IStorage>();
-        IStorage[] storages;
+	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
+	    private IStorage[] _storages;
 
 		/// <summary>
 		/// Gets the Storage Type
@@ -52,8 +52,8 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageManager(IEnumerable<IStorage> storages)
         {
-			StorageStack = new Stack<IStorage>(storages.RemoveNulls());
-            storages = StorageStack.ToArray();
+			_storageStack = new Stack<IStorage>(storages.RemoveNulls());
+            _storages = _storageStack.ToArray();
             BindStatusHandlers();
         }
         /// <summary>
@@ -66,36 +66,36 @@ namespace TWCore.Cache
             Dispose(false);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void BindStatusHandlers()
+        private void BindStatusHandlers()
         {
             Core.Status.Attach(collection =>
             {
-                collection.AddGood("Stack Count", StorageStack.Count);
-                collection.AddGood("Stack", StorageStack.Select(s => s.ToString()).Join(", "));
-                StorageStack.Each(s => Core.Status.AttachChild(s, this));
+                collection.AddGood("Stack Count", _storageStack.Count);
+                collection.AddGood("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
+                _storageStack.Each(s => Core.Status.AttachChild(s, this));
             });
         }
 		#endregion
 
 		#region Private Methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		R ReturnFromStack<R, A1>(A1 arg1, Func<IStorage, A1, R> functionValueToLook, Action<IStorage, A1, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
+		private TR ReturnFromStack<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionValueToLook, Action<IStorage, TA1, TR> actionOnPreviousStorages = null, Func<TR, bool> breakCondition = null, TR defaultValue = default(TR))
 		{
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
-			bool actionToPrevious = actionOnPreviousStorages != null;
+			var actionToPrevious = actionOnPreviousStorages != null;
 			if (actionToPrevious) 
 			{
 				refPool = ReferencePool<Stack<IStorage>>.Shared;
 				noDataStack = refPool.New();
 			}
 			var response = defaultValue;
-			bool found = false;
-			foreach (var storage in storages)
+			var found = false;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(storage, arg1);
-				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<R>.Default.Equals(functionResponse, defaultValue);
+				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
 				if (bCondition)
 				{
 					response = functionResponse;
@@ -105,46 +105,44 @@ namespace TWCore.Cache
 				if (actionToPrevious) 
 					noDataStack.Push(storage);
 			}
-			if (actionToPrevious)
+			if (!actionToPrevious) return response;
+			if (found)
 			{
-				if (found)
+				while (noDataStack.Count > 0) 
 				{
-					while (noDataStack.Count > 0) 
+					try 
 					{
-						try 
-						{
-							actionOnPreviousStorages(noDataStack.Pop(), arg1, response);
-						}
-						catch(Exception ex) 
-						{
-							Core.Log.Write(ex);
-						}
+						actionOnPreviousStorages(noDataStack.Pop(), arg1, response);
+					}
+					catch(Exception ex) 
+					{
+						Core.Log.Write(ex);
 					}
 				}
-				else
-					noDataStack.Clear();
-				refPool.Store(noDataStack);
 			}
+			else
+				noDataStack.Clear();
+			refPool.Store(noDataStack);
 			return response;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		R ReturnFromStack<R, A1, A2>(A1 arg1, A2 arg2, Func<IStorage, A1, A2, R> functionValueToLook, Action<IStorage, A1, A2, R> actionOnPreviousStorages = null, Func<R, bool> breakCondition = null, R defaultValue = default(R))
+		private TR ReturnFromStack<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionValueToLook, Action<IStorage, TA1, TA2, TR> actionOnPreviousStorages = null, Func<TR, bool> breakCondition = null, TR defaultValue = default(TR))
 		{
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
-			bool actionToPrevious = actionOnPreviousStorages != null;
+			var actionToPrevious = actionOnPreviousStorages != null;
 			if (actionToPrevious)
 			{
 				refPool = ReferencePool<Stack<IStorage>>.Shared;
 				noDataStack = refPool.New();
 			}
 			var response = defaultValue;
-			bool found = false;
-			foreach (var storage in storages)
+			var found = false;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(storage, arg1, arg2);
-				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<R>.Default.Equals(functionResponse, defaultValue);
+				var bCondition = breakCondition?.Invoke(functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
 				if (bCondition)
 				{
 					response = functionResponse;
@@ -154,34 +152,32 @@ namespace TWCore.Cache
 				if (actionToPrevious)
 					noDataStack.Push(storage);
 			}
-			if (actionToPrevious)
+			if (!actionToPrevious) return response;
+			if (found)
 			{
-				if (found)
+				while (noDataStack.Count > 0) 
 				{
-					while (noDataStack.Count > 0) 
+					try 
 					{
-						try 
-						{
-							actionOnPreviousStorages(noDataStack.Pop(), arg1, arg2, response);
-						}
-						catch(Exception ex) 
-						{
-							Core.Log.Write(ex);
-						}
+						actionOnPreviousStorages(noDataStack.Pop(), arg1, arg2, response);
+					}
+					catch(Exception ex) 
+					{
+						Core.Log.Write(ex);
 					}
 				}
-				else
-					noDataStack.Clear();
-				refPool.Store(noDataStack);
 			}
+			else
+				noDataStack.Clear();
+			refPool.Store(noDataStack);
 			return response;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ExecuteInAllStack<A1>(A1 arg1, Action<IStorage, A1> actionPushData)
+		private bool ExecuteInAllStack<TA1>(TA1 arg1, Action<IStorage, TA1> actionPushData)
 		{
-			bool ret = true;
-			foreach (var storage in storages)
+			var ret = true;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
@@ -197,10 +193,10 @@ namespace TWCore.Cache
 			return ret;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ExecuteInAllStack<A1, A2>(A1 arg1, A2 arg2, Action<IStorage, A1, A2> actionPushData)
+		private bool ExecuteInAllStack<TA1, TA2>(TA1 arg1, TA2 arg2, Action<IStorage, TA1, TA2> actionPushData)
 		{
-			bool ret = true;
-			foreach (var storage in storages)
+			var ret = true;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
@@ -216,10 +212,10 @@ namespace TWCore.Cache
 			return ret;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ExecuteInAllStack<A1, A2, A3>(A1 arg1, A2 arg2, A3 arg3, Action<IStorage, A1, A2, A3> actionPushData)
+		private bool ExecuteInAllStack<TA1, TA2, TA3>(TA1 arg1, TA2 arg2, TA3 arg3, Action<IStorage, TA1, TA2, TA3> actionPushData)
 		{
-			bool ret = true;
-			foreach (var storage in storages)
+			var ret = true;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
@@ -235,10 +231,10 @@ namespace TWCore.Cache
 			return ret;
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool ExecuteInAllStack<A1, A2, A3, A4>(A1 arg1, A2 arg2, A3 arg3, A4 arg4, Action<IStorage, A1, A2, A3, A4> actionPushData)
+		private bool ExecuteInAllStack<TA1, TA2, TA3, TA4>(TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4, Action<IStorage, TA1, TA2, TA3, TA4> actionPushData)
 		{
-			bool ret = true;
-			foreach (var storage in storages)
+			var ret = true;
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
@@ -258,7 +254,7 @@ namespace TWCore.Cache
 		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
 		{
 			var responses = new List<TR>();
-			foreach (var storage in storages)
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var result = default(TR);
@@ -284,8 +280,8 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IStorage Pop()
         {
-            var pop = StorageStack.Pop();
-            storages = StorageStack.ToArray();
+            var pop = _storageStack.Pop();
+            _storages = _storageStack.ToArray();
             return pop;
         }
         /// <summary>
@@ -296,8 +292,8 @@ namespace TWCore.Cache
         public void Push(IStorage item)
         {
 			if (item == null) return;
-            StorageStack.Push(item);
-            storages = StorageStack.ToArray();
+            _storageStack.Push(item);
+            _storages = _storageStack.ToArray();
         }
         #endregion
 
@@ -306,7 +302,7 @@ namespace TWCore.Cache
 		/// Init this storage
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() => storages?.Each(s => s.Init());
+        public void Init() => _storages?.Each(s => s.Init());
 
         #region Exist Key / Get Keys
         /// <summary>
@@ -325,7 +321,7 @@ namespace TWCore.Cache
 		public string[] GetKeys() 
 		{
 			var keys = new HashSet<string>(StringComparer.Ordinal);
-			foreach (var storage in storages)
+			foreach (var storage in _storages)
 			{
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
@@ -582,12 +578,10 @@ namespace TWCore.Cache
         public StorageItem GetOrSet(string key, SerializedObject data)
         {
             var stoData = Get(key);
-            if (stoData == null)
-            {
-                Set(key, data);
-                stoData = Get(key);
-            }
-            return stoData;
+	        if (stoData != null) return stoData;
+	        Set(key, data);
+	        stoData = Get(key);
+	        return stoData;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -600,12 +594,10 @@ namespace TWCore.Cache
         public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan expirationDate)
         {
             var stoData = Get(key);
-            if (stoData == null)
-            {
-                Set(key, data, expirationDate);
-                stoData = Get(key);
-            }
-            return stoData;
+	        if (stoData != null) return stoData;
+	        Set(key, data, expirationDate);
+	        stoData = Get(key);
+	        return stoData;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -619,12 +611,10 @@ namespace TWCore.Cache
         public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
         {
             var stoData = Get(key);
-            if (stoData == null)
-            {
-                Set(key, data, expirationDate, tags);
-                stoData = Get(key);
-            }
-            return stoData;
+	        if (stoData != null) return stoData;
+	        Set(key, data, expirationDate, tags);
+	        stoData = Get(key);
+	        return stoData;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -637,12 +627,10 @@ namespace TWCore.Cache
         public StorageItem GetOrSet(string key, SerializedObject data, DateTime expirationDate)
         {
             var stoData = Get(key);
-            if (stoData == null)
-            {
-                Set(key, data, expirationDate);
-                stoData = Get(key);
-            }
-            return stoData;
+	        if (stoData != null) return stoData;
+	        Set(key, data, expirationDate);
+	        stoData = Get(key);
+	        return stoData;
         }
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
@@ -656,12 +644,10 @@ namespace TWCore.Cache
         public StorageItem GetOrSet(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
         {
             var stoData = Get(key);
-            if (stoData == null)
-            {
-                Set(key, data, expirationDate, tags);
-                stoData = Get(key);
-            }
-            return stoData;
+	        if (stoData != null) return stoData;
+	        Set(key, data, expirationDate, tags);
+	        stoData = Get(key);
+	        return stoData;
         }
         #endregion
 
@@ -672,12 +658,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEnabled()
         {
-            foreach(var sto in storages)
-            {
-                if (sto.IsEnabled())
-                    return true;
-            }
-            return false;
+	        return _storages.Any(sto => sto.IsEnabled());
         }
         /// <summary>
         /// Gets if the Storage is ready to be requested.
@@ -686,12 +667,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsReady()
         {
-            foreach (var sto in storages)
-            {
-                if (!sto.IsReady())
-                    return false;
-            }
-            return true;
+	        return _storages.All(sto => sto.IsReady());
         }
         #endregion
 
@@ -706,12 +682,12 @@ namespace TWCore.Cache
 	        if (_disposedValue) return;
 	        if (disposing)
 	        {
-		        StorageStack.Each(s =>
+		        _storageStack.Each(s =>
 		        {
 			        var sM = s as StorageBase;
 			        sM?.Dispose();
 		        });
-		        StorageStack.Clear();
+		        _storageStack.Clear();
 	        }
 	        _disposedValue = true;
         }

@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Client.Transports
 {
@@ -32,9 +33,9 @@ namespace TWCore.Net.RPC.Client.Transports
     /// </summary>
     public class HttpTransportClient : ITransportClient
     {
-		readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
-		ServiceDescriptorCollection _descriptors;
-        HttpClient httpClient;
+	    private readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
+	    private ServiceDescriptorCollection _descriptors;
+	    private HttpClient _httpClient;
 
         #region Properties
         /// <summary>
@@ -53,14 +54,12 @@ namespace TWCore.Net.RPC.Client.Transports
 			set 
 			{
 				_descriptors = value;
-				if (_descriptors != null)
+				if (_descriptors == null) return;
+				_methods.Clear();
+				foreach(var descriptor in _descriptors.Items.Values)
 				{
-					_methods.Clear();
-					foreach(var descriptor in _descriptors.Items.Values)
-					{
-						foreach(var mtd in descriptor.Methods)
-							_methods.Add(mtd.Key, descriptor);
-					}
+					foreach(var mtd in descriptor.Methods)
+						_methods.Add(mtd.Key, descriptor);
 				}
 			}
 		}
@@ -89,19 +88,19 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HttpTransportClient()
         {
-            var _handler = new DecompressionHandler()
+            var handler = new DecompressionHandler()
             {
                 InnerHandler = new HttpClientHandler()
             };
-            httpClient = new HttpClient(_handler);
-            httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
+            _httpClient = new HttpClient(handler);
+            _httpClient.DefaultRequestHeaders.AcceptEncoding.Add(new StringWithQualityHeaderValue("gzip"));
             Serializer = new JsonTextSerializer();
 
             Core.Status.Attach(collection =>
             {
                 collection.Add("Bytes Sent", Counters.BytesSent);
                 collection.Add("Bytes Received", Counters.BytesReceived);
-                Core.Status.AttachChild(httpClient, this);
+                Core.Status.AttachChild(_httpClient, this);
             }, this);
         }
         /// <summary>
@@ -137,7 +136,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
-            var result = await httpClient.GetAsync(Url).ConfigureAwait(false);
+            var result = await _httpClient.GetAsync(Url).ConfigureAwait(false);
             var data = await result.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return Serializer.Deserialize<ServiceDescriptorCollection>(data);
         }
@@ -148,7 +147,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceDescriptorCollection GetDescriptors()
         {
-            var result = httpClient.GetAsync(Url).WaitAsync();
+            var result = _httpClient.GetAsync(Url).WaitAsync();
             var data = result.Content.ReadAsByteArrayAsync().WaitAsync();
             return Serializer.Deserialize<ServiceDescriptorCollection>(data);
         }
@@ -171,7 +170,7 @@ namespace TWCore.Net.RPC.Client.Transports
             }
             var dataRQ = Serializer.Serialize(messageRQ);
             var sContent = new StreamContent(dataRQ.ToMemoryStream());
-            var postResult = await httpClient.PostAsync(Url, sContent).ConfigureAwait(false);
+            var postResult = await _httpClient.PostAsync(Url, sContent).ConfigureAwait(false);
 			Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             Counters.IncrementBytesReceived(dataRS.Length);
@@ -192,8 +191,8 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            httpClient?.Dispose();
-            httpClient = null;
+            _httpClient?.Dispose();
+            _httpClient = null;
         }
         #endregion
     }

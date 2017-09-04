@@ -4,23 +4,23 @@ namespace DasMulli.Win32.ServiceUtils
 {
     public sealed class SimpleServiceStateMachine : IWin32ServiceStateMachine
     {
-        private readonly IWin32Service serviceImplementation;
-        private ServiceStatusReportCallback statusReportCallback;
+        private readonly IWin32Service _serviceImplementation;
+        private ServiceStatusReportCallback _statusReportCallback;
 
         public SimpleServiceStateMachine(IWin32Service serviceImplementation)
         {
-            this.serviceImplementation = serviceImplementation;
+            _serviceImplementation = serviceImplementation;
         }
 
         public void OnStart(string[] startupArguments, ServiceStatusReportCallback statusReportCallback)
         {
-            this.statusReportCallback = statusReportCallback;
+            _statusReportCallback = statusReportCallback;
 
             try
             {
-                serviceImplementation.Start(startupArguments, HandleServiceImplementationStoppedOnItsOwn);
+                _serviceImplementation.Start(startupArguments, HandleServiceImplementationStoppedOnItsOwn);
 
-                if (serviceImplementation.CanPauseAndContinue)
+                if (_serviceImplementation.CanPauseAndContinue)
                     statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode: 0, waitHint: 0);
                 else
                     statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode: 0, waitHint: 0);
@@ -37,50 +37,50 @@ namespace DasMulli.Win32.ServiceUtils
             {
                 case ServiceControlCommand.Stop:
                 {
-                    statusReportCallback(ServiceState.StopPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 60000);
+                    _statusReportCallback(ServiceState.StopPending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 60000);
                     var win32ExitCode = 0;
                     try
                     {
-                        serviceImplementation.Stop();
+                        _serviceImplementation.Stop();
                     }
                     catch
                     {
                         win32ExitCode = -1;
                     }
-                    statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    _statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
                     break;
                 }
                 case ServiceControlCommand.Pause:
                 {
-                    statusReportCallback(ServiceState.PausePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    _statusReportCallback(ServiceState.PausePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
                     var win32ExitCode = 0;
                     try
                     {
-                        serviceImplementation.OnPause();
+                        _serviceImplementation.OnPause();
                     }
                     catch
                     {
                         win32ExitCode = -1;
                     }
-                    statusReportCallback(ServiceState.Paused, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    _statusReportCallback(ServiceState.Paused, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
                     break;
                 }
                 case ServiceControlCommand.Continue:
                 {
-                    statusReportCallback(ServiceState.ContinuePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    _statusReportCallback(ServiceState.ContinuePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
                     var win32ExitCode = 0;
                     try
                     {
-                        serviceImplementation.OnContinue();
+                        _serviceImplementation.OnContinue();
                     }
                     catch
                     {
                         win32ExitCode = -1;
                     }
-                    if (serviceImplementation.CanPauseAndContinue)
-                        statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode, waitHint: 0);
+                    if (_serviceImplementation.CanPauseAndContinue)
+                        _statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop | ServiceAcceptedControlCommandsFlags.PauseContinue, win32ExitCode, waitHint: 0);
                     else
-                        statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0);
+                        _statusReportCallback(ServiceState.Running, ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0);
                         break;
                 }
             }
@@ -88,7 +88,7 @@ namespace DasMulli.Win32.ServiceUtils
 
         private void HandleServiceImplementationStoppedOnItsOwn()
         {
-            statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 0);
+            _statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 0);
         }
     }
 }

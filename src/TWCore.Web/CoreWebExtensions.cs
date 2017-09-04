@@ -22,6 +22,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using TWCore.Serialization;
 using TWCore.Web.Logger;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Web
 {

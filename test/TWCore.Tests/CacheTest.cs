@@ -15,7 +15,7 @@ namespace TWCore.Tests
 
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            LRU2QStorageTest();
+            Lru2QStorageTest();
             Core.Log.InfoBasic("Press ENTER to continue.");
             Console.ReadLine();
             FileStorageTest();
@@ -39,7 +39,7 @@ namespace TWCore.Tests
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void LRU2QStorageTest()
+        static void Lru2QStorageTest()
         {
             Core.Log.Warning("LRU2QStorage Test");
             using (var sto = new LRU2QStorage(20000))

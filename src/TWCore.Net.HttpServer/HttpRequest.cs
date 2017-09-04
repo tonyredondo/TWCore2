@@ -31,10 +31,10 @@ namespace TWCore.Net.HttpServer
     /// </summary>
     public class HttpRequest
     {
-        TcpClient client;
-        HttpContext Context;
-        static int MAX_POST_SIZE = 10 * 1024 * 1024; // 10MB
-        StreamReader _streamReader;
+        private const int MaxPostSize = 10 * 1024 * 1024; // 10MB
+        private TcpClient _client;
+        private HttpContext _context;
+        private readonly StreamReader _streamReader;
 
         #region Properties
         /// <summary>
@@ -104,8 +104,8 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal HttpRequest(TcpClient socketClient, HttpContext context)
         {
-            client = socketClient;
-            Context = context;
+            _client = socketClient;
+            _context = context;
             socketClient.ReceiveTimeout = 120000;
             InputStream = new BufferedStream(socketClient.GetStream(), 16384);
             _streamReader = new StreamReader(InputStream);
@@ -123,18 +123,17 @@ namespace TWCore.Net.HttpServer
 
             #region Init
             //Core.Log.LibVerbose("Initializing request...");
-            string request = _streamReader.ReadLine();
+            var request = _streamReader.ReadLine();
             if (string.IsNullOrEmpty(request))
                 throw new Exception("Invalid http request line");
 
             //Core.Log.LibVerbose("Request: {0}", request);
 
-            string strMethod;
-            int lastIndex = 0, newIndex;
+            int lastIndex, newIndex;
             newIndex = request.IndexOf(' ', 2);
             if (newIndex < 0)
                 throw new Exception("Invalid http request line");
-            strMethod = request.Substring(0, newIndex);
+            var strMethod = request.Substring(0, newIndex);
             lastIndex = newIndex + 1;
             newIndex = request.IndexOf(' ', lastIndex);
             if (newIndex < 0)
@@ -173,16 +172,16 @@ namespace TWCore.Net.HttpServer
             #region Extract Headers
             //Core.Log.LibVerbose("Extracting headers...");
             string line;
-            bool hostHeader = false;
+            var hostHeader = false;
             string host = null;
-            bool contentTypeHeader = false;
+            var contentTypeHeader = false;
             while (!string.IsNullOrEmpty(line = _streamReader.ReadLine()))
             {               
-                int separator = line.IndexOf(':', 1);
+                var separator = line.IndexOf(':', 1);
                 if (separator > -1)
                 {
                     var name = line.Substring(0, separator);
-                    string value = line[separator + 1] == ' ' ? line.Substring(separator + 2) : line.Substring(separator + 1);
+                    var value = line[separator + 1] == ' ' ? line.Substring(separator + 2) : line.Substring(separator + 1);
                     Headers[name] = value;
                     if (!hostHeader && name == "Host")
                     {
@@ -211,8 +210,8 @@ namespace TWCore.Net.HttpServer
                 if (Headers.ContainsKey("Content-Length"))
                 {
                     ContentLength = Convert.ToInt32(Headers["Content-Length"]);
-                    if (ContentLength > MAX_POST_SIZE)
-                        throw new Exception(String.Format("POST Content-Length({0}) too big for this simple server", ContentLength));
+                    if (ContentLength > MaxPostSize)
+                        throw new Exception(string.Format("POST Content-Length({0}) too big for this simple server", ContentLength));
                     if (ContentLength > 0)
                     {
                         var fReader = new BinaryReader(InputStream, Encoding.UTF8, true);
@@ -225,10 +224,9 @@ namespace TWCore.Net.HttpServer
 
             Url = new Uri("http://" + host + RawUrl);
             QueryString = HttpUtility.ParseQueryString(Url.Query);
-            if (ContentType == "application/x-www-form-urlencoded")
-                Form = new FormUrlEncodedContentParser(PostData);
-            else
-                Form = new FormUrlEncodedContentParser();
+            Form = ContentType == "application/x-www-form-urlencoded" ? 
+                new FormUrlEncodedContentParser(PostData) : 
+                new FormUrlEncodedContentParser();
 
             return true;
         }

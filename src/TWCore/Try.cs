@@ -109,7 +109,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T Do<T>(Func<T> tryFunction, string exceptionMessage)
         {
-            var res = default(T);
+            T res;
             try
             {
                 res = tryFunction();

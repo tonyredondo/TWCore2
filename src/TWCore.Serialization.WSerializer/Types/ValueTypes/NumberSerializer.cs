@@ -43,86 +43,86 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             DataType.Byte9, DataType.Byte10, DataType.Byte11, DataType.Byte12, DataType.Byte13, DataType.Byte14, DataType.Byte15, DataType.Byte16
         });
 
-        SerializerMode _mode;
+        private SerializerMode _mode;
 
         #region Decimal Cache
-        SerializerCache<decimal> decimalCache;
-        SerializerCache<decimal> DecimalCache
+        private SerializerCache<decimal> _decimalCache;
+        private SerializerCache<decimal> DecimalCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return decimalCache ?? (decimalCache = new SerializerCache<decimal>(_mode)); }
+            get { return _decimalCache ?? (_decimalCache = new SerializerCache<decimal>(_mode)); }
         }
         #endregion
 
         #region Double Cache
-        SerializerCache<double> doubleCache;
-        SerializerCache<double> DoubleCache
+        private SerializerCache<double> _doubleCache;
+        private SerializerCache<double> DoubleCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return doubleCache ?? (doubleCache = new SerializerCache<double>(_mode)); }
+            get { return _doubleCache ?? (_doubleCache = new SerializerCache<double>(_mode)); }
         }
         #endregion
 
         #region Float Cache
-        SerializerCache<float> floatCache;
-        SerializerCache<float> FloatCache
+        private SerializerCache<float> _floatCache;
+        private SerializerCache<float> FloatCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return floatCache ?? (floatCache = new SerializerCache<float>(_mode)); }
+            get { return _floatCache ?? (_floatCache = new SerializerCache<float>(_mode)); }
         }
         #endregion
 
         #region Long Cache
-        SerializerCache<long> longCache;
-        SerializerCache<long> LongCache
+        private SerializerCache<long> _longCache;
+        private SerializerCache<long> LongCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return longCache ?? (longCache = new SerializerCache<long>(_mode)); }
+            get { return _longCache ?? (_longCache = new SerializerCache<long>(_mode)); }
         }
         #endregion
 
         #region ULong Cache
-        SerializerCache<ulong> uLongCache;
-        SerializerCache<ulong> ULongCache
+        private SerializerCache<ulong> _uLongCache;
+        private SerializerCache<ulong> ULongCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return uLongCache ?? (uLongCache = new SerializerCache<ulong>(_mode)); }
+            get { return _uLongCache ?? (_uLongCache = new SerializerCache<ulong>(_mode)); }
         }
         #endregion
 
         #region Int Cache
-        SerializerCache<int> intCache;
-        SerializerCache<int> IntCache
+        private SerializerCache<int> _intCache;
+        private SerializerCache<int> IntCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return intCache ?? (intCache = new SerializerCache<int>(_mode)); }
+            get { return _intCache ?? (_intCache = new SerializerCache<int>(_mode)); }
         }
         #endregion
 
         #region UInt Cache
-        SerializerCache<uint> uIntCache;
-        SerializerCache<uint> UIntCache
+        private SerializerCache<uint> _uIntCache;
+        private SerializerCache<uint> UIntCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return uIntCache ?? (uIntCache = new SerializerCache<uint>(_mode)); }
+            get { return _uIntCache ?? (_uIntCache = new SerializerCache<uint>(_mode)); }
         }
         #endregion
 
         #region Short Cache
-        SerializerCache<short> shortCache;
-        SerializerCache<short> ShortCache
+        private SerializerCache<short> _shortCache;
+        private SerializerCache<short> ShortCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return shortCache ?? (shortCache = new SerializerCache<short>(_mode)); }
+            get { return _shortCache ?? (_shortCache = new SerializerCache<short>(_mode)); }
         }
         #endregion
 
         #region UShort Cache
-        SerializerCache<ushort> uShortCache;
-        SerializerCache<ushort> UShortCache
+        private SerializerCache<ushort> _uShortCache;
+        private SerializerCache<ushort> UShortCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return uShortCache ?? (uShortCache = new SerializerCache<ushort>(_mode)); }
+            get { return _uShortCache ?? (_uShortCache = new SerializerCache<ushort>(_mode)); }
         }
         #endregion
 
@@ -133,15 +133,15 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public override void Init(SerializerMode mode)
         {
             _mode = mode;
-            if (decimalCache != null) decimalCache = new SerializerCache<decimal>(mode);
-            if (doubleCache != null) doubleCache = new SerializerCache<double>(mode);
-            if (floatCache != null) floatCache = new SerializerCache<float>(mode);
-            if (longCache != null) longCache = new SerializerCache<long>(mode);
-            if (uLongCache != null) uLongCache = new SerializerCache<ulong>(mode);
-            if (intCache != null) intCache = new SerializerCache<int>(mode);
-            if (uIntCache != null) uIntCache = new SerializerCache<uint>(mode);
-            if (shortCache != null) shortCache = new SerializerCache<short>(mode);
-            if (uShortCache != null) uShortCache = new SerializerCache<ushort>(mode);
+            if (_decimalCache != null) _decimalCache = new SerializerCache<decimal>(mode);
+            if (_doubleCache != null) _doubleCache = new SerializerCache<double>(mode);
+            if (_floatCache != null) _floatCache = new SerializerCache<float>(mode);
+            if (_longCache != null) _longCache = new SerializerCache<long>(mode);
+            if (_uLongCache != null) _uLongCache = new SerializerCache<ulong>(mode);
+            if (_intCache != null) _intCache = new SerializerCache<int>(mode);
+            if (_uIntCache != null) _uIntCache = new SerializerCache<uint>(mode);
+            if (_shortCache != null) _shortCache = new SerializerCache<short>(mode);
+            if (_uShortCache != null) _uShortCache = new SerializerCache<ushort>(mode);
         }
         /// <summary>
         /// Gets if the type serializer can write the type
@@ -174,7 +174,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         {
             var valueType = value?.GetType();
             var decType = DataTypeHelper.GetDecreaseDataType(value, valueType);
-            var objIdx = 0;
+            int objIdx;
             switch (decType)
             {
                 case DataType.Decimal:
@@ -489,7 +489,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             }
 
             var decType = DataTypeHelper.GetDecreaseDataType(value);
-            var objIdx = 0;
+            int objIdx;
             switch (decType)
             {
                 case DataType.Int:

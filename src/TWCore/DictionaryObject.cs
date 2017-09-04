@@ -158,26 +158,22 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
-            result = null;
-
-            if (BaseDictionary.TryGetValue(binder.Name, out result))
+            if (!BaseDictionary.TryGetValue(binder.Name, out result)) return false;
+            
+            var dct = result as Dictionary<string, object>;
+            if (dct != null)
             {
-                var dct = result as Dictionary<string, object>;
-                if (dct != null)
-                {
-                    result = new DictionaryObject(dct);
-                }
-                else
-                {
-                    var list = result as List<Dictionary<string, object>>;
-                    if (list != null)
-                    {
-                        result = list.Select(i => new DictionaryObject(i)).ToList();
-                    }
-                }
-                return true;
+                result = new DictionaryObject(dct);
             }
-            return false;
+            else
+            {
+                var list = result as List<Dictionary<string, object>>;
+                if (list != null)
+                {
+                    result = list.Select(i => new DictionaryObject(i)).ToList();
+                }
+            }
+            return true;
         }
         /// <summary>
         /// Provides the implementation for operations that set member values.

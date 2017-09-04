@@ -137,7 +137,6 @@ namespace TWCore.Diagnostics.Trace.Storages
                 try
                 {
                     oldWriter?.Dispose();
-                    oldWriter = null;
                 }
                 catch
                 {
@@ -255,7 +254,6 @@ namespace TWCore.Diagnostics.Trace.Storages
             try
             {
                 oldWriter?.Dispose();
-                oldWriter = null;
             }
             catch
             {

@@ -37,18 +37,18 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ToBase62(double iDec)
         {
-            string strBin = "";
-            int[] result = new int[128];
-            int MaxBit = result.Length;
+            var strBin = "";
+            var result = new int[128];
+            var maxBit = result.Length;
 
-            for (; System.Math.Round(iDec) > 0; iDec /= numbase)
+            for (; Math.Round(iDec) > 0; iDec /= numbase)
             {
-                int rem = Convert.ToInt32(iDec % numbase);
-                result[--MaxBit] = rem;
+                var rem = Convert.ToInt32(iDec % numbase);
+                result[--maxBit] = rem;
             }
-            for (int i = 0; i < result.Length; i++)
+            for (var i = 0; i < result.Length; i++)
                 strBin += sTable[(int)result.GetValue(i)];
-            strBin = strBin.TrimStart(new char[] { '0' });
+            strBin = strBin.TrimStart(new[] { '0' });
             return strBin;
         }
 
@@ -61,13 +61,11 @@ namespace TWCore.Text
         public static double ToDouble(string sBase)
         {
             double dec = 0;
-            int b = 0;
             double iProduct = 1;
-
-            for (int i = sBase.Length - 1; i >= 0; i--, iProduct *= numbase)
+            for (var i = sBase.Length - 1; i >= 0; i--, iProduct *= numbase)
             {
                 //string sValue = sBase[i].ToString();
-                b = sTable.IndexOf(sBase[i]);
+                var b = sTable.IndexOf(sBase[i]);
                 dec += (b * iProduct);
             }
             return dec;

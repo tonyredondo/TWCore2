@@ -95,31 +95,29 @@ namespace TWCore
             Message = ex.Message?.RemoveInvalidXMLChars();
             Source = ex.Source;
             StackTrace = ex.StackTrace;
-            ExceptionType = ex?.GetType().FullName;
+            ExceptionType = ex.GetType().FullName;
             if (ex.InnerException != null)
                 InnerException = new SerializableException(ex.InnerException);
 
-            if (ex.Data != null)
+            if (ex.Data == null) return;
+            
+            Data = new KeyValueCollection();
+            foreach (var key in ex.Data.Keys)
             {
-                Data = new KeyValueCollection();
-                foreach (var key in ex.Data.Keys)
+                if (!(key is string) && key.GetType().GetTypeInfo().IsClass) continue;
+                    
+                var strKey = key.ToString();
+                string strValue;
+                try
                 {
-                    if (key is string || !key.GetType().GetTypeInfo().IsClass)
-                    {
-                        var strKey = key.ToString();
-                        string strValue = null;
-                        try
-                        {
-                            strValue = SerializerManager.DefaultTextSerializer.SerializeToString(ex.Data[key], ex.Data[key].GetType())?.RemoveInvalidXMLChars();
-                        }
-                        catch (Exception s_ex)
-                        {
-                            strValue = s_ex.Message?.RemoveInvalidXMLChars();
-                        }
-                        if (!Data.Contains(strKey))
-                            Data.Add(strKey, strValue);
-                    }
+                    strValue = SerializerManager.DefaultTextSerializer.SerializeToString(ex.Data[key], ex.Data[key].GetType())?.RemoveInvalidXMLChars();
                 }
+                catch (Exception sEx)
+                {
+                    strValue = sEx.Message?.RemoveInvalidXMLChars();
+                }
+                if (!Data.Contains(strKey))
+                    Data.Add(strKey, strValue);
             }
         }
         #endregion

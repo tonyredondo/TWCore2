@@ -284,12 +284,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteToStream(this Stream source, Stream destination, int length = 0, int bufferSize = 4096, int timeOutToReadBytes = 0)
         {
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead = 0;
-            int toRead = length;
-            bool nolength = (toRead <= 0);
+            var buffer = new byte[bufferSize];
+            var toRead = length;
+            var nolength = (toRead <= 0);
             while (toRead > 0 || nolength)
             {
+                int bytesRead;
                 if (timeOutToReadBytes > 0)
                 {
                     var rTask = source.ReadAsync(buffer, 0, buffer.Length);
@@ -314,12 +314,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task WriteToStreamAsync(this Stream source, Stream destination, int length = 0, int bufferSize = 4096, int timeOutToReadBytes = 0)
         {
-            byte[] buffer = new byte[bufferSize];
-            int bytesRead = 0;
-            int toRead = length;
-            bool nolength = (toRead <= 0);
+            var buffer = new byte[bufferSize];
+            var toRead = length;
+            var nolength = (toRead <= 0);
             while (toRead > 0 || nolength)
             {
+                int bytesRead;
                 if (timeOutToReadBytes > 0)
                 {
                     var rTask = source.ReadAsync(buffer, 0, buffer.Length);

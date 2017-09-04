@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.IO;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.PWSerializer.Types
 {
@@ -51,33 +52,33 @@ namespace TWCore.Serialization.PWSerializer.Types
             DataType.RefString8Byte6,   DataType.RefString8Byte7,   DataType.RefString8Byte8,   DataType.RefString8Byte9, DataType.RefString8Byte10,    DataType.RefString8Byte11,  DataType.RefString8Byte12,
             DataType.RefString8Byte13,  DataType.RefString8Byte14,  DataType.RefString8Byte15,  DataType.RefString8UShort
         });
-        SerializerMode _mode;
-        SerializerCache<string> _cache;
-        SerializerCache<string> Cache
+
+        private SerializerMode _mode;
+        private SerializerCache<string> _cache;
+        private SerializerCache<string> Cache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache ?? (_cache = new SerializerCache<string>(_mode)); }
         }
-        SerializerCache<string> _cache8;
-        SerializerCache<string> Cache8
+        private SerializerCache<string> _cache8;
+        private SerializerCache<string> Cache8
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache8 ?? (_cache8 = new SerializerCache<string>(_mode)); }
         }
-        SerializerCache<string> _cache16;
-        SerializerCache<string> Cache16
+        private SerializerCache<string> _cache16;
+        private SerializerCache<string> Cache16
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache16 ?? (_cache16 = new SerializerCache<string>(_mode)); }
         }
-        SerializerCache<string> _cache32;
-        SerializerCache<string> Cache32
+        private SerializerCache<string> _cache32;
+        private SerializerCache<string> Cache32
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache32 ?? (_cache32 = new SerializerCache<string>(_mode)); }
         }
-
-        bool useCache;
+        private bool _useCache;
         public Encoding Encoding { get; set; } = DefaultUTF8Encoding;
 
         /// <summary>
@@ -91,7 +92,7 @@ namespace TWCore.Serialization.PWSerializer.Types
             Cache8?.Clear(mode);
             Cache16?.Clear(mode);
             Cache32?.Clear(mode);
-            useCache = (mode != SerializerMode.NoCached);
+            _useCache = (mode != SerializerMode.NoCached);
         }
         /// <summary>
         /// Gets if the type serializer can write the type
@@ -137,7 +138,7 @@ namespace TWCore.Serialization.PWSerializer.Types
             var cache8 = false;
             var cache16 = false;
             var cache32 = false;
-            if (useCache)
+            if (_useCache)
             {
                 var vLength = value.Length;
                 if (vLength <= 8)
@@ -434,7 +435,7 @@ namespace TWCore.Serialization.PWSerializer.Types
 
             writer.Write(bytes, 0, length);
 
-            if (!useCache || length <= 2) return;
+            if (!_useCache || length <= 2) return;
             if (cache8)
                 Cache8.SerializerSet(value);
             else if (cache16)
@@ -585,7 +586,6 @@ namespace TWCore.Serialization.PWSerializer.Types
                     return Cache8.DeserializerGet(reader.ReadUInt16());
             }
 
-            string strValue = null;
             var length = 0;
             switch (type)
             {
@@ -662,9 +662,9 @@ namespace TWCore.Serialization.PWSerializer.Types
             if (length == 0) return null;
 
             var bytes = reader.ReadBytes(length);
-            strValue = Encoding.GetString(bytes);
+            var strValue = Encoding.GetString(bytes);
 
-            if (!useCache || length <= 2) return strValue;
+            if (!_useCache || length <= 2) return strValue;
             var sLength = strValue.Length;
             if (sLength <= 8)
                 Cache8.DeserializerSet(strValue);

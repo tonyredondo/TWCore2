@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.WSerializer.Types
 {
@@ -46,26 +47,26 @@ namespace TWCore.Serialization.WSerializer.Types
             DataType.RefString16Byte13, DataType.RefString16Byte14, DataType.RefString16Byte15, DataType.RefString16Byte16, DataType.RefString16UShort
         });
 
-        SerializerMode _mode;
-        SerializerCache<string> _cache;
-        SerializerCache<string> Cache
+        private SerializerMode _mode;
+        private SerializerCache<string> _cache;
+        private SerializerCache<string> Cache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache ?? (_cache = new SerializerCache<string>(_mode)); }
         }
-        SerializerCache<string> _cache16;
-        SerializerCache<string> Cache16
+        private SerializerCache<string> _cache16;
+        private SerializerCache<string> Cache16
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache16 ?? (_cache16 = new SerializerCache<string>(_mode)); }
         }
-        SerializerCache<string> _cache32;
-        SerializerCache<string> Cache32
+        private SerializerCache<string> _cache32;
+        private SerializerCache<string> Cache32
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _cache32 ?? (_cache32 = new SerializerCache<string>(_mode)); }
         }
-        bool useCache;
+        private bool _useCache;
         public Encoding Encoding { get; set; } = DefaultUTF8Encoding;
 
         /// <summary>
@@ -78,7 +79,7 @@ namespace TWCore.Serialization.WSerializer.Types
             Cache?.Clear(mode);
             Cache16?.Clear(mode);
             Cache32?.Clear(mode);
-            useCache = (mode != SerializerMode.NoCached);
+            _useCache = (mode != SerializerMode.NoCached);
         }
         /// <summary>
         /// Gets if the type serializer can write the type
@@ -123,7 +124,7 @@ namespace TWCore.Serialization.WSerializer.Types
             }
             var cache16 = false;
             var cache32 = false;
-            if (useCache)
+            if (_useCache)
             {
                 var vLength = value.Length;
                 if (vLength <= 16)
@@ -347,7 +348,7 @@ namespace TWCore.Serialization.WSerializer.Types
 
             writer.Write(bytes, 0, bytes.Length);
 
-            if (!useCache)
+            if (!_useCache)
                 return;
             if (length < 2)
                 return;
@@ -471,7 +472,6 @@ namespace TWCore.Serialization.WSerializer.Types
                     return Cache16.DeserializerGet(reader.ReadUInt16());
             }
 
-            string strValue = null;
             var length = 0;
             switch (type)
             {
@@ -536,9 +536,9 @@ namespace TWCore.Serialization.WSerializer.Types
             if (length == 0) return null;
 
             var bytes = reader.ReadBytes(length);
-            strValue = Encoding.GetString(bytes);
+            var strValue = Encoding.GetString(bytes);
 
-            if (!useCache)
+            if (!_useCache)
                 return strValue;
             if (length < 2)
                 return strValue;

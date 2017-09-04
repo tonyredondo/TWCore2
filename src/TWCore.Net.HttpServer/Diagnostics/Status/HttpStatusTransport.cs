@@ -88,7 +88,7 @@ namespace TWCore.Diagnostics.Status.Transports
             httpServer.AddGetHandler("/discovery", ctx =>
             {
                 var services = DiscoveryService.GetRegisteredServices();
-                var statusServices = services.Where(s => s.Category == DiscoveryService.FRAMEWORK_CATEGORY && s.Name == "STATUS").ToArray();
+                var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS").ToArray();
                 ctx.Response.WriteLine("<html><head><title>Discovered Status Services</title></head><body style='padding:30px;'><h1 style='text-align:center;'>Discovered status services</h1>");
                 foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
                 {
@@ -130,7 +130,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 var settings = Core.GetSettings<HttpStatusSettings>();
                 if (settings.Discovery)
                 {
-                    DiscoveryService.RegisterService(DiscoveryService.FRAMEWORK_CATEGORY, "STATUS", "Status engine http transport service", new Dictionary<string, object>
+                    DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS", "Status engine http transport service", new Dictionary<string, object>
                     {
                         ["Port"] = port
                     });

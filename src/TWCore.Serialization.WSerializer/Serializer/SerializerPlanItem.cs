@@ -26,8 +26,8 @@ namespace TWCore.Serialization.WSerializer.Serializer
     internal abstract class SerializerPlanItem
     {
         #region Static
-        static ConcurrentDictionary<Type, string> typeNames = new ConcurrentDictionary<Type, string>();
-        static ConcurrentDictionary<Type, Tuple<string, string, string>> typeNamesTuples = new ConcurrentDictionary<Type, Tuple<string, string, string>>();
+        private static readonly ConcurrentDictionary<Type, string> AllTypeNames = new ConcurrentDictionary<Type, string>();
+        private static readonly ConcurrentDictionary<Type, Tuple<string, string, string>> AllTypeNamesTuples = new ConcurrentDictionary<Type, Tuple<string, string, string>>();
         #endregion
 
         #region Fields and Properties
@@ -40,17 +40,14 @@ namespace TWCore.Serialization.WSerializer.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetTypeName(Type type)
         {
-            return typeNames.GetOrAdd(type, _type =>
+            return AllTypeNames.GetOrAdd(type, gType =>
             {
-                var typeInfo = _type.GetTypeInfo();
+                var typeInfo = gType.GetTypeInfo();
                 var assembly = typeInfo.Assembly;
                 var assemblyName = new AssemblyName(assembly.FullName);
-
-                string mType = null;
-                if (typeInfo.IsGenericType)
-                    mType = string.Format("{0}.{1}[{2}]", typeInfo.Namespace, typeInfo.Name, typeInfo.GenericTypeArguments.Select(a => "[" + GetTypeName(a) + "]").ToArray().Join(","));
-                else
-                    mType = type.FullName;
+                var mType = typeInfo.IsGenericType ? 
+                    string.Format("{0}.{1}[{2}]", typeInfo.Namespace, typeInfo.Name, typeInfo.GenericTypeArguments.Select(a => "[" + GetTypeName(a) + "]").ToArray().Join(",")) : 
+                    type.FullName;
                 if (mType != null && assemblyName.Name != "mscorlib")
                     mType += "," + assemblyName.Name;
                 return mType;
@@ -59,24 +56,21 @@ namespace TWCore.Serialization.WSerializer.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Tuple<string, string, string> GetTypeNameTuple(Type type)
         {
-            return typeNamesTuples.GetOrAdd(type, _type =>
+            return AllTypeNamesTuples.GetOrAdd(type, gType =>
             {
-                var typeInfo = _type.GetTypeInfo();
+                var typeInfo = gType.GetTypeInfo();
                 var assembly = typeInfo.Assembly;
                 var assemblyName = new AssemblyName(assembly.FullName);
-
-                string mNamespace = null;
-                string mType = null;
+                string mNamespace;
+                string mType;
                 string asmName = null;
-
 
                 if (typeInfo.IsGenericType)
                 {
                     mNamespace = typeInfo.Namespace;
-                    if (typeInfo.GenericTypeArguments.Length > 0)
-                        mType = string.Format("{0}[{1}]", typeInfo.Name, typeInfo.GenericTypeArguments.Select(a => "[" + GetTypeName(a) + "]").ToArray().Join(","));
-                    else
-                        mType = typeInfo.Name;
+                    mType = typeInfo.GenericTypeArguments.Length > 0 ? 
+                        string.Format("{0}[{1}]", typeInfo.Name, typeInfo.GenericTypeArguments.Select(a => "[" + GetTypeName(a) + "]").ToArray().Join(",")) : 
+                        typeInfo.Name;
                 }
                 else
                 {
@@ -177,10 +171,10 @@ namespace TWCore.Serialization.WSerializer.Serializer
                 if (typeInfo.IsGenericType)
                 {
                     var gtype = typeInfo.GetGenericTypeDefinition();
-                    var _ta = GetTypeNameTuple(gtype);
-                    TypeNamespace = _ta.Item1;
-                    TypeName = _ta.Item2;
-                    TypeAssembly = _ta.Item3;
+                    var ta = GetTypeNameTuple(gtype);
+                    TypeNamespace = ta.Item1;
+                    TypeName = ta.Item2;
+                    TypeAssembly = ta.Item3;
 
                     var types = typeInfo.GenericTypeArguments;
                     Quantity = types.Length;
@@ -192,18 +186,18 @@ namespace TWCore.Serialization.WSerializer.Serializer
                     for (var i = 0; i < Quantity; i++)
                     {
                         DTypes[i] = GetDataType(Types[i]);
-                        var _takey = GetTypeNameTuple(Types[i]);
-                        TypeNamespaces[i] = _takey.Item1;
-                        TypeNames[i] = _takey.Item2;
-                        TypeAssemblies[i] = _takey.Item3;
+                        var takey = GetTypeNameTuple(Types[i]);
+                        TypeNamespaces[i] = takey.Item1;
+                        TypeNames[i] = takey.Item2;
+                        TypeAssemblies[i] = takey.Item3;
                     }
                 }
                 else
                 {
-                    var _ta = GetTypeNameTuple(type);
-                    TypeNamespace = _ta.Item1;
-                    TypeName = _ta.Item2;
-                    TypeAssembly = _ta.Item3;
+                    var ta = GetTypeNameTuple(type);
+                    TypeNamespace = ta.Item1;
+                    TypeName = ta.Item2;
+                    TypeAssembly = ta.Item3;
                 }
             }
         }
@@ -286,20 +280,20 @@ namespace TWCore.Serialization.WSerializer.Serializer
                 KeyIsNullable = keyIsNullable;
                 Key = props.First(p => p.Name == "Key").GetFastPropertyInfo();
                 KeyDType = GetDataType(KeyType);
-                var _takey = GetTypeNameTuple(KeyType);
-                KeyTypeNamespace = _takey.Item1;
-                KeyTypeName = _takey.Item2;
-                KeyTypeAssembly = _takey.Item3;
+                var takey = GetTypeNameTuple(KeyType);
+                KeyTypeNamespace = takey.Item1;
+                KeyTypeName = takey.Item2;
+                KeyTypeAssembly = takey.Item3;
 
                 ValueType = valueType;
                 ValueSerializerType = valueSerializerType;
                 ValueIsNullable = valueIsNullable;
                 Value = props.First(p => p.Name == "Value").GetFastPropertyInfo();
                 ValueDType = GetDataType(ValueType);
-                var _tavalue = GetTypeNameTuple(ValueType);
-                ValueTypeNamespace = _tavalue.Item1;
-                ValueTypeName = _tavalue.Item2;
-                ValueTypeAssembly = _tavalue.Item3;
+                var tavalue = GetTypeNameTuple(ValueType);
+                ValueTypeNamespace = tavalue.Item1;
+                ValueTypeName = tavalue.Item2;
+                ValueTypeAssembly = tavalue.Item3;
             }
         }
         #endregion

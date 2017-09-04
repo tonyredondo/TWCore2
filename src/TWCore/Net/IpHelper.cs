@@ -20,6 +20,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net
 {
@@ -50,7 +51,7 @@ namespace TWCore.Net
             {
                 var hostIPs = Dns.GetHostAddressesAsync(hostNameOrAddress).WaitAsync();
                 var localIPs = Dns.GetHostAddressesAsync(Dns.GetHostName()).WaitAsync();
-                return hostIPs.Any(hostIP => IPAddress.IsLoopback(hostIP) || localIPs.Contains(hostIP));
+                return hostIPs.Any(hostIp => IPAddress.IsLoopback(hostIp) || localIPs.Contains(hostIp));
             }
             catch
             {
@@ -67,12 +68,10 @@ namespace TWCore.Net
         public static uint IpToInt(string ipAddress)
         {
             var uip = ipAddress.Split('.').Select(i => {
-                uint.TryParse(i, out uint _uip);
-                return _uip;
+                uint.TryParse(i, out uint puip);
+                return puip;
             }).ToArray();
-            if (uip.Length == 4)
-                return IpToInt(uip[0], uip[1], uip[2], uip[3]);
-            return 0;
+            return uip.Length == 4 ? IpToInt(uip[0], uip[1], uip[2], uip[3]) : 0;
         }
         /// <summary>
         /// Ip Address to UInt
@@ -97,13 +96,13 @@ namespace TWCore.Net
             var ipTokens = ipaddr.Split('.');
             if (ipTokens.Length != 4)
                 return 0;
-            int ipInt = 0;
+            var ipInt = 0;
             for (var i = 0; i < 4; i++)
             {
                 var ipNum = ipTokens[i];
                 try
                 {
-                    int ipVal = int.Parse(ipNum);
+                    var ipVal = int.Parse(ipNum);
                     if (ipVal < 0 || ipVal > 255)
                         return 0;
                     ipInt = (ipInt << 8) + ipVal;
@@ -124,14 +123,14 @@ namespace TWCore.Net
         public static async Task<string> GetPublicIPAsync()
         {
             Core.Log.LibVerbose("Getting the public ip address...");
-            var address = string.Empty;
+            string address;
             var request = WebRequest.Create("http://checkip.dyndns.org/");
             using (var response = await request.GetResponseAsync().ConfigureAwait(false))
             using (var stream = new StreamReader(response.GetResponseStream()))
                 address = stream.ReadToEnd();
             //Search for the ip in the html
-            int first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;
-            int last = address.LastIndexOf("</body>", StringComparison.Ordinal);
+            var first = address.IndexOf("Address: ", StringComparison.Ordinal) + 9;
+            var last = address.LastIndexOf("</body>", StringComparison.Ordinal);
             address = address.SubstringIndex(first, last);
             Core.Log.LibVerbose("The Ip address is: {0}", address);
             return address;

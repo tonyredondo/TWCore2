@@ -24,6 +24,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -33,19 +34,19 @@ namespace TWCore.Messaging.RabbitMQ
 	public class RabbitMQueueRawServerListener : MQueueRawServerListenerBase
     {
         #region Fields
-        readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
-        readonly object _lock = new object();
-        string _name;
-        RabbitMQueue _receiver;
-        EventingBasicConsumer _receiverConsumer;
-        string _receiverConsumerTag;
-        CancellationToken _token;
-        Task _monitorTask;
-        bool _exceptionSleep;
+        private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+        private readonly object _lock = new object();
+        private readonly string _name;
+        private RabbitMQueue _receiver;
+        private EventingBasicConsumer _receiverConsumer;
+        private string _receiverConsumerTag;
+        private CancellationToken _token;
+        private Task _monitorTask;
+        private bool _exceptionSleep;
         #endregion
 
         #region Nested Type
-        class RabbitMessage
+        private class RabbitMessage
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
@@ -118,13 +119,11 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_receiver != null)
-            {
-                if (!string.IsNullOrEmpty(_receiverConsumerTag))
-                    _receiver.Channel?.BasicCancel(_receiverConsumerTag);
-                _receiver.Close();
-                _receiver = null;
-            }
+            if (_receiver == null) return;
+            if (!string.IsNullOrEmpty(_receiverConsumerTag))
+                _receiver.Channel?.BasicCancel(_receiverConsumerTag);
+            _receiver.Close();
+            _receiver = null;
         }
         #endregion
 
@@ -133,13 +132,13 @@ namespace TWCore.Messaging.RabbitMQ
         /// Monitors the maximum concurrent message allowed for the listener
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        async Task MonitorProcess()
+        private async Task MonitorProcess()
         {
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
-                    bool exSleep = false;
+                    bool exSleep;
                     lock (_lock)
                         exSleep = _exceptionSleep;
                     if (exSleep)
@@ -181,49 +180,59 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="obj">Object message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ProcessingTask(object obj)
+        private void ProcessingTask(object obj)
         {
             try
             {
                 Counters.IncrementProcessingThreads();
-                if (obj is RabbitMessage message)
+                if (!(obj is RabbitMessage message)) return;
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, _receiver.Route + "/" + _receiver.Name);
+                Counters.IncrementTotalReceivingBytes(message.Body.Count);
+                if (ResponseServer)
                 {
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, _receiver.Route + "/" + _receiver.Name);
-                    Counters.IncrementTotalReceivingBytes(message.Body.Count);
-                    if (ResponseServer)
-                    {
-                        var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
-                        evArgs.Metadata["AppId"] = message.Properties.AppId;
-                        evArgs.Metadata["ContentEncoding"] = message.Properties.ContentEncoding;
-                        evArgs.Metadata["ContentType"] = message.Properties.ContentType;
-                        evArgs.Metadata["DeliveryMode"] = message.Properties.DeliveryMode.ToString();
-                        evArgs.Metadata["Expiration"] = message.Properties.Expiration;
-                        evArgs.Metadata["Priority"] = message.Properties.Priority.ToString();
-                        evArgs.Metadata["Timestamp"] = message.Properties.Timestamp.ToString();
-                        evArgs.Metadata["Type"] = message.Properties.Type;
-                        evArgs.Metadata["UserId"] = message.Properties.UserId;
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
-                        OnResponseReceived(evArgs);
-                    }
-                    else
-                    {
-                        var evArgs = new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId);
-                        evArgs.Metadata["AppId"] = message.Properties.AppId;
-                        evArgs.Metadata["ContentEncoding"] = message.Properties.ContentEncoding;
-                        evArgs.Metadata["ContentType"] = message.Properties.ContentType;
-                        evArgs.Metadata["DeliveryMode"] = message.Properties.DeliveryMode.ToString();
-                        evArgs.Metadata["Expiration"] = message.Properties.Expiration;
-                        evArgs.Metadata["Priority"] = message.Properties.Priority.ToString();
-                        evArgs.Metadata["Timestamp"] = message.Properties.Timestamp.ToString();
-                        evArgs.Metadata["Type"] = message.Properties.Type;
-                        evArgs.Metadata["UserId"] = message.Properties.UserId;
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
-                        OnRequestReceived(evArgs);
-                    }
-                    Counters.IncrementTotalMessagesProccesed();
+                    var evArgs =
+                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId)
+                        {
+                            Metadata =
+                            {
+                                ["AppId"] = message.Properties.AppId,
+                                ["ContentEncoding"] = message.Properties.ContentEncoding,
+                                ["ContentType"] = message.Properties.ContentType,
+                                ["DeliveryMode"] = message.Properties.DeliveryMode.ToString(),
+                                ["Expiration"] = message.Properties.Expiration,
+                                ["Priority"] = message.Properties.Priority.ToString(),
+                                ["Timestamp"] = message.Properties.Timestamp.ToString(),
+                                ["Type"] = message.Properties.Type,
+                                ["UserId"] = message.Properties.UserId,
+                                ["ReplyTo"] = message.Properties.ReplyTo,
+                                ["MessageId"] = message.Properties.MessageId
+                            }
+                        };
+                    OnResponseReceived(evArgs);
                 }
+                else
+                {
+                    var evArgs =
+                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId)
+                        {
+                            Metadata =
+                            {
+                                ["AppId"] = message.Properties.AppId,
+                                ["ContentEncoding"] = message.Properties.ContentEncoding,
+                                ["ContentType"] = message.Properties.ContentType,
+                                ["DeliveryMode"] = message.Properties.DeliveryMode.ToString(),
+                                ["Expiration"] = message.Properties.Expiration,
+                                ["Priority"] = message.Properties.Priority.ToString(),
+                                ["Timestamp"] = message.Properties.Timestamp.ToString(),
+                                ["Type"] = message.Properties.Type,
+                                ["UserId"] = message.Properties.UserId,
+                                ["ReplyTo"] = message.Properties.ReplyTo,
+                                ["MessageId"] = message.Properties.MessageId
+                            }
+                        };
+                    OnRequestReceived(evArgs);
+                }
+                Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception ex)
             {

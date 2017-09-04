@@ -66,14 +66,14 @@ namespace TWCore.Serialization
         {
             if (Data == null || Data.Length == 0) return null;
             var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
-            ISerializer serializer = null;
+            ISerializer serializer;
             if (string.IsNullOrWhiteSpace(SerializerMimeType))
                 serializer = SerializerManager.DefaultBinarySerializer;
             else
             {
                 var idx = SerializerMimeType.IndexOf(':');
-                string serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
-                string serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
+                var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
+                var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
                 serializer = SerializerManager.GetByMimeType(serMime);
                 if (!string.IsNullOrWhiteSpace(serComp))
                     serializer.Compressor = CompressorManager.GetByEncodingType(serComp);

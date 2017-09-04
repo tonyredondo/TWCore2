@@ -29,17 +29,17 @@ namespace TWCore.Net.Multicast
     /// </summary>
     public static class DiscoveryService
     {
-        static PeerConnection _peerConnection;
-        static List<RegisteredService> _localServices;
-        static TimeoutDictionary<Guid, ReceivedService> _receivedServices;
-        static TimeSpan _serviceTimeout = TimeSpan.FromSeconds(30);
-        static Thread _sendThread;
-        static CancellationTokenSource _tokenSource;
-        static CancellationToken _token;
-        static bool _connected;
+        private static readonly PeerConnection PeerConnection;
+        private static readonly List<RegisteredService> LocalServices;
+        private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
+        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
+        private static Thread _sendThread;
+        private static CancellationTokenSource _tokenSource;
+        private static CancellationToken _token;
+        private static bool _connected;
 
         #region Consts
-        public const string FRAMEWORK_CATEGORY = "FRAMEWORK";
+        public const string FrameworkCategory = "FRAMEWORK";
         #endregion
 
         #region Events
@@ -73,17 +73,17 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Has a registered local service
         /// </summary>
-        public static bool HasRegisteredLocalService => _localServices.Count > 0;
+        public static bool HasRegisteredLocalService => LocalServices.Count > 0;
         #endregion
 
         #region .ctor
         static DiscoveryService()
         {
-            _localServices = new List<RegisteredService>();
-            _receivedServices = new TimeoutDictionary<Guid, ReceivedService>();
-            _receivedServices.OnItemTimeout += (s, e) => Try.Do(() => OnServiceExpired?.Invoke(s, new EventArgs<ReceivedService>(e.Value)), false);
-            _peerConnection = new PeerConnection();
-            _peerConnection.OnReceive += PeerConnection_OnReceive;
+            LocalServices = new List<RegisteredService>();
+            ReceivedServices = new TimeoutDictionary<Guid, ReceivedService>();
+            ReceivedServices.OnItemTimeout += (s, e) => Try.Do(() => OnServiceExpired?.Invoke(s, new EventArgs<ReceivedService>(e.Value)), false);
+            PeerConnection = new PeerConnection();
+            PeerConnection.OnReceive += PeerConnection_OnReceive;
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
             _connected = false;
@@ -108,7 +108,7 @@ namespace TWCore.Net.Multicast
             _connected = true;
             MulticastIp = multicastIp;
             Port = port;
-            _peerConnection.Connect(multicastIp, port);
+            PeerConnection.Connect(multicastIp, port);
             _sendThread = new Thread(SendThread)
             {
                 Name = "DiscoveryServiceSendThread",
@@ -126,7 +126,7 @@ namespace TWCore.Net.Multicast
             _tokenSource?.Cancel();
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
-            _peerConnection.Disconnect();
+            PeerConnection.Disconnect();
             _connected = false;
         }
         /// <summary>
@@ -151,8 +151,8 @@ namespace TWCore.Net.Multicast
             };
             var serviceText = service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
             service.ServiceId = serviceText.GetHashSHA1Guid();
-            lock (_localServices)
-                _localServices.Add(service);
+            lock (LocalServices)
+                LocalServices.Add(service);
         }
         /// <summary>
         /// Register service
@@ -169,15 +169,15 @@ namespace TWCore.Net.Multicast
         /// <returns>Received registered services array</returns>
         public static ReceivedService[] GetRegisteredServices()
         {
-            lock (_receivedServices)
+            lock (ReceivedServices)
             {
-                return _receivedServices.ToValueArray();
+                return ReceivedServices.ToValueArray();
             }
         }
         #endregion
 
         #region Private Methods
-        static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
+        private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
             var rService = Serializer.Deserialize<RegisteredService>(e.Data);
             var received = new ReceivedService
@@ -194,27 +194,27 @@ namespace TWCore.Net.Multicast
                 Address = e.Address
             };
             bool exist;
-            lock (_receivedServices)
+            lock (ReceivedServices)
             {
-                exist = _receivedServices.TryRemove(received.ServiceId, out var _);
-                _receivedServices.TryAdd(received.ServiceId, received, _serviceTimeout);
+                exist = ReceivedServices.TryRemove(received.ServiceId, out var _);
+                ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
             }
             var eArgs = new EventArgs<ReceivedService>(received);
             if (!exist)
                 OnNewServiceReceived?.Invoke(sender, eArgs);
             OnServiceReceived?.Invoke(sender, eArgs);
         }
-        static void SendThread()
+        private static void SendThread()
         {
             while (!_token.IsCancellationRequested)
             {
-                RegisteredService[] rSrv = null;
-                lock (_localServices)
-                    rSrv = _localServices.ToArray();
+                RegisteredService[] rSrv;
+                lock (LocalServices)
+                    rSrv = LocalServices.ToArray();
                 foreach (var srv in rSrv)
                 {
                     var srvValue = Serializer.Serialize(srv);
-                    _peerConnection.Send(srvValue);
+                    PeerConnection.Send(srvValue);
                     if (_token.IsCancellationRequested)
                         return;
                 }

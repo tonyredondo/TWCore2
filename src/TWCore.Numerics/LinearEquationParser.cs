@@ -17,6 +17,9 @@ limitations under the License.
 #pragma warning disable 1591
 
 using System;
+// ReSharper disable RedundantAssignment
+// ReSharper disable InconsistentNaming
+#pragma warning disable 219
 
 namespace TWCore.Numerics
 {
@@ -54,7 +57,6 @@ namespace TWCore.Numerics
     public class LinearEquationParser
     {
         private static readonly int m_maximumNumberLength = 20;
-
         private int m_startPosition;
         private int m_equationIndex;
         private LinearEquationParserState m_parserState;
@@ -282,7 +284,7 @@ namespace TWCore.Numerics
         // ReSharper disable once UnusedMember.Local
         private LinearEquationParserStatus GetEquationStatus()
         {
-            var status = LinearEquationParserStatus.Success;
+            LinearEquationParserStatus status;
 
             if ((!m_equalSignInEquationFlag)
                 && (!m_termBeforeEqualSignExistsFlag)
@@ -529,7 +531,7 @@ namespace TWCore.Numerics
             // If a variable was encountered then add to the aMatrix.
             //------------------------------------------------------------------
 
-            bool haveTermFlag = false;
+            var haveTermFlag = false;
 
             if (haveVariableNameFlag)
             {
@@ -588,16 +590,13 @@ namespace TWCore.Numerics
             // There must be at least one term on each side of the equal sign.
             //------------------------------------------------------------------
 
-            if (haveTermFlag)
+            if (m_equalSignInEquationFlag)
             {
-                if (m_equalSignInEquationFlag)
-                {
-                    m_termAfterEqualSignExistsFlag = true;
-                }
-                else
-                {
-                    m_termBeforeEqualSignExistsFlag = true;
-                }
+                m_termAfterEqualSignExistsFlag = true;
+            }
+            else
+            {
+                m_termBeforeEqualSignExistsFlag = true;
             }
 
             //------------------------------------------------------------------
@@ -606,7 +605,7 @@ namespace TWCore.Numerics
 
             SkipSpaces(inputLine, ref positionIndex);
 
-            return haveTermFlag;
+            return true;
         }
 
         /// <summary>
@@ -661,18 +660,18 @@ namespace TWCore.Numerics
                                ref int positionIndex,
                                ref string numberString)
         {
-            int decimalPointCount = 0;
-            int digitLength = 0;
-            bool haveNumberFlag = false;
-            bool continueFlag = positionIndex < inputLine.Length;
+            var decimalPointCount = 0;
+            var digitLength = 0;
+            var haveNumberFlag = false;
+            var continueFlag = positionIndex < inputLine.Length;
 
             while (continueFlag)
             {
-                Char c = inputLine[positionIndex];
+                var c = inputLine[positionIndex];
 
                 continueFlag = (c == '.');
 
-                if (Char.IsDigit(c))
+                if (char.IsDigit(c))
                 {
                     if (++digitLength > m_maximumNumberLength)
                     {
@@ -689,31 +688,25 @@ namespace TWCore.Numerics
                 else
                 {
                     continueFlag = c == '.';
-
-                    if (continueFlag)
+                    if (!continueFlag) continue;
+                    
+                    if (++decimalPointCount > 1)
                     {
-                        if (++decimalPointCount > 1)
-                        {
-                            SetLastStatusValue(LinearEquationParserStatus.ErrorMultipleDecimalPoints,
-                                               positionIndex);
-                            return false;
-                        }
-
-                        numberString += c;
-                        positionIndex++;
-                        continueFlag = positionIndex < inputLine.Length;
+                        SetLastStatusValue(LinearEquationParserStatus.ErrorMultipleDecimalPoints,
+                            positionIndex);
+                        return false;
                     }
+
+                    numberString += c;
+                    positionIndex++;
+                    continueFlag = positionIndex < inputLine.Length;
                 }
             }
 
-            if (numberString.Length > m_maximumNumberLength)
-            {
-                SetLastStatusValue(LinearEquationParserStatus.ErrorTooManyDigits,
-                                   positionIndex);
-                return false;
-            }
-
-            return haveNumberFlag;
+            if (numberString.Length <= m_maximumNumberLength) 
+                return haveNumberFlag;
+            SetLastStatusValue(LinearEquationParserStatus.ErrorTooManyDigits, positionIndex);
+            return false;
         }
 
         /// <summary>

@@ -378,29 +378,28 @@ namespace TWCore.Numerics
             var numberOfEquations = 0;
 
             var parser = new LinearEquationParser();
-            var parserStatus = LinearEquationParserStatus.Success;
             var solverStatus = LinearEquationSolverStatus.IllConditioned;
 
             foreach (var line in equations)
             {
-                parserStatus = parser.Parse(line, aMatrix, bVector, variableNameIndexMap, ref numberOfEquations);
+                var parserStatus = parser.Parse(line, aMatrix, bVector, variableNameIndexMap, ref numberOfEquations);
                 if (parserStatus != LinearEquationParserStatus.Success) break;
             }
-            if (numberOfEquations == variableNameIndexMap.Count)
+            if (numberOfEquations != variableNameIndexMap.Count) 
+                return solverStatus;
+            
+            var xVector = new SparseArray<int, double>();
+            solverStatus = Solve(numberOfEquations, aMatrix, bVector, xVector);
+            switch (solverStatus)
             {
-                var xVector = new SparseArray<int, double>();
-                solverStatus = Solve(numberOfEquations, aMatrix, bVector, xVector);
-                switch (solverStatus)
-                {
-                    case LinearEquationSolverStatus.Success:
-                        foreach (var pair in variableNameIndexMap)
-                            response.Add(pair.Key, xVector[pair.Value]);
-                        break;
-                    case LinearEquationSolverStatus.IllConditioned:
-                        break;
-                    case LinearEquationSolverStatus.Singular:
-                        break;
-                }
+                case LinearEquationSolverStatus.Success:
+                    foreach (var pair in variableNameIndexMap)
+                        response.Add(pair.Key, xVector[pair.Value]);
+                    break;
+                case LinearEquationSolverStatus.IllConditioned:
+                    break;
+                case LinearEquationSolverStatus.Singular:
+                    break;
             }
             return solverStatus;
         }

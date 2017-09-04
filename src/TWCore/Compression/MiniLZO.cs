@@ -19,6 +19,9 @@ using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedParameter.Local
 // ReSharper disable UnusedMethodReturnValue.Local
+// ReSharper disable RedundantAssignment
+// ReSharper disable InconsistentNaming
+// ReSharper disable RedundantCast
 
 namespace TWCore.Compression
 {
@@ -27,13 +30,13 @@ namespace TWCore.Compression
     /// </summary>
     public static class MiniLZO
     {
-        static readonly int[] MultiplyDeBruijnBitPosition = { 0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9 };
+        private static readonly int[] MultiplyDeBruijnBitPosition = { 0, 1, 28, 2, 29, 14, 24, 3, 30, 22, 20, 15, 25, 17, 4, 8, 31, 27, 13, 23, 21, 19, 16, 7, 26, 12, 18, 6, 11, 5, 10, 9 };
         
         #region Public Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe SubArray<byte> Decompress(byte[] @in)
         {
-            byte[] @out = new byte[@in.Length * 8];
+            var @out = new byte[@in.Length * 8];
             uint out_len = 0;
             fixed (byte* @pIn = @in, wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
@@ -44,7 +47,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe SubArray<byte> Decompress(SubArray<byte> @in)
         {
-            byte[] @out = new byte[@in.Count * 8];
+            var @out = new byte[@in.Count * 8];
             uint out_len = 0;
             fixed (byte* wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
@@ -65,7 +68,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe SubArray<byte> Compress(byte[] input)
         {
-            byte[] @out = new byte[input.Length + (input.Length / 16) + 64 + 3];
+            var @out = new byte[input.Length + (input.Length / 16) + 64 + 3];
             uint out_len = 0;
             fixed (byte* @pIn = input, wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
@@ -76,7 +79,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static unsafe SubArray<byte> Compress(SubArray<byte> input)
         {
-            byte[] @out = new byte[input.Count + (input.Count / 16) + 64 + 3];
+            var @out = new byte[input.Count + (input.Count / 16) + 64 + 3];
             uint out_len = 0;
             fixed (byte* wrkmem = new byte[IntPtr.Size * 16384], pOut = @out)
             {
@@ -97,7 +100,7 @@ namespace TWCore.Compression
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe static uint Lzo1x_1_compress_core(byte* @in, uint in_len, byte* @out, ref uint out_len, uint ti, void* wrkmem)
+        static unsafe uint Lzo1x_1_compress_core(byte* @in, uint in_len, byte* @out, ref uint out_len, uint ti, void* wrkmem)
         {
             byte* ip;
             byte* op;

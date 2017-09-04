@@ -44,67 +44,63 @@ namespace TWCore.Cache.Client.Configuration
         /// <returns>Cache client pool</returns>
         public CacheClientPool GetCacheClient(string name)
         {
-            if (Caches?.Contains(name) == true)
+            if (Caches?.Contains(name) != true) return null;
+            var cacheConfig = Caches[name];
+            var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
+                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
+                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+
+            if (cConfig?.Pool == null) return null;
+            var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);
+            var pingDelayOnError = cConfig.Pool.PingDelayOnError.ParseTo(30000);
+            var readMode = cConfig.Pool.ReadMode;
+            var writeMode = cConfig.Pool.WriteMode;
+            var selectionOrder = cConfig.Pool.SelectionOrder;
+            var indexOrder = cConfig.Pool.IndexOrder;
+            var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
+            ISerializer serializer;
+            if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
             {
-                var cacheConfig = Caches[name];
-                var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
-                    cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
-                    cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-
-                if (cConfig?.Pool != null)
-                {
-                    var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);
-                    var pingDelayOnError = cConfig.Pool.PingDelayOnError.ParseTo(30000);
-                    var readMode = cConfig.Pool.ReadMode;
-                    var writeMode = cConfig.Pool.WriteMode;
-                    var selectionOrder = cConfig.Pool.SelectionOrder;
-                    var indexOrder = cConfig.Pool.IndexOrder;
-                    var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
-                    ISerializer serializer = null;
-                    if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
-                    {
-                        serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
-                        if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
-                            serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
-                    }
-                    else
-                        serializer = SerializerManager.DefaultBinarySerializer;
-                    var ccp = new CacheClientPool(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
-                    ccp.Serializer = serializer;
-                    ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
-
-                    if (cConfig.Pool.Items?.Any() == true)
-                    {
-                        var idx = 0;
-                        foreach (var pitem in cConfig.Pool.Items)
-                        {
-                            idx++;
-                            if (!pitem.Enabled)
-                                continue;
-
-							var objType = pitem.CreateInstance<object>();
-							if (objType is ITransportClient transport)
-							{
-								var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-								var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
-
-								var proxy = CacheClientProxy.GetClient(transport);
-								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-								ccp.Add(cppName, proxy, pitem.Mode);
-							}
-							if (objType is StorageBase sto)
-							{
-								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
-								ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite);
-							}
-                        }
-                    }
-                    return ccp;
-                }
-
+                serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
+                if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
+                    serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
             }
+            else
+                serializer = SerializerManager.DefaultBinarySerializer;
+            
+            var ccp =
+                new CacheClientPool(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder)
+                {
+                    Serializer = serializer,
+                    ForceAtLeastOneNetworkItemEnabled = forceNetworkItem
+                };
 
-            return null;
+            if (cConfig.Pool.Items?.Any() != true) return ccp;
+            
+            var idx = 0;
+            foreach (var pitem in cConfig.Pool.Items)
+            {
+                idx++;
+                if (!pitem.Enabled)
+                    continue;
+
+                var objType = pitem.CreateInstance<object>();
+                if (objType is ITransportClient transport)
+                {
+                    var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+                    var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
+
+                    var proxy = CacheClientProxy.GetClient(transport);
+                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+                    ccp.Add(cppName, proxy, pitem.Mode);
+                }
+                if (objType is StorageBase sto)
+                {
+                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+                    ccp.Add(cppName, sto);
+                }
+            }
+            return ccp;
         }
         /// <summary>
         /// Gets the cache client connection pool
@@ -113,65 +109,59 @@ namespace TWCore.Cache.Client.Configuration
         /// <returns>Cache client pool</returns>
         public async Task<CacheClientPoolAsync> GetCacheClientAsync(string name)
         {
-            if (Caches?.Contains(name) == true)
+            if (Caches?.Contains(name) != true) return null;
+            var cacheConfig = Caches[name];
+            var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
+                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
+                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+
+            if (cConfig?.Pool == null) return null;
+            var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);
+            var pingDelayOnError = cConfig.Pool.PingDelayOnError.ParseTo(30000);
+            var readMode = cConfig.Pool.ReadMode;
+            var writeMode = cConfig.Pool.WriteMode;
+            var selectionOrder = cConfig.Pool.SelectionOrder;
+            var indexOrder = cConfig.Pool.IndexOrder;
+            var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
+            ISerializer serializer;
+            if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
             {
-                var cacheConfig = Caches[name];
-                var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
-                    cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
-                    cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+                serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
+                if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
+                    serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
+            }
+            else
+                serializer = SerializerManager.DefaultBinarySerializer;
+            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
+            ccp.Serializer = serializer;
+            ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
 
-                if (cConfig?.Pool != null)
+            if (cConfig.Pool.Items?.Any() != true) return ccp;
+            
+            var idx = 0;
+            foreach (var pitem in cConfig.Pool.Items)
+            {
+                idx++;
+                if (!pitem.Enabled)
+                    continue;
+
+                var objType = pitem.CreateInstance<object>();
+                if (objType is ITransportClient transport)
                 {
-                    var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);
-                    var pingDelayOnError = cConfig.Pool.PingDelayOnError.ParseTo(30000);
-                    var readMode = cConfig.Pool.ReadMode;
-                    var writeMode = cConfig.Pool.WriteMode;
-                    var selectionOrder = cConfig.Pool.SelectionOrder;
-                    var indexOrder = cConfig.Pool.IndexOrder;
-                    var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
-                    ISerializer serializer = null;
-                    if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
-                    {
-                        serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
-                        if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
-                            serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
-                    }
-                    else
-                        serializer = SerializerManager.DefaultBinarySerializer;
-                    var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
-                    ccp.Serializer = serializer;
-                    ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
+                    var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+                    var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
-                    if (cConfig.Pool.Items?.Any() == true)
-                    {
-                        var idx = 0;
-                        foreach (var pitem in cConfig.Pool.Items)
-                        {
-                            idx++;
-                            if (!pitem.Enabled)
-                                continue;
-
-							var objType = pitem.CreateInstance<object>();
-							if (objType is ITransportClient transport)
-							{
-								var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-								var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
-
-								var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
-								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-								ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
-							}
-							if (objType is StorageBase sto)
-							{
-								var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
-								ccp.Add(cppName, sto, StorageItemMode.ReadAndWrite);
-							}
-                        }
-                    }
-                    return ccp;
+                    var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
+                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+                    ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
+                }
+                if (objType is StorageBase sto)
+                {
+                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+                    ccp.Add(cppName, sto);
                 }
             }
-            return null;
+            return ccp;
         }
     }
 }

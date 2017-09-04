@@ -24,6 +24,8 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+// ReSharper disable MethodSupportsCancellation
+#pragma warning disable 414
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -33,20 +35,20 @@ namespace TWCore.Messaging.RabbitMQ
 	public class RabbitMQueueServerListener : MQueueServerListenerBase
     {
         #region Fields
-        readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
-        readonly object _lock = new object();
-        Type _messageType;
-        string _name;
-        RabbitMQueue _receiver;
-        EventingBasicConsumer _receiverConsumer;
-        string _receiverConsumerTag;
-        CancellationToken _token;
-        Task _monitorTask;
-        bool _exceptionSleep;
+        private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+        private readonly object _lock = new object();
+        private readonly Type _messageType;
+        private readonly string _name;
+        private RabbitMQueue _receiver;
+        private EventingBasicConsumer _receiverConsumer;
+        private string _receiverConsumerTag;
+        private CancellationToken _token;
+        private Task _monitorTask;
+        private bool _exceptionSleep;
         #endregion
 
         #region Nested Type
-        class RabbitMessage
+        private class RabbitMessage
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
@@ -124,13 +126,11 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_receiver != null)
-            {
-                if (!string.IsNullOrEmpty(_receiverConsumerTag))
-                    _receiver.Channel?.BasicCancel(_receiverConsumerTag);
-                _receiver.Close();
-                _receiver = null;
-            }
+            if (_receiver == null) return;
+            if (!string.IsNullOrEmpty(_receiverConsumerTag))
+                _receiver.Channel?.BasicCancel(_receiverConsumerTag);
+            _receiver.Close();
+            _receiver = null;
         }
         #endregion
 
@@ -139,13 +139,13 @@ namespace TWCore.Messaging.RabbitMQ
         /// Monitors the maximum concurrent message allowed for the listener
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        async Task MonitorProcess()
+        private async Task MonitorProcess()
         {
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
-                    bool exSleep = false;
+                    bool exSleep;
                     lock (_lock)
                         exSleep = _exceptionSleep;
                     if (exSleep)
@@ -187,39 +187,43 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="obj">Object message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ProcessingTask(object obj)
+        private void ProcessingTask(object obj)
         {
             try
             {
                 Counters.IncrementProcessingThreads();
-                if (obj is RabbitMessage message)
+                if (!(obj is RabbitMessage message)) return;
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
+                var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
+                if (messageBody is RequestMessage request && request.Header != null)
                 {
-                    Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
-                    var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-                    if (messageBody is RequestMessage request && request.Header != null)
-                    {
-                        request.Header.ApplicationReceivedTime = Core.Now;
-                        Counters.IncrementReceivingTime(request.Header.TotalTime);
-                        if (request.Header.ClientName != Config.Name)
-                            Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                        var evArgs = new RequestReceivedEventArgs(_name, _receiver, request);
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
-                        if (request.Header.ResponseQueue != null)
-                            evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                        OnRequestReceived(evArgs);
-                    }
-                    else if (messageBody is ResponseMessage response && response.Header != null)
-                    {
-                        response.Header.Response.ApplicationReceivedTime = Core.Now;
-                        Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs = new ResponseReceivedEventArgs(_name, response);
-                        evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                        evArgs.Metadata["MessageId"] = message.Properties.MessageId;
-                        OnResponseReceived(evArgs);
-                    }
-                    Counters.IncrementTotalMessagesProccesed();
+                    request.Header.ApplicationReceivedTime = Core.Now;
+                    Counters.IncrementReceivingTime(request.Header.TotalTime);
+                    if (request.Header.ClientName != Config.Name)
+                        Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+                    var evArgs = new RequestReceivedEventArgs(_name, _receiver, request);
+                    evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
+                    evArgs.Metadata["MessageId"] = message.Properties.MessageId;
+                    if (request.Header.ResponseQueue != null)
+                        evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+                    OnRequestReceived(evArgs);
                 }
+                else if (messageBody is ResponseMessage response && response.Header != null)
+                {
+                    response.Header.Response.ApplicationReceivedTime = Core.Now;
+                    Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+                    var evArgs =
+                        new ResponseReceivedEventArgs(_name, response)
+                        {
+                            Metadata =
+                            {
+                                ["ReplyTo"] = message.Properties.ReplyTo,
+                                ["MessageId"] = message.Properties.MessageId
+                            }
+                        };
+                    OnResponseReceived(evArgs);
+                }
+                Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception ex)
             {

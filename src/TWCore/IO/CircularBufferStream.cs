@@ -27,13 +27,13 @@ namespace TWCore.IO
     public class CircularBufferStream : Stream
     {
         #region Fields
-        int start = 9;
-        int length;
-        byte[] _buffer;
-        readonly ManualResetEventSlim readEvent = new ManualResetEventSlim(false);
-        readonly ManualResetEventSlim writeEvent = new ManualResetEventSlim(false);
-        readonly object readLock = new object();
-        readonly object writeLock = new object();
+        private const int Start = 9;
+        private readonly int _length;
+        private readonly byte[] _buffer;
+        private readonly ManualResetEventSlim _readEvent = new ManualResetEventSlim(false);
+        private readonly ManualResetEventSlim _writeEvent = new ManualResetEventSlim(false);
+        private readonly object _readLock = new object();
+        private readonly object _writeLock = new object();
         #endregion
 
         #region Properties
@@ -67,8 +67,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CircularBufferStream(int bufferSize = 65536)
         {
-            length = bufferSize;
-            _buffer = new byte[length + start];
+            _length = bufferSize;
+            _buffer = new byte[_length + Start];
         }
         #endregion
 
@@ -105,37 +105,34 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            lock (readLock)
+            lock (_readLock)
             {
                 var rPos = GetReadPosition();
                 var wPos = GetWritePosition();
                 while (GetReadFirst() == 0 && rPos == wPos)
                 {
-                    writeEvent.Wait();
-                    writeEvent.Reset();
+                    _writeEvent.Wait();
+                    _writeEvent.Reset();
                     wPos = GetWritePosition();
                 }
-                int totalRead = 0;
-                int cLength = 0;
+                var totalRead = 0;
+                int cLength;
                 if (GetReadFirst() == 0)
-                    cLength = rPos > wPos ? length : wPos;
+                    cLength = rPos > wPos ? _length : wPos;
                 else
-                    cLength = rPos >= wPos ? length : wPos;
+                    cLength = rPos >= wPos ? _length : wPos;
                 var bufRemain = cLength - rPos;
                 if (bufRemain >= count)
                 {
-                    Buffer.BlockCopy(_buffer, rPos + start, buffer, offset, count);
+                    Buffer.BlockCopy(_buffer, rPos + Start, buffer, offset, count);
                     totalRead += count;
                     rPos += count;
-                    if (rPos == length)
-                        SetReadPosition(0);
-                    else
-                        SetReadPosition(rPos);
+                    SetReadPosition(rPos == _length ? 0 : rPos);
                 }
                 else
                 {
                     var remain = count - bufRemain;
-                    Buffer.BlockCopy(_buffer, rPos + start, buffer, offset, bufRemain);
+                    Buffer.BlockCopy(_buffer, rPos + Start, buffer, offset, bufRemain);
                     totalRead += bufRemain;
                     rPos += bufRemain;
                     if (rPos == wPos)
@@ -145,15 +142,12 @@ namespace TWCore.IO
                     else
                     {
                         var canRead = Math.Min(remain, wPos);
-                        Buffer.BlockCopy(_buffer, start, buffer, offset + bufRemain, canRead);
+                        Buffer.BlockCopy(_buffer, Start, buffer, offset + bufRemain, canRead);
                         totalRead += canRead;
-                        if (canRead < remain)
-                            SetReadPosition(canRead);
-                        else
-                            SetReadPosition(remain);
+                        SetReadPosition(canRead < remain ? canRead : remain);
                     }
                 }
-                readEvent.Set();
+                _readEvent.Set();
                 return totalRead;
             }
         }
@@ -166,52 +160,49 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            lock (writeLock)
+            lock (_writeLock)
             {
                 var rPos = GetReadPosition();
                 var wPos = GetWritePosition();
                 while (GetReadFirst() == 1 && rPos == wPos)
                 {
-                    readEvent.Wait();
-                    readEvent.Reset();
+                    _readEvent.Wait();
+                    _readEvent.Reset();
                     rPos = GetReadPosition();
                 }
-                int cLength = rPos <= wPos ? length : rPos;
+                var cLength = rPos <= wPos ? _length : rPos;
                 var bufRemain = cLength - wPos;
                 if (bufRemain >= count)
                 {
-                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + start, count);
+                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + Start, count);
                     wPos += count;
-                    if (wPos == length)
-                        SetWritePosition(0);
-                    else
-                        SetWritePosition(wPos);
+                    SetWritePosition(wPos == _length ? 0 : wPos);
                     if (rPos == wPos)
                         SetReadFirst(1);
-                    writeEvent.Set();
+                    _writeEvent.Set();
                 }
                 else
                 {
                     var remain = count - bufRemain;
-                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + start, bufRemain);
+                    Buffer.BlockCopy(buffer, offset, _buffer, wPos + Start, bufRemain);
                     wPos += bufRemain;
                     if (wPos == rPos)
                     {
                         SetWritePosition(wPos);
                         SetReadFirst(1);
-                        writeEvent.Set();
+                        _writeEvent.Set();
                         Write(buffer, offset + bufRemain, remain);
                     }
                     else
                     {
                         var canWrite = Math.Min(remain, rPos);
-                        Buffer.BlockCopy(buffer, offset + bufRemain, _buffer, start, canWrite);
+                        Buffer.BlockCopy(buffer, offset + bufRemain, _buffer, Start, canWrite);
                         if (canWrite < remain)
                         {
                             SetWritePosition(canWrite);
                             remain = remain - canWrite;
                             SetReadFirst(1);
-                            writeEvent.Set();
+                            _writeEvent.Set();
                             Write(buffer, offset + bufRemain + canWrite, remain);
                         }
                         else
@@ -219,7 +210,7 @@ namespace TWCore.IO
                             if (rPos == remain)
                                 SetReadFirst(1);
                             SetWritePosition(remain);
-                            writeEvent.Set();
+                            _writeEvent.Set();
                         }
                     }
                 }
@@ -228,32 +219,32 @@ namespace TWCore.IO
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe int GetReadPosition()
+        private unsafe int GetReadPosition()
         {
             fixed (byte* rPos = &_buffer[0])
                 return *(int*)rPos;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe void SetReadPosition(int value)
+        private unsafe void SetReadPosition(int value)
         {
             fixed (byte* b = &_buffer[0])
                 *((int*)b) = value;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe int GetWritePosition()
+        private unsafe int GetWritePosition()
         {
             fixed (byte* rPos = &_buffer[4])
                 return *(int*)rPos;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        unsafe void SetWritePosition(int value)
+        private unsafe void SetWritePosition(int value)
         {
             fixed (byte* b = &_buffer[4])
                 *((int*)b) = value;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        byte GetReadFirst() => _buffer[8];
+        private byte GetReadFirst() => _buffer[8];
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SetReadFirst(byte value) => _buffer[8] = value;
+        private void SetReadFirst(byte value) => _buffer[8] = value;
     }
 }

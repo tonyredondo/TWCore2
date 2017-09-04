@@ -28,12 +28,11 @@ namespace TWCore.IO
     public class SharedMemoryStream : Stream
     {
         #region Fields
-        int start = 9;
-        int length;
-        MemoryMappedFile _mmfBuffer;
-        MemoryMappedViewAccessor _view;
-        EventWaitHandle readEvent;
-        EventWaitHandle writeEvent;
+        private const int Start = 9;
+        private readonly int _length;
+        private readonly MemoryMappedViewAccessor _view;
+        private readonly EventWaitHandle _readEvent;
+        private readonly EventWaitHandle _writeEvent;
         #endregion
 
         #region Properties
@@ -68,15 +67,15 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SharedMemoryStream(string name, int bufferSize = 262144)
         {
-            length = bufferSize;
-            _mmfBuffer = MemoryMappedFile.CreateOrOpen(name, length + start);
-            _view = _mmfBuffer.CreateViewAccessor();
+            _length = bufferSize;
+            var mmfBuffer = MemoryMappedFile.CreateOrOpen(name, _length + Start);
+            _view = mmfBuffer.CreateViewAccessor();
             var readEventName = "Global\\CoreStream." + name + ".Read";
             var writeEventName = "Global\\CoreStream." + name + ".Write";
-            if (!EventWaitHandle.TryOpenExisting(readEventName, out readEvent))
-                readEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readEventName, out bool _);
-            if (!EventWaitHandle.TryOpenExisting(writeEventName, out writeEvent))
-                writeEvent = new EventWaitHandle(false, EventResetMode.ManualReset, writeEventName, out bool _);
+            if (!EventWaitHandle.TryOpenExisting(readEventName, out _readEvent))
+                _readEvent = new EventWaitHandle(false, EventResetMode.ManualReset, readEventName, out bool _);
+            if (!EventWaitHandle.TryOpenExisting(writeEventName, out _writeEvent))
+                _writeEvent = new EventWaitHandle(false, EventResetMode.ManualReset, writeEventName, out bool _);
         }
         #endregion
 
@@ -117,30 +116,27 @@ namespace TWCore.IO
             var wPos = GetWritePosition();
             while (GetReadFirst() == 0 && rPos == wPos)
             {
-                writeEvent.WaitOne();
-                writeEvent.Reset();
+                _writeEvent.WaitOne();
+                _writeEvent.Reset();
                 wPos = GetWritePosition();
             }
-            int totalRead = 0;
-            int cLength = 0;
+            var totalRead = 0;
+            int cLength;
             if (GetReadFirst() == 0)
-                cLength = rPos > wPos ? length : wPos;
+                cLength = rPos > wPos ? _length : wPos;
             else
-                cLength = rPos >= wPos ? length : wPos;
+                cLength = rPos >= wPos ? _length : wPos;
             var bufRemain = cLength - rPos;
             if (bufRemain >= count)
             {
-                totalRead += _view.ReadArray(rPos + start, buffer, offset, count);
+                totalRead += _view.ReadArray(rPos + Start, buffer, offset, count);
                 rPos += count;
-                if (rPos == length)
-                    SetReadPosition(0);
-                else
-                    SetReadPosition(rPos);
+                SetReadPosition(rPos == _length ? 0 : rPos);
             }
             else
             {
                 var remain = count - bufRemain;
-                totalRead += _view.ReadArray(rPos + start, buffer, offset, bufRemain);
+                totalRead += _view.ReadArray(rPos + Start, buffer, offset, bufRemain);
                 rPos += bufRemain;
                 if (rPos == wPos)
                 {
@@ -149,14 +145,11 @@ namespace TWCore.IO
                 else
                 {
                     var canRead = Math.Min(remain, wPos);
-                    totalRead += _view.ReadArray(start, buffer, offset + bufRemain, canRead);
-                    if (canRead < remain)
-                        SetReadPosition(canRead);
-                    else
-                        SetReadPosition(remain);
+                    totalRead += _view.ReadArray(Start, buffer, offset + bufRemain, canRead);
+                    SetReadPosition(canRead < remain ? canRead : remain);
                 }
             }
-            readEvent.Set();
+            _readEvent.Set();
             return totalRead;
         }
         /// <summary>
@@ -172,47 +165,44 @@ namespace TWCore.IO
             var wPos = GetWritePosition();
             while (GetReadFirst() == 1 && rPos == wPos)
             {
-                readEvent.WaitOne();
-                readEvent.Reset();
+                _readEvent.WaitOne();
+                _readEvent.Reset();
                 rPos = GetReadPosition();
             }
 
-            int cLength = rPos <= wPos ? length : rPos;
+            var cLength = rPos <= wPos ? _length : rPos;
             var bufRemain = cLength - wPos;
             if (bufRemain >= count)
             {
-                _view.WriteArray(wPos + start, buffer, offset, count);
+                _view.WriteArray(wPos + Start, buffer, offset, count);
                 wPos += count;
-                if (wPos == length)
-                    SetWritePosition(0);
-                else
-                    SetWritePosition(wPos);
+                SetWritePosition(wPos == _length ? 0 : wPos);
                 if (rPos == wPos)
                     SetReadFirst(1);
-                writeEvent.Set();
+                _writeEvent.Set();
             }
             else
             {
                 var remain = count - bufRemain;
-                _view.WriteArray(wPos + start, buffer, offset, bufRemain);
+                _view.WriteArray(wPos + Start, buffer, offset, bufRemain);
                 wPos += bufRemain;
                 if (wPos == rPos)
                 {
                     SetWritePosition(wPos);
                     SetReadFirst(1);
-                    writeEvent.Set();
+                    _writeEvent.Set();
                     Write(buffer, offset + bufRemain, remain);
                 }
                 else
                 {
                     var canWrite = Math.Min(remain, rPos);
-                    _view.WriteArray(start, buffer, offset + bufRemain, canWrite);
+                    _view.WriteArray(Start, buffer, offset + bufRemain, canWrite);
                     if (canWrite < remain)
                     {
                         SetWritePosition(canWrite);
                         remain = remain - canWrite;
                         SetReadFirst(1);
-                        writeEvent.Set();
+                        _writeEvent.Set();
                         Write(buffer, offset + bufRemain + canWrite, remain);
                     }
                     else
@@ -220,7 +210,7 @@ namespace TWCore.IO
                         if (rPos == remain)
                             SetReadFirst(1);
                         SetWritePosition(remain);
-                        writeEvent.Set();
+                        _writeEvent.Set();
                     }
                 }
             }
@@ -229,16 +219,16 @@ namespace TWCore.IO
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int GetReadPosition() => _view.ReadInt32(0);
+        private int GetReadPosition() => _view.ReadInt32(0);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SetReadPosition(int value) => _view.Write(0, value);
+        private void SetReadPosition(int value) => _view.Write(0, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int GetWritePosition() => _view.ReadInt32(4);
+        private int GetWritePosition() => _view.ReadInt32(4);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SetWritePosition(int value) => _view.Write(4, value);
+        private void SetWritePosition(int value) => _view.Write(4, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        byte GetReadFirst() => _view.ReadByte(8);
+        private byte GetReadFirst() => _view.ReadByte(8);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SetReadFirst(byte value) => _view.Write(8, value);
+        private void SetReadFirst(byte value) => _view.Write(8, value);
     }
 }

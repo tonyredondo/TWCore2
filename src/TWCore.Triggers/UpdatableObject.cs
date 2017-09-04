@@ -22,17 +22,17 @@ using System.Threading.Tasks;
 
 namespace TWCore.Triggers
 {
+    internal static class UpdatableObject
+    {
+        public static readonly object ParentSync = new object();
+    }
+    
     /// <summary>
 	/// Class to handle an object instances that updates based on triggers
 	/// </summary>
 	/// <typeparam name="T">Type of instance</typeparam>
 	public class UpdatableObject<T> : IDisposable where T : class
     {
-        private static readonly object ParentSync = new object();
-        readonly object localSync = new object();
-        Task triggerTask;
-        CancellationTokenSource tokenSource;
-
         /// <summary>
         /// Current Instance
         /// </summary>
@@ -44,7 +44,7 @@ namespace TWCore.Triggers
         /// <summary>
         /// Cancellation token
         /// </summary>
-        public CancellationToken CancellationToken => tokenSource?.Token ?? CancellationToken.None;
+        public CancellationToken CancellationToken => _tokenSource?.Token ?? CancellationToken.None;
 
         #region Events
         /// <summary>
@@ -66,9 +66,12 @@ namespace TWCore.Triggers
         #endregion
 
         #region Private Fields
-        DateTime _lastUpdateTime;
-        Func<T> InstanceLoader;
-        List<TriggerBase> Triggers;
+        private readonly object _localSync = new object();
+        private Task _triggerTask;
+        private CancellationTokenSource _tokenSource;
+        private DateTime _lastUpdateTime;
+        private Func<T> _instanceLoader;
+        private readonly List<TriggerBase> _triggers;
         #endregion
 
         #region .ctors
@@ -78,16 +81,16 @@ namespace TWCore.Triggers
         /// <param name="useStaticLock">Use static lock when a trigger occurs</param>
         public UpdatableObject(bool useStaticLock = false)
         {
-            Triggers = new List<TriggerBase>();
+            _triggers = new List<TriggerBase>();
             if (useStaticLock)
-                localSync = ParentSync;
+                _localSync = UpdatableObject.ParentSync;
             MinTimeOfInstance = TimeSpan.FromSeconds(1);
 
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(MinTimeOfInstance), MinTimeOfInstance);
                 collection.Add("LastUpdateTime", _lastUpdateTime);
-                foreach (var trigger in Triggers)
+                foreach (var trigger in _triggers)
                     Core.Status.AttachChild(trigger, this);
             });
         }
@@ -110,15 +113,11 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void AddTrigger(TriggerBase trigger)
         {
-            if (trigger != null)
-            {
-                if (!Triggers.Contains(trigger))
-                {
-                    trigger.OnTriggered += OnTriggerExecute;
-                    trigger.Init();
-                    Triggers.Add(trigger);
-                }
-            }
+            if (trigger == null) return;
+            if (_triggers.Contains(trigger)) return;
+            trigger.OnTriggered += OnTriggerExecute;
+            trigger.Init();
+            _triggers.Add(trigger);
         }
         /// <summary>
         /// Remove an update trigger from the collection
@@ -126,15 +125,11 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void RemoveTrigger(TriggerBase trigger)
         {
-            if (trigger != null)
-            {
-                if (Triggers.Contains(trigger))
-                {
-                    trigger.OnTriggered -= OnTriggerExecute;
-                    trigger.Dispose();
-                    Triggers.Remove(trigger);
-                }
-            }
+            if (trigger == null) return;
+            if (!_triggers.Contains(trigger)) return;
+            trigger.OnTriggered -= OnTriggerExecute;
+            trigger.Dispose();
+            _triggers.Remove(trigger);
         }
         #endregion
 
@@ -145,7 +140,7 @@ namespace TWCore.Triggers
         /// <param name="instanceLoader">Loader/Updater function</param>
         public void SetInstanceLoader(Func<T> instanceLoader)
         {
-            InstanceLoader = instanceLoader;
+            _instanceLoader = instanceLoader;
         }
         /// <summary>
         /// Execute the instance loader
@@ -159,83 +154,75 @@ namespace TWCore.Triggers
         /// </summary>
         public void Unload()
         {
-            lock (ParentSync)
+            lock (UpdatableObject.ParentSync)
             {
-                foreach (var trigger in Triggers)
+                foreach (var trigger in _triggers)
                 {
                     trigger.OnTriggered -= OnTriggerExecute;
                     trigger.Dispose();
                 }
-                Triggers.Clear();
+                _triggers.Clear();
             }
         }
         #endregion
 
         #region Private Methods
-        void OnTriggerExecute(TriggerBase trigger)
+        private void OnTriggerExecute(TriggerBase trigger)
         {
-            if (InstanceLoader != null)
+            if (_instanceLoader != null)
                 Task.Factory.StartNew(obj => InnerOnTriggerExecute((TriggerBase)obj), trigger, CancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
-        void InnerOnTriggerExecute(TriggerBase trigger)
+        private void InnerOnTriggerExecute(TriggerBase trigger)
         {
-            if (InstanceLoader != null)
+            if (_instanceLoader == null) return;
+            lock (_localSync)
             {
-                lock (localSync)
+                Core.Log.LibVerbose("Trigger execution was received, executing update.");
+                if (Core.Now - _lastUpdateTime > MinTimeOfInstance)
                 {
-                    Core.Log.LibVerbose("Trigger execution was received, executing update.");
-                    if (Core.Now - _lastUpdateTime > MinTimeOfInstance)
+                    _lastUpdateTime = Core.Now;
+                    var newInstance = default(T);
+                    BeforeUpdate?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance)));
+                    var loadOk = true;
+                    var sw = Stopwatch.StartNew();
+                    try
                     {
-                        _lastUpdateTime = Core.Now;
-                        T newInstance = default(T);
-                        BeforeUpdate?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance)));
-                        bool loadOK = true;
-                        var sw = Stopwatch.StartNew();
+                        if (CancellationToken.IsCancellationRequested)
+                            return;
+                        newInstance = _instanceLoader();
+                        if (CancellationToken.IsCancellationRequested)
+                            return;
+                        sw.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        sw.Stop();
+                        Core.Log.Write(ex);
+                        loadOk = false;
+                        OnException?.Invoke(this, new ExceptionEventArgs(ex, sw.Elapsed.TotalMilliseconds));
+                    }
+                    if (!loadOk || CancellationToken.IsCancellationRequested) return;
+                    var oldInstance = Instance;
+                    Instance = newInstance;
+                    Core.Log.LibVerbose("The update was done sucessfully.");
+                    if (oldInstance is IDisposable oldDisposable)
+                    {
                         try
                         {
-                            if (CancellationToken.IsCancellationRequested)
-                                return;
-                            newInstance = InstanceLoader();
-                            if (CancellationToken.IsCancellationRequested)
-                                return;
-                            sw.Stop();
+                            Core.Log.LibDebug("Disposing old instance.");
+                            oldDisposable.Dispose();
                         }
-                        catch (Exception ex)
+                        catch (Exception oDispEx)
                         {
-                            sw.Stop();
-                            Core.Log.Write(ex);
-                            loadOK = false;
-                            OnException?.Invoke(this, new ExceptionEventArgs(ex, sw.Elapsed.TotalMilliseconds));
-                        }
-                        if (loadOK && !CancellationToken.IsCancellationRequested)
-                        {
-                            var oldInstance = Instance;
-                            Instance = newInstance;
-                            Core.Log.LibVerbose("The update was done sucessfully.");
-                            if (oldInstance is IDisposable)
-                            {
-                                try
-                                {
-                                    Core.Log.LibDebug("Disposing old instance.");
-                                    ((IDisposable)oldInstance).Dispose();
-                                }
-                                catch (Exception oDispEx)
-                                {
-                                    Core.Log.Error(oDispEx, "Error disposing the old instance.");
-                                }
-                                finally
-                                {
-                                    oldInstance = default(T);
-                                }
-                            }
-                            AfterUpdate?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance), sw.Elapsed.TotalMilliseconds));
+                            Core.Log.Error(oDispEx, "Error disposing the old instance.");
                         }
                     }
-                    else
-                    {
-                        Core.Log.LibVerbose("The updatable object wasn't update, another update was made recently.");
-                        NotUpdatedTooRecent?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance)));
-                    }
+                    AfterUpdate?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance), sw.Elapsed.TotalMilliseconds));
+                }
+                else
+                {
+                    Core.Log.LibVerbose("The updatable object wasn't update, another update was made recently.");
+                    NotUpdatedTooRecent?.Invoke(this, new TriggeredEventArgs<WeakReference<T>>(trigger, new WeakReference<T>(Instance)));
                 }
             }
         }
@@ -247,10 +234,10 @@ namespace TWCore.Triggers
         public void Dispose()
         {
             Unload();
-            tokenSource?.Cancel();
-            triggerTask?.Wait(5000);
-            tokenSource = null;
-            triggerTask = null;
+            _tokenSource?.Cancel();
+            _triggerTask?.Wait(5000);
+            _tokenSource = null;
+            _triggerTask = null;
         }
     }
 }

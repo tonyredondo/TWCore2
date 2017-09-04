@@ -113,7 +113,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual byte[] GetBytes(object obj) => GetBytes(GetSerializer().Serialize(obj, obj.GetType()));
+        public virtual byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
         /// <summary>
         /// Gets the hash string value from an object
         /// </summary>
@@ -127,7 +127,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Guid GetGuid(object obj) => GetGuid(GetSerializer().Serialize(obj, obj.GetType()));
+        public virtual Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
 
         /// <summary>
         /// Gets the hash bytes from a string value

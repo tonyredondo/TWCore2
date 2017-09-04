@@ -29,11 +29,11 @@ namespace TWCore.Serialization
     /// <summary>
     /// Xml Serializer
     /// </summary>
-    public class XmlTextSerializer : TextSerializer
+    public sealed class XmlTextSerializer : TextSerializer
     {
-        static ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings> settingsCache = new ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings>();
-        static string[] _extensions = new string[] { ".xml" };
-        static string[] _mimeTypes = new string[] { SerializerMimeTypes.Xml, "text/xml" };
+        private static readonly ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings> SettingsCache = new ConcurrentDictionary<(Encoding, bool, bool), XmlWriterSettings>();
+        private static readonly string[] SExtensions = { ".xml" };
+        private static readonly string[] SMimeTypes = { SerializerMimeTypes.Xml, "text/xml" };
 
         #region Default Values
         /// <summary>
@@ -58,11 +58,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions => _extensions;
+        public override string[] Extensions => SExtensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes => _mimeTypes;
+        public override string[] MimeTypes => SMimeTypes;
         /// <summary>
         /// Indicates if the serialized xml should have Indent
         /// </summary>
@@ -92,12 +92,12 @@ namespace TWCore.Serialization
         }
         #endregion
 
-        static readonly ConcurrentDictionary<string, XmlSerializer> _cacheSerializer = new ConcurrentDictionary<string, XmlSerializer>();
+        private static readonly ConcurrentDictionary<string, XmlSerializer> CacheSerializer = new ConcurrentDictionary<string, XmlSerializer>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static XmlSerializer CreateSerializer(Type type, Type[] extraTypes)
+        private static XmlSerializer CreateSerializer(Type type, Type[] extraTypes)
         {
             var key = string.Format("{0}[{1}]", type?.FullName, extraTypes?.Select(i => i?.FullName).RemoveNulls().Join(","));
-            return _cacheSerializer.GetOrAdd(key, _key => new XmlSerializer(type, extraTypes));
+            return CacheSerializer.GetOrAdd(key, mKey => new XmlSerializer(type, extraTypes));
         }
 
         /// <summary>
@@ -113,7 +113,7 @@ namespace TWCore.Serialization
             extraTypes.UnionWith(SerializerManager.DefaultKnownTypes);
             extraTypes.UnionWith(KnownTypes);
             var xser = CreateSerializer(itemType, extraTypes.ToArray());
-            using (XmlReader xreader = XmlReader.Create(stream))
+            using (var xreader = XmlReader.Create(stream))
                 return xser.Deserialize(xreader);
         }
         /// <summary>
@@ -131,7 +131,7 @@ namespace TWCore.Serialization
             extraTypes.UnionWith(SerializerManager.DefaultKnownTypes);
             extraTypes.UnionWith(KnownTypes);
             var xser = CreateSerializer(itemType, extraTypes.ToArray());
-            var settings = settingsCache.GetOrAdd((Encoding, Indent, OmitXmlDeclaration), tpl => new XmlWriterSettings()
+            var settings = SettingsCache.GetOrAdd((Encoding, Indent, OmitXmlDeclaration), tpl => new XmlWriterSettings()
             {
                 Encoding = tpl.Item1,
                 Indent = tpl.Item2,
@@ -143,7 +143,7 @@ namespace TWCore.Serialization
             foreach (var nspace in Namespaces)
                 xns.Add(nspace.Key, nspace.Value);
 
-            using (XmlWriter xwriter = XmlWriter.Create(stream, settings))
+            using (var xwriter = XmlWriter.Create(stream, settings))
                 xser.Serialize(xwriter, item, xns);
         }
 

@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Diagnostics.Log.Storages
 {
@@ -30,11 +31,12 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// All file log storage writers
         /// </summary>
-        static ConcurrentDictionary<string, StreamWriter> logStreams = new ConcurrentDictionary<string, StreamWriter>();
-        StreamWriter sWriter;
-        string currentFileName;
-        int numbersOfFiles;
-        volatile bool firstWrite = true;
+        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+
+        private StreamWriter _sWriter;
+        private string _currentFileName;
+        private int _numbersOfFiles;
+        private volatile bool _firstWrite = true;
 
         #region Properties
         /// <summary>
@@ -110,7 +112,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 collection.Add(nameof(FileDate), FileDate);
                 collection.Add(nameof(UseMaxLength), UseMaxLength);
                 collection.Add(nameof(MaxLength), MaxLength);
-                collection.Add("Current FileName", currentFileName);
+                collection.Add("Current FileName", _currentFileName);
             });
         }
 
@@ -129,76 +131,73 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureLogFile(string fileName)
         {
-            bool dayHasChange = FileDate.Date != DateTime.Today;
-            long fileLength = -1L;
-            bool maxLengthReached = false;
+            var dayHasChange = FileDate.Date != DateTime.Today;
+            var maxLengthReached = false;
             if (UseMaxLength)
             {
-                fileLength = new FileInfo(currentFileName).Length;
+                var fileLength = new FileInfo(_currentFileName).Length;
                 if (fileLength >= MaxLength)
                     maxLengthReached = true;
             }
-            if (dayHasChange || maxLengthReached)
+            if (!dayHasChange && !maxLengthReached) return;
+            
+            string oldFileName;
+            if (dayHasChange && CreateByDay)
             {
-                string oldFileName = string.Empty;
-                if (dayHasChange && CreateByDay)
-                {
-                    currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                    oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                    numbersOfFiles = 0;
-                }
-                else
-                {
-                    currentFileName = fileName;
-                    oldFileName = fileName;
-                }
-                if (maxLengthReached)
-                {
-                    oldFileName = currentFileName;
-                    numbersOfFiles++;
-                    currentFileName = Path.Combine(Path.GetDirectoryName(currentFileName), Path.GetFileNameWithoutExtension(currentFileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + "." + numbersOfFiles + Path.GetExtension(currentFileName));
-                }
+                _currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+                oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+                _numbersOfFiles = 0;
+            }
+            else
+            {
+                _currentFileName = fileName;
+                oldFileName = fileName;
+            }
+            if (maxLengthReached)
+            {
+                oldFileName = _currentFileName;
+                _numbersOfFiles++;
+                _currentFileName = Path.Combine(Path.GetDirectoryName(_currentFileName), Path.GetFileNameWithoutExtension(_currentFileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + "." + _numbersOfFiles + Path.GetExtension(_currentFileName));
+            }
 
-                #region Remove previous
+            #region Remove previous
+            try
+            {
+                _sWriter?.Dispose();
+                _sWriter = null;
+            }
+            catch
+            {
+                // ignored
+            }
+            if (LogStreams.TryRemove(oldFileName, out var oldWriter))
+            {
                 try
                 {
-                    sWriter?.Dispose();
-                    sWriter = null;
+                    oldWriter?.Dispose();
                 }
                 catch
                 {
                     // ignored
                 }
-                if (logStreams.TryRemove(oldFileName, out var oldWriter))
-                {
-                    try
-                    {
-                        oldWriter?.Dispose();
-                        oldWriter = null;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-                #endregion
-
-                #region Load Writer
-                sWriter = logStreams.GetOrAdd(currentFileName, fname =>
-                {
-                    var folder = Path.GetDirectoryName(fname);
-                    if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
-                    var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
-                    {
-                        AutoFlush = true
-                    };
-                    return sw;
-                });
-                if (File.Exists(currentFileName))
-                    FileDate = File.GetCreationTime(currentFileName);
-                #endregion
             }
+            #endregion
+
+            #region Load Writer
+            _sWriter = LogStreams.GetOrAdd(_currentFileName, fname =>
+            {
+                var folder = Path.GetDirectoryName(fname);
+                if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    AutoFlush = true
+                };
+                return sw;
+            });
+            if (File.Exists(_currentFileName))
+                FileDate = File.GetCreationTime(_currentFileName);
+            #endregion
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetExceptionDescription(SerializableException itemEx)
@@ -218,52 +217,50 @@ namespace TWCore.Diagnostics.Log.Storages
         public void Write(ILogItem item)
         {
             EnsureLogFile(FileName);
-            if (sWriter != null)
+            if (_sWriter == null) return;
+            if (_firstWrite)
             {
-                if (firstWrite)
+                lock (_sWriter)
                 {
-                    lock (sWriter)
-                    {
-                        sWriter.WriteLine();
-                        sWriter.WriteLine();
-                        sWriter.WriteLine();
-                        sWriter.WriteLine();
-                        sWriter.WriteLine();
-                        sWriter.WriteLine("-.");
-                        sWriter.Flush();
-                    }
-                    firstWrite = false;
+                    _sWriter.WriteLine();
+                    _sWriter.WriteLine();
+                    _sWriter.WriteLine();
+                    _sWriter.WriteLine();
+                    _sWriter.WriteLine();
+                    _sWriter.WriteLine("-.");
+                    _sWriter.Flush();
                 }
-                var sbuilder = new StringBuilder(128);
-                sbuilder.Append(item.Timestamp.GetTimeSpanFormat());
-                sbuilder.AppendFormat(" ({0:000}) ", item.ThreadId);
-                sbuilder.AppendFormat("{0, 10}: ", item.Level);
+                _firstWrite = false;
+            }
+            var sbuilder = new StringBuilder(128);
+            sbuilder.Append(item.Timestamp.GetTimeSpanFormat());
+            sbuilder.AppendFormat(" ({0:000}) ", item.ThreadId);
+            sbuilder.AppendFormat("{0, 10}: ", item.Level);
 
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    sbuilder.Append(item.GroupName + " ");
+            if (!string.IsNullOrEmpty(item.GroupName))
+                sbuilder.Append(item.GroupName + " ");
 
-                if (item.LineNumber > 0)
-                    sbuilder.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                    sbuilder.Append("<" + item.TypeName + "> ");
+            if (item.LineNumber > 0)
+                sbuilder.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+            else if (!string.IsNullOrEmpty(item.TypeName))
+                sbuilder.Append("<" + item.TypeName + "> ");
 
-                if (!string.IsNullOrEmpty(item.Code))
-                    sbuilder.Append("[" + item.Code + "] ");
+            if (!string.IsNullOrEmpty(item.Code))
+                sbuilder.Append("[" + item.Code + "] ");
 
-                sbuilder.Append(item.Message);
+            sbuilder.Append(item.Message);
 
-                if (item.Exception != null)
-                {
-                    sbuilder.Append("\r\nExceptions:\r\n");
-                    sbuilder.Append(GetExceptionDescription(item.Exception));
-                }
-                string line = sbuilder.ToString();
+            if (item.Exception != null)
+            {
+                sbuilder.Append("\r\nExceptions:\r\n");
+                sbuilder.Append(GetExceptionDescription(item.Exception));
+            }
+            var line = sbuilder.ToString();
 
-                lock (sWriter)
-                {
-                    sWriter.WriteLine(line);
-                    sWriter.Flush();
-                }
+            lock (_sWriter)
+            {
+                _sWriter.WriteLine(line);
+                _sWriter.Flush();
             }
         }
         /// <summary>
@@ -272,10 +269,10 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteEmptyLine()
         {
-            lock (sWriter)
+            lock (_sWriter)
             {
-                sWriter.WriteLine(string.Empty);
-                sWriter.Flush();
+                _sWriter.WriteLine(string.Empty);
+                _sWriter.Flush();
             }
         }
 
@@ -287,20 +284,19 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
-                sWriter?.WriteLine(".-");
-                sWriter?.Flush();
-                sWriter?.Dispose();
-                sWriter = null;
+                _sWriter?.WriteLine(".-");
+                _sWriter?.Flush();
+                _sWriter?.Dispose();
+                _sWriter = null;
             }
             catch
             {
                 // ignored
             }
-            if (!logStreams.TryRemove(currentFileName, out var oldWriter)) return;
+            if (!LogStreams.TryRemove(_currentFileName, out var oldWriter)) return;
             try
             {
                 oldWriter?.Dispose();
-                oldWriter = null;
             }
             catch
             {

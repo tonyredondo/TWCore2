@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Diagnostics.Log.Storages
 {
@@ -27,14 +28,14 @@ namespace TWCore.Diagnostics.Log.Storages
     /// </summary>
 	public class HtmlFileLogStorage : ILogStorage
     {
-        static ConcurrentDictionary<string, StreamWriter> logStreams = new ConcurrentDictionary<string, StreamWriter>();
-        StreamWriter sWriter;
-        string currentFileName;
-        int numbersOfFiles;
-        volatile bool firstWrite = true;
+        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private StreamWriter _sWriter;
+        private string _currentFileName;
+        private int _numbersOfFiles;
+        private volatile bool _firstWrite = true;
 
 		#region Html format
-		string _html = @"
+        private const string Html = @"
 <html>
 <head>
     <title>Log File</title>
@@ -249,11 +250,13 @@ namespace TWCore.Diagnostics.Log.Storages
 </div>
 <div class='displaywrap'><div class='display'>
 ";
-		string _preFormat = "<pre class='{0}'>{1}</pre>";
-		string _preFormatWTime = "<pre class='{0}' data-time='{2}'>{1}</pre>";
-		string _preFormatWType = "<pre class='{0}' data-type='{2}'>{1}</pre>";
-		string _htmlEnd = "</pre></div></div></body></html>";
-		#endregion
+
+        private const string PreFormat = "<pre class='{0}'>{1}</pre>";
+        private const string PreFormatWTime = "<pre class='{0}' data-time='{2}'>{1}</pre>";
+        private const string PreFormatWType = "<pre class='{0}' data-type='{2}'>{1}</pre>";
+        private const string HtmlEnd = "</pre></div></div></body></html>";
+
+        #endregion
 
         #region Properties
         /// <summary>
@@ -329,7 +332,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 collection.Add(nameof(FileDate), FileDate);
                 collection.Add(nameof(UseMaxLength), UseMaxLength);
                 collection.Add(nameof(MaxLength), MaxLength);
-                collection.Add("Current FileName", currentFileName);
+                collection.Add("Current FileName", _currentFileName);
             });
         }
 
@@ -348,80 +351,76 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureLogFile(string fileName)
         {
-            bool dayHasChange = FileDate.Date != DateTime.Today;
-            long fileLength = -1L;
-            bool maxLengthReached = false;
+            var dayHasChange = FileDate.Date != DateTime.Today;
+            var maxLengthReached = false;
             if (UseMaxLength)
             {
-                fileLength = new FileInfo(currentFileName).Length;
+                var fileLength = new FileInfo(_currentFileName).Length;
                 if (fileLength >= MaxLength)
                     maxLengthReached = true;
             }
-            if (dayHasChange || maxLengthReached)
+            if (!dayHasChange && !maxLengthReached) return;
+            string oldFileName;
+            if (dayHasChange && CreateByDay)
             {
-                string oldFileName = string.Empty;
-                if (dayHasChange && CreateByDay)
-                {
-                    currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                    oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                    numbersOfFiles = 0;
-                }
-                else
-                {
-                    currentFileName = fileName;
-                    oldFileName = fileName;
-                }
-                if (maxLengthReached)
-                {
-                    oldFileName = currentFileName;
-                    numbersOfFiles++;
-                    currentFileName = Path.Combine(Path.GetDirectoryName(currentFileName), Path.GetFileNameWithoutExtension(currentFileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + "." + numbersOfFiles + Path.GetExtension(currentFileName));
-                }
+                _currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+                oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+                _numbersOfFiles = 0;
+            }
+            else
+            {
+                _currentFileName = fileName;
+                oldFileName = fileName;
+            }
+            if (maxLengthReached)
+            {
+                oldFileName = _currentFileName;
+                _numbersOfFiles++;
+                _currentFileName = Path.Combine(Path.GetDirectoryName(_currentFileName), Path.GetFileNameWithoutExtension(_currentFileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + "." + _numbersOfFiles + Path.GetExtension(_currentFileName));
+            }
 
-                #region Remove previous
+            #region Remove previous
+            try
+            {
+                _sWriter?.WriteLine(HtmlEnd);
+                _sWriter?.Dispose();
+                _sWriter = null;
+            }
+            catch
+            {
+                // ignored
+            }
+            if (LogStreams.TryRemove(oldFileName, out var oldWriter))
+            {
                 try
                 {
-					sWriter?.WriteLine(_htmlEnd);
-                    sWriter?.Dispose();
-                    sWriter = null;
+                    oldWriter?.Dispose();
                 }
                 catch
                 {
                     // ignored
                 }
-                if (logStreams.TryRemove(oldFileName, out var oldWriter))
-                {
-                    try
-                    {
-                        oldWriter?.Dispose();
-                        oldWriter = null;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-                #endregion
-
-                #region Load Writer
-                sWriter = logStreams.GetOrAdd(currentFileName, fname =>
-                {
-                    var folder = Path.GetDirectoryName(fname);
-                    if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
-					var alreadyExist = File.Exists(fname);
-                    var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
-                    {
-                        AutoFlush = true
-                    };
-					if (!alreadyExist)
-						sw.WriteLine(_html);
-                    return sw;
-                });
-                if (File.Exists(currentFileName))
-                    FileDate = File.GetCreationTime(currentFileName);
-                #endregion
             }
+            #endregion
+
+            #region Load Writer
+            _sWriter = LogStreams.GetOrAdd(_currentFileName, fname =>
+            {
+                var folder = Path.GetDirectoryName(fname);
+                if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                var alreadyExist = File.Exists(fname);
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    AutoFlush = true
+                };
+                if (!alreadyExist)
+                    sw.WriteLine(Html);
+                return sw;
+            });
+            if (File.Exists(_currentFileName))
+                FileDate = File.GetCreationTime(_currentFileName);
+            #endregion
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetExceptionDescription(SerializableException itemEx)
@@ -441,57 +440,55 @@ namespace TWCore.Diagnostics.Log.Storages
         public void Write(ILogItem item)
         {
             EnsureLogFile(FileName);
-            if (sWriter != null)
+            if (_sWriter == null) return;
+            var time = item.Timestamp.GetTimeSpanFormat();
+            var format = PreFormat;
+            if (_firstWrite)
             {
-                var time = item.Timestamp.GetTimeSpanFormat();
-                var format = _preFormat;
-                if (firstWrite)
+                lock (_sWriter)
                 {
-                    lock (sWriter)
-                    {
-                        sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-						sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-						sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-						sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-						sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-						sWriter.WriteLine(_preFormatWTime, "Start", "&#8615; START &#8615;", time);
-                        sWriter.Flush();
-                    }
-                    firstWrite = false;
+                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.WriteLine(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
+                    _sWriter.Flush();
                 }
-                var sbuilder = new StringBuilder(128);
-                sbuilder.Append(time);
-                sbuilder.AppendFormat(" ({0:000}) ", item.ThreadId);
-                sbuilder.AppendFormat("{0, 10}: ", item.Level);
+                _firstWrite = false;
+            }
+            var sbuilder = new StringBuilder(128);
+            sbuilder.Append(time);
+            sbuilder.AppendFormat(" ({0:000}) ", item.ThreadId);
+            sbuilder.AppendFormat("{0, 10}: ", item.Level);
 
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    sbuilder.Append(item.GroupName + " ");
+            if (!string.IsNullOrEmpty(item.GroupName))
+                sbuilder.Append(item.GroupName + " ");
 
-                if (item.LineNumber > 0)
-                    sbuilder.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                {
-                    sbuilder.Append("&lt;" + item.TypeName + "&gt; ");
-                    format = _preFormatWType;
-                }
+            if (item.LineNumber > 0)
+                sbuilder.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+            else if (!string.IsNullOrEmpty(item.TypeName))
+            {
+                sbuilder.Append("&lt;" + item.TypeName + "&gt; ");
+                format = PreFormatWType;
+            }
 
-                if (!string.IsNullOrEmpty(item.Code))
-                    sbuilder.Append("[" + item.Code + "] ");
+            if (!string.IsNullOrEmpty(item.Code))
+                sbuilder.Append("[" + item.Code + "] ");
                 
-                sbuilder.Append(System.Security.SecurityElement.Escape(item.Message));
+            sbuilder.Append(System.Security.SecurityElement.Escape(item.Message));
 
-                if (item.Exception != null)
-                {
-                    sbuilder.Append("\r\nExceptions:\r\n");
-                    sbuilder.Append(GetExceptionDescription(item.Exception));
-                }
-                string line = sbuilder.ToString();
+            if (item.Exception != null)
+            {
+                sbuilder.Append("\r\nExceptions:\r\n");
+                sbuilder.Append(GetExceptionDescription(item.Exception));
+            }
+            var line = sbuilder.ToString();
 
-                lock (sWriter)
-                {
-                    sWriter.WriteLine(format, item.Level, line, item.TypeName);
-                    sWriter.Flush();
-                }
+            lock (_sWriter)
+            {
+                _sWriter.WriteLine(format, item.Level, line, item.TypeName);
+                _sWriter.Flush();
             }
         }
         /// <summary>
@@ -500,10 +497,10 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteEmptyLine()
         {
-            lock (sWriter)
+            lock (_sWriter)
             {
-				sWriter.WriteLine(_preFormat, "EmptyLine", "<br/>");
-                sWriter.Flush();
+				_sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+                _sWriter.Flush();
             }
         }
 
@@ -515,20 +512,19 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
-				sWriter?.WriteLine(_preFormat, "End", "&#8613; END &#8613;");
-                sWriter?.Flush();
-                sWriter?.Dispose();
-                sWriter = null;
+				_sWriter?.WriteLine(PreFormat, "End", "&#8613; END &#8613;");
+                _sWriter?.Flush();
+                _sWriter?.Dispose();
+                _sWriter = null;
             }
             catch
             {
                 // ignored
             }
-            if (!logStreams.TryRemove(currentFileName, out var oldWriter)) return;
+            if (!LogStreams.TryRemove(_currentFileName, out var oldWriter)) return;
             try
             {
                 oldWriter?.Dispose();
-                oldWriter = null;
             }
             catch
             {

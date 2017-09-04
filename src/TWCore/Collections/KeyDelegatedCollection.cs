@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable VirtualMemberCallInConstructor
 
 namespace TWCore.Collections
 {

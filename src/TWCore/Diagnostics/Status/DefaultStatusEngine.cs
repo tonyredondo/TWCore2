@@ -34,10 +34,10 @@ namespace TWCore.Diagnostics.Status
     [IgnoreStackFrameLog]
     public class DefaultStatusEngine : IStatusEngine
     {
-        readonly List<StatusItemsDelegateItem> StatusItemsDelegates = new List<StatusItemsDelegateItem>();
-        readonly List<StatusDelegateItem> StatusValuesDelegates = new List<StatusDelegateItem>();
-        readonly ObjectHierarchyCollection ObjectsHierarchy = new ObjectHierarchyCollection();
-        readonly List<WeakReference> DeattachList = new List<WeakReference>();
+        private readonly List<StatusItemsDelegateItem> _statusItemsDelegates = new List<StatusItemsDelegateItem>();
+        private readonly List<StatusDelegateItem> _statusValuesDelegates = new List<StatusDelegateItem>();
+        private readonly ObjectHierarchyCollection _objectsHierarchy = new ObjectHierarchyCollection();
+        private readonly List<WeakReference> _deattachList = new List<WeakReference>();
         //bool applyProperties = false;
 
         #region Properties
@@ -120,13 +120,11 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
         {
-            if (statusItemDelegate != null)
-            {
-                var weakFunc = WeakDelegate.Create(statusItemDelegate);
-                lock (StatusItemsDelegates)
-                    StatusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
-                AttachChild(null, parent);
-            }
+            if (statusItemDelegate == null) return;
+            var weakFunc = WeakDelegate.Create(statusItemDelegate);
+            lock (_statusItemsDelegates)
+                _statusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
+            AttachChild(null, parent);
         }
         /// <summary>
         /// Attach a values filler delegate
@@ -136,17 +134,15 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
         {
-            if (valuesFillerDelegate != null)
-            {
-                objectToAttach = objectToAttach ?? valuesFillerDelegate.Target;
-                var weakAction = WeakDelegate.Create(valuesFillerDelegate);
-                lock (StatusValuesDelegates)
-                    StatusValuesDelegates.Add(new StatusDelegateItem
-                    {
-                        Action = weakAction,
-                        WeakObject = new WeakReference<object>(objectToAttach)
-                    });
-            }
+            if (valuesFillerDelegate == null) return;
+            objectToAttach = objectToAttach ?? valuesFillerDelegate.Target;
+            var weakAction = WeakDelegate.Create(valuesFillerDelegate);
+            lock (_statusValuesDelegates)
+                _statusValuesDelegates.Add(new StatusDelegateItem
+                {
+                    Action = weakAction,
+                    WeakObject = new WeakReference<object>(objectToAttach)
+                });
         }
         /// <summary>
         /// Attach an object without values
@@ -168,33 +164,31 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AttachChild(object childObject, object parent)
         {
-            if (parent != null)
+            if (parent == null) return;
+            lock (_objectsHierarchy)
             {
-                lock (ObjectsHierarchy)
+                var objParent = _objectsHierarchy.FindParent(parent);
+                if (objParent == null)
                 {
-                    var objParent = ObjectsHierarchy.FindParent(parent);
-                    if (objParent == null)
+                    objParent = new ObjectHierarchyItem { WeakObject = new WeakReference<object>(parent) };
+                    _objectsHierarchy.Add(objParent);
+                }
+                if (childObject != null && objParent.Childrens.All(i => i.Object != childObject))
+                {
+                    var childrens = _objectsHierarchy.Where(i => i.Object == childObject).ToList();
+                    if (childrens.Any())
                     {
-                        objParent = new ObjectHierarchyItem { WeakObject = new WeakReference<object>(parent) };
-                        ObjectsHierarchy.Add(objParent);
+                        _objectsHierarchy.RemoveAll(o => childrens.Contains(o));
+                        objParent.Childrens.AddRange(childrens);
                     }
-                    if (childObject != null && !objParent.Childrens.Any(i => i.Object == childObject))
+                    else
                     {
-                        var childrens = ObjectsHierarchy.Where(i => i.Object == childObject).ToList();
-                        if (childrens.Any())
-                        {
-                            ObjectsHierarchy.RemoveAll(o => childrens.Contains(o));
-                            objParent.Childrens.AddRange(childrens);
-                        }
-                        else
-                        {
-                            objParent.Childrens.Add(new ObjectHierarchyItem { WeakObject = new WeakReference<object>(childObject) });
-                        }
+                        objParent.Childrens.Add(new ObjectHierarchyItem { WeakObject = new WeakReference<object>(childObject) });
                     }
                 }
-                BindPropertiesFromAnObject(parent);
-                BindPropertiesFromAnObject(childObject);
             }
+            BindPropertiesFromAnObject(parent);
+            BindPropertiesFromAnObject(childObject);
         }
 
         /// <summary>
@@ -204,60 +198,55 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DeAttachObject(object objectToDeattach)
         {
-            if (objectToDeattach != null)
+            if (objectToDeattach == null) return;
+            lock (_objectsHierarchy)
             {
-                lock (ObjectsHierarchy)
+                lock (_deattachList)
+                    _deattachList.Add(new WeakReference(objectToDeattach));
+                var item = _objectsHierarchy.RemoveParent(objectToDeattach);
+                item?.GetAllObjectsInHierarchy().RemoveNulls().Each(hobj =>
                 {
-                    lock (DeattachList)
-                        DeattachList.Add(new WeakReference(objectToDeattach));
-                    var item = ObjectsHierarchy.RemoveParent(objectToDeattach);
-                    if (item != null)
-                        item.GetAllObjectsInHierarchy().RemoveNulls().Each(hobj =>
-                        {
-                            StatusItemsDelegates.RemoveAll(i => i.Parent == hobj);
-                            StatusValuesDelegates.RemoveAll(i => i.Object == hobj);
-                        });
-                }
+                    _statusItemsDelegates.RemoveAll(i => i.Parent == hobj);
+                    _statusValuesDelegates.RemoveAll(i => i.Object == hobj);
+                });
             }
         }
         #endregion
 
         #region Private Methods
 
-        List<object> lstObj = new List<object>();
+        private List<object> _lstObj = new List<object>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerable<StatusItem> GetStatusItemsFromDelegates()
+        private IEnumerable<StatusItem> GetStatusItemsFromDelegates()
         {
-            lock (StatusItemsDelegates)
+            lock (_statusItemsDelegates)
             {
-                return StatusItemsDelegates.Select(i =>
+                return _statusItemsDelegates.Select(i =>
                 {
                     var sw = Stopwatch.StartNew();
                     var val = Try.Do(i.Function);
                     sw.Stop();
-                    if (val != null)
-                    {
-                        val.ObjRef = i.Parent;
-                        val.Parent = true;
-                    }
+                    if (val == null) return null;
+                    val.ObjRef = i.Parent;
+                    val.Parent = true;
                     return val;
                 }).RemoveNulls();
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IEnumerable<StatusItem> GetStatusItemsFromValuesDelegates()
+        private IEnumerable<StatusItem> GetStatusItemsFromValuesDelegates()
         {
-            lock (StatusValuesDelegates)
+            lock (_statusValuesDelegates)
             {
-                var groups = StatusValuesDelegates?.Where(i => i?.Object != null).ToArray().GroupBy(i => i.Object);
+                var groups = _statusValuesDelegates?.Where(i => i?.Object != null).ToArray().GroupBy(i => i.Object);
                 return groups?.Select(item =>
                 {
                     var sItem = new StatusItem() { Name = item.Key.ToString(), ObjRef = item.Key, Parent = false };
-                    lstObj.Add(item.Key);
+                    _lstObj.Add(item.Key);
                     foreach (var i in item)
                         Try.Do(() => i.Action(sItem.Values));
-                    var lstSType = lstObj.Where(o => o.GetType() == item.Key.GetType()).ToArray();
+                    var lstSType = _lstObj.Where(o => o.GetType() == item.Key.GetType()).ToArray();
                     sItem.Name = lstSType.Skip(1).Any() ? 
                         string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(item.Key)) : 
                         string.Format("{0}", sItem.Name);
@@ -269,7 +258,7 @@ namespace TWCore.Diagnostics.Status
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        StatusItemCollection Transport_OnFetchStatus()
+        private StatusItemCollection Transport_OnFetchStatus()
         {
             if (!Enabled)
                 return null;
@@ -284,55 +273,52 @@ namespace TWCore.Diagnostics.Status
                     ApplicationDisplayName = Core.ApplicationDisplayName,
                     ApplicationName = Core.ApplicationName
                 };
-                lstObj = new List<object>();
+                _lstObj = new List<object>();
 
                 var allList = new List<StatusItem>();
 
                 allList.AddRange(GetStatusItemsFromDelegates());
 
-                if (bounded)
+                if (_bounded)
                 {
                     GetStatusItemsFromValuesDelegates();
-                    bounded = false;
+                    _bounded = false;
                 }
                 allList.AddRange(GetStatusItemsFromValuesDelegates());
 
-                lock (DeattachList)
+                lock (_deattachList)
                 {
-                    DeattachList.Each(obj =>
+                    _deattachList.Each(obj =>
                     {
-                        if (obj.IsAlive)
+                        if (!obj.IsAlive) return;
+                        lock (_objectsHierarchy)
                         {
-                            lock (ObjectsHierarchy)
+                            var item = _objectsHierarchy.RemoveParent(obj.Target);
+                            item?.GetAllObjectsInHierarchy().RemoveNulls().Each(hobj =>
                             {
-                                var item = ObjectsHierarchy.RemoveParent(obj.Target);
-                                if (item != null)
-                                    item.GetAllObjectsInHierarchy().RemoveNulls().Each(hobj =>
-                                    {
-                                        StatusItemsDelegates.RemoveAll(i => i.Parent == hobj);
-                                        StatusValuesDelegates.RemoveAll(i => i.Object == hobj);
-                                    });
-                            }
+                                _statusItemsDelegates.RemoveAll(i => i.Parent == hobj);
+                                _statusValuesDelegates.RemoveAll(i => i.Object == hobj);
+                            });
                         }
                     });
                 }
 
                 allList.Where(i => i.ObjRef == null).Each(item =>
                 {
-                    item.Childrens.AddRange(allList.Where(i => object.Equals(i.ObjRef, item)).ToList());
+                    item.Childrens.AddRange(allList.Where(i => Equals(i.ObjRef, item)).ToList());
                     collection.Items.Add(item);
                 });
                 collection.Items.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
                 allList.Where(i => i.ObjRef != null).ToList();
-                FillHierarchy(allList, collection.Items, ObjectsHierarchy);
+                FillHierarchy(allList, collection.Items, _objectsHierarchy);
 
                 return collection;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void FillHierarchy(List<StatusItem> remainingList, List<StatusItem> statusList, ObjectHierarchyCollection objectsHierarchy)
+        private void FillHierarchy(IReadOnlyCollection<StatusItem> remainingList, ICollection<StatusItem> statusList, ObjectHierarchyCollection objectsHierarchy)
         {
             lock (objectsHierarchy)
             {
@@ -353,8 +339,8 @@ namespace TWCore.Diagnostics.Status
                     else if (obj.Object != null)
                     {
                         var sItem = new StatusItem() { Name = obj.Object.ToString(), Parent = false };
-                        lstObj.Add(obj.Object);
-                        var lstSType = lstObj.Where(o => o.GetType() == obj.GetType()).ToArray();
+                        _lstObj.Add(obj.Object);
+                        var lstSType = _lstObj.Where(o => o.GetType() == obj.GetType()).ToArray();
                         sItem.Name = lstSType.Skip(1).Any() ? 
                             string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(obj.Object)) : 
                             string.Format("{0}", sItem.Name);
@@ -365,115 +351,100 @@ namespace TWCore.Diagnostics.Status
             }
         }
 
-        bool bindFirstTime = true;
-        bool bounded;
-        static ConcurrentBag<WeakReference> alreadyAdded = new ConcurrentBag<WeakReference>();
+        private bool _bindFirstTime = true;
+        private bool _bounded;
+        private static readonly ConcurrentBag<WeakReference> AlreadyAdded = new ConcurrentBag<WeakReference>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void BindPropertiesFromAnObject(object childObject)
+        private void BindPropertiesFromAnObject(object childObject)
         {
-            if (bindFirstTime)
+            if (_bindFirstTime)
             {
-                bindFirstTime = false;
-                bounded = true;
+                _bindFirstTime = false;
+                _bounded = true;
             }
-            if (!alreadyAdded.Any(i => i.Target == childObject))
-            {
-                var statusDelegate = new StatusDelegateAttributeItem(childObject);
-                StatusValuesDelegates.Add(statusDelegate);
-                alreadyAdded.Add(new WeakReference(childObject));
-            }
+            if (AlreadyAdded.Any(i => i.Target == childObject)) return;
+            var statusDelegate = new StatusDelegateAttributeItem(childObject);
+            lock (_statusValuesDelegates)
+                _statusValuesDelegates.Add(statusDelegate);
+            AlreadyAdded.Add(new WeakReference(childObject));
         }
         #endregion
 
         #region Nested Class
-        class StatusDelegateAttributeItem : StatusDelegateItem
+        private sealed class StatusDelegateAttributeItem : StatusDelegateItem
         {
-            static ConcurrentDictionary<Type, Tuple<FastPropertyInfo, StatusPropertyAttribute>[]> statusPropPerType = new ConcurrentDictionary<Type, Tuple<FastPropertyInfo, StatusPropertyAttribute>[]>();
-            static ConcurrentDictionary<Type, Tuple<FastPropertyInfo, StatusReferenceAttribute>[]> statusRefPropPerType = new ConcurrentDictionary<Type, Tuple<FastPropertyInfo, StatusReferenceAttribute>[]>();
-            static ConcurrentBag<WeakReference> refAdded = new ConcurrentBag<WeakReference>();
+            private static readonly ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]> StatusPropPerType = new ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]>();
+            private static readonly ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]> StatusRefPropPerType = new ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]>();
+            private static readonly ConcurrentBag<WeakReference> RefAdded = new ConcurrentBag<WeakReference>();
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public StatusDelegateAttributeItem(object obj)
             {
                 WeakObject = new WeakReference<object>(obj);
-                Action = new Action<StatusItemValuesCollection>(ActionMethod);
+                Action = ActionMethod;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void ActionMethod(StatusItemValuesCollection col)
+            private void ActionMethod(StatusItemValuesCollection col)
             {
                 var obj = Object;
-                if (obj != null)
+                if (obj == null) return;
+                var objType = obj.GetType();
+                var statusAttributes = StatusPropPerType.GetOrAdd(objType, mType =>
                 {
-                    var objType = obj.GetType();
-                    var statusAttributes = statusPropPerType.GetOrAdd(objType, _type =>
+                    return mType.GetProperties().Select(p =>
                     {
-                        return _type.GetProperties().Select(p =>
-                        {
-                            var attr = p.GetAttribute<StatusPropertyAttribute>();
-                            if (attr != null && p != null)
-                            {
-                                var fastProp = p.GetFastPropertyInfo();
-                                return Tuple.Create(fastProp, attr);
-                            }
-                            return Tuple.Create<FastPropertyInfo, StatusPropertyAttribute>(null, null);
-                        }).Where(t => t.Item2 != null).ToArray();
-                    });
-                    var statusReferenceAttributes = statusRefPropPerType.GetOrAdd(objType, _type =>
+                        var attr = p.GetAttribute<StatusPropertyAttribute>();
+                        if (attr == null || p == null)
+                            return (null, null);
+                        var fastProp = p.GetFastPropertyInfo();
+                        return (fastProp, attr);
+                    }).Where(t => t.Item2 != null).ToArray();
+                });
+                var statusReferenceAttributes = StatusRefPropPerType.GetOrAdd(objType, mType =>
+                {
+                    return mType.GetProperties().Select(p =>
                     {
-                        return _type.GetProperties().Select(p =>
-                        {
-                            var attr = p.GetAttribute<StatusReferenceAttribute>();
-                            if (attr != null && p != null)
-                            {
-                                var fastProp = p.GetFastPropertyInfo();
-                                return Tuple.Create(fastProp, attr);
-                            }
-                            return Tuple.Create<FastPropertyInfo, StatusReferenceAttribute>(null, null);
-                        }).Where(t => t.Item2 != null).ToArray();
-                    });
+                        var attr = p.GetAttribute<StatusReferenceAttribute>();
+                        if (attr == null || p == null)
+                            return (null, null);
+                        var fastProp = p.GetFastPropertyInfo();
+                        return (fastProp, attr);
+                    }).Where(t => t.Item2 != null).ToArray();
+                });
 
-                    for (var i = 0; i < statusAttributes.Length; i++)
+                for (var i = 0; i < statusAttributes.Length; i++)
+                {
+                    var tuple = statusAttributes[i];
+                    var name = tuple.Item2.Name ?? tuple.Item1.Name;
+                    if (col.Any(c => c.Key == name)) continue;
+                    var value = tuple.Item1.GetValue(obj);
+                    var status = tuple.Item2.Status;
+                    col.Add(name, value, status);
+                }
+                for (var i = 0; i < statusReferenceAttributes.Length; i++)
+                {
+                    var tuple = statusReferenceAttributes[i];
+                    var value = tuple.Item1.GetValue(obj);
+                    if (value == null) continue;
+                    if (value is IEnumerable ieVal)
                     {
-                        var tuple = statusAttributes[i];
-                        var name = tuple.Item2.Name ?? tuple.Item1.Name;
-                        if (!col.Any(c => c.Key == name))
+                        ieVal.EachObject(mValue =>
                         {
-                            var value = tuple.Item1.GetValue(obj);
-                            var status = tuple.Item2.Status;
-                            col.Add(name, value, status);
-                        }
+                            if (RefAdded.Any(w => w.Target == mValue)) return;
+                            Core.Status.AttachChild(mValue, obj);
+                            RefAdded.Add(new WeakReference(mValue));
+                        });
                     }
-                    for (var i = 0; i < statusReferenceAttributes.Length; i++)
+                    else
                     {
-                        var tuple = statusReferenceAttributes[i];
-                        var value = tuple.Item1.GetValue(obj);
-                        if (value != null)
-                        {
-                            if (value is IEnumerable)
-                            {
-                                ((IEnumerable)value).EachObject(_value =>
-                                {
-                                    if (!refAdded.Any(w => w.Target == _value))
-                                    {
-                                        Core.Status.AttachChild(_value, obj);
-                                        refAdded.Add(new WeakReference(_value));
-                                    }
-                                });
-                            }
-                            else
-                            {
-                                if (!refAdded.Any(w => w.Target == value))
-                                {
-                                    Core.Status.AttachChild(value, obj);
-                                    refAdded.Add(new WeakReference(value));
-                                }
-                            }
-                        }
+                        if (RefAdded.Any(w => w.Target == value)) continue;
+                        Core.Status.AttachChild(value, obj);
+                        RefAdded.Add(new WeakReference(value));
                     }
                 }
             }
         }
-        class StatusDelegateItem
+        private class StatusDelegateItem
         {
             public WeakReference<object> WeakObject { get; set; }
             public virtual Action<StatusItemValuesCollection> Action { get; set; }
@@ -489,7 +460,7 @@ namespace TWCore.Diagnostics.Status
                 }
             }
         }
-        class StatusItemsDelegateItem
+        private class StatusItemsDelegateItem
         {
             public WeakReference<object> WeakParent { get; set; }
             public Func<StatusItem> Function { get; set; }
@@ -505,24 +476,21 @@ namespace TWCore.Diagnostics.Status
                 }
             }
         }
-
-        class ObjectHierarchyCollection : List<ObjectHierarchyItem>
+        private class ObjectHierarchyCollection : List<ObjectHierarchyItem>
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ObjectHierarchyItem FindParent(object parent)
             {
-                if (parent != null)
+                if (parent == null) return null;
+                foreach (var item in this)
                 {
-                    foreach (var item in this)
+                    if (item.Object == parent)
+                        return item;
+                    else if (item.Childrens.Any())
                     {
-                        if (item.Object == parent)
-                            return item;
-                        else if (item.Childrens.Any())
-                        {
-                            var res = item.Childrens.FindParent(parent);
-                            if (res != null)
-                                return res;
-                        }
+                        var res = item.Childrens.FindParent(parent);
+                        if (res != null)
+                            return res;
                     }
                 }
                 return null;
@@ -530,29 +498,24 @@ namespace TWCore.Diagnostics.Status
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ObjectHierarchyItem RemoveParent(object parent)
             {
-                if (parent != null)
+                if (parent == null) return null;
+                var toDelete = this.FirstOrDefault(i => i.Object == parent);
+                if (toDelete != null)
+                    Remove(toDelete);
+                else
                 {
-                    var toDelete = this.FirstOrDefault(i => i.Object == parent);
-                    if (toDelete != null)
-                        Remove(toDelete);
-                    else
+                    foreach (var item in this)
                     {
-                        foreach (var item in this)
-                        {
-                            if (item.Childrens.Any())
-                            {
-                                toDelete = item.Childrens.RemoveParent(parent);
-                                if (toDelete != null)
-                                    break;
-                            }
-                        }
+                        if (!item.Childrens.Any()) continue;
+                        toDelete = item.Childrens.RemoveParent(parent);
+                        if (toDelete != null)
+                            break;
                     }
-                    return toDelete;
                 }
-                return null;
+                return toDelete;
             }
         }
-        class ObjectHierarchyItem
+        private class ObjectHierarchyItem
         {
             public WeakReference<object> WeakObject { get; set; }
             public object Object

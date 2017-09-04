@@ -20,6 +20,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using TWCore.Compression;
 using TWCore.Serialization;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
@@ -31,10 +32,9 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <summary>
         /// All file log storage writers
         /// </summary>
-        static ConcurrentDictionary<string, StreamWriter> logStreams = new ConcurrentDictionary<string, StreamWriter>();
-
-        StreamWriter sWriter;
-        string currentFileName;
+        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private StreamWriter _sWriter;
+        private string _currentFileName;
 
         #region Properties
         /// <summary>
@@ -90,7 +90,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                 collection.Add(nameof(CreateByDay), CreateByDay);
                 collection.Add(nameof(FileDate), FileDate);
                 collection.Add(nameof(Serializer), Serializer);
-                collection.Add("Current FileName", currentFileName);
+                collection.Add("Current FileName", _currentFileName);
             });
         }
         /// <summary>
@@ -107,64 +107,63 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureTraceFile(string fileName)
         {
-            if (FileDate.Date != DateTime.Today)
+            if (FileDate.Date == DateTime.Today) return;
+            
+            string oldFileName;
+            if (CreateByDay)
             {
-                string oldFileName = string.Empty;
-                if (CreateByDay)
-                {
-                    currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                    oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
-                }
-                else
-                {
-                    currentFileName = fileName;
-                    oldFileName = fileName;
-                }
+                _currentFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + DateTime.Today.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+                oldFileName = Path.Combine(Path.GetDirectoryName(fileName), Path.GetFileNameWithoutExtension(fileName) + "_" + FileDate.Date.ToString("yyyy-MM-dd") + Path.GetExtension(fileName));
+            }
+            else
+            {
+                _currentFileName = fileName;
+                oldFileName = fileName;
+            }
 
-                #region Remove previous
+            #region Remove previous
+            try
+            {
+                _sWriter?.Dispose();
+                _sWriter = null;
+            }
+            catch
+            {
+                // ignored
+            }
+
+            if (LogStreams.TryRemove(oldFileName, out var oldWriter))
+            {
                 try
                 {
-                    sWriter?.Dispose();
-                    sWriter = null;
+                    oldWriter?.Dispose();
+                    oldWriter = null;
                 }
                 catch
                 {
                     // ignored
                 }
-
-                if (logStreams.TryRemove(oldFileName, out var oldWriter))
-                {
-                    try
-                    {
-                        oldWriter?.Dispose();
-                        oldWriter = null;
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                }
-                #endregion
-
-                #region Load Writer
-                sWriter = logStreams.GetOrAdd(currentFileName, fname =>
-                {
-                    var folder = Path.GetDirectoryName(fname);
-                    if (!Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
-                    var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
-                    {
-                        AutoFlush = true
-                    };
-                    return sw;
-                });
-                if (File.Exists(currentFileName))
-                    FileDate = File.GetCreationTime(currentFileName);
-                #endregion
             }
+            #endregion
+
+            #region Load Writer
+            _sWriter = LogStreams.GetOrAdd(_currentFileName, fname =>
+            {
+                var folder = Path.GetDirectoryName(fname);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                {
+                    AutoFlush = true
+                };
+                return sw;
+            });
+            if (File.Exists(_currentFileName))
+                FileDate = File.GetCreationTime(_currentFileName);
+            #endregion
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        string GetObjectFilePath(TraceItem item)
+        private string GetObjectFilePath(TraceItem item)
         {
             var pattern = DateTime.Today.ToString("yyyy-MM-dd");
 
@@ -207,36 +206,33 @@ namespace TWCore.Diagnostics.Trace.Storages
         public void Write(TraceItem item)
         {
             EnsureTraceFile(FileName);
-
-            if (sWriter != null)
+            if (_sWriter == null) return;
+            var traceFilePath = GetObjectFilePath(item);
+            if (item.TraceObject != null)
             {
-                var traceFilePath = GetObjectFilePath(item);
-                if (item.TraceObject != null)
+                try
                 {
-                    try
-                    {
-                        var serializer = Serializer ?? SerializerManager.Serializers[0];
-                        serializer.SerializeToFile(item.TraceObject, traceFilePath);
-                    }
-                    catch(Exception ex)
-                    {
-                        File.WriteAllText(traceFilePath + ".txt", ex.Message + "\r\n" + ex.StackTrace);
-                    }
+                    var serializer = Serializer ?? SerializerManager.Serializers[0];
+                    serializer.SerializeToFile(item.TraceObject, traceFilePath);
                 }
-                else
-                    File.WriteAllText(traceFilePath + ".txt", "Object is Null");
+                catch(Exception ex)
+                {
+                    File.WriteAllText(traceFilePath + ".txt", ex.Message + "\r\n" + ex.StackTrace);
+                }
+            }
+            else
+                File.WriteAllText(traceFilePath + ".txt", "Object is Null");
 
-                lock (sWriter)
-                {
-                    string line = string.Format("{0} [TRACE] ({1};{2}) {3}: {4} ({5})",
-                        item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss.fff"),
-                        (!string.IsNullOrEmpty(item.GroupName)) ? item.GroupName + " " : string.Empty,
-                        item.TraceName,
-                        traceFilePath
-                    );
-                    sWriter.WriteLine(line);
-                    sWriter.Flush();
-                }
+            lock (_sWriter)
+            {
+                var line = string.Format("{0} [TRACE] ({1};{2}) {3}: {4} ({5})",
+                    item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss.fff"),
+                    (!string.IsNullOrEmpty(item.GroupName)) ? item.GroupName + " " : string.Empty,
+                    item.TraceName,
+                    traceFilePath
+                );
+                _sWriter.WriteLine(line);
+                _sWriter.Flush();
             }
         }
 
@@ -248,14 +244,14 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             try
             {
-                sWriter?.Dispose();
-                sWriter = null;
+                _sWriter?.Dispose();
+                _sWriter = null;
             }
             catch
             {
                 // ignored
             }
-            if (!logStreams.TryRemove(currentFileName, out var oldWriter)) return;
+            if (!LogStreams.TryRemove(_currentFileName, out var oldWriter)) return;
             try
             {
                 oldWriter?.Dispose();

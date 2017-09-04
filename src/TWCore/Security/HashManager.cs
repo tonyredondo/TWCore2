@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
+// ReSharper disable ObjectCreationAsStatement
 
 namespace TWCore.Security
 {

@@ -27,34 +27,21 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static object _lstPoolLock = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static Queue<List<byte[]>> _lstPool = new Queue<List<byte[]>>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static int _lstPoolCount;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static object _poolLock = new object();
-        static Queue<byte[]> _pool = new Queue<byte[]>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static int _poolCount;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static int _maxLength = 255;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly object LstPoolLock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Queue<List<byte[]>> LstPool = new Queue<List<byte[]>>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly object PoolLock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _lstPoolCount;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _poolCount;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 255;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _length;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _maxRow;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _rowIndex;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _position;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private byte[] _currentBuffer;
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
-        private bool _canWrite;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _length;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _maxRow;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _rowIndex;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _position;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        List<byte[]> _buffer;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        byte[] _currentBuffer;
+        private static readonly Queue<byte[]> Pool = new Queue<byte[]>();
 
         #region Properties
         /// <summary>
@@ -72,20 +59,20 @@ namespace TWCore.IO
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
-		public override long Length => (_maxRow * _maxLength) + _length;
+		public override long Length => (_maxRow * MaxLength) + _length;
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
         public override long Position
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => (_rowIndex * _maxLength) + _position;
+            get => (_rowIndex * MaxLength) + _position;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
-                var val = ((double)value / _maxLength);
+                var val = ((double)value / MaxLength);
                 _rowIndex = (int)val;
-                _position = (int)((val - _rowIndex) * _maxLength);
+                _position = (int)((val - _rowIndex) * MaxLength);
                 _currentBuffer = _buffer[_rowIndex];
             }
         }
@@ -161,8 +148,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin)
         {
-            var length = ((_buffer.Count - 1) * _maxLength) + _length;
-            var currentPosition = (_rowIndex * _maxLength) + _position;
+            var length = ((_buffer.Count - 1) * MaxLength) + _length;
+            var currentPosition = (_rowIndex * MaxLength) + _position;
             switch (origin)
             {
                 case SeekOrigin.Begin:
@@ -174,6 +161,8 @@ namespace TWCore.IO
                 case SeekOrigin.End:
                     currentPosition = length + (int)offset;
                     break;
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(origin), origin, null);
             }
             Position = currentPosition;
             return currentPosition;
@@ -185,10 +174,10 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void SetLength(long value)
         {
-            var val = ((double)value / _maxLength);
+            var val = ((double)value / MaxLength);
             var rowIndex = (int)val;
             var nRows = rowIndex + 1;
-            var nlength = (int)((val - rowIndex) * _maxLength);
+            var nlength = (int)((val - rowIndex) * MaxLength);
             if (nRows == _buffer.Count)
             {
                 if (_length > nlength)
@@ -205,16 +194,14 @@ namespace TWCore.IO
                     _buffer.RemoveAt(lastIdx);
                     _length = nlength;
                 }
-                Array.Clear(_currentBuffer, _length - 1, _maxLength - _length);
+                Array.Clear(_currentBuffer, _length - 1, MaxLength - _length);
             }
-            if (nRows > _buffer.Count)
+            if (nRows <= _buffer.Count) return;
+            for (var i = _buffer.Count; i < nRows; i++)
             {
-                for (var i = _buffer.Count; i < nRows; i++)
-                {
-                    _currentBuffer = GetArray();
-                    _buffer.Add(_currentBuffer);
-                    _maxRow++;
-                }
+                _currentBuffer = GetArray();
+                _buffer.Add(_currentBuffer);
+                _maxRow++;
             }
         }
         /// <summary>
@@ -227,10 +214,10 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int total = 0;
+            var total = 0;
             while (count > 0)
             {
-                var clength = (_rowIndex == _maxRow) ? _length : _maxLength;
+                var clength = (_rowIndex == _maxRow) ? _length : MaxLength;
                 var remain = clength - _position;
                 if (remain == 0)
                 {
@@ -239,7 +226,7 @@ namespace TWCore.IO
                         _rowIndex++;
                         _currentBuffer = _buffer[_rowIndex];
                         _position = 0;
-                        remain = (_rowIndex == _maxRow) ? _length : _maxLength;
+                        remain = (_rowIndex == _maxRow) ? _length : MaxLength;
                     }
                     else
                         return total;
@@ -260,11 +247,11 @@ namespace TWCore.IO
         /// <param name="offset">The zero-based byte offset in buffer at which to begin copying bytes to the current stream.</param>
         /// <param name="count">The number of bytes to be written to the current stream.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(byte[] buffer, int offset, int count)
+        public sealed override void Write(byte[] buffer, int offset, int count)
         {
             while (count > 0)
             {
-                var remain = _maxLength - _position;
+                var remain = MaxLength - _position;
                 if (remain == 0)
                 {
                     _currentBuffer = GetArray();
@@ -273,7 +260,7 @@ namespace TWCore.IO
                     _rowIndex++;
                     _position = 0;
                     _length = 0;
-                    remain = _maxLength;
+                    remain = MaxLength;
                 }
                 var canWrite = remain < count ? remain : count;
                 Buffer.BlockCopy(buffer, offset, _currentBuffer, _position, canWrite);
@@ -290,7 +277,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteByte(byte value)
         {
-            if (_maxLength > _position)
+            if (MaxLength > _position)
             {
                 _currentBuffer[_position] = value;
                 _position++;
@@ -314,7 +301,7 @@ namespace TWCore.IO
         {
             if (_rowIndex == _maxRow)
                 return (_length > _position) ? _currentBuffer[_position++] : -1;
-            if (_maxLength > _position)
+            if (MaxLength > _position)
                 return _currentBuffer[_position++];
             _rowIndex++;
             _currentBuffer = _buffer[_rowIndex];
@@ -330,56 +317,50 @@ namespace TWCore.IO
         {
             var tmp = new byte[Length];
             for (var i = 0; i < _maxRow; i++)
-                Buffer.BlockCopy(_buffer[i], 0, tmp, i * _maxLength, _maxLength);
-            Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * _maxLength, _length);
+                Buffer.BlockCopy(_buffer[i], 0, tmp, i * MaxLength, MaxLength);
+            Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * MaxLength, _length);
             return tmp;
         }
         #endregion
 
         #region Pool Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte[] GetArray()
+        private static byte[] GetArray()
         {
-            lock (_poolLock)
+            lock (PoolLock)
             {
-                if (_poolCount > 0)
-                {
-                    _poolCount--;
-                    return _pool.Dequeue();
-                }
+                if (_poolCount <= 0) return new byte[MaxLength];
+                _poolCount--;
+                return Pool.Dequeue();
             }
-            return new byte[_maxLength];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void StoreArray(byte[] array)
+        private static void StoreArray(byte[] array)
         {
-            Array.Clear(array, 0, _maxLength);
-            lock (_poolLock)
+            Array.Clear(array, 0, MaxLength);
+            lock (PoolLock)
             {
                 _poolCount++;
-                _pool.Enqueue(array);
+                Pool.Enqueue(array);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static List<byte[]> GetList()
+        private static List<byte[]> GetList()
         {
-            lock (_lstPoolLock)
+            lock (LstPoolLock)
             {
-                if (_lstPoolCount > 0)
-                {
-                    _lstPoolCount--;
-                    return _lstPool.Dequeue();
-                }
+                if (_lstPoolCount <= 0) return new List<byte[]>(10);
+                _lstPoolCount--;
+                return LstPool.Dequeue();
             }
-            return new List<byte[]>(10);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void StoreList(List<byte[]> lst)
+        private static void StoreList(List<byte[]> lst)
         {
             lst.Clear();
-            lock (_lstPoolLock)
+            lock (LstPoolLock)
             {
-                _lstPool.Enqueue(lst);
+                LstPool.Enqueue(lst);
                 _lstPoolCount++;
             }
         }

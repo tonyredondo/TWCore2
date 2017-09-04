@@ -159,8 +159,6 @@ namespace TWCore.Collections
         where TKey : class
         where TValue : class
     {
-        private static readonly CoreSettings DefaultSettings = Core.GetSettings<CoreSettings>();
-
         private readonly ConcurrentDictionary<object, WeakReference<TValue>> _dictionary;
         private readonly WeakKeyComparer<TKey> _comparer;
         private readonly Action _removeWeakReferencesInNull;
@@ -172,7 +170,7 @@ namespace TWCore.Collections
         {
             _comparer = new WeakKeyComparer<TKey>(comparer);
             _dictionary = new ConcurrentDictionary<object, WeakReference<TValue>>(_comparer);
-            _removeWeakReferencesInNull = new Action(RemoveCollectedEntries).CreateThrottledAction(DefaultSettings.WeakDictionaryRemoveReferenceThrottledTimeInMs);
+            _removeWeakReferencesInNull = new Action(RemoveCollectedEntries).CreateThrottledAction(CoreSettings.Instance.WeakDictionaryRemoveReferenceThrottledTimeInMs);
         }
 
         // WARNING: The count returned here may include entries for which

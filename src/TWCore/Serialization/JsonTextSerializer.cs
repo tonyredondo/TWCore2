@@ -27,11 +27,11 @@ namespace TWCore.Serialization
     /// <summary>
     /// Json Serializer
     /// </summary>
-    public class JsonTextSerializer : TextSerializer
+    public sealed class JsonTextSerializer : TextSerializer
     {
-		static ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> _serializerSettings = new ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
-        static string[] _extensions = new string[] { ".json" };
-        static string[] _mimeTypes = new string[] { SerializerMimeTypes.Json, "text/json" };
+        private static readonly ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> SerializerSettings = new ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
+        private static readonly string[] SExtensions = { ".json" };
+        private static readonly string[] SMimeTypes = { SerializerMimeTypes.Json, "text/json" };
 
         #region Default Values
         /// <summary>
@@ -44,11 +44,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions => _extensions;
+        public override string[] Extensions => SExtensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes => _mimeTypes;
+        public override string[] MimeTypes => SMimeTypes;
         /// <summary>
         /// Gets or sets if the serialized json result should be indented
         /// </summary>
@@ -83,11 +83,11 @@ namespace TWCore.Serialization
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        JsonSerializer GetSerializer()
+        private JsonSerializer GetSerializer()
         {
-            return _serializerSettings.GetOrAdd((Indent, UseCamelCase, NameHandling, IgnoreNullValues, EnumsAsStrings, true), tpl =>
+            return SerializerSettings.GetOrAdd((Indent, UseCamelCase, NameHandling, IgnoreNullValues, EnumsAsStrings, true), tpl =>
             {
-                var _ser = new JsonSerializerSettings
+                var ser = new JsonSerializerSettings
                 {
                     Formatting = tpl.Item1 ? Formatting.Indented : Formatting.None,
                     ContractResolver = tpl.Item2 ? new CamelCasePropertyNamesContractResolver() : new DefaultContractResolver(),
@@ -96,8 +96,8 @@ namespace TWCore.Serialization
                     CheckAdditionalContent = tpl.Item6
                 };
                 if (tpl.Item5)
-                    _ser.Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() };
-                return JsonSerializer.Create(_ser);
+                    ser.Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() };
+                return JsonSerializer.Create(ser);
             });
         }
 

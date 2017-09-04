@@ -27,12 +27,11 @@ namespace TWCore.Diagnostics.Log.Storages
     public class LogStorageCollection : ILogStorage
     {
         public static LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
-
-        readonly object locker = new object();
-        volatile bool IsDirty;
-        List<Tuple<ILogStorage, LogLevel>> CItems;
-        readonly List<Tuple<ILogStorage, LogLevel>> Items = new List<Tuple<ILogStorage, LogLevel>>();
-        LogLevel lastMaxLogLevel = LogLevel.Error;
+        private readonly object _locker = new object();
+        private readonly List<Tuple<ILogStorage, LogLevel>> _items = new List<Tuple<ILogStorage, LogLevel>>();
+        private volatile bool _isDirty;
+        private LogLevel _lastMaxLogLevel = LogLevel.Error;
+        private List<Tuple<ILogStorage, LogLevel>> _cItems;
 
         #region.ctor
         /// <summary>
@@ -43,7 +42,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Items", Items.Select(i => i.Item1 + "[" + i.Item2 + "]").Join(", "));
+                collection.Add("Items", _items.Select(i => i.Item1 + "[" + i.Item2 + "]").Join(", "));
             });
         }
         #endregion
@@ -57,12 +56,12 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(ILogStorage storage, LogLevel writeLevel)
         {
-            lock (locker)
+            lock (_locker)
             {
-                if (!Items.Any(i => i == storage))
+                if (_items.All(i => i.Item1 != storage))
                 {
-                    Items.Add(Tuple.Create(storage, writeLevel));
-                    IsDirty = true;
+                    _items.Add(Tuple.Create(storage, writeLevel));
+                    _isDirty = true;
                     CalculateMaxLogLevel();
                 }
             }
@@ -84,7 +83,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <returns>Storage instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILogStorage Get(Type storageType)
-            => Items.FirstOrDefault(i => i.Item1.GetType().IsAssignableFrom(storageType))?.Item1;
+            => _items.FirstOrDefault(i => i.Item1.GetType().IsAssignableFrom(storageType))?.Item1;
         /// <summary>
         /// Removes a existing storage from the collection
         /// </summary>
@@ -92,7 +91,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(ILogStorage storage)
         {
-            Items.RemoveAll(i => i.Item1 == storage);
+            _items.RemoveAll(i => i.Item1 == storage);
         }
         /// <summary>
         /// Change the log level of a given storage
@@ -102,7 +101,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ChangeStorageLogLevel(ILogStorage storage, LogLevel level)
         {
-            if (Items.RemoveAll(i => i.Item1 == storage) > 0)
+            if (_items.RemoveAll(i => i.Item1 == storage) > 0)
                 Add(storage, level);
         }
         /// <summary>
@@ -113,8 +112,8 @@ namespace TWCore.Diagnostics.Log.Storages
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                lock (locker)
-                    return Items.Count;
+                lock (_locker)
+                    return _items.Count;
             }
         }
         /// <summary>
@@ -123,10 +122,10 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            lock (locker)
+            lock (_locker)
             {
-                Items.Clear();
-                IsDirty = true;
+                _items.Clear();
+                _isDirty = true;
                 CalculateMaxLogLevel();
             }
         }
@@ -137,24 +136,21 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILogStorage[] GetAllStorages()
         {
-            lock (locker)
-                return Items.Select(i => i.Item1).ToArray() ?? new ILogStorage[0];
+            lock (_locker)
+                return _items.Select(i => i.Item1).ToArray() ?? new ILogStorage[0];
         }
         /// <summary>
         /// Get Max LogLevel in Storages
         /// </summary>
         /// <returns>LogLevel</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public LogLevel GetMaxLogLevel() => lastMaxLogLevel;
+        public LogLevel GetMaxLogLevel() => _lastMaxLogLevel;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void CalculateMaxLogLevel()
+        private void CalculateMaxLogLevel()
         {
-            var levels = Items.Select(i => i.Item2).ToArray();
-            if (levels.Length > 0)
-                lastMaxLogLevel = levels.Max();
-            else
-                lastMaxLogLevel = LogLevel.Error;
+            var levels = _items.Select(i => i.Item2).ToArray();
+            _lastMaxLogLevel = levels.Length > 0 ? levels.Max() : LogLevel.Error;
         }
         #endregion
 
@@ -166,16 +162,16 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
-            if (Items == null) return;
-            if (IsDirty || CItems == null)
+            if (_items == null) return;
+            if (_isDirty || _cItems == null)
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    CItems = new List<Tuple<ILogStorage, LogLevel>>(Items);
-                    IsDirty = false;
+                    _cItems = new List<Tuple<ILogStorage, LogLevel>>(_items);
+                    _isDirty = false;
                 }
             }
-            foreach (var sto in CItems)
+            foreach (var sto in _cItems)
             {
                 try
                 {
@@ -194,15 +190,15 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteEmptyLine()
         {
-            if (IsDirty || CItems == null)
+            if (_isDirty || _cItems == null)
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    CItems = new List<Tuple<ILogStorage, LogLevel>>(Items);
-                    IsDirty = false;
+                    _cItems = new List<Tuple<ILogStorage, LogLevel>>(_items);
+                    _isDirty = false;
                 }
             }
-            foreach (var sto in CItems)
+            foreach (var sto in _cItems)
             {
                 try
                 {
@@ -228,12 +224,12 @@ namespace TWCore.Diagnostics.Log.Storages
             if (_disposedValue) return;
             if (disposing)
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    Items.ParallelEach(t => Try.Do(() => t.Item1.Dispose(), false));
-                    Items?.Clear();
-                    CItems?.Clear();
-                    IsDirty = true;
+                    _items.ParallelEach(t => Try.Do(() => t.Item1.Dispose(), false));
+                    _items?.Clear();
+                    _cItems?.Clear();
+                    _isDirty = true;
                 }
             }
             _disposedValue = true;

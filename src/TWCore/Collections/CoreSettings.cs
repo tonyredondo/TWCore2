@@ -25,6 +25,11 @@ namespace TWCore.Collections
     public class CoreSettings : SettingsBase
     {
         /// <summary>
+        /// Singleton instance
+        /// </summary>
+        public static CoreSettings Instance => Singleton<CoreSettings>.Instance;
+        
+        /// <summary>
         /// LFUCollection Default Capacity
         /// </summary>
         public int LFUCollectionDefaultCapacity { get; set; } = ushort.MaxValue;

@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {
@@ -29,8 +30,8 @@ namespace TWCore
     /// </summary>
     public static partial class Extensions
     {
-        static Dictionary<string, GetAccessorDelegate> GetterCache = new Dictionary<string, GetAccessorDelegate>();
-        static Dictionary<string, SetAccessorDelegate> SetterCache = new Dictionary<string, SetAccessorDelegate>();
+        private static readonly Dictionary<string, GetAccessorDelegate> GetterCache = new Dictionary<string, GetAccessorDelegate>();
+        private static readonly Dictionary<string, SetAccessorDelegate> SetterCache = new Dictionary<string, SetAccessorDelegate>();
 
         /// <summary>
         /// Object Deep copy/clone using serialization
@@ -69,21 +70,17 @@ namespace TWCore
         /// <returns>Property or field value</returns>
         public static Type GetMemberObjectType(this object source, string name)
         {
-            if (source != null)
-            {
-                Type sourceType = source.GetType();
-                if (source as IDictionary != null)
-                    return (source as IDictionary).Contains(name) ? (source as IDictionary)[name]?.GetType() : null;
+            if (source == null) return null;
+            var sourceType = source.GetType();
+            if (source is IDictionary sourceDictio)
+                return sourceDictio.Contains(name) ? sourceDictio[name]?.GetType() : null;
 
-                var prop = sourceType.GetRuntimeProperty(name);
-                if (prop != null && prop.CanRead)
-                    return prop.PropertyType;
+            var prop = sourceType.GetRuntimeProperty(name);
+            if (prop != null && prop.CanRead)
+                return prop.PropertyType;
 
-                var field = sourceType.GetRuntimeField(name);
-                if (field != null)
-                    return field.FieldType;
-            }
-            return null;
+            var field = sourceType.GetRuntimeField(name);
+            return field?.FieldType;
         }
         /// <summary>
         /// Get object property or field value
@@ -93,36 +90,33 @@ namespace TWCore
         /// <returns>Property or field value</returns>
         public static object GetMemberObjectValue(this object source, string name)
         {
-            if (source != null)
+            if (source == null) return null;
+            var sourceType = source.GetType();
+            GetAccessorDelegate getter = null;
+            var key = string.Format("{0}.{1}", sourceType.AssemblyQualifiedName, name);
+
+            if (GetterCache.ContainsKey(key))
+                getter = GetterCache[key];
+            else
             {
-                Type sourceType = source.GetType();
-                GetAccessorDelegate getter = null;
-                var key = string.Format("{0}.{1}", sourceType.AssemblyQualifiedName, name);
+                var sDictionary = source as IDictionary;
+                if (sDictionary != null)
+                    return sDictionary.Contains(name) ? sDictionary[name] : null;
 
-                if (GetterCache.ContainsKey(key))
-                    getter = GetterCache[key];
-                else
+                var prop = sourceType.GetRuntimeProperty(name);
+                if (prop != null && prop.CanRead)
+                    getter = Factory.Accessors.BuildGetAccessor(prop);
+
+                if (getter == null)
                 {
-                    var sDictionary = source as IDictionary;
-                    if (sDictionary != null)
-                        return sDictionary.Contains(name) ? sDictionary[name] : null;
-
-                    var prop = sourceType.GetRuntimeProperty(name);
-                    if (prop != null && prop.CanRead)
-                        getter = Factory.Accessors.BuildGetAccessor(prop);
-
-                    if (getter == null)
-                    {
-                        var field = sourceType.GetRuntimeField(name);
-                        if (field != null)
-                            getter = obj => field.GetValue(obj);
-                    }
-
-                    GetterCache[key] = getter;
+                    var field = sourceType.GetRuntimeField(name);
+                    if (field != null)
+                        getter = obj => field.GetValue(obj);
                 }
-                return getter?.Invoke(source);
+
+                GetterCache[key] = getter;
             }
-            return null;
+            return getter?.Invoke(source);
         }
 
         /// <summary>
@@ -135,18 +129,15 @@ namespace TWCore
         public static T GetMemberValue<T>(this object source, string name)
         {
             var objRes = GetMemberObjectValue(source, name);
-            if (objRes != (object)default(T) && objRes != null)
+            if (objRes == (object) default(T) || objRes == null) return default(T);
+            try
             {
-                try
-                {
-                    return (T)Convert.ChangeType(objRes, typeof(T));
-                }
-                catch
-                {
-                    return (T)objRes;
-                }
+                return (T)Convert.ChangeType(objRes, typeof(T));
             }
-            return default(T);
+            catch
+            {
+                return (T)objRes;
+            }
         }
         /// <summary>
         /// Set object property or field value
@@ -156,36 +147,34 @@ namespace TWCore
         /// <param name="value">Property or field value</param>
         public static void SetMemberObjectValue(this object source, string name, object value)
         {
-            if (source != null)
+            if (source == null) return;
+            var sourceType = source.GetType();
+            var sDictio = source as IDictionary;
+            if (sDictio != null)
             {
-                Type sourceType = source.GetType();
-                var sDictio = source as IDictionary;
-                if (sDictio != null)
-                {
-                    sDictio[name] = value;
-                    return;
-                }
-
-                SetAccessorDelegate setter = null;
-                var key = string.Format("{0}.{1}", sourceType.AssemblyQualifiedName, name);
-
-                if (SetterCache.ContainsKey(key))
-                    setter = SetterCache[key];
-                else
-                {
-                    var prop = sourceType.GetRuntimeProperty(name);
-                    if (prop != null && prop.CanWrite)
-                        setter = Factory.Accessors.BuildSetAccessor(prop);
-                    if (setter == null)
-                    {
-                        var field = sourceType.GetRuntimeField(name);
-                        if (field != null)
-                            setter = (s, v) => field.SetValue(s, v);
-                    }
-                    setter = SetterCache[key];
-                }
-                setter(source, value);
+                sDictio[name] = value;
+                return;
             }
+
+            SetAccessorDelegate setter = null;
+            var key = string.Format("{0}.{1}", sourceType.AssemblyQualifiedName, name);
+
+            if (SetterCache.ContainsKey(key))
+                setter = SetterCache[key];
+            else
+            {
+                var prop = sourceType.GetRuntimeProperty(name);
+                if (prop != null && prop.CanWrite)
+                    setter = Factory.Accessors.BuildSetAccessor(prop);
+                if (setter == null)
+                {
+                    var field = sourceType.GetRuntimeField(name);
+                    if (field != null)
+                        setter = (s, v) => field.SetValue(s, v);
+                }
+                SetterCache[key] = setter;
+            }
+            setter?.Invoke(source, value);
         }
         #endregion
 
@@ -203,37 +192,35 @@ namespace TWCore
             {
                 var iTarget = target as IList;
                 var iSource = (IList)source;
-                if (iTarget != null && iSource != null)
+                if (iTarget == null) return;
+                Type innerType = null;
+                if (typeof(T).IsArray)
+                    innerType = typeof(T).GetElementType();
+                else
                 {
-                    Type innerType = null;
-                    if (typeof(T).IsArray)
-                        innerType = typeof(T).GetElementType();
+                    var gargs = iTarget.GetType().GenericTypeArguments;
+                    if (gargs.Length == 0)
+                        gargs = typeof(T).GenericTypeArguments;
+                    if (gargs.Length > 0)
+                        innerType = gargs[0];
                     else
                     {
-                        var gargs = iTarget.GetType().GenericTypeArguments;
-                        if (gargs.Length == 0)
-                            gargs = typeof(T).GenericTypeArguments;
-                        if (gargs.Length > 0)
-                            innerType = gargs[0];
-                        else
-                        {
-                            var iListType = iTarget.GetType().GetTypeInfo().ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                            if (iListType?.GenericTypeArguments.Any() == true)
-                                innerType = iListType.GenericTypeArguments[0];
-                        }
+                        var iListType = iTarget.GetType().GetTypeInfo().ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                        if (iListType?.GenericTypeArguments.Any() == true)
+                            innerType = iListType.GenericTypeArguments[0];
                     }
-                    foreach (var item in iSource)
-                    {
-                        var nItem = Activator.CreateInstance(item?.GetType() ?? innerType);
-                        nItem.CopyValuesFrom(item);
-                        iTarget.Add(nItem);
-                    }
+                }
+                foreach (var item in iSource)
+                {
+                    var nItem = Activator.CreateInstance(item?.GetType() ?? innerType);
+                    nItem.CopyValuesFrom(item);
+                    iTarget.Add(nItem);
                 }
             }
             else if (source != null)
             {
-                Type sourceType = source.GetType();
-                Type targetType = target.GetType();
+                var sourceType = source.GetType();
+                var targetType = target.GetType();
 
 
                 var sourceProperties = sourceType.GetRuntimeProperties().Where(p => !p.IsSpecialName && p.CanRead);
@@ -241,27 +228,25 @@ namespace TWCore
                 {
                     var sFastProp = sProp.GetFastPropertyInfo();
                     var tProp = targetType.GetRuntimeProperty(sProp.Name);
-                    if (tProp != null && !tProp.IsSpecialName && tProp.CanWrite)
-                    {
-                        var tFastProp = tProp.GetFastPropertyInfo();
-                        var sPropValue = sFastProp.GetValue(source);
-                        var sPropTypeInfo = sFastProp.PropertyType.GetTypeInfo();
-                        var tPropTypeInfo = tFastProp.PropertyType.GetTypeInfo();
+                    if (tProp == null || tProp.IsSpecialName || !tProp.CanWrite) continue;
+                    var tFastProp = tProp.GetFastPropertyInfo();
+                    var sPropValue = sFastProp.GetValue(source);
+                    var sPropTypeInfo = sFastProp.PropertyType.GetTypeInfo();
+                    var tPropTypeInfo = tFastProp.PropertyType.GetTypeInfo();
 
-                        if (tPropTypeInfo.IsEnum)
-                            tFastProp.SetValue(target, Enum.ToObject(tFastProp.PropertyType, sPropValue));
-                        else if (sPropTypeInfo.IsValueType || sFastProp.PropertyType == typeof(string) || sPropValue as string != null)
-                            tFastProp.SetValue(target, sPropValue);
+                    if (tPropTypeInfo.IsEnum)
+                        tFastProp.SetValue(target, Enum.ToObject(tFastProp.PropertyType, sPropValue));
+                    else if (sPropTypeInfo.IsValueType || sFastProp.PropertyType == typeof(string) || sPropValue is string)
+                        tFastProp.SetValue(target, sPropValue);
+                    else
+                    {
+                        if (sPropValue == null)
+                            tFastProp.SetValue(target, null);
                         else
                         {
-                            if (sPropValue == null)
-                                tFastProp.SetValue(target, null);
-                            else
-                            {
-                                var tPropValue = Activator.CreateInstance(tFastProp.PropertyType);
-                                tPropValue.CopyValuesFrom(sPropValue);
-                                tFastProp.SetValue(target, tPropValue);
-                            }
+                            var tPropValue = Activator.CreateInstance(tFastProp.PropertyType);
+                            tPropValue.CopyValuesFrom(sPropValue);
+                            tFastProp.SetValue(target, tPropValue);
                         }
                     }
                 }
@@ -270,26 +255,24 @@ namespace TWCore
                 foreach (var sField in sourceFields)
                 {
                     var tField = targetType.GetRuntimeField(sField.Name);
-                    if (tField != null)
-                    {
-                        var sFieldValue = sField.GetValue(source);
-                        var sFieldTypeInfo = sField.FieldType.GetTypeInfo();
-                        var tFieldTypeInfo = tField.FieldType.GetTypeInfo();
+                    if (tField == null) continue;
+                    var sFieldValue = sField.GetValue(source);
+                    var sFieldTypeInfo = sField.FieldType.GetTypeInfo();
+                    var tFieldTypeInfo = tField.FieldType.GetTypeInfo();
 
-                        if (tFieldTypeInfo.IsEnum)
-                            tField.SetValue(target, Enum.ToObject(tField.FieldType, sFieldValue));
-                        else if (sFieldTypeInfo.IsValueType || sField.FieldType == typeof(string) || sFieldValue as string != null)
-                            tField.SetValue(target, sFieldValue);
+                    if (tFieldTypeInfo.IsEnum)
+                        tField.SetValue(target, Enum.ToObject(tField.FieldType, sFieldValue));
+                    else if (sFieldTypeInfo.IsValueType || sField.FieldType == typeof(string) || sFieldValue is string)
+                        tField.SetValue(target, sFieldValue);
+                    else
+                    {
+                        if (sFieldValue == null)
+                            tField.SetValue(target, null);
                         else
                         {
-                            if (sFieldValue == null)
-                                tField.SetValue(target, null);
-                            else
-                            {
-                                var tFieldValue = Activator.CreateInstance(sField.FieldType);
-                                tFieldValue.CopyValuesFrom(sFieldValue);
-                                tField.SetValue(target, tFieldValue);
-                            }
+                            var tFieldValue = Activator.CreateInstance(sField.FieldType);
+                            tFieldValue.CopyValuesFrom(sFieldValue);
+                            tField.SetValue(target, tFieldValue);
                         }
                     }
                 }
@@ -314,14 +297,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void GetDictionaryValues(this object destination, Dictionary<string, object> source)
         {
-            if (source != null && destination != null)
+            if (source == null || destination == null) return;
+            foreach (var item in source)
             {
-                foreach (var item in source)
-                {
-                    var prop = destination.GetType().GetRuntimeProperty(item.Key);
-                    if (prop.CanWrite)
-                        prop.SetValue(destination, item.Value);
-                }
+                var prop = destination.GetType().GetRuntimeProperty(item.Key);
+                if (prop.CanWrite)
+                    prop.SetValue(destination, item.Value);
             }
         }
         #endregion

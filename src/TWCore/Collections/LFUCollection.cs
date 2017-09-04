@@ -27,9 +27,6 @@ namespace TWCore.Collections
     /// <typeparam name="TValue">Value Type</typeparam>
     public class LFUCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LFUCollection<TKey, TValue>.ValueNode>
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        static CoreSettings _defaultSettings = Core.GetSettings<CoreSettings>();
-
         #region Nested Type
         /// <summary>
         /// LFU Collection Value Node
@@ -93,7 +90,7 @@ namespace TWCore.Collections
         /// Least frequently used cache algorithm collection with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public LFUCollection() : this(_defaultSettings.LFUCollectionDefaultCapacity) { }
+        public LFUCollection() : this(CoreSettings.Instance.LFUCollectionDefaultCapacity) { }
         /// <summary>
         /// Least frequently used cache algorithm collection
         /// </summary>
@@ -102,7 +99,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LFUCollection(int capacity, int agePolicy = -1) : base(capacity)
         {
-            _agePolicy = (agePolicy < 0) ? _defaultSettings.LFUCollectionDefaultAgePolicy : agePolicy;
+            _agePolicy = (agePolicy < 0) ? CoreSettings.Instance.LFUCollectionDefaultAgePolicy : agePolicy;
             _list = new LinkedList<ValueNode.CountNode>();
             _slots = new Dictionary<int, TKey>();
             _availableSlots = new Queue<int>();

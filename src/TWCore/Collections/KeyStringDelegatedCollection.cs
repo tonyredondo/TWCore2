@@ -23,6 +23,13 @@ using System.Xml.Serialization;
 
 namespace TWCore.Collections
 {
+    internal class KeyStringDelegatedCollection
+    {
+        /// <summary>
+        /// Default Key array separator
+        /// </summary>
+        public static string DefaultKeyArraySeparator { get; set; } = ",";
+    }
     /// <summary>
     /// Collection of Items where the Key is calculated from a delegate.
     /// </summary>
@@ -31,19 +38,12 @@ namespace TWCore.Collections
 	[Serializable]
     public class KeyStringDelegatedCollection<TItem> : KeyDelegatedCollection<string, TItem>
     {
-        #region Statics
-        /// <summary>
-        /// Default Key array separator
-        /// </summary>
-        public static string DefaultKeyArraySeparator { get; set; } = ",";
-        #endregion
-
         #region Properties
         /// <summary>
         /// Key array separator
         /// </summary>
         [XmlAttribute, DataMember]
-        public string KeyArraySeparator { get; set; } = DefaultKeyArraySeparator;
+        public string KeyArraySeparator { get; set; } = KeyStringDelegatedCollection.DefaultKeyArraySeparator;
         #endregion
 
         #region .ctor

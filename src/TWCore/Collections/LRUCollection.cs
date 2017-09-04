@@ -27,8 +27,6 @@ namespace TWCore.Collections
     /// <typeparam name="TValue">Collection Value</typeparam>
     public class LRUCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LRUCollection<TKey, TValue>.ValueNode>
     {
-        static CoreSettings _defaultSettings = Core.GetSettings<CoreSettings>();
-
         #region Nested Type
         /// <summary>
         /// LRU Collection Value Node
@@ -63,7 +61,7 @@ namespace TWCore.Collections
         /// Collection with a fixed capacity and LRU replacement logic with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public LRUCollection() : this(_defaultSettings.LRUCollectionDefaultCapacity) { }
+        public LRUCollection() : this(CoreSettings.Instance.LRUCollectionDefaultCapacity) { }
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>

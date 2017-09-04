@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Client
 {
@@ -29,13 +30,13 @@ namespace TWCore.Net.RPC.Client
     /// </summary>
     public abstract class RPCProxy
     {
-        RPCClient _client;
-        string _serviceName;
-        Dictionary<string, FieldInfo> _events;
+	    private RPCClient _client;
+	    private string _serviceName;
+	    private readonly Dictionary<string, FieldInfo> _events;
 
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCProxy()
+        protected RPCProxy()
         {
             _events = GetType().GetRuntimeFields().ToDictionary(k => k.Name, v => v);
         }
@@ -67,13 +68,12 @@ namespace TWCore.Net.RPC.Client
         /// <param name="sender">Object sender</param>
         /// <param name="e">Object event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Client_OnEventReceived(object sender, EventDataEventArgs e)
+        private void Client_OnEventReceived(object sender, EventDataEventArgs e)
         {
-            if (e.ServiceName == _serviceName && _events.TryGetValue(e.EventName, out var value) && value.GetValue(this) is MulticastDelegate evHandler)
-            {
-                foreach (var handler in evHandler.GetInvocationList())
-                    handler.DynamicInvoke(this, e.EventArgs);
-            }
+	        if (e.ServiceName != _serviceName || !_events.TryGetValue(e.EventName, out var value) ||
+	            !(value.GetValue(this) is MulticastDelegate evHandler)) return;
+	        foreach (var handler in evHandler.GetInvocationList())
+		        handler.DynamicInvoke(this, e.EventArgs);
         }
 
         #region Invoke Generic
@@ -214,9 +214,9 @@ namespace TWCore.Net.RPC.Client
 			=> _client.ServerInvoke(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
         #endregion
 
-        ConcurrentDictionary<string, string> _memberNames = new ConcurrentDictionary<string, string>();
+	    private readonly ConcurrentDictionary<string, string> _memberNames = new ConcurrentDictionary<string, string>();
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        string GetMemberName(string memberName) => _memberNames.GetOrAdd(memberName, key => key?.EndsWith("Async") == true && key?.Length > 5 ? key.Substring(0, key.Length - 5) : key);
+		private string GetMemberName(string memberName) => _memberNames.GetOrAdd(memberName, key => key?.EndsWith("Async") == true && key.Length > 5 ? key.Substring(0, key.Length - 5) : key);
 
         #region InvokeAsync Generic
         /// <summary>

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using System.Threading;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC
 {
@@ -24,8 +25,8 @@ namespace TWCore.Net.RPC
     /// </summary>
     public class RPCTransportCounters
     {
-        long _bytesSent;
-        long _bytesReceived;
+        private long _bytesSent;
+        private long _bytesReceived;
 
         #region Properties
         /// <summary>

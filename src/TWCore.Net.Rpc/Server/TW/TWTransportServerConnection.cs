@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.IO;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -54,22 +55,19 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
 
         #region Fields
-        TcpClient Client;
-        TWTransportServer Server;
-        readonly Task ReceiveTask;
-        readonly long socketErrorsToDisconnection = 2;
-        long socketErrors;
-        bool disconnectionEventSent;
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        BufferedStream ReadStream;
-        BufferedStream WriteStream;
-        ISerializer Serializer;
-        BytesCounterStream readCounterStream;
-        BytesCounterStream writeCounterStream;
+        private readonly Task _receiveTask;
+        private readonly long _socketErrorsToDisconnection = 2;
+        private readonly CancellationTokenSource _tokenSource;
+        private readonly BufferedStream _readStream;
+        private readonly BufferedStream _writeStream;
+        private readonly ISerializer _serializer;
+        private readonly object _readLock = new object();
+        private readonly object _writeLock = new object();
 
-        object readLock = new object();
-        object writeLock = new object();
+        private TcpClient _client;
+        private TWTransportServer _server;
+        private long _socketErrors;
+        private bool _disconnectionEventSent;
         #endregion
 
         #region Properties
@@ -87,7 +85,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Gets true if the connection is closed.
         /// </summary>
         [StatusProperty]
-        public bool Disconnected => socketErrors >= socketErrorsToDisconnection;
+        public bool Disconnected => _socketErrors >= _socketErrorsToDisconnection;
         /// <summary>
         /// Gets true if the SessionRequest was already received and accepted.
         /// </summary>
@@ -135,21 +133,21 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TWTransportServerConnection(TWTransportServer server, TcpClient client, ISerializer serializer)
         {
-            Server = server;
-            Client = client;
-            socketErrors = 0;
-            tokenSource = new CancellationTokenSource();
-            token = tokenSource.Token;
+            _server = server;
+            _client = client;
+            _serializer = serializer;
+            _socketErrors = 0;
+            _tokenSource = new CancellationTokenSource();
+            var token = _tokenSource.Token;
             client.ReceiveBufferSize = ReceiveSize;
             client.SendBufferSize = SendSize;
             var netStream = client.GetStream();
-            Serializer = serializer;
-            readCounterStream = new BytesCounterStream(netStream);
-            writeCounterStream = new BytesCounterStream(netStream);
-            ReadStream = new BufferedStream(readCounterStream, ReceiveSize);
-            WriteStream = new BufferedStream(writeCounterStream, SendSize);
+            var readCounterStream = new BytesCounterStream(netStream);
+            var writeCounterStream = new BytesCounterStream(netStream);
+            _readStream = new BufferedStream(readCounterStream, ReceiveSize);
+            _writeStream = new BufferedStream(writeCounterStream, SendSize);
 
-            ReceiveTask = Task.Factory.StartNew(() =>
+            _receiveTask = Task.Factory.StartNew(() =>
             {
                 while (!token.IsCancellationRequested && !Disconnected)
                 {
@@ -157,7 +155,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     switch (msgType)
                     {
                         case RPCMessageType.Unknown:
-                            Interlocked.Increment(ref socketErrors);
+                            Interlocked.Increment(ref _socketErrors);
                             break;
                         case RPCMessageType.RequestMessage:
                             ThreadPool.QueueUserWorkItem(ProcessRequestMessage, message);
@@ -166,34 +164,28 @@ namespace TWCore.Net.RPC.Server.Transports
                             ThreadPool.QueueUserWorkItem(ProcessSessionRequestMessage, message);
                             break;
                     }
-                    if (readCounterStream != null)
-                        Server.Counters.SetBytesReceived(readCounterStream.BytesRead);
-                    if (writeCounterStream != null)
-                        Server.Counters.SetBytesSent(writeCounterStream.BytesWrite);
+                    _server.Counters.SetBytesReceived(readCounterStream.BytesRead);
+                    _server.Counters.SetBytesSent(writeCounterStream.BytesWrite);
                 }
-                if (Disconnected)
+                if (!Disconnected) return;
+                Core.Log.Warning("Session {0} had disconnected.", SessionId);
+                DisconnectionDateTime = DateTime.UtcNow;
+                try
                 {
-                    Core.Log.Warning("Session {0} had disconnected.", SessionId);
-                    DisconnectionDateTime = DateTime.UtcNow;
-                    try
-                    {
-                        Client.Dispose();
-                    }
-                    catch
-                    {
-                        // ignored
-                    }
-                    if (!disconnectionEventSent)
-                    {
-                        OnSessionDisconnected?.Invoke(this);
-                        disconnectionEventSent = true;
-                    }
+                    _client.Dispose();
                 }
+                catch
+                {
+                    // ignored
+                }
+                if (_disconnectionEventSent) return;
+                OnSessionDisconnected?.Invoke(this);
+                _disconnectionEventSent = true;
             }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ProcessSessionRequestMessage(object message)
+        private void ProcessSessionRequestMessage(object message)
         {
             var sessionRequest = message as RPCSessionRequestMessage;
             if (sessionRequest == null) return;
@@ -216,12 +208,12 @@ namespace TWCore.Net.RPC.Server.Transports
                 {
                     WriteRPCMessageData(sessionResponse, RPCMessageType.SessionResponse);
                     watch.Tap("Session wasn't created.");
-                    Client.Dispose();
+                    _client.Dispose();
                 }
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ProcessRequestMessage(object message)
+        private void ProcessRequestMessage(object message)
         {
             var messageRequest = message as RPCRequestMessage;
             if (messageRequest == null) return;
@@ -240,19 +232,19 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        (RPCMessageType, RPCMessage) GetRPCMessage()
+        private (RPCMessageType, RPCMessage) GetRPCMessage()
         {
-            lock (readLock)
+            lock (_readLock)
             {
                 #region LoadType
-                int mTypeByte = 255;
+                int mTypeByte;
                 try
                 {
-                    mTypeByte = ReadStream.ReadByte();
+                    mTypeByte = _readStream.ReadByte();
                 }
                 catch (Exception ex)
                 {
-                    Interlocked.Increment(ref socketErrors);
+                    Interlocked.Increment(ref _socketErrors);
                     Core.Log.Warning("Error reading bytes ({0})", ex.Message);
                     return (RPCMessageType.Unknown, null);
                 }
@@ -273,10 +265,10 @@ namespace TWCore.Net.RPC.Server.Transports
                     Core.Log.LibVerbose("Ping message received, sending pong.");
                     if (!Disconnected)
                     {
-                        lock (WriteStream)
+                        lock (_writeStream)
                         {
-                            WriteStream.WriteByte((byte)RPCMessageType.Pong);
-                            WriteStream.Flush();
+                            _writeStream.WriteByte((byte)RPCMessageType.Pong);
+                            _writeStream.Flush();
                             return (RPCMessageType.Ping, null);
                         }
                     }
@@ -289,56 +281,55 @@ namespace TWCore.Net.RPC.Server.Transports
 					switch(mTypeEnum)
 					{
 						case RPCMessageType.SessionRequest:
-							message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCSessionRequestMessage));
+							message = (RPCMessage)_serializer.Deserialize(_readStream, typeof(RPCSessionRequestMessage));
 							break;
 						case RPCMessageType.RequestMessage:
-							message = (RPCMessage)Serializer.Deserialize(ReadStream, typeof(RPCRequestMessage));
+							message = (RPCMessage)_serializer.Deserialize(_readStream, typeof(RPCRequestMessage));
 							break;
 					}
                 }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
-                    Interlocked.Increment(ref socketErrors);
-                    if (Disconnected && !disconnectionEventSent)
-                    {
-                        OnSessionDisconnected?.Invoke(this);
-                        disconnectionEventSent = true;
-                    }
+                    Interlocked.Increment(ref _socketErrors);
+                    if (!Disconnected || _disconnectionEventSent) 
+                        return (mTypeEnum, message);
+                    OnSessionDisconnected?.Invoke(this);
+                    _disconnectionEventSent = true;
                 }
                 return (mTypeEnum, message);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void WriteRPCMessageData(RPCMessage message, RPCMessageType messageType)
+        private void WriteRPCMessageData(RPCMessage message, RPCMessageType messageType)
         {
-            lock (writeLock)
+            lock (_writeLock)
             {
                 if (Disconnected)
                     Factory.Thread.SleepUntil(() => !Disconnected);
 
                 try
                 {
-                    WriteStream.WriteByte((byte)messageType);
+                    _writeStream.WriteByte((byte)messageType);
                     try
                     {
-                        Serializer.Serialize(message, WriteStream);
+                        _serializer.Serialize(message, _writeStream);
                     }
                     catch (Exception ex)
                     {
                         Core.Log.Write(ex);
                     }
-                    WriteStream.Flush();
-                    Interlocked.Exchange(ref socketErrors, 0);
+                    _writeStream.Flush();
+                    Interlocked.Exchange(ref _socketErrors, 0);
                 }
                 catch (Exception ex)
                 {
-                    Interlocked.Increment(ref socketErrors);
+                    Interlocked.Increment(ref _socketErrors);
                     Core.Log.Write(ex);
-                    if (Disconnected && !disconnectionEventSent)
+                    if (Disconnected && !_disconnectionEventSent)
                     {
                         OnSessionDisconnected?.Invoke(this);
-                        disconnectionEventSent = true;
+                        _disconnectionEventSent = true;
                     }
                 }
             }
@@ -366,25 +357,25 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            tokenSource.Cancel();
+            _tokenSource.Cancel();
             try
             {
-                ReceiveTask.Wait(1000);
+                _receiveTask.Wait(1000);
             }
             catch
             {
                 // ignored
             }
-            Server = null;
+            _server = null;
             try
             {
-                Client?.Dispose();
+                _client?.Dispose();
             }
             catch
             {
                 // ignored
             }
-            Client = null;
+            _client = null;
         }
         #endregion       
     }

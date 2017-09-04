@@ -168,21 +168,18 @@ namespace TWCore.Cache.Storages.IO
             private const string DataExtension = ".data";
 
             #region Fields
-            CancellationTokenSource _tokenSource;
-            CancellationToken _token;
             // ReSharper disable once NotAccessedField.Local
-            Task _loadTask;
-            readonly object _pendingLock = new object();
-            readonly object _metasLock = new object();
-            Dictionary<string, SerializedObject> _pendingItems;
-            Dictionary<string, StorageItemMeta> _metas;
-            Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
-            int _currentTransactionLogLength;
-            string _transactionLogFilePath;
-            string _indexFilePath;
-            Action SaveMetadataBuffered;
-            FileStream _transactionStream;
-            FileStorageMetaLog _currentTransaction;
+            private Task _loadTask;
+            private Dictionary<string, StorageItemMeta> _metas;
+            private int _currentTransactionLogLength;
+            private FileStream _transactionStream;
+            private readonly object _pendingLock = new object();
+            private readonly object _metasLock = new object();
+            private readonly Dictionary<string, SerializedObject> _pendingItems;
+            private readonly Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
+            private readonly string _transactionLogFilePath;
+            private readonly string _indexFilePath;
+            private readonly FileStorageMetaLog _currentTransaction;
             #endregion
 
             #region Properties
@@ -221,7 +218,7 @@ namespace TWCore.Cache.Storages.IO
             #region .ctor
             public FolderStorage(string basePath, FileStorage storage)
             {
-                SaveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
+                var saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
                 BasePath = basePath;
                 Serializer = storage.Serializer;
                 IndexSerializer = storage.MetaSerializer;
@@ -236,13 +233,13 @@ namespace TWCore.Cache.Storages.IO
                 List<FileStorageMetaLog> transactionLog = null;
                 _metas = new Dictionary<string, StorageItemMeta>();
                 _pendingItems = new Dictionary<string, SerializedObject>();
-                _tokenSource = new CancellationTokenSource();
-                _token = _tokenSource.Token;
-                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(WorkerProcess, true)
+                var tokenSource = new CancellationTokenSource();
+                var token = tokenSource.Token;
+                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(WorkerProcess)
                 {
                     EnableWaitTimeout = false
                 };
-                _storageWorker.OnWorkDone += (sender, e) => SaveMetadataBuffered();
+                _storageWorker.OnWorkDone += (sender, e) => saveMetadataBuffered();
                 _currentTransaction = new FileStorageMetaLog();
 
                 if (!Directory.Exists(BasePath))
@@ -264,10 +261,10 @@ namespace TWCore.Cache.Storages.IO
                         {
                             try
                             {
-                                if (_token.IsCancellationRequested) return;
+                                if (token.IsCancellationRequested) return;
 
                                 #region Loading index file
-                                bool indexLoaded = false;
+                                var indexLoaded = false;
                                 if (File.Exists(_indexFilePath))
                                 {
                                     try
@@ -311,7 +308,7 @@ namespace TWCore.Cache.Storages.IO
                                 {
                                     Core.Log.Warning("The index doesn't exist or couldn't be loaded. Generating new index file.");
                                     var dateNow = Core.Now;
-                                    DateTime eTime = dateNow.AddDays(5);
+                                    var eTime = dateNow.AddDays(5);
                                     if (storage.MaximumItemDuration.HasValue)
                                         eTime = dateNow.Add(storage.MaximumItemDuration.Value);
                                     if (storage.ItemsExpirationDateOverwrite.HasValue)
@@ -322,7 +319,7 @@ namespace TWCore.Cache.Storages.IO
                                     if (_metas == null) _metas = new Dictionary<string, StorageItemMeta>();
 
                                     var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension, SearchOption.AllDirectories);
-                                    int idx = 0;
+                                    var idx = 0;
                                     foreach (var file in allFiles)
                                     {
                                         var cTime = File.GetCreationTime(file);
@@ -338,7 +335,7 @@ namespace TWCore.Cache.Storages.IO
                                 #endregion
 
                                 #region Loading transaction log file
-                                bool transactionLogLoaded = false;
+                                var transactionLogLoaded = false;
                                 if (File.Exists(_transactionLogFilePath))
                                 {
                                     try
@@ -382,7 +379,6 @@ namespace TWCore.Cache.Storages.IO
                                                 }
                                             }
                                             transactionLog = lstTransactions;
-                                            transactionLogLoaded = true;
                                         }
                                     }
                                     catch (Exception ex)
@@ -398,17 +394,16 @@ namespace TWCore.Cache.Storages.IO
                                     Core.Log.InfoBasic("Applying {0} pending transactions", transactionLog.Count);
                                     foreach (var item in transactionLog)
                                     {
-                                        if (item.Type == FileStorageMetaLog.TransactionType.Add)
+                                        switch (item.Type)
                                         {
-                                            _metas[item.Meta.Key] = item.Meta;
-                                        }
-                                        if (item.Type == FileStorageMetaLog.TransactionType.Remove)
-                                        {
-                                            if (_metas.TryGetValue(item.Meta.Key, out var oldMeta))
-                                            {
+                                            case FileStorageMetaLog.TransactionType.Add:
+                                                _metas[item.Meta.Key] = item.Meta;
+                                                break;
+                                            case FileStorageMetaLog.TransactionType.Remove:
+                                                if (!_metas.TryGetValue(item.Meta.Key, out var oldMeta)) continue;
                                                 _metas.Remove(item.Meta.Key);
                                                 oldMeta.Dispose();
-                                            }
+                                                break;
                                         }
                                     }
                                     SaveMetadata();
@@ -430,7 +425,7 @@ namespace TWCore.Cache.Storages.IO
                                 LoadingFailed = true;
                             }
                         }
-                }, _token);
+                }, token);
 
                 Core.Status.Attach(collection =>
                 {
@@ -449,9 +444,9 @@ namespace TWCore.Cache.Storages.IO
 
             #region Private Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            string GetDataPath(string key) => Path.Combine(BasePath, key + DataExtension + Serializer.Extensions[0]);
+            private string GetDataPath(string key) => Path.Combine(BasePath, key + DataExtension + Serializer.Extensions[0]);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
+            private void WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
             {
                 var meta = workerItem.Item1;
                 var transaction = workerItem.Item2;
@@ -463,7 +458,7 @@ namespace TWCore.Cache.Storages.IO
                 {
                     lock (_transactionStream)
                     {
-                        Try.Do(() => File.Copy(_transactionLogFilePath, _transactionLogFilePath + ".old", true), ex => Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message), false);
+                        Try.Do(() => File.Copy(_transactionLogFilePath, _transactionLogFilePath + ".old", true), ex => Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message));
                         _currentTransaction.Meta = meta;
                         _currentTransaction.Type = transaction;
                         IndexSerializer.Serialize(_currentTransaction, _transactionStream);
@@ -481,23 +476,22 @@ namespace TWCore.Cache.Storages.IO
                 try
                 {
                     var filePath = GetDataPath(meta.Key);
-                    if (transaction == FileStorageMetaLog.TransactionType.Remove)
+                    switch (transaction)
                     {
-                        Core.Log.LibVerbose("Removing element from filesystem '{0}'.", meta.Key);
-                        File.Delete(filePath);
-                        return;
-                    }
-                    if (transaction == FileStorageMetaLog.TransactionType.Add)
-                    {
-                        Core.Log.LibVerbose("Writing element to filesystem '{0}'.", meta.Key);
-                        SerializedObject serObj = null;
-                        lock (_pendingLock)
-                            _pendingItems.TryGetValue(meta.Key, out serObj);
-                        if (serObj != null)
-                            Serializer.SerializeToFile(serObj, filePath);
-                        lock (_pendingLock)
-                            _pendingItems.Remove(meta.Key);
-                        return;
+                        case FileStorageMetaLog.TransactionType.Remove:
+                            Core.Log.LibVerbose("Removing element from filesystem '{0}'.", meta.Key);
+                            File.Delete(filePath);
+                            return;
+                        case FileStorageMetaLog.TransactionType.Add:
+                            Core.Log.LibVerbose("Writing element to filesystem '{0}'.", meta.Key);
+                            SerializedObject serObj;
+                            lock (_pendingLock)
+                                _pendingItems.TryGetValue(meta.Key, out serObj);
+                            if (serObj != null)
+                                Serializer.SerializeToFile(serObj, filePath);
+                            lock (_pendingLock)
+                                _pendingItems.Remove(meta.Key);
+                            return;
                     }
                 }
                 catch (Exception ex)
@@ -514,24 +508,22 @@ namespace TWCore.Cache.Storages.IO
                 _currentTransactionLogLength++;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void SaveMetadata()
+            private void SaveMetadata()
             {
                 Core.Log.LibVerbose("Writing Index.");
                 try
                 {
                     lock (_metasLock)
                     {
-                        if (disposedValue) return;
-                        Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message), false);
+                        if (_disposedValue) return;
+                        Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message));
                         IndexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
-                        if (_transactionStream != null)
+                        if (_transactionStream == null) return;
+                        lock (_transactionStream)
                         {
-                            lock (_transactionStream)
-                            {
-                                _transactionStream.Position = 0;
-                                _transactionStream.SetLength(0);
-                                _transactionStream.Flush();
-                            }
+                            _transactionStream.Position = 0;
+                            _transactionStream.SetLength(0);
+                            _transactionStream.Flush();
                         }
                     }
                 }
@@ -541,16 +533,16 @@ namespace TWCore.Cache.Storages.IO
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void Meta_OnExpire(object sender, EventArgs e)
+            private void Meta_OnExpire(object sender, EventArgs e)
             {
                 var meta = sender as StorageItemMeta;
                 if (meta == null) return;
                 OnRemove(meta.Key, out meta);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void RemoveExpiredItems()
+            private void RemoveExpiredItems()
             {
-                StorageItemMeta[] expiredItems = null;
+                StorageItemMeta[] expiredItems;
                 lock (_metasLock)
                     expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
                 Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
@@ -595,7 +587,7 @@ namespace TWCore.Cache.Storages.IO
                     meta = null;
                     return false;
                 }
-                bool response = false;
+                var response = false;
                 lock (_pendingLock)
                     _pendingItems.Remove(key);
                 lock (_metasLock)
@@ -620,7 +612,6 @@ namespace TWCore.Cache.Storages.IO
                 if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
                 {
                     Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
-                    meta = null;
                     return false;
                 }
                 lock (_pendingLock)
@@ -649,8 +640,8 @@ namespace TWCore.Cache.Storages.IO
             {
                 try
                 {
-                    StorageItemMeta metaValue = null;
-                    SerializedObject serObj = null;
+                    StorageItemMeta metaValue;
+                    SerializedObject serObj;
                     lock (_pendingLock)
                         _pendingItems.TryGetValue(key, out serObj);
                     lock (_metasLock)
@@ -674,7 +665,7 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
             {
-                StorageItemMeta metaValue = null;
+                StorageItemMeta metaValue;
                 lock (_metasLock)
                     _metas.TryGetValue(key, out metaValue);
                 if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
@@ -688,33 +679,31 @@ namespace TWCore.Cache.Storages.IO
             #endregion
 
             #region IDisposable Support
-            private bool disposedValue;
+            private bool _disposedValue;
 
             // To detect redundant calls
 
             private void Dispose(bool disposing)
             {
-                if (!disposedValue)
+                if (_disposedValue) return;
+                if (disposing)
                 {
-                    if (disposing)
-                    {
-                        // TODO: dispose managed state (managed objects).
-                    }
-                    _storageWorker.Stop(int.MaxValue);
-                    SaveMetadata();
-                    lock (_transactionStream)
-                    {
-                        _transactionStream.Flush();
-                        _transactionStream.Dispose();
-                        _transactionStream = null;
-                    }
-                    lock (_metasLock)
-                        _metas.Clear();
-                    lock (_pendingLock)
-                        _pendingItems.Clear();
-
-                    disposedValue = true;
+                    
                 }
+                _storageWorker.Stop(int.MaxValue);
+                SaveMetadata();
+                lock (_transactionStream)
+                {
+                    _transactionStream.Flush();
+                    _transactionStream.Dispose();
+                    _transactionStream = null;
+                }
+                lock (_metasLock)
+                    _metas.Clear();
+                lock (_pendingLock)
+                    _pendingItems.Clear();
+
+                _disposedValue = true;
             }
 
             ~FolderStorage()

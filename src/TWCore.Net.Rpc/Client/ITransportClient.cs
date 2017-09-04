@@ -18,6 +18,7 @@ using System;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Client
 {

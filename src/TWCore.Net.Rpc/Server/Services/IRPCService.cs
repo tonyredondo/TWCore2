@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using TWCore.Net.RPC.Server;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Services
 {

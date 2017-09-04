@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Client
 {
@@ -31,11 +32,11 @@ namespace TWCore.Net.RPC.Client
     /// </summary>
     public class RPCClient : IRPCClient, IRPCClientAsync, IDisposable
     {
-        readonly ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor> MethodDescriptorCache = new ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor>();
-        ITransportClient _transport;
-        bool _transportInit;
-        ServiceDescriptorCollection _serverDescriptors;
-        ServiceDescriptorCollection _descriptors;
+        private readonly ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor>();
+        private ITransportClient _transport;
+        private bool _transportInit;
+        private ServiceDescriptorCollection _serverDescriptors;
+        private ServiceDescriptorCollection _descriptors;
 
         #region Properties
         /// <summary>
@@ -56,11 +57,9 @@ namespace TWCore.Net.RPC.Client
                 if (_transport != null)
                     _transport.OnEventReceived -= Transport_OnEventReceived;
                 _transport = value;
-                if (_transport != null)
-                {
-                    _transport.OnEventReceived += Transport_OnEventReceived;
-                    InitTransportAsync().WaitAsync();
-                }
+                if (_transport == null) return;
+                _transport.OnEventReceived += Transport_OnEventReceived;
+                InitTransportAsync().WaitAsync();
             }
         }
         /// <summary>
@@ -106,16 +105,15 @@ namespace TWCore.Net.RPC.Client
             if (!interfaceType.GetTypeInfo().IsInterface)
                 throw new ArgumentException("The type of the dynamic proxy should be an interface.");
             await InitTransportAsync().ConfigureAwait(false);
-            if (!Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
+            if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
+                return new DynamicProxy(this, descriptor);
+            if (!UseServerDescriptor)
             {
-                if (!UseServerDescriptor)
-                {
-                    descriptor = ServiceDescriptor.GetDescriptor(interfaceType);
-                    Descriptors.Add(descriptor);
-                }
-                else
-                    throw new NotImplementedException("The server doesn't have an implementation for this Type.");
+                descriptor = ServiceDescriptor.GetDescriptor(interfaceType);
+                Descriptors.Add(descriptor);
             }
+            else
+                throw new NotImplementedException("The server doesn't have an implementation for this Type.");
             return new DynamicProxy(this, descriptor);
         }
         /// <summary>
@@ -167,16 +165,15 @@ namespace TWCore.Net.RPC.Client
             if (!interfaceType.GetTypeInfo().IsInterface)
                 throw new ArgumentException("The type of the dynamic proxy should be an interface.");
             InitTransport();
-            if (!Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
+            if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
+                return new DynamicProxy(this, descriptor);
+            if (!UseServerDescriptor)
             {
-                if (!UseServerDescriptor)
-                {
-                    descriptor = ServiceDescriptor.GetDescriptor(interfaceType);
-                    Descriptors.Add(descriptor);
-                }
-                else
-                    throw new NotImplementedException("The server doesn't have an implementation for this Type.");
+                descriptor = ServiceDescriptor.GetDescriptor(interfaceType);
+                Descriptors.Add(descriptor);
             }
+            else
+                throw new NotImplementedException("The server doesn't have an implementation for this Type.");
             return new DynamicProxy(this, descriptor);
         }
         /// <summary>
@@ -287,7 +284,7 @@ namespace TWCore.Net.RPC.Client
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        async Task InitTransportAsync()
+        private async Task InitTransportAsync()
         {
             if (!_transportInit)
             {
@@ -296,43 +293,37 @@ namespace TWCore.Net.RPC.Client
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void InitTransport()
+        private void InitTransport()
         {
-            if (!_transportInit)
-            {
-                Transport.Init();
-                _transportInit = true;
-            }
+            if (_transportInit) return;
+            Transport.Init();
+            _transportInit = true;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
+        private async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
-            if (_descriptors == null)
+            if (_descriptors != null) return _descriptors;
+            if (_serverDescriptors == null && UseServerDescriptor)
+                _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
+            lock (this)
             {
-                if (_serverDescriptors == null && UseServerDescriptor)
-                    _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
-                lock (this)
-                {
-                    _descriptors = new ServiceDescriptorCollection();
-                    if (UseServerDescriptor)
-                        _descriptors.Combine(_serverDescriptors);
-                }
+                _descriptors = new ServiceDescriptorCollection();
+                if (UseServerDescriptor)
+                    _descriptors.Combine(_serverDescriptors);
             }
             return _descriptors;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ServiceDescriptorCollection GetDescriptors()
+        private ServiceDescriptorCollection GetDescriptors()
         {
-            if (_descriptors == null)
+            if (_descriptors != null) return _descriptors;
+            if (_serverDescriptors == null && UseServerDescriptor)
+                _serverDescriptors = Transport.GetDescriptors();
+            lock (this)
             {
-                if (_serverDescriptors == null && UseServerDescriptor)
-                    _serverDescriptors = Transport.GetDescriptors();
-                lock (this)
-                {
-                    _descriptors = new ServiceDescriptorCollection();
-                    if (UseServerDescriptor)
-                        _descriptors.Combine(_serverDescriptors);
-                }
+                _descriptors = new ServiceDescriptorCollection();
+                if (UseServerDescriptor)
+                    _descriptors.Combine(_serverDescriptors);
             }
             return _descriptors;
         }
@@ -341,13 +332,11 @@ namespace TWCore.Net.RPC.Client
         /// </summary>
         /// <param name="sender">Object sender</param>
         /// <param name="e">Event args</param>
-        void Transport_OnEventReceived(object sender, EventDataEventArgs e)
+        private void Transport_OnEventReceived(object sender, EventDataEventArgs e)
         {
-            if (Descriptors.Items.TryGetValue(e.ServiceName, out var @descriptor))
-            {
-                if (@descriptor.Events.ContainsKey(e.EventName))
-                    OnEventReceived?.Invoke(sender, e);
-            }
+            if (!Descriptors.Items.TryGetValue(e.ServiceName, out var @descriptor)) return;
+            if (@descriptor.Events.ContainsKey(e.EventName))
+                OnEventReceived?.Invoke(sender, e);
         }
         /// <summary>
         /// Creates a new RPC Request message
@@ -357,38 +346,36 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Method arguments</param>
         /// <returns>RPC Request message object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        RPCRequestMessage CreateRequest(string serviceName, string method, object[] args)
+        private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args)
         {
             var types = args?.Select(a => a?.GetType() ?? Type.Missing.GetType());
-            var mDesc = MethodDescriptorCache.GetOrAdd((serviceName, method, types), kTuple =>
+            var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), kTuple =>
             {
-                if (Descriptors.Items.TryGetValue(kTuple.Item1, out var descriptor))
+                if (!Descriptors.Items.TryGetValue(kTuple.Item1, out var descriptor)) return null;
+                
+                var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args?.Length).ToArray();
+                switch (methods.Length)
                 {
-                    var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args?.Length).ToArray();
-                    switch (methods.Length)
-                    {
-                        case 0:
-                            return null;
-                        case 1:
-                            return methods[0];
-                        default:
-                            return methods.FirstOrDefault(m =>
+                    case 0:
+                        return null;
+                    case 1:
+                        return methods[0];
+                    default:
+                        return methods.FirstOrDefault(m =>
+                        {
+                            for (var i = 0; i < m.Parameters.Length; i++)
                             {
-                                for (var i = 0; i < m.Parameters.Length; i++)
-                                {
-                                    var p1 = m.Parameters[i].Parameter;
-                                    var v2 = args?[i];
-                                    if (v2 != null && !p1.ParameterType.GetTypeInfo().IsAssignableFrom(v2.GetType().GetTypeInfo()))
-                                        return false;
-                                    if (v2 == null && p1.ParameterType.GetTypeInfo().IsValueType)
-                                        if (!p1.ParameterType.GetTypeInfo().IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
-                                            return false;
-                                }
-                                return true;
-                            });
-                    }
+                                var p1 = m.Parameters[i].Parameter;
+                                var v2 = args?[i];
+                                if (v2 != null && !p1.ParameterType.GetTypeInfo().IsAssignableFrom(v2.GetType().GetTypeInfo()))
+                                    return false;
+                                if (v2 != null || !p1.ParameterType.GetTypeInfo().IsValueType) continue;
+                                if (!p1.ParameterType.GetTypeInfo().IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                                    return false;
+                            }
+                            return true;
+                        });
                 }
-                return null;
             });
             if (mDesc == null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
@@ -397,7 +384,7 @@ namespace TWCore.Net.RPC.Client
             if (args?.Length == 0 && mDesc.Parameters?.Length == 1)
                 parameters.Add(null);
 
-            RPCRequestMessage rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
+            var rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
             rqMessage.MessageId = Guid.NewGuid();
 			rqMessage.MethodId = mDesc.Id;
 			rqMessage.Parameters = parameters.ToArray();

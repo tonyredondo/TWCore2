@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Descriptors;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server
 {
@@ -31,9 +32,9 @@ namespace TWCore.Net.RPC.Server
     /// </summary>
     public class RPCServer : IRPCServer
     {
-		readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
-		readonly Dictionary<Guid, (ServiceItem, MethodDescriptor)> _methods = new Dictionary<Guid, (ServiceItem, MethodDescriptor)>(100);
-        ITransportServer transport;
+        private readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
+        private readonly Dictionary<Guid, (ServiceItem, MethodDescriptor)> _methods = new Dictionary<Guid, (ServiceItem, MethodDescriptor)>(100);
+        private ITransportServer _transport;
 
         #region Properties
         /// <summary>
@@ -46,12 +47,12 @@ namespace TWCore.Net.RPC.Server
         public ITransportServer Transport
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return transport; }
+            get { return _transport; }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
                 if (!Running)
-                    transport = value;
+                    _transport = value;
                 else
                     throw new Exception("The RPC server is started, you can't modify the transport, please Stop first");
             }
@@ -160,7 +161,7 @@ namespace TWCore.Net.RPC.Server
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OnMethodCall(object sender, MethodEventArgs e)
+        private void OnMethodCall(object sender, MethodEventArgs e)
         {
 			if (_methods.TryGetValue(e.Request.MethodId, out var desc)) 
 			{
@@ -173,21 +174,22 @@ namespace TWCore.Net.RPC.Server
 			};
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
+        private void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
         {
             e.Descriptors = Descriptors;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OnClientConnect(object sender, ClientConnectEventArgs e)
+        private void OnClientConnect(object sender, ClientConnectEventArgs e)
         {
             _serviceInstances.Each(item => item.FireClientConnection(e.ClientId));
         }
         #endregion
 
         #region Nested ServiceItem Class
-        class ServiceItem
+        private class ServiceItem
         {
-            RPCServer Server;
+            private readonly RPCServer _server;
+            private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
 
             [StatusProperty]
             public Type ServiceType { get; set; }
@@ -195,13 +197,12 @@ namespace TWCore.Net.RPC.Server
             public object ServiceInstance { get; set; }
             public ServiceDescriptor Descriptor { get; set; }
             public readonly Dictionary<EventInfo, EventHandler> ServiceEventHandlers = new Dictionary<EventInfo, EventHandler>();
-            readonly Dictionary<int, Guid> ThreadClientId = new Dictionary<int, Guid>();
             public MethodInfo OnClientConnectMethod;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ServiceItem(RPCServer server, Type serviceType, object serviceInstance)
             {
-                Server = server;
+                _server = server;
                 ServiceInstance = serviceInstance;
                 ServiceType = serviceType;
                 Descriptor = ServiceDescriptor.GetDescriptor(ServiceType);
@@ -217,29 +218,24 @@ namespace TWCore.Net.RPC.Server
                 #endregion
 
                 #region Events
-                if (Descriptor?.Events?.Any() == true)
+                if (Descriptor?.Events?.Any() != true) return;
+                
+                foreach (var evDesc in Descriptor.Events.Values)
                 {
-                    foreach (var evDesc in Descriptor.Events.Values)
+                    if (evDesc.Event == null) continue;
+                        
+                    var eventAttribute = (RPCEventAttribute)ServiceInstance?.GetType().GetRuntimeEvent(evDesc.Name)?.GetCustomAttribute(typeof(RPCEventAttribute)) ??
+                                         new RPCEventAttribute(RPCMessageScope.Session);
+                    var evHandler = new EventHandler((s, e) =>
                     {
-                        if (evDesc.Event != null)
-                        {
-                            var eventAttribute = (RPCEventAttribute)ServiceInstance?.GetType().GetRuntimeEvent(evDesc.Name)?.GetCustomAttribute(typeof(RPCEventAttribute));
-                            if (eventAttribute == null)
-                                eventAttribute = new RPCEventAttribute(RPCMessageScope.Session);
-                            var evHandler = new EventHandler((s, e) =>
-                            {
-                                if (Server.Transport != null)
-                                {
-                                    Guid clientId;
-                                    lock (ThreadClientId) ThreadClientId.TryGetValue(Environment.CurrentManagedThreadId, out clientId);
-                                    Server.Transport.FireEvent(eventAttribute, clientId, Descriptor.Name, evDesc.Event.Name, s, e);
-                                }
-                            });
-                            evDesc.Event.AddEventHandler(ServiceInstance, evHandler);
-                            ServiceEventHandlers[evDesc.Event] = evHandler;
-                            Core.Log.LibDebug("Binding Event: {0} on service {1}", evDesc.Name, Descriptor.Name);
-                        }
-                    }
+                        if (_server.Transport == null) return;
+                        Guid clientId;
+                        lock (_threadClientId) _threadClientId.TryGetValue(Environment.CurrentManagedThreadId, out clientId);
+                        _server.Transport.FireEvent(eventAttribute, clientId, Descriptor.Name, evDesc.Event.Name, s, e);
+                    });
+                    evDesc.Event.AddEventHandler(ServiceInstance, evHandler);
+                    ServiceEventHandlers[evDesc.Event] = evHandler;
+                    Core.Log.LibDebug("Binding Event: {0} on service {1}", evDesc.Name, Descriptor.Name);
                 }
                 #endregion
             }
@@ -253,13 +249,11 @@ namespace TWCore.Net.RPC.Server
                 #endregion
 
                 #region Events
-                if (ServiceEventHandlers?.Any() == true)
+                if (ServiceEventHandlers?.Any() != true) return;
+                foreach (var ev in ServiceEventHandlers)
                 {
-                    foreach (var ev in ServiceEventHandlers)
-                    {
-                        Core.Log.LibDebug("Unbinding Event: {0} on service {1}", ev.Key.Name, Descriptor.Name);
-                        ev.Key.RemoveEventHandler(ServiceInstance, ev.Value);
-                    }
+                    Core.Log.LibDebug("Unbinding Event: {0} on service {1}", ev.Key.Name, Descriptor.Name);
+                    ev.Key.RemoveEventHandler(ServiceInstance, ev.Value);
                 }
                 #endregion
             }
@@ -269,17 +263,16 @@ namespace TWCore.Net.RPC.Server
             {
                 Try.Do(() =>
                 {
-                    if (OnClientConnectMethod != null)
-                    {
-                        var tId = Environment.CurrentManagedThreadId;
-                        lock (ThreadClientId) ThreadClientId[tId] = clientId;
-                        var pTers = OnClientConnectMethod.GetParameters();
-                        if (pTers.Length == 0)
-                            OnClientConnectMethod?.Invoke(ServiceInstance, null);
-                        if (pTers.Length == 1)
-                            OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
-                        lock (ThreadClientId) ThreadClientId.Remove(tId);
-                    }
+                    if (OnClientConnectMethod == null) return;
+                    
+                    var tId = Environment.CurrentManagedThreadId;
+                    lock (_threadClientId) _threadClientId[tId] = clientId;
+                    var pTers = OnClientConnectMethod.GetParameters();
+                    if (pTers.Length == 0)
+                        OnClientConnectMethod?.Invoke(ServiceInstance, null);
+                    if (pTers.Length == 1)
+                        OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
+                    lock (_threadClientId) _threadClientId.Remove(tId);
                 });
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -289,9 +282,9 @@ namespace TWCore.Net.RPC.Server
                 try
                 {
 					var tId = Environment.CurrentManagedThreadId;
-					lock (ThreadClientId) ThreadClientId[tId] = clientId;
+					lock (_threadClientId) _threadClientId[tId] = clientId;
 					response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
-					lock (ThreadClientId) ThreadClientId.Remove(tId);
+					lock (_threadClientId) _threadClientId.Remove(tId);
                 }
                 catch (TargetInvocationException ex)
                 {

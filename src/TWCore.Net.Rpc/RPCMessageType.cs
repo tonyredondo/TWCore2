@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 
+// ReSharper disable InconsistentNaming
 namespace TWCore.Net.RPC
 {
     /// <summary>

@@ -19,6 +19,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Net.RPC.Server;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Services
 {
@@ -27,7 +28,7 @@ namespace TWCore.Services
     /// </summary>
     public abstract class RPCService : IRPCService
     {
-        CancellationTokenSource cts;
+        private CancellationTokenSource _cts;
 
         #region Properties
         /// <summary>
@@ -49,7 +50,7 @@ namespace TWCore.Services
         /// RPC Service
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCService()
+        protected RPCService()
         {
             Core.Status.Attach(collection => Core.Status.AttachChild(Server, this));
         }
@@ -65,8 +66,8 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Continuing RPC service...");
-                cts = new CancellationTokenSource();
-                ServiceToken = cts.Token;
+                _cts = new CancellationTokenSource();
+                ServiceToken = _cts.Token;
                 await Server.StartAsync().ConfigureAwait(false);
                 Core.Log.InfoBasic("RPC service has started.");
             }
@@ -84,7 +85,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Pausing RPC service...");
-                cts?.Cancel();
+                _cts?.Cancel();
                 await Server.StopAsync().ConfigureAwait(false);
                 Core.Log.InfoBasic("RPC service has been paused.");
             }
@@ -111,8 +112,8 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Starting RPC service...");
-                cts = new CancellationTokenSource();
-                ServiceToken = cts.Token;
+                _cts = new CancellationTokenSource();
+                ServiceToken = _cts.Token;
                 OnInit(args);
                 Server = GetRPCServer();
                 if (Server == null)
@@ -134,7 +135,7 @@ namespace TWCore.Services
         {
             try
             {
-                cts?.Cancel();
+                _cts?.Cancel();
                 OnFinalizing();
                 Core.Log.InfoBasic("Stopping RPC service...");
                 await Server.StopAsync().ConfigureAwait(false);

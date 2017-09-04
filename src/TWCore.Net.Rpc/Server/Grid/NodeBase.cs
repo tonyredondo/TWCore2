@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server.Grid
 {
@@ -25,14 +26,14 @@ namespace TWCore.Net.RPC.Server.Grid
     /// </summary>
     public abstract class NodeBase : IGridNode, IDisposable
     {
-        readonly NodeInfo nodeInfo = new NodeInfo { Id = Guid.NewGuid() };
+        private readonly NodeInfo _nodeInfo = new NodeInfo { Id = Guid.NewGuid() };
 
         #region Properties
         /// <summary>
         /// Node information
         /// </summary>
         /// <returns>GridNodeInfo instance</returns>
-        public NodeInfo GetNodeInfo() => nodeInfo;
+        public NodeInfo GetNodeInfo() => _nodeInfo;
         /// <summary>
         /// Gets if node is available to process.
         /// </summary>
@@ -41,11 +42,19 @@ namespace TWCore.Net.RPC.Server.Grid
         /// <summary>
         /// Node Type
         /// </summary>
-        public string Type { get { return nodeInfo.Type; } set { nodeInfo.Type = value; } }
+        public string Type 
+        { 
+            get => _nodeInfo.Type;
+            set => _nodeInfo.Type = value;
+        }
         /// <summary>
         /// Node Service Name
         /// </summary>
-        public string ServiceName { get { return nodeInfo.ServiceName; } set { nodeInfo.ServiceName = value; } }
+        public string ServiceName 
+        { 
+            get => _nodeInfo.ServiceName;
+            set => _nodeInfo.ServiceName = value;
+        }
         #endregion
 
         #region .ctor
@@ -53,14 +62,14 @@ namespace TWCore.Net.RPC.Server.Grid
         /// Grid Node base class
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NodeBase()
+        protected NodeBase()
         {
             Type = GetType().AssemblyQualifiedName;
             ServiceName = GetType().Name;
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("NodeInfo", nodeInfo);
+                collection.Add("NodeInfo", _nodeInfo);
                 collection.Add("IsReady", IsReady);
                 collection.Add("Type", Type);
                 collection.Add("ServiceName", ServiceName);

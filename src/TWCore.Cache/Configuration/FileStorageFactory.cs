@@ -33,30 +33,30 @@ namespace TWCore.Cache.Configuration
         /// <returns>Storage</returns>
         protected override StorageBase CreateStorage(KeyValueCollection parameters)
         {
-            var BasePath = parameters["BasePath"];
-            var SerializerMimeType = parameters["SerializerMimeType"];
-            var MetaSerializerMimeType = parameters["MetaSerializerMimeType"] ?? "application/json";
-            var CompressorEncodingType = parameters["CompressorEncodingType"];
-            var NumberOfSubFolder = parameters["NumberOfSubFolder"].ParseTo((byte)25);
-            var TransactionLogThreshold = parameters["TransactionLogThreshold"].ParseTo(250);
-            var SlowDownWriteThreshold = parameters["SlowDownWriteThreshold"].ParseTo(1000);
-            var StorageType = parameters["StorageType"].ParseTo(FileStorageType.Normal);
+            var basePath = parameters["BasePath"];
+            var serializerMimeType = parameters["SerializerMimeType"];
+            var metaSerializerMimeType = parameters["MetaSerializerMimeType"] ?? "application/json";
+            var compressorEncodingType = parameters["CompressorEncodingType"];
+            var numberOfSubFolder = parameters["NumberOfSubFolder"].ParseTo((byte)25);
+            var transactionLogThreshold = parameters["TransactionLogThreshold"].ParseTo(250);
+            var slowDownWriteThreshold = parameters["SlowDownWriteThreshold"].ParseTo(1000);
+            var storageType = parameters["StorageType"].ParseTo(FileStorageType.Normal);
 
-            var metaSerializer = SerializerManager.GetByMimeType<ISerializer>(MetaSerializerMimeType);
-            var serializer = SerializerManager.GetByMimeType(SerializerMimeType);
-            if (CompressorEncodingType.IsNotNullOrWhitespace())
-                serializer.Compressor = CompressorManager.GetByEncodingType(CompressorEncodingType);
+            var metaSerializer = SerializerManager.GetByMimeType<ISerializer>(metaSerializerMimeType);
+            var serializer = SerializerManager.GetByMimeType(serializerMimeType);
+            if (compressorEncodingType.IsNotNullOrWhitespace())
+                serializer.Compressor = CompressorManager.GetByEncodingType(compressorEncodingType);
 
             SerializerManager.SupressFileExtensionWarning = true;
 
-            switch (StorageType)
+            switch (storageType)
             {
                 case FileStorageType.Normal:
-                    return new FileStorage(BasePath)
+                    return new FileStorage(basePath)
                     {
-						NumberOfSubFolders = NumberOfSubFolder,
-                        TransactionLogThreshold = TransactionLogThreshold,
-                        SlowDownWriteThreshold = SlowDownWriteThreshold,
+						NumberOfSubFolders = numberOfSubFolder,
+                        TransactionLogThreshold = transactionLogThreshold,
+                        SlowDownWriteThreshold = slowDownWriteThreshold,
 						MetaSerializer = (BinarySerializer)metaSerializer,
 						Serializer = (BinarySerializer)serializer
                     };

@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -33,12 +34,13 @@ namespace TWCore.Net.RPC.Server.Transports
     /// </summary>
     public class TWTransportServer : ITransportServer
     {
-        readonly ConcurrentDictionary<Guid, TWTransportServerConnection> sessions = new ConcurrentDictionary<Guid, TWTransportServerConnection>();
-        TcpListener _listener;
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        Task tskListener;
-        Timer disconnectionTimer;
+        private readonly ConcurrentDictionary<TWTransportServerConnection, object> _pendingConnections = new ConcurrentDictionary<TWTransportServerConnection, object>();
+        private readonly ConcurrentDictionary<Guid, TWTransportServerConnection> _sessions = new ConcurrentDictionary<Guid, TWTransportServerConnection>();
+        private TcpListener _listener;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
+        private Task _tskListener;
+        private Timer _disconnectionTimer;
 
         #region Properties
         /// <summary>
@@ -93,9 +95,9 @@ namespace TWCore.Net.RPC.Server.Transports
             Serializer = Serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             Core.Status.Attach(collection =>
             {
-                collection.Add("Sessions Count", sessions.Count);
+                collection.Add("Sessions Count", _sessions.Count);
                 Core.Status.AttachChild(_listener, this);
-                foreach (var ses in sessions)
+                foreach (var ses in _sessions)
                     Core.Status.AttachChild(ses.Value, this);
             });
         }
@@ -136,27 +138,27 @@ namespace TWCore.Net.RPC.Server.Transports
                 if (!Serializer.KnownTypes.Contains(typeof(RPCSessionResponseMessage)))
                     Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
             }
-            tokenSource = new CancellationTokenSource();
-            token = tokenSource.Token;
+            _tokenSource = new CancellationTokenSource();
+            _token = _tokenSource.Token;
             _listener = new TcpListener(IPAddress.Any, Port);
             _listener.Server.NoDelay = true;
             Factory.SetSocketLoopbackFastPath(_listener.Server);
             _listener.Start();
-            tskListener = Task.Factory.StartNew(async () =>
+            _tskListener = Task.Factory.StartNew(async () =>
             {
-                while (!token.IsCancellationRequested)
+                while (!_token.IsCancellationRequested)
                 {
-                    var tcpClient = await _listener.AcceptTcpClientAsync().ConfigureAwait(false);
+                    var tcpClient = await _listener.AcceptTcpClientAsync().HandleCancellationAsync(_token).ConfigureAwait(false);
                     ThreadPool.QueueUserWorkItem(ConnectionReceived, tcpClient);
                 }
-            }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-            disconnectionTimer = new Timer(state =>
+            }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _disconnectionTimer = new Timer(state =>
             {
-                var sessionsTimeout = sessions.Values.ToList().Where(v => v.DisconnectionDateTime.HasValue && (DateTime.UtcNow - v.DisconnectionDateTime.Value).TotalMinutes > DisconnectedSessionTimeoutInMinutes);
+                var sessionsTimeout = _sessions.Values.ToList().Where(v => v.DisconnectionDateTime.HasValue && (DateTime.UtcNow - v.DisconnectionDateTime.Value).TotalMinutes > DisconnectedSessionTimeoutInMinutes);
                 foreach (var sTimeout in sessionsTimeout)
                 {
                     Core.Log.LibVerbose("Removing SessionId={0}", sTimeout.SessionId);
-                    sessions.TryRemove(sTimeout.SessionId, out var _);
+                    _sessions.TryRemove(sTimeout.SessionId, out var _);
                 }
             }, this, 10000, 10000);
             Core.Log.LibVerbose("Transport Listener Started");
@@ -170,12 +172,12 @@ namespace TWCore.Net.RPC.Server.Transports
         public async Task StopListenerAsync()
         {
             Core.Log.LibVerbose("Stopping Transport Listener");
-            disconnectionTimer?.Dispose();
-            disconnectionTimer = null;
+            _disconnectionTimer?.Dispose();
+            _disconnectionTimer = null;
             try
             {
-                tokenSource.Cancel();
-                await tskListener.ConfigureAwait(false);
+                _tokenSource.Cancel();
+                await _tskListener.ConfigureAwait(false);
                 _listener.Stop();
                 _listener = null;
             }
@@ -183,8 +185,8 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 Core.Log.Write(ex);
             }
-            sessions.Values.ToList().Each(session => Try.Do(() => session.Dispose()));
-            sessions.Clear();
+            _sessions.Values.ToList().Each(session => Try.Do(session.Dispose));
+            _sessions.Clear();
             Core.Log.LibVerbose("Transport Listener Stopped");
         }
         /// <summary>
@@ -204,7 +206,7 @@ namespace TWCore.Net.RPC.Server.Transports
             switch (eventAttribute.Scope)
             {
                 case RPCMessageScope.Session:
-                    if (sessions.TryGetValue(clientId, out var client))
+                    if (_sessions.TryGetValue(clientId, out var client))
                     {
                         client.SendEventMessage(eventMessage);
                         Core.Log.LibVerbose($"Sending event trigger to SessionId='{clientId}' on event '{eventName}'");
@@ -214,7 +216,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     var hubName = eventAttribute.HubName;
                     try
                     {
-                        var hSessions = sessions.Values.Where(v => v.Hub == hubName && !v.Disconnected).ToList();
+                        var hSessions = _sessions.Values.Where(v => v.Hub == hubName && !v.Disconnected).ToList();
                         foreach (var cItem in hSessions)
                             cItem.SendEventMessage(eventMessage);
                         Core.Log.LibVerbose($"Sending event trigger to Hub='{hubName}' on event '{eventName}'");
@@ -227,7 +229,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 case RPCMessageScope.Global:
                     try
                     {
-                        var s = sessions.Values.Where(v => !v.Disconnected).ToList();
+                        var s = _sessions.Values.Where(v => !v.Disconnected).ToList();
                         foreach (var sItem in s)
                             sItem.SendEventMessage(eventMessage);
                         Core.Log.LibVerbose($"Sending event trigger to all sessions on event '{eventName}'");
@@ -243,7 +245,7 @@ namespace TWCore.Net.RPC.Server.Transports
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ConnectionReceived(object objTcpClient)
+        private void ConnectionReceived(object objTcpClient)
         {
             var client = (TcpClient)objTcpClient;
             var sessionItem = new TWTransportServerConnection(this, client, Serializer)
@@ -252,16 +254,18 @@ namespace TWCore.Net.RPC.Server.Transports
                 OnSessionDisconnected = SessionItem_OnSessionDisconnected,
                 OnRequestReceived = Session_OnRequestReceived
             };
+            _pendingConnections.TryAdd(sessionItem, null);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SessionItem_OnSessionRequestReceived(TWTransportServerConnection client, RPCSessionRequestMessage request, RPCSessionResponseMessage response)
+        private void SessionItem_OnSessionRequestReceived(TWTransportServerConnection client, RPCSessionRequestMessage request, RPCSessionResponseMessage response)
         {
             OnClientConnect?.Invoke(this, new ClientConnectEventArgs(response.SessionId));
-            if (response.Succeed)
-                sessions.AddOrUpdate(response.SessionId, client, (k, a) => client);
+            if (!response.Succeed) return;
+            _sessions.AddOrUpdate(response.SessionId, client, (k, a) => client);
+            _pendingConnections.TryRemove(client, out var _);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        RPCResponseMessage Session_OnRequestReceived(TWTransportServerConnection client, RPCRequestMessage request)
+        private RPCResponseMessage Session_OnRequestReceived(TWTransportServerConnection client, RPCRequestMessage request)
         {
             if (request.MethodId == Guid.Empty)
             {
@@ -278,12 +282,12 @@ namespace TWCore.Net.RPC.Server.Transports
             return mEventArgs.Response;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SessionItem_OnSessionDisconnected(TWTransportServerConnection client)
+        private void SessionItem_OnSessionDisconnected(TWTransportServerConnection client)
         {
             client.OnSessionRequestReceived = null;
             client.OnRequestReceived = null;
             client.OnSessionDisconnected = null;
-            sessions.TryRemove(client.SessionId, out client);
+            _sessions.TryRemove(client.SessionId, out client);
             Core.Status.DeAttachObject(client);
         }
         #endregion
@@ -304,7 +308,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Scope = RPCMessageScope.Hub,
                 Description = description
             };
-            var lstClients = sessions.Values.Where(c => c.Hub == hub && !c.Disconnected).ToArray();
+            var lstClients = _sessions.Values.Where(c => c.Hub == hub && !c.Disconnected).ToArray();
             Parallel.ForEach(lstClients, client => client.SendPushMessage(msg));
         }
         /// <summary>
@@ -323,7 +327,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Scope = RPCMessageScope.Hub,
                 Description = description
             };
-            var lstClients = sessions.Values.Where(c => c.Hub == hub && c.SessionId != exceptSessionId && !c.Disconnected).ToArray();
+            var lstClients = _sessions.Values.Where(c => c.Hub == hub && c.SessionId != exceptSessionId && !c.Disconnected).ToArray();
             Parallel.ForEach(lstClients, client => client.SendPushMessage(msg));
         }
         /// <summary>
@@ -340,7 +344,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Scope = RPCMessageScope.Global,
                 Description = description
             };
-            var lstClients = sessions.Values.Where(c => !c.Disconnected).ToArray();
+            var lstClients = _sessions.Values.Where(c => !c.Disconnected).ToArray();
             Parallel.ForEach(lstClients, client => client.SendPushMessage(msg));
         }
         /// <summary>
@@ -358,7 +362,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Scope = RPCMessageScope.Global,
                 Description = description
             };
-            var lstClients = sessions.Values.Where(c => c.SessionId != exceptSessionId && !c.Disconnected).ToArray();
+            var lstClients = _sessions.Values.Where(c => c.SessionId != exceptSessionId && !c.Disconnected).ToArray();
             Parallel.ForEach(lstClients, client => client.SendPushMessage(msg));
         }
         /// <summary>
@@ -376,7 +380,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Scope = RPCMessageScope.Session,
                 Description = description
             };
-            if (sessions.TryGetValue(sessionId, out var client))
+            if (_sessions.TryGetValue(sessionId, out var client))
                 client.SendPushMessage(msg);
         }
         #endregion

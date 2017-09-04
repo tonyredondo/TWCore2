@@ -66,58 +66,50 @@ namespace TWCore.Net.RPC.Descriptors
             {
                 Name = serviceType.FullName
             };
-            bool isInterface = serviceType.GetTypeInfo().IsInterface;
+            var isInterface = serviceType.GetTypeInfo().IsInterface;
             var methodsInfo = serviceType.GetRuntimeMethods().OrderBy(i => i.Name + "[" + i.GetParameters()?.Select(p => p.Name).Join(", ") + "]");
             foreach (var mInfo in methodsInfo)
             {
-                if (mInfo.IsPublic && !mInfo.IsSpecialName)
+                if (!mInfo.IsPublic || mInfo.IsSpecialName) continue;
+                var isRpcMethod = mInfo.IsDefined(typeof(RPCMethodAttribute)) || isInterface;
+                if (!isRpcMethod) continue;
+                var mDesc = new MethodDescriptor()
                 {
-                    var isRPCMethod = mInfo.IsDefined(typeof(RPCMethodAttribute)) || isInterface;
-                    if (isRPCMethod)
-                    {
-                        var mDesc = new MethodDescriptor()
-                        {
-                            Method = mInfo.GetMethodAccessor(),
-                            Name = mInfo.Name,
-                            ReturnType = GetTypeName(mInfo.ReturnType)
-                        };
-                        RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
+                    Method = mInfo.GetMethodAccessor(),
+                    Name = mInfo.Name,
+                    ReturnType = GetTypeName(mInfo.ReturnType)
+                };
+                RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 
-                        var pars = mInfo.GetParameters();
-                        mDesc.Parameters = new ParameterDescriptor[pars.Length];
-                        for (var i = 0; i < pars.Length; i++)
-                        {
-                            var p = pars[i];
-                            var pDes = new ParameterDescriptor()
-                            {
-                                Parameter = p,
-                                Name = p.Name,
-                                Index = p.Position,
-                                Type = GetTypeName(p.ParameterType)
-                            };
-                            RegisterServiceDescriptorType(descriptor, p.ParameterType);
-                            mDesc.Parameters[i] = pDes;
-                        }
-                        mDesc.Id = GetMethodId(descriptor, mDesc);
-                        descriptor.Methods.Add(mDesc.Id, mDesc);
-                    }
+                var pars = mInfo.GetParameters();
+                mDesc.Parameters = new ParameterDescriptor[pars.Length];
+                for (var i = 0; i < pars.Length; i++)
+                {
+                    var p = pars[i];
+                    var pDes = new ParameterDescriptor()
+                    {
+                        Parameter = p,
+                        Name = p.Name,
+                        Index = p.Position,
+                        Type = GetTypeName(p.ParameterType)
+                    };
+                    RegisterServiceDescriptorType(descriptor, p.ParameterType);
+                    mDesc.Parameters[i] = pDes;
                 }
+                mDesc.Id = GetMethodId(descriptor, mDesc);
+                descriptor.Methods.Add(mDesc.Id, mDesc);
             }
 
             var eventsInfo = serviceType.GetRuntimeEvents();
             foreach (var eInfo in eventsInfo)
             {
-                if (!eInfo.IsSpecialName)
-                {
-                    var isRPCEvent = eInfo.IsDefined(typeof(RPCEventAttribute)) || isInterface;
-                    if (isRPCEvent)
-                    {
-                        var name = eInfo.Name;
-                        var eventHandler = GetTypeName(eInfo.EventHandlerType);
-                        RegisterServiceDescriptorType(descriptor, eInfo.EventHandlerType);
-                        descriptor.Events.Add(name, new EventDescriptor { Name = name, Type = eventHandler, Event = eInfo });
-                    }
-                }
+                if (eInfo.IsSpecialName) continue;
+                var isRpcEvent = eInfo.IsDefined(typeof(RPCEventAttribute)) || isInterface;
+                if (!isRpcEvent) continue;
+                var name = eInfo.Name;
+                var eventHandler = GetTypeName(eInfo.EventHandlerType);
+                RegisterServiceDescriptorType(descriptor, eInfo.EventHandlerType);
+                descriptor.Events.Add(name, new EventDescriptor { Name = name, Type = eventHandler, Event = eInfo });
             }
             return descriptor;
         }

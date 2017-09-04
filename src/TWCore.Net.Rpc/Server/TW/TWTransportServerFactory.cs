@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server.Transports
 {

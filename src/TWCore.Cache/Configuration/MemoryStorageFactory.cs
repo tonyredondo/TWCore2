@@ -32,29 +32,29 @@ namespace TWCore.Cache.Configuration
         /// <returns>Storage</returns>
         protected override StorageBase CreateStorage(KeyValueCollection parameters)
         {
-            var Capacity = parameters["Capacity"].ParseTo(1024);
-            var Name = parameters["Name"];
+            var capacity = parameters["Capacity"].ParseTo(1024);
+            var name = parameters["Name"];
 
-            if (string.Equals(Name, "LRUStorage", StringComparison.OrdinalIgnoreCase))
-                return new LRUStorage(Capacity);
+            if (string.Equals(name, "LRUStorage", StringComparison.OrdinalIgnoreCase))
+                return new LRUStorage(capacity);
 
-            if (string.Equals(Name, "LRU2QSimpleStorage", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, "LRU2QSimpleStorage", StringComparison.OrdinalIgnoreCase))
             {
-                var ThresholdDiv = parameters["ThresholdDiv"].ParseTo(4);
-                return new LRU2QSimpleStorage(Capacity, Capacity / ThresholdDiv);
+                var thresholdDiv = parameters["ThresholdDiv"].ParseTo(4);
+                return new LRU2QSimpleStorage(capacity, capacity / thresholdDiv);
             }
 
-            if (string.Equals(Name, "LFUStorage", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, "LFUStorage", StringComparison.OrdinalIgnoreCase))
             {
-                var AgePolicy = parameters["AgePolicy"].ParseTo(1000);
-                return new LFUStorage(Capacity, AgePolicy);
+                var agePolicy = parameters["AgePolicy"].ParseTo(1000);
+                return new LFUStorage(capacity, agePolicy);
             }
 
-            if (string.Equals(Name, "LRU2QStorage", StringComparison.OrdinalIgnoreCase))
+            if (string.Equals(name, "LRU2QStorage", StringComparison.OrdinalIgnoreCase))
             {
-                var KInDiv = parameters["KInDiv"].ParseTo(4);
-                var KOutDiv = parameters["KOutDiv"].ParseTo(2);
-                return new LRU2QStorage(Capacity, Capacity / KInDiv, Capacity / KOutDiv);
+                var kInDiv = parameters["KInDiv"].ParseTo(4);
+                var kOutDiv = parameters["KOutDiv"].ParseTo(2);
+                return new LRU2QStorage(capacity, capacity / kInDiv, capacity / kOutDiv);
             }
 
             return null;

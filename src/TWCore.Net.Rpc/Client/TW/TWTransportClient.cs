@@ -540,8 +540,8 @@ namespace TWCore.Net.RPC.Client.Transports
             public string _host;
             public int _port;
             public string _hub;
-			public int _receiveBufferSize = 16384;
-			public int _sendBufferSize = 16384;
+			public int _receiveBufferSize;
+			public int _sendBufferSize;
             public RPCTransportCounters _counters;
             public Guid SessionId { get; private set; }
             public bool IsOnSession { get; private set; }
@@ -1079,13 +1079,6 @@ namespace TWCore.Net.RPC.Client.Transports
             #endregion
 
             #region Private Enums
-            enum ConnectionStatus : byte
-            {
-                Disconnected = 0x00,
-                Disconnecting = 0x10,
-                Connecting = 0x20,
-                Connected = 0x30,
-            }
             enum TargetConnectionStatus : byte
             {
                 Disconnected = 0x00,

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable MemberHidesStaticFromOuterClass
 
 namespace TWCore.Numerics
 {

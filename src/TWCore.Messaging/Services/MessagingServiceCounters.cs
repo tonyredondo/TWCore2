@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TWCore.Diagnostics.Status;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Services
 {

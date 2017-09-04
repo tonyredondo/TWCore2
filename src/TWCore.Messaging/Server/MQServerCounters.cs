@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Messaging.Server
 {

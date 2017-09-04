@@ -21,6 +21,7 @@ using System.IO.Compression;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.IO;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Net.HttpServer
 {

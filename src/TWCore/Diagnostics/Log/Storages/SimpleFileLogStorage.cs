@@ -56,7 +56,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// Maximun length in bytes for a single file. Default value is 4Mb
         /// </summary>
-        public long MaxLength { get; private set; } = 4194304L;
+        public long MaxLength { get; private set; }
         #endregion
 
         #region .ctor

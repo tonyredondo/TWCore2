@@ -26,6 +26,7 @@ using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using TWCore.Messaging.RawClient;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Messaging.RabbitMQ
 {

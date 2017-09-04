@@ -28,6 +28,7 @@ using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using System.Text;
 using System.Threading.Tasks;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Messaging.NSQ
 {

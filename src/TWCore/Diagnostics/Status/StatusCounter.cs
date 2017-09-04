@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Diagnostics.Status
 {
@@ -186,7 +187,6 @@ namespace TWCore.Diagnostics.Status
 
         class ItemInterval<T>
         {
-            IComparer<T> _comparer;
             TimeSpan _sinceSlideTime;
             ConcurrentQueue<ItemValue<T>> _queue;
             Func<ItemValue<T>, decimal> _funcToAverage;
@@ -208,7 +208,6 @@ namespace TWCore.Diagnostics.Status
             public ItemInterval(TimeSpan sinceSlideTime, Func<ItemValue<T>, decimal> funcToAverage, IComparer<T> comparer)
             {
                 _sinceSlideTime = sinceSlideTime;
-                _comparer = comparer;
                 _funcToAverage = funcToAverage;
                 _queue = new ConcurrentQueue<ItemValue<T>>();
                 tokenSource = new CancellationTokenSource();
@@ -257,39 +256,37 @@ namespace TWCore.Diagnostics.Status
                 var now = Core.Now;
                 while (true)
                 {
-                    if (!_queue.TryPeek(out var _value))
+                    if (!_queue.TryPeek(out var value))
                         break;
-                    if (now - _value.ValueDate >= _sinceSlideTime)
+                    if (now - value.ValueDate >= _sinceSlideTime)
                     {
-                        _queue.TryDequeue(out _value);
+                        _queue.TryDequeue(out value);
                         dirty = true;
                     }
                     else
                         break;
                 }
-                if (dirty)
+                if (!dirty) return;
+                AverageValue = _queue.Count > 0 ? Math.Round(_queue.Average(_funcToAverage), 2) : (decimal?)null;
+                StandardDeviation = _queue.Count > 0 ? Math.Round(_queue.GetStdDev(i => (double)_funcToAverage(i)), 2) : (double?)null;
+                var qArray = _queue.ToArray();
+                CallsQuantity = qArray.Length;
+                var sorted = qArray.Select((i, idx) => Tuple.Create(_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
+                LowestValue = sorted.FirstOrDefault()?.Item2;
+                HighestValue = sorted.LastOrDefault()?.Item2;
+                if (Percentils?.Count > 0 && sorted.Length > 0)
                 {
-                    AverageValue = _queue.Count > 0 ? Math.Round(_queue.Average(_funcToAverage), 2) : (decimal?)null;
-                    StandardDeviation = _queue.Count > 0 ? Math.Round(_queue.GetStdDev(i => (double)_funcToAverage(i)), 2) : (double?)null;
-                    var qArray = _queue.ToArray();
-                    CallsQuantity = qArray.Length;
-                    var sorted = qArray.Select((i, idx) => Tuple.Create(_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
-                    LowestValue = sorted.FirstOrDefault()?.Item2;
-                    HighestValue = sorted.LastOrDefault()?.Item2;
-                    if (Percentils?.Count > 0 && sorted.Length > 0)
+                    var posIndexes = sorted.Length - 1;
+                    foreach (var percentil in Percentils)
                     {
-                        var posIndexes = sorted.Length - 1;
-                        foreach (var percentil in Percentils)
-                        {
-                            var idx = percentil.Percentil * posIndexes;
-                            var minIdx = posIndexes - (int)idx;
-                            var maxIdx = (int)Math.Ceiling(idx);
-                            percentil.Max = sorted[maxIdx].Item1;
-                            percentil.Min = sorted[minIdx].Item1;
-                        }
+                        var idx = percentil.Percentil * posIndexes;
+                        var minIdx = posIndexes - (int)idx;
+                        var maxIdx = (int)Math.Ceiling(idx);
+                        percentil.Max = sorted[maxIdx].Item1;
+                        percentil.Min = sorted[minIdx].Item1;
                     }
-                    dirty = false;
                 }
+                dirty = false;
             }
         }
         class ItemValue<T>

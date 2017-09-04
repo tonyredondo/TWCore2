@@ -40,8 +40,9 @@ namespace TWCore.IO
         static int _poolCount;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         static int _maxLength = 255;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        bool _canWrite = true;
+
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
+        private bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         int _length;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]

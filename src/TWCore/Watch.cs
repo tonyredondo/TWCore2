@@ -269,17 +269,15 @@ namespace TWCore
                 public int Id;
                 public double GlobalTicks;
                 public double LastTapTicks;
-                public long CurrentTicks;
                 public string Message;
                 public int Type;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, double globalTicks, double lastTapTicks, long currentTicks, string message, int type)
+                public LogStatItem(int id, double globalTicks, double lastTapTicks, string message, int type)
                 {
                     Id = id;
                     GlobalTicks = globalTicks;
                     LastTapTicks = lastTapTicks;
-                    CurrentTicks = currentTicks;
                     Message = message;
                     Type = type;
                 }
@@ -337,7 +335,7 @@ namespace TWCore
                 if (Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, currentTicks, message, 1));
+                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 1));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -353,7 +351,7 @@ namespace TWCore
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, currentTicks, message, 0));
+                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 0));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -369,7 +367,7 @@ namespace TWCore
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, currentTicks, message, 2));
+                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 2));
                 }
                 _ticksTimestamp = currentTicks;
             }

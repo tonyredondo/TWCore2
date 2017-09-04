@@ -174,6 +174,7 @@ namespace TWCore.Cache.Storages.IO
             #region Fields
             CancellationTokenSource _tokenSource;
             CancellationToken _token;
+            // ReSharper disable once NotAccessedField.Local
             Task _loadTask;
             readonly object _pendingLock = new object();
             readonly object _metasLock = new object();

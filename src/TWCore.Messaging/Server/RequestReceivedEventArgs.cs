@@ -53,11 +53,11 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Gets if the response is going to be sent.
         /// </summary>
-        public bool SendResponse { get; private set; } = true;
+        public bool SendResponse { get; private set; }
         /// <summary>
         /// Gets the timeout in seconds of the sender to wait for the response
         /// </summary>
-        public int ProcessResponseTimeoutInSeconds { get; private set; } = -1;
+        public int ProcessResponseTimeoutInSeconds { get; private set; }
         /// <summary>
         /// Gets the Cancellation Token when the time to process a response has been reached.
         /// </summary>

@@ -43,6 +43,7 @@ namespace TWCore.Collections
         private List<T> _addedItemsRebuilding = new List<T>();
         private List<T> _removedItemsRebuilding = new List<T>();
         private IComparer<T> _rangeComparer;
+        // ReSharper disable once NotAccessedField.Local
         private Task _rebuildTask;
         private CancellationTokenSource _rebuildTaskCancelSource;
         private bool _isRebuilding;

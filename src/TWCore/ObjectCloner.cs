@@ -23,6 +23,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable UnusedMember.Local
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore
 {

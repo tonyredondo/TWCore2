@@ -155,6 +155,7 @@ namespace TWCore.Cache.Client
 				for(var i = 0; i < poolEnabled.Length; i++)
 				{
 					var kList = poolEnabled[i].Storage.GetKeys();
+				    if (kList == null) continue;
 					for(var j = 0; j < kList.Length; j++)
 						hKeys.Add(kList[j]);
 				}

@@ -298,6 +298,16 @@ namespace TWCore
 			var wait = new ManualResetEventSlim(false);
 			var continuation = task.ContinueWith(_ =>
 			{
+				if (_.Exception != null)
+				{
+					var ex = _.Exception;
+					if (ex.InnerExceptions.Count == 1)
+					{
+						Core.Log.Write(ex.InnerExceptions[0]);
+						ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+					}
+					Core.Log.Write(ex);
+				}
 				wait.Set();
 				return _.Result;
 			});
@@ -314,6 +324,16 @@ namespace TWCore
 			var wait = new ManualResetEventSlim(false);
             task.ContinueWith(_ =>
             {
+	            if (_.Exception != null)
+	            {
+		            var ex = _.Exception;
+		            if (ex.InnerExceptions.Count == 1)
+		            {
+			            Core.Log.Write(ex.InnerExceptions[0]);
+			            ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+		            }
+		            Core.Log.Write(ex);
+	            }
 	            wait.Set();
             });
             wait.Wait();

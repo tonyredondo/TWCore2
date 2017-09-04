@@ -30,26 +30,33 @@ namespace TWCore.Tests
 				var cacheClient = await CacheClientProxy.GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
-                string[] keys;
-                for (var i = 0; i < 10; i++)
-                    keys = cachePool.GetKeys();
+	            try
+	            {
+		            string[] keys;
+		            for (var i = 0; i < 15; i++)
+			            keys = cachePool.GetKeys();
 
-                Console.ReadLine();
+		            Console.ReadLine();
 
-                StorageItem value;
-                for (var i = 0; i < 100; i++)
-                {
-                    string key = "test-" + i;
-                    value = cachePool.Get(key);
-                    cachePool.Set(key, "bla bla bla bla bla");
-                }
-				Console.ReadLine();
-				for (var i = 0; i < 100; i++)
-				{
-					string key = "test-" + i;
-					value = cachePool.Get(key);
-					cachePool.Set(key, "bla bla bla bla bla");
-				}
+		            StorageItem value;
+		            for (var i = 0; i < 100; i++)
+		            {
+			            string key = "test-" + i;
+			            value = cachePool.Get(key);
+			            cachePool.Set(key, "bla bla bla bla bla");
+		            }
+		            Console.ReadLine();
+		            for (var i = 0; i < 100; i++)
+		            {
+			            string key = "test-" + i;
+			            value = cachePool.Get(key);
+			            cachePool.Set(key, "bla bla bla bla bla");
+		            }
+	            }
+	            catch (Exception ex)
+	            {
+		            Core.Log.Write(ex);
+	            }
             }
         }
 

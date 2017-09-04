@@ -19,6 +19,7 @@ using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Serialization;
+// ReSharper disable ValueParameterNotUsed
 
 namespace TWCore.Messaging
 {

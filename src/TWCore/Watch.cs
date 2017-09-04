@@ -217,7 +217,7 @@ namespace TWCore
                         break;
                     case 1:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
-                        if (item.LastTapTicks != item.GlobalTicks)
+                        if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.0000001)
                         {
                             gTime = (item.GlobalTicks / _frequency) * 1000;
                             Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "  [{0:00}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
@@ -230,7 +230,7 @@ namespace TWCore
                     case 2:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         gTime = (item.GlobalTicks / _frequency) * 1000;
-                        if (cTime != gTime)
+                        if (Math.Abs(cTime - gTime) > 0.0000001)
                             Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
                         else
                             Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Total Time = {1:0.0000}ms] {2}", item.Id, gTime, item.Message);

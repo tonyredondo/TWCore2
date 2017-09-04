@@ -61,9 +61,9 @@ namespace TWCore.Numerics
         /// <param name="sourceCollection">Source collection</param>
         public LexicalPermutation(IEnumerable<T> sourceCollection)
         {
-            if (sourceCollection.Count() == 0) throw new ArgumentException("Source collection cannot contain 0 elements.");
             // NB: This conversion to a list also creates a orderring on the input collection
             sourceList = sourceCollection.ToList();
+            if (sourceList.Count == 0) throw new ArgumentException("Source collection cannot contain 0 elements.");
             // Pre-allocate memory requirements to avoid garbage collector
             currentFactorialNumber = new int[sourceList.Count];
             currentFactorialElements = new bool[sourceList.Count];
@@ -82,8 +82,8 @@ namespace TWCore.Numerics
         /// <returns>Permutation enumerations</returns>
         public IEnumerable<List<T>> GetPermutationEnumerator()
         {
-            long nPermutations = GetFactorial(sourceList.Count);
-            for (long i = 0; i < nPermutations; i++)
+            var nPerm = GetFactorial(sourceList.Count);
+            for (long i = 0; i < nPerm; i++)
             {
                 SetCurrentFactorialNumber(i);
                 // currentFactorialNumber must now contain Lehmer code ... convert back to elements from source collection

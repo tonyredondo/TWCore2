@@ -414,17 +414,17 @@ namespace TWCore
 		/// <returns>IEnumerable with elements merged</returns>
 		public static IEnumerable<T> Merge<T, TKey>(this IEnumerable<T> enumerable, Func<T, TKey> keySelector, Func<IEnumerable<T>, T> mergeFunction)
 		{
-			return enumerable != null ? merge(enumerable, keySelector, mergeFunction) : null;
+			return enumerable != null ? InnerMerge(enumerable.ToArray(), keySelector, mergeFunction) : null;
 
-			IEnumerable<T> merge(IEnumerable<T> _enumerable, Func<T, TKey> _keySelector, Func<IEnumerable<T>, T> _mergeFunction)
+			IEnumerable<T> InnerMerge(T[] array, Func<T, TKey> mKeySelector, Func<IEnumerable<T>, T> mMergeFunction)
 			{
-				var source = _enumerable;
-				foreach (var item in _enumerable)
+				var source = array;
+				foreach (var item in array)
 				{
-					var key = _keySelector(item);
+					var key = mKeySelector(item);
 					var similarItems = source.Where(i => !object.ReferenceEquals(item, i) && object.Equals(keySelector(i), key)).ToList();
-					T nItem = similarItems.Count > 1 ? _mergeFunction(similarItems) : item;
-					source = source.Where(s => !similarItems.Contains(s));
+					var nItem = similarItems.Count > 1 ? mMergeFunction(similarItems) : item;
+					source = source.Where(s => !similarItems.Contains(s)).ToArray();
 					yield return nItem;
 				}
 			}
@@ -453,8 +453,9 @@ namespace TWCore
 		{
 			Ensure.ArgumentNotNull(first);
 			Ensure.ArgumentNotNull(second);
-			var secondCount = second.Distinct().Count();
-			var intersectCount = second.Intersect(first).Distinct().Count();
+			var secondArray = second as T[] ?? second.ToArray();
+			var secondCount = secondArray.Distinct().Count();
+			var intersectCount = secondArray.Intersect(first).Distinct().Count();
 			return intersectCount == secondCount;
 		}
 
@@ -471,9 +472,11 @@ namespace TWCore
 		{
 			Ensure.ArgumentNotNull(first);
 			Ensure.ArgumentNotNull(second);
-			var firstCount = first.Distinct().Count();
-			var secondCount = second.Distinct().Count();
-			var intersectCount = second.Intersect(first).Distinct().Count();
+			var firstArray = first as T[] ?? first.ToArray();
+			var secondArray = second as T[] ?? second.ToArray();
+			var firstCount = firstArray.Distinct().Count();
+			var secondCount = secondArray.Distinct().Count();
+			var intersectCount = secondArray.Intersect(firstArray).Distinct().Count();
 			return (intersectCount < firstCount) && (intersectCount == secondCount);
 		}
 
@@ -517,9 +520,11 @@ namespace TWCore
 		public static IEnumerable<TItem> Combine<TItem, TKey>(this IEnumerable<TItem> lastEnumerable, IEnumerable<TItem> initialEnumerable, Func<TItem, TKey> keySelector, Func<TItem, TItem, TItem> finalItemFunc)
 		{
 			var lst = new List<TItem>(initialEnumerable);
-			if (lastEnumerable?.Any() == true)
+			if (lastEnumerable == null) return lst;
+			var lastArray = lastEnumerable as TItem[] ?? lastEnumerable.ToArray();
+			if (lastArray.Any())
 			{
-				lastEnumerable.Each(item =>
+				lastArray.Each(item =>
 				{
 					var keyValue = keySelector(item);
 					var oItem = lst.FirstOrDefault(o => object.Equals(keyValue, keySelector(o)));
@@ -668,33 +673,31 @@ namespace TWCore
 		/// <returns>IEnumerable of IEnumerable with all combinations</returns>
 		public static IEnumerable<IEnumerable<T>> GetCombination<T>(this IEnumerable<IEnumerable<T>> enumerable)
 		{
-			var singCol = enumerable?.FirstOrDefault();
-			if (singCol != null)
+			if (enumerable == null) yield break;
+			var enumerableArray = enumerable as IEnumerable<T>[] ?? enumerable.ToArray();
+			var singCol = enumerableArray.FirstOrDefault();
+			if (singCol == null) yield break;
+			foreach (var item in singCol)
 			{
-				foreach (var item in singCol)
+				var innerCol = enumerableArray.Skip(1).ToList();
+				if (innerCol.Any())
 				{
-					var innerCol = enumerable?.Skip(1).ToList();
-					if (innerCol.Any())
+					var innerCombination = innerCol.GetCombination();
+					if (innerCombination == null) continue;
+					foreach (var combination in innerCombination)
 					{
-						var innerCombination = innerCol.GetCombination();
-						if (innerCombination != null)
-						{
-							foreach (var combination in innerCombination)
-							{
-								var tComb = new List<T>(combination);
-								tComb.Insert(0, item);
-								yield return tComb;
-							}
-						}
-					}
-					else
-					{
-						var tComb = new List<T>
-						{
-							item
-						};
+						var tComb = new List<T>(combination);
+						tComb.Insert(0, item);
 						yield return tComb;
 					}
+				}
+				else
+				{
+					var tComb = new List<T>
+					{
+						item
+					};
+					yield return tComb;
 				}
 			}
 		}
@@ -708,21 +711,19 @@ namespace TWCore
 			var response = new List<string>();
 			var coll = enumerable?.Select(item => item.ToArray()).ToArray();
 			var singCol = coll?.FirstOrDefault();
-			if (singCol != null)
+			if (singCol == null) return response;
+			for (var i = 0; i < singCol.Length; i++)
 			{
-				for (var i = 0; i < singCol.Length; i++)
+				var item = singCol[i];
+				if (coll.Length > 1)
 				{
-					var item = singCol[i];
-					if (coll.Length > 1)
-					{
-						var newCollection = coll.Skip(1).ToArray();
-						var newPermute = newCollection.GetCombination();
-						foreach (var perm in newPermute)
-							response.Add(item + perm);
-					}
-					else
-						response.Add(item);
+					var newCollection = coll.Skip(1).ToArray();
+					var newPermute = newCollection.GetCombination();
+					foreach (var perm in newPermute)
+						response.Add(item + perm);
 				}
+				else
+					response.Add(item);
 			}
 			return response;
 		}
@@ -738,15 +739,14 @@ namespace TWCore
 		/// <returns>Index of the element</returns>
 		public static int IndexOf<T>(this IEnumerable<T> enumerable, Predicate<T> predicate)
 		{
-			if (enumerable?.Any() == true && predicate != null)
-			{
-				var idx = 0;
-				foreach (var item in enumerable)
-					if (predicate(item))
-						return idx;
-					else
-						idx++;
-			}
+			if (enumerable == null) return -1;
+			if (predicate == null) return -1;
+			var idx = 0;
+			foreach (var item in enumerable)
+				if (predicate(item))
+					return idx;
+				else
+					idx++;
 			return -1;
 		}
 		/// <summary>
@@ -905,12 +905,13 @@ namespace TWCore
 		/// <returns>IEnumerable with all functions results</returns>
 		public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs)
 		{
-			var response = new T[funcs.Count()];
-			var _sync = new object();
-			Parallel.ForEach(funcs, (item, state, index) =>
+			var funcsArray = funcs as Func<T>[] ?? funcs.ToArray();
+			var response = new T[funcsArray.Length];
+			var sync = new object();
+			Parallel.ForEach(funcsArray, (item, state, index) =>
 			{
 				var res = item();
-				lock (_sync)
+				lock (sync)
 					response.SetValue(res, (int)index);
 			});
 			return response;
@@ -923,14 +924,15 @@ namespace TWCore
 		/// <returns>IEnumerable with all functions results</returns>
 		public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs, CancellationToken token)
 		{
-			var response = new T[funcs.Count()];
-			var _sync = new object();
-			Parallel.ForEach(funcs, new ParallelOptions { CancellationToken = token }, (item, state, index) =>
+			var funcsArray = funcs as Func<T>[] ?? funcs.ToArray();
+			var response = new T[funcsArray.Length];
+			var sync = new object();
+			Parallel.ForEach(funcsArray, new ParallelOptions { CancellationToken = token }, (item, state, index) =>
 			{
 				if (!token.IsCancellationRequested)
 				{
 					var res = item();
-					lock (_sync)
+					lock (sync)
 						response.SetValue(res, (int)index);
 				}
 				else if (!state.IsStopped)
@@ -1002,9 +1004,10 @@ namespace TWCore
 		/// <param name="col">IEnumerable instance</param>
 		public static void AddRange<TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, IEnumerable<TItem> col)
 		{
-			if (col?.Any() == true)
-				foreach (var i in col)
-					keyedCollection?.Add(i);
+			if (keyedCollection == null) return;
+			if (col == null) return;
+			foreach (var i in col)
+				keyedCollection.Add(i);
 		}
 		/// <summary>
 		/// If the collection contains the key, execute a Func to return a value, if fails then another func.

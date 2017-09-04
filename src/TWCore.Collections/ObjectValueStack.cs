@@ -94,22 +94,20 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
+                if (_stack.Count <= 0) return;
+                var oldPeek = _stack.Peek();
+                var nStack = _stack.Where(item => item.Sender != sender).ToArray();
+                if (nStack.Any())
+                    _stack = new Stack<ObjectValue<T>>(nStack.Reverse());
+
                 if (_stack.Count > 0)
                 {
-                    var oldPeek = _stack.Peek();
-                    var nStack = _stack.Where(item => item.Sender != sender);
-                    if (nStack != null && nStack.Count() > 0)
-                        _stack = new Stack<ObjectValue<T>>(nStack.Reverse());
-
-                    if (_stack.Count > 0)
-                    {
-                        var newPeek = _stack.Peek();
-                        if (newPeek != oldPeek)
-                            ChangeValueAction(newPeek.Sender, newPeek.Value);
-                    }
-                    else
-                        ChangeValueAction(this, DefaultValue);
+                    var newPeek = _stack.Peek();
+                    if (newPeek != oldPeek)
+                        ChangeValueAction(newPeek.Sender, newPeek.Value);
                 }
+                else
+                    ChangeValueAction(this, DefaultValue);
             }
         }
         /// <summary>

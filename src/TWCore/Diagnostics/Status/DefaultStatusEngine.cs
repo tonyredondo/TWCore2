@@ -257,11 +257,10 @@ namespace TWCore.Diagnostics.Status
                     lstObj.Add(item.Key);
                     foreach (var i in item)
                         Try.Do(() => i.Action(sItem.Values));
-                    var lstSType = lstObj.Where(o => o.GetType() == item.Key.GetType());
-                    if (lstSType.Skip(1).Any())
-                        sItem.Name = string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(item.Key));
-                    else
-                        sItem.Name = string.Format("{0}", sItem.Name);
+                    var lstSType = lstObj.Where(o => o.GetType() == item.Key.GetType()).ToArray();
+                    sItem.Name = lstSType.Skip(1).Any() ? 
+                        string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(item.Key)) : 
+                        string.Format("{0}", sItem.Name);
                     if (sItem.Values.SortValues)
                         sItem.Values.Sort((a, b) => string.Compare(a.Key, b.Key, StringComparison.Ordinal));
                     return sItem;
@@ -355,11 +354,10 @@ namespace TWCore.Diagnostics.Status
                     {
                         var sItem = new StatusItem() { Name = obj.Object.ToString(), Parent = false };
                         lstObj.Add(obj.Object);
-                        var lstSType = lstObj.Where(o => o.GetType() == obj.GetType());
-                        if (lstSType.Skip(1).Any())
-                            sItem.Name = string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(obj.Object));
-                        else
-                            sItem.Name = string.Format("{0}", sItem.Name);
+                        var lstSType = lstObj.Where(o => o.GetType() == obj.GetType()).ToArray();
+                        sItem.Name = lstSType.Skip(1).Any() ? 
+                            string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(obj.Object)) : 
+                            string.Format("{0}", sItem.Name);
                         statusList.Add(sItem);
                         FillHierarchy(remainingList, sItem.Childrens, obj.Childrens);
                     }

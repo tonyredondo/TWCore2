@@ -30,11 +30,11 @@ namespace TWCore
 	/// <summary>
 	/// Sub array for each delegate
 	/// </summary>
-	public delegate void SubArrayForEach<T, A1>(ref T value, ref A1 arg1);
+	public delegate void SubArrayForEach<T, TA1>(ref T value, ref TA1 arg1);
     /// <summary>
 	/// Sub array for each delegate
 	/// </summary>
-	public delegate void SubArrayForEach<T, A1, A2>(ref T value, ref A1 arg1, ref A2 arg2);
+	public delegate void SubArrayForEach<T, TA1, TA2>(ref T value, ref TA1 arg1, ref TA2 arg2);
 
     /// <summary>
     /// Provides an SubArray from an array without copying buffer.
@@ -49,12 +49,12 @@ namespace TWCore
         /// </summary>
         public static SubArray<T> Empty = new SubArray<T>();
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        T[] _array;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _offset;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _count;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
+        private readonly T[] _array;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
+        private readonly int _offset;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
+        private readonly int _count;
 
         #region Properties
         /// <summary>

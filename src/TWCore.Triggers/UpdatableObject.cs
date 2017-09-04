@@ -28,7 +28,7 @@ namespace TWCore.Triggers
 	/// <typeparam name="T">Type of instance</typeparam>
 	public class UpdatableObject<T> : IDisposable where T : class
     {
-        readonly static object _parentSync = new object();
+        private static readonly object ParentSync = new object();
         readonly object localSync = new object();
         Task triggerTask;
         CancellationTokenSource tokenSource;
@@ -80,7 +80,7 @@ namespace TWCore.Triggers
         {
             Triggers = new List<TriggerBase>();
             if (useStaticLock)
-                localSync = _parentSync;
+                localSync = ParentSync;
             MinTimeOfInstance = TimeSpan.FromSeconds(1);
 
             Core.Status.Attach(collection =>
@@ -159,7 +159,7 @@ namespace TWCore.Triggers
         /// </summary>
         public void Unload()
         {
-            lock (_parentSync)
+            lock (ParentSync)
             {
                 foreach (var trigger in Triggers)
                 {

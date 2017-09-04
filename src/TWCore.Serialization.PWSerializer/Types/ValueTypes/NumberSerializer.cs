@@ -205,7 +205,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 case DataType.Double:
                     #region Double Type
                     var v2 = Factory.Converter.ToDouble(value);
-                    if (v2 == default(double))
+                    if (Math.Abs(v2 - default(double)) < 0.0000000000001)
                     {
                         writer.Write(DataType.DoubleDefault);
                         return;
@@ -228,7 +228,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 case DataType.Float:
                     #region Float Type
                     var v3 = Factory.Converter.ToFloat(value);
-                    if (v3 == default(float))
+                    if (Math.Abs(v3 - default(float)) < 0.0000000000001)
                     {
                         writer.Write(DataType.FloatDefault);
                         return;

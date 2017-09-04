@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable NonReadonlyMemberInGetHashCode
 
 namespace TWCore.Collections
 {
@@ -87,7 +88,7 @@ namespace TWCore.Collections
         /// <returns>Hash code</returns>
         public override int GetHashCode()
         {
-            int hash = 23;
+            var hash = 23;
             hash = hash * 37 + From.GetHashCode();
             hash = hash * 37 + To.GetHashCode();
             return hash;

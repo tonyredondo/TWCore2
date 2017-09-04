@@ -16,6 +16,7 @@ limitations under the License.
 
 #pragma warning disable 1591
 
+using System;
 using System.Collections.Generic;
 
 namespace TWCore.Numerics
@@ -107,7 +108,7 @@ namespace TWCore.Numerics
                 // Test for singular matrix.
                 //----------------------------------------------------------
 
-                if (temp == 0.0)
+                if (Math.Abs(temp) <= 0.0)
                 {
                     return LinearEquationSolverStatus.Singular;
                 }
@@ -161,7 +162,7 @@ namespace TWCore.Numerics
                 // Test for matrix which is singular to working precision.
                 //----------------------------------------------------------
 
-                if (maximumValue == 0.0)
+                if (Math.Abs(maximumValue) <= 0.0)
                 {
                     return LinearEquationSolverStatus.IllConditioned;
                 }

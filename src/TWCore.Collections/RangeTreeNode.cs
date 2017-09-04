@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TWCore.Collections
 {
@@ -60,7 +61,8 @@ namespace TWCore.Collections
 
             // first, find the median
             var endPoints = new List<TKey>();
-            foreach (var o in items)
+            var itemsArray = items as T[] ?? items.ToArray();
+            foreach (var o in itemsArray)
             {
                 var range = o.Range;
                 endPoints.Add(range.From);
@@ -79,7 +81,7 @@ namespace TWCore.Collections
             // if the range of an item is completely left of the center, add it to the left items
             // if it is on the right of the center, add it to the right items
             // otherwise (range overlaps the center), add the item to this node's items
-            foreach (var o in items)
+            foreach (var o in itemsArray)
             {
                 var range = o.Range;
 

@@ -26,6 +26,7 @@ using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Data.Schema;
 using TWCore.Data.Schema.Generator;
+// ReSharper disable PossibleMultipleEnumeration
 
 namespace TWCore.Data
 {
@@ -312,7 +313,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
                 else
                 {
@@ -509,7 +510,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
                 else
                 {
@@ -1410,7 +1411,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
                 else
                 {
@@ -1555,7 +1556,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod);
                 else
                 {
@@ -2050,7 +2051,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                 {
                     var rs1 = new ResultSet<T1>(fillMethod1);
                     var rs2 = new ResultSet<T2>(fillMethod2);
@@ -2212,7 +2213,7 @@ namespace TWCore.Data
             try
             {
                 Core.Log.LibVerbose("Selecting two resultsets elements from the data source using: {0}", nameOrQuery);
-                if (CacheTimeout == TimeSpan.MinValue || CacheTimeout.TotalMilliseconds == 0)
+                if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                 {
                     var rs1 = new ResultSet<T1>(fillMethod1);
                     var rs2 = new ResultSet<T2>(fillMethod2);

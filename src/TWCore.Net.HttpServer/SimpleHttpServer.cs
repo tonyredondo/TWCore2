@@ -218,42 +218,38 @@ namespace TWCore.Net.HttpServer
                             }
 
                             var response = m.Invoke(ctl, ivkParams.ToArray());
-                            if (response != null)
-                            {
-                                var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                                if (serializer == null && response is string)
-                                    ctl.Context.Response.Write((string)response);
-                                else if (serializer == null && response is ValueType)
-                                    ctl.Context.Response.Write(response.ToString());
-                                else if (serializer == null)
-                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                                if (serializer != null)
-                                    Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
-                                    {
-                                        var sEx = new SerializableException(ex);
-                                        serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                    });
-                            }
+                            if (response == null) return;
+                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                            if (serializer == null && response is string)
+                                ctl.Context.Response.Write((string)response);
+                            else if (serializer == null && response is ValueType)
+                                ctl.Context.Response.Write(response.ToString());
+                            else if (serializer == null)
+                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            if (serializer != null)
+                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                {
+                                    var sEx = new SerializableException(ex);
+                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                                });
                         }
                         else
                         {
-                            var response = m.Invoke(ctl, new Type[0]);
-                            if (response != null)
-                            {
-                                var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                                if (serializer == null && response is string)
-                                    ctl.Context.Response.Write((string)response);
-                                else if (serializer == null && response is ValueType)
-                                    ctl.Context.Response.Write(response.ToString());
-                                else if (serializer == null)
-                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                                if (serializer != null)
-                                    Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
-                                    {
-                                        var sEx = new SerializableException(ex);
-                                        serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                    });
-                            }
+                            var response = m.Invoke(ctl, new object[0]);
+                            if (response == null) return;
+                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                            if (serializer == null && response is string)
+                                ctl.Context.Response.Write((string)response);
+                            else if (serializer == null && response is ValueType)
+                                ctl.Context.Response.Write(response.ToString());
+                            else if (serializer == null)
+                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            if (serializer != null)
+                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
+                                {
+                                    var sEx = new SerializableException(ex);
+                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                                });
                         }
                     }));
                 }
@@ -276,70 +272,64 @@ namespace TWCore.Net.HttpServer
                 if (action == null)
                     action = url.Substring(1);
                 var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name.ToLowerInvariant() == action.ToLowerInvariant());
-                if (ctlMethod != null)
+                if (ctlMethod == null) return;
+                var mParams = ctlMethod.GetParameters();
+                if (mParams.Length > 0)
                 {
-                    var mParams = ctlMethod.GetParameters();
-                    if (mParams.Length > 0)
+                    ParameterInfo postObjectParam = null;
+                    object postObject = null;
+                    var ivkParams = new List<object>();
+                    if (context.Request.HasPostObject)
                     {
-                        ParameterInfo postObjectParam = null;
-                        object postObject = null;
-                        var ivkParams = new List<object>();
-                        if (context.Request.HasPostObject)
-                        {
-                            postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
-                            if (postObjectParam == null && mParams.Length == 1) postObjectParam = mParams[0];
-                            if (postObjectParam != null)
-                                postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
-                        }
-                        var dictionary = context.Route.GetRouteParameters(context.Request.Url.AbsolutePath);
-                        foreach (var mParam in mParams)
-                        {
-                            if (mParam == postObjectParam)
-                                ivkParams.Add(postObject);
-                            else if (dictionary.ContainsKey(mParam.Name))
-                                ivkParams.Add(dictionary[mParam.Name]);
-                            else
-                                ivkParams.Add(null);
-                        }
+                        postObjectParam = mParams.FirstOrDefault(p => p.GetCustomAttribute(typeof(PostObjectAttribute)) != null);
+                        if (postObjectParam == null && mParams.Length == 1) postObjectParam = mParams[0];
+                        if (postObjectParam != null)
+                            postObject = Try.Do(() => context.Request.GetPostObject(postObjectParam.ParameterType));
+                    }
+                    var dictionary = context.Route.GetRouteParameters(context.Request.Url.AbsolutePath);
+                    foreach (var mParam in mParams)
+                    {
+                        if (mParam == postObjectParam)
+                            ivkParams.Add(postObject);
+                        else if (dictionary.ContainsKey(mParam.Name))
+                            ivkParams.Add(dictionary[mParam.Name]);
+                        else
+                            ivkParams.Add(null);
+                    }
 
-                        var response = ctlMethod.Invoke(ctl, ivkParams.ToArray());
-                        if (response != null)
+                    var response = ctlMethod.Invoke(ctl, ivkParams.ToArray());
+                    if (response == null) return;
+                    var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                    if (serializer == null && response is string)
+                        ctl.Context.Response.Write((string)response);
+                    else if (serializer == null && response is ValueType)
+                        ctl.Context.Response.Write(response.ToString());
+                    else if (serializer == null)
+                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                    if (serializer != null)
+                        Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                         {
-                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            if (serializer == null && response is string)
-                                ctl.Context.Response.Write((string)response);
-                            else if (serializer == null && response is ValueType)
-                                ctl.Context.Response.Write(response.ToString());
-                            else if (serializer == null)
-                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                            if (serializer != null)
-                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
-                                {
-                                    var sEx = new SerializableException(ex);
-                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                });
-                        }
-                    }
-                    else
-                    {
-                        var response = ctlMethod.Invoke(ctl, new Type[0]);
-                        if (response != null)
+                            var sEx = new SerializableException(ex);
+                            serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                        });
+                }
+                else
+                {
+                    var response = ctlMethod.Invoke(ctl, new object[0]);
+                    if (response == null) return;
+                    var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
+                    if (serializer == null && response is string)
+                        ctl.Context.Response.Write((string)response);
+                    else if (serializer == null && response is ValueType)
+                        ctl.Context.Response.Write(response.ToString());
+                    else if (serializer == null)
+                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                    if (serializer != null)
+                        Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                         {
-                            var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            if (serializer == null && response is string)
-                                ctl.Context.Response.Write((string)response);
-                            else if (serializer == null && response is ValueType)
-                                ctl.Context.Response.Write(response.ToString());
-                            else if (serializer == null)
-                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
-                            if (serializer != null)
-                                Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
-                                {
-                                    var sEx = new SerializableException(ex);
-                                    serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
-                                });
-                        }
-                    }
+                            var sEx = new SerializableException(ex);
+                            serializer.Serialize(sEx, sEx.GetType(), ctl.Context.Response.OutputStream);
+                        });
                 }
             });
         /// <summary>

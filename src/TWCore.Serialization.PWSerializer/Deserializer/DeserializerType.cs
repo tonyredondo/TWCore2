@@ -199,7 +199,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     tinfo.IsArray = valueType.IsArray;
 
                     //
-                    var ifaces = typeInfo.ImplementedInterfaces;
+                    var ifaces = typeInfo.ImplementedInterfaces.ToArray();
 
 
                     var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));

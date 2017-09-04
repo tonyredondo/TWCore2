@@ -112,11 +112,11 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<NodeClientResult> ProcessBatch(IEnumerable<object[]> argsCollection)
         {
-            var argCount = argsCollection.Count();
-            Core.Log.Debug("Processing batch of {0} elements", argCount);
-            var _cbag = new ConcurrentBag<NodeClientResult>();
-            Parallel.ForEach(argsCollection, new ParallelOptions { MaxDegreeOfParallelism = argCount }, args => _cbag.Add(Process(args)));
-            return _cbag;
+            var collection = argsCollection as object[][] ?? argsCollection.ToArray();
+            Core.Log.Debug("Processing batch of {0} elements", collection.Length);
+            var cbag = new ConcurrentBag<NodeClientResult>();
+            Parallel.ForEach(collection, new ParallelOptions { MaxDegreeOfParallelism = collection.Length }, args => cbag.Add(Process(args)));
+            return cbag;
         }
         #endregion
     }

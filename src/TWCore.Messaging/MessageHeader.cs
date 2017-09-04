@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Serialization;
+// ReSharper disable ValueParameterNotUsed
 
 namespace TWCore.Messaging
 {
@@ -62,7 +63,7 @@ namespace TWCore.Messaging
         /// Message Total Time
         /// </summary>
         [NonSerialize]
-        public TimeSpan TotalTime { get { return ApplicationReceivedTime - ApplicationSentDate; } }
+        public TimeSpan TotalTime => ApplicationReceivedTime - ApplicationSentDate;
         /// <summary>
         /// Aditional metadata
         /// </summary>

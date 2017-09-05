@@ -18,6 +18,9 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using TWCore.Collections;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Bot
 {

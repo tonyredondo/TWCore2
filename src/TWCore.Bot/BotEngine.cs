@@ -23,6 +23,7 @@ using TWCore.Collections;
 
 namespace TWCore.Bot
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default bot engine
     /// </summary>
@@ -40,26 +41,32 @@ namespace TWCore.Bot
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Bot transport
         /// </summary>
         public IBotTransport Transport { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Current chats
         /// </summary>
         public KeyStringDelegatedCollection<BotChat> Chats { get; } = new KeyStringDelegatedCollection<BotChat>(c => c.Id, false);
+        /// <inheritdoc />
         /// <summary>
         /// Current users
         /// </summary>
         public KeyStringDelegatedCollection<BotUser> Users { get; } = new KeyStringDelegatedCollection<BotUser>(c => c.Id, false);
+        /// <inheritdoc />
         /// <summary>
         /// Tracked chats
         /// </summary>
         public KeyStringDelegatedCollection<BotChat> TrackedChats { get; } = new KeyStringDelegatedCollection<BotChat>(c => c.Id, false);
+        /// <inheritdoc />
         /// <summary>
         /// Commands collection
         /// </summary>
         public BotCommandCollection Commands { get; } = new BotCommandCollection();
+        /// <inheritdoc />
         /// <summary>
         /// Get true if the transport is connected; otherwise, false.
         /// </summary>
@@ -81,6 +88,7 @@ namespace TWCore.Bot
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Track a chat
         /// </summary>
@@ -99,6 +107,7 @@ namespace TWCore.Bot
                 return true;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Untrack a chat
         /// </summary>
@@ -117,6 +126,7 @@ namespace TWCore.Bot
                 return true;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Untrack all chats
         /// </summary>
@@ -128,6 +138,7 @@ namespace TWCore.Bot
             OnTrackedChatsChanged?.Invoke(this, EventArgs.Empty);
             Core.Log.LibVerbose("All Chats UnTracked");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get if a chat is being tracked
         /// </summary>
@@ -137,9 +148,10 @@ namespace TWCore.Bot
         public bool IsChatTracked(BotChat chat)
         {
             lock (TrackedChats)
-                return chat != null ? TrackedChats.Contains(chat.Id): false;
+                return chat != null && TrackedChats.Contains(chat.Id);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Start the bot engine listener.
         /// </summary>
@@ -151,6 +163,7 @@ namespace TWCore.Bot
             await Transport.ConnectAsync().ConfigureAwait(false);
             Core.Log.LibVerbose("Started.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stop the bot engine listener
         /// </summary>
@@ -162,6 +175,7 @@ namespace TWCore.Bot
             await Transport.DisconnectAsync().ConfigureAwait(false);
             Core.Log.LibVerbose("Stopped.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a text message
         /// </summary>
@@ -177,6 +191,7 @@ namespace TWCore.Bot
             await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Message sent.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a text message to all tracked chats
         /// </summary>
@@ -192,6 +207,7 @@ namespace TWCore.Bot
 				await Transport.SendTextMessageAsync(chat, message, parseMode).ConfigureAwait(false);
             Core.Log.LibVerbose("Messages sent.");
         }
+		/// <inheritdoc />
 		/// <summary>
 		/// Send the typing action to the chat
 		/// </summary>
@@ -204,6 +220,7 @@ namespace TWCore.Bot
 			Core.Log.LibVerbose("Sending typing notification. ChatId = {0}", chat?.Id);
 			await Transport.SendTypingAsync(chat).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Send the typing action to all tracked chats
 		/// </summary>
@@ -216,6 +233,7 @@ namespace TWCore.Bot
 			foreach (var chat in TrackedChats)
 				await Transport.SendTypingAsync(chat).ConfigureAwait(false);
 		}
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message
         /// </summary>
@@ -230,6 +248,7 @@ namespace TWCore.Bot
             Core.Log.LibVerbose("Sending photo message. ChatId = {0}, FileName = {1}, Caption = {2}", chat?.Id, fileName, caption);
             await Transport.SendPhotoMessageAsync(chat, fileName, caption).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message
         /// </summary>
@@ -244,6 +263,7 @@ namespace TWCore.Bot
             Core.Log.LibVerbose("Sending photo message. ChatId = {0}, Caption = {1}", chat?.Id, caption);
             await Transport.SendPhotoMessageAsync(chat, fileStream, caption).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message to all tracked chats
         /// </summary>
@@ -258,6 +278,7 @@ namespace TWCore.Bot
 			foreach (var chat in TrackedChats)
                 await Transport.SendPhotoMessageAsync(chat, fileName, caption).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message to all tracked chats
         /// </summary>

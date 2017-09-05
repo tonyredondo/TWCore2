@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Bot
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection of bot commands
     /// </summary>

@@ -21,12 +21,13 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Async adapter for IStorage
     /// </summary>
     public class AsyncAdapter : IStorageAsync
     {
-        IStorage _storage;
+        private readonly IStorage _storage;
 
 		/// <summary>
 		/// Gets the Storage Type
@@ -35,44 +36,45 @@ namespace TWCore.Cache.Client
 		public StorageType Type => _storage.Type;
 
         #region AsyncDelegates
-        Func<string, Task<bool>> _existKeyAsync;
-        Func<Task<string[]>> _getKeysAsync;
 
-        Func<string, Task<DateTime?>> _getCreationDateAsync;
-        Func<string, Task<DateTime?>> _getExpirationDateAsync;
+        private readonly Func<string, Task<bool>> _existKeyAsync;
+        private readonly Func<Task<string[]>> _getKeysAsync;
 
-        Func<string, Task<StorageItemMeta>> _getMetaAsync;
-        Func<string, TimeSpan, Task<StorageItemMeta>> _getMetaAsync1;
-        Func<string, DateTime, Task<StorageItemMeta>> _getMetaAsync2;
-        Func<string[], Task<StorageItemMeta[]>> _getMetaByTagAsync;
-        Func<string[], bool, Task<StorageItemMeta[]>> _getMetaByTagAsync1;
+        private readonly Func<string, Task<DateTime?>> _getCreationDateAsync;
+        private readonly Func<string, Task<DateTime?>> _getExpirationDateAsync;
 
-        Func<string, Task<StorageItem>> _getAsync;
-        Func<string, TimeSpan, Task<StorageItem>> _getAsync1;
-        Func<string, DateTime, Task<StorageItem>> _getAsync2;
-        Func<string[], Task<StorageItem[]>> _getByTagAsync;
-        Func<string[], bool, Task<StorageItem[]>> _getByTagAsync1;
+        private readonly Func<string, Task<StorageItemMeta>> _getMetaAsync;
+        private readonly Func<string, TimeSpan, Task<StorageItemMeta>> _getMetaAsync1;
+        private readonly Func<string, DateTime, Task<StorageItemMeta>> _getMetaAsync2;
+        private readonly Func<string[], Task<StorageItemMeta[]>> _getMetaByTagAsync;
+        private readonly Func<string[], bool, Task<StorageItemMeta[]>> _getMetaByTagAsync1;
 
-        Func<StorageItem, Task<bool>> _setAsync;
-        Func<string, SerializedObject, Task<bool>> _setAsync1;
-        Func<string, SerializedObject, TimeSpan, Task<bool>> _setAsync2;
-        Func<string, SerializedObject, TimeSpan?, string[], Task<bool>> _setAsync3;
-        Func<string, SerializedObject, DateTime, Task<bool>> _setAsync4;
-        Func<string, SerializedObject, DateTime?, string[], Task<bool>> _setAsync5;
+        private readonly Func<string, Task<StorageItem>> _getAsync;
+        private readonly Func<string, TimeSpan, Task<StorageItem>> _getAsync1;
+        private readonly Func<string, DateTime, Task<StorageItem>> _getAsync2;
+        private readonly Func<string[], Task<StorageItem[]>> _getByTagAsync;
+        private readonly Func<string[], bool, Task<StorageItem[]>> _getByTagAsync1;
 
-        Func<string, SerializedObject, Task<bool>> _updateDataAsync;
-        Func<string, Task<bool>> _removeAsync;
-        Func<string[], Task<string[]>> _removeByTagAsync;
-        Func<string[], bool, Task<string[]>> _removeByTagAsync1;
+        private readonly Func<StorageItem, Task<bool>> _setAsync;
+        private readonly Func<string, SerializedObject, Task<bool>> _setAsync1;
+        private readonly Func<string, SerializedObject, TimeSpan, Task<bool>> _setAsync2;
+        private readonly Func<string, SerializedObject, TimeSpan?, string[], Task<bool>> _setAsync3;
+        private readonly Func<string, SerializedObject, DateTime, Task<bool>> _setAsync4;
+        private readonly Func<string, SerializedObject, DateTime?, string[], Task<bool>> _setAsync5;
 
-        Func<string, SerializedObject, Task<StorageItem>> _getOrSetAsync;
-        Func<string, SerializedObject, TimeSpan, Task<StorageItem>> _getOrSetAsync1;
-        Func<string, SerializedObject, TimeSpan?, string[], Task<StorageItem>> _getOrSetAsync2;
-        Func<string, SerializedObject, DateTime, Task<StorageItem>> _getOrSetAsync3;
-        Func<string, SerializedObject, DateTime?, string[], Task<StorageItem>> _getOrSetAsync4;
+        private readonly Func<string, SerializedObject, Task<bool>> _updateDataAsync;
+        private readonly Func<string, Task<bool>> _removeAsync;
+        private readonly Func<string[], Task<string[]>> _removeByTagAsync;
+        private readonly Func<string[], bool, Task<string[]>> _removeByTagAsync1;
 
-        Func<Task<bool>> _isEnabledAsync;
-        Func<Task<bool>> _isReadyAsync;
+        private readonly Func<string, SerializedObject, Task<StorageItem>> _getOrSetAsync;
+        private readonly Func<string, SerializedObject, TimeSpan, Task<StorageItem>> _getOrSetAsync1;
+        private readonly Func<string, SerializedObject, TimeSpan?, string[], Task<StorageItem>> _getOrSetAsync2;
+        private readonly Func<string, SerializedObject, DateTime, Task<StorageItem>> _getOrSetAsync3;
+        private readonly Func<string, SerializedObject, DateTime?, string[], Task<StorageItem>> _getOrSetAsync4;
+
+        private readonly Func<Task<bool>> _isEnabledAsync;
+        private readonly Func<Task<bool>> _isReadyAsync;
         #endregion
 
         #region .ctor
@@ -134,6 +136,7 @@ namespace TWCore.Cache.Client
         #region IStorageAsync 
 
         #region Exist Key / Get Keys
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -141,6 +144,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> ExistKeyAsync(string key) => await _existKeyAsync(key).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -150,6 +154,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get Dates
+        /// <inheritdoc />
         /// <summary>
         /// Gets the creation date for astorage item with the key specified.
         /// </summary>
@@ -157,6 +162,7 @@ namespace TWCore.Cache.Client
         /// <returns>DateTime with the creation date of the storage item, null if the key wasn't found in the storage</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<DateTime?> GetCreationDateAsync(string key) => await _getCreationDateAsync(key).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the expiration date for a storage item with the key specified.
         /// </summary>
@@ -167,6 +173,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get MetaData
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -174,6 +181,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key) => await _getMetaAsync(key).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -182,6 +190,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key, TimeSpan lastTime) => await _getMetaAsync1(key, lastTime).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -190,6 +199,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item metadata instance.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta> GetMetaAsync(string key, DateTime comparer) => await _getMetaAsync2(key, comparer).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -197,6 +207,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item metadata array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItemMeta[]> GetMetaByTagAsync(string[] tags) => await _getMetaByTagAsync(tags).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -208,6 +219,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get Data
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -215,6 +227,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key) => await _getAsync(key).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -223,6 +236,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key, TimeSpan lastTime) => await _getAsync1(key, lastTime).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -231,6 +245,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetAsync(string key, DateTime comparer) => await _getAsync2(key, comparer).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -238,6 +253,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem[]> GetByTagAsync(string[] tags) => await _getByTagAsync(tags).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -249,6 +265,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Set Data
+        /// <inheritdoc />
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
@@ -256,6 +273,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(StorageItem item) => await _setAsync(item).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -264,6 +282,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data) => await _setAsync1(key, data).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -273,6 +292,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, TimeSpan expirationDate) => await _setAsync2(key, data, expirationDate).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -283,6 +303,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags) => await _setAsync3(key, data, expirationDate, tags).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -292,6 +313,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> SetAsync(string key, SerializedObject data, DateTime expirationDate) => await _setAsync4(key, data, expirationDate).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -305,6 +327,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Update/Remove Data
+        /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -313,6 +336,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be updated; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> UpdateDataAsync(string key, SerializedObject data) => await _updateDataAsync(key, data).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Removes a StorageItem with the Key specified.
         /// </summary>
@@ -320,6 +344,7 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be removed; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> RemoveAsync(string key) => await _removeAsync(key).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -327,6 +352,7 @@ namespace TWCore.Cache.Client
         /// <returns>String array with the keys of the items removed.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<string[]> RemoveByTagAsync(string[] tags) => await _removeByTagAsync(tags).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -338,6 +364,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region GetOrSet
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -346,6 +373,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data) => await _getOrSetAsync(key, data).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -355,6 +383,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan expirationDate) => await _getOrSetAsync1(key, data, expirationDate).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -365,6 +394,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags) => await _getOrSetAsync2(key, data, expirationDate, tags).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -374,6 +404,7 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime expirationDate) => await _getOrSetAsync3(key, data, expirationDate).ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -386,12 +417,14 @@ namespace TWCore.Cache.Client
         public async Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => await _getOrSetAsync4(key, data, expirationDate, tags).ConfigureAwait(false);
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is enabled.
         /// </summary>
         /// <returns>true if the storage is enabled; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> IsEnabledAsync() => await _isEnabledAsync().ConfigureAwait(false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.
         /// </summary>

@@ -8,9 +8,9 @@ using TWCore.Services;
 
 namespace TWCore.Test.Core
 {
-    class Program
+    internal class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
             TWCore.Core.DebugMode = true;
@@ -39,8 +39,8 @@ namespace TWCore.Test.Core
             }
         }
 
-        
-        class TestService : SimpleServiceAsync
+
+        private class TestService : SimpleServiceAsync
         {
             protected override async Task OnActionAsync(CancellationToken token)
             {

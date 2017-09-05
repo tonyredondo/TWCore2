@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.PWSerializer
 {
@@ -25,20 +26,20 @@ namespace TWCore.Serialization.PWSerializer
     /// </summary>
     public class PWBinarySerializer : BinarySerializer
     {
-        static string[] _extensions = new string[] { ".pwbin" };
-        static string[] _mimeTypes = new string[] { SerializerMimeTypes.PWBinary };
-        static ReferencePool<PWSerializerCore> _pool = ReferencePool<PWSerializerCore>.Shared;
-        SerializerMode _mode = SerializerMode.Cached2048;
+        private static readonly string[] sExtensions = { ".pwbin" };
+        private static readonly string[] sMimeTypes = { SerializerMimeTypes.PWBinary };
+        private static readonly ReferencePool<PWSerializerCore> _pool = ReferencePool<PWSerializerCore>.Shared;
+        private SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions => _extensions;
+        public override string[] Extensions => sExtensions;
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes => _mimeTypes;
+        public override string[] MimeTypes => sMimeTypes;
         /// <summary>
         /// Serialization mode
         /// </summary>

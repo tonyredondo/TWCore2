@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Compression
 {

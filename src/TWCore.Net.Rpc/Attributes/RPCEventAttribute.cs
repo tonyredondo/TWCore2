@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Attributes
 {

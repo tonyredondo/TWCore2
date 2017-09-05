@@ -23,6 +23,7 @@ using TWCore.Messaging.Client;
 using TWCore.Messaging.RawClient;
 using TWCore.Messaging.RawServer;
 using TWCore.Messaging.Server;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
 {

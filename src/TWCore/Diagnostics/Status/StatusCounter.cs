@@ -30,7 +30,7 @@ namespace TWCore.Diagnostics.Status
     /// </summary>
     public class StatusCounter
     {
-        readonly ConcurrentDictionary<string, NumberItem> CounterValues = new ConcurrentDictionary<string, NumberItem>();
+        private readonly ConcurrentDictionary<string, NumberItem> _counterValues = new ConcurrentDictionary<string, NumberItem>();
 
         /// <summary>
         /// Status Counter Name
@@ -54,8 +54,8 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(string counterName, double value)
         {
-            var _value = CounterValues.GetOrAdd(counterName, _ => new NumberItem());
-            _value.Register(value);
+            var numberItem = _counterValues.GetOrAdd(counterName, _ => new NumberItem());
+            numberItem.Register(value);
         }
         /// <summary>
         /// Gets the Status Item with all calculations
@@ -65,7 +65,7 @@ namespace TWCore.Diagnostics.Status
         public StatusItem GetStatusItem()
         {
             var status = new StatusItem { Name = Name };
-            var counterValues = CounterValues.ToArray().OrderBy(k => k.Key);
+            var counterValues = _counterValues.ToArray().OrderBy(k => k.Key);
             foreach (var counter in counterValues)
                 status.Childrens.Add(counter.Value.GetStatusItem(counter.Key));
             return status;
@@ -185,14 +185,14 @@ namespace TWCore.Diagnostics.Status
             }
         }
 
-        class ItemInterval<T>
+        private class ItemInterval<T>
         {
-            TimeSpan _sinceSlideTime;
-            ConcurrentQueue<ItemValue<T>> _queue;
-            Func<ItemValue<T>, decimal> _funcToAverage;
-            CancellationTokenSource tokenSource;
-            Task tsk;
-            bool dirty;
+            private readonly TimeSpan _sinceSlideTime;
+            private readonly ConcurrentQueue<ItemValue<T>> _queue;
+            private readonly Func<ItemValue<T>, decimal> _funcToAverage;
+            private readonly CancellationTokenSource _tokenSource;
+            private Task _tsk;
+            private bool _dirty;
 
             public double CallsQuantity;
             public DateTime LastDate;
@@ -200,17 +200,15 @@ namespace TWCore.Diagnostics.Status
             public ItemValue<T> HighestValue;
             public decimal? AverageValue;
             public double? StandardDeviation;
-            public List<ItemPercentil> Percentils;
-
+            public readonly List<ItemPercentil> Percentils;
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ItemInterval(TimeSpan sinceSlideTime, Func<ItemValue<T>, decimal> funcToAverage) : this(sinceSlideTime, funcToAverage, Comparer<T>.Default) { }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ItemInterval(TimeSpan sinceSlideTime, Func<ItemValue<T>, decimal> funcToAverage, IComparer<T> comparer)
+            public ItemInterval(TimeSpan sinceSlideTime, Func<ItemValue<T>, decimal> funcToAverage)
             {
                 _sinceSlideTime = sinceSlideTime;
                 _funcToAverage = funcToAverage;
                 _queue = new ConcurrentQueue<ItemValue<T>>();
-                tokenSource = new CancellationTokenSource();
+                _tokenSource = new CancellationTokenSource();
                 Percentils = new List<ItemPercentil> {
                     new ItemPercentil(0.7),
                     new ItemPercentil(0.8),
@@ -218,8 +216,8 @@ namespace TWCore.Diagnostics.Status
                     new ItemPercentil(0.95),
                     new ItemPercentil(0.99),
                 };
-                var token = tokenSource.Token;
-                tsk = Task.Run(async () =>
+                var token = _tokenSource.Token;
+                _tsk = Task.Run(async () =>
                 {
                     try
                     {
@@ -238,7 +236,7 @@ namespace TWCore.Diagnostics.Status
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             ~ItemInterval()
             {
-                tokenSource.Cancel();
+                _tokenSource.Cancel();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -247,7 +245,7 @@ namespace TWCore.Diagnostics.Status
                 LastDate = Core.Now;
                 var itemValue = new ItemValue<T>(value);
                 _queue.Enqueue(itemValue);
-                dirty = true;
+                _dirty = true;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -261,12 +259,12 @@ namespace TWCore.Diagnostics.Status
                     if (now - value.ValueDate >= _sinceSlideTime)
                     {
                         _queue.TryDequeue(out value);
-                        dirty = true;
+                        _dirty = true;
                     }
                     else
                         break;
                 }
-                if (!dirty) return;
+                if (!_dirty) return;
                 AverageValue = _queue.Count > 0 ? Math.Round(_queue.Average(_funcToAverage), 2) : (decimal?)null;
                 StandardDeviation = _queue.Count > 0 ? Math.Round(_queue.GetStdDev(i => (double)_funcToAverage(i)), 2) : (double?)null;
                 var qArray = _queue.ToArray();
@@ -274,7 +272,8 @@ namespace TWCore.Diagnostics.Status
                 var sorted = qArray.Select((i, idx) => Tuple.Create(_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
                 LowestValue = sorted.FirstOrDefault()?.Item2;
                 HighestValue = sorted.LastOrDefault()?.Item2;
-                if (Percentils?.Count > 0 && sorted.Length > 0)
+                if (Percentils == null) return;
+                if (Percentils.Count > 0 && sorted.Length > 0)
                 {
                     var posIndexes = sorted.Length - 1;
                     foreach (var percentil in Percentils)
@@ -286,13 +285,13 @@ namespace TWCore.Diagnostics.Status
                         percentil.Min = sorted[minIdx].Item1;
                     }
                 }
-                dirty = false;
+                _dirty = false;
             }
         }
-        class ItemValue<T>
+        private class ItemValue<T>
         {
-            public T Value;
-            public DateTime ValueDate;
+            public readonly T Value;
+            public readonly DateTime ValueDate;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ItemValue(T value)
@@ -301,9 +300,9 @@ namespace TWCore.Diagnostics.Status
                 ValueDate = Core.Now;
             }
         }
-        class ItemPercentil
+        private class ItemPercentil
         {
-            public double Percentil;
+            public readonly double Percentil;
             public decimal Min;
             public decimal Max;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -312,7 +311,6 @@ namespace TWCore.Diagnostics.Status
                 Percentil = percentil;
             }
         }
-
         #endregion
     }
 }

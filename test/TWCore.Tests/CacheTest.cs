@@ -77,10 +77,7 @@ namespace TWCore.Tests
 
             using (var w = Watch.Create("Cache GET"))
             {
-                Parallel.For(0, 25000, i =>
-                {
-                    var value = fSto.Get("Tony - " + i);
-                });
+                Parallel.For(0, 25000, i => fSto.Get("Tony - " + i));
                 Core.Log.InfoBasic("Time per item: {0}ms", w.GlobalElapsedMilliseconds / 10000);
             }
             using (var w = Watch.Create("Cache SET"))
@@ -93,10 +90,7 @@ namespace TWCore.Tests
             }
             using (var w = Watch.Create("Cache GET"))
             {
-                Parallel.For(0, 25000, i =>
-                {
-                    var value = fSto.Get("Tony - " + i);
-                });
+                Parallel.For(0, 25000, i => fSto.Get("Tony - " + i));
                 Core.Log.InfoBasic("Time per item: {0}ms", w.GlobalElapsedMilliseconds / 10000);
             }
         }

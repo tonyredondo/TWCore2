@@ -6,7 +6,10 @@ using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RabbitMQ;
 using TWCore.Serialization;
 using TWCore.Services;
+
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedVariable
+// ReSharper disable AccessToDisposedClosure
 
 namespace TWCore.Tests
 {

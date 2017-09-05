@@ -11,6 +11,8 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 
+// ReSharper disable UnusedVariable
+
 namespace TWCore.Tests
 {
     public class RpcTest : ContainerParameterServiceAsync

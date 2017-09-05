@@ -7,6 +7,7 @@ using System.IO;
 using TWCore.Data.PostgreSQL;
 using TWCore.Data.MySql;
 using TWCore.Data.SQLite;
+// ReSharper disable UnusedVariable
 
 namespace TWCore.Tests
 {

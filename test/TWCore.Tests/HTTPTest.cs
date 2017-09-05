@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Local
 
 namespace TWCore.Tests
 {

@@ -22,12 +22,14 @@ using TWCore.Collections;
 
 namespace TWCore.Cache.Client.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache configuration (client part)
     /// </summary>
     [DataContract]
     public class CacheConfiguration : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Cache name
         /// </summary>

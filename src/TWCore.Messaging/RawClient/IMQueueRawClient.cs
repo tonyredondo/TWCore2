@@ -19,6 +19,7 @@ using System.Threading;
 
 namespace TWCore.Messaging.RawClient
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Queue raw client definition
     /// </summary>
@@ -118,70 +119,70 @@ namespace TWCore.Messaging.RawClient
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R, T>(T obj);
+        TR SendAndReceive<TR, T>(T obj);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R, T>(T obj, CancellationToken cancellationToken);
+        TR SendAndReceive<TR, T>(T obj, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R, T>(T obj, Guid correlationId);
+        TR SendAndReceive<TR, T>(T obj, Guid correlationId);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R, T>(T obj, Guid correlationId, CancellationToken cancellationToken);
+        TR SendAndReceive<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R>(object obj);
+        TR SendAndReceive<TR>(object obj);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R>(object obj, CancellationToken cancellationToken);
+        TR SendAndReceive<TR>(object obj, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R>(object obj, Guid correlationId);
+        TR SendAndReceive<TR>(object obj, Guid correlationId);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        R SendAndReceive<R>(object obj, Guid correlationId, CancellationToken cancellationToken);
+        TR SendAndReceive<TR>(object obj, Guid correlationId, CancellationToken cancellationToken);
         #endregion
     }
 }

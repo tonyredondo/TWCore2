@@ -18,15 +18,18 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache configuration (server part)
     /// </summary>
     [DataContract]
     public class CacheConfiguration : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Cache name
         /// </summary>

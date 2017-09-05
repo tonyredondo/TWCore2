@@ -39,7 +39,7 @@ namespace TWCore.Geo
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CountryIpIntervalCollection ImportFromCSV(string filename)
+        public static CountryIpIntervalCollection ImportFromCsv(string filename)
         {
             var lstInterval = new CountryIpIntervalCollection();
             using (var stream = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read)))
@@ -59,7 +59,7 @@ namespace TWCore.Geo
             return lstInterval;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<CountryIpIntervalCollection> ImportFromCSVAsync(string filename)
+        public static async Task<CountryIpIntervalCollection> ImportFromCsvAsync(string filename)
         {
             var lstInterval = new CountryIpIntervalCollection();
             using (var stream = new StreamReader(File.Open(filename, FileMode.Open, FileAccess.Read)))

@@ -14,13 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-/// <summary>
-/// DalGenerator Consts
-/// </summary>
-internal static class DalGeneratorConsts
-{
 
-    public const string formatAbstractionsProject = @"
+namespace TWCore.Data.Schema.Generator
+{
+    /// <summary>
+    /// DalGenerator Consts
+    /// </summary>
+    internal static class DalGeneratorConsts
+    {
+
+        public const string FormatAbstractionsProject = @"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -31,7 +34,7 @@ internal static class DalGeneratorConsts
   </ItemGroup>
 </Project>
 ";
-    public const string formatDalProject = @"
+        public const string FormatDalProject = @"
 <Project Sdk=""Microsoft.NET.Sdk"">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -47,7 +50,7 @@ internal static class DalGeneratorConsts
 </Project>
 ";
 
-    public const string formatSolution = @"
+        public const string FormatSolution = @"
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26823.1
@@ -81,9 +84,9 @@ EndGlobal
 ";
 
 
-    //******************************************************************************************************************************************************
+        //******************************************************************************************************************************************************
 
-    public const string formatEntityHeader = @"/*
+        public const string FormatEntityHeader = @"/*
     TWCore.Data.Schema.Generator
 */    
 using System;
@@ -97,7 +100,7 @@ using TWCore.Data.Schema;
 
 
 
-    public const string formatEntityWrapper = @"
+        public const string FormatEntityWrapper = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Entities
 {
     [DataContract]
@@ -107,15 +110,15 @@ namespace ($NAMESPACE$).($DATABASENAME$).Entities
 }     
 ";
 
-    public const string formatEntityColumn = @"
+        public const string FormatEntityColumn = @"
         [DataMember]
         public ($COLUMNTYPE$) ($COLUMNNAME$) { get; set; }";
 
 
-    //******************************************************************************************************************************************************
+        //******************************************************************************************************************************************************
 
 
-    public const string formatDalInterfaceHeader = @"/*
+        public const string FormatDalInterfaceHeader = @"/*
     TWCore.Data.Schema.Generator
 */    
 using System;
@@ -128,7 +131,7 @@ using TWCore.Data.Schema;
 using ($NAMESPACE$).($DATABASENAME$).Entities;
 ";
 
-    public const string formatDalInterfaceWrapper = @"
+        public const string FormatDalInterfaceWrapper = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Dal
 {
     public interface IDal($TABLENAME$)
@@ -137,14 +140,14 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal
 }     
 ";
 
-    public const string formatDalInterfaceMethod = @"
+        public const string FormatDalInterfaceMethod = @"
         ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$));";
 
 
-    //******************************************************************************************************************************************************
+        //******************************************************************************************************************************************************
 
 
-    public const string formatDatabaseEntities = @"
+        public const string FormatDatabaseEntities = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 {
     public class ($DATABASENAME$)DalSettings : EntityDalSettings
@@ -173,10 +176,10 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 }
 ";
 
-    //******************************************************************************************************************************************************
+        //******************************************************************************************************************************************************
 
 
-    public const string formatDalHeader = @"/*
+        public const string FormatDalHeader = @"/*
     TWCore.Data.Schema.Generator
 */    
 using System;
@@ -190,7 +193,7 @@ using ($NAMESPACE$).($DATABASENAME$).Entities;
 ";
 
 
-    public const string formatDalWrapper = @"
+        public const string FormatDalWrapper = @"
 namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 {
     public class Dal($TABLENAME$) : ($DATABASENAME$)DBDal, IDal($TABLENAME$)
@@ -215,18 +218,19 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
 }     
 ";
 
-    public const string formatDalSelectMethod = @"
+        public const string FormatDalSelectMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$)) 
             => ($DATASELECT$)(($DATASQL$)($DATAPARAMETERS$), FillEntity);
 ";
 
-    public const string formatDalExecuteMethod = @"
+        public const string FormatDalExecuteMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($DATATYPE$) value) 
             => Data($ASYNC$).ExecuteNonQuery($ASYNC$)(($DATASQL$), PrepareEntity(value, ""($METHODNAME2$)""));
 ";
 
-    public const string formatDalDeleteExecuteMethod = @"
+        public const string FormatDalDeleteExecuteMethod = @"
         public ($RETURNTYPE$) ($METHODNAME$)(($METHODPARAMETERS$)) 
             => Data($ASYNC$).ExecuteNonQuery($ASYNC$)(($DATASQL$)($DATAPARAMETERS$));
 ";
+    }
 }

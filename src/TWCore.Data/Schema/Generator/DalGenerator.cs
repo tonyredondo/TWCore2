@@ -163,7 +163,7 @@ namespace TWCore.Data.Schema.Generator
         private (string, string) CreateAbstractionProject()
         {
             var dag = _dataAccessGenerator.GetType();
-            var projFile = DalGeneratorConsts.formatAbstractionsProject;
+            var projFile = DalGeneratorConsts.FormatAbstractionsProject;
             projFile = projFile.Replace("($DATAASSEMBLYNAME$)", dag.Assembly.GetName().Name);
             projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
             var filePath = Path.Combine(_schema.Name, "Abstractions", _namespace + "." + _schema.Name + ".Abstractions.csproj");
@@ -174,9 +174,9 @@ namespace TWCore.Data.Schema.Generator
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
             if (table == null) return (null, null);
 
-            const string header = DalGeneratorConsts.formatEntityHeader;
-            const string entityWrapper = DalGeneratorConsts.formatEntityWrapper;
-            const string columnFormat = DalGeneratorConsts.formatEntityColumn;
+            const string header = DalGeneratorConsts.FormatEntityHeader;
+            const string entityWrapper = DalGeneratorConsts.FormatEntityWrapper;
+            const string columnFormat = DalGeneratorConsts.FormatEntityColumn;
 
             var entityColumns = new List<string>();
             foreach (var column in table.Columns)
@@ -254,9 +254,9 @@ namespace TWCore.Data.Schema.Generator
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
             if (table == null) return (null, null);
 
-            const string header = DalGeneratorConsts.formatDalInterfaceHeader;
-            const string interfaceWrapper = DalGeneratorConsts.formatDalInterfaceWrapper;
-            const string interfaceMethod = DalGeneratorConsts.formatDalInterfaceMethod;
+            const string header = DalGeneratorConsts.FormatDalInterfaceHeader;
+            const string interfaceWrapper = DalGeneratorConsts.FormatDalInterfaceWrapper;
+            const string interfaceMethod = DalGeneratorConsts.FormatDalInterfaceMethod;
 
             var entityTableName = GetEntityNameDelegate(table.Name);
             var entityName = "Ent" + entityTableName;
@@ -331,7 +331,7 @@ namespace TWCore.Data.Schema.Generator
         private (string, string) CreateSolution()
         {
             var prov = _dataAccessGenerator.GetType().Name.Replace("DataAccess", string.Empty);
-            var projFile = DalGeneratorConsts.formatSolution;
+            var projFile = DalGeneratorConsts.FormatSolution;
             projFile = projFile.Replace("($NAMESPACE$)", _namespace);
             projFile = projFile.Replace("($CATALOGNAME$)", _schema.Name);
             projFile = projFile.Replace("($PROVIDERNAME$)", prov);
@@ -342,7 +342,7 @@ namespace TWCore.Data.Schema.Generator
         {
             var dag = _dataAccessGenerator.GetType();
             var prov = dag.Name.Replace("DataAccess", string.Empty);
-            var projFile = DalGeneratorConsts.formatDalProject;
+            var projFile = DalGeneratorConsts.FormatDalProject;
             projFile = projFile.Replace("($DATAASSEMBLYNAME$)", dag.Assembly.GetName().Name);
             projFile = projFile.Replace("($VERSION$)", Core.FrameworkVersion);
             projFile = projFile.Replace("($NAMESPACE$)", _namespace);
@@ -354,9 +354,9 @@ namespace TWCore.Data.Schema.Generator
         {
             var dag = _dataAccessGenerator.GetType();
             var prov = dag.Name.Replace("DataAccess", string.Empty);
-            var header = DalGeneratorConsts.formatEntityHeader;
+            var header = DalGeneratorConsts.FormatEntityHeader;
             header += "using " + dag.Assembly.GetName().Name + ";\r\n";
-            var databaseEntities = DalGeneratorConsts.formatDatabaseEntities;
+            var databaseEntities = DalGeneratorConsts.FormatDatabaseEntities;
             databaseEntities = databaseEntities.Replace("($NAMESPACE$)", _namespace);
             databaseEntities = databaseEntities.Replace("($PROVIDERNAME$)", prov);
             databaseEntities = databaseEntities.Replace("($DATABASENAME$)", _schema.Name);
@@ -371,11 +371,11 @@ namespace TWCore.Data.Schema.Generator
             var table = _schema.Tables.FirstOrDefault(t => t.Name == tableName);
             if (table == null) return (null, null);
 
-            const string header = DalGeneratorConsts.formatDalHeader;
-            const string dalWrapper = DalGeneratorConsts.formatDalWrapper;
-            const string dalSelectMethod = DalGeneratorConsts.formatDalSelectMethod;
-            const string dalExecuteMethod = DalGeneratorConsts.formatDalExecuteMethod;
-            const string dalDeleteExecuteMethod = DalGeneratorConsts.formatDalDeleteExecuteMethod;
+            const string header = DalGeneratorConsts.FormatDalHeader;
+            const string dalWrapper = DalGeneratorConsts.FormatDalWrapper;
+            const string dalSelectMethod = DalGeneratorConsts.FormatDalSelectMethod;
+            const string dalExecuteMethod = DalGeneratorConsts.FormatDalExecuteMethod;
+            const string dalDeleteExecuteMethod = DalGeneratorConsts.FormatDalDeleteExecuteMethod;
 
             var entityTableName = GetEntityNameDelegate(table.Name);
             var entityName = "Ent" + entityTableName;

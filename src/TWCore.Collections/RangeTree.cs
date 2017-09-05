@@ -72,6 +72,7 @@ namespace TWCore.Collections
         void Clear();
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// The standard range tree implementation. Keeps a root node and
     /// forwards all queries to it.
@@ -86,41 +87,34 @@ namespace TWCore.Collections
         private List<T> _items;
         private bool _isInSync;
         private bool _autoRebuild;
-        private IComparer<T> _rangeComparer;
+        private readonly IComparer<T> _rangeComparer;
 
         /// <summary>
         /// Whether the tree is currently in sync or not. If it is "out of sync"
         /// you can either rebuild it manually (call Rebuild) or let it rebuild
         /// automatically when you query it next.
         /// </summary>
-        public bool IsInSync
-        {
-            get { return _isInSync; }
-        }
+        public bool IsInSync => _isInSync;
 
+        /// <inheritdoc />
         /// <summary>
         /// All items of the tree.
         /// </summary>
-        public IEnumerable<T> Items
-        {
-            get { return _items; }
-        }
+        public IEnumerable<T> Items => _items;
 
+        /// <inheritdoc />
         /// <summary>
         /// Count of all items.
         /// </summary>
-        public int Count
-        {
-            get { return _items.Count; }
-        }
+        public int Count => _items.Count;
 
         /// <summary>
         /// Whether the tree should be rebuild automatically. Defaults to true.
         /// </summary>
         public bool AutoRebuild
         {
-            get { return _autoRebuild; }
-            set { _autoRebuild = value; }
+            get => _autoRebuild;
+            set => _autoRebuild = value;
         }
 
         /// <summary>
@@ -147,6 +141,7 @@ namespace TWCore.Collections
             _autoRebuild = true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performans a "stab" query with a single value.
         /// All items with overlapping ranges are returned.
@@ -159,6 +154,7 @@ namespace TWCore.Collections
             return _root.Query(value);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performans a range query.
         /// All items with overlapping ranges are returned.
@@ -171,6 +167,7 @@ namespace TWCore.Collections
             return _root.Query(range);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Rebuilds the tree if it is out of sync.
         /// </summary>
@@ -183,6 +180,7 @@ namespace TWCore.Collections
             _isInSync = true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Adds the specified item. Tree will go out of sync.
         /// </summary>
@@ -192,6 +190,7 @@ namespace TWCore.Collections
             _items.Add(item);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Adds the specified items. Tree will go out of sync.
         /// </summary>
@@ -201,6 +200,7 @@ namespace TWCore.Collections
             _items.AddRange(items);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Removes the specified item. Tree will go out of sync.
         /// </summary>
@@ -210,6 +210,7 @@ namespace TWCore.Collections
             _items.Remove(item);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Removes the specified items. Tree will go out of sync.
         /// </summary>
@@ -221,6 +222,7 @@ namespace TWCore.Collections
                 _items.Remove(item);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Clears the tree (removes all items).
         /// </summary>
@@ -232,10 +234,11 @@ namespace TWCore.Collections
         }
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Default IRangeProvider comparer
     /// </summary>
-    public class DefaultRangeProviderComparer<T, K> : IComparer<T> where T : IRangeProvider<K> where K : IComparable<K>
+    public class DefaultRangeProviderComparer<T, TK> : IComparer<T> where T : IRangeProvider<TK> where TK : IComparable<TK>
     {
         /// <summary>
         /// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.

@@ -23,6 +23,7 @@ using TWCore.Messaging.RawServer;
 using TWCore.Messaging.Server;
 using TWCore.Serialization;
 using TWCore.Settings;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {

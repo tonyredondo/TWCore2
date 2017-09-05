@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 
+// ReSharper disable InconsistentNaming
 namespace TWCore.Messaging.Configuration
 {
     /// <summary>

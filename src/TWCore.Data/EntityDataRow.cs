@@ -24,8 +24,8 @@ namespace TWCore.Data
     /// <typeparam name="T">Type of the entity</typeparam>
     public class EntityDataRow<T>
     {
-        volatile bool _bound;
-        T entity;
+        private volatile bool _bound;
+        private T _entity;
 
         #region Properties
         /// <summary>
@@ -35,11 +35,11 @@ namespace TWCore.Data
         /// <summary>
         /// Entity binder instance
         /// </summary>
-        public EntityBinder Binder;
+        public readonly EntityBinder Binder;
         /// <summary>
         /// Fill method function
         /// </summary>
-        public FillDataDelegate<T> FillMethod;
+        public readonly FillDataDelegate<T> FillMethod;
         /// <summary>
         /// Gets the entity after calling the fillmethod
         /// </summary>
@@ -48,12 +48,10 @@ namespace TWCore.Data
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (!_bound)
-                {
-                    entity = FillMethod(Binder, RowValues);
-                    _bound = true;
-                }
-                return entity;
+                if (_bound) return _entity;
+                _entity = FillMethod(Binder, RowValues);
+                _bound = true;
+                return _entity;
             }
         }
         #endregion

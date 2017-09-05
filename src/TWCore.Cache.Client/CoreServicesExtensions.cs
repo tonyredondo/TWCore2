@@ -21,6 +21,7 @@ using TWCore.Cache.Client;
 using TWCore.Cache.Client.Configuration;
 using TWCore.Serialization;
 using TWCore.Settings;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
@@ -29,12 +30,12 @@ namespace TWCore.Services
 	/// </summary>
 	public static class CoreServicesExtensions
 	{
-		static CacheSettings _settings;
-		static bool _init;
+	    private static CacheSettings _settings;
+	    private static bool _init;
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void Init()
+		private static void Init()
 		{
 			if (_init) return;
 			_init = true;
@@ -102,7 +103,7 @@ namespace TWCore.Services
 
 		#region Nested Settings Type
 		[SettingsContainer("Core.Services.Cache")]
-		class CacheConfigurationSettings : SettingsBase
+		private class CacheConfigurationSettings : SettingsBase
 		{
 			public string ConfigFile { get; set; }
 		}

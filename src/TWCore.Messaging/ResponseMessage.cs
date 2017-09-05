@@ -13,16 +13,18 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-#pragma warning disable IDE1006 // Estilos de nombres
 
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Serialization;
 // ReSharper disable ValueParameterNotUsed
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a new Response message for messaging
     /// </summary>
@@ -34,11 +36,16 @@ namespace TWCore.Messaging
         /// </summary>
         public static object NoResponse { get; } = "Message[NoResponse]";
 
+        /// <inheritdoc />
         /// <summary>
         /// Request identifier
         /// </summary>
         [XmlAttribute, DataMember]
-        public Guid CorrelationId { get { return Header.Request.CorrelationId; } set { if (Header.Request != null) { Header.Request.CorrelationId = value; } } }
+        public Guid CorrelationId
+        {
+            get => Header.Request.CorrelationId;
+            set { if (Header.Request != null) { Header.Request.CorrelationId = value; } }
+        }
         /// <summary>
         /// Response headers
         /// </summary>
@@ -48,12 +55,13 @@ namespace TWCore.Messaging
         /// Message Request+Response Total Time
         /// </summary>
         [NonSerialize]
-        public TimeSpan Total_Time { get { return Header.Response.ApplicationReceivedTime - Header.Request.Header.ApplicationSentDate; } }
+        public TimeSpan TotalTime => Header.Response.ApplicationReceivedTime - Header.Request.Header.ApplicationSentDate;
         /// <summary>
         /// Message Request+Response Total Time
         /// </summary>
         [XmlAttribute, NonSerialize]
-        public string Total_TimeString { get { return Total_Time.ToString(); } set { } }
+        public string TotalTimeString { get { return TotalTime.ToString(); } set { } }
+        /// <inheritdoc />
         /// <summary>
         /// Response body
         /// </summary>
@@ -61,6 +69,7 @@ namespace TWCore.Messaging
         public object Body { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Defines a new Response message for messaging
         /// </summary>
@@ -81,4 +90,3 @@ namespace TWCore.Messaging
         #endregion
     }
 }
-#pragma warning restore IDE1006 // Estilos de nombres

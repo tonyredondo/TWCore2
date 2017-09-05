@@ -19,9 +19,11 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache RPC Service
     /// </summary>
@@ -39,6 +41,7 @@ namespace TWCore.Services
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// Gets the RPCServer 
         /// </summary>
@@ -58,9 +61,10 @@ namespace TWCore.Services
             }
             if (!Manager.IsReady())
                 Core.Log.Warning("The StorageManager is not on Ready state, some data couldn't be found during this state.");
-            RPCServer server;
+
             if (Transports?.Any() == true)
             {
+                RPCServer server;
                 if (Transports.Length == 1)
                     server = new RPCServer(Transports[0]);
                 else
@@ -72,9 +76,9 @@ namespace TWCore.Services
                 server.AddService(typeof(IStorage), Manager);
                 return server;
             }
-            else
-				throw new NullReferenceException("The server needs to define at least one server transport.");
+            throw new NullReferenceException("The server needs to define at least one server transport.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Dispose
         /// </summary>

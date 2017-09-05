@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Client
 {
@@ -27,8 +28,8 @@ namespace TWCore.Messaging.Client
     /// </summary>
     public class MQClientCounters
     {
-        readonly object locker = new object();
-        Timer timer;
+        private readonly object _locker = new object();
+        private Timer _timer;
 
         #region Properties
         /// <summary>
@@ -70,9 +71,9 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQClientCounters()
         {
-            timer = new Timer(state =>
+            _timer = new Timer(state =>
             {
-                lock(locker)
+                lock(_locker)
                 {
                     LastMinuteMessagesSent = MessagesSent;
                     LastMinuteMessagesReceived = MessagesReceived;
@@ -95,7 +96,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalNetworkTime(TimeSpan increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalNetworkTime += increment.TotalMilliseconds;
         }
         /// <summary>
@@ -105,7 +106,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementReceivingTime(TimeSpan increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalReceivingTime += increment.TotalMilliseconds;
         }
         /// <summary>
@@ -114,7 +115,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesSent()
         {
-            lock (locker)
+            lock (_locker)
             {
                 MessagesSent++;
                 LastMinuteMessagesSent++;
@@ -126,7 +127,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesReceived()
         {
-            lock (locker)
+            lock (_locker)
             {
                 MessagesReceived++;
                 LastMinuteMessagesReceived++;

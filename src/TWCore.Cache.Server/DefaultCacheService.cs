@@ -18,14 +18,17 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default Cache Service
     /// </summary>
     public class DefaultCacheService : CacheService
     {
+        /// <inheritdoc />
         /// <summary>
         /// Gets the cache storage manager
         /// </summary>
@@ -33,6 +36,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override StorageManager GetManager()
             => Core.Services.GetDefaultCacheServerOptions().StorageStack.GetStorageManager();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the cache server transports
         /// </summary>

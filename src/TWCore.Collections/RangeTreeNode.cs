@@ -27,12 +27,12 @@ namespace TWCore.Collections
     /// </summary>
     public class RangeTreeNode<TKey, T> where TKey : IComparable<TKey> where T : IRangeProvider<TKey>
     {
-        private TKey _center;
-        private RangeTreeNode<TKey, T> _leftNode;
-        private RangeTreeNode<TKey, T> _rightNode;
-        private List<T> _items;
+        private readonly TKey _center;
+        private readonly RangeTreeNode<TKey, T> _leftNode;
+        private readonly RangeTreeNode<TKey, T> _rightNode;
+        private readonly List<T> _items;
 
-        private static IComparer<T> s_rangeComparer;
+        private static IComparer<T> _sRangeComparer;
 
         /// <summary>
         /// Initializes an empty node.
@@ -41,7 +41,7 @@ namespace TWCore.Collections
         public RangeTreeNode(IComparer<T> rangeComparer = null)
         {
             if (rangeComparer != null)
-                s_rangeComparer = rangeComparer;
+                _sRangeComparer = rangeComparer;
 
             _center = default(TKey);
             _leftNode = null;
@@ -57,7 +57,7 @@ namespace TWCore.Collections
         public RangeTreeNode(IEnumerable<T> items, IComparer<T> rangeComparer = null)
         {
             if (rangeComparer != null)
-                s_rangeComparer = rangeComparer;
+                _sRangeComparer = rangeComparer;
 
             // first, find the median
             var endPoints = new List<TKey>();
@@ -95,7 +95,7 @@ namespace TWCore.Collections
 
             // sort the items, this way the query is faster later on
             if (_items.Count > 0)
-                _items.Sort(s_rangeComparer);
+                _items.Sort(_sRangeComparer);
             else
                 _items = null;
 

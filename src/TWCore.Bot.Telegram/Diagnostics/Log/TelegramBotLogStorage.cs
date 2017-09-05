@@ -22,18 +22,19 @@ using TWCore.Bot;
 using TWCore.Bot.Telegram;
 using TWCore.Serialization;
 using TWCore.Settings;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Diagnostics.Log.Storages
 {
     [SettingsContainer("TelegramBotLog")]
     public class TelegramBotLogStorage : SettingsBase, ILogStorage
     {
-        ISerializer serializer = SerializerManager.DefaultBinarySerializer;
+        private readonly ISerializer _serializer = SerializerManager.DefaultBinarySerializer;
 
         /// <summary>
         /// Bot Engine
         /// </summary>
-        static IBotEngine Bot { get; set; }
+        private static IBotEngine Bot { get; set; }
         /// <summary>
         /// Save tracked chats on disk
         /// </summary>
@@ -57,6 +58,7 @@ namespace TWCore.Diagnostics.Log.Storages
 
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Telegram Bot Log Storage
         /// </summary>
@@ -67,7 +69,7 @@ namespace TWCore.Diagnostics.Log.Storages
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        IBotEngine GetBotEngine()
+        private IBotEngine GetBotEngine()
         {
             var telegramTransport = new TelegramBotTransport(BotToken);
             var bEngine = new BotEngine(telegramTransport);
@@ -99,7 +101,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     Try.Do(() =>
                     {
                         Core.Log.InfoBasic("Loading tracked chats file: {0}", TrackedChatsFilePath);
-                        var botChats = serializer.DeserializeFromFile<List<BotChat>>(TrackedChatsFilePath);
+                        var botChats = _serializer.DeserializeFromFile<List<BotChat>>(TrackedChatsFilePath);
                         bEngine.TrackedChats.AddRange(botChats);
                         Core.Log.InfoBasic("{0} tracked chats loaded.", botChats?.Count);
                     });
@@ -110,7 +112,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     {
                         Core.Log.InfoBasic("Saving tracked chats file: {0}", TrackedChatsFilePath);
                         var botChats = ((IBotEngine)s).TrackedChats.ToList();
-                        serializer.SerializeToFile(botChats, TrackedChatsFilePath);
+                        _serializer.SerializeToFile(botChats, TrackedChatsFilePath);
                         Core.Log.InfoBasic("{0} tracked chats saved.", botChats?.Count);
                     });
                 };
@@ -120,6 +122,7 @@ namespace TWCore.Diagnostics.Log.Storages
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -140,6 +143,7 @@ namespace TWCore.Diagnostics.Log.Storages
             }
             await Bot.SendTextMessageToTrackedChatsAsync(msg).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
@@ -148,6 +152,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting
         /// unmanaged resources.

@@ -33,10 +33,11 @@ namespace TWCore.Data
     /// <summary>
     /// Data access connection base class
     /// </summary>
+    // ReSharper disable once InheritdocConsiderUsage
     public abstract class DataAccessBase : IDataAccess, IDataAccessAsync, IDataAccessDynamicGenerator
     {
-        readonly static TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
-        readonly static DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
+        private static readonly TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
+        private static readonly DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
 
         #region Properties
         /// <summary>
@@ -149,12 +150,12 @@ namespace TWCore.Data
         {
             if (ColumnsByNameOrQueryCacheInSec > 0)
             {
-                if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var _result))
+                if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
                 {
-                    if (_result.Count != reader.FieldCount)
-                        ColumnsByNameOrQuery.TryRemove(nameOrQuery, out _result);
+                    if (result.Count != reader.FieldCount)
+                        ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
                     else
-                        return _result;
+                        return result;
                 }
                 return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
             }

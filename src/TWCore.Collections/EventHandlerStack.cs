@@ -25,11 +25,11 @@ namespace TWCore.Collections
     /// </summary>
     public class EventHandlerStack
     {
-        #region Private Fields
+        #region Fields
         /// <summary>
         /// EventHandler stack
         /// </summary>
-        Stack<EventHandler> _eventHandlersStack;
+        private Stack<EventHandler> _eventHandlersStack;
         /// <summary>
         /// EventHandler internal delegate
         /// </summary>
@@ -37,7 +37,7 @@ namespace TWCore.Collections
         /// <summary>
         /// The sync lock.
         /// </summary>
-        protected object _padlock = new object();
+        protected readonly object Padlock = new object();
         #endregion
 
         #region Properties
@@ -65,15 +65,13 @@ namespace TWCore.Collections
         /// </summary>
         private void CallEventHandler(object sender, EventArgs e)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
-                if (_eventHandlersStack.Count > 0)
-                {
-                    if (!UseBubbling)
-                        _eventHandlersStack.Peek().Invoke(sender, e);
-                    else
-                        _eventHandlersStack.Each(item => item.Invoke(sender, e));
-                }
+                if (_eventHandlersStack.Count <= 0) return;
+                if (!UseBubbling)
+                    _eventHandlersStack.Peek().Invoke(sender, e);
+                else
+                    _eventHandlersStack.Each(item => item.Invoke(sender, e));
             }
         }
         #endregion
@@ -85,7 +83,7 @@ namespace TWCore.Collections
         /// <param name="handler">EventHandler</param>
         public void RegisterHandler(EventHandler handler)
         {
-            lock (_padlock)
+            lock (Padlock)
                 _eventHandlersStack.Push(handler);
         }
         /// <summary>
@@ -94,7 +92,7 @@ namespace TWCore.Collections
         /// <param name="handler">EventHandler</param>
         public void DeRegisterHandler(EventHandler handler)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 var nStack = _eventHandlersStack.Where(item => item != handler).ToArray();
                 if (nStack.Any())
@@ -107,7 +105,7 @@ namespace TWCore.Collections
         /// <returns>EventHandler</returns>
         public EventHandler PopHandler()
         {
-            lock (_padlock)
+            lock (Padlock)
                 return _eventHandlersStack.Pop();
         }
         #endregion
@@ -123,7 +121,7 @@ namespace TWCore.Collections
         /// <summary>
         /// EventHandler stack
         /// </summary>
-        Stack<EventHandler<T>> _eventHandlersStack;
+        private Stack<EventHandler<T>> _eventHandlersStack;
         /// <summary>
         /// EventHandler internal delegate
         /// </summary>
@@ -131,7 +129,7 @@ namespace TWCore.Collections
         /// <summary>
         /// The sync lock.
         /// </summary>
-        protected object _padlock = new object();
+        protected readonly object Padlock = new object();
         #endregion
 
         #region Properties
@@ -159,15 +157,13 @@ namespace TWCore.Collections
         /// </summary>
         private void CallEventHandler(object sender, T e)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
-                if (_eventHandlersStack.Count > 0)
-                {
-                    if (!UseBubbling)
-                        _eventHandlersStack.Peek().Invoke(sender, e);
-                    else
-                        _eventHandlersStack.Each(item => item.Invoke(sender, e));
-                }
+                if (_eventHandlersStack.Count <= 0) return;
+                if (!UseBubbling)
+                    _eventHandlersStack.Peek().Invoke(sender, e);
+                else
+                    _eventHandlersStack.Each(item => item.Invoke(sender, e));
             }
         }
         #endregion
@@ -179,7 +175,7 @@ namespace TWCore.Collections
         /// <param name="handler">EventHandler</param>
         public void RegisterHandler(EventHandler<T> handler)
         {
-            lock (_padlock)
+            lock (Padlock)
                 _eventHandlersStack.Push(handler);
         }
         /// <summary>
@@ -188,7 +184,7 @@ namespace TWCore.Collections
         /// <param name="handler">EventHandler</param>
         public void DeRegisterHandler(EventHandler<T> handler)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 var nStack = _eventHandlersStack.Where(item => item != handler).ToArray();
                 if (nStack.Any())
@@ -201,7 +197,7 @@ namespace TWCore.Collections
         /// <returns>EventHandler</returns>
         public EventHandler<T> PopHandler()
         {
-            lock (_padlock)
+            lock (Padlock)
                 return _eventHandlersStack.Pop();
         }
         #endregion

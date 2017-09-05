@@ -24,42 +24,39 @@ namespace TWCore.Geo
     /// </summary>
     public class GeoMapPoint
     {
-        /// <summary>
-        /// Earth radius in km
-        /// </summary>
-        public const int EarthRadius = 6371;
-        double latitude, longitude;
+        private const int EarthRadius = 6371;
+        private double _latitude, _longitude;
 
         #region Properties
         /// <summary>
         /// Latitude in degrees. -90 to 90
         /// </summary>
-        public Double Latitude
+        public double Latitude
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return latitude; }
+            get { return _latitude; }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
                 if (value > 90) throw new ArgumentOutOfRangeException("value", "Latitude value must be <= 90");
                 if (value < -90) throw new ArgumentOutOfRangeException("value", "Latitude value must be >= -90");
-                latitude = value;
+                _latitude = value;
             }
         }
 
         /// <summary>
         /// Longitude in degree. -180 to 180
         /// </summary>
-        public Double Longitude
+        public double Longitude
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return longitude; }
+            get { return _longitude; }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
                 if (value > 180) throw new ArgumentOutOfRangeException("value", "Longitude value must be <= 180");
                 if (value < -180) throw new ArgumentOutOfRangeException("value", "Longitude value must be >= -180");
-                longitude = value;
+                _longitude = value;
             }
         }
         #endregion
@@ -87,13 +84,13 @@ namespace TWCore.Geo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetDistanceInKm(GeoMapPoint point)
         {
-            double dLat = (point.Latitude - Latitude).ToRad();
-            double dLon = (point.Longitude - Longitude).ToRad();
+            var dLat = (point.Latitude - Latitude).ToRad();
+            var dLon = (point.Longitude - Longitude).ToRad();
 
-            double a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
+            var a = Math.Sin(dLat / 2) * Math.Sin(dLat / 2) +
                         Math.Cos(Latitude.ToRad()) * Math.Cos(point.Latitude.ToRad()) *
                         Math.Sin(dLon / 2) * Math.Sin(dLon / 2);
-            double c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+            var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
             return EarthRadius * c;
         }
 
@@ -112,10 +109,10 @@ namespace TWCore.Geo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double GetBearing(GeoMapPoint point)
         {
-            double dLon = (point.Longitude - Longitude).ToRad();
+            var dLon = (point.Longitude - Longitude).ToRad();
 
-            double y = Math.Sin(dLon) * Math.Cos(point.Latitude.ToRad());
-            double x = Math.Cos(Latitude.ToRad()) * Math.Sin(point.Latitude.ToRad()) -
+            var y = Math.Sin(dLon) * Math.Cos(point.Latitude.ToRad());
+            var x = Math.Cos(Latitude.ToRad()) * Math.Sin(point.Latitude.ToRad()) -
                        Math.Sin(Latitude.ToRad()) * Math.Cos(point.Latitude.ToRad()) * Math.Cos(dLon);
             return Math.Atan2(y, x).ToBearing();
         }
@@ -128,7 +125,7 @@ namespace TWCore.Geo
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetCardinalPoint(GeoMapPoint point)
         {
-            double bearing = GetBearing(point);
+            var bearing = GetBearing(point);
             if (bearing >= 0 && bearing < 22.5) return "N";
             if (bearing >= 22.5 && bearing < 67.5) return "NE";
             if (bearing >= 67.5 && bearing < 112.5) return "E";

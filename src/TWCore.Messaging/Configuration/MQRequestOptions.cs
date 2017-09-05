@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
 {

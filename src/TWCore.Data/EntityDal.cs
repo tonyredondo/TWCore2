@@ -23,22 +23,24 @@ using TWCore.Security;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Entity Dal base class
     /// </summary>
     public abstract class EntityDal : IEntityDal
     {
-        static ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
-		static ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
+        private static readonly ConcurrentDictionary<string, ObjectPool<IDataAccess>> Pools = new ConcurrentDictionary<string, ObjectPool<IDataAccess>>();
+        private static readonly ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>> AsyncPools = new ConcurrentDictionary<string, ObjectPool<IDataAccessAsync>>();
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        EntityDalSettings _settings;
+        private EntityDalSettings _settings;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        DalPoolItem _poolItem;
+        private readonly DalPoolItem _poolItem;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        DalPoolItemAsync _poolAsyncItem;
+        private readonly DalPoolItemAsync _poolAsyncItem;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Entity Settings
         /// </summary>
@@ -52,6 +54,7 @@ namespace TWCore.Data
                 return _settings;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Data Access Pool Item
         /// </summary>
@@ -66,10 +69,10 @@ namespace TWCore.Data
         protected EntityDal()
         {
             var poolKey = Settings.GetHashSHA1();
-            var _pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pool => OnGetDataAccess(Settings)));
-			var _poolAsync = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pool => OnGetDataAccessAsync(Settings)));
-            _poolItem = new DalPoolItem(_pool);
-            _poolAsyncItem = new DalPoolItemAsync(_poolAsync);
+            var pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pl => OnGetDataAccess(Settings)));
+			var poolAsync = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pl => OnGetDataAccessAsync(Settings)));
+            _poolItem = new DalPoolItem(pool);
+            _poolAsyncItem = new DalPoolItemAsync(poolAsync);
         }
         #endregion
 

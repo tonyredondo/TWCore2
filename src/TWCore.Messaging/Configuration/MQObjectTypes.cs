@@ -18,6 +18,8 @@ using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Serialization;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
 {
@@ -61,10 +63,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set
-            {
-                Client = value != null ? value.AssemblyQualifiedName : null;
-            }
+            set => Client = value?.AssemblyQualifiedName;
         }
         /// <summary>
         /// Gets or Sets the Message queue server System.Type
@@ -84,10 +83,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set
-            {
-                Server = value != null ? value.AssemblyQualifiedName : null;
-            }
+            set => Server = value?.AssemblyQualifiedName;
         }
         /// <summary>
         /// Gets or Sets the Message queue admin System.Type
@@ -107,10 +103,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set
-            {
-                Admin = value != null ? value.AssemblyQualifiedName : null;
-            }
+            set => Admin = value?.AssemblyQualifiedName;
         }
     }
 }

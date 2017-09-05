@@ -24,13 +24,14 @@ using TBotApi = Telegram.Bot.TelegramBotClient;
 
 namespace TWCore.Bot.Telegram
 {
+    /// <inheritdoc />
     /// <summary>
     /// Telegram bot transport
     /// </summary>
     public class TelegramBotTransport : IBotTransport
     {
-        volatile bool active;
-        readonly TBotApi Bot;
+        private readonly TBotApi _bot;
+        private volatile bool _active;
 
         #region Events
         /// <summary>
@@ -44,6 +45,7 @@ namespace TWCore.Bot.Telegram
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Bot token
         /// </summary>
@@ -52,10 +54,11 @@ namespace TWCore.Bot.Telegram
         /// Get or set if the web page preview is disabled when sending a message
         /// </summary>
         public bool DisableWebPagePreview { get; set; } = true;
+        /// <inheritdoc />
         /// <summary>
         /// Get true if the transport is connected; otherwise, false.
         /// </summary>
-        public bool IsConnected => active;
+        public bool IsConnected => _active;
         #endregion
 
         #region .ctor
@@ -67,12 +70,12 @@ namespace TWCore.Bot.Telegram
         public TelegramBotTransport(string token)
         {
             Token = token;
-            Bot = new TBotApi(token);
-            Bot.OnMessage += Bot_OnMessage;
-            Bot.OnMessageEdited += Bot_OnMessage;
-            Bot.OnReceiveError += Bot_OnReceiveError;
-            Bot.OnInlineQuery += Bot_OnInlineQuery;
-            Bot.OnInlineResultChosen += Bot_OnInlineResultChosen;
+            _bot = new TBotApi(token);
+            _bot.OnMessage += Bot_OnMessage;
+            _bot.OnMessageEdited += Bot_OnMessage;
+            _bot.OnReceiveError += Bot_OnReceiveError;
+            _bot.OnInlineQuery += Bot_OnInlineQuery;
+            _bot.OnInlineResultChosen += Bot_OnInlineResultChosen;
         }
         #endregion
 
@@ -138,7 +141,7 @@ namespace TWCore.Bot.Telegram
                             PhotoName = photo.FilePath,
                             PhotoStream = new Lazy<Stream>(() =>
                             {
-                                var file = Bot.GetFileAsync(photo.FileId).WaitAndResults();
+                                var file = _bot.GetFileAsync(photo.FileId).WaitAndResults();
                                 return file.FileStream;
                             }),
                             Chat = new TelegramBotChat
@@ -167,6 +170,7 @@ namespace TWCore.Bot.Telegram
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Connect to the bot server
         /// </summary>
@@ -174,10 +178,11 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task ConnectAsync()
         {
-            Bot.StartReceiving();
-            active = true;
+            _bot.StartReceiving();
+            _active = true;
             return Task.CompletedTask;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Disconnect from the bot server
         /// </summary>
@@ -185,11 +190,12 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task DisconnectAsync()
         {
-            Bot.StopReceiving();
-            active = false;
+            _bot.StopReceiving();
+            _active = false;
             return Task.CompletedTask;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Sends a text message
         /// </summary>
@@ -200,11 +206,12 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
         {
-            if (!active) return;
-            await Bot.SendTextMessageAsync(chat.Id.ParseTo<long>(-1), message, 
+            if (!_active) return;
+            await _bot.SendTextMessageAsync(chat.Id.ParseTo<long>(-1), message, 
                 disableWebPagePreview: DisableWebPagePreview, 
                 parseMode: (TBot.Types.Enums.ParseMode)parseMode).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Send the typing action to the chat
         /// </summary>
@@ -213,9 +220,10 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendTypingAsync(BotChat chat)
         {
-            if (!active) return;
-            await Bot.SendChatActionAsync(chat.Id.ParseTo<long>(-1), TBot.Types.Enums.ChatAction.Typing).ConfigureAwait(false);
+            if (!_active) return;
+            await _bot.SendChatActionAsync(chat.Id.ParseTo<long>(-1), TBot.Types.Enums.ChatAction.Typing).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message
         /// </summary>
@@ -226,7 +234,7 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendPhotoMessageAsync(BotChat chat, string fileName, string caption = null)
         {
-            if (!active) return;
+            if (!_active) return;
             if (!File.Exists(fileName)) throw new FileNotFoundException("The filename doesn't exist", fileName);
 
             using (var ms = new RecycleMemoryStream())
@@ -237,9 +245,10 @@ namespace TWCore.Bot.Telegram
                 ms.Position = 0;
                 var fileToSend = new TBot.Types.FileToSend(Path.GetFileName(fileName), ms);
 
-                await Bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+                await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a photo message
         /// </summary>
@@ -250,10 +259,10 @@ namespace TWCore.Bot.Telegram
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendPhotoMessageAsync(BotChat chat, Stream fileStream, string caption = null)
         {
-            if (!active) return;
+            if (!_active) return;
             Ensure.ArgumentNotNull(fileStream, "The fileStream can't be null");
             var fileToSend = new TBot.Types.FileToSend(caption ?? Core.Now.Ticks.ToString(), fileStream);
-            await Bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+            await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
         }
         #endregion
     }

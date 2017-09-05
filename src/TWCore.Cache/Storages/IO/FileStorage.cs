@@ -26,6 +26,7 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Storages.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// File Cache Storage
     /// </summary>
@@ -58,6 +59,7 @@ namespace TWCore.Cache.Storages.IO
         /// Maximún number of elements waiting for write before starting to slow down the storage to free the queue
         /// </summary>
         public int SlowDownWriteThreshold { get; set; } = 1000;
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the Storage Type
 		/// </summary>

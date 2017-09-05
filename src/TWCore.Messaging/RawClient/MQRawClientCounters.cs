@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.RawClient
 {
@@ -27,8 +28,8 @@ namespace TWCore.Messaging.RawClient
     /// </summary>
     public class MQRawClientCounters
     {
-        readonly object locker = new object();
-        Timer timer;
+        private readonly object _locker = new object();
+        private Timer _timer;
 
         #region Properties
         /// <summary>
@@ -72,9 +73,9 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQRawClientCounters()
         {
-            timer = new Timer(state =>
+            _timer = new Timer(state =>
             {
-                lock(locker)
+                lock(_locker)
                 {
                     LastMinuteMessagesSent = MessagesSent;
                     LastMinuteMessagesReceived = MessagesReceived;
@@ -91,7 +92,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalBytesSent(double increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalBytesSent += increment;
         }
         /// <summary>
@@ -101,7 +102,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementTotalBytesReceived(double increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalBytesReceived += increment;
         }
         /// <summary>
@@ -110,7 +111,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesSent()
         {
-            lock (locker)
+            lock (_locker)
             {
                 MessagesSent++;
                 LastMinuteMessagesSent++;
@@ -122,7 +123,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void IncrementMessagesReceived()
         {
-            lock (locker)
+            lock (_locker)
             {
                 MessagesReceived++;
                 LastMinuteMessagesReceived++;

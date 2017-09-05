@@ -30,11 +30,11 @@ namespace TWCore.Collections
         /// <summary>
         /// Internal Stack
         /// </summary>
-        Stack<ObjectValue<T>> _stack;
+        private Stack<ObjectValue<T>> _stack;
         /// <summary>
         /// The sync lock.
         /// </summary>
-        protected object _padlock = new object();
+        protected readonly object Padlock = new object();
         #endregion
 
         #region Properties
@@ -45,7 +45,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Action for change value when the stack change
         /// </summary>
-        Action<object, T> ChangeValueAction { get; set; }
+        private Action<object, T> ChangeValueAction { get; set; }
         #endregion
 
         #region .ctor
@@ -69,7 +69,7 @@ namespace TWCore.Collections
         /// <param name="sender">Sender object</param>
         public void RegisterObject(object sender)
         {
-            lock (_padlock)
+            lock (Padlock)
                 RegisterObject(sender, DefaultValue);
         }
         /// <summary>
@@ -79,7 +79,7 @@ namespace TWCore.Collections
         /// <param name="value">New Value</param>
         public void RegisterObject(object sender, T value)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 var oValue = new ObjectValue<T> { Sender = sender, Value = value };
                 _stack.Push(oValue);
@@ -92,7 +92,7 @@ namespace TWCore.Collections
         /// <param name="sender">Sender object</param>
         public void DeRegisterObject(object sender)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 if (_stack.Count <= 0) return;
                 var oldPeek = _stack.Peek();
@@ -117,7 +117,7 @@ namespace TWCore.Collections
         /// <param name="value">New Value for this object in the stack</param>
         public void SetValue(object sender, T value)
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 if (_stack.Count <= 0) return;
                 var objValue = _stack.FirstOrDefault(item => item.Sender == sender);
@@ -134,7 +134,7 @@ namespace TWCore.Collections
         /// <returns>ObjectValue item instance</returns>
         public ObjectValue<T> PopObjectValue()
         {
-            lock (_padlock)
+            lock (Padlock)
             {
                 var pop = _stack.Pop();
                 var newPeek = _stack.Peek();
@@ -149,8 +149,8 @@ namespace TWCore.Collections
         /// <summary>
         /// Object and value element to save in the stack
         /// </summary>
-        /// <typeparam name="Tinner">Value object</typeparam>
-        public class ObjectValue<Tinner>
+        /// <typeparam name="TInner">Value object</typeparam>
+        public class ObjectValue<TInner>
         {
             /// <summary>
             /// Object sender
@@ -159,7 +159,7 @@ namespace TWCore.Collections
             /// <summary>
             /// Object value
             /// </summary>
-            public Tinner Value { get; set; }
+            public TInner Value { get; set; }
         }
         #endregion
     }

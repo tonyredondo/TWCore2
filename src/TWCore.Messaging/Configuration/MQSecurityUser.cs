@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
 {
@@ -43,21 +44,18 @@ namespace TWCore.Messaging.Configuration
         /// <returns>MQAccessRights instance</returns>
         public MQAccessRights GetAccessRights()
         {
-            if (Permissions.IsNotNullOrEmpty())
+            if (Permissions.IsNullOrEmpty()) return 0;
+            var permissions = Permissions.SplitAndTrim(",");
+            MQAccessRights? rights = null;
+            foreach (var permission in permissions)
             {
-                var permissions = Permissions.SplitAndTrim(",");
-                MQAccessRights? rights = null;
-                foreach (var permission in permissions)
-                {
-                    var r = (MQAccessRights)Enum.Parse(typeof(MQAccessRights), permission);
-                    if (rights.HasValue)
-                        rights = rights | r;
-                    else
-                        rights = r;
-                }
-                return rights ?? 0;
+                var r = (MQAccessRights)Enum.Parse(typeof(MQAccessRights), permission);
+                if (rights.HasValue)
+                    rights = rights | r;
+                else
+                    rights = r;
             }
-            return 0;
+            return rights ?? 0;
         }
     }
 }

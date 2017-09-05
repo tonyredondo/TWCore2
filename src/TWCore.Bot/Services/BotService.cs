@@ -22,34 +22,41 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Bot;
 using TWCore.Serialization;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Bot Service base
     /// </summary>
     public abstract class BotService : IBotService
     {
-        ISerializer serializer = SerializerManager.DefaultBinarySerializer;
+        private readonly ISerializer _serializer = SerializerManager.DefaultBinarySerializer;
 
+        /// <inheritdoc />
         /// <summary>
         /// Service bot engine
         /// </summary>
         public IBotEngine Bot { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Save tracked chats on disk
         /// </summary>
         public bool SaveTrackedChats { get; protected set; } = false;
+        /// <inheritdoc />
         /// <summary>
         /// Tracked chats file path
         /// </summary>
         public string TrackedChatsFilePath { get; protected set; } = "{0}_SavedChats".ApplyFormat(Core.ApplicationName);
 
         #region IService Methods
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
         public bool CanPauseAndContinue => true;
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -68,6 +75,7 @@ namespace TWCore.Services
                 Core.Log.Write(ex);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
@@ -86,6 +94,7 @@ namespace TWCore.Services
                 Core.Log.Write(ex);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
@@ -94,6 +103,7 @@ namespace TWCore.Services
         {
             OnStop();
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -115,7 +125,7 @@ namespace TWCore.Services
                         Try.Do(() =>
                         {
                             Core.Log.InfoBasic("Loading tracked chats file: {0}", TrackedChatsFilePath);
-                            var botChats = serializer.DeserializeFromFile<List<BotChat>>(TrackedChatsFilePath);
+                            var botChats = _serializer.DeserializeFromFile<List<BotChat>>(TrackedChatsFilePath);
                             Bot.TrackedChats.AddRange(botChats);
                             Core.Log.InfoBasic("{0} tracked chats loaded.", botChats?.Count);
                         });
@@ -126,7 +136,7 @@ namespace TWCore.Services
                         {
                             Core.Log.InfoBasic("Saving tracked chats file: {0}", TrackedChatsFilePath);
                             var botChats = ((IBotEngine)s).TrackedChats.ToList();
-                            serializer.SerializeToFile(botChats, TrackedChatsFilePath);
+                            _serializer.SerializeToFile(botChats, TrackedChatsFilePath);
                             Core.Log.InfoBasic("{0} tracked chats saved.", botChats?.Count);
                         });
                     };
@@ -141,6 +151,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>

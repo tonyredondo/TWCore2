@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-#pragma warning disable 1711
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -25,31 +24,37 @@ using TWCore.Serialization;
 
 namespace TWCore.Messaging.RawClient
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Queue raw client base
     /// </summary>
     public abstract class MQueueRawClientBase : IMQueueRawClient
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Gets or Sets the client name
         /// </summary>
         [StatusProperty]
         public string Name { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the sender serializer
         /// </summary>
         [StatusProperty]
         public ISerializer SenderSerializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the receiver serializer
         /// </summary>
         [StatusProperty]
         public ISerializer ReceiverSerializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the client counters
         /// </summary>
@@ -77,13 +82,14 @@ namespace TWCore.Messaging.RawClient
         /// Message Queue client base
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MQueueRawClientBase()
+        protected MQueueRawClientBase()
         {
             Counters = new MQRawClientCounters();
         }
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize client with the configuration
         /// </summary>
@@ -91,22 +97,21 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
-            if (config != null)
-            {
-                Config = config;
+            if (config == null) return;
+            Config = config;
 
-                Name = Config.Name;
-                SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
-                if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
-                    SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
-                ReceiverSerializer = SerializerManager.GetByMimeType(Config.ResponseOptions?.SerializerMimeType);
-                if (ReceiverSerializer != null && Config.ResponseOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
-                    ReceiverSerializer.Compressor = CompressorManager.GetByEncodingType(Config.ResponseOptions?.CompressorEncodingType);
+            Name = Config.Name;
+            SenderSerializer = SerializerManager.GetByMimeType(Config.RequestOptions?.SerializerMimeType);
+            if (SenderSerializer != null && Config.RequestOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
+                SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.RequestOptions?.CompressorEncodingType);
+            ReceiverSerializer = SerializerManager.GetByMimeType(Config.ResponseOptions?.SerializerMimeType);
+            if (ReceiverSerializer != null && Config.ResponseOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
+                ReceiverSerializer.Compressor = CompressorManager.GetByEncodingType(Config.ResponseOptions?.CompressorEncodingType);
 
-                OnInit();
-            }
+            OnInit();
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
@@ -115,6 +120,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send(object obj)
             => Send(obj, Guid.NewGuid());
+        /// <inheritdoc />
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
@@ -126,9 +132,9 @@ namespace TWCore.Messaging.RawClient
         {
             if (obj is byte[] bytes)
                 return SendBytes(bytes, correlationId);
-            else
-                return SendBytes((byte[])SenderSerializer.Serialize(obj), correlationId);
+            return SendBytes((byte[])SenderSerializer.Serialize(obj), correlationId);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
@@ -137,6 +143,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid SendBytes(byte[] obj)
             => SendBytes(obj, Guid.NewGuid());
+        /// <inheritdoc />
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
@@ -146,9 +153,8 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid SendBytes(byte[] obj, Guid correlationId)
         {
-            RawMessageEventArgs rmea;
             OnBeforeSend(ref obj);
-            rmea = new RawMessageEventArgs(Name, obj);
+            var rmea = new RawMessageEventArgs(Name, obj);
             OnBeforeSendRequest?.Invoke(this, rmea);
             MQueueRawClientEvents.FireOnBeforeSendRequest(this, rmea);
             obj = rmea.Message;
@@ -163,6 +169,7 @@ namespace TWCore.Messaging.RawClient
             }
             return Guid.Empty;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -172,6 +179,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Receive<T>(Guid correlationId)
             => Receive<T>(correlationId, CancellationToken.None);
+        /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -186,9 +194,9 @@ namespace TWCore.Messaging.RawClient
             if (msg == null) return default(T);
             if (typeof(T) == typeof(byte[]))
                 return (T)(object)msg;
-            else
-                return ReceiverSerializer.Deserialize<T>(msg);
+            return ReceiverSerializer.Deserialize<T>(msg);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -197,6 +205,7 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ReceiveBytes(Guid correlationId)
             => ReceiveBytes(correlationId, CancellationToken.None);
+        /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -207,17 +216,17 @@ namespace TWCore.Messaging.RawClient
         public byte[] ReceiveBytes(Guid correlationId, CancellationToken cancellationToken)
         {
             var bytes = OnReceive(correlationId, cancellationToken);
-            if (bytes != null)
-            {
-                OnAfterReceive(ref bytes);
-                Counters.IncrementMessagesReceived();
-                Counters.IncrementTotalBytesReceived(bytes.Length);
-                var rrea = new RawMessageEventArgs(Name, bytes);
-                OnResponseReceived?.Invoke(this, rrea);
-                MQueueRawClientEvents.FireOnResponseReceived(this, rrea);
-            }
+            if (bytes == null) return null;
+
+            OnAfterReceive(ref bytes);
+            Counters.IncrementMessagesReceived();
+            Counters.IncrementTotalBytesReceived(bytes.Length);
+            var rrea = new RawMessageEventArgs(Name, bytes);
+            OnResponseReceived?.Invoke(this, rrea);
+            MQueueRawClientEvents.FireOnResponseReceived(this, rrea);
             return bytes;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -229,116 +238,124 @@ namespace TWCore.Messaging.RawClient
             var correlationId = SendBytes(obj);
             return ReceiveBytes(correlationId);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R, T>(T obj)
+        public TR SendAndReceive<TR, T>(T obj)
         {
             var correlationId = Send(obj);
-            return Receive<R>(correlationId);
+            return Receive<TR>(correlationId);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R, T>(T obj, CancellationToken cancellationToken)
+        public TR SendAndReceive<TR, T>(T obj, CancellationToken cancellationToken)
         {
             var correlationId = Send(obj);
-            return Receive<R>(correlationId, cancellationToken);
+            return Receive<TR>(correlationId, cancellationToken);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R, T>(T obj, Guid correlationId)
+        public TR SendAndReceive<TR, T>(T obj, Guid correlationId)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<R>(correlationId);
+            return Receive<TR>(correlationId);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="correlationId">Manual defined correlationId</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
-        {
-            correlationId = Send(obj, correlationId);
-            return Receive<R>(correlationId, cancellationToken);
-        }
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R>(object obj)
-        {
-            var correlationId = Send(obj);
-            return Receive<R>(correlationId);
-        }
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R>(object obj, CancellationToken cancellationToken)
-        {
-            var correlationId = Send(obj);
-            return Receive<R>(correlationId, cancellationToken);
-        }
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="correlationId">Manual defined correlationId</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R>(object obj, Guid correlationId)
-        {
-            correlationId = Send(obj, correlationId);
-            return Receive<R>(correlationId);
-        }
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="R">Type of the object to be received</typeparam>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public R SendAndReceive<R>(object obj, Guid correlationId, CancellationToken cancellationToken)
+        public TR SendAndReceive<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<R>(correlationId, cancellationToken);
+            return Receive<TR>(correlationId, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TR SendAndReceive<TR>(object obj)
+        {
+            var correlationId = Send(obj);
+            return Receive<TR>(correlationId);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TR SendAndReceive<TR>(object obj, CancellationToken cancellationToken)
+        {
+            var correlationId = Send(obj);
+            return Receive<TR>(correlationId, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TR SendAndReceive<TR>(object obj, Guid correlationId)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<TR>(correlationId);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sends and waits for receive response from the queue (like RPC)
+        /// </summary>
+        /// <typeparam name="TR">Type of the object to be received</typeparam>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Object instance received from the queue</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TR SendAndReceive<TR>(object obj, Guid correlationId, CancellationToken cancellationToken)
+        {
+            correlationId = Send(obj, correlationId);
+            return Receive<TR>(correlationId, cancellationToken);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

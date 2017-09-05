@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Configuration
 {
@@ -27,7 +28,7 @@ namespace TWCore.Messaging.Configuration
     /// </summary>
     public class MQConnection
     {
-        string _key;
+        private string _key;
         /// <summary>
         /// Message queue route (path or url)
         /// </summary>
@@ -70,9 +71,7 @@ namespace TWCore.Messaging.Configuration
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetKey()
         {
-            if (_key == null)
-                _key = Route + Name + Parameters?.Select(i => i.Key + i.Value);
-            return _key;
+            return _key ?? (_key = Route + Name + Parameters?.Select(i => i.Key + i.Value));
         }
     }
 }

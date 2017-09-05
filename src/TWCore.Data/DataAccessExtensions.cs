@@ -25,7 +25,7 @@ namespace TWCore.Data
     /// </summary>
     public static class DataAccessExtensions
     {
-		static ConcurrentDictionary<(Assembly, string), string> _resourceCache = new ConcurrentDictionary<(Assembly, string), string>();
+        private static readonly ConcurrentDictionary<(Assembly, string), string> ResourceCache = new ConcurrentDictionary<(Assembly, string), string>();
 
 		/// <summary>
 		/// Gets the Sql query from a embedded resource
@@ -37,7 +37,7 @@ namespace TWCore.Data
 		public static string GetSqlResource(this IDataAccess dAccess, string resourceName)
 		{
 			var assembly = Assembly.GetCallingAssembly();
-			return _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+			return ResourceCache.GetOrAdd((assembly, resourceName), key => GetStringResource(key.Item1, key.Item2));
 		}
 		/// <summary>
 		/// Gets the Sql query from a embedded resource
@@ -48,7 +48,7 @@ namespace TWCore.Data
 		/// <returns>Sql query from the resources</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetSqlResource(this IDataAccess dAccess, Assembly assembly, string resourceName)
-			=> _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+			=> ResourceCache.GetOrAdd((assembly, resourceName), key => GetStringResource(key.Item1, key.Item2));
 		/// <summary>
 		/// Gets the Sql query from a embedded resource
 		/// </summary>
@@ -59,7 +59,7 @@ namespace TWCore.Data
 		public static string GetSqlResource(this IDataAccessAsync dAccess, string resourceName)
 		{
 			var assembly = Assembly.GetCallingAssembly();
-			return _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+			return ResourceCache.GetOrAdd((assembly, resourceName), key => GetStringResource(key.Item1, key.Item2));
 		}
 		/// <summary>
 		/// Gets the Sql query from a embedded resource
@@ -70,11 +70,11 @@ namespace TWCore.Data
 		/// <returns>Sql query from the resources</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static string GetSqlResource(this IDataAccessAsync dAccess, Assembly assembly, string resourceName)
-			=> _resourceCache.GetOrAdd((assembly, resourceName), _key => GetStringResource(_key.Item1, _key.Item2));
+			=> ResourceCache.GetOrAdd((assembly, resourceName), key => GetStringResource(key.Item1, key.Item2));
 
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static string GetStringResource(Assembly assembly, string resourceName)
+		private static string GetStringResource(Assembly assembly, string resourceName)
 		{
 			return assembly.GetResourceString(string.Format("Sql.{0}.sql", resourceName)) ??
 				assembly.GetResourceString(string.Format("sql.{0}.sql", resourceName)) ??

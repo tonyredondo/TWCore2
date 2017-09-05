@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Cache.Configuration;
 using TWCore.Configuration;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Configuration
 {

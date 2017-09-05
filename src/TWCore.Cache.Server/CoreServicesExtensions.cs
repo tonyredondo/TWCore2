@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Serialization;
 using TWCore.Services.Configuration;
 using TWCore.Settings;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
@@ -28,13 +29,13 @@ namespace TWCore.Services
     /// </summary>
     public static class CoreServicesExtensions
     {
-        static CacheConfiguration _cacheConfiguration;
-        static ServerOptions _serverOptions;
-        static bool _init;
+        private static CacheConfiguration _cacheConfiguration;
+        private static ServerOptions _serverOptions;
+        private static bool _init;
 
 		#region Init
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void Init()
+		private static void Init()
         {
             if (_init) return;
             _init = true;

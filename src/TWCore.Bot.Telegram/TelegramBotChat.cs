@@ -16,6 +16,7 @@ limitations under the License.
 
 namespace TWCore.Bot.Telegram
 {
+    /// <inheritdoc />
     /// <summary>
     /// Telegram bot chat specific
     /// </summary>

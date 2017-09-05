@@ -25,35 +25,39 @@ using TWCore.Diagnostics.Status;
 
 namespace TWCore.Diagnostics.Log
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default log engine
     /// </summary>
     [IgnoreStackFrameLog]
-    public class DefaultLogEngine : ILogEngine
+    public sealed class DefaultLogEngine : ILogEngine
     {
         #region Private fields
-        readonly Worker<ILogItem> _itemsWorker;
-        readonly ConcurrentQueue<ILogItem> lastLogItems = new ConcurrentQueue<ILogItem>();
-        readonly Worker<ILogItem> _lastLogItemsWorker;
-        readonly ManualResetEventSlim completationHandler = new ManualResetEventSlim(true);
+        private readonly Worker<ILogItem> _itemsWorker;
+        private readonly ConcurrentQueue<ILogItem> _lastLogItems = new ConcurrentQueue<ILogItem>();
+        private readonly Worker<ILogItem> _lastLogItemsWorker;
+        private readonly ManualResetEventSlim _completationHandler = new ManualResetEventSlim(true);
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Log storages items
         /// </summary>
         [StatusReference]
         public LogStorageCollection Storage { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Max log level to register in logs
         /// </summary>
         [StatusProperty]
         public LogLevel MaxLogLevel { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the log item factory
         /// </summary>
         [StatusProperty, StatusReference]
-        public CreateLogItemDelegate ItemFactory { get; set; } = (LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName) =>
+        public CreateLogItemDelegate ItemFactory { get; set; } = (level, code, message, groupName, ex, assemblyName, typeName) =>
         {
             var lItem = new LogItem
             {
@@ -81,7 +85,8 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Gets a log done task that completes when the log has finished to write
         /// </summary>
-        public Task LogDoneTask => Task.Run(() => completationHandler.Wait());
+        public Task LogDoneTask => Task.Run(() => _completationHandler.Wait());
+        /// <inheritdoc />
         /// <summary>
         /// Enable or Disable the Log engine
         /// </summary>
@@ -105,28 +110,26 @@ namespace TWCore.Diagnostics.Log
             {
                 try
                 {
-                    if (item != null)
-                    {
-                        if (item is NewLineLogItem)
-                            Storage.WriteEmptyLine();
-                        else
-                            Storage.Write(item);
-                    }
+                    if (item == null) return;
+                    if (item is NewLineLogItem)
+                        Storage.WriteEmptyLine();
+                    else
+                        Storage.Write(item);
                 }
                 catch (Exception)
                 {
                     // ignored
                 }
             }, false);
-            _itemsWorker.OnWorkDone += (s, e) => completationHandler.Set();
+            _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
             _lastLogItemsWorker = new Worker<ILogItem>(item =>
             {
                 try
                 {
-                    if (lastLogItems.Count > 10)
-                        lastLogItems.TryDequeue(out var _);
+                    if (_lastLogItems.Count > 10)
+                        _lastLogItems.TryDequeue(out var _);
                     if (!(item is NewLineLogItem))
-                        lastLogItems.Enqueue(item);
+                        _lastLogItems.Enqueue(item);
                 }
                 catch (Exception)
                 {
@@ -138,7 +141,7 @@ namespace TWCore.Diagnostics.Log
             Core.Status.Attach(() =>
             {
                 var sItem = new StatusItem();
-                var lItems = lastLogItems.ToList();
+                var lItems = _lastLogItems.ToList();
                 if (lItems.Count > 0)
                 {
                     sItem.Name = $"Last {lItems.Count} error messages";
@@ -161,30 +164,26 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose the instance resources
         /// </summary>
         /// <param name="disposing">true if should dispose managed resources.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (_disposedValue) return;
+            if (disposing)
             {
-                if (disposing)
-                {
-                    _itemsWorker?.Stop(int.MaxValue);
-                    _itemsWorker?.Clear();
-                    _lastLogItemsWorker?.Stop(50);
-                    _lastLogItemsWorker?.Clear();
-                    if (Storage != null)
-                    {
-                        Storage.Dispose();
-                    }
-                }
-                disposedValue = true;
+                _itemsWorker?.Stop(int.MaxValue);
+                _itemsWorker?.Clear();
+                _lastLogItemsWorker?.Stop(50);
+                _lastLogItemsWorker?.Clear();
+                Storage?.Dispose();
             }
+            _disposedValue = true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the instance resources
         /// </summary>
@@ -197,6 +196,7 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #region Log Methods
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -208,13 +208,14 @@ namespace TWCore.Diagnostics.Log
             {
                 if (_itemsWorker?.Count < MaximumItemsInQueue)
                 {
-                    completationHandler.Reset();
+                    _completationHandler.Reset();
                     _itemsWorker?.Enqueue(item);
                 }
                 if (item.Level == LogLevel.Error)
                     _lastLogItemsWorker?.Enqueue(item);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -228,14 +229,13 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(LogLevel level, string code, string message, string groupName, Exception ex = null, string assemblyName = null, string typeName = null)
         {
-            if (Enabled && level <= MaxLogLevel && level <= Storage.GetMaxLogLevel())
-            {
-                var item = ItemFactory(level, code, message, groupName, ex, assemblyName, typeName);
-                Write(item);
-                if (level == LogLevel.Error)
-                    Start();
-            }
+            if (!Enabled || level > MaxLogLevel || level > Storage.GetMaxLogLevel()) return;
+            var item = ItemFactory(level, code, message, groupName, ex, assemblyName, typeName);
+            Write(item);
+            if (level == LogLevel.Error)
+                Start();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -245,6 +245,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Related exception if is available</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(LogLevel level, string code, string message, Exception ex = null) => Write(level, code, message, null, ex);
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -253,6 +254,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Related exception if is available</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(LogLevel level, string message, Exception ex = null) => Write(level, null, message, null, ex);
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -260,6 +262,7 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Related exception if is available</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(LogLevel level, Exception ex) => Write(level, null, (ex as SerializableException.WrappedException)?.Message ?? ex.Message, null, ex);
+        /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
         /// </summary>
@@ -267,6 +270,7 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Exception ex) => Write(LogLevel.Error, null, (ex as SerializableException.WrappedException)?.Message ?? ex.Message, null, ex);
 
+        /// <inheritdoc />
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -279,6 +283,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Debug))
                 WriteUnsafe(LogLevel.Debug, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>
@@ -290,6 +295,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -302,6 +308,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, message, args, ex);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -313,6 +320,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a warning item into the log storages
         /// </summary>
@@ -324,6 +332,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a InfoLevel1 item into the log storages
         /// </summary>
@@ -335,6 +344,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a InfoMedium item into the log storages
         /// </summary>
@@ -346,6 +356,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a InfoDetailed item into the log storages
         /// </summary>
@@ -357,6 +368,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a Stats item into the log storages
         /// </summary>
@@ -368,6 +380,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Stats))
                 WriteUnsafe(LogLevel.Stats, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a LibDebug item into the log storages
         /// </summary>
@@ -380,6 +393,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.LibDebug))
                 WriteUnsafe(LogLevel.LibDebug, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a LibVerbose item into the log storages
         /// </summary>
@@ -392,6 +406,7 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.LibVerbose))
                 WriteUnsafe(LogLevel.LibVerbose, message, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a log empty line
         /// </summary>
@@ -403,18 +418,21 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #region Pending Items
+        /// <inheritdoc />
         /// <summary>
         /// Get all pending to write log items
         /// </summary>
         /// <returns>Pending log items array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILogItem[] GetPendingItems() => _itemsWorker?.QueueItems?.ToArray();
+        /// <inheritdoc />
         /// <summary>
         /// Enqueue to write the log items to the log storages
         /// </summary>
         /// <param name="items">Log items range</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void EnqueueItemsArray(ILogItem[] items) => items?.Each(i => _itemsWorker.Enqueue(i));
+        /// <inheritdoc />
         /// <summary>
         /// Starts the Log Engine
         /// </summary>
@@ -428,30 +446,22 @@ namespace TWCore.Diagnostics.Log
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool IsLogLevelValid(LogLevel logLevel)
+        private bool IsLogLevelValid(LogLevel logLevel)
         {
-            if (Storage.Count > 0 && (logLevel > MaxLogLevel || logLevel > Storage.GetMaxLogLevel()))
-                return false;
-            return true;
+            return Storage.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storage.GetMaxLogLevel());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void WriteUnsafe(LogLevel level, string message, object[] args, Exception ex = null)
+        private void WriteUnsafe(LogLevel level, string message, object[] args, Exception ex = null)
         {
-            if (Enabled && _itemsWorker?.Count < MaximumItemsInQueue)
-            {
-                if (args?.Length > 0)
-                    message = string.Format(message, args);
-                var item = ItemFactory(level, null, message, null, ex, null, null);
-                if (item != null) 
-                {
-                    _itemsWorker?.Enqueue(item);
-                    if (item.Level == LogLevel.Error) 
-                    {
-                        _lastLogItemsWorker?.Enqueue(item);
-                        Start();
-                    }
-                }
-            }
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            if (args?.Length > 0)
+                message = string.Format(message, args);
+            var item = ItemFactory(level, null, message, null, ex, null, null);
+            if (item == null) return;
+            _itemsWorker?.Enqueue(item);
+            if (item.Level != LogLevel.Error) return;
+            _lastLogItemsWorker?.Enqueue(item);
+            Start();
         }
         #endregion
     }

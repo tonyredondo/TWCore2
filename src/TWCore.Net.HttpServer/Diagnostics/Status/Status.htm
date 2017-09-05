@@ -209,7 +209,8 @@
             {
                 depth++;
                 if (items) {
-                    for (var i = 0; i < items.length; i++) {
+                    var i;
+                    for (i = 0; i < items.length; i++) {
                         var item = items[i];
                         var oldItem = GetItemOnData(oldItems, item.Name);
                         var id = "status" + depth + "_" + itemidx + "_" + i;
@@ -316,7 +317,7 @@
                     }
 
                     var sItemsLength = parentElement.children(".statusItem").length;
-                    for (var i = items.length; i < sItemsLength; i++)
+                    for (i = items.length; i < sItemsLength; i++)
                         parentElement.children("#status" + depth + "_" + itemidx + "_" + i).remove();
                 }
             }

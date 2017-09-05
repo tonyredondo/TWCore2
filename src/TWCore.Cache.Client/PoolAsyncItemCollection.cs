@@ -523,7 +523,7 @@ namespace TWCore.Cache.Client
 				{
 					_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
 					{ 
-						Action = async (PoolAsyncItem item, TA1 a1, TA2 a2, TA3 a3, TA4 a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
+						Action = async (item, a1, a2, a3, a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
 						Arg1 = arg1, 
 						Arg2 = arg2, 
 						Arg3 = arg3, 

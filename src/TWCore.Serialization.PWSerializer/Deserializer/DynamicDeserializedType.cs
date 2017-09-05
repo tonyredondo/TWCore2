@@ -26,6 +26,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Deserializer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Dynamic Deserialized Type
     /// </summary>
@@ -37,23 +38,23 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private int _itemDictionaryIdx;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly string[] PropertiesNames;
+        private readonly string[] _propertiesNames;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private readonly object[] PropertiesValues;
+        private readonly object[] _propertiesValues;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private Dictionary<string, object> _properties;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int PropertiesLength;
+        private readonly int _propertiesLength;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int CurrentPropertyIndex;
+        private int _currentPropertyIndex;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool isIList;
+        private bool _isIList;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private int ItemListLength;
+        private readonly int _itemListLength;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private bool isIDictionary;
+        private bool _isIDictionary;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private byte Operation;
+        private byte _operation;
         #endregion
 
         public string ValueType { get; private set; }
@@ -63,8 +64,8 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             {
                 if (_properties != null) return _properties;
                 _properties = new Dictionary<string, object>();
-                for (var i = 0; i < PropertiesLength; i++)
-                    _properties.Add(PropertiesNames[i], PropertiesValues[i]);
+                for (var i = 0; i < _propertiesLength; i++)
+                    _properties.Add(_propertiesNames[i], _propertiesValues[i]);
                 return _properties;
             }
         }
@@ -75,48 +76,48 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         public DynamicDeserializedType(string valueType, string[] properties, int length)
         {
             ValueType = valueType;
-            if (properties?.Length > 0)
+            if (properties != null && properties.Length > 0)
             {
-                PropertiesNames = properties;
-                PropertiesLength = properties.Length;
-                PropertiesValues = new object[PropertiesLength];
+                _propertiesNames = properties;
+                _propertiesLength = properties.Length;
+                _propertiesValues = new object[_propertiesLength];
             }
-            ItemListLength = length;
+            _itemListLength = length;
         }
 
         #region Internals
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ListStart()
         {
-            Operation = 1;
-            isIList = true;
+            _operation = 1;
+            _isIList = true;
             List = new List<object>();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void ListEnd()
         {
-            Operation = 0;
+            _operation = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DictionaryStart()
         {
             _itemDictionaryIdx = 0;
-            Operation = 2;
-            isIDictionary = true;
+            _operation = 2;
+            _isIDictionary = true;
             Dictionary = new Dictionary<object, object>();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void DictionaryEnd()
         {
-            Operation = 0;
+            _operation = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void AddValue(object lastObject)
         {
-            switch (Operation)
+            switch (_operation)
             {
                 case 0:
-                    PropertiesValues[CurrentPropertyIndex++] = lastObject;
+                    _propertiesValues[_currentPropertyIndex++] = lastObject;
                     break;
                 case 1:
                     List.Add(lastObject);
@@ -139,33 +140,33 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         #endregion
 
         #region Dynamic Methods
-        public bool IsList => isIList;
-        public bool IsDictionary => isIDictionary;
-        public bool HasProperties => PropertiesLength > 0;
-        public int Count => isIList ? List.Count : isIDictionary ? Dictionary.Count : -1;
+        public bool IsList => _isIList;
+        public bool IsDictionary => _isIDictionary;
+        public bool HasProperties => _propertiesLength > 0;
+        public int Count => _isIList ? List.Count : _isIDictionary ? Dictionary.Count : -1;
         public override bool TryGetIndex(GetIndexBinder binder, object[] indexes, out object result)
         {
             result = null;
-            if (isIList && indexes[0] is int index)
+            if (_isIList && indexes[0] is int index)
             {
                 var value = List[index];
                 result = value;
                 return true;
             }
-            if (!isIDictionary) return false;
+            if (!_isIDictionary) return false;
             result = Dictionary[indexes[0]];
             return true;
         }
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             result = null;
-            if (PropertiesLength <= 0)
+            if (_propertiesLength <= 0)
                 return false;
             var name = binder.Name;
-            var idx = PropertiesNames.IndexOf(name);
+            var idx = _propertiesNames.IndexOf(name);
             if (idx < 0)
                 return false;
-            result = PropertiesValues[idx];
+            result = _propertiesValues[idx];
             return true;
         }
         #endregion
@@ -195,11 +196,11 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     prop.Value.Property.SetValue(obj, value);
                 }
             }
-            if (isIList && typeInfo.IsIList)
+            if (_isIList && typeInfo.IsIList)
             {
                 var underType = typeInfo.InnerTypes[0];
                 if (typeInfo.IsArray)
-                    obj = Array.CreateInstance(underType, ItemListLength);
+                    obj = Array.CreateInstance(underType, _itemListLength);
                 var ilistObj = (IList)obj;
                 var idx = 0;
                 foreach (var item in List)
@@ -229,7 +230,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     }
                 }
             }
-            if (isIDictionary && typeInfo.IsIDictionary)
+            if (_isIDictionary && typeInfo.IsIDictionary)
             {
                 var keyType = typeInfo.InnerTypes[0];
                 var valueType = typeInfo.InnerTypes[1];
@@ -261,7 +262,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
 
         #endregion
 
-        private static ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {
@@ -317,12 +318,12 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                             else
                             {
                                 var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                if (iListType?.GenericTypeArguments.Length > 0)
+                                if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                     innerType = iListType.GenericTypeArguments[0];
                             }
                         }
                         tinfo.IsIList = true;
-                        tinfo.InnerTypes = new Type[] { innerType };
+                        tinfo.InnerTypes = new[] { innerType };
                     }
 
                     var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));

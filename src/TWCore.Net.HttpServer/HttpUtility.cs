@@ -38,7 +38,7 @@ namespace TWCore.Net.HttpServer
             if ((query.Length > 0) && (query[0] == '?'))
                 query = query.Substring(1);
 
-            return new HttpValueCollection(query, true);
+            return new HttpValueCollection(query);
         }
     }
 }

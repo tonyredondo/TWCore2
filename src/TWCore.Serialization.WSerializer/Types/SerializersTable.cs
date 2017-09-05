@@ -25,11 +25,11 @@ namespace TWCore.Serialization.WSerializer.Types
     public class SerializersTable
     {
         #region Static Pool
-        private static readonly ObjectPool<SerializersTable> CachedUShortTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached2048TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached1024TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> Cached512TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<SerializersTable> NoCachedTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<SerializersTable> CachedUShortTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.CachedUShort), Init, 1);
+        private static readonly ObjectPool<SerializersTable> Cached2048TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached2048), Init, 1);
+        private static readonly ObjectPool<SerializersTable> Cached1024TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached1024), Init, 1);
+        private static readonly ObjectPool<SerializersTable> Cached512TablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.Cached512), Init, 1);
+        private static readonly ObjectPool<SerializersTable> NoCachedTablePool = new ObjectPool<SerializersTable>(pool => new SerializersTable(SerializerMode.NoCached), Init, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializersTable GetTable(SerializerMode mode)
@@ -172,7 +172,6 @@ namespace TWCore.Serialization.WSerializer.Types
             if (serializerType == typeof(DateTimeOffsetSerializer))
             {
                 DateTimeOffsetSerializer.Write(bw, value);
-                return;
             }
         }
 
@@ -181,30 +180,29 @@ namespace TWCore.Serialization.WSerializer.Types
         {
             if (type == null)
                 return null;
-            if (!_typesCache.TryGetValue(type, out var tSer))
-            {
-                if (NumberSerializer.CanWrite(type))
-                    tSer = NumberSerializer;
-                else if (StringSerializer.CanWrite(type))
-                    tSer = StringSerializer;
-                else if (GuidSerializer.CanWrite(type))
-                    tSer = GuidSerializer;
-                else if (BoolSerializer.CanWrite(type))
-                    tSer = BoolSerializer;
-                else if (DateTimeSerializer.CanWrite(type))
-                    tSer = DateTimeSerializer;
-                else if (TimeSpanSerializer.CanWrite(type))
-                    tSer = TimeSpanSerializer;
-                else if (EnumSerializer.CanWrite(type))
-                    tSer = EnumSerializer;
-                else if (ByteArraySerializer.CanWrite(type))
-                    tSer = ByteArraySerializer;
-                else if (CharSerializer.CanWrite(type))
-                    tSer = CharSerializer;
-                else if (DateTimeOffsetSerializer.CanWrite(type))
-                    tSer = DateTimeOffsetSerializer;
-                _typesCache[type] = tSer;
-            }
+            if (_typesCache.TryGetValue(type, out var tSer))
+                return tSer;
+            if (NumberSerializer.CanWrite(type))
+                tSer = NumberSerializer;
+            else if (StringSerializer.CanWrite(type))
+                tSer = StringSerializer;
+            else if (GuidSerializer.CanWrite(type))
+                tSer = GuidSerializer;
+            else if (BoolSerializer.CanWrite(type))
+                tSer = BoolSerializer;
+            else if (DateTimeSerializer.CanWrite(type))
+                tSer = DateTimeSerializer;
+            else if (TimeSpanSerializer.CanWrite(type))
+                tSer = TimeSpanSerializer;
+            else if (EnumSerializer.CanWrite(type))
+                tSer = EnumSerializer;
+            else if (ByteArraySerializer.CanWrite(type))
+                tSer = ByteArraySerializer;
+            else if (CharSerializer.CanWrite(type))
+                tSer = CharSerializer;
+            else if (DateTimeOffsetSerializer.CanWrite(type))
+                tSer = DateTimeOffsetSerializer;
+            _typesCache[type] = tSer;
             return tSer;
         }
     }
@@ -212,11 +210,11 @@ namespace TWCore.Serialization.WSerializer.Types
     public class DeserializersTable
     {
         #region Static Pool
-        private static readonly ObjectPool<DeserializersTable> CachedUShortTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.CachedUShort), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached2048TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached2048), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached1024TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached1024), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> Cached512TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached512), Init, 1, PoolResetMode.BeforeUse, 0);
-        private static readonly ObjectPool<DeserializersTable> NoCachedTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.NoCached), Init, 1, PoolResetMode.BeforeUse, 0);
+        private static readonly ObjectPool<DeserializersTable> CachedUShortTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.CachedUShort), Init, 1);
+        private static readonly ObjectPool<DeserializersTable> Cached2048TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached2048), Init, 1);
+        private static readonly ObjectPool<DeserializersTable> Cached1024TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached1024), Init, 1);
+        private static readonly ObjectPool<DeserializersTable> Cached512TablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.Cached512), Init, 1);
+        private static readonly ObjectPool<DeserializersTable> NoCachedTablePool = new ObjectPool<DeserializersTable>(pool => new DeserializersTable(SerializerMode.NoCached), Init, 1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static DeserializersTable GetTable(SerializerMode mode)
@@ -267,7 +265,7 @@ namespace TWCore.Serialization.WSerializer.Types
             pool.Store(table);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Init(DeserializersTable table)
+        private static void Init(DeserializersTable table)
         {
             var mode = table.Mode;
             table.DateTimeSerializer.Init(mode);
@@ -306,7 +304,7 @@ namespace TWCore.Serialization.WSerializer.Types
         }
 
 
-        public readonly Dictionary<byte, TypeSerializer> _byteCache = new Dictionary<byte, TypeSerializer>();
+        public readonly Dictionary<byte, TypeSerializer> ByteCache = new Dictionary<byte, TypeSerializer>();
         public readonly SerializerMode Mode;
 
         public readonly NumberSerializer NumberSerializer = new NumberSerializer();
@@ -341,7 +339,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TypeSerializer GetSerializerByValueByte(byte value)
         {
-            if (_byteCache.TryGetValue(value, out var tSer))
+            if (ByteCache.TryGetValue(value, out var tSer))
                 return tSer;
             if (DeserializerTypesCache.TryGetValue(value, out var type))
             {
@@ -356,7 +354,7 @@ namespace TWCore.Serialization.WSerializer.Types
                 else if (type == typeof(CharSerializer)) tSer = CharSerializer;
                 else if (type == typeof(DateTimeOffsetSerializer)) tSer = DateTimeOffsetSerializer;
             }
-            _byteCache[value] = tSer;
+            ByteCache[value] = tSer;
             return tSer;
         }
 

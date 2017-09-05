@@ -23,13 +23,12 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for request received event
     /// </summary>
     public class RequestReceivedEventArgs : EventArgs
     {
-        CancellationTokenSource cTokenSource;
-        
         /// <summary>
         /// Client name
         /// </summary>
@@ -68,6 +67,7 @@ namespace TWCore.Messaging.Server
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Event args for request sent event
 		/// </summary>
@@ -83,7 +83,7 @@ namespace TWCore.Messaging.Server
             SendResponse = request?.Header?.ResponseExpected ?? true;
             ProcessResponseTimeoutInSeconds = request?.Header?.ResponseTimeoutInSeconds ?? -1;
             Response = new ResponseMessage(request, null);
-            cTokenSource = new CancellationTokenSource();
+            var cTokenSource = new CancellationTokenSource();
             ProcessResponseTimeoutCancellationToken = cTokenSource.Token;
             if (ProcessResponseTimeoutInSeconds > 0)
                 cTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));

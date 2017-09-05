@@ -87,14 +87,14 @@ namespace TWCore.Numerics
 
             SparseArray<int, double> rowMaximumVector = new SparseArray<int, double>();
 
-            int i = 0;
+            int i;
             for (i = 0; i < numberOfEquations; i++)
             {
                 double temp = 0.0;
 
                 for (int j = 0; j < numberOfEquations; j++)
                 {
-                    double test = System.Math.Abs(aMatrix[i, j]);
+                    double test = Math.Abs(aMatrix[i, j]);
 
                     if (test > temp)
                     {
@@ -149,7 +149,7 @@ namespace TWCore.Numerics
 
                     aMatrixCopy[i, r] = temp;
 
-                    double test = System.Math.Abs(temp / rowMaximumVector[i]);
+                    double test = Math.Abs(temp / rowMaximumVector[i]);
 
                     if (test > maximumValue)
                     {
@@ -276,14 +276,14 @@ namespace TWCore.Numerics
 
                 for (i = 0; i < numberOfEquations; i++)
                 {
-                    double test = System.Math.Abs(xVector[i]);
+                    double test = Math.Abs(xVector[i]);
 
                     if (test > normOfX)
                     {
                         normOfX = test;
                     }
 
-                    test = System.Math.Abs(residualVector[i]);
+                    test = Math.Abs(residualVector[i]);
 
                     if (test > normOfError)
                     {

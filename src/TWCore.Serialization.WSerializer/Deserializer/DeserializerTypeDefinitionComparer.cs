@@ -35,6 +35,6 @@ namespace TWCore.Serialization.WSerializer.Deserializer
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(DeserializerTypeDefinition obj)
-            => obj.Type?.GetHashCode() ?? obj?.GetHashCode() ?? -1;
+            => obj?.Type?.GetHashCode() ?? obj?.GetHashCode() ?? -1;
     }
 }

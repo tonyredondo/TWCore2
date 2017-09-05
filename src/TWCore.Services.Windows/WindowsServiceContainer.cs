@@ -20,6 +20,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TWCore.Settings;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Local
 
 namespace TWCore.Services.Windows
 {
@@ -29,7 +31,7 @@ namespace TWCore.Services.Windows
     /// </summary>
     internal class WindowsServiceContainer : ServiceContainer
     {
-        WindowsServiceSettings _settings;
+        private WindowsServiceSettings _settings;
 
         #region .ctor
         public WindowsServiceContainer(IService service, Action initAction) :
@@ -125,14 +127,14 @@ namespace TWCore.Services.Windows
         #endregion
 
         #region Install/Uninstall Service
-        void Init()
+        private void Init()
         {
             if (Service == null) return;
             _settings = Core.GetSettings<WindowsServiceSettings>();
             RegisterParametersHandler("service-install", "Install Windows Service", InstallService);
             RegisterParametersHandler("service-uninstall", "Uninstall Windows Service", UninstallService);
         }
-        void InstallService(ParameterHandlerInfo parameterHandlerInfo)
+        private void InstallService(ParameterHandlerInfo parameterHandlerInfo)
         {
             try
             {
@@ -181,9 +183,7 @@ namespace TWCore.Services.Windows
                     _settings.Description,
                     fullServiceCommand,
                     credentials,
-                    autoStart: _settings.AutoStart,
-                    startImmediately: false,
-                    errorSeverity: ErrorSeverity.Normal
+                    _settings.AutoStart
                 );
 
                 Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
@@ -193,7 +193,7 @@ namespace TWCore.Services.Windows
                 Core.Log.Error(ex.Message);
             }
         }
-        void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
+        private void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
         {
             try
             {
@@ -206,8 +206,7 @@ namespace TWCore.Services.Windows
                 Core.Log.Error(ex.Message);
             }
         }
-
-        static string EscapeCommandLineArgument(string arg)
+        private static string EscapeCommandLineArgument(string arg)
         {
             // http://stackoverflow.com/a/6040946/784387
             arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1$1\" + "\"");
@@ -218,7 +217,7 @@ namespace TWCore.Services.Windows
 
 
         #region Nested Types
-        public class WindowsServiceSettings : SettingsBase
+        private class WindowsServiceSettings : SettingsBase
         {
             public string DisplayName { get; set; }
             public string Description { get; set; }
@@ -227,7 +226,6 @@ namespace TWCore.Services.Windows
             public string Password { get; set; }
             public bool AutoStart { get; set; }
         }
-
         public enum ServiceCredentials
         {
             LocalSystem,

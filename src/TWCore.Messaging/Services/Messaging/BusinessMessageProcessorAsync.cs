@@ -15,34 +15,36 @@ limitations under the License.
  */
 
 using System;
-using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Business message processor
     /// </summary>
     public class BusinessMessageProcessorAsync : IMessageProcessorAsync
     {
-        static BusinessMessageProcessorSettings settings = Core.GetSettings<BusinessMessageProcessorSettings>();
-        ObjectPool<IBusinessAsync> BusinessPool;
-        Func<IBusinessAsync> creationFunction;
-        int maxMessagesPerQueue;
+        private static readonly BusinessMessageProcessorSettings Settings = Core.GetSettings<BusinessMessageProcessorSettings>();
+        private ObjectPool<IBusinessAsync> _businessPool;
+        private readonly Func<IBusinessAsync> _creationFunction;
+        private readonly int _maxMessagesPerQueue;
 
         #region Static Properties
         /// <summary>
         /// Business item initial count in percent of the total maximum items.
         /// </summary>
-        public static float InitialBusinessesPercent { get; set; } = settings.InitialBusinessesPercent;
+        public static float InitialBusinessesPercent { get; set; } = Settings.InitialBusinessesPercent;
         /// <summary>
         /// Business preallocation threshold in percent of the total maximum items.
         /// </summary>
-        public static float BusinessesPreallocationPercent { get; set; } = settings.BusinessesPreallocationPercent;
+        public static float BusinessesPreallocationPercent { get; set; } = Settings.BusinessesPreallocationPercent;
         #endregion
 
         #region Properties
@@ -65,13 +67,13 @@ namespace TWCore.Services.Messaging
         /// <param name="businessCreationFunction">Business item creation function</param>
         public BusinessMessageProcessorAsync(MQPairConfig pairConfig, Func<IBusinessAsync> businessCreationFunction)
         {
-            if (pairConfig == null) throw new ArgumentNullException(nameof(pairConfig), "The MQPairConfig can't be null");
-            if (businessCreationFunction == null) throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
-            creationFunction = businessCreationFunction;
-            maxMessagesPerQueue = pairConfig.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue;
+            _creationFunction = businessCreationFunction ?? 
+                throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
+            _maxMessagesPerQueue = pairConfig?.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
+                throw new ArgumentNullException(nameof(pairConfig), "The MQPairConfig can't be null");
             var serverCount = pairConfig.ServerQueues.Count;
-            BusinessInitialCount = (int)((maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
-            BusinessPreallocationThreshold = (int)((maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
+            BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
+            BusinessPreallocationThreshold = (int)((_maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
             AttachStatus();
         }
         /// <summary>
@@ -81,13 +83,13 @@ namespace TWCore.Services.Messaging
         /// <param name="businessCreationFunction">Business item creation function</param>
         public BusinessMessageProcessorAsync(IMQueueServer server, Func<IBusinessAsync> businessCreationFunction)
         {
-            if (server == null) throw new ArgumentNullException(nameof(server), "The IMQueueServer can't be null");
-            if (businessCreationFunction == null) throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
-            creationFunction = businessCreationFunction;
-            maxMessagesPerQueue = server.Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue;
+            _creationFunction = businessCreationFunction ?? 
+                throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
+            _maxMessagesPerQueue = server?.Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
+                throw new ArgumentNullException(nameof(server), "The IMQueueServer can't be null");
             var serverCount = server.Config.ServerQueues.Count;
-            BusinessInitialCount = (int)((maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
-            BusinessPreallocationThreshold = (int)((maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
+            BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
+            BusinessPreallocationThreshold = (int)((_maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
             AttachStatus();
         }
         /// <summary>
@@ -98,27 +100,28 @@ namespace TWCore.Services.Messaging
         /// <param name="businessCreationFunction">Business item creation function</param>
         public BusinessMessageProcessorAsync(int businessInitialCount, int businessPreallocationThreshold, Func<IBusinessAsync> businessCreationFunction)
         {
-            if (businessCreationFunction == null) throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
-            creationFunction = businessCreationFunction;
+            _creationFunction = businessCreationFunction ?? 
+                throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             BusinessInitialCount = businessInitialCount;
             BusinessPreallocationThreshold = businessPreallocationThreshold;
             AttachStatus();
         }
-        void AttachStatus()
+        private void AttachStatus()
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Maximum businesses per queue", maxMessagesPerQueue);
+                collection.Add("Maximum businesses per queue", _maxMessagesPerQueue);
                 collection.Add("Business item initial count in percent of the total maximum items", InitialBusinessesPercent);
                 collection.Add("Business preallocation threshold in percent of the total maximum items", BusinessesPreallocationPercent);
                 collection.Add("Business initial count", BusinessInitialCount);
                 collection.Add("Business preallocation threshold", BusinessPreallocationThreshold);
-                collection.Add("Available business on the pool", BusinessPool?.Count);
+                collection.Add("Available business on the pool", _businessPool?.Count);
             });
         }
         #endregion
 
         #region IMessageProcessorAsync Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize message processor
         /// </summary>
@@ -127,13 +130,13 @@ namespace TWCore.Services.Messaging
             Core.Log.LibDebug("Initializing message processor...");
             Core.Log.LibDebug("Business item initial count in percent of the total maximum items = {0}", InitialBusinessesPercent);
             Core.Log.LibDebug("Business preallocation threshold in percent of the total maximum items = {0}", BusinessesPreallocationPercent);
-            Core.Log.LibDebug("Maximum businesses per queue = {0}", maxMessagesPerQueue);
+            Core.Log.LibDebug("Maximum businesses per queue = {0}", _maxMessagesPerQueue);
             Core.Log.LibDebug("Business Initial Count = {0}", BusinessInitialCount);
             Core.Log.LibDebug("Business Preallocation Threshold = {0}", BusinessPreallocationThreshold);
             Dispose();
-            BusinessPool = new ObjectPool<IBusinessAsync>(pool =>
+            _businessPool = new ObjectPool<IBusinessAsync>(pool =>
             {
-                var item = creationFunction();
+                var item = _creationFunction();
                 if (item == null)
                     throw new NullReferenceException("The business creation function returns a null IBusiness value. Please check the creation function.");
                 item.Init();
@@ -141,6 +144,7 @@ namespace TWCore.Services.Messaging
             }, null, BusinessInitialCount, PoolResetMode.AfterUse, BusinessPreallocationThreshold);
             Core.Log.LibDebug("Message processor initialized");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process a message using the registered funcs
         /// </summary>
@@ -150,7 +154,7 @@ namespace TWCore.Services.Messaging
         public async Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
-            var item = BusinessPool.New();
+            var item = _businessPool.New();
             var response = ResponseMessage.NoResponse;
             try
             {
@@ -160,20 +164,21 @@ namespace TWCore.Services.Messaging
             {
                 Core.Log.Write(ex);
             }
-            BusinessPool.Store(item);
+            _businessPool.Store(item);
             Core.Log.LibDebug("Message processed.");
             return response;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
         public void Dispose()
         {
-            if (BusinessPool == null) return;
-            var businesses = BusinessPool.GetCurrentObjects();
+            if (_businessPool == null) return;
+            var businesses = _businessPool.GetCurrentObjects();
             foreach (var item in businesses)
                 item.Dispose();
-            BusinessPool.Clear();
+            _businessPool.Clear();
         }
         #endregion
     }

@@ -36,20 +36,20 @@ namespace TWCore.Serialization.WSerializer
     /// </summary>
     public class WSerializerCore
     {
-        private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
+        private const int MinimumLengthToCompress = 2048;
+
+        private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(pool =>
                 Tuple.Create(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
                     i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
                     1,
                     PoolResetMode.AfterUse);
-
-        static ByteArrayComparer ByteComparer = new ByteArrayComparer();
-        static DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
-        static ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new ConcurrentDictionary<Type, byte[]>();
-        static ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new ConcurrentDictionary<byte[], Type>(ByteComparer);
-        static IHash Hash = HashManager.Get("SHA1");
-        HashSet<Type> KnownTypes = new HashSet<Type>();
-        static int MinimumLengthToCompress = 2048;
+        private static readonly ByteArrayComparer ByteComparer = new ByteArrayComparer();
+        private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
+        private static readonly ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new ConcurrentDictionary<Type, byte[]>();
+        private static readonly ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new ConcurrentDictionary<byte[], Type>(ByteComparer);
+        private static readonly IHash Hash = HashManager.Get("SHA1");
+        private readonly HashSet<Type> _knownTypes = new HashSet<Type>();
 
         /// <summary>
         /// Serializer Mode
@@ -66,8 +66,8 @@ namespace TWCore.Serialization.WSerializer
         private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(1, s => s.Clear());
-        HashSet<Type> CurrentSerializerPlanTypes = new HashSet<Type>();
-        byte[] _buffer = new byte[4];
+        private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
+        private readonly byte[] _buffer = new byte[4];
 
         #region Public Methods
         /// <summary>
@@ -97,7 +97,7 @@ namespace TWCore.Serialization.WSerializer
             scopeStack.Push(scope);
 
             var mStream = new MemoryStream(1024);
-            var bw = new FastBinaryWriter(mStream, DefaultUTF8Encoding, true);
+            var bw = new FastBinaryWriter(mStream, DefaultUtf8Encoding, true);
             bw.Write((byte)Mode);
             do
             {
@@ -131,12 +131,12 @@ namespace TWCore.Serialization.WSerializer
                     #region TypeStart
 
                     case SerializerPlanItemType.TypeStart:
-                        var _oidx = objectCache.SerializerGet(scope.Value);
-                        if (_oidx > -1)
+                        var oidx = objectCache.SerializerGet(scope.Value);
+                        if (oidx > -1)
                         {
                             //debugText += " = Write ObjReference " + _oidx;
                             #region Object Reference
-                            switch (_oidx)
+                            switch (oidx)
                             {
                                 case 0:
                                     bw.Write(DataType.RefObjectByte0);
@@ -190,16 +190,15 @@ namespace TWCore.Serialization.WSerializer
                                     bw.Write(DataType.RefObjectByte16);
                                     break;
                                 default:
-                                    if (_oidx <= byte.MaxValue)
-                                        Write(bw, DataType.RefObjectByte, (byte) _oidx);
+                                    if (oidx <= byte.MaxValue)
+                                        Write(bw, DataType.RefObjectByte, (byte) oidx);
                                     else
-                                        Write(bw, DataType.RefObjectUShort, (ushort) _oidx);
+                                        Write(bw, DataType.RefObjectUShort, (ushort) oidx);
                                     break;
                             }
                             #endregion
                             scopeStack.Pop();
                             scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
-                            continue;
                         }
                         else
                         {
@@ -209,7 +208,7 @@ namespace TWCore.Serialization.WSerializer
                             var typeIdx = typesCache.SerializerGet(tStartItem.Type);
                             if (typeIdx < 0)
                             {
-                                if (KnownTypes.Contains(tStartItem.Type))
+                                if (_knownTypes.Contains(tStartItem.Type))
                                 {
                                     bw.Write(DataType.KnownType);
                                     bw.Write(GlobalKnownTypes[tStartItem.Type]);
@@ -485,18 +484,18 @@ namespace TWCore.Serialization.WSerializer
             SerializersTable.ReturnTable(serializersTable);
             StackPool.Store(scopeStack);
 
-            var globalBW = new FastBinaryWriter(stream, DefaultUTF8Encoding, true);
+            var globalBw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
             mStream.Position = 0;
             if (mStream.Length > MinimumLengthToCompress)
             {
-                globalBW.Write(DataType.FileStartCompressed);
+                globalBw.Write(DataType.FileStartCompressed);
                 var dataBytes = Compression.MiniLZO.Compress(mStream.ToSubArray());
-                globalBW.Write(dataBytes.Count);
-                globalBW.Write(dataBytes.Array, dataBytes.Offset, dataBytes.Count);
+                globalBw.Write(dataBytes.Count);
+                globalBw.Write(dataBytes.Array, dataBytes.Offset, dataBytes.Count);
             }
             else
             {
-                globalBW.Write(DataType.FileStart);
+                globalBw.Write(DataType.FileStart);
                 mStream.WriteTo(stream);
             }
         }
@@ -519,28 +518,28 @@ namespace TWCore.Serialization.WSerializer
             bw.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        SerializerPlan GetSerializerPlan(SerializersTable serializerTable, Type type)
+        private SerializerPlan GetSerializerPlan(SerializersTable serializerTable, Type type)
         {
-            return SerializationPlans.GetOrAdd(type, _type =>
+            return SerializationPlans.GetOrAdd(type, mType =>
             {
                 var plan = new List<SerializerPlanItem>();
-                var typeInfo = _type.GetTypeInfo();
-                Type genTypeDefinition = typeInfo.IsGenericType ? typeInfo.GetGenericTypeDefinition() : null;
-                var serBase = serializerTable.GetSerializerByValueType(_type);
-                bool isIList = false;
-                bool isIDictionary = false;
+                var typeInfo = mType.GetTypeInfo();
+                var genTypeDefinition = typeInfo.IsGenericType ? typeInfo.GetGenericTypeDefinition() : null;
+                var serBase = serializerTable.GetSerializerByValueType(mType);
+                var isIList = false;
+                var isIDictionary = false;
 
                 if (serBase != null)
                 {
                     //Value type
-                    plan.Add(new SerializerPlanItem.ValueItem(_type, serBase.GetType()));
+                    plan.Add(new SerializerPlanItem.ValueItem(mType, serBase.GetType()));
                 }
                 else if (genTypeDefinition == typeof(Nullable<>))
                 {
                     //Nullable type
-                    _type = Nullable.GetUnderlyingType(_type);
-                    serBase = serializerTable.GetSerializerByValueType(_type);
-                    plan.Add(new SerializerPlanItem.ValueItem(_type, serBase.GetType()));
+                    mType = Nullable.GetUnderlyingType(mType);
+                    serBase = serializerTable.GetSerializerByValueType(mType);
+                    plan.Add(new SerializerPlanItem.ValueItem(mType, serBase.GetType()));
                 }
                 else if (genTypeDefinition == typeof(Tuple<>) ||
                         genTypeDefinition == typeof(Tuple<,>) ||
@@ -560,13 +559,13 @@ namespace TWCore.Serialization.WSerializer
                         var ser = isNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(types[i])) : serializerTable.GetSerializerByValueType(types[i]);
                         serTypes[i] = ser?.GetType();
                     }
-                    var tStart = new SerializerPlanItem.TypeStart(_type, typeInfo)
+                    var tStart = new SerializerPlanItem.TypeStart(mType, typeInfo)
                     {
                         Properties = new string[0]
                     };
                     plan.Add(tStart);
-                    plan.Add(new SerializerPlanItem.TupleStart(_type, types, serTypes));
-                    plan.Add(new SerializerPlanItem.WriteBytes(new byte[] { DataType.TupleEnd }));
+                    plan.Add(new SerializerPlanItem.TupleStart(mType, types, serTypes));
+                    plan.Add(new SerializerPlanItem.WriteBytes(new[] { DataType.TupleEnd }));
                 }
                 else if (genTypeDefinition == typeof(KeyValuePair<,>))
                 {
@@ -582,18 +581,18 @@ namespace TWCore.Serialization.WSerializer
                     var valueIsNullable = valueTypeInfo.IsGenericType && valueTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
                     var valueSer = valueIsNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(valueType)) : serializerTable.GetSerializerByValueType(valueType);
 
-                    if (keySer == null && !CurrentSerializerPlanTypes.Contains(keyType))
+                    if (keySer == null && !_currentSerializerPlanTypes.Contains(keyType))
                         GetSerializerPlan(serializerTable, keyType);
-                    if (valueSer == null && !CurrentSerializerPlanTypes.Contains(valueType))
+                    if (valueSer == null && !_currentSerializerPlanTypes.Contains(valueType))
                         GetSerializerPlan(serializerTable, valueType);
 
-                    plan.Add(new SerializerPlanItem.KeyValueStart(_type, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
-                    plan.Add(new SerializerPlanItem.WriteBytes(new byte[] { DataType.KeyValueEnd }));
+                    plan.Add(new SerializerPlanItem.KeyValueStart(mType, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
+                    plan.Add(new SerializerPlanItem.WriteBytes(new[] { DataType.KeyValueEnd }));
                 }
                 else
                 {
-                    CurrentSerializerPlanTypes.Add(_type);
-                    var tStart = new SerializerPlanItem.TypeStart(_type, typeInfo);
+                    _currentSerializerPlanTypes.Add(mType);
+                    var tStart = new SerializerPlanItem.TypeStart(mType, typeInfo);
                     plan.Add(tStart);
                     var endBytes = new List<byte>();
 
@@ -625,7 +624,7 @@ namespace TWCore.Serialization.WSerializer
                             if (serType == null)
                             {
                                 plan.Add(new SerializerPlanItem.PropertyReference(prop));
-                                if (!CurrentSerializerPlanTypes.Contains(propType))
+                                if (!_currentSerializerPlanTypes.Contains(propType))
                                     GetSerializerPlan(serializerTable, propType);
                             }
                             else
@@ -655,12 +654,12 @@ namespace TWCore.Serialization.WSerializer
                                 else
                                 {
                                     var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                    if (iListType?.GenericTypeArguments.Length > 0)
+                                    if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                         innerType = iListType.GenericTypeArguments[0];
                                 }
                             }
                             plan.Add(new SerializerPlanItem.ListStart(type, innerType));
-                            if (!CurrentSerializerPlanTypes.Contains(innerType))
+                            if (!_currentSerializerPlanTypes.Contains(innerType))
                                 GetSerializerPlan(serializerTable, innerType);
                             endBytes.Add(DataType.ListEnd);
                         }
@@ -686,9 +685,9 @@ namespace TWCore.Serialization.WSerializer
                             var valueIsNullable = valueTypeInfo.IsGenericType && valueTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
                             var valueSer = valueIsNullable ? serializerTable.GetSerializerByValueType(Nullable.GetUnderlyingType(valueType)) : serializerTable.GetSerializerByValueType(valueType);
 
-                            if (keySer == null && !CurrentSerializerPlanTypes.Contains(keyType))
+                            if (keySer == null && !_currentSerializerPlanTypes.Contains(keyType))
                                 GetSerializerPlan(serializerTable, keyType);
-                            if (valueSer == null && !CurrentSerializerPlanTypes.Contains(valueType))
+                            if (valueSer == null && !_currentSerializerPlanTypes.Contains(valueType))
                                 GetSerializerPlan(serializerTable, valueType);
 
                             plan.Add(new SerializerPlanItem.DictionaryStart(type, keyType, keySer?.GetType(), keyIsNullable, valueType, valueSer?.GetType(), valueIsNullable));
@@ -699,16 +698,15 @@ namespace TWCore.Serialization.WSerializer
 
                     endBytes.Add(DataType.TypeEnd);
                     plan.Add(new SerializerPlanItem.WriteBytes(endBytes.ToArray()));
-                    CurrentSerializerPlanTypes.Remove(_type);
+                    _currentSerializerPlanTypes.Remove(mType);
                 }
-                return new SerializerPlan(plan.ToArray(), _type, isIList, isIDictionary);
+                return new SerializerPlan(plan.ToArray(), mType, isIList, isIDictionary);
             });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ResolveLinqEnumerables(object value)
         {
-            var iEValue = value as IEnumerable;
-            if (iEValue != null && !(value is string))
+            if (value is IEnumerable iEValue && !(value is string))
                 value = iEValue.Enumerate();
             return value;
         }
@@ -744,14 +742,14 @@ namespace TWCore.Serialization.WSerializer
             FastBinaryReader br;
             if (fStart == DataType.FileStartCompressed)
             {
-                var gbr = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
+                var gbr = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
                 var cLength = gbr.ReadInt32();
                 var bytes = Compression.MiniLZO.Decompress(gbr.ReadBytes(cLength));
                 stream = bytes.ToMemoryStream();
-                br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
+                br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
             }
             else
-                br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
+                br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
 
             var bMode = br.ReadByte();
             var sMode = (SerializerMode)bMode;
@@ -809,8 +807,7 @@ namespace TWCore.Serialization.WSerializer
                         continue;
                     case DataType.KnownType:
                         var hashBytes = br.ReadBytes(20);
-                        Type hashType;
-                        if (GlobalKnownTypesValues.TryGetValue(hashBytes, out hashType))
+                        if (GlobalKnownTypesValues.TryGetValue(hashBytes, out var hashType))
                         {
                             var tDef = new DeserializerTypeDefinition(hashType, GetDeserializationTypeInfo(hashType), GetPropertiesFromType(hashType));
                             typesCache.DeserializerSet(tDef);
@@ -850,13 +847,13 @@ namespace TWCore.Serialization.WSerializer
                         typeStack.Push(typeItem);
                         continue;
                     case DataType.TypeRefByte:
-                        var _refByteVal = br.ReadByte();
-                        typeItem = CreateDeserializerNewTypeItem(objectCache, typesCache.DeserializerGet(_refByteVal));
+                        var refByteVal = br.ReadByte();
+                        typeItem = CreateDeserializerNewTypeItem(objectCache, typesCache.DeserializerGet(refByteVal));
                         typeStack.Push(typeItem);
                         continue;
                     case DataType.TypeRefUShort:
-                        var _refUshoftVal = br.ReadUInt16();
-                        typeItem = CreateDeserializerNewTypeItem(objectCache, typesCache.DeserializerGet(_refUshoftVal));
+                        var refUshoftVal = br.ReadUInt16();
+                        typeItem = CreateDeserializerNewTypeItem(objectCache, typesCache.DeserializerGet(refUshoftVal));
                         typeStack.Push(typeItem);
                         continue;
                     #endregion
@@ -1095,9 +1092,8 @@ namespace TWCore.Serialization.WSerializer
         #endregion
 
         #region Private Methods
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DeserializerTypeItem CreateDeserializerNewTypeItem(SerializerCache<object> objectCache, DeserializerTypeDefinition typeDefinition)
+        private static DeserializerTypeItem CreateDeserializerNewTypeItem(SerializerCache<object> objectCache, DeserializerTypeDefinition typeDefinition)
         {
             var newTypeItem = new DeserializerTypeItem(typeDefinition);
             if (newTypeItem.Type?.IsArray == false)
@@ -1106,62 +1102,59 @@ namespace TWCore.Serialization.WSerializer
                 objectCache.DeserializerSet(null);
             return newTypeItem;
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void ProcessTypeEnd(DeserializerTypeItem typeItem, object lastObject)
+        private static void ProcessTypeEnd(DeserializerTypeItem typeItem, object lastObject)
         {
-            if (typeItem != null)
+            if (typeItem == null) return;
+
+            switch (typeItem.Last)
             {
-                switch (typeItem.Last)
-                {
-                    case DataType.Unknown:
-                        if (typeItem.Value != null)
+                case DataType.Unknown:
+                    if (typeItem.Value != null)
+                    {
+                        var propName = typeItem.Properties[typeItem.PropertyIndex++];
+                        if (typeItem.TypeInfo.Properties.TryGetValue(propName, out var fprop))
                         {
-                            var propName = typeItem.Properties[typeItem.PropertyIndex++];
-                            if (typeItem.TypeInfo.Properties.TryGetValue(propName, out var fprop))
-                            {
-                                if (lastObject == null)
-                                    fprop.SetValue(typeItem.Value, null);
-                                else if (lastObject.GetType() == fprop.PropertyType)
-                                    fprop.SetValue(typeItem.Value, lastObject);
-                                else
-                                    fprop.SetValue(typeItem.Value, DataTypeHelper.Change(lastObject, fprop.PropertyType.GetUnderlyingType()));
-                            }
+                            if (lastObject == null)
+                                fprop.SetValue(typeItem.Value, null);
+                            else if (lastObject.GetType() == fprop.PropertyType)
+                                fprop.SetValue(typeItem.Value, lastObject);
                             else
-                                Core.Log.Warning("Property {0} doesn't exist on Type {1}", propName, typeItem.Type);
-
-
-                            typeItem.LastPropertyName = null;
-                            typeItem.Last = 0;
-                        }
-                        break;
-                    case DataType.ListStart:
-                        var valueList = typeItem.ValueIList;
-                        if (valueList != null)
-                        {
-                            var iTypes = typeItem.TypeInfo.InnerTypes;
-                            if (lastObject != null && iTypes.Length > 0 && iTypes[0] != lastObject.GetType())
-                                lastObject = DataTypeHelper.Change(lastObject, iTypes[0]);
-                            valueList.Add(lastObject);
+                                fprop.SetValue(typeItem.Value, DataTypeHelper.Change(lastObject, fprop.PropertyType.GetUnderlyingType()));
                         }
                         else
-                            typeItem.Items.Add(lastObject);
-                        break;
-                    case DataType.KeyValueStart:
+                            Core.Log.Warning("Property {0} doesn't exist on Type {1}", propName, typeItem.Type);
+
+
+                        typeItem.LastPropertyName = null;
+                        typeItem.Last = 0;
+                    }
+                    break;
+                case DataType.ListStart:
+                    var valueList = typeItem.ValueIList;
+                    if (valueList != null)
+                    {
+                        var iTypes = typeItem.TypeInfo.InnerTypes;
+                        if (lastObject != null && iTypes.Length > 0 && iTypes[0] != lastObject.GetType())
+                            lastObject = DataTypeHelper.Change(lastObject, iTypes[0]);
+                        valueList.Add(lastObject);
+                    }
+                    else
                         typeItem.Items.Add(lastObject);
-                        break;
-                    case DataType.DictionaryStart:
-                        typeItem.Items.Add(lastObject);
-                        break;
-                    case DataType.TupleStart:
-                        typeItem.Items.Add(lastObject);
-                        break;
-                }
+                    break;
+                case DataType.KeyValueStart:
+                    typeItem.Items.Add(lastObject);
+                    break;
+                case DataType.DictionaryStart:
+                    typeItem.Items.Add(lastObject);
+                    break;
+                case DataType.TupleStart:
+                    typeItem.Items.Add(lastObject);
+                    break;
             }
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static Type DeserializeType(FastBinaryReader br, StringSerializer stringSerializer, byte _byte)
+        private static Type DeserializeType(FastBinaryReader br, StringSerializer stringSerializer, byte _byte)
         {
             switch (_byte)
             {
@@ -1184,124 +1177,112 @@ namespace TWCore.Serialization.WSerializer
                 case DataType.TypeNameULong: return typeof(ulong);
                 case DataType.TypeNameUShort: return typeof(ushort);
                 default:
-                    var _tassembly = stringSerializer.ReadValue(br, _byte);
-                    var _tnamespace = stringSerializer.ReadValue(br, br.ReadByte());
-                    var _tname = stringSerializer.ReadValue(br, br.ReadByte());
-                    return GetDeserializationType(ValueTuple.Create(_tassembly, _tnamespace, _tname));
+                    var tassembly = stringSerializer.ReadValue(br, _byte);
+                    var tnamespace = stringSerializer.ReadValue(br, br.ReadByte());
+                    var tname = stringSerializer.ReadValue(br, br.ReadByte());
+                    return GetDeserializationType(ValueTuple.Create(tassembly, tnamespace, tname));
             }
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static Type GetDeserializationType(ValueTuple<string, string, string> type)
+        private static Type GetDeserializationType(ValueTuple<string, string, string> type)
         {
-            return DeserializationTypes.GetOrAdd(type, _type =>
+            return DeserializationTypes.GetOrAdd(type, mType =>
             {
-                string key = _type.Item2 + "." + _type.Item3;
-                if (!string.IsNullOrEmpty(_type.Item1))
-                    key += ", " + _type.Item1;
+                string key = mType.Item2 + "." + mType.Item3;
+                if (!string.IsNullOrEmpty(mType.Item1))
+                    key += ", " + mType.Item1;
                 return Core.GetType(key);
             });
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
+        private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {
             if (type == null) return null;
             return DeserializationTypeInfo.GetOrAdd(type, valueType =>
             {
-                if (valueType != null)
+                if (valueType == null) return null;
+
+                var typeInfo = valueType.GetTypeInfo();
+                var isGenericType = typeInfo.IsGenericType;
+
+                var tinfo = new DeserializerTypeInfo()
                 {
-                    var typeInfo = valueType.GetTypeInfo();
-                    bool isGenericType = typeInfo.IsGenericType;
-
-                    var tinfo = new DeserializerTypeInfo()
+                    Type = valueType,
+                    Properties = valueType.GetRuntimeProperties().Where(p =>
                     {
-                        Type = valueType,
-                        Properties = valueType.GetRuntimeProperties().Where(p =>
+                        bool ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
+                        if (ok)
                         {
-                            bool ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
-                            if (ok)
-                            {
-                                if (p.GetIndexParameters().Length > 0)
-                                    return false;
-                            }
-                            return ok;
-                        }).Select(p => p.GetFastPropertyInfo()).ToDictionary(k => k.Name, v => v)
-                    };
-                    var constructor = typeInfo.DeclaredConstructors.First();
-                    tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
-                    tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
-                    tinfo.IsArray = valueType.IsArray;
+                            if (p.GetIndexParameters().Length > 0)
+                                return false;
+                        }
+                        return ok;
+                    }).Select(p => p.GetFastPropertyInfo()).ToDictionary(k => k.Name, v => v)
+                };
+                var constructor = typeInfo.DeclaredConstructors.First();
+                tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
+                tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
+                tinfo.IsArray = valueType.IsArray;
 
-                    //
-                    var ifaces = typeInfo.ImplementedInterfaces.ToArray();
+                //
+                var ifaces = typeInfo.ImplementedInterfaces.ToArray();
 
 
-                    var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
-                    if (ilist != null)
+                var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                if (ilist != null)
+                {
+                    Type innerType = null;
+                    if (type.IsArray)
+                        innerType = type.GetElementType();
+                    else
                     {
-                        Type innerType = null;
-                        if (type.IsArray)
-                            innerType = type.GetElementType();
+                        var gargs = ilist.GenericTypeArguments;
+                        if (gargs.Length == 0)
+                            gargs = type.GenericTypeArguments;
+                        if (gargs.Length > 0)
+                            innerType = gargs[0];
                         else
                         {
-                            var gargs = ilist.GenericTypeArguments;
-                            if (gargs.Length == 0)
-                                gargs = type.GenericTypeArguments;
-                            if (gargs.Length > 0)
-                                innerType = gargs[0];
-                            else
-                            {
-                                var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                if (iListType?.GenericTypeArguments.Length > 0)
-                                    innerType = iListType.GenericTypeArguments[0];
-                            }
+                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                            if (iListType != null && iListType.GenericTypeArguments.Length > 0)
+                                innerType = iListType.GenericTypeArguments[0];
                         }
-                        tinfo.IsIList = true;
-                        tinfo.InnerTypes = new Type[] { innerType };
                     }
-
-                    var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
-                    if (idictio != null)
-                    {
-                        tinfo.IsIDictionary = true;
-                        tinfo.InnerTypes = idictio.GenericTypeArguments;
-                    }
-
-                    if (!tinfo.IsIList && !tinfo.IsIDictionary && isGenericType)
-                        tinfo.InnerTypes = typeInfo.GenericTypeArguments;
-
-                    return tinfo;
+                    tinfo.IsIList = true;
+                    tinfo.InnerTypes = new[] { innerType };
                 }
-                return null;
+
+                var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                if (idictio != null)
+                {
+                    tinfo.IsIDictionary = true;
+                    tinfo.InnerTypes = idictio.GenericTypeArguments;
+                }
+
+                if (!tinfo.IsIList && !tinfo.IsIDictionary && isGenericType)
+                    tinfo.InnerTypes = typeInfo.GenericTypeArguments;
+
+                return tinfo;
             });
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        string[] GetPropertiesFromType(Type type)
+        private static string[] GetPropertiesFromType(Type type)
         {
-            if (type != null)
+            if (type == null) return null;
+            var typeInfo = type.GetTypeInfo();
+            var isIList = typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+
+            var properties = type.GetRuntimeProperties().OrderBy(n => n.Name).ToArray();
+            var propNames = new List<string>();
+            foreach (var prop in properties)
             {
-                var typeInfo = type.GetTypeInfo();
-                bool isIList = typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-
-                var properties = type.GetRuntimeProperties().OrderBy(n => n.Name).ToArray();
-                var propNames = new List<string>();
-                foreach (var prop in properties)
-                {
-                    if (prop.CanRead && prop.CanWrite)
-                    {
-                        if (isIList && prop.Name == "Capacity") continue;
-                        if (prop.GetIndexParameters().Length > 0)
-                            continue;
-                        propNames.Add(prop.Name);
-                    }
-                }
-                return propNames.ToArray();
+                if (!prop.CanRead || !prop.CanWrite) continue;
+                if (isIList && prop.Name == "Capacity") continue;
+                if (prop.GetIndexParameters().Length > 0) continue;
+                propNames.Add(prop.Name);
             }
-            return null;
+            return propNames.ToArray();
         }
-
         #endregion
 
         #endregion
@@ -1314,24 +1295,20 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddKnownType(Type type, bool includeInnerTypes = false)
         {
-            if (type != null)
+            if (type == null) return;
+            if (!_knownTypes.Add(type)) return;
+
+            GlobalKnownTypes.GetOrAdd(type, mType =>
             {
-                if (KnownTypes.Add(type))
-                {
-                    GlobalKnownTypes.GetOrAdd(type, _type =>
-                    {
-                        var hashBytes = Hash.GetBytes(_type.AssemblyQualifiedName);
-                        GlobalKnownTypesValues[hashBytes] = _type;
-                        return hashBytes;
-                    });
-                    if (includeInnerTypes)
-                    {
-                        var props = type.GetRuntimeProperties();
-                        foreach (var prop in props)
-                            AddKnownType(prop.PropertyType, true);
-                    }
-                }
-            }
+                var hashBytes = Hash.GetBytes(mType.AssemblyQualifiedName);
+                GlobalKnownTypesValues[hashBytes] = mType;
+                return hashBytes;
+            });
+            if (!includeInnerTypes) return;
+
+            var props = type.GetRuntimeProperties();
+            foreach (var prop in props)
+                AddKnownType(prop.PropertyType, true);
         }
         /// <summary>
         /// Clear Known Types
@@ -1339,7 +1316,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearKnownTypes()
         {
-            KnownTypes.Clear();
+            _knownTypes.Clear();
         }
     }
 }

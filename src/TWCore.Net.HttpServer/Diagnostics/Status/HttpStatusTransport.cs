@@ -23,19 +23,19 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Settings;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Diagnostics.Status.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http server status transport
     /// </summary>
     public class HttpStatusTransport : IStatusTransport
     {
-        SimpleHttpServer httpServer;
-        int maxNumberOfTries = 3;
-        int numberOfTries;
-        string htmlPage;
-        ISerializer xmlSerializer;
-        ISerializer jsonSerializer;
+        private const int MaxNumberOfTries = 3;
+        private readonly int _numberOfTries;
+        private SimpleHttpServer _httpServer;
 
         #region Events
         /// <summary>
@@ -52,40 +52,36 @@ namespace TWCore.Diagnostics.Status.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HttpStatusTransport(int port = 80)
         {
-            htmlPage = this.GetAssembly().GetResourceString("Status.htm");
-            xmlSerializer = new XmlTextSerializer();
-            jsonSerializer = new JsonTextSerializer() { UseCamelCase = false };
-            httpServer = new SimpleHttpServer();
-            httpServer.AddGetHandler("/", ctx =>
+            var htmlPage = this.GetAssembly().GetResourceString("Status.htm");
+            var xmlSerializer = new XmlTextSerializer();
+            var jsonSerializer = new JsonTextSerializer() { UseCamelCase = false };
+            _httpServer = new SimpleHttpServer();
+            _httpServer.AddGetHandler("/", ctx =>
             {
                 ctx.Response.Write(htmlPage);
             });
-            httpServer.AddGetHandler("/xml", ctx =>
+            _httpServer.AddGetHandler("/xml", ctx =>
             {
-                if (OnFetchStatus != null)
-                {
-                    var statuses = OnFetchStatus.Invoke();
-                    ctx.Response.ContentType = SerializerMimeTypes.Xml;
-                    xmlSerializer.Serialize(statuses, ctx.Response.OutputStream);
-                }
+                if (OnFetchStatus == null) return;
+                var statuses = OnFetchStatus.Invoke();
+                ctx.Response.ContentType = SerializerMimeTypes.Xml;
+                xmlSerializer.Serialize(statuses, ctx.Response.OutputStream);
             });
-            httpServer.AddGetHandler("/json", ctx =>
+            _httpServer.AddGetHandler("/json", ctx =>
             {
-                if (OnFetchStatus != null)
-                {
-                    var statuses = OnFetchStatus.Invoke();
-                    ctx.Response.ContentType = SerializerMimeTypes.Json;
-                    jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);
-                }
+                if (OnFetchStatus == null) return;
+                var statuses = OnFetchStatus.Invoke();
+                ctx.Response.ContentType = SerializerMimeTypes.Json;
+                jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);
             });
-            httpServer.AddGetHandler("/gccollect", ctx => 
+            _httpServer.AddGetHandler("/gccollect", ctx => 
             {
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
                 ctx.Response.Write("true");
             });
-            httpServer.AddGetHandler("/discovery", ctx =>
+            _httpServer.AddGetHandler("/discovery", ctx =>
             {
                 var services = DiscoveryService.GetRegisteredServices();
                 var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS").ToArray();
@@ -103,20 +99,20 @@ namespace TWCore.Diagnostics.Status.Transports
                 }
                 ctx.Response.WriteLine("</body></html>");
             });
-            bool connected = false;
+            var connected = false;
             while (true)
             {
                 try
                 {
-                    numberOfTries++;
-                    httpServer.StartAsync(port).Wait();
+                    _numberOfTries++;
+                    _httpServer.StartAsync(port).Wait();
                     connected = true;
                     break;
                 }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
-                    if (numberOfTries > maxNumberOfTries)
+                    if (_numberOfTries > MaxNumberOfTries)
                         break;
                     Factory.Thread.Sleep(1000);
                 }
@@ -136,7 +132,7 @@ namespace TWCore.Diagnostics.Status.Transports
                     });
                 }
             }
-            Core.Status.DeAttachObject(httpServer);
+            Core.Status.DeAttachObject(_httpServer);
         }
         /// <summary>
         /// Detructor
@@ -146,6 +142,7 @@ namespace TWCore.Diagnostics.Status.Transports
         {
             Dispose();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose
         /// </summary>
@@ -154,15 +151,15 @@ namespace TWCore.Diagnostics.Status.Transports
         {
             Try.Do(() =>
             {
-                httpServer?.StopAsync().Wait();
-                httpServer = null;
+                _httpServer?.StopAsync().Wait();
+                _httpServer = null;
             }, false);
         }
         #endregion
 
         #region Nested Type
         [SettingsContainer("Core")]
-        class HttpStatusSettings : SettingsBase
+        private class HttpStatusSettings : SettingsBase
         {
             /// <summary>
             /// Enable or disable the discovery of the status transport

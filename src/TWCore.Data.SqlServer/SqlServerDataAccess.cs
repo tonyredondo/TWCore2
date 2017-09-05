@@ -203,8 +203,6 @@ namespace TWCore.Data.SqlServer
                         case "geography":
                             tableColumn.DataType = "object";
                             break;
-                        default:
-                            break;
                     }
                     #endregion
 

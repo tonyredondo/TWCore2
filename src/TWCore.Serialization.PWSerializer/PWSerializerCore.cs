@@ -28,6 +28,8 @@ using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.PWSerializer.Serializer;
 using TWCore.Serialization.PWSerializer.Types;
 
+// ReSharper disable InconsistentNaming
+
 namespace TWCore.Serialization.PWSerializer
 {
     /// <summary>
@@ -35,8 +37,8 @@ namespace TWCore.Serialization.PWSerializer
     /// </summary>
     public class PWSerializerCore
     {
-        private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
-        private static ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
+        private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
+        private static readonly ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
         private static readonly ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer)> OPool = new ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer)>(pool =>
             {
                 var serCacheArr = new SerializerCache<string[]>(SerializerMode.CachedUShort, StringArrayComparer);
@@ -78,7 +80,7 @@ namespace TWCore.Serialization.PWSerializer
         }, 1, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(1, scope => scope.Init(), null, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(1, p => p.Init(), null, PoolResetMode.AfterUse);
-        byte[] _bufferSer = new byte[4];
+        private readonly byte[] _bufferSer = new byte[4];
 
         #region Public Methods
         /// <summary>
@@ -105,7 +107,7 @@ namespace TWCore.Serialization.PWSerializer
             scope.Init(plan, type, value);
             scopeStack.Push(scope);
 
-            var bw = new FastBinaryWriter(stream, DefaultUTF8Encoding, true);
+            var bw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
             _bufferSer[0] = DataType.PWFileStart;
             _bufferSer[1] = (byte)Mode;
             bw.Write(_bufferSer, 0, 2);
@@ -561,7 +563,7 @@ namespace TWCore.Serialization.PWSerializer
                                 else
                                 {
                                     var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                    if (iListType?.GenericTypeArguments.Length > 0)
+                                    if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                         innerType = iListType.GenericTypeArguments[0];
                                 }
                             }
@@ -630,8 +632,8 @@ namespace TWCore.Serialization.PWSerializer
              item.Item2.Clear();
          }, 1, PoolResetMode.AfterUse);
         private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(1, d => d.Clear());
-        private static readonly ReferencePool<Stack<DynamicDeserializedType>> GDStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(1, s => s.Clear());
-        byte[] _bufferDes = new byte[8];
+        private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(1, s => s.Clear());
+        private readonly byte[] _bufferDes = new byte[8];
 
         /// <summary>
         /// Deserialize a Portable Tony Wanhjor stream into a object value
@@ -644,7 +646,7 @@ namespace TWCore.Serialization.PWSerializer
         {
             if (type == null)
                 return Deserialize(stream);
-            var br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
+            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];
@@ -883,8 +885,6 @@ namespace TWCore.Serialization.PWSerializer
                             case DataType.RefObjectUShort:
                                 objRef = br.ReadUInt16();
                                 break;
-                            default:
-                                break;
                         }
                         #endregion
                         var objValue = objectCache.DeserializerGet(objRef);
@@ -923,7 +923,7 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            var br = new FastBinaryReader(stream, DefaultUTF8Encoding, true);
+            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];
@@ -939,7 +939,7 @@ namespace TWCore.Serialization.PWSerializer
             var objectCache = tuple.Item2;
             var propertySerializer = tuple.Item3;
 
-            var desStack = GDStackPool.New();
+            var desStack = GdStackPool.New();
             DynamicDeserializedType typeItem = null;
             string valueType = null;
             do
@@ -1165,8 +1165,6 @@ namespace TWCore.Serialization.PWSerializer
                             case DataType.RefObjectUShort:
                                 objRef = br.ReadUInt16();
                                 break;
-                            default:
-                                break;
                         }
 
                         #endregion
@@ -1197,7 +1195,7 @@ namespace TWCore.Serialization.PWSerializer
             while (desStack.Count > 0);
 
             OPool.Store(tuple);
-            GDStackPool.Store(desStack);
+            GdStackPool.Store(desStack);
             DeserializersTable.ReturnTable(serializersTable);
             return typeItem;
         }

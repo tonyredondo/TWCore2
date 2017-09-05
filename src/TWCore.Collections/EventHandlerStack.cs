@@ -55,7 +55,7 @@ namespace TWCore.Collections
         {
             _eventHandlersStack = new Stack<EventHandler>();
             UseBubbling = false;
-            EventHandlerDelegate = new EventHandler(CallEventHandler);
+            EventHandlerDelegate = CallEventHandler;
         }
         #endregion
 
@@ -149,7 +149,7 @@ namespace TWCore.Collections
         {
             _eventHandlersStack = new Stack<EventHandler<T>>();
             UseBubbling = false;
-            EventHandlerDelegate = new EventHandler<T>(CallEventHandler);
+            EventHandlerDelegate = CallEventHandler;
         }
         #endregion
 

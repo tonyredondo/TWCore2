@@ -26,14 +26,12 @@ namespace TWCore.Net.HttpServer
     /// </summary>
     public class RouteHandler
     {
-        static string RouteParamPattern = @"({([0-9a-z?]*)*})";
-        static Regex RouteParamRegex = new Regex(RouteParamPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
-        static string RouteRequiredParamReplacePattern = @"([a-z0-9 -.$\[\]]+)";
-        static string RouteOptionalParamReplacePattern = @"([a-z0-9 -.$\[\]]*)";
-
-        string MatchRoute;
-        List<string> RouteParameters = new List<string>();
-        Regex rgxMatchRoute;
+        private const string RouteParamPattern = @"({([0-9a-z?]*)*})";
+        private const string RouteRequiredParamReplacePattern = @"([a-z0-9 -.$\[\]]+)";
+        private const string RouteOptionalParamReplacePattern = @"([a-z0-9 -.$\[\]]*)";
+        private static readonly Regex RouteParamRegex = new Regex(RouteParamPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+        private readonly List<string> _routeParameters = new List<string>();
+        private readonly Regex _rgxMatchRoute;
 
         #region Properties
         /// <summary>
@@ -63,21 +61,19 @@ namespace TWCore.Net.HttpServer
             Method = method;
             Url = url;
             Handler = handler;
-            MatchRoute = url;
+            var matchRoute = url;
 
             foreach (Match match in RouteParamRegex.Matches(url))
             {
-                if (match.Success && match.Value.Length > 0)
-                {
-                    RouteParameters.Add(match.Value);
-                    if (match.Value.EndsWith("?}"))
-                        MatchRoute = MatchRoute.Replace(match.Value, RouteOptionalParamReplacePattern);
-                    else
-                        MatchRoute = MatchRoute.Replace(match.Value, RouteRequiredParamReplacePattern);
-                }
+                if (!match.Success || match.Value.Length <= 0) continue;
+
+                _routeParameters.Add(match.Value);
+                matchRoute = matchRoute.Replace(match.Value, match.Value.EndsWith("?}") ? 
+                    RouteOptionalParamReplacePattern : 
+                    RouteRequiredParamReplacePattern);
             }
-            MatchRoute = MatchRoute.Replace("/", @"(\/*)");
-            rgxMatchRoute = new Regex(MatchRoute, RegexOptions.IgnoreCase | RegexOptions.Compiled);
+            matchRoute = matchRoute.Replace("/", @"(\/*)");
+            _rgxMatchRoute = new Regex(matchRoute, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         }
         #endregion
 
@@ -91,7 +87,7 @@ namespace TWCore.Net.HttpServer
         public bool Match(string url)
         {
             url = Uri.UnescapeDataString(url);
-            var match = rgxMatchRoute.Match(url);
+            var match = _rgxMatchRoute.Match(url);
             return (match.Length == url.Length);
         }
         /// <summary>
@@ -104,7 +100,7 @@ namespace TWCore.Net.HttpServer
         {
             url = Uri.UnescapeDataString(url);
             var response = new Dictionary<string, string>();
-            var match = rgxMatchRoute.Match(url);
+            var match = _rgxMatchRoute.Match(url);
             if (match.Length != url.Length)
                 return null;
 
@@ -118,16 +114,15 @@ namespace TWCore.Net.HttpServer
             var pIdx = 0;
             foreach(var group in lstGroups)
             {
-                if (lstGroups.Count < RouteParameters.Count && RouteParameters[pIdx].EndsWith("?}"))
+                if (lstGroups.Count < _routeParameters.Count && _routeParameters[pIdx].EndsWith("?}"))
                     pIdx++;
-                if (pIdx < RouteParameters.Count)
-                {
-                    var param = RouteParameters[pIdx];
-                    var value = group.Value;
-                    param = param.Substring(1, param.Length - 2).Replace("?", "");
-                    response[param] = !string.IsNullOrEmpty(value) ? value : null;
-                    pIdx++;
-                }
+                if (pIdx >= _routeParameters.Count) continue;
+
+                var param = _routeParameters[pIdx];
+                var value = @group.Value;
+                param = param.Substring(1, param.Length - 2).Replace("?", "");
+                response[param] = !string.IsNullOrEmpty(value) ? value : null;
+                pIdx++;
             }
             return response;
         }

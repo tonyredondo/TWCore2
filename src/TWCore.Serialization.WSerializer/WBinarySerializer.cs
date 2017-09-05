@@ -20,29 +20,32 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer
 {
+    /// <inheritdoc />
     /// <summary>
     /// W Binary Serializer
     /// </summary>
     public class WBinarySerializer : BinarySerializer
     {
-        static string[] _extensions = new string[] { ".wbin" };
-        static string[] _mimeTypes = new string[] { SerializerMimeTypes.WBinary };
-        static ReferencePool<WSerializer.WSerializerCore> _pool = ReferencePool<WSerializer.WSerializerCore>.Shared;
-        WSerializer.SerializerMode _mode = WSerializer.SerializerMode.Cached2048;
+        private static readonly string[] SExtensions = { ".wbin" };
+        private static readonly string[] SMimeTypes = { SerializerMimeTypes.WBinary };
+        private static readonly ReferencePool<WSerializerCore> Pool = ReferencePool<WSerializerCore>.Shared;
+        private SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions => _extensions;
+        public override string[] Extensions => SExtensions;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes => _mimeTypes;
+        public override string[] MimeTypes => SMimeTypes;
         /// <summary>
         /// Serialization mode
         /// </summary>
-        public WSerializer.SerializerMode SerializerMode
+        public SerializerMode SerializerMode
         {
             get => _mode;
             set => _mode = value;
@@ -56,7 +59,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = _pool.New();
+            var ser = Pool.New();
             ser.Mode = _mode;
             foreach (var type in SerializerManager.DefaultKnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
@@ -64,14 +67,14 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             var obj = ser.Deserialize(stream, itemType);
             ser.ClearKnownTypes();
-            _pool.Store(ser);
+            Pool.Store(ser);
             return obj;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = _pool.New();
+            var ser = Pool.New();
             ser.Mode = _mode;
             foreach (var type in SerializerManager.DefaultKnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
@@ -79,9 +82,10 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             ser.Serialize(stream, item, itemType);
             ser.ClearKnownTypes();
-            _pool.Store(ser);
+            Pool.Store(ser);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

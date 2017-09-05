@@ -136,7 +136,7 @@ namespace TWCore.Bot.Telegram
                             PhotoId = photo.FileId,
                             PhotoSize = photo.FileSize,
                             PhotoName = photo.FilePath,
-                            PhotoStream = new Lazy<System.IO.Stream>(() =>
+                            PhotoStream = new Lazy<Stream>(() =>
                             {
                                 var file = Bot.GetFileAsync(photo.FileId).WaitAndResults();
                                 return file.FileStream;

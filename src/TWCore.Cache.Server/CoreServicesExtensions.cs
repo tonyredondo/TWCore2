@@ -69,7 +69,7 @@ namespace TWCore.Services
                 return;
             }
 
-            _cacheConfiguration = serverCacheSettings?.Caches?.FirstOrDefault(c => c.Name == cacheSettings.ServerName);
+            _cacheConfiguration = serverCacheSettings.Caches?.FirstOrDefault(c => c.Name == cacheSettings.ServerName);
             _serverOptions =
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??

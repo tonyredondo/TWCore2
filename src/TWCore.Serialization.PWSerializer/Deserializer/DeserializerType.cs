@@ -26,18 +26,16 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
 {
     internal class DeserializerType
     {
-        private static ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private object _tmpDictionary;
 
         public Type Type;
         public DeserializerTypeInfo TypeInfo;
         public object Value;
-        public IList IListValue;
-        public IDictionary IDictionaryValue;
-        public int IListIndex;
-
-        object _tmpDictionary;
+        public IList ListValue;
+        public IDictionary DictionaryValue;
+        public int ListIndex;
         public int ItemDictionaryIdx;
-
         public string[] Properties;
         public Type[] PropertiesType;
         public int PropertiesLength;
@@ -53,15 +51,15 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             CurrentPropertyIndex = 0;
             Operation = 0;
             Value = null;
-            IListValue = null;
-            IDictionaryValue = null;
+            ListValue = null;
+            DictionaryValue = null;
             Type = null;
             TypeInfo = null;
-            IListIndex = 0;
+            ListIndex = 0;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetProperties(Type type, string[] properties, Dictionary<Type, Type[]> _propertiesTypes, int length)
+        public void SetProperties(Type type, string[] properties, Dictionary<Type, Type[]> propertiesTypes, int length)
         {
             Type = type;
             TypeInfo = GetDeserializationTypeInfo(type);
@@ -72,23 +70,22 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                 Value = TypeInfo.CreateInstance(length);
 
             if (TypeInfo.IsIList)
-                IListValue = (IList)Value;
+                ListValue = (IList)Value;
             else if (TypeInfo.IsIDictionary)
-                IDictionaryValue = (IDictionary)Value;
+                DictionaryValue = (IDictionary)Value;
 
-            if (properties?.Length > 0)
+            if (properties.Length <= 0) return;
+
+            Properties = properties;
+            PropertiesLength = properties.Length;
+            if (!propertiesTypes.TryGetValue(type, out PropertiesType))
             {
-                Properties = properties;
-                PropertiesLength = properties.Length;
-                if (!_propertiesTypes.TryGetValue(type, out PropertiesType))
-                {
-                    PropertiesType = properties.Select(p => TypeInfo.Properties[p].Property.PropertyType).ToArray();
-                    _propertiesTypes[type] = PropertiesType;
-                }
-                CurrentType = PropertiesType[0];
-                CurrentPropertyIndex = 0;
-                Operation = 0;
+                PropertiesType = properties.Select(p => TypeInfo.Properties[p].Property.PropertyType).ToArray();
+                propertiesTypes[type] = PropertiesType;
             }
+            CurrentType = PropertiesType[0];
+            CurrentPropertyIndex = 0;
+            Operation = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ListStart()
@@ -139,9 +136,9 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     break;
                 case 1:
                     if (TypeInfo.IsArray)
-                        IListValue[IListIndex++] = DataTypeHelper.Change(lastObject, TypeInfo.InnerTypes[0]);
+                        ListValue[ListIndex++] = DataTypeHelper.Change(lastObject, TypeInfo.InnerTypes[0]);
                     else
-                        IListValue.Add(DataTypeHelper.Change(lastObject, TypeInfo.InnerTypes[0]));
+                        ListValue.Add(DataTypeHelper.Change(lastObject, TypeInfo.InnerTypes[0]));
                     break;
                 case 2:
                     if (ItemDictionaryIdx == 0)
@@ -154,7 +151,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     {
                         var dKey = DataTypeHelper.Change(_tmpDictionary, TypeInfo.InnerTypes[0]);
                         var dValue = DataTypeHelper.Change(lastObject, TypeInfo.InnerTypes[1]);
-                        IDictionaryValue.Add(dKey, dValue);
+                        DictionaryValue.Add(dKey, dValue);
                         _tmpDictionary = null;
                         ItemDictionaryIdx = 0;
                         CurrentType = TypeInfo.InnerTypes[0];
@@ -218,12 +215,12 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                             else
                             {
                                 var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                if (iListType?.GenericTypeArguments.Length > 0)
+                                if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                     innerType = iListType.GenericTypeArguments[0];
                             }
                         }
                         tinfo.IsIList = true;
-                        tinfo.InnerTypes = new Type[] { innerType };
+                        tinfo.InnerTypes = new[] { innerType };
                     }
 
                     var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));

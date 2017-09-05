@@ -84,7 +84,7 @@ namespace TWCore.Cache
         /// true if the item has already expired; otherwise, false.
         /// </summary>
         [XmlIgnore, NonSerialize]
-        public bool IsExpired => ExpirationDate.HasValue && ExpirationDate.Value < Core.Now ? true : false;
+        public bool IsExpired => ExpirationDate.HasValue && ExpirationDate.Value < Core.Now;
         /// <summary>
         /// Item tags
         /// </summary>

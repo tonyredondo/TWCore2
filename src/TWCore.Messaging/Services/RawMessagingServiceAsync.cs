@@ -19,15 +19,17 @@ using System.Threading;
 using TWCore.Messaging;
 using TWCore.Messaging.RawServer;
 using TWCore.Services.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Raw Messaging Service Async base class
     /// </summary>
     public abstract class RawMessagingServiceAsync : IRawMessagingServiceAsync
     {
-        CancellationTokenSource cTokenSource;
+        private CancellationTokenSource _cTokenSource;
 
         #region Events
         /// <summary>
@@ -45,14 +47,17 @@ namespace TWCore.Services
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Message processor
         /// </summary>
         public IMessageProcessorAsync Processor { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Messaging queue server
         /// </summary>
         public IMQueueRawServer QueueServer { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
@@ -60,6 +65,7 @@ namespace TWCore.Services
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -69,7 +75,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Starting messaging service");
-                cTokenSource = new CancellationTokenSource();
+                _cTokenSource = new CancellationTokenSource();
                 OnInit(args);
                 QueueServer = GetQueueServer();
                 if (QueueServer == null)
@@ -82,7 +88,7 @@ namespace TWCore.Services
                     QueueServer.ResponseReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
-                        await Processor.ProcessAsync(e, cTokenSource.Token).ConfigureAwait(false);
+                        await Processor.ProcessAsync(e, _cTokenSource.Token).ConfigureAwait(false);
                     };
                 }
                 else
@@ -90,7 +96,7 @@ namespace TWCore.Services
                     QueueServer.RequestReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Request, e.CorrelationId));
-                        var result = await Processor.ProcessAsync(e, cTokenSource.Token).ConfigureAwait(false);
+                        var result = await Processor.ProcessAsync(e, _cTokenSource.Token).ConfigureAwait(false);
                         if (result != ResponseMessage.NoResponse && result != null)
                             e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
                     };
@@ -120,6 +126,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
@@ -127,7 +134,7 @@ namespace TWCore.Services
         {
             try
             {
-                cTokenSource.Cancel();
+                _cTokenSource.Cancel();
                 OnFinalizing();
                 Core.Log.InfoBasic("Stopping messaging service");
                 QueueServer.StopListeners();
@@ -142,6 +149,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -150,7 +158,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Continuing messaging service");
-                cTokenSource = new CancellationTokenSource();
+                _cTokenSource = new CancellationTokenSource();
                 QueueServer.StartListeners();
                 Core.Log.InfoBasic("Messaging service is running");
             }
@@ -160,6 +168,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
@@ -168,7 +177,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Pausing messaging service");
-                cTokenSource.Cancel();
+                _cTokenSource.Cancel();
                 QueueServer.StopListeners();
                 Core.Log.InfoBasic("Messaging service is paused");
             }
@@ -178,6 +187,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>

@@ -177,17 +177,17 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString()
         {
-            var KeyValueList = new List<string>();
+            var keyValueList = new List<string>();
             var type = BaseObject.GetType();
             var props = type.GetRuntimeProperties();
 
             foreach (var prop in props)
             {
                 var pValue = prop.GetValue(BaseObject);
-                KeyValueList.Add(string.Format("{0} = {1}", prop.Name, pValue?.ToString()));
+                keyValueList.Add(string.Format("{0} = {1}", prop.Name, pValue?.ToString()));
             }
 
-            return "{ " + string.Join(", ", KeyValueList.ToArray()) + " }";
+            return "{ " + string.Join(", ", keyValueList.ToArray()) + " }";
         }
         #endregion
 

@@ -16,9 +16,11 @@ limitations under the License.
 
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Business Async base class
     /// </summary>
@@ -28,6 +30,7 @@ namespace TWCore.Services.Messaging
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize business instance
         /// </summary>
@@ -35,6 +38,7 @@ namespace TWCore.Services.Messaging
         {
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -45,6 +49,7 @@ namespace TWCore.Services.Messaging
         {
             return ProcessAsync((T)message, cancellationToken);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -56,6 +61,7 @@ namespace TWCore.Services.Messaging
             TimeoutCancellationToken = cancellationToken;
             return OnProcessAsync(message);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
@@ -83,6 +89,7 @@ namespace TWCore.Services.Messaging
         #endregion
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Business Async base class
     /// </summary>
@@ -91,6 +98,7 @@ namespace TWCore.Services.Messaging
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize business instance
         /// </summary>
@@ -98,6 +106,7 @@ namespace TWCore.Services.Messaging
         {
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -109,6 +118,7 @@ namespace TWCore.Services.Messaging
             TimeoutCancellationToken = cancellationToken;
             return OnProcessAsync(message);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

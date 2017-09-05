@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
+// ReSharper disable CollectionNeverQueried.Global
 
 namespace TWCore.Messaging.RawServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for raw response received event
     /// </summary>
@@ -43,6 +45,7 @@ namespace TWCore.Messaging.RawServer
         public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
 
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event
 		/// </summary>

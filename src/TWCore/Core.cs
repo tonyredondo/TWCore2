@@ -541,7 +541,7 @@ namespace TWCore
                 throw new Exception($"Error loading the settings definitions.", ex);
             }
             //Checks if a reload time is set.
-            if (GlobalSettings?.SettingsReloadTimeInMinutes > 0)
+            if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
             {
                 Task.Delay(TimeSpan.FromMinutes(GlobalSettings.SettingsReloadTimeInMinutes)).ContinueWith(t =>
                 {

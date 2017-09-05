@@ -19,17 +19,20 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// AspNet Web Service
     /// </summary>
     public class WebService : SimpleServiceAsync
     {
-        Func<string[], IWebHost> _webHostFactory;
+        private readonly Func<string[], IWebHost> _webHostFactory;
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// AspNet Web Service
         /// </summary>

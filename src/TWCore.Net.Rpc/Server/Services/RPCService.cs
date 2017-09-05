@@ -20,9 +20,11 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Net.RPC.Server;
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// RPC Service base
     /// </summary>

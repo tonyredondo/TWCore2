@@ -18,14 +18,17 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Client.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// TW RPC Transport client factory
     /// </summary>
     public class TWTransportClientFactory : TransportClientFactoryBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new Transport from a KeyValueCollection parameters
         /// </summary>
@@ -47,12 +50,11 @@ namespace TWCore.Net.RPC.Client.Transports
                 if (compressor != null)
                     serializer.Compressor = compressor;
             }
-            ITransportClient client;
             var lclient = new TWTransportClient(host, port, socketsPerClient, serializer)
             {
                 InvokeMethodTimeout = timeout
             };
-            client = lclient;
+            ITransportClient client = lclient;
             Core.Log.LibDebug("TW Transport Client created with parameters:");
             Core.Log.LibDebug("Host: {0}", host);
             Core.Log.LibDebug("Port: {0}", port);

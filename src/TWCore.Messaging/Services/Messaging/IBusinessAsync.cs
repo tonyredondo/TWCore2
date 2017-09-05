@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a business instance for message processing
     /// </summary>
@@ -38,11 +40,12 @@ namespace TWCore.Services.Messaging
         Task<object> ProcessAsync(object message, CancellationToken cancellationToken);
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Defines a business instance for message processing
     /// </summary>
     /// <typeparam name="T">Message Type</typeparam>
-    public interface IBusinessAsync<T> : IBusinessAsync
+    public interface IBusinessAsync<in T> : IBusinessAsync
     {
         /// <summary>
         /// Process message

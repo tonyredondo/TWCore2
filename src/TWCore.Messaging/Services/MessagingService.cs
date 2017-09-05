@@ -21,16 +21,18 @@ using System.Threading;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// Messaging Service base class
 	/// </summary>
 	public abstract class MessagingService : IMessagingService
     {
-        CancellationTokenSource cTokenSource;
-        static readonly ConcurrentDictionary<object, object> receivedMessagesCache = new ConcurrentDictionary<object, object>();
+        private static readonly ConcurrentDictionary<object, object> ReceivedMessagesCache = new ConcurrentDictionary<object, object>();
+        private CancellationTokenSource _cTokenSource;
 
         #region Events
         /// <summary>
@@ -48,14 +50,17 @@ namespace TWCore.Services
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Message processor
         /// </summary>
         public IMessageProcessor Processor { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Messaging queue server
         /// </summary>
         public IMQueueServer QueueServer { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
@@ -72,6 +77,7 @@ namespace TWCore.Services
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -81,7 +87,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Starting messaging service");
-                cTokenSource = new CancellationTokenSource();
+                _cTokenSource = new CancellationTokenSource();
                 OnInit(args);
                 Counters = new MessagingServiceCounters();
                 QueueServer = GetQueueServer();
@@ -95,26 +101,25 @@ namespace TWCore.Services
                     QueueServer.ResponseReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Message));
-                        if (e.Message?.Body != null)
+                        if (e.Message?.Body == null) return;
+
+                        ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
+                        Counters.IncrementCurrentMessagesBeingProcessed();
+                        var sw = Stopwatch.StartNew();
+                        try
                         {
-                            receivedMessagesCache.TryAdd(e.Message.Body, e.Message);
-                            Counters.IncrementCurrentMessagesBeingProcessed();
-                            var sw = Stopwatch.StartNew();
-                            try
-                            {
-                                Processor.Process(e.Message.Body, cTokenSource.Token);
-                            }
-                            catch(Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                                Counters.IncrementTotalExceptions();
-                            }
-                            sw.Stop();
-                            Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                            Counters.DecrementCurrentMessagesBeingProcessed();
-                            Counters.IncrementTotalMessagesProccesed();
-                            receivedMessagesCache.TryRemove(e.Message.Body, out object _);
+                            Processor.Process(e.Message.Body, _cTokenSource.Token);
                         }
+                        catch(Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                            Counters.IncrementTotalExceptions();
+                        }
+                        sw.Stop();
+                        Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                        Counters.DecrementCurrentMessagesBeingProcessed();
+                        Counters.IncrementTotalMessagesProccesed();
+                        ReceivedMessagesCache.TryRemove(e.Message.Body, out object _);
                     };
                 }
                 else
@@ -122,28 +127,27 @@ namespace TWCore.Services
                     QueueServer.RequestReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Request));
-                        if (e.Request?.Body != null)
+                        if (e.Request?.Body == null) return;
+
+                        ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
+                        object result = null;
+                        Counters.IncrementCurrentMessagesBeingProcessed();
+                        var sw = Stopwatch.StartNew();
+                        try
                         {
-                            receivedMessagesCache.TryAdd(e.Request.Body, e.Request);
-                            object result = null;
-                            Counters.IncrementCurrentMessagesBeingProcessed();
-                            var sw = Stopwatch.StartNew();
-                            try
-                            {
-                                result = Processor.Process(e.Request.Body, e.ProcessResponseTimeoutCancellationToken);
-                            }
-                            catch(Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                                Counters.IncrementTotalExceptions();
-                            }
-                            sw.Stop();
-                            Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                            Counters.DecrementCurrentMessagesBeingProcessed();
-                            Counters.IncrementTotalMessagesProccesed();
-                            e.Response.Body = result;
-                            receivedMessagesCache.TryRemove(e.Request.Body, out object _);
+                            result = Processor.Process(e.Request.Body, e.ProcessResponseTimeoutCancellationToken);
                         }
+                        catch(Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                            Counters.IncrementTotalExceptions();
+                        }
+                        sw.Stop();
+                        Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                        Counters.DecrementCurrentMessagesBeingProcessed();
+                        Counters.IncrementTotalMessagesProccesed();
+                        e.Response.Body = result;
+                        ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {
@@ -172,6 +176,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
@@ -179,7 +184,7 @@ namespace TWCore.Services
         {
             try
             {
-                cTokenSource.Cancel();
+                _cTokenSource.Cancel();
                 OnFinalizing();
                 Core.Log.InfoBasic("Stopping messaging service");
                 QueueServer.StopListeners();
@@ -194,6 +199,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -202,7 +208,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Continuing messaging service");
-                cTokenSource = new CancellationTokenSource();
+                _cTokenSource = new CancellationTokenSource();
                 QueueServer.StartListeners();
                 Core.Log.InfoBasic("Messaging service is running");
             }
@@ -212,6 +218,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
@@ -220,7 +227,7 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Pausing messaging service");
-                cTokenSource.Cancel();
+                _cTokenSource.Cancel();
                 QueueServer.StopListeners();
                 Core.Log.InfoBasic("Messaging service is paused");
             }
@@ -230,6 +237,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
@@ -252,26 +260,28 @@ namespace TWCore.Services
 			{
 				if (!EnableMessagesTrace) return;
 
-				if (e.Message is RequestMessage reqMsg)
+				switch (e.Message)
 				{
-					Core.Trace.Write("QueueReceivedRequestMessage - " + reqMsg.CorrelationId, reqMsg);
-				}
-				if (e.Message is ResponseMessage resMsg)
-				{
-					Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
+				    case RequestMessage reqMsg:
+				        Core.Trace.Write("QueueReceivedRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+				        break;
+				    case ResponseMessage resMsg:
+				        Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
+				        break;
 				}
 			};
 			MessageSent += (sender, e) =>
 			{
 				if (!EnableMessagesTrace) return;
 
-				if (e.Message is RequestMessage reqMsg)
+				switch (e.Message)
 				{
-					Core.Trace.Write("QueueSentRequestMessage - " + reqMsg.CorrelationId, reqMsg);
-				}
-				if (e.Message is ResponseMessage resMsg)
-				{
-					Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
+				    case RequestMessage reqMsg:
+				        Core.Trace.Write("QueueSentRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+				        break;
+				    case ResponseMessage resMsg:
+				        Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
+				        break;
 				}
 			};
 		}
@@ -304,7 +314,7 @@ namespace TWCore.Services
         /// <returns>Complete Request message instance</returns>
         public static RequestMessage GetCompleteRequestMessage(object messageBody)
         {
-            if (receivedMessagesCache.TryGetValue(messageBody, out object _out))
+            if (ReceivedMessagesCache.TryGetValue(messageBody, out var _out))
                 return (RequestMessage)_out;
             return null;
         }
@@ -315,7 +325,7 @@ namespace TWCore.Services
         /// <returns>Complete Response message instance</returns>
         public static ResponseMessage GetCompleteResponseMessage(object messageBody)
         {
-            if (receivedMessagesCache.TryGetValue(messageBody, out object _out))
+            if (ReceivedMessagesCache.TryGetValue(messageBody, out var _out))
                 return (ResponseMessage)_out;
             return null;
         }

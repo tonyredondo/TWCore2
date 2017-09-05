@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
@@ -28,11 +29,10 @@ namespace TWCore.Services
     /// </summary>
     public class MessagingServiceCounters
     {
-        readonly object locker = new object();
-        Timer timer;
-
-        readonly Queue<double> processTimes = new Queue<double>();
-        readonly Queue<double> lastMinuteProcessTimes = new Queue<double>();
+        private readonly object _locker = new object();
+        private readonly Queue<double> _processTimes = new Queue<double>();
+        private readonly Queue<double> _lastMinuteProcessTimes = new Queue<double>();
+        private Timer _timer;
 
         #region Properties
         /// <summary>
@@ -42,8 +42,8 @@ namespace TWCore.Services
         {
             get
             {
-                lock (locker)
-                    return processTimes.Count > 0 ? processTimes.Average() : 0;
+                lock (_locker)
+                    return _processTimes.Count > 0 ? _processTimes.Average() : 0;
             }
         }
         /// <summary>
@@ -62,8 +62,8 @@ namespace TWCore.Services
         {
             get
             {
-                lock (locker)
-                    return lastMinuteProcessTimes.Count > 0 ? lastMinuteProcessTimes.Average() : 0;
+                lock (_locker)
+                    return _lastMinuteProcessTimes.Count > 0 ? _lastMinuteProcessTimes.Average() : 0;
             }
         }
         /// <summary>
@@ -130,11 +130,11 @@ namespace TWCore.Services
         /// </summary>
         public MessagingServiceCounters()
         {
-            timer = new Timer(state =>
+            _timer = new Timer(state =>
             {
-                lock (locker)
+                lock (_locker)
                 {
-                    lastMinuteProcessTimes.Clear();
+                    _lastMinuteProcessTimes.Clear();
                     PeakLastMinuteProcessAverageTime = 0;
                     PeakLastMinuteProcessAverageTimeLastDate = DateTime.MinValue;
 
@@ -176,7 +176,7 @@ namespace TWCore.Services
         /// </summary>
         public void IncrementTotalExceptions()
         {
-            lock (locker)
+            lock (_locker)
                 TotalExceptions++;
         }
         /// <summary>
@@ -184,7 +184,7 @@ namespace TWCore.Services
         /// </summary>
         public void IncrementTotalMessagesProccesed()
         {
-            lock (locker)
+            lock (_locker)
                 TotalMessagesProccesed++;
         }
         /// <summary>
@@ -192,7 +192,7 @@ namespace TWCore.Services
         /// </summary>
         public void IncrementCurrentMessagesBeingProcessed()
         {
-            lock (locker)
+            lock (_locker)
             {
                 CurrentMessagesBeingProcessed++;
                 TotalMessagesReceived++;
@@ -215,27 +215,27 @@ namespace TWCore.Services
         /// </summary>
         public void ReportProcessingTime(double time)
         {
-            lock (locker)
+            lock (_locker)
             {
-                processTimes.Enqueue(time);
-                if (processTimes.Count > 1000)
-                    processTimes.Dequeue();
+                _processTimes.Enqueue(time);
+                if (_processTimes.Count > 1000)
+                    _processTimes.Dequeue();
 
-                lastMinuteProcessTimes.Enqueue(time);
-                if (lastMinuteProcessTimes.Count > 1000)
-                    lastMinuteProcessTimes.Dequeue();
+                _lastMinuteProcessTimes.Enqueue(time);
+                if (_lastMinuteProcessTimes.Count > 1000)
+                    _lastMinuteProcessTimes.Dequeue();
 
-                var avgPT = ProcessAverageTime;
-                if (avgPT > PeakProcessAverageTime)
+                var avgPt = ProcessAverageTime;
+                if (avgPt > PeakProcessAverageTime)
                 {
-                    PeakProcessAverageTime = avgPT;
+                    PeakProcessAverageTime = avgPt;
                     PeakProcessAverageTimeLastDate = Core.Now;
                 }
 
-                var avgLMPT = LastMinuteProcessAverageTime;
-                if (avgLMPT > PeakLastMinuteProcessAverageTime)
+                var avgLmpt = LastMinuteProcessAverageTime;
+                if (avgLmpt > PeakLastMinuteProcessAverageTime)
                 {
-                    PeakLastMinuteProcessAverageTime = avgLMPT;
+                    PeakLastMinuteProcessAverageTime = avgLmpt;
                     PeakProcessAverageTimeLastDate = Core.Now;
                 }
             }
@@ -245,7 +245,7 @@ namespace TWCore.Services
         /// </summary>
         public void DecrementCurrentMessagesBeingProcessed()
         {
-            lock (locker)
+            lock (_locker)
                 CurrentMessagesBeingProcessed--;
         }
         #endregion

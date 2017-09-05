@@ -21,15 +21,17 @@ using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 // ReSharper disable RedundantAssignment
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Server.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http RPC Transport server
     /// </summary>
     public class HttpTransportServer : ITransportServer
     {
-        SimpleHttpServer httpServer;
+        private readonly SimpleHttpServer _httpServer;
 
         #region Properties
         /// <summary>
@@ -72,8 +74,8 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HttpTransportServer()
         {
-            httpServer = new SimpleHttpServer();
-            httpServer.OnBeginRequest += HttpServer_OnBeginRequest;
+            _httpServer = new SimpleHttpServer();
+            _httpServer.OnBeginRequest += HttpServer_OnBeginRequest;
 			Serializer = new JsonTextSerializer();
             Core.Status.Attach(collection =>
             {
@@ -81,7 +83,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
                 collection.Add("Bytes Sent", Counters.BytesSent);
                 collection.Add("Bytes Received", Counters.BytesReceived);
-                Core.Status.AttachChild(httpServer, this);
+                Core.Status.AttachChild(_httpServer, this);
                 Core.Status.AttachChild(Serializer, this);
             });
         }
@@ -109,7 +111,7 @@ namespace TWCore.Net.RPC.Server.Transports
         public async Task StartListenerAsync()
         {
             Core.Log.LibVerbose("Starting Transport Listener");
-            await httpServer.StartAsync(Port).ConfigureAwait(false);
+            await _httpServer.StartAsync(Port).ConfigureAwait(false);
             Core.Log.LibVerbose("Transport Listener Started");
         }
         /// <summary>
@@ -120,7 +122,7 @@ namespace TWCore.Net.RPC.Server.Transports
         public async Task StopListenerAsync()
         {
             Core.Log.LibVerbose("Stopping Transport Listener");
-            await httpServer.StopAsync().ConfigureAwait(false);
+            await _httpServer.StopAsync().ConfigureAwait(false);
             Core.Log.LibVerbose("Transport Listener Stopped");
         }
         /// <summary>

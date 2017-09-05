@@ -29,9 +29,11 @@ using TWCore.IO;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Client.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// TW RPC Transport client
     /// </summary>

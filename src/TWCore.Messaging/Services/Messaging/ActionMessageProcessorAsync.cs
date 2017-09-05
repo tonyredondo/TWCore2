@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Messaging
 {
@@ -29,8 +30,9 @@ namespace TWCore.Services.Messaging
     /// <typeparam name="T">Type of message to process</typeparam>
     /// <param name="message">Message to process</param>
     /// <returns>Async task</returns>
-    public delegate Task ActionMessageAsyncDelegate<T>(T message, CancellationToken cancellationToken);
+    public delegate Task ActionMessageAsyncDelegate<in T>(T message, CancellationToken cancellationToken);
 
+    /// <inheritdoc />
     /// <summary>
     /// Process messages using different Action delegates for each message type
     /// </summary>
@@ -67,12 +69,14 @@ namespace TWCore.Services.Messaging
             Actions[messageType] = processor;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Initialize message processor
         /// </summary>
         public void Init()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process a message using the registered actions
         /// </summary>
@@ -82,7 +86,7 @@ namespace TWCore.Services.Messaging
         public async Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
-            Type msgType = message?.GetType() ?? Actions.Keys.First();
+            var msgType = message?.GetType() ?? Actions.Keys.First();
             if (Actions.TryGetValue(msgType, out var processor))
             {
                 await processor(message, cancellationToken).ConfigureAwait(false);
@@ -97,6 +101,7 @@ namespace TWCore.Services.Messaging
                 Core.Log.Warning("Message can't be processed because not Processor instance couldn't be found. Type = {0}", msgType);
             return ResponseMessage.NoResponse;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

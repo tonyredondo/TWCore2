@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using TWCore.Collections;
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {
@@ -30,15 +31,15 @@ namespace TWCore
         /// </summary>
         /// <param name="item">Item to convert</param>
         /// <returns>KeyValue item instance</returns>
-        public static KeyValue<K, V> GetKeyValue<K, V>(this KeyValuePair<K, V> item) 
-            => new KeyValue<K, V>(item.Key, item.Value);
+        public static KeyValue<TK, TV> GetKeyValue<TK, TV>(this KeyValuePair<TK, TV> item) 
+            => new KeyValue<TK, TV>(item.Key, item.Value);
         /// <summary>
         /// Gets a KeyValueCollection from an IDictionary
         /// </summary>
         /// <param name="dictionary">Dictionary to convert</param>
         /// <returns>KeyValueCollection instance</returns>
-        public static KeyValueCollection<K, V> GetKeyValueCollection<K, V>(this IDictionary<K, V> dictionary)
-            => new KeyValueCollection<K, V>(dictionary);
+        public static KeyValueCollection<TK, TV> GetKeyValueCollection<TK, TV>(this IDictionary<TK, TV> dictionary)
+            => new KeyValueCollection<TK, TV>(dictionary);
         /// <summary>
         /// Gets a value from the dictionary, adding and returning a new instance if it is missing.
         /// </summary>

@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using TWCore.Net.HttpServer;
+// ReSharper disable CheckNamespace
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Services
 {

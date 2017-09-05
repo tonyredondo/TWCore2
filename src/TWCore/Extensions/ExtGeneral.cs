@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Net;
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {

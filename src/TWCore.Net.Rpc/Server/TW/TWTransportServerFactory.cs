@@ -19,14 +19,17 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Server.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// TW RPC Transport server factory
     /// </summary>
     public class TWTransportServerFactory : TransportServerFactoryBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new Transport from a KeyValueCollection parameters
         /// </summary>

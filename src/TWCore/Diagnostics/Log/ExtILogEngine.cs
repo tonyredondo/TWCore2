@@ -17,6 +17,7 @@ limitations under the License.
 using System.Linq;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Log.Storages;
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {

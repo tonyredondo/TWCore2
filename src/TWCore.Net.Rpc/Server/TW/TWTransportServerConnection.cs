@@ -24,9 +24,11 @@ using TWCore.Diagnostics.Status;
 using TWCore.IO;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Server.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a TW connection to a client
     /// </summary>

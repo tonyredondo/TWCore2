@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {

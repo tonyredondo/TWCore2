@@ -19,9 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using TWCore.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Process messages using different Func delegates for each message type
     /// </summary>
@@ -62,9 +64,9 @@ namespace TWCore.Services.Messaging
         /// Register a new func for a message type
         /// </summary>
         /// <typeparam name="T">Type of the message</typeparam>
-        /// <typeparam name="R">Type of response</typeparam>
+        /// <typeparam name="TR">Type of response</typeparam>
         /// <param name="func">Func to process the message</param>
-        public void RegisterFunc<T, R>(Func<T, R> func)
+        public void RegisterFunc<T, TR>(Func<T, TR> func)
         {
             if (func == null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
@@ -87,9 +89,9 @@ namespace TWCore.Services.Messaging
         /// Register a new func for a message type
         /// </summary>
         /// <typeparam name="T">Type of the message</typeparam>
-        /// <typeparam name="R">Type of response</typeparam>
+        /// <typeparam name="TR">Type of response</typeparam>
         /// <param name="func">Func to process the message</param>
-        public void RegisterFunc<T, R>(Func<T, CancellationToken, R> func)
+        public void RegisterFunc<T, TR>(Func<T, CancellationToken, TR> func)
         {
             if (func == null) throw new NullReferenceException("You can't register a null Func");
             var messageType = typeof(T);
@@ -98,12 +100,14 @@ namespace TWCore.Services.Messaging
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Initialize message processor
         /// </summary>
         public void Init()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process a message using the registered funcs
         /// </summary>
@@ -113,14 +117,14 @@ namespace TWCore.Services.Messaging
         public object Process(object message, CancellationToken cancellationToken)
         {
             Core.Log.LibDebug("Processing message...");
-            Type msgType = message?.GetType() ?? Funcs.Keys.First();
+            var msgType = message?.GetType() ?? Funcs.Keys.First();
             if (Funcs.TryGetValue(msgType, out var processor))
             {
                 var response = processor(message, cancellationToken);
                 Core.Log.LibDebug("Message processed.");
                 return response;
             }
-            else if (Funcs.TryGetValue(typeof(object), out processor))
+            if (Funcs.TryGetValue(typeof(object), out processor))
             {
                 var response = processor(message, cancellationToken);
                 Core.Log.LibDebug("Message processed.");
@@ -129,6 +133,7 @@ namespace TWCore.Services.Messaging
             Core.Log.Warning("Message can't be processed because not Processor instance couldn't be found. Type = {0}", msgType);
             return ResponseMessage.NoResponse;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

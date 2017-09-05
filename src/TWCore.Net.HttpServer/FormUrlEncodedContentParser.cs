@@ -26,7 +26,7 @@ namespace TWCore.Net.HttpServer
     /// </summary>
     public class FormUrlEncodedContentParser
     {
-		Dictionary<string, string> Parameters = new Dictionary<string, string>();
+        private Dictionary<string, string> _parameters = new Dictionary<string, string>();
 
         #region Properties
         /// <summary>
@@ -43,7 +43,7 @@ namespace TWCore.Net.HttpServer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                Parameters.TryGetValue(key, out string value);
+                _parameters.TryGetValue(key, out var value);
                 return value;
             }
         }
@@ -65,12 +65,12 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Parse(byte[] bytes, Encoding encoding)
+        private void Parse(byte[] bytes, Encoding encoding)
         {
             Success = false;
-            string content = encoding.GetString(bytes);
-            Parameters = content.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray()).ToDictionary(i => i[0], i => i[1]);
-            Success = Parameters.Count > 0;
+            var content = encoding.GetString(bytes);
+            _parameters = content.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray()).ToDictionary(i => i[0], i => i[1]);
+            Success = _parameters.Count > 0;
         }
         #endregion
     }

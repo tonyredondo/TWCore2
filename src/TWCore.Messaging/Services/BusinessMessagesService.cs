@@ -17,16 +17,18 @@ limitations under the License.
 using System;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// Business messages service.
 	/// </summary>
 	public class BusinessMessagesService : MessagingService
 	{
-		Func<IBusiness> _businessFactory;
-		Func<IMQueueServer> _queueServerFactory;
+	    private readonly Func<IBusiness> _businessFactory;
+	    private readonly Func<IMQueueServer> _queueServerFactory;
 
 		#region .ctor
 		/// <summary>
@@ -51,6 +53,7 @@ namespace TWCore.Services
 		#endregion
 
 		#region Overrides
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the message processor
 		/// </summary>
@@ -58,6 +61,7 @@ namespace TWCore.Services
 		/// <returns>Message processor instance</returns>
 		protected override IMessageProcessor GetMessageProcessor(IMQueueServer server)
 			=> new BusinessMessageProcessor(server, _businessFactory);
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the queue server object
 		/// </summary>

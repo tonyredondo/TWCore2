@@ -28,40 +28,47 @@ using TWCore.Serialization;
 
 namespace TWCore.Messaging.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Queue server base
     /// </summary>
     public abstract class MQueueServerBase : IMQueueServer
     {
-        CancellationTokenSource tokenSource;
-        readonly List<Task> listenerTasks = new List<Task>();
-        MQClientQueues clientQueues;
-        MQServerQueues serverQueues;
+        private readonly List<Task> _listenerTasks = new List<Task>();
+        private CancellationTokenSource _tokenSource;
+        private MQClientQueues _clientQueues;
+        private MQServerQueues _serverQueues;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Gets or Sets the client name
         /// </summary>
         [StatusProperty]
         public string Name { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the sender serializer
         /// </summary>
         [StatusProperty]
         public ISerializer SenderSerializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the receiver serializer
         /// </summary>
         [StatusProperty]
         public ISerializer ReceiverSerializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the list of message queue server listeners
         /// </summary>
         public List<IMQueueServerListener> QueueServerListeners { get; } = new List<IMQueueServerListener>();
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the server is configured as response server
         /// </summary>
@@ -96,6 +103,7 @@ namespace TWCore.Messaging.Server
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize client with the configuration
         /// </summary>
@@ -103,31 +111,30 @@ namespace TWCore.Messaging.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(MQPairConfig config)
         {
-            if (config != null)
+            if (config == null) return;
+            StopListeners();
+            QueueServerListeners.Clear();
+
+            Config = config;
+            Name = Config.Name;
+
+            OnInit();
+
+            Core.Status.Attach(collection =>
             {
-                StopListeners();
-                QueueServerListeners.Clear();
-
-                Config = config;
-                Name = Config.Name;
-
-                OnInit();
-
-                Core.Status.Attach(collection =>
-                {
-                    if (QueueServerListeners?.Any() == true)
-                        foreach (var listener in QueueServerListeners)
-                            Core.Status.AttachChild(listener, this);
-                });
-            }
+                if (QueueServerListeners?.Any() != true) return;
+                foreach (var listener in QueueServerListeners)
+                    Core.Status.AttachChild(listener, this);
+            });
         }
+        /// <inheritdoc />
         /// <summary>
         /// Start the queue listener for request messages
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StartListeners()
         {
-            if (tokenSource != null)
+            if (_tokenSource != null)
                 StopListeners();
 
             Core.Log.InfoBasic("Configuring server mode for {0} with ResponseServer = {1}", Name, ResponseServer);
@@ -140,12 +147,12 @@ namespace TWCore.Messaging.Server
                 SenderSerializer = null;
 
                 Core.Log.InfoBasic("Adding queue client listener for {0}, Environment: {1}", Name, Core.EnvironmentName);
-                clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
+                _clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-                if (clientQueues?.RecvQueue != null)
+                if (_clientQueues?.RecvQueue != null)
                 {
-                    var queueListener = OnCreateQueueServerListener(clientQueues.RecvQueue, ResponseServer);
+                    var queueListener = OnCreateQueueServerListener(_clientQueues.RecvQueue, ResponseServer);
                     queueListener.ResponseReceived += QueueListener_ResponseReceived;
                     QueueServerListeners.Add(queueListener);
                 }
@@ -164,12 +171,12 @@ namespace TWCore.Messaging.Server
 
 
                 Core.Log.InfoBasic("Adding queue server listeners for {0}, Environment: {1}", Name, Core.EnvironmentName);
-                serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
+                _serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-                if (serverQueues?.RecvQueues?.Any() == true)
+                if (_serverQueues?.RecvQueues?.Any() == true)
                 {
-                    serverQueues.RecvQueues.Each(queue =>
+                    _serverQueues.RecvQueues.Each(queue =>
                     {
                         var queueListener = OnCreateQueueServerListener(queue, ResponseServer);
                         queueListener.RequestReceived += QueueListener_RequestReceived;
@@ -183,41 +190,41 @@ namespace TWCore.Messaging.Server
             if (QueueServerListeners.Count > 0)
             {
                 Core.Log.InfoBasic("Starting queue server listeners for {0}", Name);
-                tokenSource = new CancellationTokenSource();
-                listenerTasks.Clear();
+                _tokenSource = new CancellationTokenSource();
+                _listenerTasks.Clear();
 
                 foreach (var listener in QueueServerListeners)
                 {
                     var tsk = Task.Factory.StartNew(async () =>
                     {
                         Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-                        await listener.TaskStartAsync(tokenSource.Token);
+                        await listener.TaskStartAsync(_tokenSource.Token);
                         Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-                    }, tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                    listenerTasks.Add(tsk);
+                    }, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    _listenerTasks.Add(tsk);
                 }
             }
             else
                 Core.Log.Warning("There are not server listener to start.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stop the queue listener
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void StopListeners()
         {
-            if (tokenSource != null)
-            {
-                Core.Log.InfoBasic("Stopping queue server listeners for {0}", Name);
-                tokenSource.Cancel();
-                Task.WaitAll(listenerTasks.ToArray(), TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
-                listenerTasks.Clear();
-                QueueServerListeners.Each(l => l.Dispose());
-                QueueServerListeners.Clear();
-                tokenSource = null;
-                Core.Log.InfoBasic("Queue server listeners for {0} stopped", Name);
-            }
+            if (_tokenSource == null) return;
+            Core.Log.InfoBasic("Stopping queue server listeners for {0}", Name);
+            _tokenSource.Cancel();
+            Task.WaitAll(_listenerTasks.ToArray(), TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            _listenerTasks.Clear();
+            QueueServerListeners.Each(l => l.Dispose());
+            QueueServerListeners.Clear();
+            _tokenSource = null;
+            Core.Log.InfoBasic("Queue server listeners for {0} stopped", Name);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
@@ -232,12 +239,12 @@ namespace TWCore.Messaging.Server
 
 		#region Private Methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
+		private void QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
         {
             using (var w = Watch.Create())
             {
-                if (serverQueues?.AdditionalSendQueues?.Any() == true)
-                    e.ResponseQueues.AddRange(serverQueues.AdditionalSendQueues);
+                if (_serverQueues?.AdditionalSendQueues?.Any() == true)
+                    e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
                 e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
                 RequestReceived?.Invoke(sender, e);
                 e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
@@ -263,7 +270,7 @@ namespace TWCore.Messaging.Server
             }
         }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		void QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
+		private void QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
         {
             ResponseReceived?.Invoke(sender, e);
             MQueueServerEvents.FireResponseReceived(sender, e);

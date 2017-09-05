@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using TWCore.Serialization.MsgPack;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Serialization
 {

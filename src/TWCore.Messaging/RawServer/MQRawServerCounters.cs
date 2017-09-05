@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.RawServer
 {
@@ -27,8 +28,8 @@ namespace TWCore.Messaging.RawServer
     /// </summary>
     public class MQRawServerCounters
     {
-        readonly object locker = new object();
-        Timer timer;
+        private readonly object _locker = new object();
+        private Timer _timer;
 
         #region Properties
         /// <summary>
@@ -141,9 +142,9 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQRawServerCounters()
         {
-            timer = new Timer(state =>
+            _timer = new Timer(state =>
             {
-                lock(locker)
+                lock(_locker)
                 {
                     LastMinuteMessages = CurrentMessages;
                     PeakLastMinuteMessages = CurrentMessages;
@@ -165,7 +166,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalNetworkTime(TimeSpan increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalNetworkTime += increment.TotalMilliseconds;
         }
 		/// <summary>
@@ -175,7 +176,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalReceivingBytes(double increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalReceivingBytes += increment;
         }
 		/// <summary>
@@ -184,7 +185,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalExceptions()
         {
-            lock (locker)
+            lock (_locker)
                 TotalExceptions++;
         }
 		/// <summary>
@@ -193,7 +194,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalMessagesProccesed()
         {
-            lock (locker)
+            lock (_locker)
                 TotalMessagesProccesed++;
         }
 		/// <summary>
@@ -202,7 +203,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessages()
         {
-            lock (locker)
+            lock (_locker)
             {
                 CurrentMessages++;
                 TotalMessagesReceived++;
@@ -226,7 +227,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void DecrementMessages()
         {
-            lock(locker)
+            lock(_locker)
                 CurrentMessages--;
         }
 		/// <summary>
@@ -235,7 +236,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementProcessingThreads()
         {
-            lock (locker)
+            lock (_locker)
             {
                 CurrentProcessingThreads++;
                 LastMinuteProcessingThreads++;
@@ -258,7 +259,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void DecrementProcessingThreads()
         {
-            lock (locker)
+            lock (_locker)
                 CurrentProcessingThreads--;
         }
         #endregion

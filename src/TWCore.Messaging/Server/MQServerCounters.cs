@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.Server
 {
@@ -27,8 +28,8 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public class MQServerCounters
     {
-        readonly object locker = new object();
-        Timer timer;
+        private readonly object _locker = new object();
+        private Timer _timer;
 
         #region Properties
         /// <summary>
@@ -134,9 +135,9 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQServerCounters()
         {
-            timer = new Timer(state =>
+            _timer = new Timer(state =>
             {
-                lock(locker)
+                lock(_locker)
                 {
                     LastMinuteMessages = CurrentMessages;
                     PeakLastMinuteMessages = CurrentMessages;
@@ -163,7 +164,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementReceivingTime(TimeSpan increment)
         {
-            lock (locker)
+            lock (_locker)
                 TotalReceivingTime += increment.TotalMilliseconds;
         }
 
@@ -173,7 +174,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalExceptions()
         {
-            lock (locker)
+            lock (_locker)
                 TotalExceptions++;
         }
 		/// <summary>
@@ -182,7 +183,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalMessagesProccesed()
         {
-            lock (locker)
+            lock (_locker)
                 TotalMessagesProccesed++;
         }
 		/// <summary>
@@ -191,7 +192,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessages()
         {
-            lock (locker)
+            lock (_locker)
             {
                 CurrentMessages++;
                 TotalMessagesReceived++;
@@ -215,7 +216,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void DecrementMessages()
         {
-            lock(locker)
+            lock(_locker)
                 CurrentMessages--;
         }
 		/// <summary>
@@ -224,7 +225,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementProcessingThreads()
         {
-            lock (locker)
+            lock (_locker)
             {
                 CurrentProcessingThreads++;
                 LastMinuteProcessingThreads++;
@@ -247,7 +248,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void DecrementProcessingThreads()
         {
-            lock (locker)
+            lock (_locker)
                 CurrentProcessingThreads--;
         }
         #endregion

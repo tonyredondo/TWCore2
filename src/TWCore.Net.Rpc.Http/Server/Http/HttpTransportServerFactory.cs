@@ -17,14 +17,17 @@ limitations under the License.
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Serialization;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Server.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http Transport client factory
     /// </summary>
     public class HttpTransportServerFactory : TransportServerFactoryBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new Transport from a KeyValueCollection parameters
         /// </summary>

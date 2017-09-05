@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Net.RPC.Client.Transports
 {

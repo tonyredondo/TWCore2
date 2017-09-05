@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using TWCore.Triggers;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Scheduler service
     /// </summary>

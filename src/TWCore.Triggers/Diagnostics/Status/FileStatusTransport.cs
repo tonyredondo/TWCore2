@@ -19,6 +19,8 @@ using System.IO;
 using TWCore.Serialization;
 using TWCore.Triggers;
 using SPath = System.IO.Path;
+// ReSharper disable CheckNamespace
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Diagnostics.Status.Transports
 {
@@ -50,12 +52,14 @@ namespace TWCore.Diagnostics.Status.Transports
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// File Status Transport
         /// </summary>
         public FileStatusTransport()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// File Status Transport
         /// </summary>
@@ -64,6 +68,7 @@ namespace TWCore.Diagnostics.Status.Transports
         {
             triggers?.Each(AddTrigger);
         }
+        /// <inheritdoc />
         /// <summary>
         /// File Status Transport
         /// </summary>
@@ -79,6 +84,7 @@ namespace TWCore.Diagnostics.Status.Transports
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Action to execute when the trigger occurs
         /// </summary>

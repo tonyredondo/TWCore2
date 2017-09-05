@@ -16,9 +16,11 @@ limitations under the License.
 
 using TWCore.Messaging.RawServer;
 using TWCore.Services.Messaging;
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a Raw Messaging service
     /// </summary>

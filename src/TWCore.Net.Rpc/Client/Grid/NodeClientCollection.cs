@@ -35,7 +35,7 @@ namespace TWCore.Net.RPC.Client.Grid
         public NodeClient WaitForAvailable(int timeoutInMilliseconds = -1)
         {
             NodeClient item = null;
-            var waitHandles = this.Select(i => i.availableEvent.WaitHandle).ToArray();
+            var waitHandles = this.Select(i => i.AvailableEvent.WaitHandle).ToArray();
             var idx = WaitHandle.WaitAny(waitHandles, timeoutInMilliseconds);
             if (idx != WaitHandle.WaitTimeout)
             {

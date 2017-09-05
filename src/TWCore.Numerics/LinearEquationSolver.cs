@@ -39,7 +39,7 @@ namespace TWCore.Numerics
         /// <summary>
         /// Smallest floating point value
         /// </summary>
-        public static readonly double s_smallFloatingPointValue = 5.69E-14;
+        public const double SSmallFloatingPointValue = 5.69E-14;
 
         /// <summary>
         /// This function solves simultaneous equations in matrix form.
@@ -316,7 +316,7 @@ namespace TWCore.Numerics
                     // negligible and "notConvergedFlag" is set to false.
                     //------------------------------------------------------
 
-                    notConvergedFlag = normOfError / normOfX >= s_smallFloatingPointValue;
+                    notConvergedFlag = normOfError / normOfX >= SSmallFloatingPointValue;
 
 #if DEBUGCODE
                     double normRatioForDebug = normOfError / normOfX;

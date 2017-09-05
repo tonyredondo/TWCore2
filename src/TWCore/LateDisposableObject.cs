@@ -21,17 +21,18 @@ using System.Threading.Tasks;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Late disposable object
     /// </summary>
     public abstract class LateDisposableObject : IDisposable
     {
         #region Fields
-        long _locks;
-        volatile bool _disposeCalled;
-        CancellationTokenSource cancellationTokenSource;
-        CancellationToken cancellationToken;
-        Task disposeTask;
+        private long _locks;
+        private volatile bool _disposeCalled;
+        private CancellationTokenSource _cancellationTokenSource;
+        private CancellationToken _cancellationToken;
+        private Task _disposeTask;
         #endregion
 
         #region Properties
@@ -62,6 +63,7 @@ namespace TWCore
                 LateDispose();
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
@@ -80,30 +82,28 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void LateDispose()
         {
-            if (cancellationTokenSource != null)
+            if (_cancellationTokenSource != null)
             {
                 Core.Log.LibDebug("Cancelling previous disposal task. [{0}]", GetType().Name);
-                cancellationTokenSource.Cancel();
-                disposeTask.Wait();
+                _cancellationTokenSource.Cancel();
+                _disposeTask.Wait();
             }
             Core.Log.LibDebug("Creating a disposal task. [{0}]", GetType().Name);
-            cancellationTokenSource = new CancellationTokenSource();
-            cancellationToken = cancellationTokenSource.Token;
-            disposeTask = Task.Delay(500, cancellationToken).ContinueWith(tsk =>
+            _cancellationTokenSource = new CancellationTokenSource();
+            _cancellationToken = _cancellationTokenSource.Token;
+            _disposeTask = Task.Delay(500, _cancellationToken).ContinueWith(tsk =>
             {
-                if (!cancellationToken.IsCancellationRequested)
+                if (_cancellationToken.IsCancellationRequested) return;
+                if (Interlocked.Read(ref _locks) < 1)
                 {
-                    if (Interlocked.Read(ref _locks) < 1)
-                    {
-                        Core.Log.LibDebug("Disposing object. [{0}]", GetType().Name);
-                        OnDispose();
-                        GC.SuppressFinalize(this);
-                        Core.Log.LibDebug("Object disposed. [{0}]", GetType().Name);
-                    }
-                    else
-                        Core.Log.LibDebug("Object not disposed because there is a lock. [{0}]", GetType().Name);
+                    Core.Log.LibDebug("Disposing object. [{0}]", GetType().Name);
+                    OnDispose();
+                    GC.SuppressFinalize(this);
+                    Core.Log.LibDebug("Object disposed. [{0}]", GetType().Name);
                 }
-            }, cancellationToken);
+                else
+                    Core.Log.LibDebug("Object not disposed because there is a lock. [{0}]", GetType().Name);
+            }, _cancellationToken);
         }
 
         /// <summary>

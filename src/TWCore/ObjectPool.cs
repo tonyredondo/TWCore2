@@ -28,23 +28,18 @@ namespace TWCore
     /// <typeparam name="T">Object type</typeparam>
     public sealed class ObjectPool<T>
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly object _padLock = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		readonly Stack<T> objectStack;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		Func<ObjectPool<T>, T> createFunc;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        Action<T> resetAction;
-        PoolResetMode resetMode;
-        int preallocationThreshold;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        bool allocating;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object _padLock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Stack<T> _objectStack;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _allocating;
+        private readonly PoolResetMode _resetMode;
+        private readonly int _preallocationThreshold;
 
         /// <summary>
         /// Get the number of objects in the queue
         /// </summary>
-        public int Count => objectStack.Count;
+        public int Count => _objectStack.Count;
 
         /// <summary>
         /// Object pool
@@ -57,13 +52,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
         {
-            objectStack = new Stack<T>(12);
-            this.createFunc = createFunc;
-            this.resetAction = resetAction;
-            this.resetMode = resetMode;
-            this.preallocationThreshold = preallocationThreshold;
-            if (this.preallocationThreshold > initialBufferSize)
-                initialBufferSize = this.preallocationThreshold * 2;
+            _objectStack = new Stack<T>(12);
+            _createFunc = createFunc;
+            _resetAction = resetAction;
+            _resetMode = resetMode;
+            _preallocationThreshold = preallocationThreshold;
+            if (_preallocationThreshold > initialBufferSize)
+                initialBufferSize = _preallocationThreshold * 2;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
         }
@@ -76,9 +71,9 @@ namespace TWCore
         {
             for (var i = 0; i < number; i++)
             {
-                var value = createFunc(this);
+                var value = _createFunc(this);
                 lock (_padLock)
-                    objectStack.Push(value);
+                    _objectStack.Push(value);
             }
         }
         /// <summary>
@@ -88,30 +83,30 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            bool cNew = true;
-            T value = default(T);
+            var cNew = true;
+            var value = default(T);
             lock (_padLock)
             {
-                var count = objectStack.Count;
+                var count = _objectStack.Count;
                 if (count > 0)
                 {
-                    value = objectStack.Pop();
+                    value = _objectStack.Pop();
                     cNew = false;
-                    if (count - 1 < preallocationThreshold && !allocating)
+                    if (count - 1 < _preallocationThreshold && !_allocating)
                     {
                         Task.Run(() =>
                         {
-                            allocating = true;
-                            Preallocate(preallocationThreshold * 2);
-                            allocating = false;
+                            _allocating = true;
+                            Preallocate(_preallocationThreshold * 2);
+                            _allocating = false;
                         });
                     }
                 }
             }
             if (cNew)
-                return createFunc(this);
-            if (resetMode == PoolResetMode.BeforeUse && resetAction != null)
-                resetAction(value);
+                return _createFunc(this);
+            if (_resetMode == PoolResetMode.BeforeUse)
+                _resetAction?.Invoke(value);
             return value;
         }
         /// <summary>
@@ -121,10 +116,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Store(T obj)
         {
-            if (resetMode == PoolResetMode.AfterUse && resetAction != null)
-                resetAction.Invoke(obj);
+            if (_resetMode == PoolResetMode.AfterUse)
+                _resetAction?.Invoke(obj);
             lock(_padLock)
-                objectStack.Push(obj);
+                _objectStack.Push(obj);
         }
         /// <summary>
         /// Get current objects in the pool
@@ -134,7 +129,7 @@ namespace TWCore
         public IEnumerable<T> GetCurrentObjects()
         {
             lock(_padLock)
-                return objectStack.ToReadOnly();
+                return _objectStack.ToReadOnly();
         }
         /// <summary>
         /// Clear the current object stack
@@ -143,7 +138,7 @@ namespace TWCore
         public void Clear()
         {
             lock(_padLock)
-                objectStack.Clear();
+                _objectStack.Clear();
         }
     }
 }

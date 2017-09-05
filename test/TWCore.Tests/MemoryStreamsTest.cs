@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using TWCore.IO;
 using TWCore.Services;
 // ReSharper disable UnusedVariable
+// ReSharper disable AccessToDisposedClosure
 
 namespace TWCore.Tests
 {

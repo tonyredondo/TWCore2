@@ -17,31 +17,36 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Security
 {
+    /// <inheritdoc />
     /// <summary>
     /// SHA1 Hash implementation
     /// </summary>
     public class SHA1Hash : HashBase
     {
-        SHA1 hashAlgo;
+        private readonly SHA1 _hashAlgo;
+        /// <inheritdoc />
         /// <summary>
         /// Hash algorithm used
         /// </summary>
         public override string Algorithm { get; } = "SHA1";
+        /// <inheritdoc />
         /// <summary>
         /// MD5 Hash implementation
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SHA1Hash() => hashAlgo = SHA1.Create();
+        public SHA1Hash() => _hashAlgo = SHA1.Create();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash bytes from a bytes array
         /// </summary>
         /// <param name="value">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] GetHashValue(byte[] value) => hashAlgo.ComputeHash(value);
+        public override byte[] GetHashValue(byte[] value) => _hashAlgo.ComputeHash(value);
     }
 
     /// <summary>

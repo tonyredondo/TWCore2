@@ -19,6 +19,7 @@ using System.Threading;
 
 namespace TWCore.Triggers
 {
+    /// <inheritdoc />
     /// <summary>
     /// Date Update Trigger
     /// </summary>
@@ -27,14 +28,15 @@ namespace TWCore.Triggers
         /// <summary>
         /// Trigger DateTime
         /// </summary>
-        public DateTime DateTime { get; private set; }
+        public DateTime DateTime { get; }
 
         #region Private Fields
-        CancellationTokenSource tokenSource;
-        Timer timer;
+        private CancellationTokenSource _tokenSource;
+        private Timer _timer;
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Date Upate Trigger
         /// </summary>
@@ -51,32 +53,34 @@ namespace TWCore.Triggers
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// On trigger init
         /// </summary>
         protected override void OnInit()
         {
             Core.Log.LibVerbose("{0}: OnInit() for DateTime {1}", GetType().Name, DateTime);
-            tokenSource = new CancellationTokenSource();
-            timer = new Timer(obj =>
+            _tokenSource = new CancellationTokenSource();
+            _timer = new Timer(obj =>
             {
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
                 Trigger();
-            }, tokenSource, Core.Now.Subtract(DateTime), Timeout.InfiniteTimeSpan);
+            }, _tokenSource, Core.Now.Subtract(DateTime), Timeout.InfiniteTimeSpan);
         }
+        /// <inheritdoc />
         /// <summary>
         /// On trigger finalize
         /// </summary>
         protected override void OnFinalize()
         {
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
-            tokenSource?.Cancel();
-            if (timer == null) return;
-            timer.Change(Timeout.Infinite, Timeout.Infinite);
-            timer.Dispose();
-            timer = null;
+            _tokenSource?.Cancel();
+            if (_timer == null) return;
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+            _timer.Dispose();
+            _timer = null;
         }
         #endregion
     }

@@ -17,9 +17,11 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection with a fixed capacity and LRU 2Q replacement logic
     /// </summary>
@@ -28,12 +30,13 @@ namespace TWCore.Collections
     public class LRU2QCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LRU2QCollection<TKey, TValue>.ValueNode>
     {
         #region Nested Type
+        /// <inheritdoc />
         /// <summary>
         /// LRU Collection Value Node
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
-            public int Slot;
+            public readonly int Slot;
             public LinkedListNode<TKey> ListNodeAm;
             public LinkedListNode<TKey> ListNodeA1In;
             public LinkedListNode<TKey> ListNodeA1Out;
@@ -48,26 +51,16 @@ namespace TWCore.Collections
         #endregion
 
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Dictionary<int, TKey> _slots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Queue<int> _availableSlots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _currentSlot;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _amList;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _a1InList;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _a1OutList;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly int _kin;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly int _kout;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private const int K_IN_PART = 4; //recommended parameters
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        private const int K_OUT_PART = 2;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int K_IN_PART = 4; //recommended parameters
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int K_OUT_PART = 2;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _amList;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _a1InList;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _a1OutList;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _kin;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _kout;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentSlot;
         #endregion
 
         #region Properties
@@ -82,30 +75,33 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LRU2QCollection() : this(CoreSettings.Instance.LRU2QCollectionDefaultCapacity) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>
         /// <param name="capacity">Total items count allowed in the collection</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LRU2QCollection(int capacity) : this(capacity, capacity / K_IN_PART, capacity / K_OUT_PART) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>
         /// <param name="capacity">Total items count allowed in the collection</param>
-        /// <param name="k_in_part">Kin collection part</param>
-        /// <param name="k_out_part">Kout collection part</param>
+        /// <param name="kInPart">Kin collection part</param>
+        /// <param name="kOutPart">Kout collection part</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public LRU2QCollection(int capacity, int k_in_part, int k_out_part) : base(capacity)
+        public LRU2QCollection(int capacity, int kInPart, int kOutPart) : base(capacity)
         {
-            Ensure.GreaterThan(k_in_part, 0, "KInPart should be greater than zero");
-            Ensure.GreaterThan(k_out_part, 0, "KOutPart should be greater than zero");
-            _kin = k_in_part;
-            _kout = k_out_part;
+            Ensure.GreaterThan(kInPart, 0, "KInPart should be greater than zero");
+            Ensure.GreaterThan(kOutPart, 0, "KOutPart should be greater than zero");
+            _kin = kInPart;
+            _kout = kOutPart;
             _amList = new LinkedList<TKey>();
             _a1InList = new LinkedList<TKey>();
             _a1OutList = new LinkedList<TKey>();
@@ -117,43 +113,42 @@ namespace TWCore.Collections
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ReclaimSpace()
+        private void ReclaimSpace()
         {
-            if (_valueStorage.Count > _capacity)
+            if (ValueStorage.Count <= Capacity) return;
+
+            if (_a1InList.Count > Kin)
             {
-                if (_a1InList.Count > Kin)
+                var y = _a1InList.Last;
+                _a1InList.RemoveLast();
+                if (ValueStorage.TryGetValue(y.Value, out var oValue))
                 {
-                    var Y = _a1InList.Last;
-                    _a1InList.RemoveLast();
-                    if (_valueStorage.TryGetValue(Y.Value, out var oValue))
-                    {
-                        _valueStorage.Remove(Y.Value);
-                        _slots.Remove(oValue.Slot);
-                        _availableSlots.Enqueue(oValue.Slot);
-                        CleanLists(oValue);
-                        ReportDelete(Y.Value, oValue.Value);
-                    }
-                    _a1OutList.AddFirst(Y.Value);
-                    if (_a1OutList.Count >= Kout)
-                        _a1OutList.RemoveLast();
+                    ValueStorage.Remove(y.Value);
+                    _slots.Remove(oValue.Slot);
+                    _availableSlots.Enqueue(oValue.Slot);
+                    CleanLists(oValue);
+                    ReportDelete(y.Value, oValue.Value);
                 }
-                else if (_amList.Last != null)
+                _a1OutList.AddFirst(y.Value);
+                if (_a1OutList.Count >= Kout)
+                    _a1OutList.RemoveLast();
+            }
+            else if (_amList.Last != null)
+            {
+                var y = _amList.Last;
+                _amList.RemoveLast();
+                if (ValueStorage.TryGetValue(y.Value, out var oValue))
                 {
-                    var Y = _amList.Last;
-                    _amList.RemoveLast();
-                    if (_valueStorage.TryGetValue(Y.Value, out var oValue))
-                    {
-                        _valueStorage.Remove(Y.Value);
-                        _slots.Remove(oValue.Slot);
-                        _availableSlots.Enqueue(oValue.Slot);
-                        CleanLists(oValue);
-                        ReportDelete(Y.Value, oValue.Value);
-                    }
+                    ValueStorage.Remove(y.Value);
+                    _slots.Remove(oValue.Slot);
+                    _availableSlots.Enqueue(oValue.Slot);
+                    CleanLists(oValue);
+                    ReportDelete(y.Value, oValue.Value);
                 }
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void CleanLists(ValueNode value)
+        private static void CleanLists(ValueNode value)
         {
             value.ListNodeA1Out = null;
             value.ListNodeA1In = null;
@@ -232,7 +227,7 @@ namespace TWCore.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
-            if (_valueStorage.TryGetValue(key, out var node))
+            if (ValueStorage.TryGetValue(key, out var node))
             {
                 index = node.Slot;
                 return true;

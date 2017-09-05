@@ -131,10 +131,8 @@ namespace TWCore
             foreach (var IF in target.GetInterfaces())
             {
                 yield return IF;
-                foreach (var childIF in IF.AllInterfaces())
-                {
-                    yield return childIF;
-                }
+                foreach (var childIf in IF.AllInterfaces())
+                    yield return childIf;
             }
         }
         /// <summary>

@@ -21,6 +21,7 @@ using System.Collections.Generic;
 
 namespace TWCore.Numerics
 {
+    /// <inheritdoc />
     /// <summary>
     /// This class implements a sparse 2 dimensional matrix.
     /// </summary>
@@ -31,7 +32,7 @@ namespace TWCore.Numerics
         where TKey0 : IComparable<TKey0>
         where TKey1 : IComparable<TKey1>
     {
-        private Dictionary<ComparableTuple2<TKey0, TKey1>, TValue> m_dictionary;
+        private Dictionary<ComparableTuple2<TKey0, TKey1>, TValue> _dictionary;
 
         /// <summary>
         /// This property stores the default value that is returned if the keys don't exist in the array.
@@ -45,13 +46,7 @@ namespace TWCore.Numerics
         /// <summary>
         /// Property to get the count of items in the sparse array.
         /// </summary>
-        public int Count
-        {
-            get
-            {
-                return m_dictionary.Count;
-            }
-        }
+        public int Count => _dictionary.Count;
 
         #region Constructors
         /// <summary>
@@ -90,8 +85,8 @@ namespace TWCore.Numerics
         /// </summary>
         private void InitializeDictionary()
         {
-            ComparableTuple2EqualityComparer<TKey0, TKey1> equalityComparer = new ComparableTuple2EqualityComparer<TKey0, TKey1>();
-            m_dictionary = new Dictionary<ComparableTuple2<TKey0, TKey1>, TValue>(equalityComparer);
+            var equalityComparer = new ComparableTuple2EqualityComparer<TKey0, TKey1>();
+            _dictionary = new Dictionary<ComparableTuple2<TKey0, TKey1>, TValue>(equalityComparer);
         }
 
         /// <summary>
@@ -100,13 +95,13 @@ namespace TWCore.Numerics
         /// <param name="sparse2DMatrix">An instance of the Sparse2DMatrix class.</param>
         private void Initialize(Sparse2DMatrix<TKey0, TKey1, TValue> sparse2DMatrix)
         {
-            m_dictionary.Clear();
+            _dictionary.Clear();
 
             // Copy each key value pair to the dictionary.
             foreach (KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue> pair in sparse2DMatrix)
             {
                 ComparableTuple2<TKey0, TKey1> newCombinedKey = new ComparableTuple2<TKey0, TKey1>(pair.Key);
-                m_dictionary.Add(newCombinedKey, pair.Value);
+                _dictionary.Add(newCombinedKey, pair.Value);
             }
         }
 
@@ -116,13 +111,13 @@ namespace TWCore.Numerics
         /// <param name="sparse2DMatrix">An instance of the Sparse2DMatrix class.</param>
         public void CopyTo(Sparse2DMatrix<TKey0, TKey1, TValue> sparse2DMatrix)
         {
-            sparse2DMatrix.m_dictionary.Clear();
+            sparse2DMatrix._dictionary.Clear();
 
             // Copy each key value pair to the dictionary.
-            foreach (KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue> pair in m_dictionary)
+            foreach (KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue> pair in _dictionary)
             {
                 ComparableTuple2<TKey0, TKey1> newCombinedKey = new ComparableTuple2<TKey0, TKey1>(pair.Key);
-                sparse2DMatrix.m_dictionary.Add(newCombinedKey, pair.Value);
+                sparse2DMatrix._dictionary.Add(newCombinedKey, pair.Value);
             }
         }
 
@@ -136,7 +131,7 @@ namespace TWCore.Numerics
         {
             get
             {
-                if (!m_dictionary.TryGetValue(CombineKeys(key0, key1), out var value))
+                if (!_dictionary.TryGetValue(CombineKeys(key0, key1), out var value))
                 {
                     value = DefaultValue;
                 }
@@ -146,7 +141,7 @@ namespace TWCore.Numerics
 
             set
             {
-                m_dictionary[CombineKeys(key0, key1)] = value;
+                _dictionary[CombineKeys(key0, key1)] = value;
             }
         }
         /// <summary>
@@ -157,7 +152,7 @@ namespace TWCore.Numerics
         /// <returns>Returns the value 'true' if and only if the keys exists in this matrix</returns>
         public bool ContainsKey(TKey0 key0, TKey1 key1)
         {
-            return m_dictionary.ContainsKey(CombineKeys(key0, key1));
+            return _dictionary.ContainsKey(CombineKeys(key0, key1));
         }
 
         /// <summary>
@@ -167,7 +162,7 @@ namespace TWCore.Numerics
         /// <returns>Returns the value 'true' if and only if the value exists in this matrix</returns>
         public bool ContainsValue(TValue value)
         {
-            return m_dictionary.ContainsValue(value);
+            return _dictionary.ContainsValue(value);
         }
 
         /// <summary>
@@ -179,7 +174,7 @@ namespace TWCore.Numerics
         /// <returns>Returns the value 'true' if and only if the key exists in this matrix</returns>
         public bool TryGetValue(TKey0 key0, TKey1 key1, out TValue value)
         {
-            return m_dictionary.TryGetValue(CombineKeys(key0, key1), out value);
+            return _dictionary.TryGetValue(CombineKeys(key0, key1), out value);
         }
 
         /// <summary>
@@ -190,7 +185,7 @@ namespace TWCore.Numerics
         /// <returns>The value 'true' if and only if the element is successfully found and removed.</returns>
         public bool Remove(TKey0 key0, TKey1 key1)
         {
-            return m_dictionary.Remove(CombineKeys(key0, key1));
+            return _dictionary.Remove(CombineKeys(key0, key1));
         }
 
         /// <summary>
@@ -198,7 +193,7 @@ namespace TWCore.Numerics
         /// </summary>
         public void Clear()
         {
-            m_dictionary.Clear();
+            _dictionary.Clear();
         }
 
         /// <summary>
@@ -232,7 +227,7 @@ namespace TWCore.Numerics
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
         public IEnumerator<KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue>> GetEnumerator()
         {
-            return m_dictionary.GetEnumerator();
+            return _dictionary.GetEnumerator();
         }
 
         #endregion
@@ -245,7 +240,7 @@ namespace TWCore.Numerics
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
         IEnumerator IEnumerable.GetEnumerator()
         {
-            return m_dictionary.GetEnumerator();
+            return _dictionary.GetEnumerator();
         }
 
         #endregion

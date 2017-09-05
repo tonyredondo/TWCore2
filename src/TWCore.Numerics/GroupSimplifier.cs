@@ -107,10 +107,10 @@ namespace TWCore.Numerics
                                 }
                                 else
                                 {
-                                    int igualdadesgrupo = 0;
-                                    foreach (string elmX in rgroup.Values)
+                                    var igualdadesgrupo = 0;
+                                    foreach (var elmX in rgroup.Values)
                                     {
-                                        foreach (string elmY in elementsCoincidentes)
+                                        foreach (var elmY in elementsCoincidentes)
                                         {
                                             if (elmX == elmY)
                                                 igualdadesgrupo++;
@@ -127,17 +127,17 @@ namespace TWCore.Numerics
                                     }
                                     else if (igualdadesgrupo == maxValues)
                                     {
-                                        bool XAdded = false;
-                                        foreach (string key in rgroup.Keys)
+                                        var xAdded = false;
+                                        foreach (var key in rgroup.Keys)
                                             if (key == vecX.Key)
-                                                XAdded = true;
-                                        if (!XAdded)
+                                                xAdded = true;
+                                        if (!xAdded)
                                             rgroup.Keys.Add(vecX.Key);
-                                        bool YAdded = false;
-                                        foreach (string key in rgroup.Keys)
+                                        var yAdded = false;
+                                        foreach (var key in rgroup.Keys)
                                             if (key == vecY.Key)
-                                                YAdded = true;
-                                        if (!YAdded)
+                                                yAdded = true;
+                                        if (!yAdded)
                                             rgroup.Keys.Add(vecY.Key);
                                     }
                                 }

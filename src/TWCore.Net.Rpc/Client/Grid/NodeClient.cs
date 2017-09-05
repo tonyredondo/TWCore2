@@ -25,20 +25,20 @@ namespace TWCore.Net.RPC.Client.Grid
     /// </summary>
     public class NodeClient
     {
-        NodeProxy nodeProxy;
-        internal ManualResetEventSlim availableEvent = new ManualResetEventSlim(true);
+        private readonly NodeProxy _nodeProxy;
+        internal readonly ManualResetEventSlim AvailableEvent = new ManualResetEventSlim(true);
 
         #region Properties
         /// <summary>
         /// Gets a value indicating if this GridNode is available for processing.
         /// </summary>
         /// <value>true if is available; otherwise, false.</value>
-        public bool Available => availableEvent.IsSet && nodeProxy.GetIsReady();
+        public bool Available => AvailableEvent.IsSet && _nodeProxy.GetIsReady();
         /// <summary>
         /// Gets the node information
         /// </summary>
         /// <value>GridNodeInfo instance with the information of the node.</value>
-        public NodeInfo NodeInfo => nodeProxy.GetNodeInfo();
+        public NodeInfo NodeInfo => _nodeProxy.GetNodeInfo();
         #endregion
 
         #region .ctor
@@ -49,8 +49,8 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NodeClient(NodeProxy node)
         {
-            nodeProxy = node;
-            Core.Status.AttachChild(nodeProxy, this);
+            _nodeProxy = node;
+            Core.Status.AttachChild(_nodeProxy, this);
         }
         #endregion
 
@@ -61,7 +61,7 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Lock()
         {
-            availableEvent.Reset();
+            AvailableEvent.Reset();
         }
         /// <summary>
         /// Unlock this instance.
@@ -69,7 +69,7 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void UnLock()
         {
-            availableEvent.Set();
+            AvailableEvent.Set();
         }
         /// <summary>
         /// Process the arguments in the node
@@ -79,9 +79,9 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NodeClientResult Process(params object[] args)
         {
-            availableEvent.Reset();
-            object response = nodeProxy.Process(args);
-            availableEvent.Set();
+            AvailableEvent.Reset();
+            var response = _nodeProxy.Process(args);
+            AvailableEvent.Set();
             return new NodeClientResult(NodeInfo, response);
         }
         #endregion

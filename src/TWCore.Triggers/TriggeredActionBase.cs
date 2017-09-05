@@ -22,21 +22,23 @@ using System.Threading.Tasks;
 
 namespace TWCore.Triggers
 {
+    /// <inheritdoc />
     /// <summary>
     /// Action to execute depending of triggers events
     /// </summary>
     public abstract class TriggeredActionBase : IDisposable
     {
-        readonly static object _parentSync = new object();
-        readonly object localSync = new object();
-        Task triggerTask;
-        CancellationTokenSource tokenSource;
+        private static readonly object ParentSync = new object();
+        private readonly object _localSync = new object();
 
+        #region Abstracts
         /// <summary>
         /// Action to execute when the trigger occurs
         /// </summary>
         protected abstract void OnAction();
+        #endregion
 
+        #region Properties
         /// <summary>
         /// Wait time before listening to another trigger event
         /// </summary>
@@ -44,8 +46,8 @@ namespace TWCore.Triggers
         /// <summary>
         /// Cancellation token
         /// </summary>
-        public CancellationToken CancellationToken => tokenSource?.Token ?? new CancellationToken();
-
+        public CancellationToken CancellationToken => _tokenSource?.Token ?? new CancellationToken();
+        #endregion
 
         #region Events
         /// <summary>
@@ -67,8 +69,10 @@ namespace TWCore.Triggers
         #endregion
 
         #region Private Fields
-        DateTime _lastUpdateTime;
-        List<TriggerBase> Triggers;
+        private Task _triggerTask;
+        private CancellationTokenSource _tokenSource;
+        private DateTime _lastUpdateTime;
+        private readonly List<TriggerBase> _triggers;
         #endregion
 
         #region .ctors
@@ -76,18 +80,18 @@ namespace TWCore.Triggers
         /// Action to execute depending of triggers events
         /// </summary>
         /// <param name="useStaticLock">Use static lock when a trigger occurs</param>
-        public TriggeredActionBase(bool useStaticLock = false)
+        protected TriggeredActionBase(bool useStaticLock = false)
         {
-            Triggers = new List<TriggerBase>();
+            _triggers = new List<TriggerBase>();
             if (useStaticLock)
-                localSync = _parentSync;
+                _localSync = ParentSync;
             WaitTime = TimeSpan.FromSeconds(1);
 
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(WaitTime), WaitTime);
                 collection.Add("LastUpdateTime", _lastUpdateTime);
-                foreach (var trigger in Triggers)
+                foreach (var trigger in _triggers)
                     Core.Status.AttachChild(trigger, this);
             });
         }
@@ -107,15 +111,11 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void AddTrigger(TriggerBase trigger)
         {
-            if (trigger != null)
-            {
-                if (!Triggers.Contains(trigger))
-                {
-                    trigger.OnTriggered += OnTriggerExecute;
-                    trigger.Init();
-                    Triggers.Add(trigger);
-                }
-            }
+            if (trigger == null) return;
+            if (_triggers.Contains(trigger)) return;
+            trigger.OnTriggered += OnTriggerExecute;
+            trigger.Init();
+            _triggers.Add(trigger);
         }
         /// <summary>
         /// Remove an update trigger from the collection
@@ -123,15 +123,11 @@ namespace TWCore.Triggers
         /// <param name="trigger">Update trigger object</param>
         public void RemoveTrigger(TriggerBase trigger)
         {
-            if (trigger != null)
-            {
-                if (Triggers.Contains(trigger))
-                {
-                    trigger.OnTriggered -= OnTriggerExecute;
-                    trigger.Dispose();
-                    Triggers.Remove(trigger);
-                }
-            }
+            if (trigger == null) return;
+            if (!_triggers.Contains(trigger)) return;
+            trigger.OnTriggered -= OnTriggerExecute;
+            trigger.Dispose();
+            _triggers.Remove(trigger);
         }
         #endregion
 
@@ -148,17 +144,15 @@ namespace TWCore.Triggers
         /// </summary>
         public void Unload()
         {
-            lock (_parentSync)
+            lock (ParentSync)
             {
-                if (Triggers != null)
+                if (_triggers == null) return;
+                foreach (var trigger in _triggers)
                 {
-                    foreach (var trigger in Triggers)
-                    {
-                        trigger.OnTriggered -= OnTriggerExecute;
-                        trigger.Dispose();
-                    }
-                    Triggers.Clear();
+                    trigger.OnTriggered -= OnTriggerExecute;
+                    trigger.Dispose();
                 }
+                _triggers.Clear();
             }
         }
         #endregion
@@ -166,17 +160,17 @@ namespace TWCore.Triggers
         #region Private Methods
         private void OnTriggerExecute(TriggerBase trigger)
         {
-            lock (localSync)
+            lock (_localSync)
             {
-                tokenSource = new CancellationTokenSource();
-                var token = tokenSource.Token;
-                triggerTask = Task.Run(() =>
+                _tokenSource = new CancellationTokenSource();
+                var token = _tokenSource.Token;
+                _triggerTask = Task.Run(() =>
                 {
                     if (Core.Now - _lastUpdateTime > WaitTime)
                     {
                         _lastUpdateTime = Core.Now;
                         BeforeInvoke?.Invoke(this, new TriggeredEventArgs<TriggeredActionBase>(trigger, this));
-                        bool loadOK = true;
+                        var loadOk = true;
                         var sw = Stopwatch.StartNew();
                         try
                         {
@@ -190,10 +184,10 @@ namespace TWCore.Triggers
                         catch (Exception ex)
                         {
                             sw.Stop();
-                            loadOK = false;
+                            loadOk = false;
                             OnException?.Invoke(this, new ExceptionEventArgs(ex, sw.Elapsed.TotalMilliseconds));
                         }
-                        if (loadOK)
+                        if (loadOk)
                             AfterInvoke?.Invoke(this, new TriggeredEventArgs<TriggeredActionBase>(trigger, this, sw.Elapsed.TotalMilliseconds));
                     }
                     else
@@ -201,28 +195,29 @@ namespace TWCore.Triggers
                 }, token);
                 try
                 {
-                    triggerTask.Wait(token);
+                    _triggerTask.Wait(token);
                 }
                 catch
                 {
                     // ignored
                 }
-                triggerTask = null;
-                tokenSource = null;
+                _triggerTask = null;
+                _tokenSource = null;
             }
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
         public void Dispose()
         {
             Unload();
-            tokenSource?.Cancel();
-            triggerTask?.Wait(2000);
-            tokenSource = null;
-            triggerTask = null;
+            _tokenSource?.Cancel();
+            _triggerTask?.Wait(2000);
+            _tokenSource = null;
+            _triggerTask = null;
         }
     }
 }

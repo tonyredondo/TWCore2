@@ -46,7 +46,7 @@ namespace TWCore.Text
     /// </summary>
     public static class StringParser
     {
-        static readonly ConcurrentDictionary<string, object> _cache = new ConcurrentDictionary<string, object>();
+        private static readonly ConcurrentDictionary<string, object> Cache = new ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Parse a string to another type.
@@ -64,10 +64,10 @@ namespace TWCore.Text
             dataFormat = dataFormat ?? string.Empty;
             if (string.IsNullOrEmpty(value)) return defaultValue;
             var cacheKey = value + "|" + returnType.FullName + "|" + provider?.GetFormat(returnType) + "|" + dataFormat;
-            return _cache.GetOrAdd(cacheKey, key =>
+            return Cache.GetOrAdd(cacheKey, key =>
             {
-                Type type = returnType.GetUnderlyingType();
-                object resp = defaultValue;
+                var type = returnType.GetUnderlyingType();
+                var resp = defaultValue;
 
                 if (type == typeof(string))
                 {
@@ -154,11 +154,9 @@ namespace TWCore.Text
                 }
                 else if (type.GetTypeInfo().IsEnum)
                 {
-                    if (value != null)
-                    {
-                        var objValue = Enum.Parse(type, value);
-                        resp = objValue;
-                    }
+                    if (value == null) return resp;
+                    var objValue = Enum.Parse(type, value);
+                    resp = objValue;
                 }
                 return resp;
             });

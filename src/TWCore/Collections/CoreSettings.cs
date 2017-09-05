@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using TWCore.Settings;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collections Settings
     /// </summary>

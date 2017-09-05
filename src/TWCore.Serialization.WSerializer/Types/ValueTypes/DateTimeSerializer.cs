@@ -21,23 +21,26 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// DateTime value type serializer
     /// </summary>
 	public class DateTimeSerializer : TypeSerializer<DateTime>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.DateTime, DataType.DateTimeDefault, DataType.RefDateTimeByte, DataType.RefDateTimeUShort
         });
-        SerializerMode _mode;
-        SerializerCache<DateTime> cache;
-        SerializerCache<DateTime> Cache
+
+        private SerializerMode _mode;
+        private SerializerCache<DateTime> _cache;
+        private SerializerCache<DateTime> Cache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return cache ?? (cache = new SerializerCache<DateTime>(_mode)); }
+            get { return _cache ?? (_cache = new SerializerCache<DateTime>(_mode)); }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -45,9 +48,10 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public override void Init(SerializerMode mode)
         {
             _mode = mode;
-            if (cache != null)
-                cache = new SerializerCache<DateTime>(mode);
+            if (_cache != null)
+                _cache = new SerializerCache<DateTime>(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -56,6 +60,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)
             => type == typeof(DateTime);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -70,6 +75,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                 type == DataType.RefDateTimeByte    ||
                 type == DataType.RefDateTimeUShort;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -78,6 +84,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (DateTime)value);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -106,6 +113,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                 Cache.SerializerSet(value);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -115,6 +123,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -145,6 +154,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             Cache.DeserializerSet(cValue);
             return cValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

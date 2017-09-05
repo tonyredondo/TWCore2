@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Collections
 {
@@ -38,12 +39,13 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="value"></param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheCollectionValueNode(TValue value)
+        protected CacheCollectionValueNode(TValue value)
         {
             Value = value;
         }
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Cache Collection Object Base
     /// </summary>
@@ -53,45 +55,40 @@ namespace TWCore.Collections
     public abstract class CacheCollectionBase<TKey, TValue, TValueNode> : ICacheCollection<TKey, TValue> where TValueNode : CacheCollectionValueNode<TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] 
-        private readonly object _padlock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object _padlock = new object();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _deletes;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _inserts;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _hits;
 
-        /// <summary>
-        /// Maximum capacity of the collection
-        /// </summary>
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected readonly int _capacity;
         /// <summary>
         /// Value Storage
         /// </summary>
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected readonly Dictionary<TKey, TValueNode> _valueStorage;
-
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _deletes;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _inserts;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _hits;
+        protected readonly Dictionary<TKey, TValueNode> ValueStorage;
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Maximum capacity of the collection
         /// </summary>
-        public int Capacity => _capacity;
+        public int Capacity { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Number of nodes deleted in the collection
         /// </summary>
         public int Deletes => _deletes;
+        /// <inheritdoc />
         /// <summary>
         /// Number of nodes hitted in the collection
         /// </summary>
         public int Hits => _hits;
+        /// <inheritdoc />
         /// <summary>
         /// Number of nodes inserted in the collection
         /// </summary>
         public int Inserts => _inserts;
+        /// <inheritdoc />
         /// <summary>
         /// Synchronization object
         /// </summary>
@@ -119,11 +116,11 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="capacity">Collection Capacity</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheCollectionBase(int capacity)
+        protected CacheCollectionBase(int capacity)
         {
             Ensure.GreaterThan(capacity, 0, "Capacity should be greater than 0");
-            _valueStorage = new Dictionary<TKey, TValueNode>();
-            _capacity = capacity;
+            ValueStorage = new Dictionary<TKey, TValueNode>();
+            Capacity = capacity;
         }
         /// <summary>
         /// Constructor
@@ -131,11 +128,11 @@ namespace TWCore.Collections
         /// <param name="capacity">Collection Capacity</param>
         /// <param name="comparer">Comparer</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheCollectionBase(int capacity, IEqualityComparer<TKey> comparer)
+        protected CacheCollectionBase(int capacity, IEqualityComparer<TKey> comparer)
         {
             Ensure.GreaterThan(capacity, 0, "Capacity should be greater than 0");
-            _valueStorage = new Dictionary<TKey, TValueNode>(comparer);
-            _capacity = capacity;
+            ValueStorage = new Dictionary<TKey, TValueNode>(comparer);
+            Capacity = capacity;
         }
         #endregion
 
@@ -211,6 +208,7 @@ namespace TWCore.Collections
         #endregion
 
         #region ICacheCollection
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the value associated with the specified key.
         /// </summary>
@@ -223,12 +221,9 @@ namespace TWCore.Collections
             {
                 lock (_padlock)
                 {
-                    if (_valueStorage.TryGetValue(key, out var nValue))
-                    {
-                        UpdateList(key, nValue);
-                        return nValue.Value;
-                    }
-                    throw new KeyNotFoundException();
+                    if (!ValueStorage.TryGetValue(key, out var nValue)) throw new KeyNotFoundException();
+                    UpdateList(key, nValue);
+                    return nValue.Value;
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -236,12 +231,12 @@ namespace TWCore.Collections
             {
                 lock (_padlock)
                 {
-                    if (_valueStorage.TryGetValue(key, out var nValue))
+                    if (ValueStorage.TryGetValue(key, out var nValue))
                         nValue.Value = value;
                     else
                     {
                         nValue = CreateNode(key, value);
-                        _valueStorage[key] = nValue;
+                        ValueStorage[key] = nValue;
                     }
                     UpdateList(key, nValue);
                 }
@@ -260,7 +255,7 @@ namespace TWCore.Collections
                 {
                     if (!OnGetKey(index, out var key))
                         return default(TValue);
-                    var nValue = _valueStorage[key];
+                    var nValue = ValueStorage[key];
                     UpdateList(key, nValue);
                     return nValue.Value;
                 }
@@ -270,23 +265,24 @@ namespace TWCore.Collections
             {
                 lock (_padlock)
                 {
-                    if (OnGetKey(index, out var key))
-                    {
-                        var nValue = CreateNode(key, value);
-                        _valueStorage[key] = nValue;
-                        UpdateList(key, nValue);
-                    }
+                    if (!OnGetKey(index, out var key)) return;
+                    var nValue = CreateNode(key, value);
+                    ValueStorage[key] = nValue;
+                    UpdateList(key, nValue);
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Number of nodes in the collection
         /// </summary>
-        public int Count => _valueStorage.Count;
+        public int Count => ValueStorage.Count;
+        /// <inheritdoc />
         /// <summary>
         /// true if the collection is empty; otherwise, false
         /// </summary>
-        public bool IsEmpty => _valueStorage.Count == 0;
+        public bool IsEmpty => ValueStorage.Count == 0;
+        /// <inheritdoc />
         /// <summary>
         /// Gets the collection of Keys
         /// </summary>
@@ -296,9 +292,10 @@ namespace TWCore.Collections
             get
             {
                 lock (_padlock)
-					return _valueStorage.Keys.ToList();
+					return ValueStorage.Keys.ToList();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the collection of Values
         /// </summary>
@@ -308,9 +305,10 @@ namespace TWCore.Collections
             get
             {
                 lock (_padlock)
-                    return _valueStorage.Values.Select(v => v.Value).ToList();
+                    return ValueStorage.Values.Select(v => v.Value).ToList();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Uses the specified functions to add a key/value pair to the Collection if the key does not already exist, 
         /// or to update a key/value pair in the Collection if the key already exists.
@@ -325,18 +323,19 @@ namespace TWCore.Collections
             TValue res;
             lock (_padlock)
             {
-                if (_valueStorage.TryGetValue(key, out var nValue))
+                if (ValueStorage.TryGetValue(key, out var nValue))
                     nValue.Value = updateValueFactory(key, nValue.Value);
                 else
                 {
                     nValue = CreateNode(key, addValueFactory(key));
-                    _valueStorage[key] = nValue;
+                    ValueStorage[key] = nValue;
                 }
                 UpdateList(key, nValue);
                 res = nValue.Value;
             }
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Adds a key/value pair to the Collection if the key does not already exist, or updates a key/value pair in the Collection 
         /// by using the specified function if the key already exists.
@@ -351,18 +350,19 @@ namespace TWCore.Collections
             TValue res;
             lock (_padlock)
             {
-                if (_valueStorage.TryGetValue(key, out var nValue))
+                if (ValueStorage.TryGetValue(key, out var nValue))
                     nValue.Value = updateValueFactory(key, nValue.Value);
                 else
                 {
                     nValue = CreateNode(key, addValue);
-                    _valueStorage[key] = nValue;
+                    ValueStorage[key] = nValue;
                 }
                 UpdateList(key, nValue);
                 res = nValue.Value;
             }
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clears the collection
         /// </summary>
@@ -371,10 +371,11 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
-                _valueStorage.Clear();
+                ValueStorage.Clear();
                 OnClean();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Determines whether the Collection contains the specified key.
         /// </summary>
@@ -384,8 +385,9 @@ namespace TWCore.Collections
         public bool ContainsKey(TKey key)
         {
             lock (_padlock)
-                return _valueStorage.ContainsKey(key);
+                return ValueStorage.ContainsKey(key);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Adds a key/value pair to the Collection by using the specified function, if the key does not already exist.
         /// </summary>
@@ -398,16 +400,17 @@ namespace TWCore.Collections
             TValue res;
             lock (_padlock)
             {
-                if (!_valueStorage.TryGetValue(key, out var nValue))
+                if (!ValueStorage.TryGetValue(key, out var nValue))
                 {
                     nValue = CreateNode(key, valueFactory(key));
-                    _valueStorage[key] = nValue;
+                    ValueStorage[key] = nValue;
                 }
                 UpdateList(key, nValue);
                 res = nValue.Value;
             }
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Adds a key/value pair to the Collection if the key does not already exist.
         /// </summary>
@@ -420,16 +423,17 @@ namespace TWCore.Collections
             TValue res;
             lock (_padlock)
             {
-                if (!_valueStorage.TryGetValue(key, out var nValue))
+                if (!ValueStorage.TryGetValue(key, out var nValue))
                 {
                     nValue = CreateNode(key, value);
-                    _valueStorage[key] = nValue;
+                    ValueStorage[key] = nValue;
                 }
                 UpdateList(key, nValue);
                 res = nValue.Value;
             }
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the index of an element inside the collection
         /// </summary>
@@ -445,6 +449,7 @@ namespace TWCore.Collections
             }
             return -1;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Copies the key and value pairs stored in the Collection to a new array.
         /// </summary>
@@ -453,8 +458,9 @@ namespace TWCore.Collections
         public KeyValuePair<TKey, TValue>[] ToArray()
         {
             lock (_padlock)
-                return _valueStorage.Select(i => new KeyValuePair<TKey, TValue>(i.Key, i.Value.Value)).ToArray();
+                return ValueStorage.Select(i => new KeyValuePair<TKey, TValue>(i.Key, i.Value.Value)).ToArray();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attempts to add the specified key and value to the Collection.
         /// </summary>
@@ -466,16 +472,14 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
-                if (!_valueStorage.TryGetValue(key, out var nValue))
-                {
-                    nValue = CreateNode(key, value);
-                    _valueStorage[key] = nValue;
-                    UpdateList(key, nValue);
-                    return true;
-                }
+                if (ValueStorage.TryGetValue(key, out var nValue)) return false;
+                nValue = CreateNode(key, value);
+                ValueStorage[key] = nValue;
+                UpdateList(key, nValue);
+                return true;
             }
-            return false;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attempts to get the value associated with the specified key from the Collection.
         /// </summary>
@@ -487,7 +491,7 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
-                if (_valueStorage.TryGetValue(key, out var nValue))
+                if (ValueStorage.TryGetValue(key, out var nValue))
                 {
                     UpdateList(key, nValue);
                     value = nValue.Value;
@@ -497,6 +501,7 @@ namespace TWCore.Collections
             value = default(TValue);
             return false;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attempts to remove and return the value that has the specified key from the Collection.
         /// </summary>
@@ -508,9 +513,9 @@ namespace TWCore.Collections
         {
             lock (_padlock)
             {
-                if (_valueStorage.TryGetValue(key, out var nValue))
+                if (ValueStorage.TryGetValue(key, out var nValue))
                 {
-                    _valueStorage.Remove(key);
+                    ValueStorage.Remove(key);
                     OnNodeRemove(nValue);
                     value = nValue.Value;
                     NodeRemoved?.Invoke(key, value);

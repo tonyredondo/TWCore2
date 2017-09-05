@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 
+// ReSharper disable InconsistentNaming
 namespace TWCore.Serialization
 {
     /// <summary>
@@ -25,22 +26,22 @@ namespace TWCore.Serialization
         /// <summary>
         /// Xml mime type
         /// </summary>
-        public static readonly string Xml = "application/xml";
+        public const string Xml = "application/xml";
         /// <summary>
         /// .NET Binary format mime type
         /// </summary>
-        public static readonly string BinaryFormatter = "application/binary-formatter";
+        public const string BinaryFormatter = "application/binary-formatter";
         /// <summary>
         /// WSerializer binary mime type
         /// </summary>
-        public static readonly string WBinary = "application/w-binary";
+        public const string WBinary = "application/w-binary";
         /// <summary>
         /// WSerializer binary mime type
         /// </summary>
-        public static readonly string PWBinary = "application/pw-binary";
+        public const string PWBinary = "application/pw-binary";
         /// <summary>
         /// Json mime type
         /// </summary>
-        public static readonly string Json = "application/json";
+        public const string Json = "application/json";
     }
 }

@@ -73,7 +73,14 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Has a registered local service
         /// </summary>
-        public static bool HasRegisteredLocalService => LocalServices.Count > 0;
+        public static bool HasRegisteredLocalService
+        {
+            get
+            {
+                lock(LocalServices)
+                    return LocalServices.Count > 0;
+            }
+        }
         #endregion
 
         #region .ctor

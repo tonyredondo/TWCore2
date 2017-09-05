@@ -17,9 +17,11 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Least frequently used cache algorithm collection
     /// </summary>
@@ -28,12 +30,13 @@ namespace TWCore.Collections
     public class LFUCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LFUCollection<TKey, TValue>.ValueNode>
     {
         #region Nested Type
+        /// <inheritdoc />
         /// <summary>
         /// LFU Collection Value Node
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
-            public int Slot;
+            public readonly int Slot;
             public LinkedListNode<CountNode> CountListNode;
             public LinkedListNode<KeyNode> KeyListNode;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -50,7 +53,7 @@ namespace TWCore.Collections
             }
             public sealed class KeyNode
             {
-                public TKey Key;
+                public readonly TKey Key;
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public KeyNode(TKey key) => Key = key;
             }
@@ -58,20 +61,13 @@ namespace TWCore.Collections
         #endregion
 
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _age;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _agePolicy;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<ValueNode.CountNode> _list;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Dictionary<int, TKey> _slots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Queue<int> _availableSlots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _currentSlot;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _insertionCount;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _agePolicy;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<ValueNode.CountNode> _list;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _insertionCount;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _age;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentSlot;
         #endregion
 
         #region Properties
@@ -86,11 +82,13 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Least frequently used cache algorithm collection with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LFUCollection() : this(CoreSettings.Instance.LFUCollectionDefaultCapacity) { }
+        /// <inheritdoc />
         /// <summary>
         /// Least frequently used cache algorithm collection
         /// </summary>
@@ -120,7 +118,7 @@ namespace TWCore.Collections
             var countValue = countNode?.Value;
             var keyNode = node.KeyListNode;
             var keyValue = keyNode?.Value;
-            int nCount = _insertionCount;
+            var nCount = _insertionCount;
             if (keyNode != null)
             {
                 if (++_age > _agePolicy)
@@ -128,7 +126,7 @@ namespace TWCore.Collections
                     _age = 0;
                     var mid = _list.First;
                     var insPointValue = _insertionCount;
-                    bool insPointSetted = false;
+                    var insPointSetted = false;
                     do
                     {
                         mid.Value.Count--;
@@ -155,7 +153,7 @@ namespace TWCore.Collections
             }
             else
             {
-                if (_valueStorage.Count > _capacity)
+                if (ValueStorage.Count > Capacity)
                 {
                     var lastCountNode = _list.Last;
                     while (true)
@@ -164,10 +162,10 @@ namespace TWCore.Collections
                         if (lstCount > 0)
                         {
                             var lastKeyNode = lastCountNode.Value.List.Last;
-                            if (_valueStorage.TryGetValue(lastKeyNode.Value.Key, out var oldNode))
+                            if (ValueStorage.TryGetValue(lastKeyNode.Value.Key, out var oldNode))
                             {
                                 lastCountNode.Value.List.RemoveLast();
-                                _valueStorage.Remove(lastKeyNode.Value.Key);
+                                ValueStorage.Remove(lastKeyNode.Value.Key);
                                 _slots.Remove(oldNode.Slot);
                                 _availableSlots.Enqueue(oldNode.Slot);
                                 ReportDelete(lastKeyNode.Value.Key, oldNode.Value);
@@ -279,7 +277,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
-            if (_valueStorage.TryGetValue(key, out var node))
+            if (ValueStorage.TryGetValue(key, out var node))
             {
                 index = node.Slot;
                 return true;

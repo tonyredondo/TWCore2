@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Action to process a Queue of elements in a new thread.
     /// </summary>
@@ -30,14 +31,14 @@ namespace TWCore
     public class Worker<T> : IDisposable
     {
         #region Private fields
-        ConcurrentQueue<T> _queue;
-        Action<T> _action;
-        Func<bool> _precondition;
-        Task _processThread;
-        CancellationTokenSource tokenSource;
-        volatile bool startActive;
-        volatile WorkerStatus status = WorkerStatus.Stopped;
-        ManualResetEventSlim processHandler = new ManualResetEventSlim(false);
+        private readonly Action<T> _action;
+        private readonly Func<bool> _precondition;
+        private readonly ManualResetEventSlim _processHandler = new ManualResetEventSlim(false);
+        private ConcurrentQueue<T> _queue;
+        private Task _processThread;
+        private CancellationTokenSource _tokenSource;
+        private volatile bool _startActive;
+        private volatile WorkerStatus _status = WorkerStatus.Stopped;
         #endregion
 
         #region Events
@@ -55,7 +56,7 @@ namespace TWCore
         /// <summary>
         /// List of all exceptions occurred when the Queue process.
         /// </summary>
-        public List<(Exception, T)> Exceptions { get; private set; }
+        public List<(Exception, T)> Exceptions { get; }
         /// <summary>
         /// Current queued items.
         /// </summary>
@@ -63,7 +64,7 @@ namespace TWCore
         /// <summary>
         /// Get the Worker status.
         /// </summary>
-        public WorkerStatus Status => status;
+        public WorkerStatus Status => _status;
 		/// <summary>
 		/// Enable the wait timeout
 		/// </summary>
@@ -85,8 +86,8 @@ namespace TWCore
             _action = action;
             Ensure.ArgumentNotNull(_action, "The action can't be null.");
             Exceptions = new List<(Exception, T)>();
-            tokenSource = new CancellationTokenSource();
-            this.startActive = startActive;
+            _tokenSource = new CancellationTokenSource();
+            _startActive = startActive;
             Init();
         }
         /// <summary>
@@ -103,26 +104,26 @@ namespace TWCore
             _action = action;
             Ensure.ArgumentNotNull(_action, "The action can't be null.");
             Exceptions = new List<(Exception, T)>();
-            tokenSource = new CancellationTokenSource();
-            this.startActive = startActive;
+            _tokenSource = new CancellationTokenSource();
+            _startActive = startActive;
             Init();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Init()
+        private void Init()
         {
-            processHandler.Reset();
-            tokenSource = new CancellationTokenSource();
+            _processHandler.Reset();
+            _tokenSource = new CancellationTokenSource();
             _processThread = Task.Factory.StartNew(obj =>
             {
                 OneLoopDequeueThread((CancellationToken)obj);
-            }, tokenSource.Token, tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }, _tokenSource.Token, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
 
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Exceptions) + " Count", Exceptions?.Count);
                 collection.Add("Queue Count", _queue?.Count);
-                collection.Add("Status", status);
-                collection.Add("Started Active", startActive);
+                collection.Add("Status", _status);
+                collection.Add("Started Active", _startActive);
             });
         }
         #endregion
@@ -135,16 +136,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Enqueue(T item)
         {
-            if (Status != WorkerStatus.Disposed && Status != WorkerStatus.Stopping) 
-            {
-                _queue.Enqueue(item);
-                if (startActive && Status == WorkerStatus.Stopped)
-                    Start();
-                else
-                    processHandler.Set();
-				return true;
-            }
-			return false;
+            if (Status == WorkerStatus.Disposed || Status == WorkerStatus.Stopping) return false;
+            _queue.Enqueue(item);
+            if (_startActive && Status == WorkerStatus.Stopped)
+                Start();
+            else
+                _processHandler.Set();
+            return true;
         }
         /// <summary>
         /// Clears the queue
@@ -152,7 +150,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            var prevStatus = status;
+            var prevStatus = _status;
             Stop();
             lock (this)
                 _queue = new ConcurrentQueue<T>();
@@ -173,8 +171,8 @@ namespace TWCore
         public void Start()
         {
             if (Status == WorkerStatus.Stopped)
-                status = WorkerStatus.Started;
-            processHandler.Set();
+                _status = WorkerStatus.Started;
+            _processHandler.Set();
         }
         /// <summary>
         /// Stops the processing thread
@@ -183,21 +181,19 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Stop(int afterNumItemsInQueue)
         {
-            if (status == WorkerStatus.Started)
+            if (_status != WorkerStatus.Started) return;
+            _status = WorkerStatus.Stopping;
+            if (afterNumItemsInQueue > 0)
             {
-                status = WorkerStatus.Stopping;
-                if (afterNumItemsInQueue > 0)
-                {
-                    var numItems = _queue.Count;
-                    var remain = numItems > afterNumItemsInQueue ? numItems - afterNumItemsInQueue : 0;
-					if (EnableWaitTimeout)
-                    	Factory.Thread.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout);
-					else
-						Factory.Thread.SleepUntil(() => _queue.Count <= remain);
-                }
-                status = WorkerStatus.Stopped;
-                processHandler.Reset();
+                var numItems = _queue.Count;
+                var remain = numItems > afterNumItemsInQueue ? numItems - afterNumItemsInQueue : 0;
+                if (EnableWaitTimeout)
+                    Factory.Thread.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout);
+                else
+                    Factory.Thread.SleepUntil(() => _queue.Count <= remain);
             }
+            _status = WorkerStatus.Stopped;
+            _processHandler.Reset();
         }
         /// <summary>
         /// Stops the processing thread
@@ -205,24 +201,22 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Stop()
         {
-            if (status == WorkerStatus.Started)
-            {
-                status = WorkerStatus.Stopped;
-                processHandler.Reset();
-            }
+            if (_status != WorkerStatus.Started) return;
+            _status = WorkerStatus.Stopped;
+            _processHandler.Reset();
         }
 
-        readonly object locker = new object();
+        private readonly object _locker = new object();
         [IgnoreStackFrameLog]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void OneLoopDequeueThread(CancellationToken token)
+        private void OneLoopDequeueThread(CancellationToken token)
         {
-            bool workDone = false;
+            var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                processHandler.Wait(token);
+                _processHandler.Wait(token);
 
-                while (!token.IsCancellationRequested && (status == WorkerStatus.Started || status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
+                while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
                     if (_precondition?.Invoke() == false)
                         Factory.Thread.SleepUntil(_precondition, token);
@@ -236,7 +230,7 @@ namespace TWCore
                     catch (Exception ex)
                     {
                         OnException?.Invoke(this, (ex, item));
-                        lock (locker)
+                        lock (_locker)
                             Exceptions.Add((ex, item));
                     }
                 }
@@ -245,7 +239,7 @@ namespace TWCore
                 if (token.IsCancellationRequested) continue;
                 try
                 {
-                    processHandler.Reset();
+                    _processHandler.Reset();
                 }
                 catch
                 {
@@ -255,6 +249,7 @@ namespace TWCore
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
@@ -262,11 +257,11 @@ namespace TWCore
         public void Dispose()
         {
             Stop(int.MaxValue);
-            processHandler.Set();
-            tokenSource.Cancel();
+            _processHandler.Set();
+            _tokenSource.Cancel();
             _processThread?.Wait(5000);
             _processThread = null;
-            processHandler.Reset();
+            _processHandler.Reset();
             Core.Status.DeAttachObject(this);
         }
     }

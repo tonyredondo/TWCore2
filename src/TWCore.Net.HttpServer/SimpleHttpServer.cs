@@ -28,18 +28,19 @@ using TWCore.Serialization;
 
 namespace TWCore.Net.HttpServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Simple Http Server
     /// </summary>
-    public class SimpleHttpServer : IDisposable
+    public sealed class SimpleHttpServer : IDisposable
     {
-        TcpListener _listener;
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        Task tskListener;
-        long RequestCount;
-        int Port;
-        volatile bool active;
+        private TcpListener _listener;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
+        private Task _tskListener;
+        private long _requestCount;
+        private int _port;
+        private volatile bool _active;
 
         #region Properties
         /// <summary>
@@ -103,8 +104,8 @@ namespace TWCore.Net.HttpServer
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(Port), Port);
-                collection.Add(nameof(RequestCount), RequestCount);
+                collection.Add(nameof(_port), _port);
+                collection.Add(nameof(_requestCount), _requestCount);
                 collection.Add(nameof(WebFolder), WebFolder);
                 foreach (var key in RouteHandlers.Keys)
                 {
@@ -133,26 +134,24 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task StartAsync(int port = 80)
         {
-            if (!active)
+            if (_active) return Task.CompletedTask;
+
+            Core.Log.LibVerbose("Starting HttpServer...");
+            _port = port;
+            _tokenSource = new CancellationTokenSource();
+            _token = _tokenSource.Token;
+            _listener = new TcpListener(IPAddress.Any, port);
+            _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+            _listener.Server.NoDelay = true;
+            Factory.SetSocketLoopbackFastPath(_listener.Server);
+            _listener.Start();
+            _tskListener = Task.Factory.StartNew(async () =>
             {
-                Core.Log.LibVerbose("Starting HttpServer...");
-                Port = port;
-                tokenSource = new CancellationTokenSource();
-                token = tokenSource.Token;
-                _listener = new TcpListener(IPAddress.Any, port);
-                _listener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                _listener.Server.NoDelay = true;
-                Factory.SetSocketLoopbackFastPath(_listener.Server);
-                _listener.Start();
-                tskListener = Task.Factory.StartNew(async () =>
-                {
-                    while (!token.IsCancellationRequested)
-                        ThreadPool.QueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                active = true;
-                Core.Log.LibVerbose("HttpServer Started on {0}.", port);
-                return Task.CompletedTask;
-            }
+                while (!_token.IsCancellationRequested)
+                    ThreadPool.QueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
+            }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _active = true;
+            Core.Log.LibVerbose("HttpServer Started on {0}.", port);
             return Task.CompletedTask;
         }
         /// <summary>
@@ -162,14 +161,14 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task StopAsync()
         {
-            if (active)
+            if (_active)
             {
                 Core.Log.LibVerbose("Stopping HttpServer...");
-                tokenSource.Cancel();
-                await tskListener.ConfigureAwait(false);
+                _tokenSource.Cancel();
+                await _tskListener.ConfigureAwait(false);
                 _listener.Stop();
                 _listener = null;
-                active = false;
+                _active = false;
                 Core.Log.LibVerbose("HttpServer Stopped.");
             }
         }
@@ -387,10 +386,10 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void ConnectionReceived(object objClient)
+        private void ConnectionReceived(object objClient)
         {
-            TcpClient client = (TcpClient)objClient;
-            var reqNumber = Interlocked.Increment(ref RequestCount);
+            var client = (TcpClient)objClient;
+            var reqNumber = Interlocked.Increment(ref _requestCount);
             using (var watch = Watch.Create($"HTTP REQUEST START: {reqNumber}", $"HTTP REQUEST END: {reqNumber}"))
             {
                 HttpContext context = null;
@@ -409,7 +408,7 @@ namespace TWCore.Net.HttpServer
                     watch.Tap("Request Loaded.");
                     #endregion
 
-                    bool handled = false;
+                    var handled = false;
 
                     #region OnBeginRequest
                     if (OnBeginRequest != null)
@@ -503,21 +502,21 @@ namespace TWCore.Net.HttpServer
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose method
         /// </summary>
         /// <param name="disposing">true if dispossing the managed properties</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual void Dispose(bool disposing)
+        private void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
-                if (active)
-                    StopAsync().Wait();
-                disposedValue = true;
-            }
+            if (_disposedValue) return;
+            if (disposing) { }
+            if (_active)
+                StopAsync().Wait();
+            _disposedValue = true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose method
         /// </summary>

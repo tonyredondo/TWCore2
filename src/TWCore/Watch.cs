@@ -334,8 +334,8 @@ namespace TWCore
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
-                    var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 1));
+                    var globalTicks = currentTicks - _initTicks;
+                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 1));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -350,8 +350,8 @@ namespace TWCore
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
-                    var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 0));
+                    var globalTicks = currentTicks - _initTicks;
+                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 0));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -366,8 +366,8 @@ namespace TWCore
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
-                    var _globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, _globalTicks, _lastTapTicks, message, 2));
+                    var globalTicks = currentTicks - _initTicks;
+                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 2));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -390,13 +390,13 @@ namespace TWCore
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
                 _lastTapTicks = 0;
-                disposedValue = false;
+                _disposedValue = false;
             }
             #endregion
 
             #region IDisposable Support
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private bool disposedValue; 
+            private bool _disposedValue; 
             /// <summary>
             /// Dispose Object
             /// </summary>
@@ -404,21 +404,20 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             protected virtual void Dispose(bool disposing)
             {
-                if (!disposedValue)
+                if (_disposedValue) return;
+                if (disposing)
                 {
-                    if (disposing)
+                    if (_lastMessage != null)
                     {
-                        if (_lastMessage != null)
-                        {
-                            EndTap(_lastMessage);
-                            _lastMessage = null;
-                        }
-                        Interlocked.Decrement(ref _watcherCount);
-                        itemPools.Store(this);
+                        EndTap(_lastMessage);
+                        _lastMessage = null;
                     }
-                    disposedValue = true;
+                    Interlocked.Decrement(ref _watcherCount);
+                    itemPools.Store(this);
                 }
+                _disposedValue = true;
             }
+            /// <inheritdoc />
             /// <summary>
             /// Dispose Object
             /// </summary>

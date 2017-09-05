@@ -19,25 +19,27 @@ using System.Threading;
 
 namespace TWCore.Triggers
 {
+    /// <inheritdoc />
     /// <summary>
-	/// Time of Day Update Trigger
-	/// </summary>
+    /// Time of Day Update Trigger
+    /// </summary>
 	public class TimeOfDayTrigger : TriggerBase
     {
         /// <summary>
 		/// Time of day for the Trigger
 		/// </summary>
-        public TimeSpan Time { get; private set; }
+        public TimeSpan Time { get; }
 
         #region Private Fields
-        CancellationTokenSource tokenSource;
-        Timer timer;
+        private CancellationTokenSource _tokenSource;
+        private Timer _timer;
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
-		/// Time of Day Update Trigger
-		/// </summary>
+        /// Time of Day Update Trigger
+        /// </summary>
         /// <param name="time">Time of the day to fire the trigger</param>
 		public TimeOfDayTrigger(TimeSpan time)
         {
@@ -51,22 +53,22 @@ namespace TWCore.Triggers
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// On trigger init
         /// </summary>
         protected override void OnInit()
         {
             TimeSpan startTime;
-            TimeSpan nowTime = Core.Now.TimeOfDay;
-            if (nowTime < Time)
-                startTime = Time.Subtract(nowTime);
-            else
-                startTime = Time.Add(TimeSpan.FromDays(1)).Subtract(nowTime);
+            var nowTime = Core.Now.TimeOfDay;
+            startTime = nowTime < Time ? 
+                Time.Subtract(nowTime) : 
+                Time.Add(TimeSpan.FromDays(1)).Subtract(nowTime);
 
             Core.Log.LibVerbose("{0}: OnInit() for TimeOfDay: {1}. Next update on: {2}", GetType().Name, Time, startTime);
 
-            tokenSource = new CancellationTokenSource();
-            timer = new Timer(obj =>
+            _tokenSource = new CancellationTokenSource();
+            _timer = new Timer(obj =>
             {
                 var tSource = (CancellationTokenSource)obj;
                 if (!tSource.Token.IsCancellationRequested)
@@ -74,22 +76,20 @@ namespace TWCore.Triggers
                     Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
                     Trigger();
                 }
-            }, tokenSource, startTime, TimeSpan.FromDays(1));
+            }, _tokenSource, startTime, TimeSpan.FromDays(1));
         }
+        /// <inheritdoc />
         /// <summary>
         /// On trigger finalize
         /// </summary>
         protected override void OnFinalize()
         {
             Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
-            if (tokenSource != null)
-                tokenSource.Cancel();
-            if (timer != null)
-            {
-                timer.Change(Timeout.Infinite, Timeout.Infinite);
-                timer.Dispose();
-                timer = null;
-            }
+            _tokenSource?.Cancel();
+            if (_timer == null) return;
+            _timer.Change(Timeout.Infinite, Timeout.Infinite);
+            _timer.Dispose();
+            _timer = null;
         }
         #endregion
     }

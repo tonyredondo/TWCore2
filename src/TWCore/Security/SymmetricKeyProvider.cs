@@ -66,7 +66,7 @@ namespace TWCore.Security
         /// <param name="padding">Padding of the algorithm</param>
         /// <param name="salt">Salt to use on key derivation</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SymmetricKeyProvider(AlgorithmName name = AlgorithmName.Aes, AlgorithmMode mode = AlgorithmMode.Cbc, AlgorithmPadding padding = AlgorithmPadding.PKCS7, byte[] salt = null)
+        public SymmetricKeyProvider(AlgorithmName name = AlgorithmName.Aes, AlgorithmMode mode = AlgorithmMode.Cbc, AlgorithmPadding padding = AlgorithmPadding.Pkcs7, byte[] salt = null)
         {
             Name = name;
             Mode = mode;
@@ -95,7 +95,7 @@ namespace TWCore.Security
                 case AlgorithmPadding.None:
                     alg.Padding = PaddingMode.None;
                     break;
-                case AlgorithmPadding.PKCS7:
+                case AlgorithmPadding.Pkcs7:
                     alg.Padding = PaddingMode.PKCS7;
                     break;
                 case AlgorithmPadding.Zeros:
@@ -255,7 +255,7 @@ namespace TWCore.Security
             /// The PKCS #7 padding string consists of a sequence of bytes, each of which is 
             /// equal to the total number of padding bytes added.
             /// </summary>
-            PKCS7 = 1,
+            Pkcs7 = 1,
             /// <summary>
             /// The padding string consists of bytes set to zero.
             /// </summary>

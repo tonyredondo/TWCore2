@@ -17,9 +17,11 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection with a fixed capacity and LRU 2Q replacement logic
     /// </summary>
@@ -28,37 +30,29 @@ namespace TWCore.Collections
     public class LRU2QSimpleCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LRU2QSimpleCollection<TKey, TValue>.ValueNode>
     {
         #region Nested Type
+        /// <inheritdoc />
         /// <summary>
         /// LRU Collection Value Node
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
-            public int Slot;
+            public readonly int Slot;
             public LinkedListNode<TKey> ListNodeAm;
             public LinkedListNode<TKey> ListNodeA1;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value) : base(value) { }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ValueNode(TValue value, int slot) : base(value)
-            {
-                Slot = slot;
-            }
+            public ValueNode(TValue value, int slot) : base(value) => Slot = slot;
         }
         #endregion
 
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _amList;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _a1List;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly int _threshold;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Dictionary<int, TKey> _slots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Queue<int> _availableSlots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _currentSlot;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _amList;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _a1List;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly int _threshold;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentSlot;
         #endregion
 
         #region Properties
@@ -69,17 +63,20 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LRU2QSimpleCollection() : this(CoreSettings.Instance.LRU2QSimpleCollectionDefaultCapacity) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>
         /// <param name="capacity">Total items count allowed in the collection</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LRU2QSimpleCollection(int capacity) : this(capacity, capacity / 4) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>
@@ -121,13 +118,13 @@ namespace TWCore.Collections
             }
             else
             {
-                if (_valueStorage.Count > _capacity)
+                if (ValueStorage.Count > Capacity)
                 {
                     var list = _a1List.Count >= _threshold ? _a1List : _amList;
                     var oNode = list.Last;
-                    if (_valueStorage.TryGetValue(oNode.Value, out var oValue))
+                    if (ValueStorage.TryGetValue(oNode.Value, out var oValue))
                     {
-                        _valueStorage.Remove(oNode.Value);
+                        ValueStorage.Remove(oNode.Value);
                         list.Remove(oNode);
                         _slots.Remove(oValue.Slot);
                         _availableSlots.Enqueue(oValue.Slot);
@@ -173,7 +170,7 @@ namespace TWCore.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
-            if (_valueStorage.TryGetValue(key, out var node))
+            if (ValueStorage.TryGetValue(key, out var node))
             {
                 index = node.Slot;
                 return true;

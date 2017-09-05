@@ -21,23 +21,26 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// Guid value type serializer
     /// </summary>
 	public class GuidSerializer : TypeSerializer<Guid>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
 {
             DataType.Guid, DataType.GuidDefault, DataType.RefGuidByte, DataType.RefGuidUShort
         });
-        SerializerMode _mode;
-        SerializerCache<Guid> cache;
-        SerializerCache<Guid> Cache
+
+        private SerializerMode _mode;
+        private SerializerCache<Guid> _cache;
+        private SerializerCache<Guid> Cache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return cache ?? (cache = new SerializerCache<Guid>(_mode)); }
+            get { return _cache ?? (_cache = new SerializerCache<Guid>(_mode)); }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -45,9 +48,10 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public override void Init(SerializerMode mode)
         {
             _mode = mode;
-            if (cache != null)
-                cache = new SerializerCache<Guid>(mode);
+            if (_cache != null)
+                _cache = new SerializerCache<Guid>(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -56,6 +60,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)
             => type == typeof(Guid);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -70,6 +75,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                 type == DataType.RefGuidByte ||
                 type == DataType.RefGuidUShort;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -78,6 +84,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (Guid)value);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -107,6 +114,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                 Cache.SerializerSet(value);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -116,6 +124,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -146,6 +155,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             Cache.DeserializerSet(guidValue);
             return guidValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

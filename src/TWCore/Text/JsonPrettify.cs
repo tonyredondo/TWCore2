@@ -25,7 +25,7 @@ namespace TWCore.Text
     /// </summary>
     public class JsonPrettify
     {
-        private const string INDENT_STRING = "    ";
+        private const string IndentString = "    ";
 
         /// <summary>
         /// Gets a Prettify json result from a raw json
@@ -49,7 +49,7 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, ++indent).Each(item => sb.Append(INDENT_STRING));
+                            Enumerable.Range(0, ++indent).Each(item => sb.Append(IndentString));
                         }
                         break;
                     case '}':
@@ -57,7 +57,7 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, --indent).Each(item => sb.Append(INDENT_STRING));
+                            Enumerable.Range(0, --indent).Each(item => sb.Append(IndentString));
                         }
                         sb.Append(ch);
                         break;
@@ -75,7 +75,7 @@ namespace TWCore.Text
                         if (!quoted)
                         {
                             sb.AppendLine();
-                            Enumerable.Range(0, indent).Each(item => sb.Append(INDENT_STRING));
+                            Enumerable.Range(0, indent).Each(item => sb.Append(IndentString));
                         }
                         break;
                     case ':':

@@ -21,34 +21,34 @@ namespace TWCore.Serialization.WSerializer
 {
     internal class SerializerCache<T>
     {
-        public readonly Dictionary<T, int> SerializationCache;
-        public readonly Dictionary<int, T> DeserializationCache;
-        int MaxIndex;
-        int CurrentIndex;
+        private readonly Dictionary<T, int> _serializationCache;
+        private readonly Dictionary<int, T> _deserializationCache;
+        private int _maxIndex;
+        private int _currentIndex;
 
-        public int Count => CurrentIndex;
+        public int Count => _currentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerCache(SerializerMode mode, IEqualityComparer<T> sercomparer = null, IEqualityComparer<int> descomparer = null)
         {
-            SerializationCache = new Dictionary<T, int>(sercomparer);
-            DeserializationCache = new Dictionary<int, T>(descomparer);
+            _serializationCache = new Dictionary<T, int>(sercomparer);
+            _deserializationCache = new Dictionary<int, T>(descomparer);
             switch (mode)
             {
                 case SerializerMode.Cached512:
-                    MaxIndex = 511;
+                    _maxIndex = 511;
                     break;
                 case SerializerMode.Cached1024:
-                    MaxIndex = 1023;
+                    _maxIndex = 1023;
                     break;
                 case SerializerMode.Cached2048:
-                    MaxIndex = 2047;
+                    _maxIndex = 2047;
                     break;
                 case SerializerMode.CachedUShort:
-                    MaxIndex = 65534;
+                    _maxIndex = 65534;
                     break;
             }
-            CurrentIndex = 0;
+            _currentIndex = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear(SerializerMode mode)
@@ -56,47 +56,47 @@ namespace TWCore.Serialization.WSerializer
             switch (mode)
             {
                 case SerializerMode.Cached512:
-                    MaxIndex = 511;
+                    _maxIndex = 511;
                     break;
                 case SerializerMode.Cached1024:
-                    MaxIndex = 1023;
+                    _maxIndex = 1023;
                     break;
                 case SerializerMode.Cached2048:
-                    MaxIndex = 2047;
+                    _maxIndex = 2047;
                     break;
                 case SerializerMode.CachedUShort:
-                    MaxIndex = 65534;
+                    _maxIndex = 65534;
                     break;
             }
-            CurrentIndex = 0;
-            SerializationCache.Clear();
-            DeserializationCache.Clear();
+            _currentIndex = 0;
+            _serializationCache.Clear();
+            _deserializationCache.Clear();
         }
 
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SerializerGet(T value)
         {
-            if (SerializationCache.TryGetValue(value, out int cIdx))
+            if (_serializationCache.TryGetValue(value, out int cIdx))
                 return cIdx;
             return -1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(T value)
         {
-            if (CurrentIndex < MaxIndex)
-                SerializationCache[value] = CurrentIndex++;
+            if (_currentIndex < _maxIndex)
+                _serializationCache[value] = _currentIndex++;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T DeserializerGet(int index)
-            => DeserializationCache[index];
+            => _deserializationCache[index];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DeserializerSet(T value)
         {
-            if (CurrentIndex < MaxIndex)
-                DeserializationCache[CurrentIndex++] = value;
+            if (_currentIndex < _maxIndex)
+                _deserializationCache[_currentIndex++] = value;
         }
     }
 }

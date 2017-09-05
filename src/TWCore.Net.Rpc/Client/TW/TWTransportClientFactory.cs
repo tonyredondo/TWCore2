@@ -19,6 +19,7 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable CheckNamespace
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Client.Transports
 {

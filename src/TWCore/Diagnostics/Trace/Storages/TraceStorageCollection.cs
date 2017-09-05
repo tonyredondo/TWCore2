@@ -20,15 +20,16 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
     public class TraceStorageCollection : ITraceStorage
     {
-        readonly object locker = new object();
-        volatile bool IsDirty;
-        readonly List<ITraceStorage> Items = new List<ITraceStorage>();
-        List<ITraceStorage> CItems;
+        private readonly object _locker = new object();
+        private readonly List<ITraceStorage> _items = new List<ITraceStorage>();
+        private List<ITraceStorage> _cItems;
+        private volatile bool _isDirty;
 
         #region .ctor
         /// <summary>
@@ -39,8 +40,8 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Items", Items.Join(", "));
-                foreach (var i in Items)
+                collection.Add("Items", _items.Join(", "));
+                foreach (var i in _items)
                     Core.Status.AttachChild(i, this);
             });
         }
@@ -54,31 +55,32 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(ITraceStorage storage)
         {
-            lock (locker)
+            lock (_locker)
             {
-                Items.Add(storage);
-                IsDirty = true;
+                _items.Add(storage);
+                _isDirty = true;
             }
         }
         /// <summary>
         /// Gets the storage quantities inside the collection
         /// </summary>
-        public int Count => Items?.Count ?? 0;
+        public int Count => _items?.Count ?? 0;
         /// <summary>
         /// Clears the collection
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            lock (locker)
+            lock (_locker)
             {
-                Items.Clear();
-                IsDirty = true;
+                _items.Clear();
+                _isDirty = true;
             }
         }
         #endregion
 
         #region ITraceStorage Members
+        /// <inheritdoc />
         /// <summary>
         /// Writes a trace item to the storage
         /// </summary>
@@ -86,13 +88,13 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(TraceItem item)
         {
-            if (Items == null) return;
-            lock(locker)
+            if (_items == null) return;
+            lock(_locker)
             {
-                if (IsDirty || CItems == null)
-                    CItems = new List<ITraceStorage>(Items);
+                if (_isDirty || _cItems == null)
+                    _cItems = new List<ITraceStorage>(_items);
             }
-            foreach(var i in CItems)
+            foreach(var i in _cItems)
             {
                 try
                 {
@@ -104,14 +106,15 @@ namespace TWCore.Diagnostics.Trace.Storages
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all the object resources
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            lock (locker)
-                Items.Clear();
+            lock (_locker)
+                _items.Clear();
         }
         #endregion
     }

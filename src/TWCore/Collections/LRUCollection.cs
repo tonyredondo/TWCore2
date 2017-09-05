@@ -17,9 +17,11 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection with a fixed capacity and LRU replacement logic
     /// </summary>
@@ -28,12 +30,13 @@ namespace TWCore.Collections
     public class LRUCollection<TKey, TValue> : CacheCollectionBase<TKey, TValue, LRUCollection<TKey, TValue>.ValueNode>
     {
         #region Nested Type
+        /// <inheritdoc />
         /// <summary>
         /// LRU Collection Value Node
         /// </summary>
         public sealed class ValueNode : CacheCollectionValueNode<TValue>
         {
-            public int Slot;
+            public readonly int Slot;
             public LinkedListNode<TKey> ListNode;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ValueNode(TValue value) : base(value) { }
@@ -46,22 +49,20 @@ namespace TWCore.Collections
         #endregion
 
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly LinkedList<TKey> _list;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Dictionary<int, TKey> _slots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly Queue<int> _availableSlots;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        int _currentSlot;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly LinkedList<TKey> _list;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Dictionary<int, TKey> _slots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Queue<int> _availableSlots;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _currentSlot;
         #endregion
 
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic with a capacity of ushort.MaxValue
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public LRUCollection() : this(CoreSettings.Instance.LRUCollectionDefaultCapacity) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection with a fixed capacity and LRU replacement logic
         /// </summary>
@@ -90,13 +91,13 @@ namespace TWCore.Collections
 			}
 			else
 			{
-				if (_valueStorage.Count > _capacity)
+				if (ValueStorage.Count > Capacity)
 				{
 					var lastNode = _list.Last;
 					_list.RemoveLast();
-					if (_valueStorage.TryGetValue(lastNode.Value, out var oldNode))
+					if (ValueStorage.TryGetValue(lastNode.Value, out var oldNode))
 					{
-						_valueStorage.Remove(lastNode.Value);
+						ValueStorage.Remove(lastNode.Value);
 						_slots.Remove(oldNode.Slot);
 						_availableSlots.Enqueue(oldNode.Slot);
 						ReportDelete(lastNode.Value, oldNode.Value);
@@ -131,7 +132,7 @@ namespace TWCore.Collections
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnGetIndex(TKey key, out int index)
         {
-            if (_valueStorage.TryGetValue(key, out var node))
+            if (ValueStorage.TryGetValue(key, out var node))
             {
                 index = node.Slot;
                 return true;

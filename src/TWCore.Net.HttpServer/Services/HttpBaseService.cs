@@ -27,7 +27,7 @@ namespace TWCore.Services
     public abstract class HttpBaseService : HttpControllerBase, IService
     {
         #region Fields
-        SimpleHttpServer httpServer;
+        private SimpleHttpServer _httpServer;
         #endregion
 
         #region Properties
@@ -50,13 +50,13 @@ namespace TWCore.Services
         /// Http Based Service
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public HttpBaseService() { }
+        protected HttpBaseService() { }
         /// <summary>
         /// Http Based Service
         /// </summary>
         /// <param name="port">Http binding port</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public HttpBaseService(int port)
+        protected HttpBaseService(int port)
         {
             Port = port;
         }
@@ -80,7 +80,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IService.OnContinue()
         {
-            httpServer.StartAsync(Port);
+            _httpServer.StartAsync(Port);
         }
         /// <summary>
         /// On Pause method
@@ -88,7 +88,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IService.OnPause()
         {
-            httpServer.StopAsync().WaitAsync();
+            _httpServer.StopAsync().WaitAsync();
         }
         /// <summary>
         /// On shutdown requested method
@@ -96,7 +96,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IService.OnShutdown()
         {
-            httpServer.StopAsync().WaitAsync();
+            _httpServer.StopAsync().WaitAsync();
         }
         /// <summary>
         /// On Service Start method
@@ -105,11 +105,11 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IService.OnStart(string[] args)
         {
-            httpServer = new SimpleHttpServer();
-            WebFolder = httpServer.WebFolder;
-            OnBinding(httpServer);
-            WebFolder = httpServer.WebFolder;
-            httpServer.StartAsync(Port);
+            _httpServer = new SimpleHttpServer();
+            WebFolder = _httpServer.WebFolder;
+            OnBinding(_httpServer);
+            WebFolder = _httpServer.WebFolder;
+            _httpServer.StartAsync(Port);
         }
         /// <summary>
         /// On Service Stops method
@@ -117,7 +117,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void IService.OnStop()
         {
-            httpServer.StopAsync().WaitAsync();
+            _httpServer.StopAsync().WaitAsync();
         }
         #endregion
 

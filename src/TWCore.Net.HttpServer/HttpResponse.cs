@@ -21,7 +21,9 @@ using System.IO.Compression;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.IO;
+
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.HttpServer
 {
@@ -30,43 +32,43 @@ namespace TWCore.Net.HttpServer
     /// </summary>
     public class HttpResponse
     {
-        static readonly Dictionary<HttpStatusCode, KeyValuePair<string, string>> StatusCodeResponses = new Dictionary<HttpStatusCode, KeyValuePair<string, string>>
+        private static readonly Dictionary<HttpStatusCode, (string, string)> StatusCodeResponses = new Dictionary<HttpStatusCode, (string, string)>
         {
-            [HttpStatusCode.OK] = new KeyValuePair<string, string>("200", "OK"),
-            [HttpStatusCode.Created] = new KeyValuePair<string, string>("201", "Created"),
-            [HttpStatusCode.Accepted] = new KeyValuePair<string, string>("202", "Accepted"),
-            [HttpStatusCode.No_Content] = new KeyValuePair<string, string>("204", "No Content"),
-            [HttpStatusCode.Reset_Content] = new KeyValuePair<string, string>("205", "Reset Content"),
-            [HttpStatusCode.Moved_Permanently] = new KeyValuePair<string, string>("301", "Moved Permanently"),
-            [HttpStatusCode.Found] = new KeyValuePair<string, string>("302", "Found"),
-            [HttpStatusCode.Not_Modified] = new KeyValuePair<string, string>("304", "Not Modified"),
-            [HttpStatusCode.Bad_Request] = new KeyValuePair<string, string>("400", "Bad Request"),
-            [HttpStatusCode.Unauthorized] = new KeyValuePair<string, string>("401", "Unauthorized"),
-            [HttpStatusCode.Payment_Required] = new KeyValuePair<string, string>("402", "Payment Required"),
-            [HttpStatusCode.Forbidden] = new KeyValuePair<string, string>("403", "Forbidden"),
-            [HttpStatusCode.Not_Found] = new KeyValuePair<string, string>("404", "Not_Found"),
-            [HttpStatusCode.Method_Not_Allowed] = new KeyValuePair<string, string>("405", "Method Not Allowed"),
-            [HttpStatusCode.Not_Acceptable] = new KeyValuePair<string, string>("406", "Not Acceptable"),
-            [HttpStatusCode.Request_Timeout] = new KeyValuePair<string, string>("408", "Request Timeout"),
-            [HttpStatusCode.Conflict] = new KeyValuePair<string, string>("409", "Conflict"),
-            [HttpStatusCode.Gone] = new KeyValuePair<string, string>("410", "Gone"),
-            [HttpStatusCode.PreconditionFailed] = new KeyValuePair<string, string>("412", "PreconditionFailed"),
-            [HttpStatusCode.Unsupported_Media_Type] = new KeyValuePair<string, string>("415", "Unsupported Media Type"),
-            [HttpStatusCode.Too_Many_Requests] = new KeyValuePair<string, string>("429", "Too Many Requests"),
-            [HttpStatusCode.Internal_Server_Error] = new KeyValuePair<string, string>("500", "Internal Server Error"),
-            [HttpStatusCode.Not_Implemented] = new KeyValuePair<string, string>("501", "Not Implemented"),
-            [HttpStatusCode.Service_Unavailable] = new KeyValuePair<string, string>("503", "Service Unavailable"),
+            [HttpStatusCode.OK] = ("200", "OK"),
+            [HttpStatusCode.Created] = ("201", "Created"),
+            [HttpStatusCode.Accepted] = ("202", "Accepted"),
+            [HttpStatusCode.No_Content] = ("204", "No Content"),
+            [HttpStatusCode.Reset_Content] = ("205", "Reset Content"),
+            [HttpStatusCode.Moved_Permanently] = ("301", "Moved Permanently"),
+            [HttpStatusCode.Found] = ("302", "Found"),
+            [HttpStatusCode.Not_Modified] = ("304", "Not Modified"),
+            [HttpStatusCode.Bad_Request] = ("400", "Bad Request"),
+            [HttpStatusCode.Unauthorized] = ("401", "Unauthorized"),
+            [HttpStatusCode.Payment_Required] = ("402", "Payment Required"),
+            [HttpStatusCode.Forbidden] = ("403", "Forbidden"),
+            [HttpStatusCode.Not_Found] = ("404", "Not_Found"),
+            [HttpStatusCode.Method_Not_Allowed] = ("405", "Method Not Allowed"),
+            [HttpStatusCode.Not_Acceptable] = ("406", "Not Acceptable"),
+            [HttpStatusCode.Request_Timeout] = ("408", "Request Timeout"),
+            [HttpStatusCode.Conflict] = ("409", "Conflict"),
+            [HttpStatusCode.Gone] = ("410", "Gone"),
+            [HttpStatusCode.PreconditionFailed] = ("412", "PreconditionFailed"),
+            [HttpStatusCode.Unsupported_Media_Type] = ("415", "Unsupported Media Type"),
+            [HttpStatusCode.Too_Many_Requests] = ("429", "Too Many Requests"),
+            [HttpStatusCode.Internal_Server_Error] = ("500", "Internal Server Error"),
+            [HttpStatusCode.Not_Implemented] = ("501", "Not Implemented"),
+            [HttpStatusCode.Service_Unavailable] = ("503", "Service Unavailable"),
         };
-        TcpClient client;
-        HttpContext Context;
-        bool headersSent;
-        internal EventStream EventStream;
+        internal readonly EventStream EventStream;
+        private readonly HttpContext _context;
+        private TcpClient _client;
+        private bool _headersSent;
 
         #region Properties
         /// <summary>
         /// Response headers
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
         /// <summary>
         /// Http version
         /// </summary>
@@ -94,10 +96,10 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal HttpResponse(TcpClient socketClient, HttpContext context)
         {
-            client = socketClient;
+            _client = socketClient;
             EventStream = new EventStream(new BufferedStream(socketClient.GetStream(), 16384));
             EventStream.BeforeWrite += (s, e) => WriteHeaders();
-            Context = context;
+            _context = context;
             Version = HttpVersion.Version1_0;
             StatusCode = HttpStatusCode.OK;
             ContentType = "text/html";
@@ -107,53 +109,52 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void WriteHeaders()
+        private void WriteHeaders()
         {
-            if (!headersSent && OutputStream.CanWrite)
-            {
-                //Core.Log.LibVerbose("Writing Response Headers...");
-                bool useGZip = false;
-                bool useDeflate = false;
+            if (_headersSent || !OutputStream.CanWrite) return;
 
-                if (Context.Request.Headers.TryGetValue("Accept-Encoding", out var acceptEncoding))
+            //Core.Log.LibVerbose("Writing Response Headers...");
+            var useGZip = false;
+            var useDeflate = false;
+
+            if (_context.Request.Headers.TryGetValue("Accept-Encoding", out var acceptEncoding))
+            {
+                var encodings = acceptEncoding.SplitAndTrim(',');
+                for (var i = 0; i < encodings.Length; i++)
                 {
-                    var encodings = acceptEncoding.SplitAndTrim(',');
-                    for (var i = 0; i < encodings.Length; i++)
+                    if (string.Equals(encodings[i], "gzip", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (string.Equals(encodings[i], "gzip", StringComparison.OrdinalIgnoreCase))
-                        {
-                            useGZip = true;
-                            Headers["Content-Encoding"] = encodings[i];
-                            break;
-                        }
-                        if (string.Equals(encodings[i], "deflate", StringComparison.OrdinalIgnoreCase))
-                        {
-                            useDeflate = true;
-                            Headers["Content-Encoding"] = encodings[i];
-                            break;
-                        }
+                        useGZip = true;
+                        Headers["Content-Encoding"] = encodings[i];
+                        break;
+                    }
+                    if (string.Equals(encodings[i], "deflate", StringComparison.OrdinalIgnoreCase))
+                    {
+                        useDeflate = true;
+                        Headers["Content-Encoding"] = encodings[i];
+                        break;
                     }
                 }
-                var version = Version == HttpVersion.Version1_0 ? "1.0" : Version == HttpVersion.Version1_1 ? "1.1" : "1.0";
-                var status = StatusCodeResponses[StatusCode];
-                EventStream.BaseStream.WriteLine(string.Concat("HTTP/", version, " ", status.Key, " ", status.Value));
-                EventStream.BaseStream.WriteLine("Date: " + Core.Now.ToString("R"));
-                EventStream.BaseStream.WriteLine("Content-Type: " + ContentType);
-                foreach (var header in Headers)
-                {
-                    if (header.Key == "Date")
-                        continue;
-                    if (header.Key == "Content-Type")
-                        continue;
-                    EventStream.BaseStream.WriteLine(header.Key + ": " + header.Value);
-                }
-                EventStream.BaseStream.WriteLine("");
-                if (useGZip)
-                    EventStream.BaseStream = new GZipStream(EventStream.BaseStream, CompressionMode.Compress, false);
-                else if (useDeflate)
-                    EventStream.BaseStream = new DeflateStream(EventStream.BaseStream, CompressionMode.Compress, false);
-                headersSent = true;
             }
+            var version = Version == HttpVersion.Version1_0 ? "1.0" : Version == HttpVersion.Version1_1 ? "1.1" : "1.0";
+            var status = StatusCodeResponses[StatusCode];
+            EventStream.BaseStream.WriteLine(string.Concat("HTTP/", version, " ", status.Item1, " ", status.Item2));
+            EventStream.BaseStream.WriteLine("Date: " + Core.Now.ToString("R"));
+            EventStream.BaseStream.WriteLine("Content-Type: " + ContentType);
+            foreach (var header in Headers)
+            {
+                if (header.Key == "Date")
+                    continue;
+                if (header.Key == "Content-Type")
+                    continue;
+                EventStream.BaseStream.WriteLine(header.Key + ": " + header.Value);
+            }
+            EventStream.BaseStream.WriteLine("");
+            if (useGZip)
+                EventStream.BaseStream = new GZipStream(EventStream.BaseStream, CompressionMode.Compress, false);
+            else if (useDeflate)
+                EventStream.BaseStream = new DeflateStream(EventStream.BaseStream, CompressionMode.Compress, false);
+            _headersSent = true;
         }
         #endregion
 

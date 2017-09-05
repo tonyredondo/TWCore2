@@ -31,27 +31,27 @@ namespace TWCore.Numerics
         /// <summary>
         /// The source collection of elements for which we are calculating the lexical permutation.
         /// </summary>
-        private readonly List<T> sourceList;
+        private readonly List<T> _sourceList;
 
         /// <summary>
         /// Keep a list of pre-compouted factorial numbers to increase running time.
         /// </summary>
-        private readonly long[] knownFactorials;
+        private readonly long[] _knownFactorials;
 
         /// <summary>
         /// The number of elements in the Lexical permutation.
         /// </summary>
-        private readonly long nPermutations;
+        private readonly long _nPermutations;
 
         /// <summary>
         /// The factoradic number corresponding to the current Lehmer code
         /// </summary>
-        private readonly int[] currentFactorialNumber;
+        private readonly int[] _currentFactorialNumber;
 
         /// <summary>
         /// Keep track of which elements have been used in the Lehmer code reversal so far.
         /// </summary>
-        private readonly bool[] currentFactorialElements;
+        private readonly bool[] _currentFactorialElements;
         #endregion
 
         #region .ctor
@@ -62,16 +62,16 @@ namespace TWCore.Numerics
         public LexicalPermutation(IEnumerable<T> sourceCollection)
         {
             // NB: This conversion to a list also creates a orderring on the input collection
-            sourceList = sourceCollection.ToList();
-            if (sourceList.Count == 0) throw new ArgumentException("Source collection cannot contain 0 elements.");
+            _sourceList = sourceCollection.ToList();
+            if (_sourceList.Count == 0) throw new ArgumentException("Source collection cannot contain 0 elements.");
             // Pre-allocate memory requirements to avoid garbage collector
-            currentFactorialNumber = new int[sourceList.Count];
-            currentFactorialElements = new bool[sourceList.Count];
-            knownFactorials = new long[sourceList.Count];
-            nPermutations = GetFactorial(sourceList.Count);
+            _currentFactorialNumber = new int[_sourceList.Count];
+            _currentFactorialElements = new bool[_sourceList.Count];
+            _knownFactorials = new long[_sourceList.Count];
+            _nPermutations = GetFactorial(_sourceList.Count);
             // Pre-compute all factorials needed as optimization
-            for (int i = 0; i < sourceList.Count; i++)
-                knownFactorials[i] = GetFactorial(i);
+            for (int i = 0; i < _sourceList.Count; i++)
+                _knownFactorials[i] = GetFactorial(i);
         }
         #endregion
 
@@ -82,7 +82,7 @@ namespace TWCore.Numerics
         /// <returns>Permutation enumerations</returns>
         public IEnumerable<List<T>> GetPermutationEnumerator()
         {
-            var nPerm = GetFactorial(sourceList.Count);
+            var nPerm = GetFactorial(_sourceList.Count);
             for (long i = 0; i < nPerm; i++)
             {
                 SetCurrentFactorialNumber(i);
@@ -110,10 +110,10 @@ namespace TWCore.Numerics
         {
             // Convert
             long currentNumber = nIn;
-            for (int i = currentFactorialNumber.Length - 1; i >= 0; i--)
+            for (int i = _currentFactorialNumber.Length - 1; i >= 0; i--)
             {
-                currentFactorialNumber[i] = (int)(currentNumber / knownFactorials[i]);
-                currentNumber %= knownFactorials[i];
+                _currentFactorialNumber[i] = (int)(currentNumber / _knownFactorials[i]);
+                currentNumber %= _knownFactorials[i];
             }
         }
 
@@ -123,17 +123,17 @@ namespace TWCore.Numerics
         /// </summary>
         private List<T> ConvertFactoradicNumberToSourceCollection()
         {
-            var returnList = new List<T>(currentFactorialNumber.Length);
+            var returnList = new List<T>(_currentFactorialNumber.Length);
             // Clear search cache for reversing the Lehmer code
-            for (int i = 0; i < currentFactorialElements.Length; i++) currentFactorialElements[i] = true;
-            for (int i = currentFactorialNumber.Length - 1; i >= 0; i--)
+            for (int i = 0; i < _currentFactorialElements.Length; i++) _currentFactorialElements[i] = true;
+            for (int i = _currentFactorialNumber.Length - 1; i >= 0; i--)
             {
                 int countSmaller = 0;
                 int countSmallerPosition = 0;
                 int? lastSmallerPosition = null;
-                while (countSmaller <= currentFactorialNumber[i] || lastSmallerPosition == null)
+                while (countSmaller <= _currentFactorialNumber[i] || lastSmallerPosition == null)
                 {
-                    if (currentFactorialElements[countSmallerPosition] && countSmaller <= currentFactorialNumber[i])
+                    if (_currentFactorialElements[countSmallerPosition] && countSmaller <= _currentFactorialNumber[i])
                     {
                         countSmaller++;
                         lastSmallerPosition = countSmallerPosition;
@@ -141,8 +141,8 @@ namespace TWCore.Numerics
                     countSmallerPosition++;
                 }
                 // lastSmallerPosition should always have a value at this point
-                currentFactorialElements[lastSmallerPosition.Value] = false;
-                returnList.Add(sourceList[lastSmallerPosition.Value]);
+                _currentFactorialElements[lastSmallerPosition.Value] = false;
+                returnList.Add(_sourceList[lastSmallerPosition.Value]);
             }
             return returnList;
         }

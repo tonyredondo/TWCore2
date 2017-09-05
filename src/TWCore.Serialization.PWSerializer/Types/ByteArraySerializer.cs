@@ -21,29 +21,31 @@ using TWCore.IO;
 
 namespace TWCore.Serialization.PWSerializer.Types
 {
+    /// <inheritdoc />
     /// <summary>
     /// Byte array optimized serializer
     /// </summary>
     public class ByteArraySerializer : TypeSerializer<byte[]>
     {
-        private static byte[] EmptyBytes = new byte[0];
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        private const int MaxArrayLength = 84995;
+        private static readonly byte[] EmptyBytes = new byte[0];
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.ByteArrayNull, DataType.ByteArrayEmpty, DataType.ByteArrayLengthByte, DataType.ByteArrayLengthUShort, DataType.ByteArrayLengthInt,
             DataType.RefByteArrayByte, DataType.RefByteArrayUShort
         });
 
         #region Field
-        SerializerMode _mode;
-        SerializerCache<byte[]> refCache;
-        SerializerCache<byte[]> RefCache
+        private SerializerMode _mode;
+        private SerializerCache<byte[]> _refCache;
+        private SerializerCache<byte[]> RefCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return refCache ?? (refCache = new SerializerCache<byte[]>(_mode)); }
+            get { return _refCache ?? (_refCache = new SerializerCache<byte[]>(_mode)); }
         }
-        int maxArrayLength = 84995;
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -51,8 +53,9 @@ namespace TWCore.Serialization.PWSerializer.Types
         public override void Init(SerializerMode mode)
         {
             _mode = mode;
-            refCache?.Clear(mode);
+            _refCache?.Clear(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -61,6 +64,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)
             => type == typeof(byte[]);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -69,6 +73,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(byte type)
             => ReadTypes.Contains(type);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -77,6 +82,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(FastBinaryWriter writer, object value)
             => WriteValue(writer, (byte[])value);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -87,6 +93,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         public override object Read(FastBinaryReader reader, byte type)
             => ReadValue(reader, type);
 
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -128,11 +135,12 @@ namespace TWCore.Serialization.PWSerializer.Types
 				#endregion
 
 				#region Save to Cache
-				if (length <= maxArrayLength)
+				if (length <= MaxArrayLength)
 					RefCache.SerializerSet(value);
 				#endregion
 			}
 		}
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -170,10 +178,11 @@ namespace TWCore.Serialization.PWSerializer.Types
                 return RefCache.DeserializerGet(objIdx);
 
             var cValue = reader.ReadBytes(length);
-            if (length <= maxArrayLength)
+            if (length <= MaxArrayLength)
                 RefCache.DeserializerSet(cValue);
             return cValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

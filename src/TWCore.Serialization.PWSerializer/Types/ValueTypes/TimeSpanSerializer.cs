@@ -26,18 +26,20 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// </summary>
 	public class TimeSpanSerializer : TypeSerializer<TimeSpan>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.TimeSpan, DataType.TimeSpanDefault, DataType.RefTimeSpanByte, DataType.RefTimeSpanUShort
         });
-        SerializerMode _mode;
-        SerializerCache<TimeSpan> cache;
-        SerializerCache<TimeSpan> Cache
+
+        private SerializerMode _mode;
+        private SerializerCache<TimeSpan> _cache;
+        private SerializerCache<TimeSpan> Cache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return cache ?? (cache = new SerializerCache<TimeSpan>(_mode)); }
+            get { return _cache ?? (_cache = new SerializerCache<TimeSpan>(_mode)); }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -45,8 +47,9 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         public override void Init(SerializerMode mode)
         {
             _mode = mode;
-            cache?.Clear(mode);
+            _cache?.Clear(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -55,6 +58,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)
             => type == typeof(TimeSpan);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -69,6 +73,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 type == DataType.RefTimeSpanByte ||
                 type == DataType.RefTimeSpanUShort;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -77,6 +82,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(FastBinaryWriter writer, object value)
             => WriteValue(writer, (TimeSpan)value);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -106,6 +112,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 Cache.SerializerSet(value);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -115,6 +122,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Read(FastBinaryReader reader, byte type)
             => ReadValue(reader, type);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -146,6 +154,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             Cache.DeserializerSet(cValue);
             return cValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

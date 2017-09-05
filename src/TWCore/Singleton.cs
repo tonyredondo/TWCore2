@@ -41,11 +41,11 @@ namespace TWCore
         /// <summary>
         /// Single Instance
         /// </summary>
-        public static T Instance => InstanceBox._value;
+        public static T Instance => InstanceBox.Value;
 
-        static class InstanceBox
+        private static class InstanceBox
         {
-            public static readonly T _value;
+            public static readonly T Value;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             static InstanceBox()
@@ -58,11 +58,11 @@ namespace TWCore
 	                {
 	                    if (ctor.GetParameters().Any(p => !p.HasDefaultValue) == false)
 	                    {
-	                        _value = (T)ctor.Invoke(new object[0]);
+	                        Value = (T)ctor.Invoke(new object[0]);
 	                        return;
 	                    }
 	                }
-	                _value = Activator.CreateInstance<T>();
+	                Value = Activator.CreateInstance<T>();
 				}
 				catch(Exception ex)
 				{

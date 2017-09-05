@@ -24,9 +24,11 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
+// ReSharper disable InconsistentlySynchronizedField
 
 namespace TWCore.Net.RPC.Client
 {
+    /// <inheritdoc cref="IRPCClient" />
     /// <summary>
     /// RPC standard client
     /// </summary>
@@ -236,9 +238,9 @@ namespace TWCore.Net.RPC.Client
                 ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");
-				if (response.Exception != null)
-					throw response.Exception.GetException();
-				return response.ReturnValue;
+                if (response.Exception != null)
+                    throw response.Exception.GetException();
+                return response.ReturnValue;
             }
         }
         #endregion
@@ -253,7 +255,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T ServerInvoke<T>(string serviceName, string method, params object[] args) 
+        public T ServerInvoke<T>(string serviceName, string method, params object[] args)
             => (T)ServerInvoke(serviceName, method, args);
         /// <summary>
         /// Invokes a Server RPC method
@@ -275,8 +277,8 @@ namespace TWCore.Net.RPC.Client
                 if (response == null)
                     throw new Exception("RPC Response is null.");
                 if (response.Exception != null)
-					throw response.Exception.GetException();
-				return response.ReturnValue;
+                    throw response.Exception.GetException();
+                return response.ReturnValue;
             }
         }
         #endregion
@@ -310,8 +312,8 @@ namespace TWCore.Net.RPC.Client
                 _descriptors = new ServiceDescriptorCollection();
                 if (UseServerDescriptor)
                     _descriptors.Combine(_serverDescriptors);
+                return _descriptors;
             }
-            return _descriptors;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ServiceDescriptorCollection GetDescriptors()
@@ -324,8 +326,8 @@ namespace TWCore.Net.RPC.Client
                 _descriptors = new ServiceDescriptorCollection();
                 if (UseServerDescriptor)
                     _descriptors.Combine(_serverDescriptors);
+                return _descriptors;
             }
-            return _descriptors;
         }
         /// <summary>
         /// Handles OnEventReceived event of the transport
@@ -352,7 +354,7 @@ namespace TWCore.Net.RPC.Client
             var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), kTuple =>
             {
                 if (!Descriptors.Items.TryGetValue(kTuple.Item1, out var descriptor)) return null;
-                
+
                 var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args?.Length).ToArray();
                 switch (methods.Length)
                 {
@@ -386,8 +388,8 @@ namespace TWCore.Net.RPC.Client
 
             var rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
             rqMessage.MessageId = Guid.NewGuid();
-			rqMessage.MethodId = mDesc.Id;
-			rqMessage.Parameters = parameters.ToArray();
+            rqMessage.MethodId = mDesc.Id;
+            rqMessage.Parameters = parameters.ToArray();
             return rqMessage;
         }
         #endregion

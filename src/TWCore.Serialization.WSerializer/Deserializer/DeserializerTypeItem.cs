@@ -18,13 +18,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+#pragma warning disable 414
 
 namespace TWCore.Serialization.WSerializer.Deserializer
 {
     internal class DeserializerTypeItem
     {
-        public Type Type;
-        public DeserializerTypeInfo TypeInfo;
+        public readonly Type Type;
+        public readonly DeserializerTypeInfo TypeInfo;
         public byte Last;
         public string LastPropertyName;
         public object Value;

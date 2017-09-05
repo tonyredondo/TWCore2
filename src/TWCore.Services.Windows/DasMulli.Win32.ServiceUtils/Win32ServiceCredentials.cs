@@ -1,5 +1,7 @@
 ﻿using System;
 
+// ReSharper disable CheckNamespace
+
 namespace DasMulli.Win32.ServiceUtils
 {
     public struct Win32ServiceCredentials : IEquatable<Win32ServiceCredentials>

@@ -32,24 +32,22 @@ namespace TWCore.Tests
 
 	            try
 	            {
-		            string[] keys;
-		            for (var i = 0; i < 15; i++)
-			            keys = cachePool.GetKeys();
+	                for (var i = 0; i < 15; i++)
+			            cachePool.GetKeys();
 
 		            Console.ReadLine();
 
-		            StorageItem value;
-		            for (var i = 0; i < 100; i++)
+	                for (var i = 0; i < 100; i++)
 		            {
-			            string key = "test-" + i;
-			            value = cachePool.Get(key);
+			            var key = "test-" + i;
+			            cachePool.Get(key);
 			            cachePool.Set(key, "bla bla bla bla bla");
 		            }
 		            Console.ReadLine();
 		            for (var i = 0; i < 100; i++)
 		            {
-			            string key = "test-" + i;
-			            value = cachePool.Get(key);
+			            var key = "test-" + i;
+			            cachePool.Get(key);
 			            cachePool.Set(key, "bla bla bla bla bla");
 		            }
 	            }

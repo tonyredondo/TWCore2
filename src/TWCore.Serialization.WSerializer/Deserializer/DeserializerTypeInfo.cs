@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using TWCore.Reflection;
 
+#pragma warning disable 414
+
 namespace TWCore.Serialization.WSerializer.Deserializer
 {
     internal class DeserializerTypeInfo

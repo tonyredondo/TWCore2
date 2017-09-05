@@ -17,6 +17,9 @@ limitations under the License.
 using System.IO;
 using TWCore.Compression;
 
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
     /// <summary>

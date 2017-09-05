@@ -16,8 +16,11 @@ limitations under the License.
 
 using System;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Ignore Stackframe Log (for debugging lib)
     /// </summary>

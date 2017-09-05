@@ -161,22 +161,24 @@ namespace TWCore.Collections
 
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
-        /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+        /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
         /// </summary>
-        public int Count { get { return _count; } }
+        public int Count => _count;
         /// <summary>
         /// Retrieves the LurchTableOrder Ordering enumeration this instance was created with.
         /// </summary>
-        public LurchTableOrder Ordering { get { return _ordering; } }
+        public LurchTableOrder Ordering => _ordering;
+
         /// <summary>
         /// Retrives the key comparer being used by this instance.
         /// </summary>
-        public IEqualityComparer<TKey> Comparer { get { return _comparer; } }
+        public IEqualityComparer<TKey> Comparer => _comparer;
         /// <summary>
         /// Retrives the record limit allowed in this instance.
         /// </summary>
-        public int Limit { get { return _limit; } }
+        public int Limit => _limit;
 
         /// <summary>
         /// WARNING: not thread-safe, reinitializes all internal structures.  Use Clear() for a thread-safe

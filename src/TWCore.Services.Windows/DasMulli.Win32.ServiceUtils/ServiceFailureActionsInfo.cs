@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
+// ReSharper disable CheckNamespace
+
 namespace DasMulli.Win32.ServiceUtils
 {
 

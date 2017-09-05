@@ -1,4 +1,6 @@
-﻿namespace DasMulli.Win32.ServiceUtils
+﻿// ReSharper disable CheckNamespace
+
+namespace DasMulli.Win32.ServiceUtils
 {
     public delegate void ServiceStoppedCallback();
     public interface IWin32Service

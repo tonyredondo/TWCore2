@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 
+#pragma warning disable 414
+
 namespace TWCore.Serialization.PWSerializer.Deserializer
 {
     internal class DeserializerTypeInfo
@@ -46,9 +48,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         {
             if (ActivatorParametersTypes.Length == 0)
                 return Activator();
-            else if (IsArray)
-                return Activator(length);
-            return null;
+            return IsArray ? Activator(length) : null;
         }
     }
 }

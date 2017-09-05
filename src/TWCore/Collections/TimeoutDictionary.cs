@@ -24,6 +24,9 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+#pragma warning disable 414
+
 namespace TWCore.Collections
 {
     /// <summary>
@@ -56,6 +59,7 @@ namespace TWCore.Collections
             public TimeSpan Timeout;
             public CancellationTokenSource TokenSource;
         }
+        /// <inheritdoc />
         /// <summary>
         /// TimeOut Event Argument
         /// </summary>
@@ -254,16 +258,11 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryUpdate(TKey key, TValue newValue, TValue comparisonValue)
         {
-            if (_dictionary.TryGetValue(key, out var val))
-            {
-                if (object.Equals(val.Value, comparisonValue))
-                {
-                    var res = _dictionary.TryUpdate(key, Create(key, newValue, val.Timeout), val);
-                    val?.TokenSource?.Cancel();
-                    return res;
-                }
-            }
-            return false;
+            if (!_dictionary.TryGetValue(key, out var val)) return false;
+            if (!Equals(val.Value, comparisonValue)) return false;
+            var res = _dictionary.TryUpdate(key, Create(key, newValue, val.Timeout), val);
+            val.TokenSource?.Cancel();
+            return res;
         }
         #endregion
 

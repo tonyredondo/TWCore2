@@ -16,8 +16,11 @@ limitations under the License.
 
 using TWCore.Bot;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a Bot Service
     /// </summary>

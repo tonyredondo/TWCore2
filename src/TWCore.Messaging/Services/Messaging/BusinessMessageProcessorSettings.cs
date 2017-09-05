@@ -16,8 +16,12 @@ limitations under the License.
 
 using TWCore.Settings;
 
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Business message processor settings
     /// </summary>

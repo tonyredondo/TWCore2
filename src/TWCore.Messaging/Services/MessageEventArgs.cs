@@ -16,8 +16,11 @@ limitations under the License.
 
 using System;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message event args
     /// </summary>
@@ -27,6 +30,7 @@ namespace TWCore.Services
         /// Message object instance
         /// </summary>
         public object Message { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Message event args
         /// </summary>

@@ -17,8 +17,13 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Generic String Attribute
     /// </summary>
@@ -29,12 +34,13 @@ namespace TWCore
         /// </summary>
         public string Value { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Generic String Attribute
         /// </summary>
         /// <param name="value">Attribute value</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public GenericStringAttribute(string value = null)
+        protected GenericStringAttribute(string value = null)
         {
             Value = value;
         }

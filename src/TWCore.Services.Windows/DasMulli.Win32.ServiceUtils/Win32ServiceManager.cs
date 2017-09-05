@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 
+// ReSharper disable CheckNamespace
+
 namespace DasMulli.Win32.ServiceUtils
 {
     public sealed class Win32ServiceManager

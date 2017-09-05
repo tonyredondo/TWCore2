@@ -26,7 +26,8 @@ namespace TWCore.Tests
             info.ShouldEndExecution = false;
         }
 
-        class MyController : HttpControllerBase
+        /// <inheritdoc />
+        private class MyController : HttpControllerBase
         {
             [HttpRoute(HttpMethod.GET, "/persona")]
             public SimplePerson GetPersona()

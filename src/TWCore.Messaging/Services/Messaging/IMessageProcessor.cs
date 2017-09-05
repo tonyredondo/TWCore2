@@ -17,8 +17,11 @@ limitations under the License.
 using System;
 using System.Threading;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a message processor
     /// </summary>

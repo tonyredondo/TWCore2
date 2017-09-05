@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Messaging administration service parameter
     /// </summary>

@@ -16,8 +16,11 @@ limitations under the License.
 
 using System.Threading;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore.Services.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Business base class
     /// </summary>
@@ -82,6 +85,7 @@ namespace TWCore.Services.Messaging
         #endregion
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Business base class
     /// </summary>

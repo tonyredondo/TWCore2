@@ -17,8 +17,12 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Set Stackframe Log settings (for debugging lib)
     /// </summary>
@@ -30,10 +34,12 @@ namespace TWCore
         /// </summary>
         public string ClassName { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Set Stackframe Log settings (for debugging lib)
         /// </summary>
         public StackFrameLogAttribute() { }
+        /// <inheritdoc />
         /// <summary>
         /// Set Stackframe Log settings (for debugging lib)
         /// </summary>

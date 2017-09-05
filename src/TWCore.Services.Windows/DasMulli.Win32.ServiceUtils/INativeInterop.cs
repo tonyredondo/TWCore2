@@ -1,5 +1,7 @@
 ﻿using System;
+
 // ReSharper disable InconsistentNaming
+// ReSharper disable CheckNamespace
 
 namespace DasMulli.Win32.ServiceUtils
 {

@@ -15,7 +15,11 @@ limitations under the License.
  */
 
 using System.IO;
+using System.Linq;
 using System.Reflection;
+
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {
@@ -32,21 +36,13 @@ namespace TWCore
         /// <returns>Stream object with the resource content</returns>
         public static Stream GetResourceStream(this Assembly assembly, string resourceName)
         {
-            Assembly currentAssembly = assembly;
-            if (currentAssembly != null && resourceName.IsNotNullOrEmpty())
-            {
-                string validResourceName = null;
-                var asmNames = currentAssembly.GetManifestResourceNames();
-                foreach (var name in asmNames)
-                    if (name.EndsWith(resourceName))
-                    {
-                        validResourceName = name;
-                        break;
-                    }
-                if (validResourceName != null)
-                    return currentAssembly.GetManifestResourceStream(validResourceName);
-            }
-            return null;
+            var currentAssembly = assembly;
+            if (currentAssembly == null || !resourceName.IsNotNullOrEmpty()) return null;
+            var asmNames = currentAssembly.GetManifestResourceNames();
+            var validResourceName = asmNames.FirstOrDefault(name => name.EndsWith(resourceName));
+            return validResourceName != null ? 
+                currentAssembly.GetManifestResourceStream(validResourceName) : 
+                null;
         }
         /// <summary>
         /// Gets the string object from an embedded resource
@@ -54,6 +50,7 @@ namespace TWCore
         /// <param name="assembly">Assembly with the embedded resources</param>
         /// <param name="resourceName">Resource name to extract</param>
         /// <returns>String object value with the resource content</returns>
-        public static string GetResourceString(this Assembly assembly, string resourceName) => GetResourceStream(assembly, resourceName).TextReadToEnd();
+        public static string GetResourceString(this Assembly assembly, string resourceName) 
+            => GetResourceStream(assembly, resourceName).TextReadToEnd();
     }
 }

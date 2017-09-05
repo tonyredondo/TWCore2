@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
     /// <summary>

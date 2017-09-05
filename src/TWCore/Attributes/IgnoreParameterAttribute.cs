@@ -16,8 +16,11 @@ limitations under the License.
 
 using System;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Ignore a property for a Dal parameter
     /// </summary>

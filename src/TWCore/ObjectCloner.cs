@@ -22,9 +22,14 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable MemberCanBeProtected.Local
+
 // ReSharper disable UnusedMember.Local
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable CoVariantArrayConversion
+// ReSharper disable MemberCanBePrivate.Local
+#pragma warning disable 414
 
 namespace TWCore
 {
@@ -50,7 +55,7 @@ namespace TWCore
                 var scope = new Scope();
                 scope.Init(objPlan, value);
                 scopeStack.Push(scope);
-                Scope initialScope = scope;
+                var initialScope = scope;
                 do
                 {
                     var item = scope.NextIfAvailable();
@@ -540,7 +545,7 @@ namespace TWCore
             public int PlanLength;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public virtual void Init(ObjectPlanItem[] plan, Type type, bool isIList, bool isArray, bool isIDictionary)
+            public void Init(ObjectPlanItem[] plan, Type type, bool isIList, bool isArray, bool isIDictionary)
             {
                 Plan = plan;
                 PlanLength = plan?.Length ?? 0;

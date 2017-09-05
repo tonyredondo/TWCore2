@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
+// ReSharper disable CheckNamespace
+
 namespace DasMulli.Win32.ServiceUtils
 {
     // This implementation is roughly based on https://msdn.microsoft.com/en-us/library/bb540475(v=vs.85).aspx

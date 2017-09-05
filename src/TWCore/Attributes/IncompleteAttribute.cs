@@ -17,8 +17,11 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Indicates that a class or method is incomplete and should not be used
     /// </summary>
@@ -26,6 +29,7 @@ namespace TWCore
     [AttributeUsage(AttributeTargets.Delegate | AttributeTargets.Interface | AttributeTargets.Event | AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method | AttributeTargets.Constructor | AttributeTargets.Enum | AttributeTargets.Struct | AttributeTargets.Class, Inherited = false)]
     public sealed class IncompleteAttribute : GenericStringAttribute
     {
+        /// <inheritdoc />
         /// <summary>
         /// Indicates that a class or method is incomplete and should not be used
         /// </summary>

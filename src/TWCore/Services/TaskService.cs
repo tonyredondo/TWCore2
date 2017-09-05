@@ -21,17 +21,19 @@ using System.Threading.Tasks;
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Simple service using a task
     /// </summary>
     public class TaskService : IService
     {
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        Task task;
-        Func<CancellationToken, Task> creationFunction;
+        private readonly Func<CancellationToken, Task> _creationFunction;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
+        private Task _task;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
@@ -50,7 +52,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TaskService(Func<CancellationToken, Task> taskCreationFunction)
         {
-            creationFunction = taskCreationFunction ?? throw new ArgumentNullException(nameof(taskCreationFunction), "The task creation function for the simple service can't be null.");
+            _creationFunction = taskCreationFunction ?? throw new ArgumentNullException(nameof(taskCreationFunction), "The task creation function for the simple service can't be null.");
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
         /// <summary>
@@ -60,7 +62,8 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TaskService(Action<CancellationToken> actionFunction)
         {
-            creationFunction = token => new Task(() => actionFunction(token), token) ?? throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            if (actionFunction == null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            _creationFunction = token => new Task(() => actionFunction(token), token);
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
         /// <summary>
@@ -70,12 +73,14 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TaskService(Action actionFunction)
         {
-            creationFunction = token => new Task(actionFunction, token) ?? throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            if (actionFunction == null) throw new ArgumentNullException(nameof(actionFunction), "The task creation function for the simple service can't be null.");
+            _creationFunction = token => new Task(actionFunction, token);
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
         #endregion
 
         #region IService Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -86,12 +91,12 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Starting service");
-                tokenSource = new CancellationTokenSource();
-                token = tokenSource.Token;
-                task = creationFunction(token);
-                if (task == null)
+                _tokenSource = new CancellationTokenSource();
+                _token = _tokenSource.Token;
+                _task = _creationFunction(_token);
+                if (_task == null)
                     throw new NullReferenceException("The returned task from the Task creation function can't be null");
-                task.ContinueWith(t =>
+                _task.ContinueWith(t =>
                 {
                     if (t.Exception != null)
                     {
@@ -101,11 +106,11 @@ namespace TWCore.Services
                     if (EndAfterTaskFinish)
                         ServiceContainer.ServiceExit();
                 }, TaskContinuationOptions.ExecuteSynchronously);
-                if (!task.IsCompleted && task.Status != TaskStatus.Running && task.Status != TaskStatus.WaitingForActivation && task.Status != TaskStatus.WaitingForChildrenToComplete && task.Status != TaskStatus.WaitingToRun)
-                    task.Start();
+                if (!_task.IsCompleted && _task.Status != TaskStatus.Running && _task.Status != TaskStatus.WaitingForActivation && _task.Status != TaskStatus.WaitingForChildrenToComplete && _task.Status != TaskStatus.WaitingToRun)
+                    _task.Start();
                 Core.Log.InfoBasic("Service started");
                 if (EndAfterTaskFinish)
-                    task.WaitAsync();
+                    _task.WaitAsync();
             }
             catch (Exception ex)
             {
@@ -113,6 +118,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
@@ -122,9 +128,9 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Stopping service");
-                if (!task.IsCompleted || task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Running)
-                    tokenSource.Cancel();
-                task.Wait(10000);
+                if (!_task.IsCompleted || _task.Status == TaskStatus.RanToCompletion || _task.Status == TaskStatus.Running)
+                    _tokenSource.Cancel();
+                _task.Wait(10000);
                 Core.Log.InfoBasic("Service stopped");
             }
             catch (Exception ex)
@@ -133,6 +139,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
@@ -141,6 +148,7 @@ namespace TWCore.Services
         {
             OnStop();
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -148,6 +156,7 @@ namespace TWCore.Services
         public void OnContinue()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>

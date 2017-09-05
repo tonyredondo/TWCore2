@@ -19,6 +19,9 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable ArrangeTypeMemberModifiers
+
 namespace TWCore.Text
 {
     /// <summary>
@@ -91,7 +94,7 @@ namespace TWCore.Text
                 var radix = digits.Length;
 
                 kDigits = digits;
-                kBitsPerDigit = System.Math.Log(radix, 2);
+                kBitsPerDigit = Math.Log(radix, 2);
                 kRadixBig = new BigInteger(radix);
             }
             kEndian = bytesEndian;
@@ -142,7 +145,7 @@ namespace TWCore.Text
             while (!dividend.IsZero)
             {
                 dividend = BigInteger.DivRem(dividend, kRadixBig, out var remainder);
-                int digit_index = System.Math.Abs((int)remainder);
+                int digit_index = Math.Abs((int)remainder);
                 result.Add(kDigits[digit_index]);
             }
 

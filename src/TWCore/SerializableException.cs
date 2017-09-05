@@ -92,7 +92,7 @@ namespace TWCore
         {
             HelpLink = ex.HelpLink;
             HResult = ex.HResult;
-            Message = ex.Message?.RemoveInvalidXMLChars();
+            Message = ex.Message?.RemoveInvalidXmlChars();
             Source = ex.Source;
             StackTrace = ex.StackTrace;
             ExceptionType = ex.GetType().FullName;
@@ -110,11 +110,11 @@ namespace TWCore
                 string strValue;
                 try
                 {
-                    strValue = SerializerManager.DefaultTextSerializer.SerializeToString(ex.Data[key], ex.Data[key].GetType())?.RemoveInvalidXMLChars();
+                    strValue = SerializerManager.DefaultTextSerializer.SerializeToString(ex.Data[key], ex.Data[key].GetType())?.RemoveInvalidXmlChars();
                 }
                 catch (Exception sEx)
                 {
-                    strValue = sEx.Message?.RemoveInvalidXMLChars();
+                    strValue = sEx.Message?.RemoveInvalidXmlChars();
                 }
                 if (!Data.Contains(strKey))
                     Data.Add(strKey, strValue);
@@ -131,6 +131,7 @@ namespace TWCore
         public WrappedException GetException() => new WrappedException(this);
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Wrapper exception for a serializable exception object
         /// </summary>
@@ -141,37 +142,55 @@ namespace TWCore
             /// Wrapped serializable exception
             /// </summary>
             public readonly SerializableException SerializableException;
+            /// <inheritdoc />
             /// <summary>
             /// Gets a collection of key/value pairs that provide additional user-defined information about the exception
             /// </summary>
             public override IDictionary Data => SerializableException?.Data?.ToDictionary(k => k.Key, v => v.Value);
+            /// <inheritdoc />
             /// <summary>
             /// Gets or sets a link to the help file associated with this exception.
             /// </summary>
-            public override string HelpLink { get { return SerializableException.HelpLink; } set { SerializableException.HelpLink = value; } }
+            public override string HelpLink
+            {
+                get => SerializableException.HelpLink;
+                set => SerializableException.HelpLink = value;
+            }
             /// <summary>
             /// Gets or sets HRESULT, a coded numerical value that is assigned to a specific exception.
             /// </summary>
-            public new int HResult { get { return SerializableException.HResult; } protected set { SerializableException.HResult = value; } }
+            public new int HResult
+            {
+                get => SerializableException.HResult;
+                protected set => SerializableException.HResult = value;
+            }
             /// <summary>
             /// Gets the System.Exception instance that caused the current exception.
             /// </summary>
-            public new Exception InnerException { get { return SerializableException.InnerException != null ? new WrappedException(SerializableException.InnerException) : null; } }
+            public new Exception InnerException => SerializableException.InnerException != null ? new WrappedException(SerializableException.InnerException) : null;
+            /// <inheritdoc />
             /// <summary>
             /// Gets a message that describes the current exception.
             /// </summary>
-            public override string Message { get { return SerializableException.Message; } }
+            public override string Message => SerializableException.Message;
+            /// <inheritdoc />
             /// <summary>
             /// Gets or sets the name of the application or the object that causes the error.
             /// </summary>
-            public override string Source { get { return SerializableException.Source; } set { SerializableException.Source = value; } }
+            public override string Source
+            {
+                get => SerializableException.Source;
+                set => SerializableException.Source = value;
+            }
+            /// <inheritdoc />
             /// <summary>
             /// Gets a string representation of the immediate frames on the call stack.
             /// </summary>
-            public override string StackTrace { get { return SerializableException.StackTrace; } }
+            public override string StackTrace => SerializableException.StackTrace;
             #endregion
 
             #region .ctor
+            /// <inheritdoc />
             /// <summary>
             /// Wrapper exception for a serializable exception object
             /// </summary>

@@ -22,6 +22,9 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+
+// ReSharper disable CheckNamespace
 
 namespace TWCore
 {
@@ -283,11 +286,18 @@ namespace TWCore
 			}
 			return default(T);
 		}
-		#endregion
+        #endregion
 
-		#endregion
+        #endregion
 
-		#region Sets Management
+        #region Sets Management
+        /// <summary>
+        /// Gets a hashset instance with the items of the IEnumerable
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <returns>Hashset instance</returns>
+        public static HashSet<T> ToHashSet<T>(this IEnumerable<T> enumerable)
+	        => new HashSet<T>(enumerable);
 		/// <summary>
 		/// Remove all null items in the IEnumerable
 		/// </summary>
@@ -295,9 +305,8 @@ namespace TWCore
 		/// <returns>IEnumerable without null items</returns>
 		public static IEnumerable RemoveNulls(this IEnumerable enumerable)
 		{
-			return enumerable != null ? removeNulls(enumerable) : null;
-
-			IEnumerable removeNulls(IEnumerable _enum)
+            return enumerable != null ? RemoveNullsInner(enumerable) : null;
+			IEnumerable RemoveNullsInner(IEnumerable _enum)
 			{
 				foreach (var item in _enum)
 					if (item != null)
@@ -311,9 +320,9 @@ namespace TWCore
 		/// <returns>IEnumerable without null items</returns>
 		public static IEnumerable<T> RemoveNulls<T>(this IEnumerable<T> enumerable) where T : class
 		{
-			return enumerable != null ? removeNulls(enumerable) : null;
+            return enumerable != null ? RemoveNullsInner(enumerable) : null;
 
-			IEnumerable<T> removeNulls(IEnumerable<T> _enum)
+            IEnumerable<T> RemoveNullsInner(IEnumerable<T> _enum)
 			{
 				foreach (var item in _enum)
 					if (item != null)
@@ -327,9 +336,9 @@ namespace TWCore
 		/// <returns>IEnumerable without the default value items</returns>
 		public static IEnumerable<T> RemoveDefaults<T>(this IEnumerable<T> enumerable)
 		{
-			return enumerable != null ? removeDefaults(enumerable) : null;
+            return enumerable != null ? RemoveDefaultsInner(enumerable) : null;
 
-			IEnumerable<T> removeDefaults(IEnumerable<T> _enum)
+			IEnumerable<T> RemoveDefaultsInner(IEnumerable<T> _enum)
 			{
 				foreach (var item in _enum)
 					if (!EqualityComparer<T>.Default.Equals(item, default(T)))
@@ -343,37 +352,98 @@ namespace TWCore
 		/// <param name="value">Values to add to the IEnumerable</param>
 		/// <returns>IEnumerable with the values concatenated</returns>
 		public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, params T[] value) => enumerable.Concat((IEnumerable<T>)value);
-		/// <summary>
-		/// Returns a new IEnumerable containing only elements that are present either in that object or in the specified collection, but not both.
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="value">IEnumerable with elements to perform the SymmetricExcept</param>
-		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable<T> SymmetricExceptWith<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
+
+        #region SymmetricExceptWith
+        /// <summary>
+        /// Returns a new IEnumerable containing only elements that are present either in that object or in the specified collection, but not both.
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">IEnumerable with elements to perform the SymmetricExcept</param>
+        /// <returns>IEnumerable instance</returns>
+        public static IEnumerable<T> SymmetricExceptWith<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
 		{
 			var hSet = new HashSet<T>(enumerable);
 			hSet.SymmetricExceptWith(value);
 			return hSet;
 		}
-		/// <summary>
-		/// Returns a new IEnumerable containing only elements that are not present in the specified collection (Removes elements).
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="value">IEnumerable with elements to perform the Except</param>
-		/// <returns>IEnumerable without the value items</returns>
-		public static IEnumerable<T> RemoveAll<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
+        /// <summary>
+        /// Returns a new IEnumerable containing only elements that are present either in that object or in the specified collection, but not both.
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">IEnumerable with elements to perform the SymmetricExcept</param>
+        /// <param name="keySelector">Key selector to do the SymetricExcept</param>
+        /// <returns>IEnumerable instance</returns>
+        public static IEnumerable<T> SymmetricExceptWithKey<T, TKey>(this IEnumerable<T> enumerable, IEnumerable<T> value, Func<T, TKey> keySelector)
+        {
+            var hSet = new HashSet<T>(enumerable, KeySelectorEqualityComparer.Create(keySelector));
+            hSet.SymmetricExceptWith(value);
+            return hSet;
+        }
+	    /// <summary>
+	    /// Returns a new IEnumerable containing only elements that are present either in that object or in the specified collection, but not both.
+	    /// </summary>
+	    /// <param name="enumerable">IEnumerable source object</param>
+	    /// <param name="value">IEnumerable with elements to perform the SymmetricExcept</param>
+	    /// <param name="keySelector">Key selector to do the SymetricExcept</param>
+	    /// <param name="keyComparer">IEqualityComparer for the Key selector object</param>
+	    /// <returns>IEnumerable instance</returns>
+	    public static IEnumerable<T> SymmetricExceptWithKey<T, TKey>(this IEnumerable<T> enumerable, IEnumerable<T> value, Func<T, TKey> keySelector, IEqualityComparer<TKey> keyComparer)
+        {
+            var hSet = new HashSet<T>(enumerable, KeySelectorEqualityComparer.Create(keySelector, keyComparer));
+            hSet.SymmetricExceptWith(value);
+            return hSet;
+        }
+        #endregion
+
+        #region RemoveAll
+        /// <summary>
+        /// Returns a new IEnumerable containing only elements that are not present in the specified collection (Removes elements).
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">IEnumerable with elements to perform the Except</param>
+        /// <returns>IEnumerable without the value items</returns>
+        public static IEnumerable<T> RemoveAll<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
 		{
 			var hSet = new HashSet<T>(enumerable);
 			hSet.ExceptWith(value);
 			return hSet;
 		}
-		/// <summary>
-		/// Determines whether this object and the specified collection contain the same elements.
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="value">The collection to compare to the current object</param>
-		/// <returns>true if the value enumerable contains the same elements; otherwise, false.</returns>
-		public static bool SetEquals<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
+        /// <summary>
+        /// Returns a new IEnumerable containing only elements that are not present in the specified collection (Removes elements).
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">IEnumerable with elements to perform the Except</param>
+	    /// <param name="keySelector">Key selector to do the SymetricExcept</param>
+        /// <returns>IEnumerable without the value items</returns>
+        public static IEnumerable<T> RemoveAllWithKey<T, TKey>(this IEnumerable<T> enumerable, IEnumerable<T> value, Func<T, TKey> keySelector)
+        {
+            var hSet = new HashSet<T>(enumerable, KeySelectorEqualityComparer.Create(keySelector));
+            hSet.ExceptWith(value);
+            return hSet;
+        }
+        /// <summary>
+        /// Returns a new IEnumerable containing only elements that are not present in the specified collection (Removes elements).
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">IEnumerable with elements to perform the Except</param>
+	    /// <param name="keySelector">Key selector to do the SymetricExcept</param>
+	    /// <param name="keyComparer">IEqualityComparer for the Key selector object</param>
+        /// <returns>IEnumerable without the value items</returns>
+        public static IEnumerable<T> RemoveAllWithKey<T, TKey>(this IEnumerable<T> enumerable, IEnumerable<T> value, Func<T, TKey> keySelector, IEqualityComparer<TKey> keyComparer)
+        {
+            var hSet = new HashSet<T>(enumerable, KeySelectorEqualityComparer.Create(keySelector, keyComparer));
+            hSet.ExceptWith(value);
+            return hSet;
+        }
+        #endregion
+
+        /// <summary>
+        /// Determines whether this object and the specified collection contain the same elements.
+        /// </summary>
+        /// <param name="enumerable">IEnumerable source object</param>
+        /// <param name="value">The collection to compare to the current object</param>
+        /// <returns>true if the value enumerable contains the same elements; otherwise, false.</returns>
+        public static bool SetEquals<T>(this IEnumerable<T> enumerable, IEnumerable<T> value)
 		{
 			if (enumerable == null && value == null)
 				return true;
@@ -386,20 +456,20 @@ namespace TWCore
 		/// Gets an IEnumerable with all elements distinct by a key
 		/// </summary>
 		/// <typeparam name="T">IEnumerable element type</typeparam>
-		/// <typeparam name="K">Key object type</typeparam>
+		/// <typeparam name="TK">Key object type</typeparam>
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="keySelector">Key selector function to perform the distinct</param>
 		/// <param name="comparer">Equality comparer object based on the key</param>
 		/// <returns>IEnumerable with all elements dictinct by the key</returns>
-		public static IEnumerable<T> DistinctBy<T, K>(this IEnumerable<T> enumerable, Func<T, K> keySelector, IEqualityComparer<K> comparer = null)
+		public static IEnumerable<T> DistinctBy<T, TK>(this IEnumerable<T> enumerable, Func<T, TK> keySelector, IEqualityComparer<TK> comparer = null)
 		{
-			return enumerable != null ? distinctBy(enumerable, keySelector, comparer) : null;
+            return enumerable != null ? DistinctByInner(enumerable, keySelector, comparer) : null;
 
-			IEnumerable<T> distinctBy(IEnumerable<T> _enumerable, Func<T, K> _keySelector, IEqualityComparer<K> _comparer = null)
+			IEnumerable<T> DistinctByInner(IEnumerable<T> mEnumerable, Func<T, TK> mKeySelector, IEqualityComparer<TK> mComparer = null)
 			{
-				var hSet = _comparer == null ? new HashSet<K>() : new HashSet<K>(_comparer);
-				foreach (var element in _enumerable)
-					if (hSet.Add(_keySelector(element)))
+                var hSet = mComparer == null ? new HashSet<TK>() : new HashSet<TK>(mComparer);
+				foreach (var element in mEnumerable)
+					if (hSet.Add(mKeySelector(element)))
 						yield return element;
 			}
 		}
@@ -422,7 +492,7 @@ namespace TWCore
 				foreach (var item in array)
 				{
 					var key = mKeySelector(item);
-					var similarItems = source.Where(i => !object.ReferenceEquals(item, i) && object.Equals(keySelector(i), key)).ToList();
+					var similarItems = source.Where(i => !ReferenceEquals(item, i) && Equals(keySelector(i), key)).ToList();
 					var nItem = similarItems.Count > 1 ? mMergeFunction(similarItems) : item;
 					source = source.Where(s => !similarItems.Contains(s)).ToArray();
 					yield return nItem;
@@ -527,7 +597,7 @@ namespace TWCore
 				lastArray.Each(item =>
 				{
 					var keyValue = keySelector(item);
-					var oItem = lst.FirstOrDefault(o => object.Equals(keyValue, keySelector(o)));
+					var oItem = lst.FirstOrDefault(o => Equals(keyValue, keySelector(o)));
 					if (oItem == null)
 						lst.Add(item);
 					else
@@ -573,21 +643,20 @@ namespace TWCore
 		/// <returns>Sorted IEnumerable</returns>
 		public static IEnumerable<T> Sort<T, TKey>(this IEnumerable<T> enumerable, params SortOption<T, TKey>[] options) where TKey : IComparable
 		{
-			Func<T, T, SortOption<T, TKey>[], int, int> innerSort = null;
-			innerSort = new Func<T, T, SortOption<T, TKey>[], int, int>((a, b, optionsArray, optionIndex) =>
-			{
-				if (optionsArray.Length <= optionIndex)
-					return 0;
-				var currentOption = optionsArray[optionIndex];
-				var aValue = currentOption.Selector(a);
-				var bValue = currentOption.Selector(b);
-				if (aValue.CompareTo(bValue) == 0)
-					return innerSort(a, b, optionsArray, ++optionIndex);
-				else if (aValue.CompareTo(bValue) < 0) return (currentOption.Direction == SortDirection.Ascending) ? -1 : 1;
-				else if (aValue.CompareTo(bValue) > 0) return (currentOption.Direction == SortDirection.Ascending) ? 1 : 0;
-				return 0;
-			});
-			return enumerable.Sort((a, b) => innerSort(a, b, options, 0));
+		    int InnerSort(T a, T b, SortOption<T, TKey>[] optionsArray, int optionIndex)
+		    {
+		        if (optionsArray.Length <= optionIndex)
+		            return 0;
+		        var currentOption = optionsArray[optionIndex];
+		        var aValue = currentOption.Selector(a);
+		        var bValue = currentOption.Selector(b);
+		        if (aValue.CompareTo(bValue) == 0)
+		            return InnerSort(a, b, optionsArray, ++optionIndex);
+		        if (aValue.CompareTo(bValue) < 0) return (currentOption.Direction == SortDirection.Ascending) ? -1 : 1;
+		        if (aValue.CompareTo(bValue) > 0) return (currentOption.Direction == SortDirection.Ascending) ? 1 : 0;
+		        return 0;
+		    }
+		    return enumerable.Sort((a, b) => InnerSort(a, b, options, 0));
 		}
 		/// <summary>
 		/// Option to do the sort, indicates the direction of the sort and the Key selector 
@@ -627,7 +696,7 @@ namespace TWCore
 		/// </summary>
 		/// <param name="collection">Collection object source</param>
 		/// <param name="predicate">Predicate to know is an element need to be removed from the ICollection</param>
-		public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate) => collection?.Where(p => predicate(p)).ToArray().Each(i => collection?.Remove(i));
+		public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate) => collection?.Where(p => predicate(p)).ToArray().Each(i => collection.Remove(i));
 		/// <summary>
 		/// Remove items from the collection using the predicate.
 		/// </summary>
@@ -823,7 +892,7 @@ namespace TWCore
 		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action)
 		{
 			if (enumerable != null && action != null)
-				Parallel.ForEach(enumerable, new ParallelOptions { }, (t, state, idx) => action(t, idx));
+				Parallel.ForEach(enumerable, new ParallelOptions(), (t, state, idx) => action(t, idx));
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -853,7 +922,7 @@ namespace TWCore
 		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long, object> action, object state)
 		{
 			if (enumerable != null && action != null)
-				Parallel.ForEach(enumerable, new ParallelOptions { }, (t, s, idx) => action(t, idx, state));
+				Parallel.ForEach(enumerable, new ParallelOptions(), (t, s, idx) => action(t, idx, state));
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -959,10 +1028,10 @@ namespace TWCore
 					response.Add(BatchElements(enumerator, batchSize - 1));
 			return response;
 		}
-		static List<T> BatchElements<T>(IEnumerator<T> source, int batchSize)
+	    private static List<T> BatchElements<T>(IEnumerator<T> source, int batchSize)
 		{
 			var response = new List<T> { source.Current };
-			for (int i = 0; i < batchSize && source.MoveNext(); i++)
+			for (var i = 0; i < batchSize && source.MoveNext(); i++)
 				response.Add(source.Current);
 			return response;
 		}
@@ -978,13 +1047,11 @@ namespace TWCore
 		{
 			double res = 0;
 			var valArray = values?.ToArray();
-			if (valArray != null && valArray.Length > 1)
-			{
-				var avg = valArray.Average();
-				var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
-				res = Math.Sqrt((sum) / (valArray.Length - 1));
-			}
-			return res;
+		    if (valArray == null || valArray.Length <= 1) return res;
+		    var avg = valArray.Average();
+		    var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
+		    res = Math.Sqrt((sum) / (valArray.Length - 1));
+		    return res;
 		}
 		/// <summary>
 		/// Gets the standard deviation
@@ -1017,13 +1084,13 @@ namespace TWCore
 		/// <param name="then">Func to execute when the item was found on the collection</param>
 		/// <param name="fail">Func to execute when the item was not found on the collection</param>
 		/// <returns>Return value</returns>
-		public static R ContainsKeyThen<R, TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, TKey key, Func<TItem, R> then = null, Func<R> fail = null)
+		public static TR ContainsKeyThen<TR, TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, TKey key, Func<TItem, TR> then = null, Func<TR> fail = null)
 		{
 			if (key != null && keyedCollection?.Contains(key) == true && then != null)
 				return then(keyedCollection[key]);
 			else if (fail != null)
 				return fail();
-			return default(R);
+			return default(TR);
 		}
 		/// <summary>
 		/// Get a item if the key is found on the collection; otherwise returns the default value of the item

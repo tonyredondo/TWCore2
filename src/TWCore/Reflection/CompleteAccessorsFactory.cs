@@ -22,13 +22,15 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Reflection
 {
+    /// <inheritdoc />
     /// <summary>
     /// Activator Interface
     /// </summary>
     public class CompleteAccessorsFactory : IAccessorsFactory
     {
-        static MethodInfo ChangeTypeMethodInfo;
+        private static MethodInfo _changeTypeMethodInfo;
 
+        /// <inheritdoc />
         /// <summary>
         /// Create an activator delegate to a constructor info, faster than Activator.CreateInstance
         /// </summary>
@@ -39,8 +41,8 @@ namespace TWCore.Reflection
         {
             Ensure.ArgumentNotNull(ctor);
             var ctorParams = ctor.GetParameters();
-            if (ChangeTypeMethodInfo == null)
-                ChangeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new Type[] { typeof(object), typeof(Type) });
+            if (_changeTypeMethodInfo == null)
+                _changeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
 
             var paramExp = Expression.Parameter(typeof(object[]), "args");
             var expArr = new Expression[ctorParams.Length];
@@ -48,13 +50,14 @@ namespace TWCore.Reflection
             {
                 var ctorType = ctorParams[i].ParameterType;
                 var argExp = Expression.ArrayIndex(paramExp, Expression.Constant(i));
-                var argExpConverted = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(ctorType)), ctorType);
+                var argExpConverted = Expression.Convert(Expression.Call(_changeTypeMethodInfo, argExp, Expression.Constant(ctorType)), ctorType);
                 expArr[i] = argExpConverted;
             }
             var newExp = Expression.New(ctor, expArr);
             var lambda = Expression.Lambda<ActivatorDelegate>(newExp, paramExp);
             return lambda.Compile();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Create an activator delegate to the default constructor info.
         /// </summary>
@@ -68,6 +71,7 @@ namespace TWCore.Reflection
             var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ?? ctors[0];
             return CreateActivator(ctor);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Build a get accessor from a property info
         /// </summary>
@@ -81,6 +85,7 @@ namespace TWCore.Reflection
             var expr = Expression.Lambda<GetAccessorDelegate>(Expression.Convert(Expression.Call(Expression.Convert(obj, method.DeclaringType), method), typeof(object)), obj);
             return expr.Compile();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Build a set accessor from a property info
         /// </summary>
@@ -95,6 +100,7 @@ namespace TWCore.Reflection
             var expr = Expression.Lambda<SetAccessorDelegate>(Expression.Call(Expression.Convert(obj, method.DeclaringType), method, Expression.Convert(value, method.GetParameters()[0].ParameterType)), obj, value);
             return expr.Compile();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Create an accessor delegte for a MethodInfo
         /// </summary>
@@ -103,11 +109,10 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MethodAccessorDelegate BuildMethodAccessor(MethodInfo method)
         {
-            Expression callExpression;
             var obj = Expression.Parameter(typeof(object), "o");
             var castedObject = Expression.Convert(obj, method.DeclaringType);
-            if (ChangeTypeMethodInfo == null)
-                ChangeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new Type[] { typeof(object), typeof(Type) });
+            if (_changeTypeMethodInfo == null)
+                _changeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
 
             var parameters = method.GetParameters();
             var paramExp = Expression.Parameter(typeof(object[]), "args");
@@ -123,7 +128,7 @@ namespace TWCore.Reflection
                         Expression.Constant(p.RawDefaultValue, pType), Expression.Convert(argExp, pType));
                 else if (pType != typeof(object))
                 {
-                    argExp = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
+                    argExp = Expression.Convert(Expression.Call(_changeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
                 }
                 else
                 {
@@ -131,7 +136,7 @@ namespace TWCore.Reflection
                 }
                 expArr[i] = argExp;
             }
-            callExpression = Expression.Call(castedObject, method, expArr);
+            Expression callExpression = Expression.Call(castedObject, method, expArr);
             if (method.ReturnType != typeof(void))
                 callExpression = Expression.Convert(callExpression, typeof(object));
             else

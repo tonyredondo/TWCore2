@@ -8,6 +8,9 @@ using TWCore.Data.PostgreSQL;
 using TWCore.Data.MySql;
 using TWCore.Data.SQLite;
 // ReSharper disable UnusedVariable
+// ReSharper disable InconsistentNaming
+// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace TWCore.Tests
 {

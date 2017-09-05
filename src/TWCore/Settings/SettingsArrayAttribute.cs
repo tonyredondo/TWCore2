@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Array attribute attribute for Settings parser
     /// </summary>
@@ -30,6 +31,7 @@ namespace TWCore.Settings
         /// </summary>
         public char[] Separators { get; private set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Array attribute attribute for Settings parser
         /// </summary>
@@ -40,6 +42,7 @@ namespace TWCore.Settings
             Separators = separators;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Array attribute attribute for Settings parser
         /// </summary>
@@ -47,9 +50,10 @@ namespace TWCore.Settings
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SettingsArrayAttribute(char separator)
         {
-            Separators = new char[] { separator };
+            Separators = new[] { separator };
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Array attribute attribute for Settings parser
         /// </summary>

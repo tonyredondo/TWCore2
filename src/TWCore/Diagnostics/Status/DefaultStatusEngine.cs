@@ -239,8 +239,8 @@ namespace TWCore.Diagnostics.Status
         {
             lock (_statusValuesDelegates)
             {
-                var groups = _statusValuesDelegates?.Where(i => i?.Object != null).ToArray().GroupBy(i => i.Object);
-                return groups?.Select(item =>
+                var groups = _statusValuesDelegates.Where(i => i?.Object != null).ToArray().GroupBy(i => i.Object);
+                return groups.Select(item =>
                 {
                     var sItem = new StatusItem() { Name = item.Key.ToString(), ObjRef = item.Key, Parent = false };
                     _lstObj.Add(item.Key);

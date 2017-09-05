@@ -10,6 +10,9 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
+// ReSharper disable InconsistentNaming
+// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable FieldCanBeMadeReadOnly.Local
 
 namespace TWCore.Tests
 {

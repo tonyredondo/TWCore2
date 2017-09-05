@@ -24,6 +24,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using TWCore.Text;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
     /// <summary>
@@ -31,12 +33,12 @@ namespace TWCore
     /// </summary>
     public static partial class Extensions
     {
-        static char[] space = new char[] { ' ' };
-        static string spaceString = " ";
-        static Lazy<LevenshteinStringDistance> levenshteinStringDistance = new Lazy<LevenshteinStringDistance>();
-        static Lazy<DamerauLevenshteinStringDistance> damerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
-        static Regex shrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
-        static Regex _invalidXMLChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
+        private const string SpaceString = " ";
+        private static readonly char[] Space = { ' ' };
+        private static readonly Lazy<LevenshteinStringDistance> LevenshteinStringDistance = new Lazy<LevenshteinStringDistance>();
+        private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
+        private static readonly Regex ShrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
+        private static readonly Regex InvalidXmlChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
 
         #region Is? conditionals
         /// <summary>
@@ -77,14 +79,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsUpperCase(this string value)
         {
-            if (value != null)
-            {
-                for (int i = 0; i < value.Length; i++)
-                    if (char.IsLetter(value[i]) && !char.IsUpper(value[i]))
-                        return false;
-                return true;
-            }
-            return false;
+            if (value == null) return false;
+            for (var i = 0; i < value.Length; i++)
+                if (char.IsLetter(value[i]) && !char.IsUpper(value[i]))
+                    return false;
+            return true;
         }
         /// <summary>
         /// Get if the string is all in LoweCase
@@ -94,14 +93,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsLowerCase(this string value)
         {
-            if (value != null)
-            {
-                for (int i = 0; i < value.Length; i++)
-                    if (char.IsLetter(value[i]) && !char.IsLower(value[i]))
-                        return false;
-                return true;
-            }
-            return false;
+            if (value == null) return false;
+            for (var i = 0; i < value.Length; i++)
+                if (char.IsLetter(value[i]) && !char.IsLower(value[i]))
+                    return false;
+            return true;
         }
         /// <summary>
         /// Capitalize the string
@@ -111,14 +107,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Capitalize(this string value)
         {
-            if (value != null)
-            {
-                if (value.Length > 1)
-                    return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
-                else if (value.Length == 1)
-                    return char.IsLower(value[0]) ? value.ToUpperInvariant() : value;
-            }
-            return value;
+            if (value == null) return null;
+            if (value.Length > 1)
+                return char.ToUpperInvariant(value[0]) + value.Substring(1).ToLowerInvariant();
+            if (value.Length == 1)
+                return char.IsLower(value[0]) ? value.ToUpperInvariant() : value;
+            return null;
         }
         /// <summary>
         /// Capitalize each word of the string
@@ -127,7 +121,7 @@ namespace TWCore
         /// <returns>Capitalized string</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string CapitalizeEachWords(this string value)
-            => value?.ToLowerInvariant().Split(space).Select(i => i.Capitalize()).Join(spaceString);
+            => value?.ToLowerInvariant().Split(Space).Select(i => i.Capitalize()).Join(SpaceString);
         /// <summary>
         /// Apply format to a string
         /// </summary>
@@ -147,7 +141,7 @@ namespace TWCore
         /// <returns>Percent of equality of the two strings</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double EqualPercentLevenshtein(this string a, string b, IEqualityComparer<char> comparer = null)
-            => StringCompare.EqualPercent(a, b, levenshteinStringDistance.Value, comparer);
+            => StringCompare.EqualPercent(a, b, LevenshteinStringDistance.Value, comparer);
         /// <summary>
         /// Compare two strings and gives the equality in percent.
         /// Using Damerau-Levenshtein 
@@ -158,7 +152,7 @@ namespace TWCore
         /// <returns>Percent of equality of the two strings</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static double EqualPercentDamerauLevenshtein(this string a, string b, IEqualityComparer<char> comparer = null)
-            => StringCompare.EqualPercent(a, b, damerauLevenshteinStringDistance.Value, comparer);
+            => StringCompare.EqualPercent(a, b, DamerauLevenshteinStringDistance.Value, comparer);
         /// <summary>
         /// Reverse a string
         /// </summary>
@@ -168,7 +162,7 @@ namespace TWCore
         public static string Reverse(this string value)
         {
             if (value == null) return null;
-            char[] charArray = value.ToCharArray();
+            var charArray = value.ToCharArray();
             Array.Reverse(charArray);
             return new string(charArray);
         }
@@ -193,44 +187,44 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemoveAccentMark(this string value)
         {
-            if (!string.IsNullOrEmpty(value))
-            {
-                value = value.Replace("á", "a");
-                value = value.Replace("é", "e");
-                value = value.Replace("í", "i");
-                value = value.Replace("ó", "o");
-                value = value.Replace("ú", "u");
+            if (string.IsNullOrEmpty(value)) return value;
 
-                value = value.Replace("à", "a");
-                value = value.Replace("è", "e");
-                value = value.Replace("ì", "i");
-                value = value.Replace("ò", "o");
-                value = value.Replace("ù", "u");
+            value = value.Replace("á", "a");
+            value = value.Replace("é", "e");
+            value = value.Replace("í", "i");
+            value = value.Replace("ó", "o");
+            value = value.Replace("ú", "u");
 
-                value = value.Replace("ä", "a");
-                value = value.Replace("ë", "e");
-                value = value.Replace("ï", "i");
-                value = value.Replace("ö", "o");
-                value = value.Replace("ü", "u");
+            value = value.Replace("à", "a");
+            value = value.Replace("è", "e");
+            value = value.Replace("ì", "i");
+            value = value.Replace("ò", "o");
+            value = value.Replace("ù", "u");
 
-                value = value.Replace("Á", "A");
-                value = value.Replace("É", "E");
-                value = value.Replace("Í", "I");
-                value = value.Replace("Ó", "O");
-                value = value.Replace("Ú", "U");
+            value = value.Replace("ä", "a");
+            value = value.Replace("ë", "e");
+            value = value.Replace("ï", "i");
+            value = value.Replace("ö", "o");
+            value = value.Replace("ü", "u");
 
-                value = value.Replace("À", "A");
-                value = value.Replace("È", "E");
-                value = value.Replace("Ì", "I");
-                value = value.Replace("Ò", "O");
-                value = value.Replace("Ù", "U");
+            value = value.Replace("Á", "A");
+            value = value.Replace("É", "E");
+            value = value.Replace("Í", "I");
+            value = value.Replace("Ó", "O");
+            value = value.Replace("Ú", "U");
 
-                value = value.Replace("Ä", "A");
-                value = value.Replace("Ë", "E");
-                value = value.Replace("Ï", "I");
-                value = value.Replace("Ö", "O");
-                value = value.Replace("Ü", "U");
-            }
+            value = value.Replace("À", "A");
+            value = value.Replace("È", "E");
+            value = value.Replace("Ì", "I");
+            value = value.Replace("Ò", "O");
+            value = value.Replace("Ù", "U");
+
+            value = value.Replace("Ä", "A");
+            value = value.Replace("Ë", "E");
+            value = value.Replace("Ï", "I");
+            value = value.Replace("Ö", "O");
+            value = value.Replace("Ü", "U");
+
             return value;
         }
         /// <summary>
@@ -260,7 +254,7 @@ namespace TWCore
             }
             var value = stringBuilder.ToString().Normalize(NormalizationForm.FormC);
             value = value.ShrinkSpaces();
-            return value.ToString();
+            return value;
         }
         /// <summary>
         /// Remove invalid XML unicode chars
@@ -268,10 +262,9 @@ namespace TWCore
         /// <param name="text">Original string</param>
         /// <returns>String without all invalid xml chars</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string RemoveInvalidXMLChars(this string text)
+        public static string RemoveInvalidXmlChars(this string text)
         {
-            if (string.IsNullOrEmpty(text)) return "";
-            return _invalidXMLChars.Replace(text, "");
+            return string.IsNullOrEmpty(text) ? "" : InvalidXmlChars.Replace(text, "");
         }
         /// <summary>
         /// Remove spaces from a string
@@ -281,14 +274,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemoveSpaces(this string value)
         {
-            if (!string.IsNullOrEmpty(value))
-            {
-                StringBuilder sb = new StringBuilder();
-                for (var x = 0; x < value.Length; x++)
-                    if (value[x] != ' ') sb.Append(value[x]);
-                return sb.ToString();
-            }
-            return value;
+            if (string.IsNullOrEmpty(value)) return value;
+            var sb = new StringBuilder();
+            for (var x = 0; x < value.Length; x++)
+                if (value[x] != ' ') sb.Append(value[x]);
+            return sb.ToString();
         }
         /// <summary>
         /// Remove more than one consecutive spaces from a string
@@ -298,9 +288,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ShrinkSpaces(this string value)
         {
-            if (!string.IsNullOrEmpty(value))
-                return shrinkRegex.Replace(value, @" ");
-            return value;
+            return !string.IsNullOrEmpty(value) ? ShrinkRegex.Replace(value, @" ") : value;
         }
         /// <summary>
         /// Split a string in to an array.
@@ -311,7 +299,7 @@ namespace TWCore
         /// <returns>Array of strings</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string[] Split(this string item, string separator, StringSplitOptions splitOptions = StringSplitOptions.None)
-            => item?.Split(new string[] { separator }, splitOptions);
+            => item?.Split(new[] { separator }, splitOptions);
 
         #region Substring
         /// <summary>
@@ -412,7 +400,7 @@ namespace TWCore
         public static string ToHexString(this byte[] obj)
         {
             var sb = new StringBuilder(obj.Length * 2);
-            foreach (byte b in obj)
+            foreach (var b in obj)
                 sb.AppendFormat("{0:x2}", b);
             return sb.ToString();
         }
@@ -461,10 +449,9 @@ namespace TWCore
         {
             if (string.IsNullOrEmpty(value))
                 return new string[0];
-            if (separators?.Length == 1 && separators[0] == space[0])
-                return value.Split(space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
-            else
-                return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            if (separators?.Length == 1 && separators[0] == Space[0])
+                return value.Split(Space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
         }
         /// <summary>
         /// Returns a string array containing the trimmed substrings in this <paramref name="value"/>
@@ -478,10 +465,9 @@ namespace TWCore
         {
             if (string.IsNullOrEmpty(value))
                 return new string[0];
-            if (separators?.Length == 1 && separators == spaceString)
-                return value.Split(space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
-            else
-                return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            if (separators?.Length == 1 && separators == SpaceString)
+                return value.Split(Space, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
+            return value.Trim().Split(separators, StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToArray();
         }
         /// <summary>
         /// Truncates a string to a specific length
@@ -492,7 +478,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string TruncateTo(this string value, int maxLength)
         {
-            if (value?.Length > maxLength)
+            if (value != null && value.Length > maxLength)
                 return value.Substring(0, maxLength);
             return value;
         }
@@ -600,8 +586,7 @@ namespace TWCore
                     return source.IndexOf(pattern[0], startIndex);
             }
 
-            bool found;
-            int limit = (source.Length - pattern.Length + 1) - startIndex;
+            var limit = (source.Length - pattern.Length + 1) - startIndex;
             if (limit < 1) return -1;
             // Store the first 2 characters of "pattern"
             var c0 = pattern[0];
@@ -618,7 +603,7 @@ namespace TWCore
                     continue;
                 }
                 // Check the rest of "pattern" (starting with the 3rd character)
-                found = true;
+                var found = true;
                 for (var j = 2; j < pattern.Length; j++)
                     if (source[first + j] != pattern[j])
                     {

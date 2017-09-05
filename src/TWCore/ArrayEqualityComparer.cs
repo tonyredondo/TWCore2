@@ -29,15 +29,16 @@ namespace TWCore
             => new ArrayEqualityComparer<T>(comparer);
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Array Equality Comparer
     /// </summary>
     public sealed class ArrayEqualityComparer<T> : IEqualityComparer<T[]>
     {
         public static IEqualityComparer<T[]> Default { get; } = new ArrayEqualityComparer<T>();
-
         private readonly IEqualityComparer<T> _elementComparer;
 
+        /// <inheritdoc />
         /// <summary>
         /// Array Equality Comparer
         /// </summary>
@@ -52,6 +53,7 @@ namespace TWCore
             _elementComparer = elementComparer;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Determines whether the specified objects are equal.
         /// </summary>
@@ -72,6 +74,7 @@ namespace TWCore
             }
             return true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Returns a hash code for the specified object.
         /// </summary>

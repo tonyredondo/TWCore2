@@ -21,12 +21,14 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Text
 {
+    /// <inheritdoc />
     /// <summary>
     /// Calculate the Difference-Distance between to String
     /// Using Damerau–Levenshtein : https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
     /// </summary>
     public class DamerauLevenshteinStringDistance : IStringDistance
     {
+        /// <inheritdoc />
         /// <summary>
         /// Calculate the Difference-Distance between to String
         /// Using Damerau–Levenshtein : https://en.wikipedia.org/wiki/Damerau%E2%80%93Levenshtein_distance
@@ -38,21 +40,21 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CalculateDistance(string a, string b, IEqualityComparer<char> comparer)
         {
-            int len_a = a.Length;
-            int len_b = b.Length;
+            var lenA = a.Length;
+            var lenB = b.Length;
 
-            var matrix = new int[len_a + 1, len_b + 1];
-            for (int i = 0; i <= len_a; i++)
+            var matrix = new int[lenA + 1, lenB + 1];
+            for (var i = 0; i <= lenA; i++)
                 matrix[i, 0] = i;
-            for (int j = 0; j <= len_b; j++)
+            for (var j = 0; j <= lenB; j++)
                 matrix[0, j] = j;
 
-            for (int i = 1; i <= len_a; i++)
+            for (var i = 1; i <= lenA; i++)
             {
-                for (int j = 1; j <= len_b; j++)
+                for (var j = 1; j <= lenB; j++)
                 {
-                    int cost = comparer.Equals(b[j - 1], a[i - 1]) ? 0 : 1;
-                    var vals = new int[] {
+                    var cost = comparer.Equals(b[j - 1], a[i - 1]) ? 0 : 1;
+                    var vals = new[] {
                         matrix[i - 1, j] + 1,
                         matrix[i, j - 1] + 1,
                         matrix[i - 1, j - 1] + cost
@@ -62,7 +64,7 @@ namespace TWCore.Text
                         matrix[i, j] = Math.Min(matrix[i, j], matrix[i - 2, j - 2] + cost);
                 }
             }
-            return matrix[len_a, len_b];
+            return matrix[lenA, lenB];
         }
     }
 }

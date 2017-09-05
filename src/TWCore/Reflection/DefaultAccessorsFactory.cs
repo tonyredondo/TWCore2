@@ -20,11 +20,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Reflection
 {
+    /// <inheritdoc />
     /// <summary>
     /// Activator Interface
     /// </summary>
     public class DefaultAccessorsFactory : IAccessorsFactory
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create an activator delegate to a constructor info, faster than Activator.CreateInstance
         /// </summary>
@@ -36,6 +38,7 @@ namespace TWCore.Reflection
             var type = ctor.DeclaringType;
             return args => args.Length == 0 ? Activator.CreateInstance(type) : Activator.CreateInstance(type, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Create an activator delegate to the default constructor info.
         /// </summary>
@@ -46,6 +49,7 @@ namespace TWCore.Reflection
         {
             return args => args.Length == 0 ? Activator.CreateInstance(type) : Activator.CreateInstance(type, args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Build a get accessor from a property info
         /// </summary>
@@ -54,6 +58,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public GetAccessorDelegate BuildGetAccessor(PropertyInfo property)
             => obj => property?.GetMethod.Invoke(obj, null);
+        /// <inheritdoc />
         /// <summary>
         /// Build a set accessor from a property info
         /// </summary>
@@ -61,7 +66,8 @@ namespace TWCore.Reflection
         /// <returns>Delegate to the set accessor</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SetAccessorDelegate BuildSetAccessor(PropertyInfo property)
-            => (obj, value) => property?.SetMethod.Invoke(obj, new object[] { value });
+            => (obj, value) => property?.SetMethod.Invoke(obj, new[] { value });
+        /// <inheritdoc />
         /// <summary>
         /// Create an accessor delegte for a MethodInfo
         /// </summary>
@@ -69,6 +75,6 @@ namespace TWCore.Reflection
         /// <returns>Accessor delegate</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public MethodAccessorDelegate BuildMethodAccessor(MethodInfo method)
-            => (obj, args) => method.Invoke(obj, args);
+            => method.Invoke;
     }
 }

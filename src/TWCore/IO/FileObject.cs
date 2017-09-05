@@ -27,10 +27,10 @@ namespace TWCore.IO
     /// <typeparam name="T">Object type of the instance</typeparam>
     public class FileObject<T> where T : class
     {
-        FileSystemWatcher fwatcher;
-        object locker = new object();
-        T instance;
-        Guid id = Guid.Empty;
+        private readonly object _locker = new object();
+        private FileSystemWatcher _fwatcher;
+        private T _instance;
+        private Guid _id = Guid.Empty;
 
         #region Properties
         /// <summary>
@@ -40,15 +40,15 @@ namespace TWCore.IO
         /// <summary>
         /// Current object instance
         /// </summary>
-        public T Instance { get { lock (locker) return instance; } }
+        public T Instance { get { lock (_locker) return _instance; } }
         /// <summary>
         /// Current object id
         /// </summary>
-        public Guid Id { get { lock (locker) return id; } }
+        public Guid Id { get { lock (_locker) return _id; } }
         /// <summary>
         /// Serializer used to load the file
         /// </summary>
-        public ISerializer Serializer { get; private set; }
+        public ISerializer Serializer { get; }
         #endregion
 
         #region Events
@@ -72,9 +72,7 @@ namespace TWCore.IO
         public FileObject(string filePath, ISerializer serializer = null)
         {
             FilePath = filePath;
-            Serializer = serializer;
-            if (Serializer == null)
-                Serializer = new XmlTextSerializer();
+            Serializer = serializer ?? new XmlTextSerializer();
             LoadConfig();
         }
         /// <summary>
@@ -94,26 +92,24 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void LoadConfig()
         {
-            lock (locker)
+            lock (_locker)
             {
                 var currentPath = Path.GetDirectoryName(AppContext.BaseDirectory);
                 FilePath = Path.Combine(currentPath, FilePath);
                 Try.Do(() =>
                 {
-                    if (fwatcher != null)
-                    {
-                        fwatcher.EnableRaisingEvents = false;
-                        fwatcher.Dispose();
-                        fwatcher = null;
-                    }
+                    if (_fwatcher == null) return;
+                    _fwatcher.EnableRaisingEvents = false;
+                    _fwatcher.Dispose();
+                    _fwatcher = null;
                 });
                 if (!LoadFile())
                 {
-                    instance = Activator.CreateInstance<T>();
-                    id = Guid.NewGuid();
+                    _instance = Activator.CreateInstance<T>();
+                    _id = Guid.NewGuid();
                     Save();
                 }
-                fwatcher = CreateWatcher();
+                _fwatcher = CreateWatcher();
             }
         }
         /// <summary>
@@ -122,11 +118,11 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Save()
         {
-            if (fwatcher != null)
-                fwatcher.EnableRaisingEvents = false;
-            Serializer?.SerializeToFile(instance, FilePath);
-            if (fwatcher != null)
-                fwatcher.EnableRaisingEvents = true;
+            if (_fwatcher != null)
+                _fwatcher.EnableRaisingEvents = false;
+            Serializer?.SerializeToFile(_instance, FilePath);
+            if (_fwatcher != null)
+                _fwatcher.EnableRaisingEvents = true;
         }
         #endregion
 
@@ -140,7 +136,7 @@ namespace TWCore.IO
             lock (this)
             {
                 var fpath = FilePath;
-                bool exist = true;
+                var exist = true;
 
                 #region Check and get the real file path
                 if (!File.Exists(fpath))
@@ -154,7 +150,7 @@ namespace TWCore.IO
                             exist = true;
                             break;
                         }
-                        else if (Serializer.Compressor != null && File.Exists(FilePath + fExt + Serializer.Compressor.FileExtension))
+                        if (Serializer.Compressor != null && File.Exists(FilePath + fExt + Serializer.Compressor.FileExtension))
                         {
                             fpath = FilePath + fExt + Serializer.Compressor.FileExtension;
                             exist = true;
@@ -171,14 +167,11 @@ namespace TWCore.IO
                 }
                 #endregion
 
-                if (exist)
-                {
-                    FilePath = fpath;
-                    instance = Serializer.DeserializeFromFile<T>(FilePath);
-                    id = Guid.NewGuid();
-                    return true;
-                }
-                return false;
+                if (!exist) return false;
+                FilePath = fpath;
+                _instance = Serializer.DeserializeFromFile<T>(FilePath);
+                _id = Guid.NewGuid();
+                return true;
             }
         }
         /// <summary>
@@ -188,15 +181,15 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FileSystemWatcher CreateWatcher()
         {
-            FileSystemWatcher watcher = new FileSystemWatcher()
+            var watcher = new FileSystemWatcher()
             {
                 Path = Path.GetDirectoryName(FilePath),
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Security | NotifyFilters.Size | NotifyFilters.CreationTime,
                 Filter = Path.GetFileName(FilePath)
             };
             // Add event handlers.
-            watcher.Changed += new FileSystemEventHandler(OnFileWatcherChanged);
-            watcher.Error += new ErrorEventHandler(Watcher_Error);
+            watcher.Changed += OnFileWatcherChanged;
+            watcher.Error += Watcher_Error;
             // Begin watching.
             watcher.EnableRaisingEvents = true;
             return watcher;
@@ -209,18 +202,16 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Watcher_Error(object sender, ErrorEventArgs e)
         {
-            Exception watchException = e.GetException();
+            var watchException = e.GetException();
             OnException?.Invoke(this, new EventArgs<Exception>(watchException));
             FileObjectEvents.FireException(this, watchException);
             Try.Do(() =>
             {
-                if (fwatcher != null)
-                {
-                    fwatcher.EnableRaisingEvents = false;
-                    fwatcher.Dispose();
-                }
+                if (_fwatcher == null) return;
+                _fwatcher.EnableRaisingEvents = false;
+                _fwatcher.Dispose();
             });
-            fwatcher = null;
+            _fwatcher = null;
             var nWatcher = CreateWatcher();
             while (!nWatcher.EnableRaisingEvents)
             {
@@ -233,7 +224,7 @@ namespace TWCore.IO
                     System.Threading.Thread.Sleep(500);
                 }
             }
-            fwatcher = nWatcher;
+            _fwatcher = nWatcher;
         }
         /// <summary>
         /// On File Watcher Changed method
@@ -245,38 +236,37 @@ namespace TWCore.IO
         {
             lock (this)
             {
-                if (e.ChangeType != WatcherChangeTypes.Deleted)
-                {
-                    if (fwatcher != null)
-                        fwatcher.EnableRaisingEvents = false;
+                if (e.ChangeType == WatcherChangeTypes.Deleted) return;
 
-                    FileObjectEventArgs<T> evArgs = null;
-                    try
+                if (_fwatcher != null)
+                    _fwatcher.EnableRaisingEvents = false;
+
+                FileObjectEventArgs<T> evArgs = null;
+                try
+                {
+                    Core.Log.Warning("File for object {0} => {1}. Reloading file: {2}", typeof(T).Name, e.ChangeType, FilePath);
+                    var oldId = _id;
+                    var oldValue = _instance;
+                    LoadFile();
+                    var newId = _id;
+                    var newValue = _instance;
+                    Core.Log.Warning("File for object {0} => File loaded.", typeof(T).Name, e.ChangeType);
+                    evArgs = new FileObjectEventArgs<T>(FilePath, oldId, oldValue, newId, newValue);
+                }
+                catch (Exception ex)
+                {
+                    OnException?.Invoke(this, new EventArgs<Exception>(ex));
+                    FileObjectEvents.FireException(this, ex);
+                    Core.Log.Write(ex);
+                }
+                finally
+                {
+                    if (_fwatcher != null)
+                        _fwatcher.EnableRaisingEvents = true;
+                    if (evArgs != null)
                     {
-                        Core.Log.Warning("File for object {0} => {1}. Reloading file: {2}", typeof(T).Name, e.ChangeType, FilePath);
-                        var oldId = id;
-                        var oldValue = instance;
-                        LoadFile();
-                        var newId = id;
-                        var newValue = instance;
-                        Core.Log.Warning("File for object {0} => File loaded.", typeof(T).Name, e.ChangeType);
-                        evArgs = new FileObjectEventArgs<T>(FilePath, oldId, oldValue, newId, newValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        OnException?.Invoke(this, new EventArgs<Exception>(ex));
-                        FileObjectEvents.FireException(this, ex);
-                        Core.Log.Write(ex);
-                    }
-                    finally
-                    {
-                        if (fwatcher != null)
-                            fwatcher.EnableRaisingEvents = true;
-                        if (evArgs != null)
-                        {
-                            OnChanged?.Invoke(this, evArgs);
-                            FileObjectEvents.FireFileObjectChanged(this, evArgs.FilePath, evArgs.OldId, evArgs.OldValue, evArgs.NewId, evArgs.NewValue);
-                        }
+                        OnChanged?.Invoke(this, evArgs);
+                        FileObjectEvents.FireFileObjectChanged(this, evArgs.FilePath, evArgs.OldId, evArgs.OldValue, evArgs.NewId, evArgs.NewValue);
                     }
                 }
             }
@@ -290,11 +280,9 @@ namespace TWCore.IO
         public void Dispose()
         {
             OnChanged = null;
-            if (fwatcher != null)
-            {
-                fwatcher.EnableRaisingEvents = false;
-                fwatcher = null;
-            }
+            if (_fwatcher == null) return;
+            _fwatcher.EnableRaisingEvents = false;
+            _fwatcher = null;
         }
     }
 }

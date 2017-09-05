@@ -24,23 +24,23 @@ namespace TWCore
     /// </summary>
     public static class WriteableMemoryStreamPool
     {
-        static ReferencePool<MemoryStream> _pool = new ReferencePool<MemoryStream>(0, ms =>
+        private static readonly ReferencePool<MemoryStream> Pool = new ReferencePool<MemoryStream>(0, ms =>
         {
             ms.Position = 0;
             ms.SetLength(0);
-        }, null, PoolResetMode.AfterUse, 0);
+        }, null, PoolResetMode.AfterUse);
 
         /// <summary>
         /// Get a new MemoryStream for Write
         /// </summary>
         /// <returns>MemoryStream instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static MemoryStream Get() => _pool.New();
+        public static MemoryStream Get() => Pool.New();
         /// <summary>
         /// Store a MemoryStream instance to the pool
         /// </summary>
         /// <param name="mstream">MemoryStream instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Store(MemoryStream mstream) => _pool.Store(mstream);
+        public static void Store(MemoryStream mstream) => Pool.Store(mstream);
     }
 }

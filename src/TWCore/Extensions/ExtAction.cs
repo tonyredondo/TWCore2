@@ -20,6 +20,8 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
+// ReSharper disable CheckNamespace
+
 namespace TWCore
 {
     /// <summary>
@@ -36,9 +38,9 @@ namespace TWCore
         /// <returns>Delayed action instance</returns>
         public static Action CreateDelay(this Action action, int milliseconds)
         {
-            return new Action(() => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
+            return () => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
-                TaskScheduler.Default));
+                TaskScheduler.Default);
         }
         /// <summary>
         /// Wraps an action with a delay time.
@@ -48,9 +50,9 @@ namespace TWCore
         /// <returns>Delayed action instance</returns>
         public static Action<T> CreateDelay<T>(this Action<T> action, int milliseconds)
         {
-            return new Action<T>(obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
+            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
-                TaskScheduler.Default));
+                TaskScheduler.Default);
         }
         #endregion
 
@@ -64,7 +66,7 @@ namespace TWCore
         public static Action CreateBufferedAction(this Action action, int milliseconds)
         {
             Timer timer = null;
-            return new Action(() =>
+            return () =>
             {
                 if (timer != null)
                     timer.Change(milliseconds, Timeout.Infinite);
@@ -76,7 +78,7 @@ namespace TWCore
                         timer = null;
                     }, null, milliseconds, Timeout.Infinite);
                 }
-            });
+            };
         }
         /// <summary>
         ///  Creates a buffered action wrapper from a action base.
@@ -87,7 +89,7 @@ namespace TWCore
         public static Action<T> CreateBufferedAction<T>(this Action<T> action, int milliseconds)
         {
             Timer timer = null;
-            return new Action<T>((obj) =>
+            return (obj) =>
             {
                 if (timer != null)
                     timer.Change(milliseconds, Timeout.Infinite);
@@ -99,7 +101,7 @@ namespace TWCore
                         timer = null;
                     }, obj, milliseconds, Timeout.Infinite);
                 }
-            });
+            };
         }
         #endregion
 
@@ -112,15 +114,13 @@ namespace TWCore
         /// <returns>Throttled action instance</returns>
         public static Action CreateThrottledAction(this Action action, int milliseconds)
         {
-            var Date = DateTime.MinValue;
-            return new Action(() =>
+            var date = DateTime.MinValue;
+            return () =>
             {
-                if (DateTime.UtcNow.Subtract(Date).TotalMilliseconds > milliseconds)
-                {
-                    action();
-                    Date = DateTime.UtcNow;
-                }
-            });
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
+                action();
+                date = DateTime.UtcNow;
+            };
         }
         /// <summary>
         /// Creates a Throttled action wrapper form an action base.
@@ -130,15 +130,13 @@ namespace TWCore
         /// <returns>Throttled action instance</returns>
         public static Action<T> CreateThrottledAction<T>(this Action<T> action, int milliseconds)
         {
-            var Date = DateTime.MinValue;
-            return new Action<T>((obj) =>
+            var date = DateTime.MinValue;
+            return (obj) =>
             {
-                if (DateTime.UtcNow.Subtract(Date).TotalMilliseconds > milliseconds)
-                {
-                    action(obj);
-                    Date = DateTime.UtcNow;
-                }
-            });
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
+                action(obj);
+                date = DateTime.UtcNow;
+            };
         }
         #endregion
 
@@ -313,72 +311,72 @@ namespace TWCore
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<Task> CreateAsync(this Action action) => () => action.InvokeAsync();
+        public static Func<Task> CreateAsync(this Action action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<T, Task> CreateAsync<T>(this Action<T> action) => (v) => action.InvokeAsync(v);
+        public static Func<T, Task> CreateAsync<T>(this Action<T> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, Task> CreateAsync<T1, T2>(this Action<T1, T2> action) => (v1, v2) => action.InvokeAsync(v1, v2);
+        public static Func<T1, T2, Task> CreateAsync<T1, T2>(this Action<T1, T2> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, Task> CreateAsync<T1, T2, T3>(this Action<T1, T2, T3> action) => (v1, v2, v3) => action.InvokeAsync(v1, v2, v3);
+        public static Func<T1, T2, T3, Task> CreateAsync<T1, T2, T3>(this Action<T1, T2, T3> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, T4, Task> CreateAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action) => (v1, v2, v3, v4) => action.InvokeAsync(v1, v2, v3, v4);
+        public static Func<T1, T2, T3, T4, Task> CreateAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, T4, T5, Task> CreateAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action) => (v1, v2, v3, v4, v5) => action.InvokeAsync(v1, v2, v3, v4, v5);
+        public static Func<T1, T2, T3, T4, T5, Task> CreateAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action) => action.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<Task<TResult>> CreateAsync<TResult>(this Func<TResult> func) => () => func.InvokeAsync();
+        public static Func<Task<TResult>> CreateAsync<TResult>(this Func<TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, Task<TResult>> CreateAsync<T1, TResult>(this Func<T1, TResult> func) => (v) => func.InvokeAsync(v);
+        public static Func<T1, Task<TResult>> CreateAsync<T1, TResult>(this Func<T1, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create an Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, Task<TResult>> CreateAsync<T1, T2, TResult>(this Func<T1, T2, TResult> func) => (v1, v2) => func.InvokeAsync(v1, v2);
+        public static Func<T1, T2, Task<TResult>> CreateAsync<T1, T2, TResult>(this Func<T1, T2, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, Task<TResult>> CreateAsync<T1, T2, T3, TResult>(this Func<T1, T2, T3, TResult> func) => (v1, v2, v3) => func.InvokeAsync(v1, v2, v3);
+        public static Func<T1, T2, T3, Task<TResult>> CreateAsync<T1, T2, T3, TResult>(this Func<T1, T2, T3, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, T4, Task<TResult>> CreateAsync<T1, T2, T3, T4, TResult>(this Func<T1, T2, T3, T4, TResult> func) => (v1, v2, v3, v4) => func.InvokeAsync(v1, v2, v3, v4);
+        public static Func<T1, T2, T3, T4, Task<TResult>> CreateAsync<T1, T2, T3, T4, TResult>(this Func<T1, T2, T3, T4, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<T1, T2, T3, T4, T5, Task<TResult>> CreateAsync<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func) => (v1, v2, v3, v4, v5) => func.InvokeAsync(v1, v2, v3, v4, v5);
+        public static Func<T1, T2, T3, T4, T5, Task<TResult>> CreateAsync<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
-        public static Func<object[], Task<object>> CreateAsync(this Delegate @delegate) => (args) => @delegate.InvokeAsync(args);
+        public static Func<object[], Task<object>> CreateAsync(this Delegate @delegate) => @delegate.InvokeAsync;
         #endregion
 
         #region Try
@@ -388,14 +386,14 @@ namespace TWCore
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
-        public static Action CreateTry(this Action action, Action<Exception> onException = null) => new Action(() => Try.Do(action, onException));
+        public static Action CreateTry(this Action action, Action<Exception> onException = null) => () => Try.Do(action, onException);
         /// <summary>
         /// Creates an action wrapper around the action to handles the execution inside a try/catch sentence
         /// </summary>
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
-        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => new Action<T>((obj) => Try.Do(() => action(obj), onException));
+        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => (obj) => Try.Do(() => action(obj), onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
         /// </summary>
@@ -421,7 +419,7 @@ namespace TWCore
         /// <param name="onMethodEnds">Action to be executed at the end of the invoked method with the execution time data</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>A new action wrapper</returns>
-        public static Action CreateWatch(this Action action, Action<Stopwatch> onMethodEnds, bool asyncRun = false) => new Action(() => Watch.Invoke(action, onMethodEnds, asyncRun));
+        public static Action CreateWatch(this Action action, Action<Stopwatch> onMethodEnds, bool asyncRun = false) => () => Watch.Invoke(action, onMethodEnds, asyncRun);
         /// <summary>
         /// Creates an action wrapper around the action to messure the execution time for that action.
         /// </summary>
@@ -429,7 +427,7 @@ namespace TWCore
         /// <param name="statsMessage">Stats message to write in the log instance</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>A new action wrapper</returns>
-        public static Action CreateWatch(this Action action, string statsMessage, bool asyncRun = false) => new Action(() => Watch.Invoke(action, statsMessage, asyncRun));
+        public static Action CreateWatch(this Action action, string statsMessage, bool asyncRun = false) => () => Watch.Invoke(action, statsMessage, asyncRun);
         /// <summary>
         /// Invokes the action and calls the onMethodEnds function at the end of the function with the execution time.
         /// </summary>
@@ -455,7 +453,7 @@ namespace TWCore
         /// <param name="action">Action to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
-        public static Action CreateLock(this Action action, object @lock) => new Action(() => InvokeWithLock(action, @lock));
+        public static Action CreateLock(this Action action, object @lock) => () => InvokeWithLock(action, @lock);
         /// <summary>
         /// Invokes the action with a lock over an object reference
         /// </summary>
@@ -473,7 +471,7 @@ namespace TWCore
         /// <param name="function">Function to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
-        public static Func<T> CreateLock<T>(this Func<T> function, object @lock) => new Func<T>(() => InvokeWithLock(function, @lock));
+        public static Func<T> CreateLock<T>(this Func<T> function, object @lock) => () => InvokeWithLock(function, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
         /// </summary>
@@ -491,7 +489,7 @@ namespace TWCore
         /// <param name="function">Function to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
-        public static Func<T, R> CreateLock<T, R>(this Func<T, R> function, object @lock) => new Func<T, R>(t => InvokeWithLock(function, t, @lock));
+        public static Func<T, TR> CreateLock<T, TR>(this Func<T, TR> function, object @lock) => t => InvokeWithLock(function, t, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
         /// </summary>
@@ -499,7 +497,7 @@ namespace TWCore
         /// <param name="state">State object parameter for function</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>Function invoke return value</returns>
-        public static R InvokeWithLock<T, R>(this Func<T, R> function, T state, object @lock)
+        public static TR InvokeWithLock<T, TR>(this Func<T, TR> function, T state, object @lock)
         {
             lock (@lock)
                 return function(state);
@@ -546,7 +544,7 @@ namespace TWCore
         public static TResult InvokeWithRetry<TResult>(this Func<TResult> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
         {
             var exceptions = new List<Exception>();
-            for (int retry = 0; retry < retryCount; retry++)
+            for (var retry = 0; retry < retryCount; retry++)
             {
                 try
                 {
@@ -611,7 +609,7 @@ namespace TWCore
         /// <returns>True if run successfully</returns>
         public static bool WaitForAction(this Action action, int milliseconds)
         {
-            bool done = false;
+            var done = false;
             var task = Task.Run(() =>
             {
                 try

@@ -14,12 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Wraps an object to add support to the INotifyPropertyChanged interface
     /// </summary>

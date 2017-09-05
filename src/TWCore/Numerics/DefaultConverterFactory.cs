@@ -18,54 +18,66 @@ using System;
 
 namespace TWCore.Numerics
 {
+    /// <inheritdoc />
     /// <summary>
     /// Converter factory
     /// </summary>
     public class DefaultConverterFactory : IConverterFactory
     {
+        /// <inheritdoc />
         /// <summary>
         /// Change value to byte
         /// </summary>
-        public Func<object, byte> ToByte { get; } = new Func<object, byte>(val => ((IConvertible)val).ToByte(null));
+        public Func<object, byte> ToByte { get; } = val => ((IConvertible)val).ToByte(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to sbyte
         /// </summary>
-        public Func<object, sbyte> ToSByte { get; } = new Func<object, sbyte>(val => ((IConvertible)val).ToSByte(null));
+        public Func<object, sbyte> ToSByte { get; } = val => ((IConvertible)val).ToSByte(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to ushort
         /// </summary>
-        public Func<object, ushort> ToUShort { get; } = new Func<object, ushort>(val => ((IConvertible)val).ToUInt16(null));
+        public Func<object, ushort> ToUShort { get; } = val => ((IConvertible)val).ToUInt16(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to short
         /// </summary>
-        public Func<object, short> ToShort { get; } = new Func<object, short>(val => ((IConvertible)val).ToInt16(null));
+        public Func<object, short> ToShort { get; } = val => ((IConvertible)val).ToInt16(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to uint
         /// </summary>
-        public Func<object, uint> ToUInt { get; } = new Func<object, uint>(val => ((IConvertible)val).ToUInt32(null));
+        public Func<object, uint> ToUInt { get; } = val => ((IConvertible)val).ToUInt32(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to int
         /// </summary>
-        public Func<object, int> ToInt { get; } = new Func<object, int>(val => ((IConvertible)val).ToInt32(null));
+        public Func<object, int> ToInt { get; } = val => ((IConvertible)val).ToInt32(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to ulong
         /// </summary>
-        public Func<object, ulong> ToULong { get; } = new Func<object, ulong>(val => ((IConvertible)val).ToUInt64(null));
+        public Func<object, ulong> ToULong { get; } = val => ((IConvertible)val).ToUInt64(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to long
         /// </summary>
-        public Func<object, long> ToLong { get; } = new Func<object, long>(val => ((IConvertible)val).ToInt64(null));
+        public Func<object, long> ToLong { get; } = val => ((IConvertible)val).ToInt64(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to float
         /// </summary>
-        public Func<object, float> ToFloat { get; } = new Func<object, float>(val => ((IConvertible)val).ToSingle(null));
+        public Func<object, float> ToFloat { get; } = val => ((IConvertible)val).ToSingle(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to double
         /// </summary>
-        public Func<object, double> ToDouble { get; } = new Func<object, double>(val => ((IConvertible)val).ToDouble(null));
+        public Func<object, double> ToDouble { get; } = val => ((IConvertible)val).ToDouble(null);
+        /// <inheritdoc />
         /// <summary>
         /// Change value to decimal
         /// </summary>
-        public Func<object, decimal> ToDecimal { get; } = new Func<object, decimal>(val => ((IConvertible)val).ToDecimal(null));
+        public Func<object, decimal> ToDecimal { get; } = val => ((IConvertible)val).ToDecimal(null);
     }
 }

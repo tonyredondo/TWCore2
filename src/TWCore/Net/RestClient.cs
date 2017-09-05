@@ -24,25 +24,28 @@ using System.Text;
 using System.Threading.Tasks;
 using TWCore.Serialization;
 
+// ReSharper disable CollectionNeverUpdated.Global
+
 namespace TWCore.Net
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http client to handle Rest requests
     /// </summary>
     public class RestClient : IDisposable
     {
-        static byte[] EmptyByte = new byte[0];
-        HttpClient client;
+        private static readonly byte[] EmptyByte = new byte[0];
+        private HttpClient _client;
 
         #region Properties
         /// <summary>
         /// Serializer used to encode and decode data
         /// </summary>
-        public ISerializer Serializer { get; private set; }
+        public ISerializer Serializer { get; }
         /// <summary>
         /// Default http headers on every request
         /// </summary>
-        public Dictionary<string, string> DefaultHeaders { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> DefaultHeaders { get; } = new Dictionary<string, string>();
         #endregion
 
         #region .ctor
@@ -58,12 +61,10 @@ namespace TWCore.Net
             {
                 InnerHandler = new HttpClientHandler()
             };
-            client = new HttpClient(handler);
+            _client = new HttpClient(handler);
             if (baseUrl.IsNotNullOrEmpty())
-                client.BaseAddress = new Uri(baseUrl);
-            Serializer = serializer;
-            if (Serializer == null)
-                Serializer = SerializerManager.GetByMimeType<ITextSerializer>(SerializerMimeTypes.Json) ?? SerializerManager.DefaultTextSerializer;
+                _client.BaseAddress = new Uri(baseUrl);
+            Serializer = serializer ?? (SerializerManager.GetByMimeType<ITextSerializer>(SerializerMimeTypes.Json) ?? SerializerManager.DefaultTextSerializer);
         }
         /// <summary>
         /// Destructor
@@ -81,22 +82,21 @@ namespace TWCore.Net
         /// </summary>
         /// <param name="headers">Additional headers to append on the requests</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void PrepareHeaders(Dictionary<string, string> headers)
+        private void PrepareHeaders(Dictionary<string, string> headers)
         {
-            client.DefaultRequestHeaders.Clear();
-            client.DefaultRequestHeaders.Accept.Clear();
-            Serializer.MimeTypes.Each(i => client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(i)));
+            _client.DefaultRequestHeaders.Clear();
+            _client.DefaultRequestHeaders.Accept.Clear();
+            Serializer.MimeTypes.Each(i => _client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue(i)));
             foreach (var item in DefaultHeaders)
-                client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
+                _client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
 
-            if (headers?.Any() == true)
+            if (headers == null) return;
+
+            foreach (var item in headers)
             {
-                foreach(var item in headers)
-                {
-                    if (client.DefaultRequestHeaders.Contains(item.Key))
-                        client.DefaultRequestHeaders.Remove(item.Key);
-                    client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
-                }
+                if (_client.DefaultRequestHeaders.Contains(item.Key))
+                    _client.DefaultRequestHeaders.Remove(item.Key);
+                _client.DefaultRequestHeaders.TryAddWithoutValidation(item.Key, item.Value);
             }
         }
         #endregion
@@ -124,7 +124,7 @@ namespace TWCore.Net
         {
             PrepareHeaders(headers);
             Core.Log.LibVerbose("Sending HEAD request to {0}", requestUri);
-            var response = await client.SendAsync(new HttpRequestMessage(HttpMethod.Head, requestUri)).ConfigureAwait(false);
+            var response = await _client.SendAsync(new HttpRequestMessage(HttpMethod.Head, requestUri)).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -196,7 +196,7 @@ namespace TWCore.Net
         {
             PrepareHeaders(headers);
             Core.Log.LibVerbose("Sending GET request to {0}", requestUri);
-            var response = await client.GetAsync(requestUri).ConfigureAwait(false);
+            var response = await _client.GetAsync(requestUri).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -268,7 +268,7 @@ namespace TWCore.Net
         {
             PrepareHeaders(headers);
             Core.Log.LibVerbose("Sending DELETE request to {0}", requestUri);
-            var response = await client.DeleteAsync(requestUri).ConfigureAwait(false);
+            var response = await _client.DeleteAsync(requestUri).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -345,7 +345,7 @@ namespace TWCore.Net
             var buffer = new ByteArrayContent(bytes);
             buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
             Core.Log.LibVerbose("Sending PUT request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);
-            var response = await client.PutAsync(requestUri, buffer).ConfigureAwait(false);
+            var response = await _client.PutAsync(requestUri, buffer).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -426,7 +426,7 @@ namespace TWCore.Net
             var buffer = new ByteArrayContent(bytes);
             buffer.Headers.ContentType = new MediaTypeHeaderValue(Serializer.MimeTypes[0]);
             Core.Log.LibVerbose("Sending POST request to {0} with a data length of {1} bytes", requestUri, bytes?.Length);
-            var response = await client.PostAsync(requestUri, buffer).ConfigureAwait(false);
+            var response = await _client.PostAsync(requestUri, buffer).ConfigureAwait(false);
             return await HandleResponseMessageAsync(response).ConfigureAwait(false);
         }
         /// <summary>
@@ -491,7 +491,7 @@ namespace TWCore.Net
         /// <param name="response">Response message</param>
         /// <returns>RestClientResponse object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        async Task<RestClientResponse> HandleResponseMessageAsync(HttpResponseMessage response)
+        private async Task<RestClientResponse> HandleResponseMessageAsync(HttpResponseMessage response)
         {
             Core.Log.LibVerbose("Reading the response data from: {0}", response.RequestMessage.RequestUri);
             var respObj = new RestClientResponse
@@ -520,7 +520,7 @@ namespace TWCore.Net
                     }
                     else if (response.Content.Headers.ContentType.MediaType == "text/plain")
                     {
-                        serHttpError = new SerializableHttpError { Message = Encoding.UTF8.GetString(respObj.ValueInBytes)?.RemoveInvalidXMLChars() };
+                        serHttpError = new SerializableHttpError { Message = Encoding.UTF8.GetString(respObj.ValueInBytes)?.RemoveInvalidXmlChars() };
                         serHttpError.ExceptionMessage = serHttpError.Message;
                     }
                 }
@@ -529,13 +529,13 @@ namespace TWCore.Net
                 {
                     sEx = new SerializableException
                     {
-                        Message = serHttpError.Message?.RemoveInvalidXMLChars(),
+                        Message = serHttpError.Message?.RemoveInvalidXmlChars(),
                         StackTrace = serHttpError.StackTrace,
                         ExceptionType = serHttpError.ExceptionType,
                     };
                 }
 
-                var responseText = (respObj.ValueInBytes?.Length > 0) ? Encoding.UTF8.GetString(respObj.ValueInBytes)?.RemoveInvalidXMLChars() : string.Empty;
+                var responseText = (respObj.ValueInBytes?.Length > 0) ? Encoding.UTF8.GetString(respObj.ValueInBytes)?.RemoveInvalidXmlChars() : string.Empty;
                 var rce = new RestClientException(responseText, sEx?.GetException())
                 {
                     RequestUri = respObj.RequestUri,
@@ -557,14 +557,14 @@ namespace TWCore.Net
         /// <param name="response">RestClientResponse object to being deserialized</param>
         /// <returns>RestClientResponse with a typed value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        RestClientResponse<T> GetResponseObject<T>(RestClientResponse response)
+        private RestClientResponse<T> GetResponseObject<T>(RestClientResponse response)
         {
             try
             {
                 if (!response.IsSuccessStatusCode && response.Exception != null)
                     throw response.Exception;
                 Core.Log.LibVerbose("Deserializing response byte array to an object type.");
-                return (response?.ValueInBytes?.Length > 0) ?
+                return (response.ValueInBytes?.Length > 0) ?
                     new RestClientResponse<T>(response, Serializer.Deserialize<T>(response.ValueInBytes)) :
                     new RestClientResponse<T>(response, default(T));
             }
@@ -582,14 +582,14 @@ namespace TWCore.Net
         /// <param name="responseType">Response object type</param>
         /// <returns>RestClientResponse with a typed value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        RestClientResponse<object> GetResponseObject(RestClientResponse response, Type responseType)
+        private RestClientResponse<object> GetResponseObject(RestClientResponse response, Type responseType)
         {
             try
             {
                 if (!response.IsSuccessStatusCode && response.Exception != null)
                     throw response.Exception;
                 Core.Log.LibVerbose("Deserializing response byte array to an object type.");
-                return (response?.ValueInBytes?.Length > 0) ?
+                return (response.ValueInBytes?.Length > 0) ?
                     new RestClientResponse<object>(response, Serializer.Deserialize(response.ValueInBytes, responseType)) :
                     new RestClientResponse<object>(response, null);
             }
@@ -603,7 +603,7 @@ namespace TWCore.Net
         #endregion
 
         #region IDisposable Support
-        private bool disposedValue; // To detect redundant calls
+        private bool _disposedValue; // To detect redundant calls
         /// <summary>
         /// Dispose all object resources
         /// </summary>
@@ -611,16 +611,15 @@ namespace TWCore.Net
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue)
+            if (_disposedValue) return;
+            if (disposing)
             {
-                if (disposing)
-                {
-                    client.Dispose();
-                    client = null;
-                }
-                disposedValue = true;
+                _client.Dispose();
+                _client = null;
             }
+            _disposedValue = true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all object resources
         /// </summary>

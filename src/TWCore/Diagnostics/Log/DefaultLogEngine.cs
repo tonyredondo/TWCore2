@@ -45,7 +45,7 @@ namespace TWCore.Diagnostics.Log
         /// Log storages items
         /// </summary>
         [StatusReference]
-        public LogStorageCollection Storage { get; private set; }
+        public LogStorageCollection Storage { get; }
         /// <inheritdoc />
         /// <summary>
         /// Max log level to register in logs
@@ -146,7 +146,7 @@ namespace TWCore.Diagnostics.Log
                 {
                     sItem.Name = $"Last {lItems.Count} error messages";
                     for (var i = 0; i < lItems.Count; i++)
-                        sItem.Values.Add("Error " + i, lItems[i].Message.RemoveInvalidXMLChars() + "\r\nStacktrace:\r\n" + lItems[i].Exception?.StackTrace.RemoveInvalidXMLChars(), StatusItemValueStatus.Red);
+                        sItem.Values.Add("Error " + i, lItems[i].Message.RemoveInvalidXmlChars() + "\r\nStacktrace:\r\n" + lItems[i].Exception?.StackTrace.RemoveInvalidXmlChars(), StatusItemValueStatus.Red);
                 }
                 else
                     sItem.Name = "There are no error messages in the log";

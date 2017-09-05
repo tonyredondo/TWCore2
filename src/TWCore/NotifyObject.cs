@@ -20,6 +20,7 @@ using System.Runtime.Serialization;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Property notify changed object base
     /// </summary>
@@ -33,14 +34,14 @@ namespace TWCore
         /// <summary>
         /// Sets the value for a property and check if the value has changed to trigger the PropertyChanged event
         /// </summary>
-        /// <typeparam name="K">Value type</typeparam>
+        /// <typeparam name="TK">Value type</typeparam>
         /// <param name="valueField">Value field object by ref, where the data of the property is stored.</param>
         /// <param name="value">The new value in the property set</param>
         /// <param name="propertyName">Property name, the default value is the caller property name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected virtual void SetValue<K>(ref K valueField, K value, [CallerMemberName] string propertyName = null)
+        protected virtual void SetValue<TK>(ref TK valueField, TK value, [CallerMemberName] string propertyName = null)
         {
-            if (!object.Equals(valueField, value))
+            if (!Equals(valueField, value))
             {
                 valueField = value;
                 OnPropertyChanged(propertyName);

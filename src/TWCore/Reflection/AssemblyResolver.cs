@@ -30,21 +30,21 @@ namespace TWCore.Reflection
     /// </summary>
     public class AssemblyResolver
     {
-        bool assembliesInfoLoaded;
+        private bool _assembliesInfoLoaded;
 
         #region Properties
         /// <summary>
         /// Application domain where the resolver is bound to.
         /// </summary>
-        public AppDomain Domain { get; private set; }
+        public AppDomain Domain { get; }
         /// <summary>
         /// Paths array where the assemblies are located
         /// </summary>
-        public string[] Paths { get; private set; }
+        public string[] Paths { get; }
         /// <summary>
         /// Loaded AssembliesInfo available collection
         /// </summary>
-        public KeyStringDelegatedCollection<AssemblyInfo> Assemblies { get; private set; } = new KeyStringDelegatedCollection<AssemblyInfo>(a => a.FullName, false);
+        public KeyStringDelegatedCollection<AssemblyInfo> Assemblies { get; } = new KeyStringDelegatedCollection<AssemblyInfo>(a => a.FullName, false);
         #endregion
 
         #region .ctor
@@ -76,9 +76,9 @@ namespace TWCore.Reflection
 
             var searchPaths = new List<string> { Domain.BaseDirectory };
             searchPaths.AddRange(Paths);
-            searchPaths = searchPaths.Distinct().Where(p => Directory.Exists(p)).ToList();
+            searchPaths = searchPaths.Distinct().Where(Directory.Exists).ToList();
 
-            string basePath = Domain.BaseDirectory;
+            var basePath = Domain.BaseDirectory;
             searchPaths.ParallelEach(sPath =>
             {
                 var localPath = Path.Combine(basePath, sPath?.Trim());
@@ -100,7 +100,7 @@ namespace TWCore.Reflection
                 }).RemoveNulls();
                 Assemblies.AddRange(localAssembliesInfo);
             });
-            assembliesInfoLoaded = true;
+            _assembliesInfoLoaded = true;
         }
         /// <summary>
         /// Bind the resolver to the Domain
@@ -108,7 +108,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void BindToDomain()
         {
-            if (!assembliesInfoLoaded)
+            if (!_assembliesInfoLoaded)
                 LoadAssembliesInfo();
             Domain.AssemblyResolve += AssemblyResolveEvent;
             Domain.ReflectionOnlyAssemblyResolve += ReflectionOnlyAssemblyResolveEvent;
@@ -134,11 +134,11 @@ namespace TWCore.Reflection
 
         #region Events Handlers
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        Assembly AssemblyResolveEvent(object sender, ResolveEventArgs args)
-            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].Instance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.Instance ?? null;
+        private Assembly AssemblyResolveEvent(object sender, ResolveEventArgs args)
+            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].Instance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.Instance;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        Assembly ReflectionOnlyAssemblyResolveEvent(object sender, ResolveEventArgs args)
-            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].ReflectionOnlyInstance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.ReflectionOnlyInstance ?? null;
+        private Assembly ReflectionOnlyAssemblyResolveEvent(object sender, ResolveEventArgs args)
+            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].ReflectionOnlyInstance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.ReflectionOnlyInstance;
         #endregion
 
         #region Nested Classes

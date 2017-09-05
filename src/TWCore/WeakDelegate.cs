@@ -29,11 +29,11 @@ namespace TWCore
         /// <summary>
         /// Weak object reference
         /// </summary>
-        public WeakReference<object> WeakObject { get; private set; }
+        public WeakReference<object> WeakObject { get; }
         /// <summary>
         /// Method info to execute
         /// </summary>
-        public MethodInfo Method { get; private set; }
+        public MethodInfo Method { get; }
         #endregion
 
         #region .ctor
@@ -59,9 +59,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object TryInvoke(params object[] parameters)
         {
-            if (WeakObject.TryGetTarget(out object target))
-                return Method.Invoke(target, parameters);
-            return null;
+            return WeakObject.TryGetTarget(out var target) ? Method.Invoke(target, parameters) : null;
         }
         #endregion
 
@@ -75,7 +73,7 @@ namespace TWCore
         public static Action Create(Action action)
         {
             var weakDelegate = new WeakDelegate(action.Target, action.GetMethodInfo());
-            return new Action(() => weakDelegate.TryInvoke());
+            return () => weakDelegate.TryInvoke();
         }
         /// <summary>
         /// Creates an Weak Action delegate from a normal Action
@@ -86,7 +84,7 @@ namespace TWCore
         public static Action<T> Create<T>(Action<T> action)
         {
             var weakDelegate = new WeakDelegate(action.Target, action.GetMethodInfo());
-            return new Action<T>(t => weakDelegate.TryInvoke(t));
+            return t => weakDelegate.TryInvoke(t);
         }
         /// <summary>
         /// Creates an Weak Action delegate from a normal Action
@@ -97,7 +95,7 @@ namespace TWCore
         public static Action<T1, T2> Create<T1, T2>(Action<T1, T2> action)
         {
             var weakDelegate = new WeakDelegate(action.Target, action.GetMethodInfo());
-            return new Action<T1, T2>((t1, t2) => weakDelegate.TryInvoke(t1, t2));
+            return (t1, t2) => weakDelegate.TryInvoke(t1, t2);
         }
         /// <summary>
         /// Creates an Weak Action delegate from a normal Action
@@ -108,7 +106,7 @@ namespace TWCore
         public static Action<T1, T2, T3> Create<T1, T2, T3>(Action<T1, T2, T3> action)
         {
             var weakDelegate = new WeakDelegate(action.Target, action.GetMethodInfo());
-            return new Action<T1, T2, T3>((t1, t2, t3) => weakDelegate.TryInvoke(t1, t2, t3));
+            return (t1, t2, t3) => weakDelegate.TryInvoke(t1, t2, t3);
         }
         /// <summary>
         /// Creates an Weak Action delegate from a normal Action
@@ -119,7 +117,7 @@ namespace TWCore
         public static Action<T1, T2, T3, T4> Create<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action)
         {
             var weakDelegate = new WeakDelegate(action.Target, action.GetMethodInfo());
-            return new Action<T1, T2, T3, T4>((t1, t2, t3, t4) => weakDelegate.TryInvoke(t1, t2, t3, t4));
+            return (t1, t2, t3, t4) => weakDelegate.TryInvoke(t1, t2, t3, t4);
         }
 
 
@@ -132,7 +130,7 @@ namespace TWCore
         public static Func<TResult> Create<TResult>(Func<TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return new Func<TResult>(() => (TResult)weakDelegate.TryInvoke());
+            return () => (TResult)weakDelegate.TryInvoke();
         }
         /// <summary>
         /// Creates an Weak Func delegate from a normal Func
@@ -143,7 +141,7 @@ namespace TWCore
         public static Func<T, TResult> Create<T, TResult>(Func<T, TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return new Func<T, TResult>((t) => (TResult)weakDelegate.TryInvoke(t));
+            return (t) => (TResult)weakDelegate.TryInvoke(t);
         }
         /// <summary>
         /// Creates an Weak Func delegate from a normal Func
@@ -154,7 +152,7 @@ namespace TWCore
         public static Func<T1, T2, TResult> Create<T1, T2, TResult>(Func<T1, T2, TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return new Func<T1, T2, TResult>((t1, t2) => (TResult)weakDelegate.TryInvoke(t1, t2));
+            return (t1, t2) => (TResult)weakDelegate.TryInvoke(t1, t2);
         }
         /// <summary>
         /// Creates an Weak Func delegate from a normal Func
@@ -165,7 +163,7 @@ namespace TWCore
         public static Func<T1, T2, T3, TResult> Create<T1, T2, T3, TResult>(Func<T1, T2, T3, TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return new Func<T1, T2, T3, TResult>((t1, t2, t3) => (TResult)weakDelegate.TryInvoke(t1, t2, t3));
+            return (t1, t2, t3) => (TResult)weakDelegate.TryInvoke(t1, t2, t3);
         }
         /// <summary>
         /// Creates an Weak Func delegate from a normal Func
@@ -176,7 +174,7 @@ namespace TWCore
         public static Func<T1, T2, T3, T4, TResult> Create<T1, T2, T3, T4, TResult>(Func<T1, T2, T3, T4, TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return new Func<T1, T2, T3, T4, TResult>((t1, t2, t3, t4) => (TResult)weakDelegate.TryInvoke(t1, t2, t3, t4));
+            return (t1, t2, t3, t4) => (TResult)weakDelegate.TryInvoke(t1, t2, t3, t4);
         }
         #endregion
     }

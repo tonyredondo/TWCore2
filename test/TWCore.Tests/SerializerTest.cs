@@ -5,6 +5,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TWCore.Serialization.PWSerializer.Deserializer;
 
+// ReSharper disable InconsistentNaming
+// ReSharper disable RedundantArgumentDefaultValue
+// ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable RedundantAssignment
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+
 namespace TWCore.Tests
 {
     [SuppressMessage("ReSharper", "UnusedVariable")]

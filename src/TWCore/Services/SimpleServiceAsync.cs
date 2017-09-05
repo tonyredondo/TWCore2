@@ -21,16 +21,18 @@ using System.Threading.Tasks;
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Async Simple Service Base
     /// </summary>
     public abstract class SimpleServiceAsync : IService
     {
-        CancellationTokenSource tokenSource;
-        CancellationToken token;
-        Task task;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
+        private Task _task;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
@@ -50,7 +52,7 @@ namespace TWCore.Services
         /// Async Simple Service Base
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SimpleServiceAsync()
+        protected SimpleServiceAsync()
         {
             Core.RunOnInit(() => Core.Status.AttachObject(this));
         }
@@ -61,6 +63,7 @@ namespace TWCore.Services
         #endregion
 
         #region IService Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -72,13 +75,13 @@ namespace TWCore.Services
             {
                 Core.Log.InfoBasic("Starting service");
                 StartArguments = args;
-                tokenSource = new CancellationTokenSource();
-                token = tokenSource.Token;
-                task = Task.Factory.StartNew(async () =>
+                _tokenSource = new CancellationTokenSource();
+                _token = _tokenSource.Token;
+                _task = Task.Factory.StartNew(async () =>
                 {
                     try
                     {
-                        await OnActionAsync(token).ConfigureAwait(false);
+                        await OnActionAsync(_token).ConfigureAwait(false);
                         if (EndAfterTaskFinish)
                             ServiceContainer.ServiceExit();
                     }
@@ -87,10 +90,10 @@ namespace TWCore.Services
                         Core.Log.Write(ex);
                         ServiceContainer.ServiceExit();
                     }
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 Core.Log.InfoBasic("Service started");
                 if (EndAfterTaskFinish)
-                    task.WaitAsync();
+                    _task.WaitAsync();
             }
             catch (Exception ex)
             {
@@ -98,6 +101,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
@@ -107,9 +111,9 @@ namespace TWCore.Services
             try
             {
                 Core.Log.InfoBasic("Stopping service");
-                if (!task.IsCompleted || task.Status == TaskStatus.RanToCompletion || task.Status == TaskStatus.Running)
-                    tokenSource.Cancel();
-                task.Wait(10000);
+                if (!_task.IsCompleted || _task.Status == TaskStatus.RanToCompletion || _task.Status == TaskStatus.Running)
+                    _tokenSource.Cancel();
+                _task.Wait(10000);
                 Core.Log.InfoBasic("Service stopped");
             }
             catch (Exception ex)
@@ -118,6 +122,7 @@ namespace TWCore.Services
                 //throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
@@ -126,6 +131,7 @@ namespace TWCore.Services
         {
             OnStop();
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -133,6 +139,7 @@ namespace TWCore.Services
         public void OnContinue()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>

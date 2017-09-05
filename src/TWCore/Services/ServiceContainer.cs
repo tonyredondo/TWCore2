@@ -22,18 +22,21 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Service container
     /// </summary>
     public class ServiceContainer : IServiceContainer
     {
         #region Statics
-        protected static ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
-        static string[] currentArgs;
-        static volatile bool serviceEndAfterStart;
+        protected static readonly ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
+        private static string[] _currentArgs;
+        private static volatile bool _serviceEndAfterStart;
+
         /// <summary>
         /// Gets if the Console is available
         /// </summary>
@@ -54,9 +57,10 @@ namespace TWCore.Services
         }
         #endregion
 
-        protected internal Action initAction;
+        protected internal readonly Action InitAction;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Service to execute
         /// </summary>
@@ -106,7 +110,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceContainer(string serviceName, IService service, Action initAction)
         {
-            this.initAction = initAction;
+            InitAction = initAction;
             ServiceName = serviceName;
             Service = service;
         }
@@ -118,7 +122,7 @@ namespace TWCore.Services
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ServiceExit()
-            => serviceEndAfterStart = true;
+            => _serviceEndAfterStart = true;
 
         /// <inheritdoc />
         /// <summary>
@@ -128,9 +132,9 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Run(string[] args)
         {
-            currentArgs = args ?? new string[0];
+            _currentArgs = args ?? new string[0];
 
-            if (currentArgs.Any(a => !a.Trim().StartsWith("/", StringComparison.OrdinalIgnoreCase)))
+            if (_currentArgs.Any(a => !a.Trim().StartsWith("/", StringComparison.OrdinalIgnoreCase)))
             {
                 ShowHeader();
                 Console.WriteLine("Error!: Wrong parameters.");
@@ -143,7 +147,7 @@ namespace TWCore.Services
             }
 
             var exec = false;
-            foreach (var param in currentArgs)
+            foreach (var param in _currentArgs)
             {
                 var lParam = param.Trim().ToLowerInvariant();
                 string value = null;
@@ -212,11 +216,9 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterParametersHandler(ContainerParameterHandler paramHandler)
         {
-            if (paramHandler?.Name != null)
-            {
-                paramHandler.Name = paramHandler.Name.ToLowerInvariant();
-                ParametersHandlers.TryAdd(paramHandler.Name, paramHandler);
-            }
+            if (paramHandler?.Name == null) return;
+            paramHandler.Name = paramHandler.Name.ToLowerInvariant();
+            ParametersHandlers.TryAdd(paramHandler.Name, paramHandler);
         }
         #endregion
 
@@ -242,7 +244,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void ShowFullHeader(bool showSettings = true)
         {
-            var strArgs = currentArgs.Join(" ");
+            var strArgs = _currentArgs.Join(" ");
 
             Core.Log.InfoBasic("**************************************************************************************");
             if (!string.IsNullOrWhiteSpace(strArgs))
@@ -319,7 +321,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void InternalRun(string[] args)
         {
-            initAction?.Invoke();
+            InitAction?.Invoke();
             ShowFullHeader();
 
             if (HasConsole)
@@ -334,7 +336,7 @@ namespace TWCore.Services
                 Core.Log.InfoBasic("**************************************************************************************");
                 Service.OnStart(null);
                 var paused = false;
-                while (!serviceEndAfterStart)
+                while (!_serviceEndAfterStart)
                 {
                     var key = Console.ReadKey().Key;
                     if (Service.CanPauseAndContinue)
@@ -361,7 +363,7 @@ namespace TWCore.Services
                 Service.OnStop();
                 Core.Log.InfoBasic("*** Service Stopped ***");
                 Core.Log.InfoBasic("**************************************************************************************");
-                if (!serviceEndAfterStart)
+                if (!_serviceEndAfterStart)
                 {
                     Core.Log.WriteEmptyLine();
                     Core.Log.InfoBasic("Press ENTER to exit.");
@@ -380,7 +382,7 @@ namespace TWCore.Services
                 Service.OnStop();
                 Core.Log.InfoBasic("*** Service Stopped ***");
                 Core.Log.InfoBasic("**************************************************************************************");
-                if (!serviceEndAfterStart)
+                if (!_serviceEndAfterStart)
                     Core.Log.WriteEmptyLine();
             }
             Core.Dispose();
@@ -388,25 +390,25 @@ namespace TWCore.Services
         #endregion
 
         #region Protected Methods
-        bool discovery;
+        private bool _discovery;
         protected virtual void RegisterDiscovery()
         {
-            if (Core.GlobalSettings.EnableDiscovery && DiscoveryService.HasRegisteredLocalService && !discovery)
+            if (!Core.GlobalSettings.EnableDiscovery || !DiscoveryService.HasRegisteredLocalService ||
+                _discovery) return;
+            _discovery = true;
+
+            var serializer = SerializerManager.DefaultBinarySerializer;
+            if (!string.IsNullOrWhiteSpace(Core.GlobalSettings.DiscoverySerializerMimeType))
             {
-                ISerializer serializer = SerializerManager.DefaultBinarySerializer;
-                if (!string.IsNullOrWhiteSpace(Core.GlobalSettings.DiscoverySerializerMimeType))
+                serializer = SerializerManager.GetByMimeType(Core.GlobalSettings.DiscoverySerializerMimeType);
+                if (serializer == null)
                 {
-                    serializer = SerializerManager.GetByMimeType(Core.GlobalSettings.DiscoverySerializerMimeType);
-                    if (serializer == null)
-                    {
-                        Core.Log.Warning("Discovery.SerializerMimeType can't be loaded, using default binary serializer.");
-                        serializer = SerializerManager.DefaultBinarySerializer;
-                    }
+                    Core.Log.Warning("Discovery.SerializerMimeType can't be loaded, using default binary serializer.");
+                    serializer = SerializerManager.DefaultBinarySerializer;
                 }
-                DiscoveryService.Serializer = serializer;
-                DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
-                discovery = true;
             }
+            DiscoveryService.Serializer = serializer;
+            DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
         }
         #endregion
     }

@@ -24,8 +24,7 @@ namespace TWCore.Services
     /// </summary>
     public class ParameterHandlerInfo
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        ServiceContainer _container;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceContainer _container;
 
         #region Properties
         /// <summary>
@@ -47,7 +46,11 @@ namespace TWCore.Services
         /// <summary>
         /// Service
         /// </summary>
-        public IService Service { get { return _container.Service; } set { _container.Service = value; } }
+        public IService Service
+        {
+            get => _container.Service;
+            set => _container.Service = value;
+        }
         #endregion
 
         #region .ctor
@@ -94,7 +97,7 @@ namespace TWCore.Services
         /// Call the Init Action of the Container
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitContainer() => _container.initAction?.Invoke();
+        public void InitContainer() => _container.InitAction?.Invoke();
         #endregion
     }
 }

@@ -106,7 +106,7 @@ namespace TWCore.Services.Windows
         {
             if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase))
             {
-                initAction?.Invoke();
+                InitAction?.Invoke();
                 Core.Log.InfoBasic("*** RUNNING AS WINDOWS SERVICE ***");
                 ShowFullHeader();
                 try

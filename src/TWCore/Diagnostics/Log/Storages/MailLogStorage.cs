@@ -23,15 +23,21 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Settings;
+// ReSharper disable InconsistentNaming
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc cref="ILogStorage" />
     /// <summary>
     /// Sends the Logs items via email using SMTP
     /// </summary>
     [SettingsContainer("MailLogStorage")]
     public class MailLogStorage: SettingsBase, ILogStorage
     {
+        private readonly List<ILogItem> _buffer = new List<ILogItem>();
+        private static bool _waiting;
+        private static SmtpClient _smtp;
+
         #region Settings
         /// <summary>
         /// SMTP Host
@@ -101,8 +107,8 @@ namespace TWCore.Diagnostics.Log.Storages
 
         #endregion
 
-        static SmtpClient _smtp;
-
+        #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Sends the Logs items via email using SMTP
         /// </summary>
@@ -118,6 +124,9 @@ namespace TWCore.Diagnostics.Log.Storages
                 _smtp = null;
             }
         }
+        #endregion
+
+        #region Public Methods
         /// <summary>
         /// Allow change the smtp config
         /// </summary>
@@ -133,12 +142,14 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             if (!_waiting)
             {
-                _smtp = new SmtpClient();
-                _smtp.DeliveryFormat = SmtpDeliveryFormat.International;
-                _smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-                _smtp.Host = host?.Trim();
-                _smtp.Port = port;
-                _smtp.UseDefaultCredentials = useDefaultCredentials;
+                _smtp = new SmtpClient
+                {
+                    DeliveryFormat = SmtpDeliveryFormat.International,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    Host = host?.Trim(),
+                    Port = port,
+                    UseDefaultCredentials = useDefaultCredentials
+                };
                 if (!useDefaultCredentials)
                     _smtp.Credentials = new NetworkCredential(user?.Trim(), password?.Trim());
                 _smtp.EnableSsl = useSSL;
@@ -148,7 +159,6 @@ namespace TWCore.Diagnostics.Log.Storages
             else
                 Core.Log.InfoBasic("Couldn't change the SMTP value because its in use");
         }
-
         /// <summary>
         /// Allow change the smtp config
         /// </summary>
@@ -165,29 +175,14 @@ namespace TWCore.Diagnostics.Log.Storages
                 Core.Log.InfoBasic("Couldn't change the SMTP value because its in use");
         }
 
-        /// <summary>
-        /// Dispose the current object resources
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            SendEmail();
-            buffer.Clear();
-            _smtp.Dispose();
-        }
-
-        #region Unused
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
         public void WriteEmptyLine()
         {
         }
-        #endregion
-
-
-        private readonly List<ILogItem> buffer = new List<ILogItem>();
-        private static bool _waiting;
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -195,57 +190,69 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
-            if (LevelAllowed.HasFlag(item.Level) && !item.Message.Contains("SMTPERROR"))
-            {
-                lock (buffer)
-                    buffer.Add(item);
+            if (!LevelAllowed.HasFlag(item.Level) || item.Message.Contains("SMTPERROR")) return;
 
-                if (!_waiting)
-                {
-                    _waiting = true;
-                    Task.Delay(TimeSpan.FromSeconds(BufferTimeoutInSeconds)).ContinueWith(t =>
-                    {
-                        SendEmail();
-                    });
-                }
-            }
+            lock (_buffer)
+                _buffer.Add(item);
+            if (_waiting) return;
+            _waiting = true;
+            Task.Delay(TimeSpan.FromSeconds(BufferTimeoutInSeconds)).ContinueWith(t =>
+            {
+                SendEmail();
+            });
         }
 
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose the current object resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
+        {
+            SendEmail();
+            _buffer.Clear();
+            _smtp.Dispose();
+        }
+        #endregion
+
+        #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SendEmail()
         {
-            var _message = new MailMessage();
-            _message.BodyEncoding = Encoding.UTF8;
-            _message.SubjectEncoding = Encoding.UTF8;
+            var message = new MailMessage
+            {
+                BodyEncoding = Encoding.UTF8,
+                SubjectEncoding = Encoding.UTF8
+            };
 
             var addFDisplay = AddressFromDisplay?.Trim();
             if (string.IsNullOrEmpty(addFDisplay))
-                _message.From = new MailAddress(AddressFrom?.Trim());
+                message.From = new MailAddress(AddressFrom?.Trim());
             else
-                _message.From = new MailAddress(AddressFrom?.Trim(), addFDisplay);
+                message.From = new MailAddress(AddressFrom?.Trim(), addFDisplay);
 
             AddressBcc = AddressBcc?.Replace(",", ";").Replace("|", ";");
             AddressCc = AddressCc?.Replace(",", ";").Replace("|", ";");
             AddressTo = AddressTo?.Replace(",", ";").Replace("|", ";");
 
-            AddressBcc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { _message.Bcc.Add(new MailAddress(a)); } });
-            AddressCc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { _message.CC.Add(new MailAddress(a)); } });
-            AddressTo.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { _message.To.Add(new MailAddress(a)); } });
+            AddressBcc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.Bcc.Add(new MailAddress(a)); } });
+            AddressCc.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.CC.Add(new MailAddress(a)); } });
+            AddressTo.SplitAndTrim(';').Each(a => { if (!string.IsNullOrEmpty(a)) { message.To.Add(new MailAddress(a)); } });
 
             var msg = string.Empty;
 
-            lock (buffer)
+            lock (_buffer)
             {
-                var first = buffer.First();
-                if (buffer.Count == 1)
+                var first = _buffer.First();
+                if (_buffer.Count == 1)
                 {
-                    _message.Subject = string.Format("{0} {1} {2} : {3}", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName, first.Message);
+                    message.Subject = string.Format("{0} {1} {2} : {3}", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName, first.Message);
                 }
                 else
                 {
-                    _message.Subject = string.Format("{0} {1} {2}: Messages", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName);
+                    message.Subject = string.Format("{0} {1} {2}: Messages", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName);
                 }
-                foreach (var innerItem in buffer)
+                foreach (var innerItem in _buffer)
                 {
                     msg += string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", innerItem.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), innerItem.MachineName, innerItem.EnvironmentName, innerItem.ApplicationName, innerItem.Message);
                     if (innerItem.Exception != null)
@@ -255,17 +262,17 @@ namespace TWCore.Diagnostics.Log.Storages
                         if (!string.IsNullOrEmpty(innerItem.Exception.StackTrace))
                             msg += "\r\nStack Trace: " + innerItem.Exception.StackTrace;
                     }
-                    if (innerItem != buffer.Last())
+                    if (innerItem != _buffer.Last())
                         msg += "\r\n-------------------------------\r\n";
                 }
-                buffer.Clear();
+                _buffer.Clear();
             }
-            _message.Body = msg;
+            message.Body = msg;
 
             if (_smtp == null) return;
             try
             {
-                _smtp.Send(_message);
+                _smtp.Send(message);
             }
             catch (Exception e)
             {
@@ -276,6 +283,6 @@ namespace TWCore.Diagnostics.Log.Storages
                 _waiting = false;
             }
         }
-
+        #endregion
     }
 }

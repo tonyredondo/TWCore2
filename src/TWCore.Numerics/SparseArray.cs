@@ -111,10 +111,7 @@ namespace TWCore.Numerics
 
                 return value;
             }
-            set
-            {
-                m_dictionary[key] = value;
-            }
+            set => m_dictionary[key] = value;
         }
 
         /// <summary>

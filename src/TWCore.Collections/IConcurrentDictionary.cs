@@ -15,20 +15,20 @@ limitations under the License.
  */
 
 
+// ReSharper disable InheritdocConsiderUsage
 namespace TWCore.Collections
 {
     /// <summary> Provides a delegate that performs convertions </summary>
-    public delegate TOutput Converter<TInput, TOutput>(TInput input);
+    public delegate TOutput Converter<in TInput, out TOutput>(TInput input);
     /// <summary> Provides a delegate that performs an atomic update of a key/value pair </summary>
-    public delegate TValue KeyValueUpdate<TKey, TValue>(TKey key, TValue original);
-
+    public delegate TValue KeyValueUpdate<in TKey, TValue>(TKey key, TValue original);
     /// <summary> Provides a delegate that performs a test on key/value pair </summary>
-    public delegate bool KeyValuePredicate<TKey, TValue>(TKey key, TValue original);
+    public delegate bool KeyValuePredicate<in TKey, in TValue>(TKey key, TValue original);
 
     /// <summary>
     /// An interface to provide conditional or custom creation logic to a concurrent dictionary.
     /// </summary>
-    public interface ICreateValue<TKey, TValue>
+    public interface ICreateValue<in TKey, TValue>
     {
         /// <summary>
         /// Called when the key was not found within the dictionary to produce a new value that can be added.
@@ -42,7 +42,7 @@ namespace TWCore.Collections
     /// <summary>
     /// An interface to provide conditional or custom update logic to a concurrent dictionary.
     /// </summary>
-    public interface IUpdateValue<TKey, TValue>
+    public interface IUpdateValue<in TKey, TValue>
     {
         /// <summary>
         /// Called when the key was found within the dictionary to produce a modified value to update the item
@@ -60,7 +60,7 @@ namespace TWCore.Collections
     /// Generally implemented as a struct and passed by ref to save stack space and to retrieve the values
     /// that where inserted or updated.
     /// </remarks>
-    public interface ICreateOrUpdateValue<TKey, TValue> : ICreateValue<TKey, TValue>, IUpdateValue<TKey, TValue>
+    public interface ICreateOrUpdateValue<in TKey, TValue> : ICreateValue<TKey, TValue>, IUpdateValue<TKey, TValue>
     {
     }
 
@@ -71,7 +71,7 @@ namespace TWCore.Collections
     /// Generally implemented as a struct and passed by ref to save stack space and to retrieve the values
     /// that where inserted or updated.
     /// </remarks>
-    public interface IRemoveValue<TKey, TValue>
+    public interface IRemoveValue<in TKey, in TValue>
     {
         /// <summary>
         /// Called when the dictionary is about to remove the key/value pair provided, return true to allow

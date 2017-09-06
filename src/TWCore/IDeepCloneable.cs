@@ -22,7 +22,7 @@ namespace TWCore
     /// Interface to make a deep clone of an object
     /// </summary>
     /// <typeparam name="T">Object Type</typeparam>
-    public interface IDeepCloneable<T>
+    public interface IDeepCloneable<out T>
     {
         /// <summary>
         /// Make a deep clone of the object

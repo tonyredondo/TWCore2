@@ -27,7 +27,7 @@ namespace TWCore.Data
     /// <param name="binder">EntityBinder instance</param>
     /// <param name="rowValues">Object array with all row values for an entity</param>
     /// <returns>Entity instance</returns>
-    public delegate T FillDataDelegate<T>(EntityBinder binder, object[] rowValues);
+    public delegate T FillDataDelegate<out T>(EntityBinder binder, object[] rowValues);
 
     /// <summary>
     /// Data access connection interface definition

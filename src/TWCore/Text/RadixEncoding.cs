@@ -65,11 +65,13 @@ namespace TWCore.Text
         readonly bool kIncludeProceedingZeros;
 
         /// <summary>Numerial base of this encoding</summary>
-        public int Radix { get { return kDigits.Length; } }
+        public int Radix => kDigits.Length;
+
         /// <summary>Endian ordering of bytes input to Encode and output by Decode</summary>
-        public EndianFormat Endian { get { return kEndian; } }
+        public EndianFormat Endian => kEndian;
+
         /// <summary>True if we want ending zero bytes to be encoded</summary>
-        public bool IncludeProceedingZeros { get { return kIncludeProceedingZeros; } }
+        public bool IncludeProceedingZeros => kIncludeProceedingZeros;
 
         /// <summary>
         /// Gets a string representation from the object instance

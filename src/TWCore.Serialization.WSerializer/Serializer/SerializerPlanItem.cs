@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable NotAccessedField.Global
 
 namespace TWCore.Serialization.WSerializer.Serializer
 {

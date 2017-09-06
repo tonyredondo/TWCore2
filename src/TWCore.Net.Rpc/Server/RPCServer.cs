@@ -24,6 +24,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Net.RPC.Server
 {

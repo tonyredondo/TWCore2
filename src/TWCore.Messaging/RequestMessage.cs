@@ -20,22 +20,29 @@ using System.Xml.Serialization;
 
 namespace TWCore.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a new Request Message for messaging
     /// </summary>
     [DataContract]
     public sealed class RequestMessage : IMessage
     {
+        /// <inheritdoc />
         /// <summary>
         /// Request Id
         /// </summary>
         [XmlAttribute, DataMember]
-        public Guid CorrelationId { get { return Header.CorrelationId; } set { Header.CorrelationId = value; } }
+        public Guid CorrelationId
+        {
+            get => Header.CorrelationId;
+            set => Header.CorrelationId = value;
+        }
         /// <summary>
         /// Request message header
         /// </summary>
         [XmlElement, DataMember]
         public RequestMessageHeader Header { get; set; } = new RequestMessageHeader();
+        /// <inheritdoc />
         /// <summary>
         /// Request body
         /// </summary>

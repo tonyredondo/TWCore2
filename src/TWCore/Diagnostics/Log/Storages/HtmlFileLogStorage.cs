@@ -20,9 +20,11 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 // ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable IntroduceOptionalParameters.Global
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Writes an html log file
     /// </summary>
@@ -262,7 +264,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// File name with path
         /// </summary>
-        public string FileName { get; private set; }
+        public string FileName { get; }
         /// <summary>
         /// File creation date
         /// </summary>
@@ -270,18 +272,19 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// True if a new log file is created each day; otherwise, false
         /// </summary>
-        public bool CreateByDay { get; private set; }
+        public bool CreateByDay { get; }
         /// <summary>
         /// True if a new log file is created when a maximum length is reached; otherwise, false.
         /// </summary>
-        public bool UseMaxLength { get; private set; }
+        public bool UseMaxLength { get; }
         /// <summary>
         /// Maximun length in bytes for a single file. Default value is 4Mb
         /// </summary>
-        public long MaxLength { get; private set; }
+        public long MaxLength { get; }
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Writes a simple log file
         /// </summary>
@@ -290,6 +293,7 @@ namespace TWCore.Diagnostics.Log.Storages
 		public HtmlFileLogStorage(string fileName) :
             this(fileName, true)
         { }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a simple log file
         /// </summary>
@@ -299,6 +303,7 @@ namespace TWCore.Diagnostics.Log.Storages
 		public HtmlFileLogStorage(string fileName, bool createByDay) :
             this(fileName, createByDay, false)
         { }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a simple log file
         /// </summary>
@@ -432,6 +437,7 @@ namespace TWCore.Diagnostics.Log.Storages
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -491,6 +497,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 _sWriter.Flush();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
@@ -504,6 +511,7 @@ namespace TWCore.Diagnostics.Log.Storages
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

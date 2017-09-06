@@ -17,8 +17,8 @@ namespace DasMulli.Win32.ServiceUtils
 
         public string ServiceDescription
         {
-            get { return serviceDescription; }
-            set { serviceDescription = value; }
+            get => serviceDescription;
+            set => serviceDescription = value;
         }
     }
 }

@@ -15,22 +15,27 @@ limitations under the License.
  */
 
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
+
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Threading
 {
+    /// <inheritdoc />
     /// <summary>
     /// Thread helper methods
     /// </summary>
     public class Thread : IThread
     {
+        /// <inheritdoc />
         /// <summary>
         /// Sleep time between condition checks
         /// </summary>
         public int SleepTimeBetweenConditionCheck { get; set; } = 10;
 
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps a thread for a specific time
         /// </summary>
@@ -41,6 +46,7 @@ namespace TWCore.Threading
             using (var tmpEvent = new ManualResetEventSlim(false))
                 tmpEvent.Wait(milliseconds);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps a thread for a specific time
         /// </summary>
@@ -51,6 +57,7 @@ namespace TWCore.Threading
         {
             token.WaitHandle.WaitOne(milliseconds);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps a thread for a specific time
         /// </summary>
@@ -61,6 +68,7 @@ namespace TWCore.Threading
             using (var tmpEvent = new ManualResetEventSlim(false))
                 tmpEvent.Wait(time);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps a thread for a specific time with a cancellation token
         /// </summary>
@@ -72,6 +80,7 @@ namespace TWCore.Threading
             token.WaitHandle.WaitOne(time);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>
@@ -80,20 +89,12 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SleepUntil(Func<bool> condition, CancellationToken token)
         {
-            if (!token.IsCancellationRequested && !condition())
-            {
-                using (var tmpEvent = new ManualResetEventSlim(false))
-                {
-                    Task.Factory.StartNew(objEvent =>
-                    {
-                        while (!token.IsCancellationRequested && !condition())
-                            token.WaitHandle.WaitOne(SleepTimeBetweenConditionCheck);
-                        ((ManualResetEventSlim)objEvent).Set();
-                    }, tmpEvent, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                    tmpEvent.Wait();
-                }
-            }
+            if (token.IsCancellationRequested) return;
+            var handle = token.WaitHandle;
+            while (!token.IsCancellationRequested && !condition())
+                handle.WaitOne(SleepTimeBetweenConditionCheck);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>
@@ -103,6 +104,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SleepUntil(Func<bool> condition, TimeSpan time, CancellationToken token)
             => SleepUntil(condition, (int)time.TotalMilliseconds, token);
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>
@@ -112,20 +114,14 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SleepUntil(Func<bool> condition, int milliseconds, CancellationToken token)
         {
-            if (!token.IsCancellationRequested && !condition())
-            {
-                using (var tmpEvent = new ManualResetEventSlim(false))
-                {
-                    Task.Factory.StartNew(objEvent =>
-                    {
-                        while (!token.IsCancellationRequested && !condition())
-                            token.WaitHandle.WaitOne(SleepTimeBetweenConditionCheck);
-                        ((ManualResetEventSlim)objEvent).Set();
-                    }, tmpEvent, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                    tmpEvent.Wait(milliseconds);
-                }
-            }
+            if (token.IsCancellationRequested) return;
+            var handle = token.WaitHandle;
+            var time = SleepTimeBetweenConditionCheck < milliseconds ? SleepTimeBetweenConditionCheck : milliseconds;
+            var sw = Stopwatch.StartNew();
+            while (!token.IsCancellationRequested && !condition() && sw.ElapsedMilliseconds < milliseconds)
+                handle.WaitOne(time);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>
@@ -134,6 +130,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SleepUntil(Func<bool> condition, TimeSpan time)
             => SleepUntil(condition, (int)time.TotalMilliseconds);
+        /// <inheritdoc />
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>
@@ -142,21 +139,18 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SleepUntil(Func<bool> condition, int? milliseconds = null)
         {
-            if (!condition())
+            if (condition()) return;
+            using (var tmpEvent = new ManualResetEventSlim(false))
             {
-                using (var tmpEvent = new ManualResetEventSlim(false))
+                if (milliseconds.HasValue)
                 {
-                    Task.Factory.StartNew(objEvent =>
-                    {
-                        while (!condition())
-                            Sleep(SleepTimeBetweenConditionCheck);
-                        ((ManualResetEventSlim)objEvent).Set();
-                    }, tmpEvent, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                    if (milliseconds.HasValue)
-                        tmpEvent.Wait(milliseconds.Value);
-                    else
-                        tmpEvent.Wait();
+                    var sw = Stopwatch.StartNew();
+                    while (!condition() && sw.ElapsedMilliseconds < milliseconds.Value)
+                        tmpEvent.Wait(SleepTimeBetweenConditionCheck);
+                    return;
                 }
+                while (!condition())
+                    tmpEvent.Wait(SleepTimeBetweenConditionCheck);
             }
         }
     }

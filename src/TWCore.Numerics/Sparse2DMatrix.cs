@@ -139,10 +139,7 @@ namespace TWCore.Numerics
                 return value;
             }
 
-            set
-            {
-                _dictionary[CombineKeys(key0, key1)] = value;
-            }
+            set => _dictionary[CombineKeys(key0, key1)] = value;
         }
         /// <summary>
         /// Determines whether this matrix contains the specified keys.

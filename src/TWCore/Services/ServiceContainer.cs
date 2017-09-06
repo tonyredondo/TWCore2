@@ -23,6 +23,7 @@ using System.Threading;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable IntroduceOptionalParameters.Global
 
 namespace TWCore.Services
 {

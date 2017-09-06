@@ -18,44 +18,44 @@ namespace DasMulli.Win32.ServiceUtils
 
         public ServiceType ServiceType
         {
-            get { return serviceType; }
-            set { serviceType = value; }
+            get => serviceType;
+            set => serviceType = value;
         }
 
         public ServiceState State
         {
-            get { return state; }
-            set { state = value; }
+            get => state;
+            set => state = value;
         }
 
         public ServiceAcceptedControlCommandsFlags AcceptedControlCommands
         {
-            get { return acceptedControlCommands; }
-            set { acceptedControlCommands = value; }
+            get => acceptedControlCommands;
+            set => acceptedControlCommands = value;
         }
 
         public int Win32ExitCode
         {
-            get { return win32ExitCode; }
-            set { win32ExitCode = value; }
+            get => win32ExitCode;
+            set => win32ExitCode = value;
         }
 
         public uint ServiceSpecificExitCode
         {
-            get { return serviceSpecificExitCode; }
-            set { serviceSpecificExitCode = value; }
+            get => serviceSpecificExitCode;
+            set => serviceSpecificExitCode = value;
         }
 
         public uint CheckPoint
         {
-            get { return checkPoint; }
-            set { checkPoint = value; }
+            get => checkPoint;
+            set => checkPoint = value;
         }
 
         public uint WaitHint
         {
-            get { return waitHint; }
-            set { waitHint = value; }
+            get => waitHint;
+            set => waitHint = value;
         }
 
         public ServiceStatus(ServiceType serviceType, ServiceState state, ServiceAcceptedControlCommandsFlags acceptedControlCommands, int win32ExitCode, uint serviceSpecificExitCode, uint checkPoint, uint waitHint)

@@ -25,6 +25,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Diagnostics.Status
 {

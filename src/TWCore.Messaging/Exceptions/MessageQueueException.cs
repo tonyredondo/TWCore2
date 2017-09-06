@@ -15,28 +15,33 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.Exceptions
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue exception
     /// </summary>
     public abstract class MessageQueueException : Exception
     {
+        /// <inheritdoc />
         /// <summary>
         /// Message queue exception
         /// </summary>
-        public MessageQueueException() { }
+        protected MessageQueueException() { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue exception
         /// </summary>
         /// <param name="message">Message describing the error</param>
-        public MessageQueueException(string message) : base(message) { }
+        protected MessageQueueException(string message) : base(message) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue exception
         /// </summary>
         /// <param name="message">Message describing the error</param>
         /// <param name="innerException">Inner exception</param>
-        public MessageQueueException(string message, Exception innerException) : base(message, innerException) { }
+        protected MessageQueueException(string message, Exception innerException) : base(message, innerException) { }
     }
 }

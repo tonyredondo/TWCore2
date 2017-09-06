@@ -24,7 +24,7 @@ namespace TWCore.Collections
     /// </summary>
     /// <param name="key">Key</param>
     /// <param name="value">Value</param>
-    public delegate void CacheNodeEventDelegate<TKey, TValue>(TKey key, TValue value);
+    public delegate void CacheNodeEventDelegate<in TKey, in TValue>(TKey key, TValue value);
     /// <summary>
     /// Defines a cache collection object
     /// </summary>

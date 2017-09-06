@@ -23,32 +23,38 @@ using TWCore.Serialization;
 
 namespace TWCore.Messaging.RawServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue server listener base
     /// </summary>
     public abstract class MQueueRawServerListenerBase : IMQueueRawServerListener
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Message queue connection
         /// </summary>
         public MQConnection Connection { get; protected set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the current configuration
         /// </summary>
         public MQPairConfig Config { get; protected set; }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue listener server counters
         /// </summary>
-        public MQRawServerCounters Counters { get; private set; }
+        public MQRawServerCounters Counters { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the receiver serializer
         /// </summary>
         public ISerializer ReceiverSerializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the server is configured as response server
         /// </summary>
-        public bool ResponseServer { get; private set; }
+        public bool ResponseServer { get; }
         #endregion
 
         #region Events
@@ -70,7 +76,7 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="server">Message queue server instance</param>
 		/// <param name="responseServer">true if the server is going to act as a response server</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public MQueueRawServerListenerBase(MQConnection connection, IMQueueRawServer server, bool responseServer)
+		protected MQueueRawServerListenerBase(MQConnection connection, IMQueueRawServer server, bool responseServer)
         {
             Connection = connection;
             Config = server.Config;
@@ -89,6 +95,7 @@ namespace TWCore.Messaging.RawServer
 		#endregion
 
 		#region Public Methods
+		/// <inheritdoc />
 		/// <summary>
 		/// Start the queue listener for request messages
 		/// </summary>
@@ -99,6 +106,7 @@ namespace TWCore.Messaging.RawServer
         {
             return OnListenerTaskStartAsync(token);
         }
+		/// <inheritdoc />
 		/// <summary>
 		/// Dispose all resources
 		/// </summary>

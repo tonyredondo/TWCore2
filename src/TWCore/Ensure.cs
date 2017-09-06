@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 
 namespace TWCore
 {

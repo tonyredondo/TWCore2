@@ -15,7 +15,7 @@ limitations under the License.
  */
 
 using System.Threading;
-
+// ReSharper disable NotAccessedField.Global
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services.Messaging

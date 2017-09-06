@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Container Parameter Service
     /// </summary>
@@ -26,17 +27,17 @@ namespace TWCore.Services
         /// <summary>
         /// Parameter Name
         /// </summary>
-        public string Name { get; protected set; }
+        public string Name { get; }
         /// <summary>
         /// Parameter Description
         /// </summary>
-        public string Description { get; protected set; }
+        public string Description { get; }
 
         /// <summary>
         /// Container Parameter Service
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ContainerParameterService(string name, string description) 
+        protected ContainerParameterService(string name, string description) 
         {
             Name = name;
             Description = description;

@@ -25,6 +25,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Serialization;
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Net.HttpServer
 {

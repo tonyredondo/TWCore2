@@ -19,9 +19,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable IntroduceOptionalParameters.Global
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// Recycle ByteArray MemoryStream
     /// </summary>
@@ -44,22 +46,27 @@ namespace TWCore.IO
         private static readonly Queue<byte[]> Pool = new Queue<byte[]>();
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
         public override bool CanRead => true;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         public override bool CanSeek => true;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         public override bool CanWrite => _canWrite;
+        /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
 		public override long Length => (_maxRow * MaxLength) + _length;
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
@@ -79,26 +86,31 @@ namespace TWCore.IO
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Recycle ByteArray MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream() : this(null, 0, 0, true) { }
+        /// <inheritdoc />
         /// <summary>
         /// Recycle ByteArray MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer) : this(buffer, 0, buffer?.Length ?? 0, true) { }
+        /// <inheritdoc />
         /// <summary>
         /// Recycle ByteArray MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, bool writable) : this(buffer, 0, buffer?.Length ?? 0, writable) { }
+        /// <inheritdoc />
         /// <summary>
         /// Recycle ByteArray MemoryStream
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count) : this(buffer, index, count, true) { }
+        /// <inheritdoc />
         /// <summary>
         /// Recycle ByteArray MemoryStream
         /// </summary>
@@ -134,11 +146,13 @@ namespace TWCore.IO
         #endregion
 
         #region Abstract Override Methods
+        /// <inheritdoc />
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Flush() { }
+        /// <inheritdoc />
         /// <summary>
         /// Sets the position within the current stream.
         /// </summary>
@@ -167,6 +181,7 @@ namespace TWCore.IO
             Position = currentPosition;
             return currentPosition;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
@@ -204,6 +219,7 @@ namespace TWCore.IO
                 _maxRow++;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -240,6 +256,7 @@ namespace TWCore.IO
             }
             return total;
         }
+        /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
@@ -270,6 +287,7 @@ namespace TWCore.IO
                 count -= canWrite;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
         /// </summary>
@@ -292,6 +310,7 @@ namespace TWCore.IO
             _length = 1;
             _currentBuffer[0] = value;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
         /// </summary>

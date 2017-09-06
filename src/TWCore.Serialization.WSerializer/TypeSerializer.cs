@@ -25,7 +25,7 @@ namespace TWCore.Serialization.WSerializer
     /// </summary>
     public abstract class TypeSerializer
     {
-		byte[] _buffer = new byte[9];
+        private readonly byte[] _buffer = new byte[9];
 
         /// <summary>
         /// Type serializer initialization
@@ -143,6 +143,7 @@ namespace TWCore.Serialization.WSerializer
         }
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Definition for a type serializer
     /// </summary>

@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Diagnostics.Status
 {

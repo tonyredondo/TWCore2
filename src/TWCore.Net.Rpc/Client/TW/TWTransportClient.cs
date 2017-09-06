@@ -30,6 +30,7 @@ using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Net.RPC.Client.Transports
 {

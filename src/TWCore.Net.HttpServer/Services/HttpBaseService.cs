@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Net.HttpServer;
 // ReSharper disable CheckNamespace
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
 {
@@ -66,7 +67,7 @@ namespace TWCore.Services
         /// <param name="port">Http binding port</param>
         /// <param name="webFolder">Web folder, where the files are located.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public HttpBaseService(int port, string webFolder)
+        protected HttpBaseService(int port, string webFolder)
         {
             Port = port;
             WebFolder = webFolder;

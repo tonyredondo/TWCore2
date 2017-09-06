@@ -487,10 +487,7 @@ namespace TWCore.Collections
 
         #region ICollection<KeyValuePair<TKey,TValue>> Members
 
-        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly
-        {
-            get { return false; }
-        }
+        bool ICollection<KeyValuePair<TKey, TValue>>.IsReadOnly => false;
 
         void ICollection<KeyValuePair<TKey, TValue>>.Add(KeyValuePair<TKey, TValue> item)
         {
@@ -499,9 +496,7 @@ namespace TWCore.Collections
 
         bool ICollection<KeyValuePair<TKey, TValue>>.Contains(KeyValuePair<TKey, TValue> item)
         {
-            if (TryGetValue(item.Key, out var test))
-                return EqualityComparer<TValue>.Default.Equals(item.Value, test);
-            return false;
+            return TryGetValue(item.Key, out var test) && EqualityComparer<TValue>.Default.Equals(item.Value, test);
         }
 
         void ICollection<KeyValuePair<TKey, TValue>>.CopyTo(KeyValuePair<TKey, TValue>[] array, int arrayIndex)
@@ -569,6 +564,7 @@ namespace TWCore.Collections
                 _state.Init();
             }
 
+            /// <inheritdoc />
             /// <summary>
             /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
             /// </summary>
@@ -577,8 +573,9 @@ namespace TWCore.Collections
                 _state.Unlock();
             }
 
-            object IEnumerator.Current { get { return Current; } }
+            object IEnumerator.Current => Current;
 
+            /// <inheritdoc />
             /// <summary>
             /// Gets the element in the collection at the current position of the enumerator.
             /// </summary>
@@ -586,7 +583,7 @@ namespace TWCore.Collections
             {
                 get
                 {
-                    int index = _state.Current;
+                    var index = _state.Current;
                     if (index <= 0)
                         throw new InvalidOperationException();
                     if (_owner._entries == null)
@@ -666,13 +663,11 @@ namespace TWCore.Collections
                     array[arrayIndex++] = item.Key;
             }
 
+            /// <inheritdoc />
             /// <summary>
-            /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
+            /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1" />.
             /// </summary>
-            public int Count
-            {
-                get { return _owner.Count; }
-            }
+            public int Count => _owner.Count;
 
             /// <summary>
             /// Returns an enumerator that iterates through the collection.
@@ -698,6 +693,7 @@ namespace TWCore.Collections
                     _state.Init();
                 }
 
+                /// <inheritdoc />
                 /// <summary>
                 /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
                 /// </summary>
@@ -706,8 +702,9 @@ namespace TWCore.Collections
                     _state.Unlock();
                 }
 
-                object IEnumerator.Current { get { return Current; } }
+                object IEnumerator.Current => Current;
 
+                /// <inheritdoc />
                 /// <summary>
                 /// Gets the element in the collection at the current position of the enumerator.
                 /// </summary>
@@ -715,7 +712,7 @@ namespace TWCore.Collections
                 {
                     get
                     {
-                        int index = _state.Current;
+                        var index = _state.Current;
                         if (index <= 0)
                             throw new InvalidOperationException();
                         if (_owner._entries == null)
@@ -753,10 +750,8 @@ namespace TWCore.Collections
                 return new Enumerator(_owner);
             }
             [Obsolete]
-            bool ICollection<TKey>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TKey>.IsReadOnly => true;
+
             [Obsolete]
             void ICollection<TKey>.Add(TKey item)
             {
@@ -780,9 +775,11 @@ namespace TWCore.Collections
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the keys of the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
-        public KeyCollection Keys { get { return _keyCollection ?? (_keyCollection = new KeyCollection(this)); } }
+        public KeyCollection Keys => _keyCollection ?? (_keyCollection = new KeyCollection(this));
+
         [Obsolete]
-        ICollection<TKey> IDictionary<TKey, TValue>.Keys { get { return Keys; } }
+        ICollection<TKey> IDictionary<TKey, TValue>.Keys => Keys;
+
         #endregion
 
         #region ValueCollection
@@ -830,10 +827,7 @@ namespace TWCore.Collections
             /// <summary>
             /// Gets the number of elements contained in the <see cref="T:System.Collections.Generic.ICollection`1"/>.
             /// </summary>
-            public int Count
-            {
-                get { return _owner.Count; }
-            }
+            public int Count => _owner.Count;
 
             /// <summary>
             /// Returns an enumerator that iterates through the collection.
@@ -867,7 +861,7 @@ namespace TWCore.Collections
                     _state.Unlock();
                 }
 
-                object IEnumerator.Current { get { return Current; } }
+                object IEnumerator.Current => Current;
 
                 /// <summary>
                 /// Gets the element in the collection at the current position of the enumerator.
@@ -914,10 +908,8 @@ namespace TWCore.Collections
                 return new Enumerator(_owner);
             }
             [Obsolete]
-            bool ICollection<TValue>.IsReadOnly
-            {
-                get { return true; }
-            }
+            bool ICollection<TValue>.IsReadOnly => true;
+
             [Obsolete]
             void ICollection<TValue>.Add(TValue item)
             {
@@ -941,9 +933,10 @@ namespace TWCore.Collections
         /// <summary>
         /// Gets an <see cref="T:System.Collections.Generic.ICollection`1"/> containing the values in the <see cref="T:System.Collections.Generic.IDictionary`2"/>.
         /// </summary>
-        public ValueCollection Values { get { return _valueCollection ?? (_valueCollection = new ValueCollection(this)); } }
+        public ValueCollection Values => _valueCollection ?? (_valueCollection = new ValueCollection(this));
+
         [Obsolete]
-        ICollection<TValue> IDictionary<TKey, TValue>.Values { get { return Values; } }
+        ICollection<TValue> IDictionary<TKey, TValue>.Values => Values;
 
         #endregion
 

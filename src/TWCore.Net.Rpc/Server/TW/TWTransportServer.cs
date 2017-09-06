@@ -27,6 +27,7 @@ using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Net.RPC.Server.Transports
 {

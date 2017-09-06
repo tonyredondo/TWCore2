@@ -6,6 +6,7 @@ using TWCore.IO;
 using TWCore.Services;
 // ReSharper disable UnusedVariable
 // ReSharper disable AccessToDisposedClosure
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Tests
 {
@@ -111,7 +112,7 @@ namespace TWCore.Tests
             Console.ReadLine();
             using (var sharedms = new SharedMemoryStream("test", 2000))
             {
-                CancellationTokenSource cts = new CancellationTokenSource();
+                var cts = new CancellationTokenSource();
                 Task.Run(async () =>
                 {
                     var i = 0;

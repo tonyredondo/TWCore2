@@ -27,7 +27,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
     /// </summary>
 	public class NumberSerializer : TypeSerializer<int>
     {
-        private static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
             DataType.Decimal, DataType.DecimalDefault, DataType.RefDecimalByte, DataType.RefDecimalUShort,
             DataType.Double, DataType.DoubleDefault, DataType.RefDoubleByte, DataType.RefDoubleUShort,

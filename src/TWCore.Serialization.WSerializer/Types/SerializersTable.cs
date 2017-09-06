@@ -278,6 +278,7 @@ namespace TWCore.Serialization.WSerializer.Types
         #endregion
 
         public static readonly Dictionary<byte, Type> DeserializerTypesCache = new Dictionary<byte, Type>();
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static DeserializersTable()
         {

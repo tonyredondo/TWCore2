@@ -20,20 +20,24 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache storage using LFU Algorithm
     /// </summary>
     public class LFUStorage : CacheCollectionStorage
     {
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>
         public LFUStorage() : base(new LFUCollection<string, (StorageItemMeta, SerializedObject)>()) { }
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>
         /// <param name="capacity">Capacity of the storage</param>
         public LFUStorage(int capacity) : base(new LFUCollection<string, (StorageItemMeta, SerializedObject)>(capacity)) { }
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>

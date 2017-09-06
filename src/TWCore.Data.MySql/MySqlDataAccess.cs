@@ -25,21 +25,25 @@ using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data.MySql
 {
+    /// <inheritdoc />
     /// <summary>
     /// MySql Data Access
     /// </summary>
     public class MySqlDataAccess : DataAccessBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database connection object
         /// </summary>
         /// <returns>A DbConnection object</returns>
         protected override DbConnection GetConnection() => new MySqlConnection();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database command object
         /// </summary>
         /// <returns>A DbCommand object</returns>
         protected override DbCommand GetCommand() => new MySqlCommand();
+        /// <inheritdoc />
         /// <summary>
         /// MySql Server Data access
         /// </summary>

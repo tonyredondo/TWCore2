@@ -27,6 +27,7 @@ using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data.SqlServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Sql Server Data Access
     /// </summary>
@@ -44,11 +45,13 @@ namespace TWCore.Data.SqlServer
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database connection object
         /// </summary>
         /// <returns>A DbConnection object</returns>
         protected override DbConnection GetConnection() => new SqlConnection();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database command object
         /// </summary>
@@ -65,6 +68,7 @@ namespace TWCore.Data.SqlServer
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Sql Server Data access
         /// </summary>
@@ -74,6 +78,7 @@ namespace TWCore.Data.SqlServer
             ParametersBinder = new SqlServerParametersBinder(this);
             EntityValueConverter = new SqlServerEntityValueConverter(this);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sql Server Data access
         /// </summary>

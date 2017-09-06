@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 // ReSharper disable NonReadonlyMemberInGetHashCode
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Collections
 {

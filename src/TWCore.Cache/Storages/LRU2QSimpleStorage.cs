@@ -20,20 +20,24 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache storage using a collection with a fixed capacity and LRU 2Q replacement logic
     /// </summary>
     public class LRU2QSimpleStorage : CacheCollectionStorage
     {
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using a collection with a fixed capacity and LRU 2Q replacement logic
         /// </summary>
         public LRU2QSimpleStorage() : base(new LRU2QSimpleCollection<string, (StorageItemMeta, SerializedObject)>()) { }
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using a collection with a fixed capacity and LRU 2Q replacement logic
         /// </summary>
         /// <param name="capacity">Capacity of the storage</param>
         public LRU2QSimpleStorage(int capacity) : base(new LRU2QSimpleCollection<string, (StorageItemMeta, SerializedObject)>(capacity)) { }
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using a collection with a fixed capacity and LRU 2Q replacement logic
         /// </summary>

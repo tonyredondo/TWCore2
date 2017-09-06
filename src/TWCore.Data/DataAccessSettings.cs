@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using TWCore.Settings;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default configuration values for SqlDataAccess classes
     /// </summary>

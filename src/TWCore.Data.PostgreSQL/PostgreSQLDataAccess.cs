@@ -28,22 +28,26 @@ using System.Data;
 
 namespace TWCore.Data.PostgreSQL
 {
+    /// <inheritdoc />
     /// <summary>
     /// Postgres Data Access
     /// </summary>
     public class PostgreSQLDataAccess : DataAccessBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database connection object
         /// </summary>
         /// <returns>A DbConnection object</returns>
         protected override DbConnection GetConnection() => new NpgsqlConnection();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database command object
         /// </summary>
         /// <returns>A DbCommand object</returns>
         protected override DbCommand GetCommand() => new NpgsqlCommand();
 
+        /// <inheritdoc />
         /// <summary>
         /// Postgresql Server Data access
         /// </summary>

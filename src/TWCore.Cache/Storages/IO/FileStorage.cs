@@ -69,6 +69,7 @@ namespace TWCore.Cache.Storages.IO
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// File Cache Storage
         /// </summary>
@@ -98,6 +99,7 @@ namespace TWCore.Cache.Storages.IO
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// Init this storage
         /// </summary>

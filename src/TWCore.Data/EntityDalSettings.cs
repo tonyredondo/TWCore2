@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using TWCore.Settings;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Entity Dal Settings
     /// </summary>

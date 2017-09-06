@@ -27,6 +27,10 @@ using TWCore.Collections;
 using TWCore.Data.Schema;
 using TWCore.Data.Schema.Generator;
 // ReSharper disable PossibleMultipleEnumeration
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore.Data
 {
@@ -132,18 +136,15 @@ namespace TWCore.Data
         protected virtual IDictionary<string, object> GetCommandParameters(object parameters)
         {
             var propertyInfos = parameters?.GetType().GetRuntimeProperties().Where(p => p.CanRead && !p.GetCustomAttributes<IgnoreParameterAttribute>().Any());
-            if (propertyInfos != null)
+            if (propertyInfos == null) return null;
+            var dctParameters = new Dictionary<string, object>();
+            foreach (var prop in propertyInfos)
             {
-                var dctParameters = new Dictionary<string, object>();
-                foreach (var prop in propertyInfos)
-                {
-                    var pKey = prop.Name;
-                    var pValue = prop.GetValue(parameters);
-                    dctParameters[pKey] = pValue;
-                }
-                return dctParameters;
+                var pKey = prop.Name;
+                var pValue = prop.GetValue(parameters);
+                dctParameters[pKey] = pValue;
             }
-            return null;
+            return dctParameters;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> ExtractColumnNames(string nameOrQuery, DbDataReader reader)
@@ -159,8 +160,7 @@ namespace TWCore.Data
                 }
                 return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
             }
-            else
-                return InternalExtractColumnNames(nameOrQuery, reader);
+            return InternalExtractColumnNames(nameOrQuery, reader);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> InternalExtractColumnNames(string nameOrQuery, DbDataReader reader)
@@ -240,6 +240,7 @@ namespace TWCore.Data
         //Sync Version
 
         #region SelectElements<T>
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -250,6 +251,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
             => SelectElements(nameOrQuery, null, fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -261,6 +263,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElements(nameOrQuery, GetCommandParameters(parameters), fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -272,6 +275,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElements(nameOrQuery, parameters, fillMethod, out object _);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -283,6 +287,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
             => SelectElements(nameOrQuery, null, fillMethod, out returnValue);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -295,6 +300,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> SelectElements<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
             => SelectElements(nameOrQuery, GetCommandParameters(parameters), fillMethod, out returnValue);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -313,23 +319,19 @@ namespace TWCore.Data
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
                 if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-                else
+
+                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
+                if (Caches.TryGetValue(key, out var cacheValue))
                 {
-                    var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                    if (Caches.TryGetValue(key, out object cacheValue))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value = (CacheValue<T>)cacheValue;
-                        returnValue = value.ReturnValue;
-                        return value.ResponseCollection;
-                    }
-                    else
-                    {
-                        var col = OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
-                        Caches.TryAdd(key, new CacheValue<T>(col, returnValue), CacheTimeout);
-                        return col;
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value = (CacheValue<T>)cacheValue;
+                    returnValue = value.ReturnValue;
+                    return value.ResponseCollection;
                 }
+
+                var col = OnSelectElements(nameOrQuery, parameters, fillMethod, out returnValue);
+                Caches.TryAdd(key, new CacheValue<T>(col, returnValue), CacheTimeout);
+                return col;
             }
             catch (Exception ex)
             {
@@ -435,6 +437,7 @@ namespace TWCore.Data
         #endregion
 
         #region SelectElement
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -445,6 +448,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
             => SelectElement(nameOrQuery, null, fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -456,6 +460,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElement(nameOrQuery, GetCommandParameters(parameters), fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -467,6 +472,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectElement<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElement(nameOrQuery, parameters, fillMethod, out object _);
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -479,6 +485,7 @@ namespace TWCore.Data
         public T SelectElement<T>(string nameOrQuery, FillDataDelegate<T> fillMethod, out object returnValue)
             => SelectElement(nameOrQuery, null, fillMethod, out returnValue);
 
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -492,6 +499,7 @@ namespace TWCore.Data
         public T SelectElement<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod, out object returnValue)
             => SelectElement(nameOrQuery, GetCommandParameters(parameters), fillMethod, out returnValue);
 
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -510,23 +518,19 @@ namespace TWCore.Data
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
                 if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-                else
+
+                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
+                if (Caches.TryGetValue(key, out object cacheValue))
                 {
-                    var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                    if (Caches.TryGetValue(key, out object cacheValue))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value = (CacheValue<T>)cacheValue;
-                        returnValue = value.ReturnValue;
-                        return value.Response;
-                    }
-                    else
-                    {
-                        var item = OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
-                        Caches.TryAdd(key, new CacheValue<T>(item, returnValue), CacheTimeout);
-                        return item;
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value = (CacheValue<T>)cacheValue;
+                    returnValue = value.ReturnValue;
+                    return value.Response;
                 }
+
+                var item = OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
+                Caches.TryAdd(key, new CacheValue<T>(item, returnValue), CacheTimeout);
+                return item;
             }
             catch (Exception ex)
             {
@@ -624,6 +628,7 @@ namespace TWCore.Data
         #endregion
 
         #region ExecuteNonQuery
+        /// <inheritdoc />
         /// <summary>
         /// Execute a command on the data source and returns the number of rows.
         /// </summary>
@@ -633,6 +638,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ExecuteNonQuery(string nameOrQuery, object parameters)
             => ExecuteNonQuery(nameOrQuery, GetCommandParameters(parameters));
+        /// <inheritdoc />
         /// <summary>
         /// Execute a command on the data source and returns the number of rows.
         /// </summary>
@@ -814,6 +820,7 @@ namespace TWCore.Data
         #endregion
 
         #region SelectScalar
+        /// <inheritdoc />
         /// <summary>
         /// Select a single row field from the data source
         /// </summary>
@@ -823,6 +830,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T SelectScalar<T>(string nameOrQuery, object parameters)
             => SelectScalar<T>(nameOrQuery, GetCommandParameters(parameters));
+        /// <inheritdoc />
         /// <summary>
         /// Select a single row field from the data source
         /// </summary>
@@ -1374,6 +1382,7 @@ namespace TWCore.Data
         //Async Version
 
         #region SelectElementsAsync<T>
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -1384,6 +1393,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
             => SelectElementsAsync(nameOrQuery, null, fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -1395,6 +1405,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IEnumerable<T>> SelectElementsAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElementsAsync(nameOrQuery, GetCommandParameters(parameters), fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Selects a collection of elements from the data source
         /// </summary>
@@ -1411,22 +1422,18 @@ namespace TWCore.Data
                 Core.Log.LibVerbose("Selecting elements from the data source using: {0}", nameOrQuery);
                 if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-                else
+
+                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
+                if (Caches.TryGetValue(key, out object cacheValue))
                 {
-                    var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                    if (Caches.TryGetValue(key, out object cacheValue))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value = (CacheValue<T>)cacheValue;
-                        return value.ResponseCollection;
-                    }
-                    else
-                    {
-                        var col = await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-                        Caches.TryAdd(key, new CacheValue<T>(col, null), CacheTimeout);
-                        return col;
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value = (CacheValue<T>)cacheValue;
+                    return value.ResponseCollection;
                 }
+
+                var col = await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+                Caches.TryAdd(key, new CacheValue<T>(col, null), CacheTimeout);
+                return col;
             }
             catch (Exception ex)
             {
@@ -1519,6 +1526,7 @@ namespace TWCore.Data
         #endregion
 
         #region SelectElementAsync
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -1529,6 +1537,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<T> SelectElementAsync<T>(string nameOrQuery, FillDataDelegate<T> fillMethod = null)
             => SelectElementAsync(nameOrQuery, null, fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -1540,6 +1549,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<T> SelectElementAsync<T>(string nameOrQuery, object parameters, FillDataDelegate<T> fillMethod = null)
             => SelectElementAsync(nameOrQuery, GetCommandParameters(parameters), fillMethod);
+        /// <inheritdoc />
         /// <summary>
         /// Select a single element from the data source
         /// </summary>
@@ -1556,22 +1566,18 @@ namespace TWCore.Data
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
                 if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
                     return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod);
-                else
+
+                var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
+                if (Caches.TryGetValue(key, out object cacheValue))
                 {
-                    var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                    if (Caches.TryGetValue(key, out object cacheValue))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value = (CacheValue<T>)cacheValue;
-                        return value.Response;
-                    }
-                    else
-                    {
-                        var item = await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
-                        Caches.TryAdd(key, new CacheValue<T>(item, null), CacheTimeout);
-                        return item;
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value = (CacheValue<T>)cacheValue;
+                    return value.Response;
                 }
+
+                var item = await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
+                Caches.TryAdd(key, new CacheValue<T>(item, null), CacheTimeout);
+                return item;
             }
             catch (Exception ex)
             {
@@ -1656,6 +1662,7 @@ namespace TWCore.Data
         #endregion
 
         #region ExecuteNonQueryAsync
+        /// <inheritdoc />
         /// <summary>
         /// Execute a command on the data source and returns the number of rows.
         /// </summary>
@@ -1665,6 +1672,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<int> ExecuteNonQueryAsync(string nameOrQuery, object parameters)
             => ExecuteNonQueryAsync(nameOrQuery, GetCommandParameters(parameters));
+        /// <inheritdoc />
         /// <summary>
         /// Execute a command on the data source and returns the number of rows.
         /// </summary>
@@ -1850,6 +1858,7 @@ namespace TWCore.Data
         #endregion
 
         #region SelectScalarAsync
+        /// <inheritdoc />
         /// <summary>
         /// Select a single row field from the data source
         /// </summary>
@@ -1859,6 +1868,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<T> SelectScalarAsync<T>(string nameOrQuery, object parameters)
             => SelectScalarAsync<T>(nameOrQuery, GetCommandParameters(parameters));
+        /// <inheritdoc />
         /// <summary>
         /// Select a single row field from the data source
         /// </summary>
@@ -2361,6 +2371,7 @@ namespace TWCore.Data
 
 
         #region GetSchema
+        /// <inheritdoc />
         /// <summary>
         /// Get Database Schema
         /// </summary>
@@ -2377,6 +2388,7 @@ namespace TWCore.Data
                 return dset;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get Database Schema
         /// </summary>
@@ -2407,6 +2419,7 @@ namespace TWCore.Data
         #endregion
 
         #region IDataAccessDynamicGenerator
+        /// <inheritdoc />
         /// <summary>
         /// Get the Select Base Sql from a GeneratorSelectionContainer instance
         /// </summary>
@@ -2416,6 +2429,7 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get the Where from Sql from GeneratorSelectionContainer instance
         /// </summary>
@@ -2425,6 +2439,7 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get the Insert sql from a GeneratorSelectionContainer instance
         /// </summary>
@@ -2434,6 +2449,7 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get the Update sql from a GeneratorSelectionContainer instance
         /// </summary>
@@ -2443,6 +2459,7 @@ namespace TWCore.Data
         {
             throw new NotSupportedException("The DynamicQuery feature is not supported by this provider.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get the Delete sql from a GeneratorSelectionContainer instance
         /// </summary>

@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 // ReSharper disable MemberHidesStaticFromOuterClass
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Collections
 {

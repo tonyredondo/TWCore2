@@ -26,16 +26,19 @@ using TWCore.Data.Schema.Generator;
 
 namespace TWCore.Data.SQLite
 {
+    /// <inheritdoc />
     /// <summary>
     /// SQLite Data Access
     /// </summary>
     public class SQLiteDataAccess : DataAccessBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database connection object
         /// </summary>
         /// <returns>A DbConnection object</returns>
         protected override DbConnection GetConnection() => new SqliteConnection();
+        /// <inheritdoc />
         /// <summary>
         /// Gets the database command object
         /// </summary>
@@ -43,6 +46,7 @@ namespace TWCore.Data.SQLite
         protected override DbCommand GetCommand() => new SqliteCommand();
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Sql Server Data access
         /// </summary>
@@ -50,12 +54,12 @@ namespace TWCore.Data.SQLite
         {
             AccessType = DataAccessType.Query;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sql Server Data access
         /// </summary>
         /// <param name="connectionString">Connection string</param>
         /// <param name="accessType">Data access type</param>
-        // ReSharper disable once UnusedParameter.Local
         public SQLiteDataAccess(string connectionString, DataAccessType accessType = DataAccessType.Query)
         {
             ConnectionString = connectionString;

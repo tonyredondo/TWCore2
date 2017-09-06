@@ -24,6 +24,7 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache storage adapter to use with an ICacheCollection instance
     /// </summary>
@@ -31,6 +32,7 @@ namespace TWCore.Cache.Storages
     {
         private ICacheCollection<string, (StorageItemMeta, SerializedObject)> _storage;
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the Storage Type
 		/// </summary>
@@ -38,11 +40,12 @@ namespace TWCore.Cache.Storages
 		public override StorageType Type => StorageType.Memory;
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>
         /// <param name="cacheCollection">ICacheCollection instance</param>
-        public CacheCollectionStorage(ICacheCollection<string, (StorageItemMeta, SerializedObject)> cacheCollection)
+        protected CacheCollectionStorage(ICacheCollection<string, (StorageItemMeta, SerializedObject)> cacheCollection)
         {
             _storage = cacheCollection;
             Core.Status.Attach(collection =>
@@ -60,6 +63,7 @@ namespace TWCore.Cache.Storages
         #endregion
 
         #region Abstract storage base
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the items metadata.
 		/// </summary>
@@ -69,6 +73,7 @@ namespace TWCore.Cache.Storages
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get => _storage.Values.Select(v => v.Item1);
 		}
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -77,6 +82,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
             => _storage.ContainsKey(key);
+        /// <inheritdoc />
         /// <summary>
         /// Get all storage keys.
         /// </summary>
@@ -84,6 +90,7 @@ namespace TWCore.Cache.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
             => _storage.Keys.ToArray();
+        /// <inheritdoc />
         /// <summary>
         /// Tries to set the data to the storage
         /// </summary>
@@ -97,6 +104,7 @@ namespace TWCore.Cache.Storages
             _storage.AddOrUpdate(meta.Key, (meta, value), (k, v) => (meta, value));
             return true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Tries to remove an item from the storage
         /// </summary>
@@ -114,6 +122,7 @@ namespace TWCore.Cache.Storages
             meta = null;
             return false;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Tries to get the data from the storage
         /// </summary>
@@ -132,6 +141,7 @@ namespace TWCore.Cache.Storages
             value = null;
             return false;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Tries to get the metadata from the storage
         /// </summary>
@@ -153,6 +163,7 @@ namespace TWCore.Cache.Storages
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// Init this storage
         /// </summary>
@@ -160,6 +171,7 @@ namespace TWCore.Cache.Storages
 		{
 			SetReady(true);
 		}
+        /// <inheritdoc />
         /// <summary>
         /// Release all resources
         /// </summary>

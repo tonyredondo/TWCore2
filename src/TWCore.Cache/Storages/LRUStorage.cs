@@ -20,15 +20,18 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache storage using LRU Algorithm
     /// </summary>
     public class LRUStorage : CacheCollectionStorage
     {
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>
         public LRUStorage() : base(new LRUCollection<string, (StorageItemMeta, SerializedObject)>(ushort.MaxValue)) { }
+        /// <inheritdoc />
         /// <summary>
         /// Cache storage using LRU Algorithm
         /// </summary>

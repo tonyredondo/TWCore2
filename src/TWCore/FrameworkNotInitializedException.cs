@@ -19,11 +19,13 @@ using System;
 namespace TWCore
 {
 
+    /// <inheritdoc />
     /// <summary>
     /// Framework not initialized exception
     /// </summary>
     public class FrameworkNotInitializedException : Exception
     {
+        /// <inheritdoc />
         /// <summary>
         /// Framework not initialized exception
         /// </summary>

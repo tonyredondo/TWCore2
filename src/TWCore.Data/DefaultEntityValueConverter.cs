@@ -18,11 +18,13 @@ using System;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Value converter for the entity binder for Sql databases
     /// </summary>
     public class DefaultEntityValueConverter : IEntityValueConverter
     {
+        /// <inheritdoc />
         /// <summary>
         /// Converts a value from the data source to the property type of the entity.
         /// </summary>
@@ -36,9 +38,9 @@ namespace TWCore.Data
             propertyValue = propertyType.IsValueType ? Activator.CreateInstance(propertyType) : null;
             if (value == DBNull.Value)
                 return true;
-            else if (value == null && propertyValue == null)
+            if (value == null && propertyValue == null)
                 return true;
-            else if (value is IConvertible)
+            if (value is IConvertible)
             {
                 propertyValue = System.Convert.ChangeType(value, propertyType);
                 return true;

@@ -20,16 +20,19 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Net;
 using TWCore.Serialization;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Geo
 {
+    /// <inheritdoc />
     /// <summary>
     /// Country ip interval
     /// </summary>
     [DataContract]
     public class CountryIpInterval : IRangeProvider<uint>
     {
-        Range<uint> _range;
+        private Range<uint> _range;
 
         #region Properties
         [XmlAttribute, DataMember]

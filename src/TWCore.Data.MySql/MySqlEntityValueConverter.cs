@@ -21,12 +21,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Data.MySql
 {
+    /// <inheritdoc />
     /// <summary>
     /// Value converter for the entity binder for SqlServer databases
     /// </summary>
     public class MySqlEntityValueConverter : IEntityValueConverter
     {
-        MySqlDataAccess _dataAccess;
+        private MySqlDataAccess _dataAccess;
 
         #region .ctor
         /// <summary>
@@ -39,6 +40,7 @@ namespace TWCore.Data.MySql
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Converts a value from the data source to the property type of the entity.
         /// </summary>

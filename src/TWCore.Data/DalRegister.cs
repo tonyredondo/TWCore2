@@ -21,11 +21,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Data access layer register utility
     /// </summary>
     public class DalRegister : IDalRegister
     {
+        /// <inheritdoc />
         /// <summary>
         /// Register the dal on the injector
         /// </summary>
@@ -44,7 +46,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Register(Assembly dalAssembly)
         {
-            int res = 0;
+            var res = 0;
             dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal))).Each(t =>
             {
                 var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));

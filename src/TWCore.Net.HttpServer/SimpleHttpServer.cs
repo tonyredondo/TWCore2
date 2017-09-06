@@ -449,10 +449,7 @@ namespace TWCore.Net.HttpServer
                             {
                                 context.Response.StatusCode = HttpResponse.HttpStatusCode.OK;
                                 var extension = Path.GetExtension(filePath);
-                                if (ExtensionsMimeTypes.TryGetValue(extension, out var ctype))
-                                    context.Response.ContentType = ctype;
-                                else
-                                    context.Response.ContentType = "application/octet-stream";
+                                context.Response.ContentType = ExtensionsMimeTypes.TryGetValue(extension, out var ctype) ? ctype : "application/octet-stream";
                                 Core.Log.LibVerbose($"{reqNumber} - Sending file: {filePath}...");
                                 using (var stream = File.Open(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                                     stream.WriteToStream(context.Response.OutputStream);

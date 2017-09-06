@@ -127,10 +127,7 @@ namespace TWCore.Settings
                         }
                     }
 
-                    if (isDefaultValue)
-                        p.SetValue(instance, p.GetValue(instance));
-                    else
-                        p.SetValue(instance, myValueArray);
+                    p.SetValue(instance, isDefaultValue ? p.GetValue(instance) : myValueArray);
                 }
             });
         }

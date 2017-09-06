@@ -47,12 +47,7 @@ namespace TWCore.Data
         public EntityDalSettings Settings
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                if (_settings == null)
-                    _settings = OnGetSettings();
-                return _settings;
-            }
+            get => _settings ?? (_settings = OnGetSettings());
         }
         /// <inheritdoc />
         /// <summary>

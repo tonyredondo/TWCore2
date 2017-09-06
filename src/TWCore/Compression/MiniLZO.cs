@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 // ReSharper disable RedundantAssignment
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantCast
+// ReSharper disable ConvertIfDoToWhile
 
 namespace TWCore.Compression
 {

@@ -125,14 +125,11 @@ namespace TWCore
                 var keys = currentDictionary.Keys.ToList();
                 foreach (var key in keys)
                 {
-                    var lst = currentDictionary[key] as List<Dictionary<string, object>>;
-                    if (lst != null)
-                    {
-                        if (lst.Count == 0)
-                            currentDictionary[key] = null;
-                        else if (lst.Count == 1)
-                            currentDictionary[key] = lst[0];
-                    }
+                    if (!(currentDictionary[key] is List<Dictionary<string, object>> lst)) continue;
+                    if (lst.Count == 0)
+                        currentDictionary[key] = null;
+                    else if (lst.Count == 1)
+                        currentDictionary[key] = lst[0];
                 }
 
             }
@@ -149,6 +146,7 @@ namespace TWCore
         {
             return BaseDictionary.Keys.ToList();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that get member values.
         /// </summary>
@@ -159,22 +157,21 @@ namespace TWCore
         public override bool TryGetMember(GetMemberBinder binder, out object result)
         {
             if (!BaseDictionary.TryGetValue(binder.Name, out result)) return false;
-            
-            var dct = result as Dictionary<string, object>;
-            if (dct != null)
+
+            if (result is Dictionary<string, object> dct)
             {
                 result = new DictionaryObject(dct);
             }
             else
             {
-                var list = result as List<Dictionary<string, object>>;
-                if (list != null)
+                if (result is List<Dictionary<string, object>> list)
                 {
                     result = list.Select(i => new DictionaryObject(i)).ToList();
                 }
             }
             return true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that set member values.
         /// </summary>
@@ -184,7 +181,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool TrySetMember(SetMemberBinder binder, object value)
         {
-            string name = binder.Name;
+            var name = binder.Name;
             BaseDictionary[name] = value;
             return true;
         }

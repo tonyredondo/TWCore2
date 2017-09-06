@@ -226,10 +226,9 @@ namespace TWCore.Diagnostics.Log.Storages
             };
 
             var addFDisplay = AddressFromDisplay?.Trim();
-            if (string.IsNullOrEmpty(addFDisplay))
-                message.From = new MailAddress(AddressFrom?.Trim());
-            else
-                message.From = new MailAddress(AddressFrom?.Trim(), addFDisplay);
+            message.From = string.IsNullOrEmpty(addFDisplay) ? 
+                new MailAddress(AddressFrom?.Trim()) : 
+                new MailAddress(AddressFrom?.Trim(), addFDisplay);
 
             AddressBcc = AddressBcc?.Replace(",", ";").Replace("|", ";");
             AddressCc = AddressCc?.Replace(",", ";").Replace("|", ";");
@@ -244,14 +243,9 @@ namespace TWCore.Diagnostics.Log.Storages
             lock (_buffer)
             {
                 var first = _buffer.First();
-                if (_buffer.Count == 1)
-                {
-                    message.Subject = string.Format("{0} {1} {2} : {3}", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName, first.Message);
-                }
-                else
-                {
-                    message.Subject = string.Format("{0} {1} {2}: Messages", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName);
-                }
+                message.Subject = _buffer.Count == 1 ? 
+                    string.Format("{0} {1} {2}: {3}", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName, first.Message) : 
+                    string.Format("{0} {1} {2}: Messages", first.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), first.MachineName, first.ApplicationName);
                 foreach (var innerItem in _buffer)
                 {
                     msg += string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", innerItem.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), innerItem.MachineName, innerItem.EnvironmentName, innerItem.ApplicationName, innerItem.Message);

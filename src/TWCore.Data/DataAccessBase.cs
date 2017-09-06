@@ -183,7 +183,7 @@ namespace TWCore.Data
         #endregion
 
         #region Cache Methods
-        static TimeoutDictionary<string, object> Caches = new TimeoutDictionary<string, object>();
+        private static readonly TimeoutDictionary<string, object> Caches = new TimeoutDictionary<string, object>();
         /// <summary>
         /// Gets the cache key for the name and input parameters
         /// </summary>
@@ -194,15 +194,12 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string GetCacheKey<T>(string nameOrQuery, IDictionary<string, object> parameters, FillDataDelegate<T> fillMethod)
         {
-            StringBuilder sb = new StringBuilder(nameOrQuery + ";");
+            var sb = new StringBuilder(nameOrQuery + ";");
             if (parameters != null)
             {
-                foreach (KeyValuePair<string, object> item in parameters)
+                foreach (var item in parameters)
                 {
-                    if (item.Value != null)
-                        sb.Append($"{item.Key}:{item.Value};");
-                    else
-                        sb.Append($"{item.Key};");
+                    sb.Append(item.Value != null ? $"{item.Key}:{item.Value};" : $"{item.Key};");
                 }
             }
             sb.Append($";{fillMethod?.GetType().FullName}");
@@ -722,7 +719,7 @@ namespace TWCore.Data
         /// <returns>Number of rows</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ExecuteNonQuery(string nameOrQuery, object[] parametersArray)
-            => ExecuteNonQuery(nameOrQuery, parametersArray.Select(parameters => GetCommandParameters(parameters)));
+            => ExecuteNonQuery(nameOrQuery, parametersArray.Select(GetCommandParameters));
         /// <summary>
         /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
         /// </summary>
@@ -1754,7 +1751,7 @@ namespace TWCore.Data
         /// <returns>Number of rows</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task ExecuteNonQueryAsync(string nameOrQuery, object[] parametersArray)
-            => ExecuteNonQueryAsync(nameOrQuery, parametersArray.Select(parameters => GetCommandParameters(parameters)));
+            => ExecuteNonQueryAsync(nameOrQuery, parametersArray.Select(GetCommandParameters));
         /// <summary>
         /// Execute a command multiple times over an array of parameters on the data source and returns the number of rows.
         /// </summary>

@@ -189,24 +189,21 @@ namespace TWCore
         public static WItem Create(string startMessage, string endMessage) => WItem.CreateItem(startMessage, endMessage);
 
         #region Nested Class
+        /// <inheritdoc />
         /// <summary>
         /// Watch item
         /// </summary>
         [IgnoreStackFrameLog]
-        public class WItem : IDisposable
+        public sealed class WItem : IDisposable
         {
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            static long _frequency = Stopwatch.Frequency;
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            static int _watcherCount;
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            static ObjectPool<WItem> itemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            static Worker<LogStatItem> logStatsWorker = new Worker<LogStatItem>(WorkerMethod);
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(WorkerMethod);
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
 
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            static void WorkerMethod(LogStatItem item)
+            private static void WorkerMethod(LogStatItem item)
             {
                 double gTime;
                 double cTime;
@@ -238,15 +235,11 @@ namespace TWCore
                 }
             }
 
-
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            double _initTicks;
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            double _ticksTimestamp;
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            double _lastTapTicks;
-            int _id;
-            string _lastMessage;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _initTicks;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _ticksTimestamp;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _lastTapTicks;
+            private int _id;
+            private string _lastMessage;
 
             #region Properties
             /// <summary>
@@ -264,13 +257,13 @@ namespace TWCore
             #endregion
 
             #region Nested Types
-            struct LogStatItem
+            private struct LogStatItem
             {
-                public int Id;
-                public double GlobalTicks;
-                public double LastTapTicks;
-                public string Message;
-                public int Type;
+                public readonly int Id;
+                public readonly double GlobalTicks;
+                public readonly double LastTapTicks;
+                public readonly string Message;
+                public readonly int Type;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public LogStatItem(int id, double globalTicks, double lastTapTicks, string message, int type)
@@ -297,14 +290,14 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static WItem CreateItem()
             {
-                var item = itemPools.New();
+                var item = ItemPools.New();
                 item._id = Interlocked.Increment(ref _watcherCount);
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static WItem CreateItem(string message)
             {
-                var item = itemPools.New();
+                var item = ItemPools.New();
                 item._lastMessage = message;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item.StartedTap(message);
@@ -313,7 +306,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal static WItem CreateItem(string startMessage, string lastMessage)
             {
-                var item = itemPools.New();
+                var item = ItemPools.New();
                 item._lastMessage = lastMessage;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item.StartedTap(startMessage);
@@ -335,7 +328,7 @@ namespace TWCore
                 if (Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 1));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 1));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -344,14 +337,14 @@ namespace TWCore
             /// </summary>
             /// <param name="message">Message of the tap</param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void StartedTap(string message)
+            private void StartedTap(string message)
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 0));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 0));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -367,7 +360,7 @@ namespace TWCore
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    logStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 2));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 2));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -402,7 +395,7 @@ namespace TWCore
             /// </summary>
             /// <param name="disposing"></param>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            protected virtual void Dispose(bool disposing)
+            private void Dispose(bool disposing)
             {
                 if (_disposedValue) return;
                 if (disposing)
@@ -413,7 +406,7 @@ namespace TWCore
                         _lastMessage = null;
                     }
                     Interlocked.Decrement(ref _watcherCount);
-                    itemPools.Store(this);
+                    ItemPools.Store(this);
                 }
                 _disposedValue = true;
             }

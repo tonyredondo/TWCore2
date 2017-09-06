@@ -18,15 +18,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
     public class LogStorageCollection : ILogStorage
     {
-        public static LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
+        public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
         private readonly object _locker = new object();
         private readonly List<Tuple<ILogStorage, LogLevel>> _items = new List<Tuple<ILogStorage, LogLevel>>();
         private volatile bool _isDirty;
@@ -155,6 +157,7 @@ namespace TWCore.Diagnostics.Log.Storages
         #endregion
 
         #region ILogStorage methods
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -184,6 +187,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
@@ -244,6 +248,7 @@ namespace TWCore.Diagnostics.Log.Storages
             Dispose(false);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

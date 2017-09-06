@@ -23,10 +23,10 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Represents a dictionary mapping keys to values.
     /// </summary>
-    /// 
     /// <remarks>
     /// Provides the plumbing for the portions of IDictionary[TKey TValue] which can reasonably be implemented without any
     /// dependency on the underlying representation of the dictionary.
@@ -62,23 +62,13 @@ namespace TWCore.Collections
         public ICollection<TKey> Keys
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                if (_keys == null)
-                    _keys = new KeyCollection(this);
-                return _keys;
-            }
+            get => _keys ?? (_keys = new KeyCollection(this));
         }
 
         public ICollection<TValue> Values
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                if (_values == null)
-                    _values = new ValueCollection(this);
-                return _values;
-            }
+            get => _values ?? (_values = new ValueCollection(this));
         }
 
         public TValue this[TKey key]

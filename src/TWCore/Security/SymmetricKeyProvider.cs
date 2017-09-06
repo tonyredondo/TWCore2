@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
 namespace TWCore.Security
 {
@@ -27,12 +28,12 @@ namespace TWCore.Security
     /// </summary>
     public class SymmetricKeyProvider
     {
-        SymmetricAlgorithm alg;
+        private readonly SymmetricAlgorithm _alg;
 
         /// <summary>
         /// Default Salt value
         /// </summary>
-        public static byte[] DefaultSalt = new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 };
+        public static readonly byte[] DefaultSalt = { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 };
 
         #region Properties
         /// <summary>
@@ -75,31 +76,31 @@ namespace TWCore.Security
             switch (Name)
             {
                 case AlgorithmName.Aes:
-                    alg = Aes.Create();
+                    _alg = Aes.Create();
                     break;
                 case AlgorithmName.TripleDes:
-                    alg = TripleDES.Create();
+                    _alg = TripleDES.Create();
                     break;
             }
             switch (Mode)
             {
                 case AlgorithmMode.Cbc:
-                    alg.Mode = CipherMode.CBC;
+                    _alg.Mode = CipherMode.CBC;
                     break;
                 case AlgorithmMode.Ecb:
-                    alg.Mode = CipherMode.ECB;
+                    _alg.Mode = CipherMode.ECB;
                     break;
             }
             switch (Padding)
             {
                 case AlgorithmPadding.None:
-                    alg.Padding = PaddingMode.None;
+                    _alg.Padding = PaddingMode.None;
                     break;
                 case AlgorithmPadding.Pkcs7:
-                    alg.Padding = PaddingMode.PKCS7;
+                    _alg.Padding = PaddingMode.PKCS7;
                     break;
                 case AlgorithmPadding.Zeros:
-                    alg.Padding = PaddingMode.Zeros;
+                    _alg.Padding = PaddingMode.Zeros;
                     break;
             }
         }
@@ -139,14 +140,14 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] Encrypt(byte[] data, byte[] password)
         {
-            Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
+            var pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
             using (var ms = new MemoryStream())
             {
-                lock (alg)
+                lock (_alg)
                 {
-                    alg.Key = pdb.GetBytes(32);
-                    alg.IV = pdb.GetBytes(16);
-                    using (var cs = new CryptoStream(ms, alg.CreateEncryptor(), CryptoStreamMode.Write))
+                    _alg.Key = pdb.GetBytes(32);
+                    _alg.IV = pdb.GetBytes(16);
+                    using (var cs = new CryptoStream(ms, _alg.CreateEncryptor(), CryptoStreamMode.Write))
                         cs.Write(data, 0, data.Length);
                 }
                 return ms.ToArray();
@@ -186,14 +187,14 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] Decrypt(byte[] data, byte[] password)
         {
-            Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
+            var pdb = new Rfc2898DeriveBytes(password, Salt, 1000);
             using (var ms = new MemoryStream())
             {
-                lock (alg)
+                lock (_alg)
                 {
-                    alg.Key = pdb.GetBytes(32);
-                    alg.IV = pdb.GetBytes(16);
-                    using (var cs = new CryptoStream(ms, alg.CreateDecryptor(), CryptoStreamMode.Write))
+                    _alg.Key = pdb.GetBytes(32);
+                    _alg.IV = pdb.GetBytes(16);
+                    using (var cs = new CryptoStream(ms, _alg.CreateDecryptor(), CryptoStreamMode.Write))
                         cs.Write(data, 0, data.Length);
                 }
                 return ms.ToArray();

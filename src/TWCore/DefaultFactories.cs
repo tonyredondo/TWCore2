@@ -58,20 +58,19 @@ namespace TWCore
             Accessors = new CompleteAccessorsFactory();
             GetAssemblies = () =>
             {
-                if (_assemblies == null)
+                if (_assemblies != null) return _assemblies;
+
+                _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
                 {
-                    _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
-                    {
-                        if (d.IsDynamic) return false;
-                        var assemblyName = d.GetName();
-                        return !assemblyName.Name.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) &&
-                        !assemblyName.Name.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) &&
-                        !assemblyName.Name.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) &&
-                        !assemblyName.Name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
-                        !assemblyName.Name.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) &&
-                        !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
-                    }).DistinctBy(i => i.Location).ToArray();
-                }
+                    if (d.IsDynamic) return false;
+                    var assemblyName = d.GetName();
+                    return !assemblyName.Name.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) &&
+                           !assemblyName.Name.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) &&
+                           !assemblyName.Name.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) &&
+                           !assemblyName.Name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
+                           !assemblyName.Name.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) &&
+                           !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
+                }).DistinctBy(i => i.Location).ToArray();
                 return _assemblies;
             };
             GetAllAssemblies = () =>

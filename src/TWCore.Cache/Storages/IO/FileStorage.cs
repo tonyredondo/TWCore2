@@ -537,8 +537,7 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void Meta_OnExpire(object sender, EventArgs e)
             {
-                var meta = sender as StorageItemMeta;
-                if (meta == null) return;
+                if (!(sender is StorageItemMeta meta)) return;
                 OnRemove(meta.Key, out meta);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

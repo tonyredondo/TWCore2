@@ -21,15 +21,18 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Collections;
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
 namespace TWCore.Net.HttpServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http value collection
     /// </summary>
     public class HttpValueCollection : Collection<KeyValue>
     {
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Http value collection
         /// </summary>
@@ -56,7 +59,7 @@ namespace TWCore.Net.HttpServer
             get
             {
                 var item = this.FirstOrDefault(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase));
-                return item != null ? item.Value : null;
+                return item?.Value;
             }
         }
         #endregion
@@ -112,30 +115,26 @@ namespace TWCore.Net.HttpServer
             if (Count == 0)
                 return string.Empty;
 
-            StringBuilder stringBuilder = new StringBuilder();
+            var stringBuilder = new StringBuilder();
             foreach (var item in this)
             {
-                string key = item.Key;
+                var key = item.Key;
 
-                if ((excludeKeys == null) || !excludeKeys.Contains(key))
-                {
-                    string value = item.Value;
+                if ((excludeKeys != null) && excludeKeys.Contains(key)) continue;
+                var value = item.Value;
 
-                    if (urlencoded)
-                        key = Uri.EscapeDataString(key);
+                if (urlencoded)
+                    key = Uri.EscapeDataString(key);
 
-                    if (stringBuilder.Length > 0)
-                        stringBuilder.Append('&');
+                if (stringBuilder.Length > 0)
+                    stringBuilder.Append('&');
 
-                    stringBuilder.Append((key != null) ? (key + "=") : string.Empty);
+                stringBuilder.Append((key != null) ? (key + "=") : string.Empty);
 
-                    if ((value != null) && (value.Length > 0))
-                    {
-                        if (urlencoded)
-                            value = Uri.EscapeDataString(value);
-                        stringBuilder.Append(value);
-                    }
-                }
+                if (string.IsNullOrEmpty(value)) continue;
+                if (urlencoded)
+                    value = Uri.EscapeDataString(value);
+                stringBuilder.Append(value);
             }
             return stringBuilder.ToString();
         }
@@ -144,7 +143,7 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void FillFromString(string query, bool urlencoded)
+        private void FillFromString(string query, bool urlencoded)
         {
             query.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray()).Select(i => new KeyValue(
                     (urlencoded ? Uri.UnescapeDataString(i[0]) : i[0]).Replace("+", " "),

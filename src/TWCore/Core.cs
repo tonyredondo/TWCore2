@@ -105,27 +105,13 @@ namespace TWCore
         /// <summary>
         /// Thread global data dictionary
         /// </summary>
-        public static Dictionary<string, object> ThreadData
-        {
-            get
-            {
-                if (_threadData == null)
-                    _threadData = new Dictionary<string, object>();
-                return _threadData;
-            }
-        }
+        public static Dictionary<string, object> ThreadData => _threadData ?? (_threadData = new Dictionary<string, object>());
+
         /// <summary>
         /// Thread global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ThreadObjectData
-        {
-            get
-            {
-                if (_threadObjectData == null)
-                    _threadObjectData = new Dictionary<object, object>();
-                return _threadObjectData;
-            }
-        }
+        public static Dictionary<object, object> ThreadObjectData => _threadObjectData ?? (_threadObjectData = new Dictionary<object, object>());
+
         /// <summary>
         /// Current Framework version
         /// </summary>

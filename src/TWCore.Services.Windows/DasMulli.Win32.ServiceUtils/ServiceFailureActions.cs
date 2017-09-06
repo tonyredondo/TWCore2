@@ -30,8 +30,7 @@ namespace DasMulli.Win32.ServiceUtils
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            var srvFailure = obj as ServiceFailureActions;
-            return srvFailure != null && Equals(srvFailure);
+            return obj is ServiceFailureActions srvFailure && Equals(srvFailure);
         }
 
 

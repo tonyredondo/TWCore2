@@ -23,11 +23,13 @@ using TWCore.Compression;
 
 namespace TWCore.Net
 {
+    /// <inheritdoc />
     /// <summary>
     /// Decompression handler for a System.Net.Http delegating handler
     /// </summary>
     public class DecompressionHandler : DelegatingHandler
     {
+        /// <inheritdoc />
         /// <summary>
         /// Sends an HTTP request to the inner handler to send to the server as an asynchronous operation.
         /// </summary>
@@ -35,20 +37,18 @@ namespace TWCore.Net
         /// <param name="cancellationToken">A cancellation token to cancel operation.</param>
         /// <returns>Returns System.Threading.Tasks.Task`1. The task object representing the asynchronous operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected async override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
         {
             var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            if (response.Content?.Headers?.ContentEncoding.IsNotNullOrEmpty() == true)
-            {
-                var encoding = response.Content.Headers.ContentEncoding.First();
-                var compressor = CompressorManager.GetByEncodingType(encoding);
-                if (compressor != null)
-                    response.Content = await DecompressContentAsync(response.Content, compressor).ConfigureAwait(false);
-            }
+            if (response.Content?.Headers?.ContentEncoding.IsNotNullOrEmpty() != true) return response;
+            var encoding = response.Content.Headers.ContentEncoding.First();
+            var compressor = CompressorManager.GetByEncodingType(encoding);
+            if (compressor != null)
+                response.Content = await DecompressContentAsync(response.Content, compressor).ConfigureAwait(false);
             return response;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static async Task<HttpContent> DecompressContentAsync(HttpContent compressedContent, ICompressor compressor)
+        private static async Task<HttpContent> DecompressContentAsync(HttpContent compressedContent, ICompressor compressor)
         {
             using (compressedContent)
             {

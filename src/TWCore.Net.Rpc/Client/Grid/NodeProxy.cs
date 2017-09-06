@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Net.RPC.Client.Grid
 {
@@ -24,7 +25,7 @@ namespace TWCore.Net.RPC.Client.Grid
     /// </summary>
     public class NodeProxy : RPCProxy, IGridNode
     {
-        NodeInfo _info;
+        private NodeInfo _info;
 
         /// <summary>
         /// Node information
@@ -33,9 +34,7 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NodeInfo GetNodeInfo()
         {
-            if (_info == null)
-				_info = Invoke<NodeInfo>();
-            return _info;
+            return _info ?? (_info = Invoke<NodeInfo>());
         }
         /// <summary>
         /// Gets if node is available to process.

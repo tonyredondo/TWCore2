@@ -175,11 +175,9 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetObject<T>() where T: class, new()
         {
-            object obj;
-            if (ValueType != null)
-                obj = Activator.CreateInstance(Core.GetType(ValueType));
-            else
-                obj = Activator.CreateInstance<T>();
+            var obj = ValueType != null ? 
+                Activator.CreateInstance(Core.GetType(ValueType)) : 
+                Activator.CreateInstance<T>();
             BindObject(ref obj);
             return (T)obj;
         }
@@ -247,13 +245,10 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object GetValue(object item, Type underType)
         {
-            object value = item;
+            var value = item;
             if (item is DynamicDeserializedType ddtValue)
             {
-                if (ddtValue.ValueType != null)
-                    value = Activator.CreateInstance(Core.GetType(ddtValue.ValueType));
-                else
-                    value = Activator.CreateInstance(underType);
+                value = Activator.CreateInstance(ddtValue.ValueType != null ? Core.GetType(ddtValue.ValueType) : underType);
                 ddtValue.BindObject(ref value);
             }
             value = DataTypeHelper.Change(value, underType);

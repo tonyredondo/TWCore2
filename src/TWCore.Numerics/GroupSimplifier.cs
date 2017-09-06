@@ -189,6 +189,7 @@ namespace TWCore.Numerics
             public Key(string key) { Name = key; }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Group collection results
         /// </summary>
@@ -198,11 +199,11 @@ namespace TWCore.Numerics
             /// Adds a result group to the collection
             /// </summary>
             /// <param name="res">Result group to be added</param>
-            new public void Add(ResultGroup res)
+            public new void Add(ResultGroup res)
             {
-                bool existe = false;
+                var existe = false;
 
-                foreach (ResultGroup group in this)
+                foreach (var group in this)
                 {
                     if (group.CompareTo(res) == 0)
                         existe = true;
@@ -212,8 +213,8 @@ namespace TWCore.Numerics
                         {
                             if (group.ContainsKey(res.Keys[0]))
                             {
-                                bool valorExiste = true;
-                                foreach (string elmValue in res.Values)
+                                var valorExiste = true;
+                                foreach (var elmValue in res.Values)
                                     valorExiste &= group.ContainsValue(elmValue);
                                 if (valorExiste)
                                     existe = true;
@@ -221,7 +222,7 @@ namespace TWCore.Numerics
                         }
                         if (res.ValueToString() == group.ValueToString())
                         {
-                            foreach (string elmKey in res.Keys)
+                            foreach (var elmKey in res.Keys)
                             {
                                 if (!group.ContainsKey(elmKey))
                                     group.Keys.Add(elmKey);
@@ -241,7 +242,7 @@ namespace TWCore.Numerics
             /// <returns>true if the vector is contained; otherwise, false.</returns>
             public bool ContainsRGroup(Vector vec)
             {
-                foreach (ResultGroup res in this)
+                foreach (var res in this)
                     if (res.Keys.Count == 1)
                         if (res.Keys[0] == vec.Key)
                             return true;
@@ -249,6 +250,7 @@ namespace TWCore.Numerics
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Result group definition
         /// </summary>
@@ -301,6 +303,7 @@ namespace TWCore.Numerics
             #endregion
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Vectors collection
         /// </summary>

@@ -24,15 +24,16 @@ using TWCore.Serialization;
 
 namespace TWCore.Security
 {
+    /// <inheritdoc />
     /// <summary>
     /// Abstract Hash base
     /// </summary>
     public abstract class HashBase : IHash
     {
-        string _instanceName;
-        readonly static ConcurrentDictionary<string, string> StringHashCache = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
-        readonly static LRU2QCollection<string, byte[]> StringBytesHashCache = new LRU2QCollection<string, byte[]>(1000);
-        readonly static LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(1000);
+        private static readonly ConcurrentDictionary<string, string> StringHashCache = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+        private static readonly LRU2QCollection<string, byte[]> StringBytesHashCache = new LRU2QCollection<string, byte[]>(1000);
+        private static readonly LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(1000);
+        private readonly string _instanceName;
 
         #region Properties
         /// <summary>

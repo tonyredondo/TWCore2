@@ -189,8 +189,7 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessSessionRequestMessage(object message)
         {
-            var sessionRequest = message as RPCSessionRequestMessage;
-            if (sessionRequest == null) return;
+            if (!(message is RPCSessionRequestMessage sessionRequest)) return;
             using (var watch = Watch.Create())
             {
                 var sessionId = sessionRequest.SessionId;
@@ -217,8 +216,7 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessRequestMessage(object message)
         {
-            var messageRequest = message as RPCRequestMessage;
-            if (messageRequest == null) return;
+            if (!(message is RPCRequestMessage messageRequest)) return;
             using (Watch.Create($"Processing Request Message"))
             {
                 if (!IsOnSession)

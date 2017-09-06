@@ -99,8 +99,7 @@ namespace TWCore
                 getter = GetterCache[key];
             else
             {
-                var sDictionary = source as IDictionary;
-                if (sDictionary != null)
+                if (source is IDictionary sDictionary)
                     return sDictionary.Contains(name) ? sDictionary[name] : null;
 
                 var prop = sourceType.GetRuntimeProperty(name);
@@ -149,8 +148,7 @@ namespace TWCore
         {
             if (source == null) return;
             var sourceType = source.GetType();
-            var sDictio = source as IDictionary;
-            if (sDictio != null)
+            if (source is IDictionary sDictio)
             {
                 sDictio[name] = value;
                 return;

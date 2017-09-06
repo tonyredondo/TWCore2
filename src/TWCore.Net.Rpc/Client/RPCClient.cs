@@ -336,8 +336,8 @@ namespace TWCore.Net.RPC.Client
         /// <param name="e">Event args</param>
         private void Transport_OnEventReceived(object sender, EventDataEventArgs e)
         {
-            if (!Descriptors.Items.TryGetValue(e.ServiceName, out var @descriptor)) return;
-            if (@descriptor.Events.ContainsKey(e.EventName))
+            if (!Descriptors.Items.TryGetValue(e.ServiceName, out var descriptor)) return;
+            if (descriptor.Events.ContainsKey(e.EventName))
                 OnEventReceived?.Invoke(sender, e);
         }
         /// <summary>

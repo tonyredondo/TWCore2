@@ -26,8 +26,8 @@ namespace TWCore.Text
     {
         #region Conversion between long integer and Base62
 
-        static string sTable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        static int numbase = 62;
+        private const string STable = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+        private const int Numbase = 62;
 
         /// <summary>
         /// Gets a Base62 string from a double value
@@ -41,14 +41,14 @@ namespace TWCore.Text
             var result = new int[128];
             var maxBit = result.Length;
 
-            for (; Math.Round(iDec) > 0; iDec /= numbase)
+            for (; Math.Round(iDec) > 0; iDec /= Numbase)
             {
-                var rem = Convert.ToInt32(iDec % numbase);
+                var rem = Convert.ToInt32(iDec % Numbase);
                 result[--maxBit] = rem;
             }
             for (var i = 0; i < result.Length; i++)
-                strBin += sTable[(int)result.GetValue(i)];
-            strBin = strBin.TrimStart(new[] { '0' });
+                strBin += STable[(int)result.GetValue(i)];
+            strBin = strBin.TrimStart('0');
             return strBin;
         }
 
@@ -62,10 +62,10 @@ namespace TWCore.Text
         {
             double dec = 0;
             double iProduct = 1;
-            for (var i = sBase.Length - 1; i >= 0; i--, iProduct *= numbase)
+            for (var i = sBase.Length - 1; i >= 0; i--, iProduct *= Numbase)
             {
                 //string sValue = sBase[i].ToString();
-                var b = sTable.IndexOf(sBase[i]);
+                var b = STable.IndexOf(sBase[i]);
                 dec += (b * iProduct);
             }
             return dec;

@@ -22,9 +22,9 @@ namespace TWCore.Serialization.WSerializer.Serializer
     internal class SerializerPlan
     {
         public SerializerPlanItem[] Plan;
-        public Type Type;
-        public bool IsIList;
-        public bool IsIDictionary;
+        public readonly Type Type;
+        public readonly bool IsIList;
+        public readonly bool IsIDictionary;
         public int PlanLength;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

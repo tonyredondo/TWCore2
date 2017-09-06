@@ -23,6 +23,12 @@ using System.Runtime.CompilerServices;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantCast
 // ReSharper disable ConvertIfDoToWhile
+// ReSharper disable TooWideLocalVariableScope
+// ReSharper disable SuggestVarOrType_Elsewhere
+// ReSharper disable ArrangeTypeMemberModifiers
+// ReSharper disable JoinDeclarationAndInitializer
+// ReSharper disable RedundantVerbatimPrefix
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Compression
 {

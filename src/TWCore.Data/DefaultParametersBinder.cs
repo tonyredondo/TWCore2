@@ -21,11 +21,13 @@ using System.Data.Common;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default parameters binder
     /// </summary>
     public class DefaultParametersBinder : IParametersBinder
     {
+        /// <inheritdoc />
         /// <summary>
         /// Bind parameter IDictionary to a DbCommand
         /// </summary>
@@ -34,34 +36,33 @@ namespace TWCore.Data
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void BindParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (parameters != null)
+            if (parameters == null) return;
+            foreach (var item in parameters)
             {
-                foreach (var item in parameters)
+                var paramKey = item.Key.StartsWith(parameterPrefix) ? item.Key : parameterPrefix + item.Key;
+                if (!command.Parameters.Contains(paramKey))
                 {
-                    var paramKey = item.Key.StartsWith(parameterPrefix) ? item.Key : parameterPrefix + item.Key;
-                    if (!command.Parameters.Contains(paramKey))
+                    var param = command.CreateParameter();
+                    param.ParameterName = paramKey;
+                    if (item.Value?.GetType() == typeof(DbType))
                     {
-                        var param = command.CreateParameter();
-                        param.ParameterName = paramKey;
-                        if (item.Value?.GetType() == typeof(DbType))
-                        {
-                            param.Direction = ParameterDirection.Output;
-                            param.DbType = (DbType)item.Value;
-                        }
-                        else
-                        {
-                            param.Direction = ParameterDirection.Input;
-                            param.Value = item.Value ?? DBNull.Value;
-                        }
-                        command.Parameters.Add(param);
+                        param.Direction = ParameterDirection.Output;
+                        param.DbType = (DbType)item.Value;
                     }
                     else
                     {
-                        command.Parameters[paramKey].Value = item.Value != null ? item.Value : DBNull.Value;
+                        param.Direction = ParameterDirection.Input;
+                        param.Value = item.Value ?? DBNull.Value;
                     }
+                    command.Parameters.Add(param);
+                }
+                else
+                {
+                    command.Parameters[paramKey].Value = item.Value ?? DBNull.Value;
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Retrieves the output parameters and updates the IDictionary
         /// </summary>
@@ -70,20 +71,18 @@ namespace TWCore.Data
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void RetrieveOutputParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (command?.Parameters != null && parameters != null)
+            if (command?.Parameters == null || parameters == null) return;
+            foreach (DbParameter itemParam in command.Parameters)
             {
-                foreach (DbParameter itemParam in command.Parameters)
+                if (itemParam.Direction == ParameterDirection.InputOutput || itemParam.Direction == ParameterDirection.Output)
                 {
-                    if (itemParam.Direction == ParameterDirection.InputOutput || itemParam.Direction == ParameterDirection.Output)
+                    if (parameters.ContainsKey(itemParam.ParameterName))
+                        parameters[itemParam.ParameterName] = itemParam.Value;
+                    else
                     {
-                        if (parameters.ContainsKey(itemParam.ParameterName))
-                            parameters[itemParam.ParameterName] = itemParam.Value;
-                        else
-                        {
-                            var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
-                            if (parameters.ContainsKey(pKey))
-                                parameters[pKey] = itemParam.Value;
-                        }
+                        var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
+                        if (parameters.ContainsKey(pKey))
+                            parameters[pKey] = itemParam.Value;
                     }
                 }
             }

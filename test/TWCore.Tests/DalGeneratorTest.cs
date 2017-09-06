@@ -35,15 +35,17 @@ namespace TWCore.Tests
 
             Core.Log.InfoBasic("Creating Generator");
 
-            var dGen = new DalGenerator(schema, "MrFly.Data");
-            dGen.GetEntityNameDelegate = name =>
+            var dGen = new DalGenerator(schema, "MrFly.Data")
             {
-                name = name.Replace("_", " ");
-                name = name.Substring(0, 3) + "_" + name.Substring(4).CapitalizeEachWords();
-                name = name.Replace("-", "_");
-                return name.RemoveSpaces();
+                GetEntityNameDelegate = name =>
+                {
+                    name = name.Replace("_", " ");
+                    name = name.Substring(0, 3) + "_" + name.Substring(4).CapitalizeEachWords();
+                    name = name.Replace("-", "_");
+                    return name.RemoveSpaces();
+                },
+                GeneratorType = DalGeneratorType.Embedded
             };
-            dGen.GeneratorType = DalGeneratorType.Embedded;
 
 
             Core.Log.InfoBasic("Generating SQLServer Dal: {0}", folder);

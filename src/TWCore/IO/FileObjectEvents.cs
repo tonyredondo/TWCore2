@@ -36,14 +36,12 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void FireFileObjectChanged(object sender, string filePath, Guid oldId, object oldValue, Guid newId, object newValue)
         {
-            if (OnFileObjectChanged != null)
-                OnFileObjectChanged(sender, new FileObjectEventArgs<object>(filePath, oldId, oldValue, newId, newValue));
+            OnFileObjectChanged?.Invoke(sender, new FileObjectEventArgs<object>(filePath, oldId, oldValue, newId, newValue));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void FireException(object sender, Exception ex)
         {
-            if (OnException != null)
-                OnException(sender, new EventArgs<Exception>(ex));
+            OnException?.Invoke(sender, new EventArgs<Exception>(ex));
         }
     }
 }

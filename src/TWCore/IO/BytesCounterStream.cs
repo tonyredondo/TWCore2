@@ -19,14 +19,15 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// Stream decorator with transfered bytes count
     /// </summary>
     public class BytesCounterStream : Stream
     {
-        Stream _baseStream;
-        long _bytesRead;
-        long _bytesWrite;
+        private readonly Stream _baseStream;
+        private long _bytesRead;
+        private long _bytesWrite;
 
         #region Properties
         /// <summary>
@@ -41,41 +42,41 @@ namespace TWCore.IO
         /// Bytes write
         /// </summary>
         public long BytesWrite => _bytesWrite;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         public override bool CanSeek => BaseStream.CanSeek;
+        /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
         public override bool CanRead => BaseStream.CanRead;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         public override bool CanWrite => BaseStream.CanWrite;
+        /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
         public override long Length => BaseStream.Length;
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
         public override long Position
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return _baseStream.Position;
-            }
+            get => _baseStream.Position;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-                _baseStream.Position = value;
-            }
+            set => _baseStream.Position = value;
         }
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Stream decorator with transfered bytes count
         /// </summary>
@@ -87,6 +88,7 @@ namespace TWCore.IO
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -97,11 +99,12 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
         {
-            int res = _baseStream.Read(buffer, offset, count);
+            var res = _baseStream.Read(buffer, offset, count);
             if (res > 0)
                 _bytesRead += res;
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
         /// </summary>
@@ -109,11 +112,12 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
         {
-            int res = _baseStream.ReadByte();
+            var res = _baseStream.ReadByte();
             if (res >= 0)
                 _bytesRead++;
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
@@ -126,6 +130,7 @@ namespace TWCore.IO
             _baseStream.Write(buffer, offset, count);
             _bytesWrite += count;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a byte to the current position in the stream and advances the position within the stream by one byte.
         /// </summary>
@@ -136,11 +141,13 @@ namespace TWCore.IO
             _baseStream.WriteByte(value);
             _bytesWrite++;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Flush() => _baseStream.Flush();
+        /// <inheritdoc />
         /// <summary>
         /// Sets the position within the current stream.
         /// </summary>
@@ -149,6 +156,7 @@ namespace TWCore.IO
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin) => _baseStream.Seek(offset, origin);
+        /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>

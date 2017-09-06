@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Triggers
 {
@@ -60,30 +61,25 @@ namespace TWCore.Triggers
         /// </summary>
         public void Init()
         {
-            if (!Initiated)
-            {
-                OnInit();
-                Initiated = true;
-            }
+            if (Initiated) return;
+            OnInit();
+            Initiated = true;
         }
         /// <summary>
         /// Finalize Method
         /// </summary>
         public void Dispose()
         {
-            if (Initiated)
-            {
-                OnFinalize();
-                Initiated = false;
-            }
+            if (!Initiated) return;
+            OnFinalize();
+            Initiated = false;
         }
         /// <summary>
         /// Call the update trigger
         /// </summary>
         public void Trigger()
         {
-            if (OnTriggered != null)
-                OnTriggered(this);
+            OnTriggered?.Invoke(this);
         }
         #endregion
 

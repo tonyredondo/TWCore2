@@ -27,9 +27,7 @@ namespace DasMulli.Win32.ServiceUtils
 
         internal Win32ServiceHost(IWin32Service service, INativeInterop nativeInterop)
         {
-            if (service == null)
-                throw new ArgumentNullException(nameof(service));
-            _serviceName = service.ServiceName;
+            _serviceName = service?.ServiceName ?? throw new ArgumentNullException(nameof(service));
             _stateMachine = new SimpleServiceStateMachine(service);
             _nativeInterop = nativeInterop ?? throw new ArgumentNullException(nameof(nativeInterop));
             _serviceMainFunctionDelegate = ServiceMainFunction;

@@ -119,7 +119,7 @@ namespace TWCore.Net.HttpServer
                 if (pIdx >= _routeParameters.Count) continue;
 
                 var param = _routeParameters[pIdx];
-                var value = @group.Value;
+                var value = group.Value;
                 param = param.Substring(1, param.Length - 2).Replace("?", "");
                 response[param] = !string.IsNullOrEmpty(value) ? value : null;
                 pIdx++;

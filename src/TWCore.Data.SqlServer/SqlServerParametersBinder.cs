@@ -23,13 +23,14 @@ using System.Data.SqlTypes;
 
 namespace TWCore.Data.SqlServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Sql Server parameters binder
     /// </summary>
     public class SqlServerParametersBinder : IParametersBinder
     {
-        static Dictionary<DataTable, string> TableNames = new Dictionary<DataTable, string>();
-        SqlServerDataAccess _dataAccess;
+        private static readonly Dictionary<DataTable, string> TableNames = new Dictionary<DataTable, string>();
+        private readonly SqlServerDataAccess _dataAccess;
 
         #region .ctor
         /// <summary>
@@ -52,6 +53,7 @@ namespace TWCore.Data.SqlServer
             TableNames[table] = tableName;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Bind parameter IDictionary to a DbCommand
         /// </summary>
@@ -60,62 +62,60 @@ namespace TWCore.Data.SqlServer
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void BindParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (parameters != null)
+            if (parameters == null) return;
+            foreach (var item in parameters)
             {
-                foreach (var item in parameters)
+                var paramKey = item.Key.StartsWith(parameterPrefix) ? item.Key : parameterPrefix + item.Key;
+                if (!command.Parameters.Contains(paramKey))
                 {
-                    var paramKey = item.Key.StartsWith(parameterPrefix) ? item.Key : parameterPrefix + item.Key;
-                    if (!command.Parameters.Contains(paramKey))
+                    var param = (SqlParameter)command.CreateParameter();
+                    param.ParameterName = paramKey;
+                    if (item.Value?.GetType() == typeof(DbType))
                     {
-                        var param = (SqlParameter)command.CreateParameter();
-                        param.ParameterName = paramKey;
-                        if (item.Value?.GetType() == typeof(DbType))
-                        {
-                            param.Direction = ParameterDirection.Output;
-                            param.DbType = (DbType)item.Value;
-                        }
-                        else
-                        {
-                            param.Direction = ParameterDirection.Input;
-                            if (_dataAccess.UseStructuredDataType)
-                            {
-                                if (item.Value != null && item.Value is DataTable)
-                                {
-                                    var dtable = (DataTable)item.Value;
-                                    param.SqlDbType = SqlDbType.Structured;
-                                    if (TableNames?.ContainsKey(dtable) == true)
-                                        param.TypeName = TableNames[dtable];
-                                    else if (dtable.TableName.IsNotNullOrWhitespace())
-                                        param.TypeName = dtable.TableName;
-                                }
-                            }
-                            var iValue = item.Value;
-
-                            if (iValue != null)
-                            {
-                                if (_dataAccess.ReplaceDateTimeMinMaxValues)
-                                {
-                                    var valueDate = iValue as DateTime?;
-                                    if (valueDate.HasValue)
-                                    {
-                                        if (valueDate.Value == DateTime.MinValue)
-                                            iValue = SqlDateTime.MinValue;
-                                        else if (valueDate.Value == DateTime.MaxValue)
-                                            iValue = SqlDateTime.MaxValue;
-                                    }
-                                }
-                            }
-                            param.Value = iValue ?? DBNull.Value;
-                        }
-                        command.Parameters.Add(param);
+                        param.Direction = ParameterDirection.Output;
+                        param.DbType = (DbType)item.Value;
                     }
                     else
                     {
-                        command.Parameters[paramKey].Value = item.Value ?? DBNull.Value;
+                        param.Direction = ParameterDirection.Input;
+                        if (_dataAccess.UseStructuredDataType)
+                        {
+                            if (item.Value is DataTable dtable)
+                            {
+                                param.SqlDbType = SqlDbType.Structured;
+                                if (TableNames?.ContainsKey(dtable) == true)
+                                    param.TypeName = TableNames[dtable];
+                                else if (dtable.TableName.IsNotNullOrWhitespace())
+                                    param.TypeName = dtable.TableName;
+                            }
+                        }
+                        var iValue = item.Value;
+
+                        if (iValue != null)
+                        {
+                            if (_dataAccess.ReplaceDateTimeMinMaxValues)
+                            {
+                                var valueDate = iValue as DateTime?;
+                                if (valueDate.HasValue)
+                                {
+                                    if (valueDate.Value == DateTime.MinValue)
+                                        iValue = SqlDateTime.MinValue;
+                                    else if (valueDate.Value == DateTime.MaxValue)
+                                        iValue = SqlDateTime.MaxValue;
+                                }
+                            }
+                        }
+                        param.Value = iValue ?? DBNull.Value;
                     }
+                    command.Parameters.Add(param);
+                }
+                else
+                {
+                    command.Parameters[paramKey].Value = item.Value ?? DBNull.Value;
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Retrieves the output parameters and updates the IDictionary
         /// </summary>
@@ -124,21 +124,18 @@ namespace TWCore.Data.SqlServer
         /// <param name="parameterPrefix">DbCommand parameter prefix</param>
         public void RetrieveOutputParameters(DbCommand command, IDictionary<string, object> parameters, string parameterPrefix)
         {
-            if (command?.Parameters != null && parameters != null)
+            if (command?.Parameters == null || parameters == null) return;
+            foreach (DbParameter itemParam in command.Parameters)
             {
-                foreach (DbParameter itemParam in command.Parameters)
+                if (itemParam.Direction != ParameterDirection.InputOutput &&
+                    itemParam.Direction != ParameterDirection.Output) continue;
+                if (parameters.ContainsKey(itemParam.ParameterName))
+                    parameters[itemParam.ParameterName] = itemParam.Value;
+                else
                 {
-                    if (itemParam.Direction == ParameterDirection.InputOutput || itemParam.Direction == ParameterDirection.Output)
-                    {
-                        if (parameters.ContainsKey(itemParam.ParameterName))
-                            parameters[itemParam.ParameterName] = itemParam.Value;
-                        else
-                        {
-                            var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
-                            if (parameters.ContainsKey(pKey))
-                                parameters[pKey] = itemParam.Value;
-                        }
-                    }
+                    var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
+                    if (parameters.ContainsKey(pKey))
+                        parameters[pKey] = itemParam.Value;
                 }
             }
         }

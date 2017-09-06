@@ -19,9 +19,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable NotAccessedField.Local
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// The async range tree implementation. Keeps a root node and
     /// forwards all queries to it.
@@ -42,29 +45,23 @@ namespace TWCore.Collections
         private List<T> _removedItems = new List<T>();
         private List<T> _addedItemsRebuilding = new List<T>();
         private List<T> _removedItemsRebuilding = new List<T>();
-        private IComparer<T> _rangeComparer;
-        // ReSharper disable once NotAccessedField.Local
+        private readonly IComparer<T> _rangeComparer;
         private Task _rebuildTask;
         private CancellationTokenSource _rebuildTaskCancelSource;
         private bool _isRebuilding;
+        private readonly object _locker = new object();
 
-        private object _locker = new object();
-
+        /// <inheritdoc />
         /// <summary>
         /// All items of the tree.
         /// </summary>
-        public IEnumerable<T> Items
-        {
-            get { return _rangeTree.Items.Concat(_addedItemsRebuilding).Concat(_addedItems); }
-        }
+        public IEnumerable<T> Items => _rangeTree.Items.Concat(_addedItemsRebuilding).Concat(_addedItems);
 
+        /// <inheritdoc />
         /// <summary>
         /// Count of all items.
         /// </summary>
-        public int Count
-        {
-            get { return _rangeTree.Count + _addedItemsRebuilding.Count + _addedItems.Count; }
-        }
+        public int Count => _rangeTree.Count + _addedItemsRebuilding.Count + _addedItems.Count;
 
         /// <summary>
         /// Initializes an empty tree.
@@ -84,6 +81,7 @@ namespace TWCore.Collections
             _rangeComparer = rangeComparer;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performans a "stab" query with a single value.
         /// All items with overlapping ranges are returned.
@@ -107,6 +105,7 @@ namespace TWCore.Collections
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Performans a range query.
         /// All items with overlapping ranges are returned.
@@ -136,19 +135,18 @@ namespace TWCore.Collections
         /// </summary>
         private List<T> FilterResults(List<T> results)
         {
-            if (_removedItemsRebuilding.Count > 0 || _removedItems.Count > 0)
-            {
-                var hs = new HashSet<T>(results);
-                foreach (var item in _removedItemsRebuilding)
-                    hs.Remove(item);
-                foreach (var item in _removedItems)
-                    hs.Remove(item);
-                results = hs.ToList();
-            }
+            if (_removedItemsRebuilding.Count <= 0 && _removedItems.Count <= 0) return results;
+            var hs = new HashSet<T>(results);
+            foreach (var item in _removedItemsRebuilding)
+                hs.Remove(item);
+            foreach (var item in _removedItems)
+                hs.Remove(item);
+            results = hs.ToList();
 
             return results;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Adds the specified item.
         /// </summary>
@@ -158,6 +156,7 @@ namespace TWCore.Collections
                 _addedItems.Add(item);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Adds the specified items.
         /// </summary>
@@ -167,6 +166,7 @@ namespace TWCore.Collections
                 _addedItems.AddRange(items);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Removes the specified item.
         /// </summary>
@@ -176,6 +176,7 @@ namespace TWCore.Collections
                 _removedItems.Add(item);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Removes the specified items.
         /// </summary>
@@ -185,6 +186,7 @@ namespace TWCore.Collections
                 _removedItems.AddRange(items);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Clears the tree (removes all items).
         /// </summary>
@@ -198,11 +200,11 @@ namespace TWCore.Collections
                 _addedItemsRebuilding = new List<T>();
                 _removedItemsRebuilding = new List<T>();
 
-                if (_rebuildTaskCancelSource != null)
-                    _rebuildTaskCancelSource.Cancel();
+                _rebuildTaskCancelSource?.Cancel();
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Start the rebuild task if a rebuild is necessary.
         /// </summary>

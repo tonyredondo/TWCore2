@@ -31,7 +31,7 @@ namespace DasMulli.Win32.ServiceUtils
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            return obj is ScAction && Equals((ScAction)obj);
+            return obj is ScAction oObj && Equals(oObj);
         }
 
         public override int GetHashCode()

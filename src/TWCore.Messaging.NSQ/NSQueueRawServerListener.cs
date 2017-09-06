@@ -212,15 +212,21 @@ namespace TWCore.Messaging.NSQ
 
 				if (ResponseServer)
 				{
-					var evArgs = new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId);
-					evArgs.Metadata["ReplyTo"] = message.Name;
-					OnResponseReceived(evArgs);
+				    var evArgs =
+				        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId)
+				        {
+				            Metadata = { ["ReplyTo"] = message.Name }
+				        };
+				    OnResponseReceived(evArgs);
 				}
 				else
 				{
-					var evArgs = new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId);
-					evArgs.Metadata["ReplyTo"] = message.Name;
-					OnRequestReceived(evArgs);
+				    var evArgs =
+				        new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId)
+				        {
+				            Metadata = { ["ReplyTo"] = message.Name }
+				        };
+				    OnRequestReceived(evArgs);
 				}
 				Counters.IncrementTotalMessagesProccesed();
 			}

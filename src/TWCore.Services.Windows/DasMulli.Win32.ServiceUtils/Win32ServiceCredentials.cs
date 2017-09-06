@@ -33,7 +33,7 @@ namespace DasMulli.Win32.ServiceUtils
             {
                 return false;
             }
-            return obj is Win32ServiceCredentials && Equals((Win32ServiceCredentials) obj);
+            return obj is Win32ServiceCredentials wsCred && Equals(wsCred);
         }
 
         public override int GetHashCode()

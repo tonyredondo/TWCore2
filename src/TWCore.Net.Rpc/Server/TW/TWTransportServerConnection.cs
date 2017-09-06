@@ -217,7 +217,7 @@ namespace TWCore.Net.RPC.Server.Transports
         private void ProcessRequestMessage(object message)
         {
             if (!(message is RPCRequestMessage messageRequest)) return;
-            using (Watch.Create($"Processing Request Message"))
+            using (Watch.Create("Processing Request Message"))
             {
                 if (!IsOnSession)
                 {

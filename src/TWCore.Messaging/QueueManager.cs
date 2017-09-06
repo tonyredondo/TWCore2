@@ -25,9 +25,9 @@ namespace TWCore.Messaging
     /// </summary>
     public class QueueManager
     {
-        IMQueueAdmin admin;
-        MQClientQueues ClientQueues;
-        MQServerQueues ServerQueues;
+        private readonly IMQueueAdmin _admin;
+        private readonly MQClientQueues _clientQueues;
+        private readonly MQServerQueues _serverQueues;
 
         #region Properties
         /// <summary>
@@ -46,20 +46,17 @@ namespace TWCore.Messaging
         /// </summary>
         public QueueManager(MQPairConfig config)
         {
-            if (config == null)
-                throw new ArgumentNullException("The configuration pair must not be null", nameof(config));
-
-            Config = config;
+            Config = config ?? throw new ArgumentNullException("The configuration pair must not be null", nameof(config));
             Security = Config.Security?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                 ?? Config.Security?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
                 ?? Config.Security?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-            ClientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+            _clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-            ServerQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+            _serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-            admin = Config.GetAdmin();
+            _admin = Config.GetAdmin();
         }
         #endregion
 
@@ -70,17 +67,17 @@ namespace TWCore.Messaging
         /// <returns>True if all client queues exists, otherwise; false.</returns>
         public bool ExistClientQueues()
         {
-            bool response = true;
-            if (ClientQueues != null)
+            var response = true;
+            if (_clientQueues != null)
             {
-                if (ClientQueues.SendQueues!= null)
-                    foreach(var queue in ClientQueues.SendQueues)
+                if (_clientQueues.SendQueues!= null)
+                    foreach(var queue in _clientQueues.SendQueues)
                         response &= ExistQueue(queue);
                 else
                     Core.Log.Warning("There is not client send queues configured.");
 
-                if (ClientQueues.RecvQueue != null)
-                    response &= ExistQueue(ClientQueues.RecvQueue);
+                if (_clientQueues.RecvQueue != null)
+                    response &= ExistQueue(_clientQueues.RecvQueue);
                 else
                     Core.Log.Warning("There is not client receive queue configured.");
             }
@@ -95,17 +92,17 @@ namespace TWCore.Messaging
         /// <returns>True if all server queues exists, otherwise; false.</returns>
         public bool ExistServerQueues()
         {
-            bool response = true;
-            if (ServerQueues != null)
+            var response = true;
+            if (_serverQueues != null)
             {
-                if (ServerQueues.RecvQueues != null)
-                    foreach (var queue in ServerQueues.RecvQueues)
+                if (_serverQueues.RecvQueues != null)
+                    foreach (var queue in _serverQueues.RecvQueues)
                         response &= ExistQueue(queue);
                 else
                     Core.Log.Warning("There is not server receive queues configured.");
 
-                if (ServerQueues.AdditionalSendQueues != null)
-                    foreach (var queue in ServerQueues.AdditionalSendQueues)
+                if (_serverQueues.AdditionalSendQueues != null)
+                    foreach (var queue in _serverQueues.AdditionalSendQueues)
                         response &= ExistQueue(queue);
                 else
                     Core.Log.Warning("There is not additional send queues configured.");
@@ -122,7 +119,7 @@ namespace TWCore.Messaging
         /// <returns>True if the queues exists, otherwise; false.</returns>
         public bool ExistQueue(MQConnection queue)
         {
-            var exist = admin.Exist(queue);
+            var exist = _admin.Exist(queue);
             if (!exist)
                 Core.Log.Warning("The queue Route={0}, Name={1} doesn't exist.", queue.Route, queue.Name);
             return exist;
@@ -136,17 +133,17 @@ namespace TWCore.Messaging
         /// <returns>True if all queues were created, otherwise; false.</returns>
         public bool CreateClientQueues()
         {
-            bool response = true;
-            if (ClientQueues != null)
+            var response = true;
+            if (_clientQueues != null)
             {
-                if (ClientQueues.SendQueues != null)
-                    foreach (var queue in ClientQueues.SendQueues)
+                if (_clientQueues.SendQueues != null)
+                    foreach (var queue in _clientQueues.SendQueues)
                         response &= CreateQueue(queue);
                 else
                     Core.Log.Warning("There is not client send queues configured.");
 
-                if (ClientQueues.RecvQueue != null)
-                    response &= CreateQueue(ClientQueues.RecvQueue);
+                if (_clientQueues.RecvQueue != null)
+                    response &= CreateQueue(_clientQueues.RecvQueue);
                 else
                     Core.Log.Warning("There is not client receive queue configured.");
             }
@@ -160,17 +157,17 @@ namespace TWCore.Messaging
         /// <returns>True if all queues were created, otherwise; false.</returns>
         public bool CreateServerQueues()
         {
-            bool response = true;
-            if (ServerQueues != null)
+            var response = true;
+            if (_serverQueues != null)
             {
-                if (ServerQueues.RecvQueues != null)
-                    foreach (var queue in ServerQueues.RecvQueues)
+                if (_serverQueues.RecvQueues != null)
+                    foreach (var queue in _serverQueues.RecvQueues)
                         response &= CreateQueue(queue);
                 else
                     Core.Log.Warning("There is not server receive queues configured.");
 
-                if (ServerQueues.AdditionalSendQueues != null)
-                    foreach (var queue in ServerQueues.AdditionalSendQueues)
+                if (_serverQueues.AdditionalSendQueues != null)
+                    foreach (var queue in _serverQueues.AdditionalSendQueues)
                         response &= CreateQueue(queue);
                 else
                     Core.Log.Warning("There is not additional send queues configured.");
@@ -186,13 +183,13 @@ namespace TWCore.Messaging
         /// <returns>True if the queue was created, otherwise; false.</returns>
         public bool CreateQueue(MQConnection queue)
         {
-            var exist = admin.Exist(queue);
+            var exist = _admin.Exist(queue);
             if (!exist)
             {
                 try
                 {
                     Core.Log.InfoBasic("Creating queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                    exist = admin.Create(queue);
+                    exist = _admin.Create(queue);
                 }
                 catch (Exception ex)
                 {
@@ -207,7 +204,7 @@ namespace TWCore.Messaging
                     {
                         Core.Log.InfoBasic("Settings '{0}' permissions to user '{1}' on queue: Route={2}, Name={3}", user.Permissions, user.Name, queue.Route, queue.Name);
                         var accessRights = user.GetAccessRights();
-                        admin.SetPermission(queue, user.Name, accessRights);
+                        _admin.SetPermission(queue, user.Name, accessRights);
                     }
                     catch (Exception ex)
                     {
@@ -226,17 +223,17 @@ namespace TWCore.Messaging
         /// <returns>True if all queues were deleted, otherwise; false.</returns>
         public bool DeleteClientQueues()
         {
-            bool response = true;
-            if (ClientQueues != null)
+            var response = true;
+            if (_clientQueues != null)
             {
-                if (ClientQueues.SendQueues != null)
-                    foreach (var queue in ClientQueues.SendQueues)
+                if (_clientQueues.SendQueues != null)
+                    foreach (var queue in _clientQueues.SendQueues)
                         response &= DeleteQueue(queue);
                 else
                     Core.Log.Warning("There is not client send queues configured.");
 
-                if (ClientQueues.RecvQueue != null)
-                    response &= DeleteQueue(ClientQueues.RecvQueue);
+                if (_clientQueues.RecvQueue != null)
+                    response &= DeleteQueue(_clientQueues.RecvQueue);
                 else
                     Core.Log.Warning("There is not client receive queue configured.");
             }
@@ -250,17 +247,17 @@ namespace TWCore.Messaging
         /// <returns>True if all queues were deleted, otherwise; false.</returns>
         public bool DeleteServerQueues()
         {
-            bool response = true;
-            if (ServerQueues != null)
+            var response = true;
+            if (_serverQueues != null)
             {
-                if (ServerQueues.RecvQueues != null)
-                    foreach (var queue in ServerQueues.RecvQueues)
+                if (_serverQueues.RecvQueues != null)
+                    foreach (var queue in _serverQueues.RecvQueues)
                         response &= DeleteQueue(queue);
                 else
                     Core.Log.Warning("There is not server receive queues configured.");
 
-                if (ServerQueues.AdditionalSendQueues != null)
-                    foreach (var queue in ServerQueues.AdditionalSendQueues)
+                if (_serverQueues.AdditionalSendQueues != null)
+                    foreach (var queue in _serverQueues.AdditionalSendQueues)
                         response &= DeleteQueue(queue);
                 else
                     Core.Log.Warning("There is not additional send queues configured.");
@@ -276,13 +273,13 @@ namespace TWCore.Messaging
         /// <returns>True if the queue was deleted, otherwise; false.</returns>
         public bool DeleteQueue(MQConnection queue)
         {
-            var exist = admin.Exist(queue);
+            var exist = _admin.Exist(queue);
             if (exist)
             {
                 try
                 {
                     Core.Log.InfoBasic("Deleting queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                    return admin.Delete(queue);
+                    return _admin.Delete(queue);
                 }
                 catch (Exception ex)
                 {
@@ -301,16 +298,16 @@ namespace TWCore.Messaging
         /// </summary>
         public void PurgeClientQueues()
         {
-            if (ClientQueues != null)
+            if (_clientQueues != null)
             {
-                if (ClientQueues.SendQueues != null)
-                    foreach (var queue in ClientQueues.SendQueues)
+                if (_clientQueues.SendQueues != null)
+                    foreach (var queue in _clientQueues.SendQueues)
                         PurgeQueue(queue);
                 else
                     Core.Log.Warning("There is not client send queues configured.");
 
-                if (ClientQueues.RecvQueue != null)
-                    PurgeQueue(ClientQueues.RecvQueue);
+                if (_clientQueues.RecvQueue != null)
+                    PurgeQueue(_clientQueues.RecvQueue);
                 else
                     Core.Log.Warning("There is not client receive queue configured.");
             }
@@ -322,16 +319,16 @@ namespace TWCore.Messaging
         /// </summary>
         public void PurgeServerQueues()
         {
-            if (ServerQueues != null)
+            if (_serverQueues != null)
             {
-                if (ServerQueues.RecvQueues != null)
-                    foreach (var queue in ServerQueues.RecvQueues)
+                if (_serverQueues.RecvQueues != null)
+                    foreach (var queue in _serverQueues.RecvQueues)
                         PurgeQueue(queue);
                 else
                     Core.Log.Warning("There is not server receive queues configured.");
 
-                if (ServerQueues.AdditionalSendQueues != null)
-                    foreach (var queue in ServerQueues.AdditionalSendQueues)
+                if (_serverQueues.AdditionalSendQueues != null)
+                    foreach (var queue in _serverQueues.AdditionalSendQueues)
                         PurgeQueue(queue);
                 else
                     Core.Log.Warning("There is not additional send queues configured.");
@@ -345,18 +342,16 @@ namespace TWCore.Messaging
         /// <param name="queue">Queue connection definition</param>
         public void PurgeQueue(MQConnection queue)
         {
-            var exist = admin.Exist(queue);
-            if (exist)
+            var exist = _admin.Exist(queue);
+            if (!exist) return;
+            try
             {
-                try
-                {
-                    Core.Log.InfoBasic("Purging queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                    admin.Purge(queue);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Error(ex, "Error purging the queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                }
+                Core.Log.InfoBasic("Purging queue: Route={0}, Name={1}", queue.Route, queue.Name);
+                _admin.Purge(queue);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Error(ex, "Error purging the queue: Route={0}, Name={1}", queue.Route, queue.Name);
             }
         }
         #endregion

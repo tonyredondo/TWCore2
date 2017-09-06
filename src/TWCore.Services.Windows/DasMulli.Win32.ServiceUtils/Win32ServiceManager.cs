@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel;
 
 // ReSharper disable CheckNamespace
 
@@ -98,9 +97,7 @@ namespace DasMulli.Win32.ServiceUtils
             {
                 using (var mgr = ServiceControlManager.Connect(_nativeInterop, _machineName, _databaseName, ServiceControlManagerAccessRights.All))
                 {
-                    ServiceHandle existingService;
-                    Win32Exception errorException;
-                    if (mgr.TryOpenService(serviceName, ServiceControlAccessRights.All, out existingService, out errorException)) {
+                    if (mgr.TryOpenService(serviceName, ServiceControlAccessRights.All, out var existingService, out var errorException)) {
                         using(existingService)
                         {
                             DoUpdateService(displayName, description, binaryPath, credentials, autoStart, errorSeverity, existingService, serviceFailureActions, failureActionsOnNonCrashFailures);

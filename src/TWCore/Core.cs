@@ -524,7 +524,7 @@ namespace TWCore
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading the settings definitions.", ex);
+                throw new Exception("Error loading the settings definitions.", ex);
             }
             //Checks if a reload time is set.
             if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
@@ -598,7 +598,7 @@ namespace TWCore
             }
             catch (Exception ex)
             {
-                throw new Exception($"Error loading the injector definitions.", ex);
+                throw new Exception("Error loading the injector definitions.", ex);
             }
         }
         #endregion

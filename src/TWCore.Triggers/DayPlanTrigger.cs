@@ -18,83 +18,80 @@ using System;
 
 namespace TWCore.Triggers
 {
+    /// <inheritdoc />
     /// <summary>
     /// Day Plan Update Trigger
     /// </summary>
     public class DayPlanTrigger : TriggerBase
     {
-        TimeOfDayTrigger[] Triggers;
+        private readonly TimeOfDayTrigger[] _triggers;
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Day Plan Update Trigger
         /// </summary>
         /// <param name="times">Times of the day when the trigger will execute.</param>
         public DayPlanTrigger(params TimeSpan[] times)
         {
-            if (times != null)
+            if (times == null) return;
+            _triggers = new TimeOfDayTrigger[times.Length];
+            for (var i = 0; i < times.Length; i++)
             {
-                Triggers = new TimeOfDayTrigger[times.Length];
-                for (var i = 0; i < times.Length; i++)
-                {
-                    Triggers[i] = new TimeOfDayTrigger(times[i]);
-                    Triggers[i].OnTriggered += ChildTrigger;
-                }
+                _triggers[i] = new TimeOfDayTrigger(times[i]);
+                _triggers[i].OnTriggered += ChildTrigger;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Day Plan Update Trigger
         /// </summary>
         /// /// <param name="timesInString">Times of the day when the trigger will execute.</param>
         public DayPlanTrigger(params string[] timesInString)
         {
-            if (timesInString != null)
+            if (timesInString == null) return;
+            _triggers = new TimeOfDayTrigger[timesInString.Length];
+            for (var i = 0; i < timesInString.Length; i++)
             {
-                Triggers = new TimeOfDayTrigger[timesInString.Length];
-                for (var i = 0; i < timesInString.Length; i++)
+                var time = timesInString[i].ParseTo<TimeSpan?>(null);
+                if (time.HasValue)
                 {
-                    var time = timesInString[i].ParseTo<TimeSpan?>(null);
-                    if (time.HasValue)
-                    {
-                        Triggers[i] = new TimeOfDayTrigger(time.Value);
-                        Triggers[i].OnTriggered += ChildTrigger;
-                    }
-                    else
-                        throw new FormatException("The Time: {0} for the DayPlanTrigger can't be parsed as a TimeSpan value".ApplyFormat(timesInString[i]));
+                    _triggers[i] = new TimeOfDayTrigger(time.Value);
+                    _triggers[i].OnTriggered += ChildTrigger;
                 }
+                else
+                    throw new FormatException("The Time: {0} for the DayPlanTrigger can't be parsed as a TimeSpan value".ApplyFormat(timesInString[i]));
             }
         }
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// On trigger init
         /// </summary>
         protected override void OnInit()
         {
-            if (Triggers != null)
-            {
-                Core.Log.LibVerbose("{0}: OnInit()", GetType().Name);
-                foreach (var trigger in Triggers)
-                    trigger.Init();
-            }
+            if (_triggers == null) return;
+            Core.Log.LibVerbose("{0}: OnInit()", GetType().Name);
+            foreach (var trigger in _triggers)
+                trigger.Init();
         }
+        /// <inheritdoc />
         /// <summary>
         /// On trigger finalize
         /// </summary>
         protected override void OnFinalize()
         {
-            if (Triggers != null)
-            {
-                Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
-                foreach (var trigger in Triggers)
-                    trigger.Dispose();
-            }
+            if (_triggers == null) return;
+            Core.Log.LibVerbose("{0}: OnFinalize()", GetType().Name);
+            foreach (var trigger in _triggers)
+                trigger.Dispose();
         }
         #endregion
 
         #region Private Methods
-        void ChildTrigger(TriggerBase child)
+        private void ChildTrigger(TriggerBase child)
         {
             Core.Log.LibVerbose("{0}: Plan Trigger call", GetType().Name);
             Trigger();

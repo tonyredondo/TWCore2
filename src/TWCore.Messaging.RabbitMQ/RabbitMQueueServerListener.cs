@@ -201,9 +201,15 @@ namespace TWCore.Messaging.RabbitMQ
                     Counters.IncrementReceivingTime(request.Header.TotalTime);
                     if (request.Header.ClientName != Config.Name)
                         Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                    var evArgs = new RequestReceivedEventArgs(_name, _receiver, request);
-                    evArgs.Metadata["ReplyTo"] = message.Properties.ReplyTo;
-                    evArgs.Metadata["MessageId"] = message.Properties.MessageId;
+                    var evArgs =
+                        new RequestReceivedEventArgs(_name, _receiver, request)
+                        {
+                            Metadata =
+                            {
+                                ["ReplyTo"] = message.Properties.ReplyTo,
+                                ["MessageId"] = message.Properties.MessageId
+                            }
+                        };
                     if (request.Header.ResponseQueue != null)
                         evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                     OnRequestReceived(evArgs);

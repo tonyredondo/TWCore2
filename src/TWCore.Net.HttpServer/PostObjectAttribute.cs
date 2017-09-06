@@ -18,10 +18,11 @@ using System;
 
 namespace TWCore.Net.HttpServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Define which parameters is gonna be setted with the Post object data
     /// </summary>
-    [AttributeUsage(AttributeTargets.Parameter, AllowMultiple = false)]
+    [AttributeUsage(AttributeTargets.Parameter)]
     public sealed class PostObjectAttribute : Attribute
     {
     }

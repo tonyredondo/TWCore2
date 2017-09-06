@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable UnassignedField.Global
 
 namespace TWCore.Net.RPC.Client.Grid
 {
@@ -28,7 +29,7 @@ namespace TWCore.Net.RPC.Client.Grid
     /// </summary>
     public class GridClient
     {
-        object waitLock = new object();
+        private readonly object _waitLock = new object();
 
         #region Properties
         /// <summary>
@@ -86,22 +87,19 @@ namespace TWCore.Net.RPC.Client.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NodeClientResult Process(params object[] args)
         {
-            if (Items.Count > 0)
+            if (Items.Count <= 0) return null;
+            NodeClient item;
+            Core.Log.LibDebug("Selecting an available node...");
+            lock (_waitLock)
             {
-                NodeClient item;
-                Core.Log.LibDebug("Selecting an available node...");
-                lock (waitLock)
-                {
-                    item = Items.WaitForAvailable();
-                    item.Lock();
-                }
-                Core.Log.LibDebug("Calling process on Node '{0}'", item.NodeInfo.Id);
-                var response = item.Process(args);
-                Core.Log.LibDebug("Received response from Node '{0}'", item.NodeInfo.Id);
-                OnNodeResults?.Invoke(this, new EventArgs<NodeClientResult>(response));
-                return response;
+                item = Items.WaitForAvailable();
+                item.Lock();
             }
-            return null;
+            Core.Log.LibDebug("Calling process on Node '{0}'", item.NodeInfo.Id);
+            var response = item.Process(args);
+            Core.Log.LibDebug("Received response from Node '{0}'", item.NodeInfo.Id);
+            OnNodeResults?.Invoke(this, new EventArgs<NodeClientResult>(response));
+            return response;
         }
         /// <summary>
         /// Processes the batch on the available nodes of the grid.

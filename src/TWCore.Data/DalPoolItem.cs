@@ -22,13 +22,14 @@ using TWCore.Data.Schema;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Dal Pool Item
     /// </summary>
     public class DalPoolItem : IDataAccess
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        internal ObjectPool<IDataAccess> Pool;
+        internal readonly ObjectPool<IDataAccess> Pool;
 
         /// <summary>
         /// Dal Pool item

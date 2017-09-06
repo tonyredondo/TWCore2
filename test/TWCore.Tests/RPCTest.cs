@@ -10,6 +10,9 @@ using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
+// ReSharper disable ArrangeTypeMemberModifiers
+// ReSharper disable InconsistentNaming
+// ReSharper disable FieldCanBeMadeReadOnly.Local
 
 // ReSharper disable UnusedVariable
 

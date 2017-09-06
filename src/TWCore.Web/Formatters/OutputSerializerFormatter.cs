@@ -22,12 +22,13 @@ using System;
 
 namespace TWCore.Web.Formatters
 {
+    /// <inheritdoc />
     /// <summary>
     /// OutputFormatter for ISerializer instances
     /// </summary>
     public class OutputSerializerFormatter : OutputFormatter
     {
-        ISerializer _serializer;
+        private readonly ISerializer _serializer;
 
         /// <summary>
         /// OutputFormatter for ISerializer instances

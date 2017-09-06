@@ -28,9 +28,9 @@ namespace TWCore.Net.HttpServer
     public class FormMultipartParser
     {
         #region Statics Regex
-        static Regex nameRegex = new Regex(@"(?<=name\=\"")(.*?)(?=\"")", RegexOptions.Compiled);
-        static Regex contentTypeRegex = new Regex(@"(?<=Content\-Type:)(.*?)(?=\r\n\r\n)", RegexOptions.Compiled);
-        static Regex filenameRegex = new Regex(@"(?<=filename\=\"")(.*?)(?=\"")", RegexOptions.Compiled);
+        private static readonly Regex NameRegex = new Regex(@"(?<=name\=\"")(.*?)(?=\"")", RegexOptions.Compiled);
+        private static readonly Regex ContentTypeRegex = new Regex(@"(?<=Content\-Type:)(.*?)(?=\r\n\r\n)", RegexOptions.Compiled);
+        private static readonly Regex FilenameRegex = new Regex(@"(?<=filename\=\"")(.*?)(?=\"")", RegexOptions.Compiled);
         #endregion
 
         #region Properties
@@ -57,7 +57,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Form parameters
         /// </summary>
-        public IDictionary<string, string> Parameters { get; private set; } = new Dictionary<string, string>();
+        public IDictionary<string, string> Parameters { get; } = new Dictionary<string, string>();
         #endregion
 
         #region .ctor
@@ -77,93 +77,88 @@ namespace TWCore.Net.HttpServer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Parse(byte[] bytes, Encoding encoding)
+        private void Parse(byte[] bytes, Encoding encoding)
         {
             Success = false;
-            string content = encoding.GetString(bytes);
-            int delimiterEndIndex = content.IndexOf("\r\n", StringComparison.OrdinalIgnoreCase);
+            var content = encoding.GetString(bytes);
+            var delimiterEndIndex = content.IndexOf("\r\n", StringComparison.OrdinalIgnoreCase);
 
-            if (delimiterEndIndex > -1)
+            if (delimiterEndIndex <= -1) return;
+
+            var delimiter = content.Substring(0, content.IndexOf("\r\n", StringComparison.OrdinalIgnoreCase));
+            var sections = content.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
+
+            foreach (var s in sections)
             {
-				string delimiter = content.Substring(0, content.IndexOf("\r\n", StringComparison.OrdinalIgnoreCase));
-                string[] sections = content.Split(new[] { delimiter }, StringSplitOptions.RemoveEmptyEntries);
+                if (!s.Contains("Content-Disposition")) continue;
 
-                foreach (string s in sections)
+                // If we find "Content-Disposition", this is a valid multi-part section
+                // Now, look for the "name" parameter
+                var nameMatch = NameRegex.Match(s);
+                var name = nameMatch.Value.Trim().ToLower();
+
+                if (name == FilePartName)
                 {
-                    if (s.Contains("Content-Disposition"))
-                    {
-                        // If we find "Content-Disposition", this is a valid multi-part section
-                        // Now, look for the "name" parameter
-                        var nameMatch = nameRegex.Match(s);
-                        string name = nameMatch.Value.Trim().ToLower();
+                    // Look for Content-Type
+                    var contentTypeMatch = ContentTypeRegex.Match(content);
 
-                        if (name == FilePartName)
-                        {
-                            // Look for Content-Type
-                            var contentTypeMatch = contentTypeRegex.Match(content);
+                    // Look for filename
+                    var filenameMatch = FilenameRegex.Match(content);
 
-                            // Look for filename
-                            var filenameMatch = filenameRegex.Match(content);
+                    // Did we find the required values?
+                    if (!contentTypeMatch.Success || !filenameMatch.Success) continue;
 
-                            // Did we find the required values?
-                            if (contentTypeMatch.Success && filenameMatch.Success)
-                            {
-                                // Set properties
-                                ContentType = contentTypeMatch.Value.Trim();
-                                Filename = filenameMatch.Value.Trim();
+                    // Set properties
+                    ContentType = contentTypeMatch.Value.Trim();
+                    Filename = filenameMatch.Value.Trim();
 
-                                // Get the start & end indexes of the file contents
-                                int startIndex = contentTypeMatch.Index + contentTypeMatch.Length + "\r\n\r\n".Length;
+                    // Get the start & end indexes of the file contents
+                    var startIndex = contentTypeMatch.Index + contentTypeMatch.Length + "\r\n\r\n".Length;
 
-                                byte[] delimiterBytes = encoding.GetBytes("\r\n" + delimiter);
-                                int endIndex = IndexOf(bytes, delimiterBytes, startIndex);
+                    var delimiterBytes = encoding.GetBytes("\r\n" + delimiter);
+                    var endIndex = IndexOf(bytes, delimiterBytes, startIndex);
 
-                                int contentLength = endIndex - startIndex;
+                    var contentLength = endIndex - startIndex;
 
-                                // Extract the file contents from the byte array
-                                byte[] fileData = new byte[contentLength];
+                    // Extract the file contents from the byte array
+                    var fileData = new byte[contentLength];
 
-                                Buffer.BlockCopy(bytes, startIndex, fileData, 0, contentLength);
+                    Buffer.BlockCopy(bytes, startIndex, fileData, 0, contentLength);
 
-                                FileContents = fileData;
-                            }
-                        }
-                        else if (!string.IsNullOrWhiteSpace(name))
-                        {
-                            // Get the start & end indexes of the file contents
-                            int startIndex = nameMatch.Index + nameMatch.Length + "\r\n\r\n".Length;
-                            Parameters.Add(name, s.Substring(startIndex).TrimEnd('\r', '\n').Trim());
-                        }
-                    }
+                    FileContents = fileData;
                 }
-
-                // If some data has been successfully received, set success to true
-                Success |= FileContents != null || Parameters.Count != 0;
+                else if (!string.IsNullOrWhiteSpace(name))
+                {
+                    // Get the start & end indexes of the file contents
+                    var startIndex = nameMatch.Index + nameMatch.Length + "\r\n\r\n".Length;
+                    Parameters.Add(name, s.Substring(startIndex).TrimEnd('\r', '\n').Trim());
+                }
             }
+
+            // If some data has been successfully received, set success to true
+            Success |= FileContents != null || Parameters.Count != 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        int IndexOf(byte[] searchWithin, byte[] serachFor, int startIndex)
+        private static int IndexOf(byte[] searchWithin, byte[] serachFor, int startIndex)
         {
-            int index = 0;
-            int startPos = Array.IndexOf(searchWithin, serachFor[0], startIndex);
+            var index = 0;
+            var startPos = Array.IndexOf(searchWithin, serachFor[0], startIndex);
+            if (startPos == -1) return -1;
 
-            if (startPos != -1)
+            while ((startPos + index) < searchWithin.Length)
             {
-                while ((startPos + index) < searchWithin.Length)
+                if (searchWithin[startPos + index] == serachFor[index])
                 {
-                    if (searchWithin[startPos + index] == serachFor[index])
-                    {
-                        index++;
-                        if (index == serachFor.Length)
-                            return startPos;
-                    }
-                    else
-                    {
-                        startPos = Array.IndexOf(searchWithin, serachFor[0], startPos + index);
-                        if (startPos == -1)
-                            return -1;
-                        index = 0;
-                    }
+                    index++;
+                    if (index == serachFor.Length)
+                        return startPos;
+                }
+                else
+                {
+                    startPos = Array.IndexOf(searchWithin, serachFor[0], startPos + index);
+                    if (startPos == -1)
+                        return -1;
+                    index = 0;
                 }
             }
             return -1;

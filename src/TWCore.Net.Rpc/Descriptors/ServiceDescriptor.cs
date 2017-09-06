@@ -32,6 +32,8 @@ namespace TWCore.Net.RPC.Descriptors
     [Serializable, DataContract]
     public class ServiceDescriptor
     {
+        private static readonly IHash Hash = HashManager.Get("SHA1");
+
         /// <summary>
         /// Service name
         /// </summary>
@@ -115,33 +117,29 @@ namespace TWCore.Net.RPC.Descriptors
         }
 
         #region Private methods
-        static IHash hash = HashManager.Get("SHA1");
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static Guid GetMethodId(ServiceDescriptor serviceDescriptor, MethodDescriptor methodDescriptor)
+        private static Guid GetMethodId(ServiceDescriptor serviceDescriptor, MethodDescriptor methodDescriptor)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append(serviceDescriptor.Name + "." + methodDescriptor.Name);
             sb.Append("(");
             if (methodDescriptor.Parameters != null)
                 foreach (var p in methodDescriptor.Parameters)
                     sb.Append(string.Format(" {0}[{1}] ", p.Name, p.Type));
             sb.Append(") : " + methodDescriptor.ReturnType);
-			return hash.GetGuid(sb.ToString());
+			return Hash.GetGuid(sb.ToString());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static string GetTypeName(Type type)
+        private static string GetTypeName(Type type)
         {
             var genericTypes = new List<string>();
-            if (type.IsConstructedGenericType)
-            {
-                type.GenericTypeArguments.Each(a => genericTypes.Add(a.FullName));
-                return type.Name + "[" + genericTypes.Join(", ") + "]";
-            }
-            else
-                return type.FullName;
+            if (!type.IsConstructedGenericType) return type.FullName;
+            type.GenericTypeArguments.Each(a => genericTypes.Add(a.FullName));
+            return type.Name + "[" + genericTypes.Join(", ") + "]";
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void RegisterServiceDescriptorType(ServiceDescriptor descriptor, Type type)
+        private static void RegisterServiceDescriptorType(ServiceDescriptor descriptor, Type type)
         {
             if (type.IsConstructedGenericType)
                 type.GenericTypeArguments.Each(t => RegisterServiceDescriptorType(descriptor, t));
@@ -152,23 +150,22 @@ namespace TWCore.Net.RPC.Descriptors
             if (asmName.Name != "mscorlib")
             {
                 var name = GetTypeName(type);
-                if (!descriptor.Types.ContainsKey(name))
+                if (descriptor.Types.ContainsKey(name)) return;
+
+                var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
+                descriptor.Types.Add(name, tDesc);
+                var props = type.GetRuntimeProperties().ToArray();
+                tDesc.Properties = new PropertyDescriptor[props.Length];
+                for (var i = 0; i < props.Length; i++)
                 {
-                    var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
-                    descriptor.Types.Add(name, tDesc);
-                    var props = type.GetRuntimeProperties().ToArray();
-                    tDesc.Properties = new PropertyDescriptor[props.Length];
-                    for (var i = 0; i < props.Length; i++)
+                    var p = props[i];
+                    var pDesc = new PropertyDescriptor()
                     {
-                        var p = props[i];
-                        var pDesc = new PropertyDescriptor()
-                        {
-                            Name = p.Name,
-                            Type = GetTypeName(p.PropertyType)
-                        };
-                        RegisterServiceDescriptorType(descriptor, p.PropertyType);
-                        tDesc.Properties[i] = pDesc;
-                    }
+                        Name = p.Name,
+                        Type = GetTypeName(p.PropertyType)
+                    };
+                    RegisterServiceDescriptorType(descriptor, p.PropertyType);
+                    tDesc.Properties[i] = pDesc;
                 }
             }
             else
@@ -176,11 +173,10 @@ namespace TWCore.Net.RPC.Descriptors
                 if (typeInfo.GenericTypeArguments.Any(t => t.GetTypeInfo().Assembly.GetName().Name != "mscorlib"))
                 {
                     var name = GetTypeName(type);
-                    if (!descriptor.Types.ContainsKey(name))
-                    {
-                        var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
-                        descriptor.Types.Add(name, tDesc);
-                    }
+                    if (descriptor.Types.ContainsKey(name)) return;
+
+                    var tDesc = new TypeDescriptor { Name = name, FullName = type.AssemblyQualifiedName };
+                    descriptor.Types.Add(name, tDesc);
                 }
             }
         }

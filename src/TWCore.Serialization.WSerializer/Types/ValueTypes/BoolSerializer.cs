@@ -21,12 +21,14 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// Boolean value type serializer
     /// </summary>
 	public class BoolSerializer : TypeSerializer<bool>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.BoolFalse, DataType.BoolTrue });
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.BoolFalse, DataType.BoolTrue });
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -35,6 +37,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type) 
             => type == typeof(bool);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -43,6 +46,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(byte type)
             => type == DataType.BoolFalse || type == DataType.BoolTrue;
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -51,6 +55,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(BinaryWriter writer, object value)
             => writer.Write((bool)value ? DataType.BoolTrue : DataType.BoolFalse);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -59,6 +64,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void WriteValue(BinaryWriter writer, bool value)
             => writer.Write(value ? DataType.BoolTrue : DataType.BoolFalse);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -69,6 +75,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public override object Read(BinaryReader reader, byte type)
             => type == DataType.BoolTrue;
 
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -79,6 +86,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public override bool ReadValue(BinaryReader reader, byte type)
             => type == DataType.BoolTrue;
 
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

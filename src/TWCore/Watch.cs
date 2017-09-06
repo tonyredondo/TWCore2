@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Log;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
@@ -32,7 +33,7 @@ namespace TWCore
         /// <summary>
         /// Internal action worker for async statistics
         /// </summary>
-        static ActionWorker worker = new ActionWorker();
+        private static readonly ActionWorker Worker = new ActionWorker();
 
         #region Functions
         /// <summary>
@@ -50,7 +51,7 @@ namespace TWCore
             var res = invokeMethod();
             sw.Stop();
             if (asyncRun)
-                worker.Enqueue(onMethodEnds, sw);
+                Worker.Enqueue(onMethodEnds, sw);
             else
                 onMethodEnds(sw);
             return res;
@@ -83,7 +84,7 @@ namespace TWCore
             var res = await task().ConfigureAwait(false);
             sw.Stop();
             if (asyncRun)
-                worker.Enqueue(onMethodEnds, sw);
+                Worker.Enqueue(onMethodEnds, sw);
             else
                 onMethodEnds(sw);
             return res;
@@ -118,7 +119,7 @@ namespace TWCore
             invokeMethod();
             sw.Stop();
             if (asyncRun)
-                worker.Enqueue(onMethodEnds, sw);
+                Worker.Enqueue(onMethodEnds, sw);
             else
                 onMethodEnds(sw);
         }
@@ -148,7 +149,7 @@ namespace TWCore
             await task().ConfigureAwait(false);
             sw.Stop();
             if (asyncRun)
-                worker.Enqueue(onMethodEnds, sw);
+                Worker.Enqueue(onMethodEnds, sw);
             else
                 onMethodEnds(sw);
         }

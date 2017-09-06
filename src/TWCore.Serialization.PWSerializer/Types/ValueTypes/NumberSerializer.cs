@@ -21,12 +21,13 @@ using TWCore.IO;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// Int value type serializer
     /// </summary>
 	public class NumberSerializer : TypeSerializer<int>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new[]
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
             DataType.Decimal, DataType.DecimalDefault, DataType.RefDecimalByte, DataType.RefDecimalUShort,
             DataType.Double, DataType.DoubleDefault, DataType.RefDoubleByte, DataType.RefDoubleUShort,
@@ -127,6 +128,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -144,6 +146,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             _shortCache?.Clear(mode);
             _uShortCache?.Clear(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -157,6 +160,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             type == typeof(int) || type == typeof(uint) ||
             type == typeof(short) || type == typeof(ushort) ||
             type == typeof(byte) || type == typeof(sbyte);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -165,6 +169,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(byte type)
             => ReadTypes.Contains(type);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -435,6 +440,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     #endregion
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -576,6 +582,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -745,6 +752,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             return 0;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -840,6 +848,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             }
             return 0;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

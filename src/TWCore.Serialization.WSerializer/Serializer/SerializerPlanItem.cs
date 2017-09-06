@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable NotAccessedField.Global
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace TWCore.Serialization.WSerializer.Serializer
 {

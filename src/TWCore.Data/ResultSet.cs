@@ -20,16 +20,17 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Data
 {
+    /// <inheritdoc />
     /// <summary>
     /// Result set 
     /// </summary>
     /// <typeparam name="T">Entity type for the result set</typeparam>
     public class ResultSet<T> : IResultSet
     {
-        static FillDataDelegate<T> DefaultFillMethod = ((e, o) => e.Bind<T>(o));
+        private static readonly FillDataDelegate<T> DefaultFillMethod = ((e, o) => e.Bind<T>(o));
 
         #region Fields
-        List<EntityDataRow<T>> _dataRows = new List<EntityDataRow<T>>();
+        private readonly List<EntityDataRow<T>> _dataRows = new List<EntityDataRow<T>>();
         #endregion
 
         #region Properties
@@ -59,6 +60,7 @@ namespace TWCore.Data
         #endregion
 
         #region Methods
+        /// <inheritdoc />
         /// <summary>
         /// Prepare the result set
         /// </summary>
@@ -70,6 +72,7 @@ namespace TWCore.Data
             EntityBinder.PrepareEntity(typeof(T));
             FillMethod = FillMethod ?? DefaultFillMethod;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Add new row
         /// </summary>
@@ -77,6 +80,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRow(object[] columns) 
             => _dataRows.Add(new EntityDataRow<T>(columns, Binder, FillMethod));
+        /// <inheritdoc />
         /// <summary>
         /// Sets the column names to the binder
         /// </summary>

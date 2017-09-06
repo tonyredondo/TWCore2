@@ -26,9 +26,9 @@ namespace TWCore.Reflection
     /// </summary>
     public class FastPropertyInfo
     {
-        static ConcurrentDictionary<PropertyInfo, FastPropertyInfo> Infos = new ConcurrentDictionary<PropertyInfo, FastPropertyInfo>();
-        static ConcurrentDictionary<PropertyInfo, GetAccessorDelegate> GetAccessorCache = new ConcurrentDictionary<PropertyInfo, GetAccessorDelegate>();
-        static ConcurrentDictionary<PropertyInfo, SetAccessorDelegate> SetAccessorCache = new ConcurrentDictionary<PropertyInfo, SetAccessorDelegate>();
+        private static readonly ConcurrentDictionary<PropertyInfo, FastPropertyInfo> Infos = new ConcurrentDictionary<PropertyInfo, FastPropertyInfo>();
+        private static readonly ConcurrentDictionary<PropertyInfo, GetAccessorDelegate> GetAccessorCache = new ConcurrentDictionary<PropertyInfo, GetAccessorDelegate>();
+        private static readonly ConcurrentDictionary<PropertyInfo, SetAccessorDelegate> SetAccessorCache = new ConcurrentDictionary<PropertyInfo, SetAccessorDelegate>();
 
         /// <summary>
         /// Getter delegate
@@ -63,7 +63,7 @@ namespace TWCore.Reflection
         /// Faster Property info getter and setter
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        FastPropertyInfo(PropertyInfo prop)
+        private FastPropertyInfo(PropertyInfo prop)
         {
             Name = prop.Name;
 			GetValue = GetAccessorCache.GetOrAdd(prop, GetDelegate);
@@ -83,12 +83,13 @@ namespace TWCore.Reflection
         public static FastPropertyInfo Get(PropertyInfo prop)
             => Infos.GetOrAdd(prop, p => new FastPropertyInfo(p));
 
-
-		static GetAccessorDelegate GetDelegate(PropertyInfo prop)
+        private static GetAccessorDelegate GetDelegate(PropertyInfo prop)
 			=> prop.CanRead ? Factory.Accessors.BuildGetAccessor(prop) : EmptyGet;
-		static SetAccessorDelegate SetDelegate(PropertyInfo prop)
+
+        private static SetAccessorDelegate SetDelegate(PropertyInfo prop)
 			=> prop.CanWrite ? Factory.Accessors.BuildSetAccessor(prop) : EmptySet;
-		static object EmptyGet(object value) => null;
-		static void EmptySet(object value, object arg) { }
+
+        private static object EmptyGet(object value) => null;
+        private static void EmptySet(object value, object arg) { }
     }
 }

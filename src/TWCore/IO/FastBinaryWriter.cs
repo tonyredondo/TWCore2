@@ -20,14 +20,16 @@ using System.Text;
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// Writes primitive data types as binary values in a specific encoding.
     /// </summary>
     public class FastBinaryWriter : BinaryWriter
     {
-        byte[] _buffer = new byte[8];
+        private readonly byte[] _buffer = new byte[8];
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>Initializes a new instance of the <see cref="T:TWCore.IO.FasterBinaryWriter" /> class based on the supplied stream and using <see cref="T:System.Text.UTF8Encoding" />.</summary>
         /// <param name="input">A stream. </param>
         /// <exception cref="T:System.ArgumentException">The stream does not support reading, the stream is null, or the stream is already closed. </exception>
@@ -35,6 +37,7 @@ namespace TWCore.IO
         public FastBinaryWriter(Stream input) : base(input)
         {
         }
+        /// <inheritdoc />
         /// <summary>Initializes a new instance of the <see cref="T:TWCore.IO.FasterBinaryWriter" /> class based on the supplied stream and a specific character encoding.</summary>
         /// <param name="input">The supplied stream. </param>
         /// <param name="encoding">The character encoding. </param>
@@ -45,6 +48,7 @@ namespace TWCore.IO
         public FastBinaryWriter(Stream input, Encoding encoding) : base(input, encoding)
         {
         }
+        /// <inheritdoc />
         /// <summary>Initializes a new instance of the <see cref="T:TWCore.IO.FasterBinaryWriter" /> class based on the supplied stream and a specific character encoding.</summary>
         /// <param name="input">The supplied stream. </param>
         /// <param name="encoding">The character encoding. </param>
@@ -55,6 +59,7 @@ namespace TWCore.IO
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>Writes an eight-byte floating-point value to the current stream and advances the stream position by eight bytes.</summary>
         /// <param name="value">The eight-byte floating-point value to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -67,6 +72,7 @@ namespace TWCore.IO
                 *((long*)b) = *(long*)&value;
             base.Write(_buffer, 0, 8);
         }
+        /// <inheritdoc />
         /// <summary>Writes a four-byte floating-point value to the current stream and advances the stream position by four bytes.</summary>
         /// <param name="value">The four-byte floating-point value to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -79,6 +85,7 @@ namespace TWCore.IO
                 *((uint*)b) = *(uint*)&value;
             base.Write(_buffer, 0, 4);
         }
+        /// <inheritdoc />
         /// <summary>Writes a four-byte signed integer to the current stream and advances the stream position by four bytes.</summary>
         /// <param name="value">The four-byte signed integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -91,6 +98,7 @@ namespace TWCore.IO
                 *((int*)b) = value;
             base.Write(_buffer, 0, 4);
         }
+        /// <inheritdoc />
         /// <summary>Writes an eight-byte signed integer to the current stream and advances the stream position by eight bytes.</summary>
         /// <param name="value">The eight-byte signed integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -103,6 +111,7 @@ namespace TWCore.IO
                 *((long*)b) = value;
             base.Write(_buffer, 0, 8);
         }
+        /// <inheritdoc />
         /// <summary>Writes a two-byte signed integer to the current stream and advances the stream position by two bytes.</summary>
         /// <param name="value">The two-byte signed integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -115,6 +124,7 @@ namespace TWCore.IO
                 *((short*)b) = value;
             base.Write(_buffer, 0, 2);
         }
+        /// <inheritdoc />
         /// <summary>Writes a four-byte unsigned integer to the current stream and advances the stream position by four bytes.</summary>
         /// <param name="value">The four-byte unsigned integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -127,6 +137,7 @@ namespace TWCore.IO
                 *((uint*)b) = value;
             base.Write(_buffer, 0, 4);
         }
+        /// <inheritdoc />
         /// <summary>Writes an eight-byte unsigned integer to the current stream and advances the stream position by eight bytes.</summary>
         /// <param name="value">The eight-byte unsigned integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>
@@ -139,6 +150,7 @@ namespace TWCore.IO
                 *((long*)b) = *(long*)&value;
             base.Write(_buffer, 0, 8);
         }
+        /// <inheritdoc />
         /// <summary>Writes a two-byte unsigned integer to the current stream and advances the stream position by two bytes.</summary>
         /// <param name="value">The two-byte unsigned integer to write. </param>
         /// <exception cref="T:System.IO.IOException">An I/O error occurs. </exception>

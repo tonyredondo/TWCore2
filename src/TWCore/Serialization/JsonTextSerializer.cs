@@ -21,9 +21,11 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Json Serializer
     /// </summary>
@@ -41,10 +43,12 @@ namespace TWCore.Serialization
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
         public override string[] Extensions => SExtensions;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
@@ -101,6 +105,7 @@ namespace TWCore.Serialization
             });
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the object instance deserialized from a stream
         /// </summary>
@@ -114,6 +119,7 @@ namespace TWCore.Serialization
             using (var sr = new StreamReader(stream, Encoding, true, 1024, true))
                 return ser.Deserialize(sr, itemType);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object and writes it to the stream
         /// </summary>
@@ -129,6 +135,7 @@ namespace TWCore.Serialization
                 ser.Serialize(sw, item, itemType);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

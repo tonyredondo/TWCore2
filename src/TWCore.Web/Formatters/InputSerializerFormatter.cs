@@ -23,12 +23,13 @@ using TWCore.IO;
 
 namespace TWCore.Web.Formatters
 {
+    /// <inheritdoc />
     /// <summary>
     /// InputFormatter for ISerializer instances
     /// </summary>
     public class InputSerializerFormatter : InputFormatter
     {
-        ISerializer _serializer;
+        private readonly ISerializer _serializer;
 
         /// <summary>
         /// InputFormatter for ISerializer instances

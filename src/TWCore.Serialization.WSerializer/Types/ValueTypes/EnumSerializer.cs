@@ -22,17 +22,19 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// Enum value type serializer
     /// </summary>
 	public class EnumSerializer : TypeSerializer<int>
     {
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.EnumByte, DataType.EnumByteDefault, DataType.EnumByte1, DataType.EnumByte2, DataType.EnumByte3, DataType.EnumByte4, DataType.EnumByte5, DataType.EnumByte6, DataType.EnumByte7,
             DataType.EnumByte8, DataType.EnumByte9, DataType.EnumByte10, DataType.EnumByte11, DataType.EnumByte12, DataType.EnumByte13, DataType.EnumByte14, DataType.EnumByte15,
             DataType.EnumByte16, DataType.EnumUShort, DataType.EnumInt, DataType.EnumSByteMinusOne
         });
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -41,6 +43,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type) 
             => type.GetTypeInfo().IsEnum;
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -49,6 +52,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(byte type) 
             => ReadTypes.Contains(type);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -124,6 +128,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
                     break;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -199,6 +204,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -278,6 +284,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             //return declaredType.GetTypeInfo().IsEnum ? Enum.ToObject(declaredType, intValue) : intValue;
             return intValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -356,6 +363,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             }
             return intValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

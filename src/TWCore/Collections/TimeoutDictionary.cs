@@ -37,8 +37,7 @@ namespace TWCore.Collections
     public class TimeoutDictionary<TKey, TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
         #endregion
 
         #region Events
@@ -52,7 +51,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Internal dictionary item
         /// </summary>
-        class TimeoutClass
+        private class TimeoutClass
         {
             public TValue Value;
             public Task Task;

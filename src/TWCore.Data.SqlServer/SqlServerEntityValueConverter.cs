@@ -20,12 +20,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Data.SqlServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Value converter for the entity binder for SqlServer databases
     /// </summary>
     public class SqlServerEntityValueConverter : IEntityValueConverter
     {
-        SqlServerDataAccess _dataAccess;
+        private readonly SqlServerDataAccess _dataAccess;
 
         #region .ctor
         /// <summary>
@@ -38,6 +39,7 @@ namespace TWCore.Data.SqlServer
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Converts a value from the data source to the property type of the entity.
         /// </summary>
@@ -56,15 +58,14 @@ namespace TWCore.Data.SqlServer
                 return true;
             if (valueType != null)
             {
-                if (valueType.Name == "SqlGeometry" && valueType.Namespace == "Microsoft.SqlServer.Types")
+                switch (valueType.Name)
                 {
-                    propertyValue = value?.ToString();
-                    return true;
-                }
-                if (valueType.Name == "SqlGeography" && valueType.Namespace == "Microsoft.SqlServer.Types")
-                {
-                    propertyValue = value?.ToString();
-                    return true;
+                    case "SqlGeometry" when valueType.Namespace == "Microsoft.SqlServer.Types":
+                        propertyValue = value?.ToString();
+                        return true;
+                    case "SqlGeography" when valueType.Namespace == "Microsoft.SqlServer.Types":
+                        propertyValue = value?.ToString();
+                        return true;
                 }
             }
             if (_dataAccess.ReplaceDateTimeMinMaxValues)

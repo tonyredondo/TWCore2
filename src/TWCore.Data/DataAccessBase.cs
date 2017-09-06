@@ -214,15 +214,15 @@ namespace TWCore.Data
             /// <summary>
             /// Response collection from a SelectElements method
             /// </summary>
-            public IEnumerable<T> ResponseCollection;
+            public readonly IEnumerable<T> ResponseCollection;
             /// <summary>
             /// Response from a SelectElement
             /// </summary>
-            public T Response;
+            public readonly T Response;
             /// <summary>
             /// Return value object
             /// </summary>
-            public object ReturnValue;
+            public readonly object ReturnValue;
 
             public CacheValue(IEnumerable<T> responseCollection, object returnValue)
             {

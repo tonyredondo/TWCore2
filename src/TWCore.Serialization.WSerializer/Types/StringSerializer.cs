@@ -23,6 +23,7 @@ using System.Text;
 
 namespace TWCore.Serialization.WSerializer.Types
 {
+    /// <inheritdoc />
     /// <summary>
     /// String type serializer
     /// </summary>
@@ -30,7 +31,7 @@ namespace TWCore.Serialization.WSerializer.Types
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
 
-        public static HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.StringNull, DataType.StringEmpty,
             DataType.StringLengthByte1, DataType.StringLengthByte2, DataType.StringLengthByte3, DataType.StringLengthByte4, DataType.StringLengthByte5, DataType.StringLengthByte6,
@@ -69,6 +70,7 @@ namespace TWCore.Serialization.WSerializer.Types
         private bool _useCache;
         public Encoding Encoding { get; set; } = DefaultUTF8Encoding;
 
+        /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
@@ -81,6 +83,7 @@ namespace TWCore.Serialization.WSerializer.Types
             Cache32?.Clear(mode);
             _useCache = (mode != SerializerMode.NoCached);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
@@ -89,6 +92,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanWrite(Type type)
             => type == typeof(string);
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
         /// </summary>
@@ -97,6 +101,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool CanRead(byte type) 
             => ReadTypes.Contains(type);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -105,6 +110,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (string)value);
+        /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.
         /// </summary>
@@ -364,6 +370,7 @@ namespace TWCore.Serialization.WSerializer.Types
             else
                 Cache.SerializerSet(value);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -373,6 +380,7 @@ namespace TWCore.Serialization.WSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -558,6 +566,7 @@ namespace TWCore.Serialization.WSerializer.Types
 
             return strValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>

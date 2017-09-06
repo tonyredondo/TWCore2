@@ -23,6 +23,7 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace TWCore.Serialization
 {
@@ -31,8 +32,8 @@ namespace TWCore.Serialization
     /// </summary>
     public static class SerializerManager
     {
-        static ISerializer _defaultBinarySerializer;
-        static ITextSerializer _defaultTextSerializer;
+        private static ISerializer _defaultBinarySerializer;
+        private static ITextSerializer _defaultTextSerializer;
 
 
         /// <summary>
@@ -80,7 +81,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Default value to indicate the known types
         /// </summary>
-        public static List<Type> DefaultKnownTypes = new List<Type>();
+        public static readonly List<Type> DefaultKnownTypes = new List<Type>();
         /// <summary>
         /// Supress the file extension warning from the log
         /// </summary>
@@ -88,11 +89,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Default Binary Serializer MimeTypes Load array
         /// </summary>
-        public static string[] DefaultBinarySerializerMimeTypes = new string[] { SerializerMimeTypes.WBinary, SerializerMimeTypes.PWBinary, SerializerMimeTypes.BinaryFormatter };
+        public static string[] DefaultBinarySerializerMimeTypes = { SerializerMimeTypes.WBinary, SerializerMimeTypes.PWBinary, SerializerMimeTypes.BinaryFormatter };
         /// <summary>
         /// Default Text Serializer MimeTypes Load array
         /// </summary>
-        public static string[] DefaultTextSerializerMimeTypes = new string[] { SerializerMimeTypes.Json, SerializerMimeTypes.Xml };
+        public static string[] DefaultTextSerializerMimeTypes = { SerializerMimeTypes.Json, SerializerMimeTypes.Xml };
 
 
         #region .ctor
@@ -110,18 +111,15 @@ namespace TWCore.Serialization
                         {
                             foreach (var type in assembly.DefinedTypes)
                             {
-                                if (!type.IsInterface && !type.IsAbstract && type.ImplementedInterfaces.Any(i => i == typeof(ISerializer)))
+                                if (type.IsInterface || type.IsAbstract || type.ImplementedInterfaces.All(i => i != typeof(ISerializer))) continue;
+                                var serType = type.AsType();
+                                try
                                 {
-                                    var serType = type.AsType();
-                                    try
-                                    {
-                                        Register((ISerializer)Activator.CreateInstance(serType));
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
-                                    }
-
+                                    Register((ISerializer)Activator.CreateInstance(serType));
+                                }
+                                catch (Exception ex)
+                                {
+                                    Core.Log.Write(LogLevel.Warning, $"Error registering the '{serType.FullName}' serializer, the type was ignored.", ex);
                                 }
                             }
                         }

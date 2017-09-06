@@ -19,6 +19,7 @@ using System.Collections.Generic;
 
 namespace TWCore.Numerics
 {
+    /// <inheritdoc />
     /// <summary>
     /// This class implements a sparse array.
     /// </summary>
@@ -27,7 +28,7 @@ namespace TWCore.Numerics
     public class SparseArray<TKey, TValue> : IEnumerable<KeyValuePair<TKey, TValue>>
         where TKey : IComparable<TKey>
     {
-        private Dictionary<TKey, TValue> m_dictionary;
+        private readonly Dictionary<TKey, TValue> _mDictionary;
 
         /// <summary>
         /// This property stores the default value that is returned if the key doesn't exist.
@@ -37,7 +38,7 @@ namespace TWCore.Numerics
         /// <summary>
         /// Property to get the count of items in the sparse array.
         /// </summary>
-        public int Count => m_dictionary.Count;
+        public int Count => _mDictionary.Count;
 
         #region Constructors
         /// <summary>
@@ -45,7 +46,7 @@ namespace TWCore.Numerics
         /// </summary>
         public SparseArray()
         {
-            m_dictionary = new Dictionary<TKey, TValue>();
+            _mDictionary = new Dictionary<TKey, TValue>();
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace TWCore.Numerics
         /// <param name="defaultValue">A default value to return if the key is not present.</param>
         public SparseArray(TValue defaultValue)
         {
-            m_dictionary = new Dictionary<TKey, TValue>();
+            _mDictionary = new Dictionary<TKey, TValue>();
             DefaultValue = defaultValue;
         }
 
@@ -64,7 +65,7 @@ namespace TWCore.Numerics
         /// <param name="sparseArray">The sparse array instance to be copied</param>
         public SparseArray(SparseArray<TKey, TValue> sparseArray)
         {
-            m_dictionary = new Dictionary<TKey, TValue>();
+            _mDictionary = new Dictionary<TKey, TValue>();
             Initialize(sparseArray);
             DefaultValue = sparseArray.DefaultValue;
         }
@@ -77,11 +78,11 @@ namespace TWCore.Numerics
         /// <param name="sparseArray">An instance of the SparseArray class.</param>
         private void Initialize(SparseArray<TKey, TValue> sparseArray)
         {
-            m_dictionary.Clear();
+            _mDictionary.Clear();
 
             // Copy each key value pair to the new dictionary.
             foreach (KeyValuePair<TKey, TValue> pair in sparseArray)
-                m_dictionary.Add(pair.Key, pair.Value);
+                _mDictionary.Add(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -90,11 +91,11 @@ namespace TWCore.Numerics
         /// <param name="sparseArray">An instance of the SparseArray class.</param>
         public void CopyTo(SparseArray<TKey, TValue> sparseArray)
         {
-            sparseArray.m_dictionary.Clear();
+            sparseArray._mDictionary.Clear();
 
             // Copy each key value pair to the new dictionary.
-            foreach (KeyValuePair<TKey, TValue> pair in m_dictionary)
-                sparseArray.m_dictionary.Add(pair.Key, pair.Value);
+            foreach (KeyValuePair<TKey, TValue> pair in _mDictionary)
+                sparseArray._mDictionary.Add(pair.Key, pair.Value);
         }
 
         /// <summary>
@@ -106,12 +107,12 @@ namespace TWCore.Numerics
         {
             get
             {
-                if (!m_dictionary.TryGetValue(key, out var value))
+                if (!_mDictionary.TryGetValue(key, out var value))
                     value = DefaultValue;
 
                 return value;
             }
-            set => m_dictionary[key] = value;
+            set => _mDictionary[key] = value;
         }
 
         /// <summary>
@@ -119,14 +120,14 @@ namespace TWCore.Numerics
         /// </summary>
         /// <param name="key">A key</param>
         /// <returns>Returns the value 'true' if and only if the key exists in this sparse array</returns>
-        public bool ContainsKey(TKey key) => m_dictionary.ContainsKey(key);
+        public bool ContainsKey(TKey key) => _mDictionary.ContainsKey(key);
 
         /// <summary>
         /// Determines whether this sparse array contains the specified value.
         /// </summary>
         /// <param name="value">A value</param>
         /// <returns>Returns the value 'true' if and only if the value exists in this sparse array</returns>
-        public bool ContainsValue(TValue value) => m_dictionary.ContainsValue(value);
+        public bool ContainsValue(TValue value) => _mDictionary.ContainsValue(value);
 
         /// <summary>
         /// Gets the value for the associated key.
@@ -134,19 +135,19 @@ namespace TWCore.Numerics
         /// <param name="key">The key of the value to get</param>
         /// <param name="value">An out parameter that contains the value if the key exists</param>
         /// <returns>Returns the value 'true' if and only if the key exists in this sparse array</returns>
-        public bool TryGetValue(TKey key, out TValue value) => m_dictionary.TryGetValue(key, out value);
+        public bool TryGetValue(TKey key, out TValue value) => _mDictionary.TryGetValue(key, out value);
 
         /// <summary>
         /// Removes the value with the specified key from this sparse array instance.
         /// </summary>
         /// <param name="key">The key of the element to remove</param>
         /// <returns>The value 'true' if and only if the element is successfully found and removed.</returns>
-        public bool Remove(TKey key) => m_dictionary.Remove(key);
+        public bool Remove(TKey key) => _mDictionary.Remove(key);
 
         /// <summary>
         /// Method to clear all values in the sparse array.
         /// </summary>
-        public void Clear() => m_dictionary.Clear();
+        public void Clear() => _mDictionary.Clear();
 
         #region IEnumerable<KeyValuePair<TKey, TValue>> Members
 
@@ -154,7 +155,7 @@ namespace TWCore.Numerics
         /// The Generic IEnumerator GetEnumerator method
         /// </summary>
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => m_dictionary.GetEnumerator();
+        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator() => _mDictionary.GetEnumerator();
 
         #endregion
 
@@ -164,18 +165,18 @@ namespace TWCore.Numerics
         /// The non-generic IEnumerator GetEnumerator method
         /// </summary>
         /// <returns>An enumerator to iterate over all key-value pairs in this sparse array</returns>
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => m_dictionary.Values.GetEnumerator();
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => _mDictionary.Values.GetEnumerator();
 
         /// <summary>
         /// Property to get the key-value pair at the current enumerator position.
         /// </summary>
-        public TValue Current => m_dictionary.Values.GetEnumerator().Current;
+        public TValue Current => _mDictionary.Values.GetEnumerator().Current;
 
         /// <summary>
         /// Method to move to the next enumerator position.
         /// </summary>
         /// <returns>true if the move on the enumerator could be done; otherwise, false.</returns>
-        public bool MoveNext() => m_dictionary.Values.GetEnumerator().MoveNext();
+        public bool MoveNext() => _mDictionary.Values.GetEnumerator().MoveNext();
 
         #endregion
     }

@@ -22,9 +22,12 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 // ReSharper disable VirtualMemberCallInConstructor
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable FieldCanBeMadeReadOnly.Global
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection of Items where the Key is calculated from a delegate.
     /// </summary>
@@ -35,7 +38,7 @@ namespace TWCore.Collections
     public class KeyDelegatedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        protected object Ilocker = new object();
+        protected readonly object Ilocker = new object();
 
         #region Statics
         /// <summary>
@@ -65,6 +68,7 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -73,6 +77,7 @@ namespace TWCore.Collections
         {
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -83,6 +88,7 @@ namespace TWCore.Collections
             ThrowExceptionOnDuplicateKeys = throwExceptionOnDuplicateKeys;
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -93,6 +99,7 @@ namespace TWCore.Collections
             OnInit();
             AddRange(enumerable);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -103,6 +110,7 @@ namespace TWCore.Collections
         {
             AddRange(enumerable);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -114,6 +122,7 @@ namespace TWCore.Collections
                 DefaultKeySelector = KeySelector;
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -128,6 +137,7 @@ namespace TWCore.Collections
                 DefaultKeySelector = KeySelector;
             OnInit();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -138,6 +148,7 @@ namespace TWCore.Collections
         {
             AddRange(enumerable);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>

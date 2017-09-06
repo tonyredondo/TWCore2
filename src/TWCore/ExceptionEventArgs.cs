@@ -16,6 +16,9 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {

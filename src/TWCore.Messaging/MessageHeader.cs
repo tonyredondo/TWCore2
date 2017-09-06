@@ -20,6 +20,8 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable ValueParameterNotUsed
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging
 {

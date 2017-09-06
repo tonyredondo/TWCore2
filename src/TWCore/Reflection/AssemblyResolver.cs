@@ -22,6 +22,8 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Reflection
 {
@@ -164,7 +166,7 @@ namespace TWCore.Reflection
             /// </summary>
             public string FullName => AssemblyName?.FullName;
 
-            Assembly _instance;
+            private Assembly _instance;
             /// <summary>
             /// Assembly instance
             /// </summary>
@@ -187,7 +189,8 @@ namespace TWCore.Reflection
                     return null;
                 }
             }
-            Assembly _reflectionOnlyInstance;
+
+            private Assembly _reflectionOnlyInstance;
             /// <summary>
             /// Assembly instance in the reflection only context
             /// </summary>

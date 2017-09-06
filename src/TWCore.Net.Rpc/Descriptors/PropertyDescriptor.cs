@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Net.RPC.Descriptors
 {

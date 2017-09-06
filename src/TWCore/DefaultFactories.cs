@@ -28,9 +28,13 @@ using System.Threading;
 using Newtonsoft.Json;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default Factories
     /// </summary>

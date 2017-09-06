@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Client.Grid
 {
@@ -27,11 +29,11 @@ namespace TWCore.Net.RPC.Client.Grid
         /// <summary>
         /// Gets the node information who executed the process
         /// </summary>
-        public NodeInfo NodeInfo { get; private set; }
+        public NodeInfo NodeInfo { get; }
         /// <summary>
         /// Process result data
         /// </summary>
-        public object Data { get; private set; }
+        public object Data { get; }
         /// <summary>
         /// Grid node client process result
         /// </summary>

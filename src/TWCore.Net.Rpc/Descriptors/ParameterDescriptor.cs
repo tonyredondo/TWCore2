@@ -19,6 +19,7 @@ using System.Reflection;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Net.RPC.Descriptors
 {

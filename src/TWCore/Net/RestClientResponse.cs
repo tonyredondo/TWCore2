@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Net;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net
 {
@@ -50,6 +52,7 @@ namespace TWCore.Net
         /// </summary>
         public Uri RequestUri { get; set; }
     }
+    /// <inheritdoc />
     /// <summary>
     /// Response of the Rest client object
     /// </summary>
@@ -58,7 +61,7 @@ namespace TWCore.Net
         /// <summary>
         /// Gets the deserialized response object
         /// </summary>
-        public T Value { get; private set; }
+        public T Value { get; }
         /// <summary>
         /// Response of the Rest client object
         /// </summary>

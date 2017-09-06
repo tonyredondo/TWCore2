@@ -24,15 +24,20 @@ using TWCore.Messaging.RawClient;
 using TWCore.Messaging.RawServer;
 using TWCore.Messaging.Server;
 // ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable CollectionNeverUpdated.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Messaging.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue send/recv configuration
     /// </summary>
     [XmlRoot("QueueConfig"), DataContract]
     public class MQPairConfig : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Configuration name
         /// </summary>
@@ -88,8 +93,7 @@ namespace TWCore.Messaging.Configuration
                 client.Init(this);
                 return client;
             }
-            else
-                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Client);
+            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Client);
             return null;
         }
         /// <summary>
@@ -105,8 +109,7 @@ namespace TWCore.Messaging.Configuration
                 client.Init(this);
                 return client;
             }
-            else
-                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Client);
+            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Client);
             return null;
         }
         /// <summary>
@@ -124,8 +127,7 @@ namespace TWCore.Messaging.Configuration
                 server.ResponseServer = responseServer;
                 return server;
             }
-            else
-                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Server);
+            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Server);
             return null;
         }
         /// <summary>
@@ -143,8 +145,7 @@ namespace TWCore.Messaging.Configuration
                 server.ResponseServer = responseServer;
                 return server;
             }
-            else
-                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Server);
+            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", RawTypes?.Server);
             return null;
         }
         /// <summary>
@@ -159,8 +160,7 @@ namespace TWCore.Messaging.Configuration
                 var admin = (IMQueueAdmin)Activator.CreateInstance(type);
                 return admin;
             }
-            else
-                Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Admin ?? RawTypes?.Admin);
+            Core.Log.Warning("The type '{0}' couldn't be found in the assembly folder.", Types?.Admin ?? RawTypes?.Admin);
             return null;
         }
         /// <summary>

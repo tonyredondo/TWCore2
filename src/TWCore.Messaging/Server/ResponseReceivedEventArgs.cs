@@ -18,6 +18,8 @@ using System;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable CollectionNeverQueried.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.Server
 {
@@ -30,15 +32,15 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Response message received
         /// </summary>
-        public ResponseMessage Message { get; private set; }
+        public ResponseMessage Message { get; }
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
+        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
 
 		/// <inheritdoc />
 		/// <summary>

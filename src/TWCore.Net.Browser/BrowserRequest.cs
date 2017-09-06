@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Net;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Net.Browser
 {

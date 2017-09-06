@@ -18,6 +18,8 @@ using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Messaging.Configuration
 {

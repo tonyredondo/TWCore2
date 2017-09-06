@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Net;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Net
 {

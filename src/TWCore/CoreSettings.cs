@@ -16,9 +16,15 @@ limitations under the License.
 
 using System;
 using TWCore.Settings;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Global Core Settings
     /// </summary>

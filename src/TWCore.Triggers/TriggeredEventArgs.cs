@@ -15,6 +15,9 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Triggers
 {

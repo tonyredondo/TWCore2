@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Attributes
 {
@@ -29,7 +31,7 @@ namespace TWCore.Net.RPC.Attributes
         /// <summary>
         /// Fire triggering message scope
         /// </summary>
-        public RPCMessageScope Scope { get; set; }
+        public RPCMessageScope Scope { get; }
         /// <summary>
         /// In case of scope sets to Hub, the Comma separated Hub name list to fire the event
         /// </summary>

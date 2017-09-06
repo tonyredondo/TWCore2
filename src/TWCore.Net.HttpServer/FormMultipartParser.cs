@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.HttpServer
 {
@@ -37,7 +39,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// File part name
         /// </summary>
-        public string FilePartName { get; private set; }
+        public string FilePartName { get; }
         /// <summary>
         /// true if the content was successfully parsed; otherwise, false.
         /// </summary>

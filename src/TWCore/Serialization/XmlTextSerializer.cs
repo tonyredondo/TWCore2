@@ -25,9 +25,14 @@ using System.Xml;
 using System.Xml.Serialization;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable ConvertToConstant.Global
+// ReSharper disable CollectionNeverUpdated.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Xml Serializer
     /// </summary>
@@ -57,10 +62,12 @@ namespace TWCore.Serialization
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
         public override string[] Extensions => SExtensions;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
@@ -84,6 +91,7 @@ namespace TWCore.Serialization
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Xml Serializer
         /// </summary>
@@ -102,6 +110,7 @@ namespace TWCore.Serialization
             return CacheSerializer.GetOrAdd(key, mKey => new XmlSerializer(type, extraTypes));
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the object instance deserialized from a stream
         /// </summary>
@@ -118,6 +127,7 @@ namespace TWCore.Serialization
             using (var xreader = XmlReader.Create(stream))
                 return xser.Deserialize(xreader);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object and writes it to the stream
         /// </summary>
@@ -149,6 +159,7 @@ namespace TWCore.Serialization
                 xser.Serialize(xwriter, item, xns);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

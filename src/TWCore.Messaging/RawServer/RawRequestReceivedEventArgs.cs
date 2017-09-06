@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.RawServer
 {
@@ -30,23 +32,23 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Sender queue
         /// </summary>
-        public MQConnection Sender { get; private set; }
+        public MQConnection Sender { get; }
         /// <summary>
         /// Response queues
         /// </summary>
-        public List<MQConnection> ResponseQueues { get; private set; } = new List<MQConnection>();
+        public List<MQConnection> ResponseQueues { get; } = new List<MQConnection>();
         /// <summary>
         /// Correlation Id
         /// </summary>
-        public Guid CorrelationId { get; private set; }
+        public Guid CorrelationId { get; }
         /// <summary>
         /// Request message
         /// </summary>
-        public SubArray<byte> Request { get; private set; }
+        public SubArray<byte> Request { get; }
         /// <summary>
         /// Response message
         /// </summary>
@@ -54,11 +56,11 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Gets if the response is going to be sent.
         /// </summary>
-        public bool SendResponse { get; private set; } = true;
+        public bool SendResponse { get; } = true;
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
+        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
 
 		/// <summary>
 		/// Event args for request sent event

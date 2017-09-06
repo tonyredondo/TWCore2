@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 // ReSharper disable UnassignedField.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Client.Grid
 {

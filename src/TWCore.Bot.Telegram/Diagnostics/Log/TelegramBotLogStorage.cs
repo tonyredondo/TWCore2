@@ -23,6 +23,10 @@ using TWCore.Bot.Telegram;
 using TWCore.Serialization;
 using TWCore.Settings;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Log.Storages
 {

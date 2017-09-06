@@ -20,6 +20,8 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.Server
 {
@@ -32,39 +34,39 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Sender queue
         /// </summary>
-        public MQConnection Sender { get; private set; }
+        public MQConnection Sender { get; }
         /// <summary>
         /// Response queues
         /// </summary>
-        public List<MQConnection> ResponseQueues { get; private set; } = new List<MQConnection>();
+        public List<MQConnection> ResponseQueues { get; } = new List<MQConnection>();
         /// <summary>
         /// Request message
         /// </summary>
-        public RequestMessage Request { get; private set; }
+        public RequestMessage Request { get; }
         /// <summary>
         /// Response message
         /// </summary>
-        public ResponseMessage Response { get; private set; }
+        public ResponseMessage Response { get; }
         /// <summary>
         /// Gets if the response is going to be sent.
         /// </summary>
-        public bool SendResponse { get; private set; }
+        public bool SendResponse { get; }
         /// <summary>
         /// Gets the timeout in seconds of the sender to wait for the response
         /// </summary>
-        public int ProcessResponseTimeoutInSeconds { get; private set; }
+        public int ProcessResponseTimeoutInSeconds { get; }
         /// <summary>
         /// Gets the Cancellation Token when the time to process a response has been reached.
         /// </summary>
-        public CancellationToken ProcessResponseTimeoutCancellationToken { get; private set; }
+        public CancellationToken ProcessResponseTimeoutCancellationToken { get; }
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
+        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
 
 
 		/// <inheritdoc />

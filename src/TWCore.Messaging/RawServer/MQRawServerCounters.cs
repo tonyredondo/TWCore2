@@ -20,6 +20,9 @@ using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.RawServer
 {

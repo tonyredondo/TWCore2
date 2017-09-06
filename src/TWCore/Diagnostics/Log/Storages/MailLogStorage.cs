@@ -24,6 +24,8 @@ using System.Text;
 using System.Threading.Tasks;
 using TWCore.Settings;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Diagnostics.Log.Storages
 {

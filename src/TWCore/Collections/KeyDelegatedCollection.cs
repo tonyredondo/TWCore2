@@ -24,6 +24,8 @@ using System.Xml.Serialization;
 // ReSharper disable VirtualMemberCallInConstructor
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Collections
 {

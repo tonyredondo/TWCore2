@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System.Xml.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net
 {

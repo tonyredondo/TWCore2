@@ -21,6 +21,9 @@ using System.Threading;
 using TWCore.Net.RPC.Server;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore.Services
 {
@@ -33,6 +36,7 @@ namespace TWCore.Services
         private CancellationTokenSource _cts;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// RPC Server to start
         /// </summary>
@@ -41,6 +45,7 @@ namespace TWCore.Services
         /// Service cancellation token
         /// </summary>
         public CancellationToken ServiceToken { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
@@ -59,6 +64,7 @@ namespace TWCore.Services
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
@@ -78,6 +84,7 @@ namespace TWCore.Services
                 Core.Log.Write(ex);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
@@ -96,6 +103,7 @@ namespace TWCore.Services
                 Core.Log.Write(ex);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
@@ -104,6 +112,7 @@ namespace TWCore.Services
         {
             OnStop();
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -129,6 +138,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>

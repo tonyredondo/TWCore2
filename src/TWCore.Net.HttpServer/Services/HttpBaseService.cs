@@ -19,6 +19,10 @@ using TWCore.Net.HttpServer;
 // ReSharper disable CheckNamespace
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedParameter.Global
 
 namespace TWCore.Services
 {

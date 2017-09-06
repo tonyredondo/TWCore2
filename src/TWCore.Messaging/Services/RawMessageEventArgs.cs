@@ -15,7 +15,8 @@ limitations under the License.
  */
 
 using System;
-
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services

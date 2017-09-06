@@ -17,15 +17,18 @@ limitations under the License.
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable CollectionNeverUpdated.Global
 
 namespace TWCore.Injector
 {
+    /// <inheritdoc />
     /// <summary>
     /// Instantiable object definition
     /// </summary>
     [DataContract]
     public class Instantiable : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Name of the definition
         /// </summary>

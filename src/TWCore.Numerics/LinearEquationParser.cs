@@ -19,6 +19,8 @@ limitations under the License.
 using System;
 // ReSharper disable RedundantAssignment
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 #pragma warning disable 219
 
 namespace TWCore.Numerics
@@ -56,7 +58,7 @@ namespace TWCore.Numerics
     /// </summary>
     public class LinearEquationParser
     {
-        private static readonly int m_maximumNumberLength = 20;
+        private const int m_maximumNumberLength = 20;
         private int m_startPosition;
         private int m_equationIndex;
         private LinearEquationParserState m_parserState;

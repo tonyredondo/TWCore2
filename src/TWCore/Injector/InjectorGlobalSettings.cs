@@ -19,6 +19,10 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable CollectionNeverUpdated.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Injector
 {
@@ -78,17 +82,15 @@ namespace TWCore.Injector
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void NonIntantiableClassAppend(KeyStringDelegatedCollection<NonInstantiable> nonNew, KeyStringDelegatedCollection<NonInstantiable> nonBase)
+        private static void NonIntantiableClassAppend(KeyStringDelegatedCollection<NonInstantiable> nonNew, KeyStringDelegatedCollection<NonInstantiable> nonBase)
         {
-            if (nonNew != null)
+            if (nonNew == null) return;
+            foreach (var item in nonNew)
             {
-                foreach (var item in nonNew)
-                {
-                    if (!nonBase.Contains(item.Type))
-                        nonBase.Add(item);
-                    else
-                        nonBase[item.Type].ClassDefinitions.AddRange(item.ClassDefinitions);
-                }
+                if (!nonBase.Contains(item.Type))
+                    nonBase.Add(item);
+                else
+                    nonBase[item.Type].ClassDefinitions.AddRange(item.ClassDefinitions);
             }
         }
     }

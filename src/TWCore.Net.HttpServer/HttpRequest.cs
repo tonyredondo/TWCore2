@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Serialization;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.HttpServer
 {
@@ -40,11 +42,11 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Client remote address
         /// </summary>
-        public string RemoteAddress { get; private set; }
+        public string RemoteAddress { get; }
         /// <summary>
         /// Client remote port
         /// </summary>
-        public int RemotePort { get; private set; }
+        public int RemotePort { get; }
         /// <summary>
         /// Http method
         /// </summary>
@@ -64,7 +66,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Request headers
         /// </summary>
-        public Dictionary<string, string> Headers { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> Headers { get; } = new Dictionary<string, string>();
         /// <summary>
         /// Query string values collection
         /// </summary>
@@ -88,7 +90,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Input stream
         /// </summary>
-        public Stream InputStream { get; private set; }
+        public Stream InputStream { get; }
         /// <summary>
         /// Has post object
         /// </summary>

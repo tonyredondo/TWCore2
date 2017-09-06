@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.IO;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Bot
 {

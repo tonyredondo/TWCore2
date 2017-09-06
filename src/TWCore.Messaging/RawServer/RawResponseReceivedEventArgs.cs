@@ -18,6 +18,8 @@ using System;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable CollectionNeverQueried.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.RawServer
 {
@@ -30,11 +32,11 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Correlation Id
         /// </summary>
-        public Guid CorrelationId { get; private set; }
+        public Guid CorrelationId { get; }
         /// <summary>
         /// Response message received
         /// </summary>
@@ -42,8 +44,7 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; private set; } = new KeyValueCollection();
-
+        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
 
 		/// <inheritdoc />
 		/// <summary>

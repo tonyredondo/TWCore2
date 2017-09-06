@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.Server
 {
@@ -27,11 +29,11 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Response message received
         /// </summary>
-        public ResponseMessage Message { get; private set; }
+        public ResponseMessage Message { get; }
 
 		/// <summary>
 		/// Event args for response received event

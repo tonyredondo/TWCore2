@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.RawServer
 {
@@ -27,11 +29,11 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Client name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
         /// <summary>
         /// Correlation Id
         /// </summary>
-        public Guid CorrelationId { get; private set; }
+        public Guid CorrelationId { get; }
         /// <summary>
         /// Response message received
         /// </summary>

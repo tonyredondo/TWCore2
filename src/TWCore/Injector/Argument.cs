@@ -17,15 +17,18 @@ limitations under the License.
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Injector
 {
+    /// <inheritdoc />
     /// <summary>
     /// Argument value definition
     /// </summary>
     [DataContract]
     public class Argument : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Argument name
         /// </summary>

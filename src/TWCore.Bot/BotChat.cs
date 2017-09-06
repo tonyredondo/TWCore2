@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Bot
 {

@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Net.RPC
 {
+    /// <inheritdoc />
     /// <summary>
     /// Push message type
     /// </summary>

@@ -18,9 +18,13 @@ using System;
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
 // ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC.Server.Grid
 {
+    /// <inheritdoc cref="IGridNode" />
     /// <summary>
     /// Grid Node base class
     /// </summary>
@@ -29,11 +33,13 @@ namespace TWCore.Net.RPC.Server.Grid
         private readonly NodeInfo _nodeInfo = new NodeInfo { Id = Guid.NewGuid() };
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Node information
         /// </summary>
         /// <returns>GridNodeInfo instance</returns>
         public NodeInfo GetNodeInfo() => _nodeInfo;
+        /// <inheritdoc />
         /// <summary>
         /// Gets if node is available to process.
         /// </summary>
@@ -78,6 +84,7 @@ namespace TWCore.Net.RPC.Server.Grid
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Node Init Method
         /// </summary>
@@ -89,6 +96,7 @@ namespace TWCore.Net.RPC.Server.Grid
             Core.Log.LibDebug("Init call received.");
             return OnInit(args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Start the process execution
         /// </summary>

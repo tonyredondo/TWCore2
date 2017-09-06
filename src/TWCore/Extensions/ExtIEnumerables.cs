@@ -974,6 +974,7 @@ namespace TWCore
 		/// <returns>IEnumerable with all functions results</returns>
 		public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs)
 		{
+		    if (funcs == null) return null;
 			var funcsArray = funcs as Func<T>[] ?? funcs.ToArray();
 			var response = new T[funcsArray.Length];
 			var sync = new object();
@@ -993,7 +994,8 @@ namespace TWCore
 		/// <returns>IEnumerable with all functions results</returns>
 		public static IEnumerable<T> ParallelInvoke<T>(this IEnumerable<Func<T>> funcs, CancellationToken token)
 		{
-			var funcsArray = funcs as Func<T>[] ?? funcs.ToArray();
+		    if (funcs == null) return null;
+            var funcsArray = funcs as Func<T>[] ?? funcs.ToArray();
 			var response = new T[funcsArray.Length];
 			var sync = new object();
 			Parallel.ForEach(funcsArray, new ParallelOptions { CancellationToken = token }, (item, state, index) =>

@@ -96,7 +96,8 @@ namespace TWCore.Services
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Request, e.CorrelationId));
                         var result = Processor.Process(e, _cTokenSource.Token);
-                        e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
+                        if (result != null)
+                            e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {

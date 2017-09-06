@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Collections
 {
+    /// <inheritdoc />
     /// <summary>
     /// Key/Value Collection
     /// </summary>
@@ -30,11 +31,13 @@ namespace TWCore.Collections
     public class KeyValueCollection<TKey, TValue> : KeyDelegatedCollection<TKey, KeyValue<TKey, TValue>>
     {
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection() : base(i => i.Key) { }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -46,6 +49,7 @@ namespace TWCore.Collections
             foreach (var item in dictionary)
                 Add(new KeyValue<TKey, TValue>(item));
         }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -53,7 +57,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<TKey, TValue>> col) : base(i => i.Key)
         {
-            var keyValues = col as KeyValue<TKey, TValue>[] ?? col.ToArray();
+            var keyValues = col as KeyValue<TKey, TValue>[] ?? col?.ToArray();
             if (keyValues?.Any() != true) return;
             foreach (var item in keyValues)
                 if (!Contains(item.Key))
@@ -156,7 +160,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<string, string>> col) : base(i => i.Key)
         {
-            var keyValues = col as KeyValue<string, string>[] ?? col.ToArray();
+            var keyValues = col as KeyValue<string, string>[] ?? col?.ToArray();
             if (keyValues?.Any() != true) return;
             foreach (var item in keyValues)
                 if (!Contains(item.Key))
@@ -170,7 +174,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(IEnumerable<KeyValue<string, string>> col, bool throwExceptionOnDuplicateKeys) : base(i => i.Key, throwExceptionOnDuplicateKeys)
         {
-            var keyValues = col as KeyValue<string, string>[] ?? col.ToArray();
+            var keyValues = col as KeyValue<string, string>[] ?? col?.ToArray();
             if (keyValues?.Any() != true) return;
             foreach (var item in keyValues)
                 if (!Contains(item.Key))

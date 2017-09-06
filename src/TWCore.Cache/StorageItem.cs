@@ -21,11 +21,12 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache
 {
+    /// <inheritdoc />
     /// <summary>
     /// Storage item
     /// </summary>
     [DataContract]
-    public class StorageItem : IDisposable
+    public sealed class StorageItem : IDisposable
     {
         /// <summary>
         /// Gets or sets the item meta data
@@ -68,11 +69,12 @@ namespace TWCore.Cache
         {
             Dispose();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void Dispose()
+        public void Dispose()
         {
             Meta = null;
             Data = null;

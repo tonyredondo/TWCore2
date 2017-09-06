@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Cache
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args of the event when an Item has been removed from the storage
     /// </summary>
@@ -28,6 +29,7 @@ namespace TWCore.Cache
         /// Storage item key
         /// </summary>
         public string Key { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Event args of the event when an Item has been removed from the storage
         /// </summary>

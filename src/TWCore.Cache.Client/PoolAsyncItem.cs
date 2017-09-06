@@ -179,6 +179,7 @@ namespace TWCore.Cache.Client
         {
             Dispose();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources of the instance
         /// </summary>

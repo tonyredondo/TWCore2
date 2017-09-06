@@ -20,11 +20,13 @@ using TWCore.Collections;
 
 namespace TWCore.Cache.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Memory storage factory using the configuration parameters
     /// </summary>
     public class MemoryStorageFactory : CacheStorageFactoryBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new storage from a KeyValueCollection parameters
         /// </summary>

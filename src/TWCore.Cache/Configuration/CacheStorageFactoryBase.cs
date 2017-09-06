@@ -20,15 +20,18 @@ using TWCore.Configuration;
 
 namespace TWCore.Cache.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache Storage type factory
     /// </summary>
     public abstract class CacheStorageFactoryBase : ITypeFactory
     {
+        /// <inheritdoc />
         /// <summary>
         /// Object type of the result of the factory
         /// </summary>
         public Type ObjectType => typeof(StorageBase);
+        /// <inheritdoc />
         /// <summary>
         /// Create a new object from a KeyValueCollection parameters
         /// </summary>

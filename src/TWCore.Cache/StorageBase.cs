@@ -25,6 +25,7 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache
 {
+    /// <inheritdoc />
     /// <summary>
     /// Storage Base class
     /// </summary>
@@ -67,6 +68,7 @@ namespace TWCore.Cache
         /// Overwrites the expiration date setted by each item in TimeSpan.
         /// </summary>
         public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the Storage Type
 		/// </summary>
@@ -242,9 +244,10 @@ namespace TWCore.Cache
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
-		/// Init this storage
-		/// </summary>
+        /// Init this storage
+        /// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
@@ -280,6 +283,7 @@ namespace TWCore.Cache
         #region IStorage
 
         #region Exist Key / Get Keys
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -291,6 +295,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return false;
             return OnExistKey(key);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get all storage keys.
         /// </summary>
@@ -303,6 +308,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get Dates
+        /// <inheritdoc />
         /// <summary>
         /// Gets the creation date for astorage item with the key specified.
         /// </summary>
@@ -314,6 +320,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGetMeta(key, out var meta) ? meta.CreationDate : (DateTime?)null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the expiration date for a storage item with the key specified.
         /// </summary>
@@ -328,6 +335,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get MetaData
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -339,6 +347,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGetMeta(key, out var meta) ? meta : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -351,6 +360,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGetMeta(key, out var meta, i => (Core.Now - i.CreationDate) <= lastTime) ? meta : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -363,6 +373,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGetMeta(key, out var meta, i => i.CreationDate >= comparer) ? meta : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -371,6 +382,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta[] GetMetaByTag(string[] tags)
             => GetMetaByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -392,6 +404,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get Data
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -403,6 +416,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGet(key, out var item) ? item : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -415,6 +429,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGet(key, out var item, i => (Core.Now - i.CreationDate) <= lastTime) ? item : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -427,6 +442,7 @@ namespace TWCore.Cache
             if (!Ready || string.IsNullOrEmpty(key)) return null;
             return OnTryGet(key, out var item, i => i.CreationDate >= comparer) ? item : null;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -435,6 +451,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem[] GetByTag(string[] tags)
             => GetByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -456,6 +473,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Set Data
+        /// <inheritdoc />
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
@@ -469,6 +487,7 @@ namespace TWCore.Cache
             item.Meta.OnExpire += OnItemExpire;
             return true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -478,6 +497,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data)
             => InternalSet(key, data);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -488,6 +508,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
             => InternalSet(key, data, Core.Now.Add(expirationDate));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -499,6 +520,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
             => InternalSet(key, data, expirationDate.HasValue ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -509,6 +531,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, DateTime expirationDate)
             => InternalSet(key, data, expirationDate);
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -522,7 +545,7 @@ namespace TWCore.Cache
             => InternalSet(key, data, expirationDate, tags);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        bool InternalSet(string key, SerializedObject data, DateTime? expirationDate = null, string[] tags = null)
+        private bool InternalSet(string key, SerializedObject data, DateTime? expirationDate = null, string[] tags = null)
         {
             if (!Ready || string.IsNullOrEmpty(key)) return false;
             var dateNow = Core.Now;
@@ -563,6 +586,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Update/Remove Data
+        /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -576,6 +600,7 @@ namespace TWCore.Cache
             var meta = GetMeta(key);
             return meta != null && OnSet(meta, data);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Removes a StorageItem with the Key specified.
         /// </summary>
@@ -592,6 +617,7 @@ namespace TWCore.Cache
             meta?.Dispose();
             return true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -600,6 +626,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] RemoveByTag(string[] tags)
             => RemoveByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -625,6 +652,7 @@ namespace TWCore.Cache
         #endregion
 
         #region GetOrSet
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -634,6 +662,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem GetOrSet(string key, SerializedObject data)
             => InternalGetOrSet(key, data);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -644,6 +673,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan expirationDate)
             => InternalGetOrSet(key, data, Core.Now.Add(expirationDate));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -655,6 +685,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
             => InternalGetOrSet(key, data, expirationDate.HasValue ? (DateTime?)Core.Now.Add(expirationDate.Value) : null, tags);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -665,6 +696,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem GetOrSet(string key, SerializedObject data, DateTime expirationDate)
             => InternalGetOrSet(key, data, expirationDate);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -687,12 +719,14 @@ namespace TWCore.Cache
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsEnabled() => Enabled;
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.
         /// </summary>
@@ -721,6 +755,7 @@ namespace TWCore.Cache
             OnDispose();
             _disposedValue = true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Release all resources
         /// </summary>

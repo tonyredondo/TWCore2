@@ -21,11 +21,13 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// File storage factory using the configuration parameters
     /// </summary>
     public class FileStorageFactory : CacheStorageFactoryBase
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new storage from a KeyValueCollection parameters
         /// </summary>

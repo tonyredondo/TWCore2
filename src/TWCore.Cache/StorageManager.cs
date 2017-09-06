@@ -19,9 +19,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Serialization;
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
 namespace TWCore.Cache
 {
+    /// <inheritdoc />
     /// <summary>
     /// Storage Manager
     /// </summary>
@@ -30,6 +32,7 @@ namespace TWCore.Cache
 	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
 	    private IStorage[] _storages;
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the Storage Type
 		/// </summary>
@@ -298,13 +301,15 @@ namespace TWCore.Cache
         #endregion
 
         #region IStorage
+        /// <inheritdoc />
         /// <summary>
-		/// Init this storage
-		/// </summary>
+        /// Init this storage
+        /// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init() => _storages?.Each(s => s.Init());
 
         #region Exist Key / Get Keys
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -313,6 +318,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key)
             => ReturnFromStack(key, (sto, arg1) => sto.ExistKey(arg1));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -340,6 +346,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get Dates
+        /// <inheritdoc />
         /// <summary>
         /// Gets the creation date for astorage item with the key specified.
         /// </summary>
@@ -348,6 +355,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime? GetCreationDate(string key)
             => ReturnFromStack(key, (sto, arg1) => sto.GetCreationDate(arg1));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the expiration date for a storage item with the key specified.
         /// </summary>
@@ -359,6 +367,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get MetaData
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -367,6 +376,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key)
             => ReturnFromStack(key, (sto, arg1) => sto.GetMeta(arg1));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -376,6 +386,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key, TimeSpan lastTime)
             => ReturnFromStack(key, lastTime, (sto, arg1, arg2) => sto.GetMeta(arg1, arg2));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -385,6 +396,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta GetMeta(string key, DateTime comparer)
 			=> ReturnFromStack(key, comparer, (sto, arg1, arg2) => sto.GetMeta(arg1, arg2));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -393,6 +405,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta[] GetMetaByTag(string[] tags)
             => GetMetaByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -411,6 +424,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Get Data
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -419,6 +433,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key)
             => ReturnFromStack(key, (sto, arg1) => sto.Get(arg1), (pSto, arg1, stoVal) => pSto.Set(stoVal));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -428,6 +443,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key, TimeSpan lastTime)
             => ReturnFromStack(key, lastTime, (sto, arg1, arg2) => sto.Get(arg1, arg2), (pSto, arg1, arg2, stoVal) => pSto.Set(stoVal));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -437,6 +453,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem Get(string key, DateTime comparer)
             => ReturnFromStack(key, comparer, (sto, arg1, arg2) => sto.Get(arg1, arg2), (pSto, arg1, arg2, stoVal) => pSto.Set(stoVal));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -445,6 +462,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem[] GetByTag(string[] tags)
             => GetByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -463,6 +481,7 @@ namespace TWCore.Cache
 		#endregion
 
 		#region Set Data
+		/// <inheritdoc />
 		/// <summary>
 		/// Sets a new StorageItem with the given data
 		/// </summary>
@@ -471,6 +490,7 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Set(StorageItem item)
 			=> ExecuteInAllStack(item, (sto, arg1) => sto.Set(arg1));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -480,6 +500,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data)
             => ExecuteInAllStack(key, data, (sto, arg1, arg2) => sto.Set(arg1, arg2));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -490,6 +511,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
             => ExecuteInAllStack(key, data, expirationDate, (sto, arg1, arg2, arg3) => sto.Set(arg1, arg2, arg3));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -501,6 +523,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
             => ExecuteInAllStack(key, data, expirationDate, tags, (sto, arg1, arg2, arg3, arg4) => sto.Set(arg1, arg2, arg3, arg4));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -511,6 +534,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, DateTime expirationDate)
 			=> ExecuteInAllStack(key, data, expirationDate, (sto, arg1, arg2, arg3) => sto.Set(arg1, arg2, arg3));
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -525,6 +549,7 @@ namespace TWCore.Cache
         #endregion
 
         #region Update/Remove Data
+        /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -534,6 +559,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool UpdateData(string key, SerializedObject data)
             => ExecuteInAllStack(key, data, (sto, arg1, arg2) => sto.UpdateData(arg1, arg2));
+        /// <inheritdoc />
         /// <summary>
         /// Removes a StorageItem with the Key specified.
         /// </summary>
@@ -542,6 +568,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(string key)
             => ExecuteInAllStack(key, (sto, arg1) => sto.Remove(arg1));
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -550,6 +577,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] RemoveByTag(string[] tags)
             => RemoveByTag(tags, false);
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -568,6 +596,7 @@ namespace TWCore.Cache
         #endregion
 
         #region GetOrSet
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -583,6 +612,7 @@ namespace TWCore.Cache
 	        stoData = Get(key);
 	        return stoData;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -599,6 +629,7 @@ namespace TWCore.Cache
 	        stoData = Get(key);
 	        return stoData;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -616,6 +647,7 @@ namespace TWCore.Cache
 	        stoData = Get(key);
 	        return stoData;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -632,6 +664,7 @@ namespace TWCore.Cache
 	        stoData = Get(key);
 	        return stoData;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -651,6 +684,7 @@ namespace TWCore.Cache
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is enabled.
         /// </summary>
@@ -660,6 +694,7 @@ namespace TWCore.Cache
         {
 	        return _storages.Any(sto => sto.IsEnabled());
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.
         /// </summary>
@@ -691,6 +726,7 @@ namespace TWCore.Cache
 	        }
 	        _disposedValue = true;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Release all resources
         /// </summary>

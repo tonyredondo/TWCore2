@@ -63,6 +63,7 @@ namespace TWCore.Cache.Client
 	/// </summary>
 	public delegate bool ResponseConditionDelegate<in T>(T response);
 
+    /// <inheritdoc />
     /// <summary>
     /// Cache pool item collection
     /// </summary>
@@ -170,13 +171,11 @@ namespace TWCore.Cache.Client
         /// <param name="item">Pool item to be added in the collection</param>
         public void Add(PoolItem item)
         {
-            if (item != null)
-            {
-                item.PingDelay = PingDelay;
-                item.PingDelayOnError = PingDelayOnError;
-                Items.Add(item);
-				_hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
-            }
+            if (item == null) return;
+            item.PingDelay = PingDelay;
+            item.PingDelayOnError = PingDelayOnError;
+            Items.Add(item);
+            _hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
         }
         /// <summary>
         /// Clear all the pool collection
@@ -224,11 +223,9 @@ namespace TWCore.Cache.Client
                 {
                     if (idx >=0 && idx < lstItems.Count)
                     {
-                        if (lstItems[idx] != null)
-                        {
-                            nItems.Add(lstItems[idx]);
-                            lstItems[idx] = null;
-                        }
+                        if (lstItems[idx] == null) continue;
+                        nItems.Add(lstItems[idx]);
+                        lstItems[idx] = null;
                     }
                 }
                 foreach(var item in lstItems)
@@ -551,6 +548,7 @@ namespace TWCore.Cache.Client
 		}
 		#endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

@@ -22,9 +22,11 @@ using System.Runtime.Serialization;
 using System.Threading;
 using System.Xml.Serialization;
 using TWCore.Serialization;
+// ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
 namespace TWCore.Cache
 {
+    /// <inheritdoc />
     /// <summary>
     /// Storage item Metadata
     /// </summary>
@@ -116,6 +118,7 @@ namespace TWCore.Cache
         {
             Dispose();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

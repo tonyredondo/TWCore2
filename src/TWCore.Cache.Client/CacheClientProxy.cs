@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
 using TWCore.Serialization;
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Cache.Client
 {
@@ -27,11 +28,11 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientProxy : RPCProxy, IStorage, IStorageAsync
     {
-		/// <summary>
-		/// Gets the Storage Type
-		/// </summary>
-		/// <value>The type.</value>
-		public StorageType Type => StorageType.Network;
+        /// <summary>
+        /// Gets the Storage Type
+        /// </summary>
+        /// <value>The type.</value>
+        public StorageType Type => StorageType.Network;
 
         #region IStorage
         /// <summary>

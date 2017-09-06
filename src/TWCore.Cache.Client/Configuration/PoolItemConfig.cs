@@ -20,6 +20,7 @@ using TWCore.Configuration;
 
 namespace TWCore.Cache.Client.Configuration
 {
+    /// <inheritdoc />
     /// <summary>
     /// Pool item config
     /// </summary>

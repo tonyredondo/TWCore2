@@ -60,6 +60,7 @@ namespace TWCore.Cache.Client
 	/// </summary>
 	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1, in TA2, in TA3, in TA4>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4);
 
+    /// <inheritdoc />
     /// <summary>
     /// Cache pool item collection
     /// </summary>
@@ -236,11 +237,9 @@ namespace TWCore.Cache.Client
 
 			while (sw.Elapsed.TotalSeconds < 15)
 			{
-				IEnumerable<PoolAsyncItem> iWhere;
-
-				iWhere = onlyMemoryStorages ? 
-					Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory) : 
-					Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
+			    var iWhere = onlyMemoryStorages ? 
+			        Items.Where(i => i.Enabled && i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory) : 
+			        Items.Where(i => i.Enabled && i.Mode.HasFlag(mode));
 
 				if (SelectionOrder == PoolOrder.PingTime)
 					iWhere = iWhere.OrderBy(i => i.PingTime);
@@ -558,6 +557,7 @@ namespace TWCore.Cache.Client
 		}
 		#endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

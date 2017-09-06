@@ -20,6 +20,7 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines a cache storage
     /// </summary>

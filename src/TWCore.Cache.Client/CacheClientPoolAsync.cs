@@ -22,6 +22,7 @@ using TWCore.Serialization;
 
 namespace TWCore.Cache.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache client connection pool
     /// </summary>
@@ -149,6 +150,7 @@ namespace TWCore.Cache.Client
         #region IStorageAsync
 
         #region Exist Key / Get Keys
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -164,6 +166,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -186,6 +189,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get Dates
+        /// <inheritdoc />
         /// <summary>
         /// Gets the creation date for astorage item with the key specified.
         /// </summary>
@@ -201,6 +205,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the expiration date for a storage item with the key specified.
         /// </summary>
@@ -219,6 +224,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get MetaData
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -234,6 +240,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -250,6 +257,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information of a key in the storage.
         /// </summary>
@@ -266,6 +274,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -281,6 +290,7 @@ namespace TWCore.Cache.Client
                 return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItemMeta information searching the items with the tags 
         /// </summary>
@@ -300,6 +310,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Get Data
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -317,6 +328,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -335,6 +347,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key in the storage
         /// </summary>
@@ -353,6 +366,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -368,6 +382,7 @@ namespace TWCore.Cache.Client
 				return res.Item1;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem searching the items with the tags 
         /// </summary>
@@ -387,6 +402,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Set Data
+        /// <inheritdoc />
         /// <summary>
         /// Sets a new StorageItem with the given data
         /// </summary>
@@ -402,6 +418,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -418,6 +435,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -435,6 +453,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -453,6 +472,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -470,6 +490,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
@@ -491,6 +512,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region Update/Remove Data
+        /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -507,6 +529,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Removes a StorageItem with the Key specified.
         /// </summary>
@@ -522,6 +545,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -537,6 +561,7 @@ namespace TWCore.Cache.Client
                 return res;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
         /// </summary>
@@ -556,6 +581,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         #region GetOrSet
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -577,6 +603,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -599,6 +626,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -622,6 +650,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -644,6 +673,7 @@ namespace TWCore.Cache.Client
                 return sto;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
         /// </summary>
@@ -669,12 +699,14 @@ namespace TWCore.Cache.Client
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is enabled.
         /// </summary>
         /// <returns>true if the storage is enabled; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> IsEnabledAsync() => Task.FromResult(_pool.AnyEnabled());
+        /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.
         /// </summary>
@@ -742,6 +774,7 @@ namespace TWCore.Cache.Client
 
 
         #region IDispose
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

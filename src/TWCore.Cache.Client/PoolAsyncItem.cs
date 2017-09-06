@@ -21,6 +21,7 @@ using TWCore.Diagnostics.Status;
 
 namespace TWCore.Cache.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Cache pool item
     /// </summary>

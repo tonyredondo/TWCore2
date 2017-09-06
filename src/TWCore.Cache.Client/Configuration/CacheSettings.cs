@@ -132,9 +132,11 @@ namespace TWCore.Cache.Client.Configuration
             }
             else
                 serializer = SerializerManager.DefaultBinarySerializer;
-            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
-            ccp.Serializer = serializer;
-            ccp.ForceAtLeastOneNetworkItemEnabled = forceNetworkItem;
+            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder)
+            {
+                Serializer = serializer,
+                ForceAtLeastOneNetworkItemEnabled = forceNetworkItem
+            };
 
             if (cConfig.Pool.Items?.Any() != true) return ccp;
             

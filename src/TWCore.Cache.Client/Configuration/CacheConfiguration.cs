@@ -19,6 +19,10 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable CollectionNeverUpdated.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Cache.Client.Configuration
 {

@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Data.Schema.Generator;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedParameter.Local
 
 namespace TWCore.Data.SQLite
 {

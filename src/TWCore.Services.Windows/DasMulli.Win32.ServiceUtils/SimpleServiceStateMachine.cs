@@ -60,7 +60,7 @@ namespace DasMulli.Win32.ServiceUtils
                 }
                 case ServiceControlCommand.Pause:
                 {
-                    _statusReportCallback(ServiceState.PausePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    _statusReportCallback(ServiceState.PausePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 20000);
                     var win32ExitCode = 0;
                     try
                     {
@@ -75,7 +75,7 @@ namespace DasMulli.Win32.ServiceUtils
                 }
                 case ServiceControlCommand.Continue:
                 {
-                    _statusReportCallback(ServiceState.ContinuePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 10000);
+                    _statusReportCallback(ServiceState.ContinuePending, ServiceAcceptedControlCommandsFlags.None, win32ExitCode: 0, waitHint: 20000);
                     var win32ExitCode = 0;
                     try
                     {

@@ -1,9 +1,6 @@
 ﻿// ReSharper disable ParameterHidesMember
 // ReSharper disable CheckNamespace
 
-using System;
-using System.Diagnostics;
-
 namespace DasMulli.Win32.ServiceUtils
 {
     public sealed class SimpleServiceStateMachine : IWin32ServiceStateMachine

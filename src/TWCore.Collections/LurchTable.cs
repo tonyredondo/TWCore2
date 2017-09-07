@@ -20,6 +20,9 @@ using System.Collections.Generic;
 using System.Threading;
 // ReSharper disable MemberHidesStaticFromOuterClass
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ArrangeTypeMemberModifiers
 
 namespace TWCore.Collections
 {
@@ -305,9 +308,7 @@ namespace TWCore.Collections
         public TValue GetOrAdd(TKey key, TValue value)
         {
             var info = new AddInfo { Value = value, CanUpdate = false };
-            if (InsertResult.Exists == Insert(key, ref info))
-                return info.Value;
-            return value;
+            return InsertResult.Exists == Insert(key, ref info) ? info.Value : value;
         }
 
         /// <summary>
@@ -1419,11 +1420,9 @@ namespace TWCore.Collections
 
             public void Unlock()
             {
-                if (_locked != null)
-                {
-                    Monitor.Exit(_locked);
-                    _locked = null;
-                }
+                if (_locked == null) return;
+                Monitor.Exit(_locked);
+                _locked = null;
             }
 
             public void Lock(object lck)
@@ -1455,10 +1454,7 @@ namespace TWCore.Collections
 
                 if (_hasTestValue && !EqualityComparer<TValue>.Default.Equals(_testValue, value))
                     return false;
-                if (Condition != null && !Condition(key, value))
-                    return false;
-
-                return true;
+                return Condition == null || Condition(key, value);
             }
         }
 

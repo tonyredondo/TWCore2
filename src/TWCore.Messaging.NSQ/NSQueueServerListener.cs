@@ -215,23 +215,28 @@ namespace TWCore.Messaging.NSQ
 				if (!(obj is NSQMessage message)) return;
 				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
 				var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-				if (messageBody is RequestMessage request && request.Header != null)
+				switch (messageBody)
 				{
-					request.Header.ApplicationReceivedTime = Core.Now;
-					Counters.IncrementReceivingTime(request.Header.TotalTime);
-					if (request.Header.ClientName != Config.Name)
-						Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-					var evArgs = new RequestReceivedEventArgs(_name, Connection, request);
-					if (request.Header.ResponseQueue != null)
-						evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-					OnRequestReceived(evArgs);
-				}
-				else if (messageBody is ResponseMessage response && response.Header != null)
-				{
-					response.Header.Response.ApplicationReceivedTime = Core.Now;
-					Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-					var evArgs = new ResponseReceivedEventArgs(_name, response);
-					OnResponseReceived(evArgs);
+					case RequestMessage request when request.Header != null:
+					{
+						request.Header.ApplicationReceivedTime = Core.Now;
+						Counters.IncrementReceivingTime(request.Header.TotalTime);
+						if (request.Header.ClientName != Config.Name)
+							Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+						var evArgs = new RequestReceivedEventArgs(_name, Connection, request);
+						if (request.Header.ResponseQueue != null)
+							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+						OnRequestReceived(evArgs);
+						break;
+					}
+					case ResponseMessage response when response.Header != null:
+					{
+						response.Header.Response.ApplicationReceivedTime = Core.Now;
+						Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+						var evArgs = new ResponseReceivedEventArgs(_name, response);
+						OnResponseReceived(evArgs);
+						break;
+					}
 				}
 				Counters.IncrementTotalMessagesProccesed();
 			}

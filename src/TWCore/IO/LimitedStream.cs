@@ -17,6 +17,9 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.IO
 {
@@ -40,7 +43,7 @@ namespace TWCore.IO
         /// <summary>
         /// MaxLength bytes to read
         /// </summary>
-        public int MaxLength { get; private set; }
+        public int MaxLength { get; }
         /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.

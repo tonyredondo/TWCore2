@@ -22,6 +22,12 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore.Cache
 {
@@ -113,14 +119,12 @@ namespace TWCore.Cache
 
         #region Private/Protected Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void SetExpirationTimeout()
+        private void SetExpirationTimeout()
         {
             _expirationTimer?.Change(Timeout.Infinite, Timeout.Infinite);
-            if (ExpirationCheckTimeInMinutes > 0)
-            {
-                var timeout = TimeSpan.FromMinutes(ExpirationCheckTimeInMinutes);
-                _expirationTimer = new Timer(item => CheckItemExpiration(), this, timeout, timeout);
-            }
+            if (ExpirationCheckTimeInMinutes <= 0) return;
+            var timeout = TimeSpan.FromMinutes(ExpirationCheckTimeInMinutes);
+            _expirationTimer = new Timer(item => CheckItemExpiration(), this, timeout, timeout);
         }
         /// <summary>
         /// Checks items expiration

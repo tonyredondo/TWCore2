@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Log.Storages;
 using TWCore.Diagnostics.Status;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Diagnostics.Log
 {
@@ -110,11 +111,17 @@ namespace TWCore.Diagnostics.Log
             {
                 try
                 {
-                    if (item == null) return;
-                    if (item is NewLineLogItem)
-                        Storage.WriteEmptyLine();
-                    else
-                        Storage.Write(item);
+                    switch (item)
+                    {
+                        case null:
+                            return;
+                        case NewLineLogItem _:
+                            Storage.WriteEmptyLine();
+                            break;
+                        default:
+                            Storage.Write(item);
+                            break;
+                    }
                 }
                 catch (Exception)
                 {
@@ -204,16 +211,14 @@ namespace TWCore.Diagnostics.Log
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
-            if (Enabled && item != null && item.Level <= MaxLogLevel && item.Level <= Storage.GetMaxLogLevel())
+            if (!Enabled || item == null || item.Level > MaxLogLevel || item.Level > Storage.GetMaxLogLevel()) return;
+            if (_itemsWorker?.Count < MaximumItemsInQueue)
             {
-                if (_itemsWorker?.Count < MaximumItemsInQueue)
-                {
-                    _completationHandler.Reset();
-                    _itemsWorker?.Enqueue(item);
-                }
-                if (item.Level == LogLevel.Error)
-                    _lastLogItemsWorker?.Enqueue(item);
+                _completationHandler.Reset();
+                _itemsWorker?.Enqueue(item);
             }
+            if (item.Level == LogLevel.Error)
+                _lastLogItemsWorker?.Enqueue(item);
         }
         /// <inheritdoc />
         /// <summary>

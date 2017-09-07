@@ -23,6 +23,8 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 // ReSharper disable CheckNamespace
 
@@ -43,8 +45,8 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object> action)
 		{
-			if (enumerable != null && action != null)
-				foreach (object obj in enumerable) action(obj);
+			if (enumerable == null || action == null) return;
+			foreach (var obj in enumerable) action(obj);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -54,13 +56,13 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
-				foreach (object obj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(obj);
-				}
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			foreach (var obj in enumerable)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(obj);
+			}
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -69,11 +71,9 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object, int> action)
 		{
-			if (enumerable != null && action != null)
-			{
-				var idx = 0;
-				foreach (object obj in enumerable) action(obj, idx++);
-			}
+			if (enumerable == null || action == null) return;
+			var idx = 0;
+			foreach (var obj in enumerable) action(obj, idx++);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -83,15 +83,13 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			var idx = 0;
+			foreach (var obj in enumerable)
 			{
-				var idx = 0;
-				foreach (object obj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(obj, idx++);
-				}
+				if (token.IsCancellationRequested)
+					break;
+				action(obj, idx++);
 			}
 		}
 		/// <summary>
@@ -102,11 +100,9 @@ namespace TWCore
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state)
 		{
-			if (enumerable != null && action != null)
-			{
-				var idx = 0;
-				foreach (object innerObj in enumerable) action(innerObj, idx++, state);
-			}
+			if (enumerable == null || action == null) return;
+			var idx = 0;
+			foreach (var innerObj in enumerable) action(innerObj, idx++, state);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -117,15 +113,13 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			var idx = 0;
+			foreach (var innerObj in enumerable)
 			{
-				var idx = 0;
-				foreach (object innerObj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(innerObj, idx++, state);
-				}
+				if (token.IsCancellationRequested)
+					break;
+				action(innerObj, idx++, state);
 			}
 		}
 		/// <summary>
@@ -135,12 +129,10 @@ namespace TWCore
 		/// <returns>IList with the result of the enumeration</returns>
 		public static IEnumerable Enumerate(this IEnumerable linqExpression)
 		{
-			if (linqExpression != null && !(linqExpression is IList) && !(linqExpression is string))
-			{
-				var bType = linqExpression.GetType().GetTypeInfo().BaseType;
-				if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
-					return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
-			}
+			if (linqExpression == null || linqExpression is IList || linqExpression is string) return linqExpression;
+			var bType = linqExpression.GetType().GetTypeInfo().BaseType;
+			if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
+				return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
 			return linqExpression;
 		}
 		#endregion
@@ -153,8 +145,8 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T> action)
 		{
-			if (enumerable != null && action != null)
-				foreach (T obj in enumerable) action(obj);
+			if (enumerable == null || action == null) return;
+			foreach (var obj in enumerable) action(obj);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -164,14 +156,12 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			foreach (var obj in enumerable)
 			{
-				foreach (T obj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(obj);
-				}
+				if (token.IsCancellationRequested)
+					break;
+				action(obj);
 			}
 		}
 		/// <summary>
@@ -181,11 +171,9 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
 		{
-			if (enumerable != null && action != null)
-			{
-				var idx = 0;
-				foreach (T obj in enumerable) action(obj, idx++);
-			}
+			if (enumerable == null || action == null) return;
+			var idx = 0;
+			foreach (var obj in enumerable) action(obj, idx++);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -195,15 +183,13 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			var idx = 0;
+			foreach (var obj in enumerable)
 			{
-				var idx = 0;
-				foreach (T obj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(obj, idx++);
-				}
+				if (token.IsCancellationRequested)
+					break;
+				action(obj, idx++);
 			}
 		}
 		/// <summary>
@@ -214,11 +200,9 @@ namespace TWCore
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state)
 		{
-			if (enumerable != null && action != null)
-			{
-				var idx = 0;
-				foreach (T innerObj in enumerable) action(innerObj, idx++, state);
-			}
+			if (enumerable == null || action == null) return;
+			var idx = 0;
+			foreach (var innerObj in enumerable) action(innerObj, idx++, state);
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -229,15 +213,13 @@ namespace TWCore
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state, CancellationToken token)
 		{
-			if (enumerable != null && action != null && !token.IsCancellationRequested)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			var idx = 0;
+			foreach (var innerObj in enumerable)
 			{
-				var idx = 0;
-				foreach (T innerObj in enumerable)
-				{
-					if (token.IsCancellationRequested)
-						break;
-					action(innerObj, idx++, state);
-				}
+				if (token.IsCancellationRequested)
+					break;
+				action(innerObj, idx++, state);
 			}
 		}
 		/// <summary>
@@ -247,12 +229,10 @@ namespace TWCore
 		/// <returns>IList with the result of the enumeration</returns>
 		public static IEnumerable Enumerate<T>(this IEnumerable<T> linqExpression)
 		{
-			if (linqExpression != null && !(linqExpression is IList) && !(linqExpression is string))
-			{
-				var bType = linqExpression.GetType().GetTypeInfo().BaseType;
-				if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
-					return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
-			}
+			if (linqExpression == null || linqExpression is IList || linqExpression is string) return linqExpression;
+			var bType = linqExpression.GetType().GetTypeInfo().BaseType;
+			if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
+				return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
 			return linqExpression;
 		}
 
@@ -265,26 +245,21 @@ namespace TWCore
 		/// <returns>The item if is found</returns>
 		public static T FindFirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)
 		{
-			if (predicates != null)
+			if (predicates == null) return default(T);
+			var comparer = EqualityComparer<T>.Default;
+			var foundArray = new T[predicates.Length - 1];
+			foreach (var item in source)
 			{
-				var comparer = EqualityComparer<T>.Default;
-				var foundArray = new T[predicates.Length - 1];
-				foreach (var item in source)
+				for (var i = 0; i < predicates.Length; i++)
 				{
-					for (var i = 0; i < predicates.Length; i++)
-					{
-						if (predicates[i](item))
-						{
-							if (i == 0)
-								return item;
-							else if (comparer.Equals(item, default(T)))
-								foundArray[i - 1] = item;
-						}
-					}
+					if (!predicates[i](item)) continue;
+					if (i == 0)
+						return item;
+					else if (comparer.Equals(item, default(T)))
+						foundArray[i - 1] = item;
 				}
-				return foundArray.FirstOrDefault(item => !comparer.Equals(item, default(T)));
 			}
-			return default(T);
+			return foundArray.FirstOrDefault(item => !comparer.Equals(item, default(T)));
 		}
         #endregion
 

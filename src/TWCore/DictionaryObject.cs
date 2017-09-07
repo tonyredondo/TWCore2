@@ -97,7 +97,7 @@ namespace TWCore
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Extract(XElement element, Dictionary<string, object> currentDictionary)
+        private static void Extract(XElement element, Dictionary<string, object> currentDictionary)
         {
             if (element.HasAttributes)
             {
@@ -126,10 +126,15 @@ namespace TWCore
                 foreach (var key in keys)
                 {
                     if (!(currentDictionary[key] is List<Dictionary<string, object>> lst)) continue;
-                    if (lst.Count == 0)
-                        currentDictionary[key] = null;
-                    else if (lst.Count == 1)
-                        currentDictionary[key] = lst[0];
+                    switch (lst.Count)
+                    {
+                        case 0:
+                            currentDictionary[key] = null;
+                            break;
+                        case 1:
+                            currentDictionary[key] = lst[0];
+                            break;
+                    }
                 }
 
             }

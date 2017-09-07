@@ -74,16 +74,16 @@ namespace TWCore.Data
             if (command?.Parameters == null || parameters == null) return;
             foreach (DbParameter itemParam in command.Parameters)
             {
-                if (itemParam.Direction == ParameterDirection.InputOutput || itemParam.Direction == ParameterDirection.Output)
+                if (itemParam.Direction != ParameterDirection.InputOutput &&
+                    itemParam.Direction != ParameterDirection.Output) continue;
+                
+                if (parameters.ContainsKey(itemParam.ParameterName))
+                    parameters[itemParam.ParameterName] = itemParam.Value;
+                else
                 {
-                    if (parameters.ContainsKey(itemParam.ParameterName))
-                        parameters[itemParam.ParameterName] = itemParam.Value;
-                    else
-                    {
-                        var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
-                        if (parameters.ContainsKey(pKey))
-                            parameters[pKey] = itemParam.Value;
-                    }
+                    var pKey = itemParam.ParameterName.SubstringFromFirst(parameterPrefix);
+                    if (parameters.ContainsKey(pKey))
+                        parameters[pKey] = itemParam.Value;
                 }
             }
         }

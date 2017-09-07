@@ -162,14 +162,11 @@ namespace TWCore.Messaging.Client
             OnBeforeSend(rqMsg);
             OnBeforeSendRequest?.Invoke(this, rsea);
             MQueueClientEvents.FireOnBeforeSendRequest(this, rsea);
-            if (OnSend(rqMsg))
-            {
-                Counters.IncrementMessagesSent();
-                OnRequestSent?.Invoke(this, rsea);
-                MQueueClientEvents.FireOnRequestSent(this, rsea);
-                return rqMsg.CorrelationId;
-            }
-            return Guid.Empty;
+            if (!OnSend(rqMsg)) return Guid.Empty;
+            Counters.IncrementMessagesSent();
+            OnRequestSent?.Invoke(this, rsea);
+            MQueueClientEvents.FireOnRequestSent(this, rsea);
+            return rqMsg.CorrelationId;
         }
         /// <inheritdoc />
         /// <summary>

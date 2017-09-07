@@ -111,54 +111,53 @@ namespace TWCore.Data
                     if (pattern.IsNotNullOrEmpty())
                         propName = pattern.Replace("%", propName);
 
-                    if (ColumnIndex.ContainsKey(propName))
+                    if (!ColumnIndex.ContainsKey(propName)) continue;
+                    
+                    var idx = ColumnIndex[propName];
+                    if (idx >= rowValues.Length || idx < 0)
                     {
-                        var idx = ColumnIndex[propName];
-                        if (idx >= rowValues.Length || idx < 0)
-                        {
-                            Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
-                            continue;
-                        }
-                        var value = rowValues[idx];
-                        var valueType = value?.GetType();
-						var propertyType = prop.PropertyUnderlayingType;
-						var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
-						var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
+                        Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
+                        continue;
+                    }
+                    var value = rowValues[idx];
+                    var valueType = value?.GetType();
+                    var propertyType = prop.PropertyUnderlayingType;
+                    var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
+                    var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
 
-                        if (value == null)
-                            prop.SetValue(entity, defaultValue);
-                        else if (propertyType == valueType)
-                            prop.SetValue(entity, value);
-                        else
-                        {
-                            object result = defaultValue;
+                    if (value == null)
+                        prop.SetValue(entity, defaultValue);
+                    else if (propertyType == valueType)
+                        prop.SetValue(entity, value);
+                    else
+                    {
+                        var result = defaultValue;
 
-                            if (propertyType == typeof(Guid) && valueType == typeof(string))
-                                result = new Guid((string)value);
-                            else if (propertyTypeInfo.IsEnum &&
-                                (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
-                                result = Enum.Parse(propertyType, value.ToString());
-                            else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))
-                                result = valueConverterResult;
-                            else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
+                        if (propertyType == typeof(Guid) && valueType == typeof(string))
+                            result = new Guid((string)value);
+                        else if (propertyTypeInfo.IsEnum &&
+                                 (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
+                            result = Enum.Parse(propertyType, value.ToString());
+                        else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))
+                            result = valueConverterResult;
+                        else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
+                        {
+                            try
                             {
-                                try
-                                {
-                                    result = Convert.ChangeType(value, propertyType);
-                                }
-                                catch (InvalidCastException exCast)
-                                {
-                                    Core.Log.Write(exCast);
-                                    InvalidCastList.Add(new InvalidCast(valueType, propertyType));
-                                }
-                                catch (Exception ex)
-                                {
-                                    Core.Log.Write(ex);
-                                }
+                                result = Convert.ChangeType(value, propertyType);
                             }
-
-                            prop.SetValue(entity, result);
+                            catch (InvalidCastException exCast)
+                            {
+                                Core.Log.Write(exCast);
+                                InvalidCastList.Add(new InvalidCast(valueType, propertyType));
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
                         }
+
+                        prop.SetValue(entity, result);
                     }
                 }
                 return entity;

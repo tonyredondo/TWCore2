@@ -30,13 +30,11 @@ namespace DasMulli.Win32.ServiceUtils
 
         public virtual void Start(bool throwIfAlreadyRunning = true)
         {
-            if (!NativeInterop.StartServiceW(this, 0, IntPtr.Zero))
+            if (NativeInterop.StartServiceW(this, 0, IntPtr.Zero)) return;
+            var win32Error = Marshal.GetLastWin32Error();
+            if (win32Error != KnownWin32ErrorCoes.ERROR_SERVICE_ALREADY_RUNNING || throwIfAlreadyRunning)
             {
-                var win32Error = Marshal.GetLastWin32Error();
-                if (win32Error != KnownWin32ErrorCoes.ERROR_SERVICE_ALREADY_RUNNING || throwIfAlreadyRunning)
-                {
-                    throw new Win32Exception(win32Error);
-                }
+                throw new Win32Exception(win32Error);
             }
         }
 

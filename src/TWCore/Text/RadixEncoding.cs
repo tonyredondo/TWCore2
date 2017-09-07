@@ -18,6 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable MemberCanBePrivate.Global
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable ArrangeTypeMemberModifiers
@@ -166,20 +169,18 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void DecodeImplPadResult(ref byte[] result, int padCount)
         {
-            if (padCount > 0)
-            {
-                int new_length = result.Length + DecodingBytesCount(padCount);
-                Array.Resize(ref result, new_length); // new bytes will be zero, just the way we want it
-            }
+            if (padCount <= 0) return;
+            var new_length = result.Length + DecodingBytesCount(padCount);
+            Array.Resize(ref result, new_length); // new bytes will be zero, just the way we want it
         }
         #region Decode (Little Endian)
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         byte[] DecodeImpl(string chars, int startIndex = 0)
         {
             var bi = new BigInteger();
-            for (int x = startIndex; x < chars.Length; x++)
+            for (var x = startIndex; x < chars.Length; x++)
             {
-                int i = kDigits.IndexOf(chars[x]);
+                var i = kDigits.IndexOf(chars[x]);
                 if (i < 0) return null; // invalid character
                 bi *= kRadixBig;
                 bi += i;
@@ -190,8 +191,8 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         byte[] DecodeImplWithPadding(string chars)
         {
-            int pad_count = 0;
-            for (int x = 0; x < chars.Length; x++, pad_count++)
+            var pad_count = 0;
+            for (var x = 0; x < chars.Length; x++, pad_count++)
                 if (chars[x] != kDigits[0]) break;
 
             var result = DecodeImpl(chars, pad_count);
@@ -206,9 +207,9 @@ namespace TWCore.Text
         byte[] DecodeImplReversed(string chars, int startIndex = 0)
         {
             var bi = new BigInteger();
-            for (int x = (chars.Length - 1) - startIndex; x >= 0; x--)
+            for (var x = (chars.Length - 1) - startIndex; x >= 0; x--)
             {
-                int i = kDigits.IndexOf(chars[x]);
+                var i = kDigits.IndexOf(chars[x]);
                 if (i < 0) return null; // invalid character
                 bi *= kRadixBig;
                 bi += i;
@@ -219,8 +220,8 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         byte[] DecodeImplReversedWithPadding(string chars)
         {
-            int pad_count = 0;
-            for (int x = chars.Length - 1; x >= 0; x--, pad_count++)
+            var pad_count = 0;
+            for (var x = chars.Length - 1; x >= 0; x--, pad_count++)
                 if (chars[x] != kDigits[0]) break;
 
             var result = DecodeImplReversed(chars, pad_count);
@@ -243,8 +244,7 @@ namespace TWCore.Text
 
             if (kEndian == EndianFormat.Big)
                 return kIncludeProceedingZeros ? DecodeImplReversedWithPadding(radixChars) : DecodeImplReversed(radixChars);
-            else
-                return kIncludeProceedingZeros ? DecodeImplWithPadding(radixChars) : DecodeImpl(radixChars);
+            return kIncludeProceedingZeros ? DecodeImplWithPadding(radixChars) : DecodeImpl(radixChars);
         }
     };
 }

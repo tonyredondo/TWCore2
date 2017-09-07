@@ -26,6 +26,7 @@ using System.Xml.Serialization;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
@@ -200,11 +201,9 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddRange(IEnumerable<TItem> enumerable)
         {
-            if (enumerable != null)
-            {
-                foreach (var item in enumerable)
-                    Add(item);
-            }
+            if (enumerable == null) return;
+            foreach (var item in enumerable)
+                Add(item);
         }
         /// <summary>
         /// Add an item to the collection and if there is an item with the same key, combine it.

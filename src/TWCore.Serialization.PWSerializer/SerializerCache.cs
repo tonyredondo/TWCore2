@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization.PWSerializer
 {

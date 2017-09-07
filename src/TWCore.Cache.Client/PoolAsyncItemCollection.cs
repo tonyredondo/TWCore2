@@ -20,6 +20,10 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Cache.Client
 {
@@ -75,11 +79,11 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Delays between ping tries in milliseconds
         /// </summary>
-        public int PingDelay { get; private set; }
+        public int PingDelay { get; }
         /// <summary>
         /// Delay after a ping error for next try
         /// </summary>
-        public int PingDelayOnError { get; private set; }
+        public int PingDelayOnError { get; }
         /// <summary>
         /// Cache pool Read Mode
         /// </summary>
@@ -151,12 +155,10 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(IndexOrder), IndexOrder?.Join(","));
                 collection.Add(nameof(ForceAtLeastOneNetworkItemEnabled), ForceAtLeastOneNetworkItemEnabled);
                 Core.Status.AttachChild(_worker, this);
-                if (Items != null)
-                {
-                    collection.Add(nameof(Items.Count), Items.Count);
-                    foreach (var item in Items)
-                        Core.Status.AttachChild(item, this);
-                }
+	            if (Items == null) return;
+	            collection.Add(nameof(Items.Count), Items.Count);
+	            foreach (var item in Items)
+		            Core.Status.AttachChild(item, this);
             });
         }
         #endregion
@@ -168,13 +170,11 @@ namespace TWCore.Cache.Client
         /// <param name="item">Pool item to be added in the collection</param>
         public void Add(PoolAsyncItem item)
         {
-            if (item != null)
-            {
-                item.PingDelay = PingDelay;
-                item.PingDelayOnError = PingDelayOnError;
-                Items.Add(item);
-				_hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
-            }
+	        if (item == null) return;
+	        item.PingDelay = PingDelay;
+	        item.PingDelayOnError = PingDelayOnError;
+	        Items.Add(item);
+	        _hasMemoryStorage |= item.Storage.Type == StorageType.Memory;
         }
         /// <summary>
         /// Clear all the pool collection
@@ -220,14 +220,10 @@ namespace TWCore.Cache.Client
 				var nItems = new List<PoolAsyncItem>();
 				foreach(var idx in IndexOrder)
 				{
-					if (idx >=0 && idx < lstItems.Count)
-					{
-						if (lstItems[idx] != null)
-						{
-							nItems.Add(lstItems[idx]);
-							lstItems[idx] = null;
-						}
-					}
+					if (idx < 0 || idx >= lstItems.Count) continue;
+					if (lstItems[idx] == null) continue;
+					nItems.Add(lstItems[idx]);
+					lstItems[idx] = null;
 				}
 				foreach(var item in lstItems)
 					if (item != null)
@@ -374,56 +370,57 @@ namespace TWCore.Cache.Client
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
 			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
 
-			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			switch (WriteMode)
 			{
-				for(var i = 0; i < arrEnabled.Length; i++)
-				{
-					var item = arrEnabled[i];
-					try
+				case PoolWriteMode.WritesAllInSync:
+					for(var i = 0; i < arrEnabled.Length; i++)
 					{
-						await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
-						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						var item = arrEnabled[i];
+						try
+						{
+							await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+							Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						}
+						catch (Exception ex)
+						{
+							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						}
 					}
-					catch (Exception ex)
+					return;
+				case PoolWriteMode.WritesFirstAndThenAsync:
+					var idx = 0;
+					for(; idx < arrEnabled.Length; idx++)
 					{
-						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						var item = arrEnabled[idx];
+						try
+						{
+							await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+							Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						}
+						catch (Exception ex)
+						{
+							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						}
+						if (item.Storage.Type != StorageType.Memory)
+							break;
 					}
-				}
-				return;
-			}
-
-			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-			{
-				var idx = 0;
-				for(; idx < arrEnabled.Length; idx++)
-				{
-					var item = arrEnabled[idx];
-					try
+					idx++;
+					if (idx < arrEnabled.Length) 
 					{
-						await action(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
-						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
+						{ 
+							Action = action, 
+							Arg1 = arg1, 
+							Arg2 = arg2, 
+							Arg3 = arg3, 
+							Arg4 = arg4, 
+							Index = idx, 
+							Items = arrEnabled 
+						});
 					}
-					catch (Exception ex)
-					{
-						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-					}
-					if (item.Storage.Type != StorageType.Memory)
-						break;
-				}
-				idx++;
-				if (idx < arrEnabled.Length) 
-				{
-					_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
-					{ 
-						Action = action, 
-						Arg1 = arg1, 
-						Arg2 = arg2, 
-						Arg3 = arg3, 
-						Arg4 = arg4, 
-						Index = idx, 
-						Items = arrEnabled 
-					});
-				}
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 		}
 
@@ -481,56 +478,57 @@ namespace TWCore.Cache.Client
 
 			var response = default(T);
 
-			if (WriteMode == PoolWriteMode.WritesAllInSync)
+			switch (WriteMode)
 			{
-				for(var i = 0; i < arrEnabled.Length; i++)
-				{
-					var item = arrEnabled[i];
-					try
+				case PoolWriteMode.WritesAllInSync:
+					for(var i = 0; i < arrEnabled.Length; i++)
 					{
-						response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
-						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						var item = arrEnabled[i];
+						try
+						{
+							response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+							Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						}
+						catch (Exception ex)
+						{
+							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						}
 					}
-					catch (Exception ex)
+					return response;
+				case PoolWriteMode.WritesFirstAndThenAsync:
+					var idx = 0;
+					for(; idx < arrEnabled.Length; idx++)
 					{
-						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						var item = arrEnabled[idx];
+						try
+						{
+							response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
+							Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						}
+						catch (Exception ex)
+						{
+							Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
+						}
+						if (item.Storage.Type != StorageType.Memory)
+							break;
 					}
-				}
-				return response;
-			}
-
-			if (WriteMode == PoolWriteMode.WritesFirstAndThenAsync)
-			{
-				var idx = 0;
-				for(; idx < arrEnabled.Length; idx++)
-				{
-					var item = arrEnabled[idx];
-					try
+					idx++;
+					if (idx < arrEnabled.Length) 
 					{
-						response = await function(item, arg1, arg2, arg3, arg4).ConfigureAwait(false);
-						Core.Log.LibVerbose("\tAction executed on: '{0}'.", item.Name);
+						_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
+						{ 
+							Action = async (item, a1, a2, a3, a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
+							Arg1 = arg1, 
+							Arg2 = arg2, 
+							Arg3 = arg3, 
+							Arg4 = arg4, 
+							Index = idx, 
+							Items = arrEnabled 
+						});
 					}
-					catch (Exception ex)
-					{
-						Core.Log.Error(ex, "\tAction Exception on '{0}': {1}", item.Name, ex.Message);
-					}
-					if (item.Storage.Type != StorageType.Memory)
-						break;
-				}
-				idx++;
-				if (idx < arrEnabled.Length) 
-				{
-					_worker.Enqueue(WorkerHandler, new WriteItem<TA1, TA2, TA3, TA4> 
-					{ 
-						Action = async (item, a1, a2, a3, a4) => await function(item, a1, a2, a3, a4).ConfigureAwait(false), 
-						Arg1 = arg1, 
-						Arg2 = arg2, 
-						Arg3 = arg3, 
-						Arg4 = arg4, 
-						Index = idx, 
-						Items = arrEnabled 
-					});
-				}
+					break;
+				default:
+					throw new ArgumentOutOfRangeException();
 			}
 
 			return response;

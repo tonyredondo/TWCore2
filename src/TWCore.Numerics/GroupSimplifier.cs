@@ -17,6 +17,10 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 // ReSharper disable MemberHidesStaticFromOuterClass
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Numerics
 {
@@ -29,7 +33,7 @@ namespace TWCore.Numerics
         /// <summary>
         /// Matrix with the values
         /// </summary>
-        public Dictionary<Key, string> Matrix { get; private set; }
+        public Dictionary<Key, string> Matrix { get; }
         #endregion
 
         #region .ctor
@@ -75,26 +79,24 @@ namespace TWCore.Numerics
                 }
                 else
                 {
-                    ResultGroup rgroup = new ResultGroup();
-                    for (int i = 0; i < vectors.Count; i++)
+                    var rgroup = new ResultGroup();
+                    for (var i = 0; i < vectors.Count; i++)
                     {
-                        Vector vecX = vectors[i];
+                        var vecX = vectors[i];
 
-                        for (int j = i + 1; j < vectors.Count; j++)
+                        for (var j = i + 1; j < vectors.Count; j++)
                         {
-                            Vector vecY = vectors[j];
-                            List<string> elementsCoincidentes = new List<string>();
-                            int numIgualdades = 0;
-                            foreach (string elmX in vecX.Values)
+                            var vecY = vectors[j];
+                            var elementsCoincidentes = new List<string>();
+                            var numIgualdades = 0;
+                            foreach (var elmX in vecX.Values)
                             {
-                                foreach (string elmY in vecY.Values)
+                                foreach (var elmY in vecY.Values)
                                 {
-                                    if (elmX == elmY)
-                                    {
-                                        numIgualdades++;
-                                        if (!elementsCoincidentes.Contains(elmX))
-                                            elementsCoincidentes.Add(elmX);
-                                    }
+                                    if (elmX != elmY) continue;
+                                    numIgualdades++;
+                                    if (!elementsCoincidentes.Contains(elmX))
+                                        elementsCoincidentes.Add(elmX);
                                 }
                             }
                             if (numIgualdades == maxValues)
@@ -328,13 +330,11 @@ namespace TWCore.Numerics
             /// <returns>Vector collection</returns>
             public VectorCollection GetVectorsCountValues(int count)
             {
-                VectorCollection vc = new VectorCollection();
-                if (count <= GetMaxCountValues())
-                {
-                    foreach (Vector vec in this)
-                        if (vec.Values.Count == count)
-                            vc.Add(vec);
-                }
+                var vc = new VectorCollection();
+                if (count > GetMaxCountValues()) return vc;
+                foreach (var vec in this)
+                    if (vec.Values.Count == count)
+                        vc.Add(vec);
                 return vc;
             }
             /// <summary>
@@ -344,7 +344,7 @@ namespace TWCore.Numerics
             /// <returns>true if a vector with the key is contained; otherwise, false.</returns>
             public bool ContainsKey(string key)
             {
-                foreach (Vector vec in this)
+                foreach (var vec in this)
                     if (vec.Key == key)
                         return true;
                 return false;
@@ -356,7 +356,7 @@ namespace TWCore.Numerics
             /// <returns>Vector instance</returns>
             public Vector GetVectorByKey(string key)
             {
-                foreach (Vector vec in this)
+                foreach (var vec in this)
                     if (vec.Key == key)
                         return vec;
                 return null;

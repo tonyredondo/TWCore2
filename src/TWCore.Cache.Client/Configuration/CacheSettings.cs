@@ -85,19 +85,24 @@ namespace TWCore.Cache.Client.Configuration
                     continue;
 
                 var objType = pitem.CreateInstance<object>();
-                if (objType is ITransportClient transport)
+                switch (objType)
                 {
-                    var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-                    var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
+                    case ITransportClient transport:
+                    {
+                        var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+                        var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
-                    var proxy = CacheClientProxy.GetClient(transport);
-                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-                    ccp.Add(cppName, proxy, pitem.Mode);
-                }
-                if (objType is StorageBase sto)
-                {
-                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
-                    ccp.Add(cppName, sto);
+                        var proxy = CacheClientProxy.GetClient(transport);
+                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+                        ccp.Add(cppName, proxy, pitem.Mode);
+                        break;
+                    }
+                    case StorageBase sto:
+                    {
+                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+                        ccp.Add(cppName, sto);
+                        break;
+                    }
                 }
             }
             return ccp;
@@ -148,19 +153,24 @@ namespace TWCore.Cache.Client.Configuration
                     continue;
 
                 var objType = pitem.CreateInstance<object>();
-                if (objType is ITransportClient transport)
+                switch (objType)
                 {
-                    var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
-                    var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
+                    case ITransportClient transport:
+                    {
+                        var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
+                        var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 
-                    var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
-                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
-                    ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
-                }
-                if (objType is StorageBase sto)
-                {
-                    var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
-                    ccp.Add(cppName, sto);
+                        var proxy = await CacheClientProxy.GetClientAsync(transport).ConfigureAwait(false);
+                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + transport.GetType().Name + "-" + hostParam?.Value + "-" + portParam?.Value + ")." + idx;
+                        ccp.Add(cppName, (IStorageAsync)proxy, pitem.Mode);
+                        break;
+                    }
+                    case StorageBase sto:
+                    {
+                        var cppName = Core.EnvironmentName + "." + Core.MachineName + "." + name + ".Storage(" + sto.Type + ")." + idx;
+                        ccp.Add(cppName, sto);
+                        break;
+                    }
                 }
             }
             return ccp;

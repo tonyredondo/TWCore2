@@ -166,81 +166,74 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             if (type == null) return null;
             return DeserializationTypeInfo.GetOrAdd(type, valueType =>
             {
-                if (valueType != null)
+                if (valueType == null) return null;
+                var typeInfo = valueType.GetTypeInfo();
+                var isGenericType = typeInfo.IsGenericType;
+
+                var tinfo = new DeserializerTypeInfo()
                 {
-                    var typeInfo = valueType.GetTypeInfo();
-                    bool isGenericType = typeInfo.IsGenericType;
-
-                    var tinfo = new DeserializerTypeInfo()
+                    Type = valueType,
+                    Properties = valueType.GetRuntimeProperties().Where(p =>
                     {
-                        Type = valueType,
-                        Properties = valueType.GetRuntimeProperties().Where(p =>
-                        {
-                            bool ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
-                            if (ok)
-                            {
-                                if (p.GetIndexParameters().Length > 0)
-                                    return false;
-                            }
-                            return ok;
-                        }).Select(p => new DeserializerTypeInfo.FPropertyInfo
-                        {
-                            Property = p.GetFastPropertyInfo(),
-                            IsEnum = p.PropertyType.GetTypeInfo().IsEnum,
-                            UnderlyingType = p.PropertyType.GetUnderlyingType()
-                        }).ToDictionary(k => k.Property.Name, v => v)
-                    };
-                    var constructor = typeInfo.DeclaredConstructors.First();
-                    tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
-                    tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
-                    tinfo.IsArray = valueType.IsArray;
-
-                    //
-                    var ifaces = typeInfo.ImplementedInterfaces.ToArray();
-
-
-                    var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
-                    if (ilist != null)
+                        var ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
+                        if (!ok) return false;
+                        return p.GetIndexParameters().Length <= 0;
+                    }).Select(p => new DeserializerTypeInfo.FPropertyInfo
                     {
-                        Type innerType = null;
-                        if (type.IsArray)
-                            innerType = type.GetElementType();
+                        Property = p.GetFastPropertyInfo(),
+                        IsEnum = p.PropertyType.GetTypeInfo().IsEnum,
+                        UnderlyingType = p.PropertyType.GetUnderlyingType()
+                    }).ToDictionary(k => k.Property.Name, v => v)
+                };
+                var constructor = typeInfo.DeclaredConstructors.First();
+                tinfo.Activator = Factory.Accessors.CreateActivator(constructor);
+                tinfo.ActivatorParametersTypes = constructor.GetParameters().Select(p => p.ParameterType).ToArray();
+                tinfo.IsArray = valueType.IsArray;
+
+                //
+                var ifaces = typeInfo.ImplementedInterfaces.ToArray();
+
+
+                var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                if (ilist != null)
+                {
+                    Type innerType = null;
+                    if (type.IsArray)
+                        innerType = type.GetElementType();
+                    else
+                    {
+                        var gargs = ilist.GenericTypeArguments;
+                        if (gargs.Length == 0)
+                            gargs = type.GenericTypeArguments;
+                        if (gargs.Length > 0)
+                            innerType = gargs[0];
                         else
                         {
-                            var gargs = ilist.GenericTypeArguments;
-                            if (gargs.Length == 0)
-                                gargs = type.GenericTypeArguments;
-                            if (gargs.Length > 0)
-                                innerType = gargs[0];
-                            else
-                            {
-                                var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
-                                if (iListType != null && iListType.GenericTypeArguments.Length > 0)
-                                    innerType = iListType.GenericTypeArguments[0];
-                            }
+                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                            if (iListType != null && iListType.GenericTypeArguments.Length > 0)
+                                innerType = iListType.GenericTypeArguments[0];
                         }
-                        tinfo.IsIList = true;
-                        tinfo.InnerTypes = new[] { innerType };
                     }
-
-                    var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
-                    if (idictio != null)
-                    {
-                        tinfo.IsIDictionary = true;
-                        tinfo.InnerTypes = idictio.GenericTypeArguments;
-                    }
-
-                    if (!tinfo.IsIList && !tinfo.IsIDictionary && isGenericType)
-                        tinfo.InnerTypes = typeInfo.GenericTypeArguments;
-
-                    if (tinfo.IsIList && type.GenericTypeArguments.Length == 1 && type.GetGenericTypeDefinition() == typeof(List<>))
-                        tinfo.IsTypeList = true;
-                    else if (tinfo.IsIDictionary && type.GenericTypeArguments.Length == 2 && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
-                        tinfo.IsTypeDictionary = true;
-
-                    return tinfo;
+                    tinfo.IsIList = true;
+                    tinfo.InnerTypes = new[] { innerType };
                 }
-                return null;
+
+                var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                if (idictio != null)
+                {
+                    tinfo.IsIDictionary = true;
+                    tinfo.InnerTypes = idictio.GenericTypeArguments;
+                }
+
+                if (!tinfo.IsIList && !tinfo.IsIDictionary && isGenericType)
+                    tinfo.InnerTypes = typeInfo.GenericTypeArguments;
+
+                if (tinfo.IsIList && type.GenericTypeArguments.Length == 1 && type.GetGenericTypeDefinition() == typeof(List<>))
+                    tinfo.IsTypeList = true;
+                else if (tinfo.IsIDictionary && type.GenericTypeArguments.Length == 2 && type.GetGenericTypeDefinition() == typeof(Dictionary<,>))
+                    tinfo.IsTypeDictionary = true;
+
+                return tinfo;
             });
         }
     }

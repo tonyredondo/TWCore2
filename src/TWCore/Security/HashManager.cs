@@ -17,6 +17,8 @@ limitations under the License.
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable ObjectCreationAsStatement
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Security
 {
@@ -60,9 +62,9 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void DeregisterSerializer(IHash hash)
         {
-            if (hash != null)
-                if (Hashes.Contains(hash.Algorithm))
-                    Hashes.Remove(hash.Algorithm);
+            if (hash == null) return;
+            if (Hashes.Contains(hash.Algorithm))
+                Hashes.Remove(hash.Algorithm);
         }
         /// <summary>
         /// Gets a hash instance from a algorithm type

@@ -18,6 +18,8 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 // ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 
 namespace TWCore.Serialization.PWSerializer
 {
@@ -32,10 +34,12 @@ namespace TWCore.Serialization.PWSerializer
         private SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
         public override string[] Extensions => sExtensions;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>

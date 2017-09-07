@@ -37,11 +37,11 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int CalculateDistance(string a, string b, IEqualityComparer<char> comparer)
         {
-            int[] costs = new int[b.Length + 1];
-            for (int i = 0; i <= a.Length; i++)
+            var costs = new int[b.Length + 1];
+            for (var i = 0; i <= a.Length; i++)
             {
-                int lastValue = i;
-                for (int j = 0; j <= b.Length; j++)
+                var lastValue = i;
+                for (var j = 0; j <= b.Length; j++)
                 {
                     if (i == 0)
                         costs[j] = j;
@@ -49,7 +49,7 @@ namespace TWCore.Text
                     {
                         if (j > 0)
                         {
-                            int newValue = costs[j - 1];
+                            var newValue = costs[j - 1];
                             if (!comparer.Equals(a[i - 1], b[j - 1]))
                                 newValue = Math.Min(Math.Min(newValue, lastValue), costs[j]) + 1;
                             costs[j - 1] = lastValue;

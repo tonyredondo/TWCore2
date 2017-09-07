@@ -24,6 +24,8 @@ using TWCore.Compression;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Serialization
 {
@@ -167,18 +169,17 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Deregister(ISerializer serializer)
         {
-            if (serializer != null)
-            {
-                var key = serializer.GetType();
-                if (Serializers.Contains(key))
-                    Serializers.Remove(key);
+            if (serializer == null) return;
+            
+            var key = serializer.GetType();
+            if (Serializers.Contains(key))
+                Serializers.Remove(key);
 
-                if (_defaultBinarySerializer == serializer)
-                    _defaultBinarySerializer = null;
+            if (_defaultBinarySerializer == serializer)
+                _defaultBinarySerializer = null;
 
-                if (_defaultTextSerializer == serializer)
-                    _defaultTextSerializer = null;
-            }
+            if (_defaultTextSerializer == serializer)
+                _defaultTextSerializer = null;
         }
         #endregion
 

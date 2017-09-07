@@ -21,6 +21,8 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeMadeStatic.Global
 
 namespace TWCore.Net.Browser
 {
@@ -47,18 +49,15 @@ namespace TWCore.Net.Browser
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<BrowserResponse> NavigateAsync(BrowserRequest request)
         {
-            if (request != null)
+            if (request == null) return null;
+            if (History.Count > 0)
             {
-                if (History.Count > 0)
-                {
-                    request.UrlReferer = History[History.Count - 1].Item2.ResponseUrl;
-                    request.Cookies = History[History.Count - 1].Item2.Cookies;
-                }
-                var response = await NavigateNoHistoryAsync(request).ConfigureAwait(false);
-                History.Add((request, response));
-                return response;
+                request.UrlReferer = History[History.Count - 1].Item2.ResponseUrl;
+                request.Cookies = History[History.Count - 1].Item2.Cookies;
             }
-            return null;
+            var response = await NavigateNoHistoryAsync(request).ConfigureAwait(false);
+            History.Add((request, response));
+            return response;
         }
 
         /// <summary>
@@ -69,51 +68,58 @@ namespace TWCore.Net.Browser
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<BrowserResponse> NavigateNoHistoryAsync(BrowserRequest request)
         {
-            if (request != null)
+            if (request == null) return null;
+            if (string.IsNullOrEmpty(request.Method)) request.Method = "GET";
+
+            var wClientHandler = new HttpClientHandler();
+            var wClient = new HttpClient(wClientHandler);
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.3");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Langauge", "es,en-US;q=0.8,en;q=0.6,th;q=0.4");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Cache-Control", "max-age=0");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/42.0.1180.83 Safari/537.1");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Connection", "Keep-Alive");
+            wClient.DefaultRequestHeaders.TryAddWithoutValidation("Referer", request.UrlReferer);
+            wClientHandler.CookieContainer = request.Cookies ?? new CookieContainer();
+            var method = HttpMethod.Get;
+            switch (request.Method.ToLowerInvariant())
             {
-                if (string.IsNullOrEmpty(request.Method)) request.Method = "GET";
-
-                var wClientHandler = new HttpClientHandler();
-                var wClient = new HttpClient(wClientHandler);
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Charset", "ISO-8859-1,utf-8;q=0.7,*;q=0.3");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Langauge", "es,en-US;q=0.8,en;q=0.6,th;q=0.4");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Cache-Control", "max-age=0");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/42.0.1180.83 Safari/537.1");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Connection", "Keep-Alive");
-                wClient.DefaultRequestHeaders.TryAddWithoutValidation("Referer", request.UrlReferer);
-                wClientHandler.CookieContainer = request.Cookies ?? new CookieContainer();
-                HttpMethod method = HttpMethod.Get;
-                if (request.Method.ToLowerInvariant() == "post") method = HttpMethod.Post;
-                if (request.Method.ToLowerInvariant() == "put") method = HttpMethod.Put;
-                if (request.Method.ToLowerInvariant() == "head") method = HttpMethod.Head;
-                if (request.Method.ToLowerInvariant() == "delete") method = HttpMethod.Delete;
-
-                var wRequest = new HttpRequestMessage(method, request.RequestUrl);
-                if (request.PostData?.Any() == true)
-                {
-                    var buffer = new ByteArrayContent(request.PostData);
-                    buffer.Headers.ContentType = new MediaTypeHeaderValue(request.ContentType ?? "application/x-www-form-urlencoded");
-                    wRequest.Content = buffer;
-                }
-
-                var wResponse = await wClient.SendAsync(wRequest).ConfigureAwait(false);
-                var wResponseContent = await wResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-
-                return new BrowserResponse
-                {
-                    ContentLength = wResponse.Content.Headers.ContentLength,
-                    ContentType = wResponse.Content.Headers.ContentType.MediaType,
-                    ContentEncoding = wResponse.Content.Headers.ContentEncoding.ToString(),
-                    LastModified = wResponse.Content.Headers.LastModified,
-                    Cookies = wClientHandler.CookieContainer,
-                    Headers = wResponse.Headers,
-                    ContentHeaders = wResponse.Content.Headers,
-                    Content = wResponseContent,
-                    ResponseUrl = wResponse.RequestMessage.RequestUri.ToString()
-                };
+                case "post":
+                    method = HttpMethod.Post;
+                    break;
+                case "put":
+                    method = HttpMethod.Put;
+                    break;
+                case "head":
+                    method = HttpMethod.Head;
+                    break;
+                case "delete":
+                    method = HttpMethod.Delete;
+                    break;
             }
-            return null;
+            var wRequest = new HttpRequestMessage(method, request.RequestUrl);
+            if (request.PostData?.Any() == true)
+            {
+                var buffer = new ByteArrayContent(request.PostData);
+                buffer.Headers.ContentType = new MediaTypeHeaderValue(request.ContentType ?? "application/x-www-form-urlencoded");
+                wRequest.Content = buffer;
+            }
+
+            var wResponse = await wClient.SendAsync(wRequest).ConfigureAwait(false);
+            var wResponseContent = await wResponse.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+
+            return new BrowserResponse
+            {
+                ContentLength = wResponse.Content.Headers.ContentLength,
+                ContentType = wResponse.Content.Headers.ContentType.MediaType,
+                ContentEncoding = wResponse.Content.Headers.ContentEncoding.ToString(),
+                LastModified = wResponse.Content.Headers.LastModified,
+                Cookies = wClientHandler.CookieContainer,
+                Headers = wResponse.Headers,
+                ContentHeaders = wResponse.Content.Headers,
+                Content = wResponseContent,
+                ResponseUrl = wResponse.RequestMessage.RequestUri.ToString()
+            };
         }
 
         /// <summary>

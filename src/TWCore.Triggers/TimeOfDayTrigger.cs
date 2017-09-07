@@ -71,11 +71,9 @@ namespace TWCore.Triggers
             _timer = new Timer(obj =>
             {
                 var tSource = (CancellationTokenSource)obj;
-                if (!tSource.Token.IsCancellationRequested)
-                {
-                    Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
-                    Trigger();
-                }
+                if (tSource.Token.IsCancellationRequested) return;
+                Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
+                Trigger();
             }, _tokenSource, startTime, TimeSpan.FromDays(1));
         }
         /// <inheritdoc />

@@ -18,6 +18,9 @@ using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ArrangeTypeMemberModifiers
 
 namespace TWCore.Reflection
 {
@@ -43,11 +46,9 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterDomain(AppDomain domain = null)
         {
-            if (Core.Settings[SettingsKey].IsNotNullOrWhitespace())
-            {
-                var paths = Core.Settings[SettingsKey].SplitAndTrim(',').ToArray();
-                RegisterDomain(paths, domain);
-            }
+            if (!Core.Settings[SettingsKey].IsNotNullOrWhitespace()) return;
+            var paths = Core.Settings[SettingsKey].SplitAndTrim(',').ToArray();
+            RegisterDomain(paths, domain);
         }
         /// <summary>
         /// Register a domain and creates a new assembly resolver on the search paths
@@ -57,13 +58,11 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterDomain(string[] paths, AppDomain domain = null)
         {
-            if (!Resolvers.Contains(domain ?? AppDomain.CurrentDomain))
-            {
-                var resolver = new AssemblyResolver(domain ?? AppDomain.CurrentDomain, paths);
-                resolver.LoadAssembliesInfo();
-                resolver.BindToDomain();
-                Resolvers.Add(resolver);
-            }
+            if (Resolvers.Contains(domain ?? AppDomain.CurrentDomain)) return;
+            var resolver = new AssemblyResolver(domain ?? AppDomain.CurrentDomain, paths);
+            resolver.LoadAssembliesInfo();
+            resolver.BindToDomain();
+            Resolvers.Add(resolver);
         }
         /// <summary>
         /// Unregister a domain and removes the associated assembly resolver
@@ -72,12 +71,10 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void UnregisterDomain(AppDomain domain = null)
         {
-            if (Resolvers.Contains(domain ?? AppDomain.CurrentDomain))
-            {
-                var resolver = Resolvers[domain ?? AppDomain.CurrentDomain];
-                resolver.UnbindFromDomain();
-                Resolvers.Remove(resolver);
-            }
+            if (!Resolvers.Contains(domain ?? AppDomain.CurrentDomain)) return;
+            var resolver = Resolvers[domain ?? AppDomain.CurrentDomain];
+            resolver.UnbindFromDomain();
+            Resolvers.Remove(resolver);
         }
         /// <summary>
         /// Gets the assembly resolver associated with the domain

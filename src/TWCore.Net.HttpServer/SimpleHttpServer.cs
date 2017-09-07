@@ -220,12 +220,18 @@ namespace TWCore.Net.HttpServer
                             var response = m.Invoke(ctl, ivkParams.ToArray());
                             if (response == null) return;
                             var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            if (serializer == null && response is string)
-                                ctl.Context.Response.Write((string)response);
-                            else if (serializer == null && response is ValueType)
-                                ctl.Context.Response.Write(response.ToString());
-                            else if (serializer == null)
-                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            switch (serializer)
+                            {
+                                case null when response is string:
+                                    ctl.Context.Response.Write((string)response);
+                                    break;
+                                case null when response is ValueType:
+                                    ctl.Context.Response.Write(response.ToString());
+                                    break;
+                                case null:
+                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                                    break;
+                            }
                             if (serializer != null)
                                 Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                                 {
@@ -238,12 +244,18 @@ namespace TWCore.Net.HttpServer
                             var response = m.Invoke(ctl, new object[0]);
                             if (response == null) return;
                             var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                            if (serializer == null && response is string)
-                                ctl.Context.Response.Write((string)response);
-                            else if (serializer == null && response is ValueType)
-                                ctl.Context.Response.Write(response.ToString());
-                            else if (serializer == null)
-                                serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            switch (serializer)
+                            {
+                                case null when response is string:
+                                    ctl.Context.Response.Write((string)response);
+                                    break;
+                                case null when response is ValueType:
+                                    ctl.Context.Response.Write(response.ToString());
+                                    break;
+                                case null:
+                                    serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                                    break;
+                            }
                             if (serializer != null)
                                 Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                                 {
@@ -300,12 +312,18 @@ namespace TWCore.Net.HttpServer
                     var response = ctlMethod.Invoke(ctl, ivkParams.ToArray());
                     if (response == null) return;
                     var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                    if (serializer == null && response is string)
-                        ctl.Context.Response.Write((string)response);
-                    else if (serializer == null && response is ValueType)
-                        ctl.Context.Response.Write(response.ToString());
-                    else if (serializer == null)
-                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                    switch (serializer)
+                    {
+                        case null when response is string:
+                            ctl.Context.Response.Write((string)response);
+                            break;
+                        case null when response is ValueType:
+                            ctl.Context.Response.Write(response.ToString());
+                            break;
+                        case null:
+                            serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            break;
+                    }
                     if (serializer != null)
                         Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                         {
@@ -318,12 +336,18 @@ namespace TWCore.Net.HttpServer
                     var response = ctlMethod.Invoke(ctl, new object[0]);
                     if (response == null) return;
                     var serializer = SerializerManager.GetByMimeType(ctl.Context.Response.ContentType);
-                    if (serializer == null && response is string)
-                        ctl.Context.Response.Write((string)response);
-                    else if (serializer == null && response is ValueType)
-                        ctl.Context.Response.Write(response.ToString());
-                    else if (serializer == null)
-                        serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                    switch (serializer)
+                    {
+                        case null when response is string:
+                            ctl.Context.Response.Write((string)response);
+                            break;
+                        case null when response is ValueType:
+                            ctl.Context.Response.Write(response.ToString());
+                            break;
+                        case null:
+                            serializer = SerializerManager.GetByMimeType(SerializerMimeTypes.Json);
+                            break;
+                    }
                     if (serializer != null)
                         Try.Do(() => serializer.Serialize(response, response.GetType(), ctl.Context.Response.OutputStream), ex =>
                         {

@@ -48,196 +48,193 @@ namespace TWCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object Clone(object value)
         {
-            if (value != null)
+            if (value == null) return null;
+            var objPlan = GetObjectPlan(value.GetType());
+            var scopeStack = new Stack<Scope>();
+            var scope = new Scope();
+            scope.Init(objPlan, value);
+            scopeStack.Push(scope);
+            var initialScope = scope;
+            do
             {
-                var objPlan = GetObjectPlan(value.GetType());
-                var scopeStack = new Stack<Scope>();
-                var scope = new Scope();
-                scope.Init(objPlan, value);
-                scopeStack.Push(scope);
-                var initialScope = scope;
-                do
+                var item = scope.NextIfAvailable();
+
+                #region Get the Current Scope
+                if (item == null)
                 {
-                    var item = scope.NextIfAvailable();
-
-                    #region Get the Current Scope
-                    if (item == null)
+                    var oldScope = scopeStack.Pop();
+                    scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
+                    if (scope != null)
                     {
-                        var oldScope = scopeStack.Pop();
-                        scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
-                        if (scope != null)
+                        var current = scope.Current();
+                        switch (current.PlanType)
                         {
-                            var current = scope.Current();
-                            switch (current.PlanType)
-                            {
-                                case PlanItemType.PropertyReference:
-                                    var pCurrent = (PropertyReferencePlanItem)current;
-                                    pCurrent.Property.SetValue(scope.DestinationValue, oldScope.DestinationValue);
-                                    break;
+                            case PlanItemType.PropertyReference:
+                                var pCurrent = (PropertyReferencePlanItem)current;
+                                pCurrent.Property.SetValue(scope.DestinationValue, oldScope.DestinationValue);
+                                break;
 
-                                case PlanItemType.FieldReference:
-                                    var fCurrent = (FieldReferencePlanItem)current;
-                                    fCurrent.Field.SetValue(scope.DestinationValue, oldScope.DestinationValue);
-                                    break;
+                            case PlanItemType.FieldReference:
+                                var fCurrent = (FieldReferencePlanItem)current;
+                                fCurrent.Field.SetValue(scope.DestinationValue, oldScope.DestinationValue);
+                                break;
 
-                                case PlanItemType.RuntimeValue:
-                                    var rvItem = (RuntimeValuePlanItem)current;
-                                    rvItem.DestinationValue = oldScope.DestinationValue;
-                                    break;
+                            case PlanItemType.RuntimeValue:
+                                var rvItem = (RuntimeValuePlanItem)current;
+                                rvItem.DestinationValue = oldScope.DestinationValue;
+                                break;
 
-                                case PlanItemType.List:
-                                    if (scope.IsArray)
+                            case PlanItemType.List:
+                                if (scope.IsArray)
+                                {
+                                    for (var i = 0; i < oldScope.Plan.Length; i++)
                                     {
-                                        for (var i = 0; i < oldScope.Plan.Length; i++)
-                                        {
-                                            var rVal = (RuntimeValuePlanItem)oldScope.Plan[i];
-                                            scope.DestinationIListValue[i] = rVal.DestinationValue;
-                                        }
+                                        var rVal = (RuntimeValuePlanItem)oldScope.Plan[i];
+                                        scope.DestinationIListValue[i] = rVal.DestinationValue;
                                     }
-                                    else
+                                }
+                                else
+                                {
+                                    for (var i = 0; i < oldScope.Plan.Length; i++)
                                     {
-                                        for (var i = 0; i < oldScope.Plan.Length; i++)
-                                        {
-                                            var rVal = (RuntimeValuePlanItem)oldScope.Plan[i];
-                                            scope.DestinationIListValue.Add(rVal.DestinationValue);
-                                        }
+                                        var rVal = (RuntimeValuePlanItem)oldScope.Plan[i];
+                                        scope.DestinationIListValue.Add(rVal.DestinationValue);
                                     }
-                                    break;
+                                }
+                                break;
 
-                                case PlanItemType.Dictionary:
-                                    for (var i = 0; i < oldScope.Plan.Length - 1; i += 2)
-                                    {
-                                        var dKey = ((RuntimeValuePlanItem)oldScope.Plan[i]).DestinationValue;
-                                        var dValue = ((RuntimeValuePlanItem)oldScope.Plan[i + 1]).DestinationValue;
-                                        scope.DestinationIDictionaryValue[dKey] = dValue;
-                                    }
-                                    break;
-                            }
+                            case PlanItemType.Dictionary:
+                                for (var i = 0; i < oldScope.Plan.Length - 1; i += 2)
+                                {
+                                    var dKey = ((RuntimeValuePlanItem)oldScope.Plan[i]).DestinationValue;
+                                    var dValue = ((RuntimeValuePlanItem)oldScope.Plan[i + 1]).DestinationValue;
+                                    scope.DestinationIDictionaryValue[dKey] = dValue;
+                                }
+                                break;
                         }
-                        continue;
                     }
-                    #endregion
+                    continue;
+                }
+                #endregion
 
-                    #region Switch Plan Types
-                    switch (item.PlanType)
-                    {
-                        case PlanItemType.Type:
-                            if (scope.IsArray)
-                            {
-                                var destValue = Activator.CreateInstance(scope.Type, ((IList)scope.SourceValue).Count);
-                                scope.DestinationValue = destValue;
+                #region Switch Plan Types
+                switch (item.PlanType)
+                {
+                    case PlanItemType.Type:
+                        if (scope.IsArray)
+                        {
+                            var destValue = Activator.CreateInstance(scope.Type, ((IList)scope.SourceValue).Count);
+                            scope.DestinationValue = destValue;
+                            scope.DestinationIListValue = (IList)destValue;
+                        }
+                        else
+                        {
+                            var destValue = Activator.CreateInstance(scope.Type);
+                            scope.DestinationValue = destValue;
+                            if (scope.IsIList)
                                 scope.DestinationIListValue = (IList)destValue;
-                            }
-                            else
+                            if (scope.IsIDictionary)
+                                scope.DestinationIDictionaryValue = (IDictionary)destValue;
+                        }
+                        break;
+
+                    case PlanItemType.PropertyValue:
+                        var pValueItem = (PropertyValuePlanItem)item;
+                        var pValue = pValueItem.Property.GetValue(scope.SourceValue);
+                        pValueItem.Property.SetValue(scope.DestinationValue, pValue);
+                        break;
+
+                    case PlanItemType.FieldValue:
+                        var fValueItem = (FieldValuePlanItem)item;
+                        var fValue = fValueItem.Field.GetValue(scope.SourceValue);
+                        fValueItem.Field.SetValue(scope.DestinationValue, fValue);
+                        break;
+
+                    case PlanItemType.Value:
+                        return scope.SourceValue;
+
+                    case PlanItemType.PropertyReference:
+                        var pReferenceItem = (PropertyReferencePlanItem)item;
+                        var pReferenceValue = pReferenceItem.Property.GetValue(scope.SourceValue);
+                        if (pReferenceValue != null)
+                        {
+                            scope = new Scope();
+                            scope.Init(GetObjectPlan(pReferenceValue.GetType()), pReferenceValue);
+                            scopeStack.Push(scope);
+                        }
+                        break;
+
+                    case PlanItemType.FieldReference:
+                        var fReferenceItem = (FieldReferencePlanItem)item;
+                        var fReferenceValue = fReferenceItem.Field.GetValue(scope.SourceValue);
+                        if (fReferenceValue != null)
+                        {
+                            scope = new Scope();
+                            scope.Init(GetObjectPlan(fReferenceValue.GetType()), fReferenceValue);
+                            scopeStack.Push(scope);
+                        }
+                        break;
+
+                    case PlanItemType.List:
+                        var lType = (ListPlanItem)item;
+                        var iList = (IList)scope.SourceValue;
+                        if (iList.Count > 0)
+                        {
+                            var aPlan = new RuntimeValuePlanItem[iList.Count];
+                            for (var i = 0; i < iList.Count; i++)
                             {
-                                var destValue = Activator.CreateInstance(scope.Type);
-                                scope.DestinationValue = destValue;
-                                if (scope.IsIList)
-                                    scope.DestinationIListValue = (IList)destValue;
-                                if (scope.IsIDictionary)
-                                    scope.DestinationIDictionaryValue = (IDictionary)destValue;
+                                var itemList = iList[i];
+                                var itemType = itemList?.GetType() ?? lType.InnerType;
+                                var rtmVal = new RuntimeValuePlanItem();
+                                rtmVal.Init(itemType, IsValueType(itemType, itemType.GetTypeInfo()), itemList);
+                                aPlan[i] = rtmVal;
                             }
-                            break;
+                            scope = new Scope();
+                            scope.Init(aPlan, scope.Type);
+                            scopeStack.Push(scope);
+                        }
+                        break;
 
-                        case PlanItemType.PropertyValue:
-                            var pValueItem = (PropertyValuePlanItem)item;
-                            var pValue = pValueItem.Property.GetValue(scope.SourceValue);
-                            pValueItem.Property.SetValue(scope.DestinationValue, pValue);
-                            break;
-
-                        case PlanItemType.FieldValue:
-                            var fValueItem = (FieldValuePlanItem)item;
-                            var fValue = fValueItem.Field.GetValue(scope.SourceValue);
-                            fValueItem.Field.SetValue(scope.DestinationValue, fValue);
-                            break;
-
-                        case PlanItemType.Value:
-                            return scope.SourceValue;
-
-                        case PlanItemType.PropertyReference:
-                            var pReferenceItem = (PropertyReferencePlanItem)item;
-                            var pReferenceValue = pReferenceItem.Property.GetValue(scope.SourceValue);
-                            if (pReferenceValue != null)
+                    case PlanItemType.Dictionary:
+                        var dctItem = (DictionaryPlanItem)item;
+                        var iDictio = (IDictionary)scope.SourceValue;
+                        if (iDictio.Count > 0)
+                        {
+                            var aPlan = new RuntimeValuePlanItem[iDictio.Count * 2];
+                            var aIdx = 0;
+                            foreach (var keyValue in iDictio.Keys)
                             {
-                                scope = new Scope();
-                                scope.Init(GetObjectPlan(pReferenceValue.GetType()), pReferenceValue);
-                                scopeStack.Push(scope);
+                                var valueValue = iDictio[keyValue];
+                                var aPlanKeyVal = new RuntimeValuePlanItem();
+                                aPlanKeyVal.Init(keyValue.GetType(), dctItem.KeyIsValue, keyValue);
+                                aPlan[aIdx++] = aPlanKeyVal;
+
+                                var aPlanValVal = new RuntimeValuePlanItem();
+                                aPlanValVal.Init(valueValue?.GetType() ?? dctItem.ValueType, dctItem.ValueIsValue, valueValue);
+                                aPlan[aIdx++] = aPlanValVal;
                             }
-                            break;
+                            scope = new Scope();
+                            scope.Init(aPlan, scope.Type);
+                            scopeStack.Push(scope);
+                        }
+                        break;
 
-                        case PlanItemType.FieldReference:
-                            var fReferenceItem = (FieldReferencePlanItem)item;
-                            var fReferenceValue = fReferenceItem.Field.GetValue(scope.SourceValue);
-                            if (fReferenceValue != null)
-                            {
-                                scope = new Scope();
-                                scope.Init(GetObjectPlan(fReferenceValue.GetType()), fReferenceValue);
-                                scopeStack.Push(scope);
-                            }
-                            break;
+                    case PlanItemType.RuntimeValue:
+                        var rvItem = (RuntimeValuePlanItem)item;
+                        if (rvItem.IsValue)
+                            rvItem.DestinationValue = rvItem.SourceValue;
+                        else
+                        {
+                            scope = new Scope();
+                            scope.Init(GetObjectPlan(rvItem.SourceValue?.GetType() ?? rvItem.Type), rvItem.SourceValue);
+                            scopeStack.Push(scope);
+                        }
+                        break;
+                }
+                #endregion
 
-                        case PlanItemType.List:
-                            var lType = (ListPlanItem)item;
-                            var iList = (IList)scope.SourceValue;
-                            if (iList.Count > 0)
-                            {
-                                var aPlan = new RuntimeValuePlanItem[iList.Count];
-                                for (var i = 0; i < iList.Count; i++)
-                                {
-                                    var itemList = iList[i];
-                                    var itemType = itemList?.GetType() ?? lType.InnerType;
-                                    var rtmVal = new RuntimeValuePlanItem();
-                                    rtmVal.Init(itemType, IsValueType(itemType, itemType.GetTypeInfo()), itemList);
-                                    aPlan[i] = rtmVal;
-                                }
-                                scope = new Scope();
-                                scope.Init(aPlan, scope.Type);
-                                scopeStack.Push(scope);
-                            }
-                            break;
-
-                        case PlanItemType.Dictionary:
-                            var dctItem = (DictionaryPlanItem)item;
-                            var iDictio = (IDictionary)scope.SourceValue;
-                            if (iDictio.Count > 0)
-                            {
-                                var aPlan = new RuntimeValuePlanItem[iDictio.Count * 2];
-                                var aIdx = 0;
-                                foreach (var keyValue in iDictio.Keys)
-                                {
-                                    var valueValue = iDictio[keyValue];
-                                    var aPlanKeyVal = new RuntimeValuePlanItem();
-                                    aPlanKeyVal.Init(keyValue.GetType(), dctItem.KeyIsValue, keyValue);
-                                    aPlan[aIdx++] = aPlanKeyVal;
-
-                                    var aPlanValVal = new RuntimeValuePlanItem();
-                                    aPlanValVal.Init(valueValue?.GetType() ?? dctItem.ValueType, dctItem.ValueIsValue, valueValue);
-                                    aPlan[aIdx++] = aPlanValVal;
-                                }
-                                scope = new Scope();
-                                scope.Init(aPlan, scope.Type);
-                                scopeStack.Push(scope);
-                            }
-                            break;
-
-                        case PlanItemType.RuntimeValue:
-                            var rvItem = (RuntimeValuePlanItem)item;
-                            if (rvItem.IsValue)
-                                rvItem.DestinationValue = rvItem.SourceValue;
-                            else
-                            {
-                                scope = new Scope();
-                                scope.Init(GetObjectPlan(rvItem.SourceValue?.GetType() ?? rvItem.Type), rvItem.SourceValue);
-                                scopeStack.Push(scope);
-                            }
-                            break;
-                    }
-                    #endregion
-
-                } while (scope != null);
-                return initialScope.DestinationValue;
-            }
-            return null;
+            } while (scope != null);
+            return initialScope.DestinationValue;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

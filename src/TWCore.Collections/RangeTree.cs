@@ -19,6 +19,9 @@ using System.Collections.Generic;
 using System.Linq;
 // ReSharper disable PossibleMultipleEnumeration
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 
 namespace TWCore.Collections
 {

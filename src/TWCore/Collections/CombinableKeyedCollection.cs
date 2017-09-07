@@ -19,6 +19,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Collections
 {
@@ -30,6 +32,7 @@ namespace TWCore.Collections
     [DataContract]
     public abstract class CombinableKeyedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>, ICombinable<CombinableKeyedCollection<TKey, TItem>> where TItem : ICombinable<TItem>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Gets the combination of the current instance with another item
         /// </summary>
@@ -41,25 +44,24 @@ namespace TWCore.Collections
             var lst = (CombinableKeyedCollection<TKey, TItem>)Activator.CreateInstance(GetType());
 			if (item != null)
             	lst.AddRange(item.Select(i => i.DeepClone()));
-            if (this.Any())
+            if (!this.Any()) return lst;
+            foreach (var innerItem in this)
             {
-                foreach (var innerItem in this)
+                var rN = GetKeyForItem(innerItem);
+                if (!lst.Contains(rN))
+                    lst.Add(innerItem.DeepClone());
+                else
                 {
-                    var rN = GetKeyForItem(innerItem);
-					if (!lst.Contains(rN))
-						lst.Add(innerItem.DeepClone());
-                    else
-                    {
-						TItem oItem = lst[rN];
-						lst.Remove(oItem);
-                        var rItem = innerItem.Combine(oItem);
-                        lst.Add(rItem);
-                    }
+                    var oItem = lst[rN];
+                    lst.Remove(oItem);
+                    var rItem = innerItem.Combine(oItem);
+                    lst.Add(rItem);
                 }
             }
             return lst;
         }
     }
+    /// <inheritdoc />
     /// <summary>
     /// Keyed collection where the items are ICombinables
     /// </summary>

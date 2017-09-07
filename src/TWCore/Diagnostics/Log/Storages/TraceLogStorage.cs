@@ -19,11 +19,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Writes the Logs items using the System.Diagnostics.Trace method
     /// </summary>
     public class TraceLogStorage : ILogStorage
     {
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -49,11 +51,9 @@ namespace TWCore.Diagnostics.Log.Storages
                     System.Diagnostics.Trace.Write("[" + item.Code + "] ");
 
                 System.Diagnostics.Trace.WriteLine(item.Message);
-                if (item.Exception != null)
-                {
-                    System.Diagnostics.Trace.WriteLine("Exceptions:\r\n");
-                    System.Diagnostics.Trace.WriteLine(GetExceptionDescription(item.Exception));
-                }
+                if (item.Exception == null) return;
+                System.Diagnostics.Trace.WriteLine("Exceptions:\r\n");
+                System.Diagnostics.Trace.WriteLine(GetExceptionDescription(item.Exception));
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -64,6 +64,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 desc += GetExceptionDescription(itemEx.InnerException);
             return desc;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>

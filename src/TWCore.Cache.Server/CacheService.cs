@@ -62,21 +62,20 @@ namespace TWCore.Services
             if (!Manager.IsReady())
                 Core.Log.Warning("The StorageManager is not on Ready state, some data couldn't be found during this state.");
 
-            if (Transports?.Any() == true)
+            if (Transports?.Any() != true)
+                throw new NullReferenceException("The server needs to define at least one server transport.");
+            
+            RPCServer server;
+            if (Transports.Length == 1)
+                server = new RPCServer(Transports[0]);
+            else
             {
-                RPCServer server;
-                if (Transports.Length == 1)
-                    server = new RPCServer(Transports[0]);
-                else
-                {
-                    var transport = new TransportServerCollection();
-                    Transports.Each(transport.Add);
-                    server = new RPCServer(transport);
-                }
-                server.AddService(typeof(IStorage), Manager);
-                return server;
+                var transport = new TransportServerCollection();
+                Transports.Each(transport.Add);
+                server = new RPCServer(transport);
             }
-            throw new NullReferenceException("The server needs to define at least one server transport.");
+            server.AddService(typeof(IStorage), Manager);
+            return server;
         }
         /// <inheritdoc />
         /// <summary>

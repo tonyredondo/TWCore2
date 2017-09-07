@@ -149,18 +149,16 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> ExtractColumnNames(string nameOrQuery, DbDataReader reader)
         {
-            if (ColumnsByNameOrQueryCacheInSec > 0)
+            if (ColumnsByNameOrQueryCacheInSec <= 0) return InternalExtractColumnNames(nameOrQuery, reader);
+            
+            if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
             {
-                if (ColumnsByNameOrQuery.TryGetValue(nameOrQuery, out var result))
-                {
-                    if (result.Count != reader.FieldCount)
-                        ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
-                    else
-                        return result;
-                }
-                return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
+                if (result.Count != reader.FieldCount)
+                    ColumnsByNameOrQuery.TryRemove(nameOrQuery, out result);
+                else
+                    return result;
             }
-            return InternalExtractColumnNames(nameOrQuery, reader);
+            return ColumnsByNameOrQuery.GetOrAdd(nameOrQuery, k => (InternalExtractColumnNames(nameOrQuery, reader), TimeSpan.FromSeconds(ColumnsByNameOrQueryCacheInSec)));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual Dictionary<string, int> InternalExtractColumnNames(string nameOrQuery, DbDataReader reader)

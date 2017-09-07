@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
-
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable CheckNamespace
 
 namespace DasMulli.Win32.ServiceUtils

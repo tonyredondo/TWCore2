@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Reflection
 {
@@ -28,7 +29,8 @@ namespace TWCore.Reflection
         /// <summary>
         /// Assembly resolver associated with the binder.
         /// </summary>
-        public AssemblyResolver AssemblyResolver { get; private set; }
+        public AssemblyResolver AssemblyResolver { get; }
+        
         /// <summary>
         /// Serialization binder for the BinaryFormatter serializer that uses the AssemblyResolver
         /// </summary>
@@ -48,14 +50,10 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Type BindToType(string assemblyName, string typeName)
         {
-            if (AssemblyResolver.Assemblies.Contains(assemblyName))
-            {
-                var assemblyInfo = AssemblyResolver.Assemblies[assemblyName];
-                var type = assemblyInfo.Instance.GetType(typeName);
-                if (type != null)
-                    return type;
-            }
-            return Core.GetType(typeName);
+            if (!AssemblyResolver.Assemblies.Contains(assemblyName)) return Core.GetType(typeName);
+            var assemblyInfo = AssemblyResolver.Assemblies[assemblyName];
+            var type = assemblyInfo.Instance.GetType(typeName);
+            return type ?? Core.GetType(typeName);
         }
     }
 }

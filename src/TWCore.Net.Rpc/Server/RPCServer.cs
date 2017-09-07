@@ -269,10 +269,15 @@ namespace TWCore.Net.RPC.Server
                     var tId = Environment.CurrentManagedThreadId;
                     lock (_threadClientId) _threadClientId[tId] = clientId;
                     var pTers = OnClientConnectMethod.GetParameters();
-                    if (pTers.Length == 0)
-                        OnClientConnectMethod?.Invoke(ServiceInstance, null);
-                    if (pTers.Length == 1)
-                        OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
+                    switch (pTers.Length)
+                    {
+                        case 0:
+                            OnClientConnectMethod?.Invoke(ServiceInstance, null);
+                            break;
+                        case 1:
+                            OnClientConnectMethod?.Invoke(ServiceInstance, new object[] { clientId });
+                            break;
+                    }
                     lock (_threadClientId) _threadClientId.Remove(tId);
                 });
             }

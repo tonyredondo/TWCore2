@@ -185,14 +185,12 @@ namespace TWCore
                             {
                                 var keyPair = item.Key.SplitAndTrim(">");
                                 var k1 = keyPair[0].SplitAndTrim(".");
-                                string env = k1[0];
-                                string mac = k1.Length > 1 ? k1[1] : null;
-                                string ckey = keyPair[1];
-                                if (env == Core.EnvironmentName && (mac == null || mac == Core.MachineName))
-                                {
-                                    Core.Settings.Remove(ckey);
-                                    Core.Settings.Add(ckey, item.Value);
-                                }
+                                var env = k1[0];
+                                var mac = k1.Length > 1 ? k1[1] : null;
+                                var ckey = keyPair[1];
+                                if (env != Core.EnvironmentName || (mac != null && mac != Core.MachineName)) continue;
+                                Core.Settings.Remove(ckey);
+                                Core.Settings.Add(ckey, item.Value);
                             }
                             else
                             {

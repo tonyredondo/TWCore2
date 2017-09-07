@@ -627,23 +627,24 @@ namespace TWCore.Numerics
             // Check for a plus or a minus sign.
             //------------------------------------------------------------------
 
-            bool haveSignFlag = false;
+            var haveSignFlag = false;
             negativeFlag = false;
 
             if (positionIndex < inputLine.Length)
             {
-                char c = inputLine[positionIndex];
+                var c = inputLine[positionIndex];
 
-                if (c == '+')
+                switch (c)
                 {
-                    haveSignFlag = true;
-                    positionIndex++;
-                }
-                else if (c == '-')
-                {
-                    haveSignFlag = true;
-                    negativeFlag = true;
-                    positionIndex++;
+                    case '+':
+                        haveSignFlag = true;
+                        positionIndex++;
+                        break;
+                    case '-':
+                        haveSignFlag = true;
+                        negativeFlag = true;
+                        positionIndex++;
+                        break;
                 }
             }
 

@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Services;
+// ReSharper disable ClassNeverInstantiated.Local
+// ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMember.Local
 
 namespace TWCore.Tests

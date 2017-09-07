@@ -93,22 +93,20 @@ namespace TWCore.Diagnostics.Status.Transports
             var status = OnFetchStatus?.Invoke();
             try
             {
-                if (status != null)
-                {
-                    var now = Core.Now;
-                    var filename = FileNameFormat
-                        .Replace("{yyyy}", now.ToString("yyyy"))
-                        .Replace("{MM}", now.ToString("MM"))
-                        .Replace("{dd}", now.ToString("dd"))
-                        .Replace("{HH}", now.ToString("HH"))
-                        .Replace("{mm}", now.ToString("mm"));
+                if (status == null) return;
+                var now = Core.Now;
+                var filename = FileNameFormat
+                    .Replace("{yyyy}", now.ToString("yyyy"))
+                    .Replace("{MM}", now.ToString("MM"))
+                    .Replace("{dd}", now.ToString("dd"))
+                    .Replace("{HH}", now.ToString("HH"))
+                    .Replace("{mm}", now.ToString("mm"));
 
-                    var filePath = SPath.Combine(AppContext.BaseDirectory, Path, filename);
-                    var folder = SPath.GetDirectoryName(filePath);
-                    if (!Directory.Exists(folder))
-                        Directory.CreateDirectory(folder);
-                    Serializer.SerializeToFile(status, filePath);
-                }
+                var filePath = SPath.Combine(AppContext.BaseDirectory, Path, filename);
+                var folder = SPath.GetDirectoryName(filePath);
+                if (!Directory.Exists(folder))
+                    Directory.CreateDirectory(folder);
+                Serializer.SerializeToFile(status, filePath);
             }
             catch (Exception ex)
             {

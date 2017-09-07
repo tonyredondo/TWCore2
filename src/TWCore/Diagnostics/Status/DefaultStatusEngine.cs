@@ -62,42 +62,41 @@ namespace TWCore.Diagnostics.Status
         {
             Transports.CollectionChanged += (s, e) =>
             {
-                if (e.Action == NotifyCollectionChangedAction.Add)
+                switch (e.Action)
                 {
-                    if (e.NewItems != null)
-                    {
-                        foreach (IStatusTransport item in e.NewItems)
-                            item.OnFetchStatus += Transport_OnFetchStatus;
-                    }
-                }
-                if (e.Action == NotifyCollectionChangedAction.Remove)
-                {
-                    if (e.OldItems != null)
-                    {
-                        foreach (IStatusTransport item in e.OldItems)
-                            item.OnFetchStatus -= Transport_OnFetchStatus;
-                    }
-                }
-                if (e.Action == NotifyCollectionChangedAction.Replace)
-                {
-                    if (e.NewItems != null)
-                    {
-                        foreach (IStatusTransport item in e.NewItems)
-                            item.OnFetchStatus += Transport_OnFetchStatus;
-                    }
-                    if (e.OldItems != null)
-                    {
-                        foreach (IStatusTransport item in e.OldItems)
-                            item.OnFetchStatus -= Transport_OnFetchStatus;
-                    }
-                }
-                if (e.Action == NotifyCollectionChangedAction.Reset)
-                {
-                    if (e.OldItems != null)
-                    {
-                        foreach (IStatusTransport item in e.OldItems)
-                            item.OnFetchStatus -= Transport_OnFetchStatus;
-                    }
+                    case NotifyCollectionChangedAction.Add:
+                        if (e.NewItems != null)
+                        {
+                            foreach (IStatusTransport item in e.NewItems)
+                                item.OnFetchStatus += Transport_OnFetchStatus;
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Remove:
+                        if (e.OldItems != null)
+                        {
+                            foreach (IStatusTransport item in e.OldItems)
+                                item.OnFetchStatus -= Transport_OnFetchStatus;
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Replace:
+                        if (e.NewItems != null)
+                        {
+                            foreach (IStatusTransport item in e.NewItems)
+                                item.OnFetchStatus += Transport_OnFetchStatus;
+                        }
+                        if (e.OldItems != null)
+                        {
+                            foreach (IStatusTransport item in e.OldItems)
+                                item.OnFetchStatus -= Transport_OnFetchStatus;
+                        }
+                        break;
+                    case NotifyCollectionChangedAction.Reset:
+                        if (e.OldItems != null)
+                        {
+                            foreach (IStatusTransport item in e.OldItems)
+                                item.OnFetchStatus -= Transport_OnFetchStatus;
+                        }
+                        break;
                 }
             };
         }
@@ -426,21 +425,23 @@ namespace TWCore.Diagnostics.Status
                 {
                     var tuple = statusReferenceAttributes[i];
                     var value = tuple.Item1.GetValue(obj);
-                    if (value == null) continue;
-                    if (value is IEnumerable ieVal)
+                    switch (value)
                     {
-                        ieVal.EachObject(mValue =>
-                        {
-                            if (RefAdded.Any(w => w.Target == mValue)) return;
-                            Core.Status.AttachChild(mValue, obj);
-                            RefAdded.Add(new WeakReference(mValue));
-                        });
-                    }
-                    else
-                    {
-                        if (RefAdded.Any(w => w.Target == value)) continue;
-                        Core.Status.AttachChild(value, obj);
-                        RefAdded.Add(new WeakReference(value));
+                        case null:
+                            continue;
+                        case IEnumerable ieVal:
+                            ieVal.EachObject(mValue =>
+                            {
+                                if (RefAdded.Any(w => w.Target == mValue)) return;
+                                Core.Status.AttachChild(mValue, obj);
+                                RefAdded.Add(new WeakReference(mValue));
+                            });
+                            break;
+                        default:
+                            if (RefAdded.Any(w => w.Target == value)) continue;
+                            Core.Status.AttachChild(value, obj);
+                            RefAdded.Add(new WeakReference(value));
+                            break;
                     }
                 }
             }

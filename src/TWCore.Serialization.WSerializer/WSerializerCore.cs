@@ -606,30 +606,28 @@ namespace TWCore.Serialization.WSerializer
                     var propNames = new List<string>();
                     foreach (var prop in properties)
                     {
-                        if (prop.CanRead && prop.CanWrite)
+                        if (!prop.CanRead || !prop.CanWrite) continue;
+                        if (isIList && prop.Name == "Capacity")
+                            continue;
+                        if (prop.GetAttribute<NonSerializeAttribute>() != null)
+                            continue;
+                        if (prop.GetIndexParameters().Length > 0)
+                            continue;
+                        var propType = prop.PropertyType;
+                        var propTypeInfo = propType.GetTypeInfo();
+                        var propIsNullable = propTypeInfo.IsGenericType && propTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
+                        if (propIsNullable)
+                            propType = Nullable.GetUnderlyingType(propType);
+                        var serType = serializerTable.GetSerializerByValueType(propType)?.GetType();
+                        propNames.Add(prop.Name);
+                        if (serType == null)
                         {
-                            if (isIList && prop.Name == "Capacity")
-                                continue;
-                            if (prop.GetAttribute<NonSerializeAttribute>() != null)
-                                continue;
-                            if (prop.GetIndexParameters().Length > 0)
-                                continue;
-                            var propType = prop.PropertyType;
-                            var propTypeInfo = propType.GetTypeInfo();
-                            var propIsNullable = propTypeInfo.IsGenericType && propTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);
-                            if (propIsNullable)
-                                propType = Nullable.GetUnderlyingType(propType);
-                            var serType = serializerTable.GetSerializerByValueType(propType)?.GetType();
-                            propNames.Add(prop.Name);
-                            if (serType == null)
-                            {
-                                plan.Add(new SerializerPlanItem.PropertyReference(prop));
-                                if (!_currentSerializerPlanTypes.Contains(propType))
-                                    GetSerializerPlan(serializerTable, propType);
-                            }
-                            else
-                                plan.Add(new SerializerPlanItem.PropertyValue(prop, serType, propIsNullable));
+                            plan.Add(new SerializerPlanItem.PropertyReference(prop));
+                            if (!_currentSerializerPlanTypes.Contains(propType))
+                                GetSerializerPlan(serializerTable, propType);
                         }
+                        else
+                            plan.Add(new SerializerPlanItem.PropertyValue(prop, serType, propIsNullable));
                     }
                     tStart.Properties = propNames.ToArray();
                     #endregion
@@ -1210,13 +1208,9 @@ namespace TWCore.Serialization.WSerializer
                     Type = valueType,
                     Properties = valueType.GetRuntimeProperties().Where(p =>
                     {
-                        bool ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
-                        if (ok)
-                        {
-                            if (p.GetIndexParameters().Length > 0)
-                                return false;
-                        }
-                        return ok;
+                        var ok = !p.IsSpecialName && p.CanRead && p.CanWrite;
+                        if (!ok) return false;
+                        return p.GetIndexParameters().Length <= 0;
                     }).Select(p => p.GetFastPropertyInfo()).ToDictionary(k => k.Name, v => v)
                 };
                 var constructor = typeInfo.DeclaredConstructors.First();

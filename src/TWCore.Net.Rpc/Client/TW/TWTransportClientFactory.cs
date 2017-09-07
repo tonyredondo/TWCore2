@@ -60,12 +60,11 @@ namespace TWCore.Net.RPC.Client.Transports
             Core.Log.LibDebug("Host: {0}", host);
             Core.Log.LibDebug("Port: {0}", port);
             Core.Log.LibDebug("SocketsPerClient: {0}", socketsPerClient);
-            if (serializerMimeType != null)
-            {
-                Core.Log.LibDebug("SerializerMimeType: {0}", serializerMimeType);
-                if (serializer?.Compressor != null)
-                    Core.Log.LibDebug("CompressorEncoding: {0}", compressorEncoding);
-            }
+            if (serializerMimeType == null) 
+                return client;
+            Core.Log.LibDebug("SerializerMimeType: {0}", serializerMimeType);
+            if (serializer?.Compressor != null)
+                Core.Log.LibDebug("CompressorEncoding: {0}", compressorEncoding);
             return client;
         }
     }

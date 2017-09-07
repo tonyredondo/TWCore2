@@ -96,10 +96,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(KeyValuePair<TKey, TValue> item)
         {
-            if (!TryGetValue(item.Key, out var value))
-                return false;
-
-            return EqualityComparer<TValue>.Default.Equals(value, item.Value);
+            return TryGetValue(item.Key, out var value) && EqualityComparer<TValue>.Default.Equals(value, item.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -111,11 +108,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            if (!Contains(item))
-                return false;
-
-
-            return Remove(item.Key);
+            return Contains(item) && Remove(item.Key);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

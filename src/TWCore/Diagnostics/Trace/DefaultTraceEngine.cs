@@ -21,6 +21,7 @@ using TWCore.Diagnostics.Trace.Storages;
 
 namespace TWCore.Diagnostics.Trace
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default trace engine
     /// </summary>
@@ -28,20 +29,23 @@ namespace TWCore.Diagnostics.Trace
     public class DefaultTraceEngine : ITraceEngine
     {
         #region Private fields
-        readonly Worker<TraceItem> _itemsWorker;
+        private readonly Worker<TraceItem> _itemsWorker;
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Trace storages items
         /// </summary>
         [StatusReference]
         public TraceStorageCollection Storage { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the trace item factory
         /// </summary>
         [StatusProperty, StatusReference]
         public CreateTraceItemDelegate ItemFactory { get; set; } = Factory.CreateTraceItem;
+        /// <inheritdoc />
         /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>
@@ -63,16 +67,14 @@ namespace TWCore.Diagnostics.Trace
 
             _itemsWorker = new Worker<TraceItem>(() => Storage?.Count > 0, item =>
             {
-                if (item != null)
+                if (item == null) return;
+                try
                 {
-                    try
-                    {
-                        Storage.Write(item);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Error(ex, "Error writing the Trace item to disk.");
-                    }
+                    Storage.Write(item);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Error(ex, "Error writing the Trace item to disk.");
                 }
             });
             Core.Status.AttachObject(this);
@@ -89,6 +91,7 @@ namespace TWCore.Diagnostics.Trace
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
@@ -99,6 +102,7 @@ namespace TWCore.Diagnostics.Trace
             if (Enabled && item != null)
                 _itemsWorker?.Enqueue(item);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
@@ -108,12 +112,11 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(string groupName, string traceName, object traceObject)
         {
-            if (Enabled)
-            {
-                var item = ItemFactory(groupName, traceName, traceObject);
-                Write(item);
-            }
+            if (!Enabled) return;
+            var item = ItemFactory(groupName, traceName, traceObject);
+            Write(item);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
@@ -121,6 +124,7 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="traceObject">Trace object</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(string traceName, object traceObject) => Write(null, traceName, traceObject);
+        /// <inheritdoc />
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>

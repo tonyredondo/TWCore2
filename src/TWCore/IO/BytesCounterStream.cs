@@ -16,6 +16,10 @@ limitations under the License.
 
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.IO
 {

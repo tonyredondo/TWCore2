@@ -60,18 +60,16 @@ namespace TWCore.Serialization.PWSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(ulong value)
+        private static byte GetDecreaseDataType(ulong value)
         {
             if (value <= 255)
                 return DataType.Byte;
             if (value <= 65535)
                 return DataType.UShort;
-            if (value <= uint.MaxValue)
-                return DataType.UInt;
-            return DataType.ULong;
+            return value <= uint.MaxValue ? DataType.UInt : DataType.ULong;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(long value)
+        private static byte GetDecreaseDataType(long value)
         {
             if (value >= 0 && value <= 255)
                 return DataType.Byte;
@@ -88,13 +86,11 @@ namespace TWCore.Serialization.PWSerializer
             return DataType.Long;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(uint value)
+        private static byte GetDecreaseDataType(uint value)
         {
             if (value <= 255)
                 return DataType.Byte;
-            if (value <= 65535)
-                return DataType.UShort;
-            return DataType.UInt;
+            return value <= 65535 ? DataType.UShort : DataType.UInt;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte GetDecreaseDataType(int value)
@@ -110,14 +106,12 @@ namespace TWCore.Serialization.PWSerializer
             return DataType.Int;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(ushort value)
+        private static byte GetDecreaseDataType(ushort value)
         {
-            if (value <= 255)
-                return DataType.Byte;
-            return DataType.UShort;
+            return value <= 255 ? DataType.Byte : DataType.UShort;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(short value)
+        private static byte GetDecreaseDataType(short value)
         {
             if (value >= 0 && value <= 255)
                 return DataType.Byte;
@@ -126,7 +120,7 @@ namespace TWCore.Serialization.PWSerializer
             return DataType.Short;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(sbyte value)
+        private static byte GetDecreaseDataType(sbyte value)
             => (value >= 0) ? DataType.Byte : DataType.SByte;
 
 
@@ -138,39 +132,29 @@ namespace TWCore.Serialization.PWSerializer
         /// <returns>Object value with new type</returns>
         public static object Change(object obj, Type typeTo)
         {
-            Type u = Nullable.GetUnderlyingType(typeTo);
+            var u = Nullable.GetUnderlyingType(typeTo);
             var typeInfo = typeTo.GetTypeInfo();
 
             if (obj == null)
                 return typeInfo.IsValueType ? Activator.CreateInstance(typeTo) : null;
-            else
+            if (u != null)
+                return u == typeof(object) ? obj : Convert.ChangeType(obj, u);
+            if (typeTo == typeof(object))
+                return obj;
+            var objType = obj.GetType();
+            if (typeTo == objType)
+                return obj;
+            if (typeInfo.IsAssignableFrom(objType.GetTypeInfo()))
+                return obj;
+            if (typeInfo.IsEnum)
+                return Enum.ToObject(typeTo, obj);
+            try
             {
-                if (u != null)
-                {
-                    if (u == typeof(object))
-                        return obj;
-                    return Convert.ChangeType(obj, u);
-                }
-                else
-                {
-                    if (typeTo == typeof(object))
-                        return obj;
-                    var objType = obj.GetType();
-                    if (typeTo == objType)
-                        return obj;
-                    if (typeInfo.IsAssignableFrom(objType.GetTypeInfo()))
-                        return obj;
-                    if (typeInfo.IsEnum)
-                        return Enum.ToObject(typeTo, obj);
-                    try
-                    {
-                        return Convert.ChangeType(obj, typeTo);
-                    }
-                    catch
-                    {
-                        return obj;
-                    }
-                }
+                return Convert.ChangeType(obj, typeTo);
+            }
+            catch
+            {
+                return obj;
             }
         }
 

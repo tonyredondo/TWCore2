@@ -158,16 +158,13 @@ namespace TWCore.Messaging.RawClient
             OnBeforeSendRequest?.Invoke(this, rmea);
             MQueueRawClientEvents.FireOnBeforeSendRequest(this, rmea);
             obj = rmea.Message;
-            if (OnSend(obj, correlationId))
-            {
-                Counters.IncrementMessagesSent();
-                Counters.IncrementTotalBytesSent(obj.Length);
-                rmea = new RawMessageEventArgs(Name, obj);
-                OnRequestSent?.Invoke(this, rmea);
-                MQueueRawClientEvents.FireOnRequestSent(this, rmea);
-                return correlationId;
-            }
-            return Guid.Empty;
+            if (!OnSend(obj, correlationId)) return Guid.Empty;
+            Counters.IncrementMessagesSent();
+            Counters.IncrementTotalBytesSent(obj.Length);
+            rmea = new RawMessageEventArgs(Name, obj);
+            OnRequestSent?.Invoke(this, rmea);
+            MQueueRawClientEvents.FireOnRequestSent(this, rmea);
+            return correlationId;
         }
         /// <inheritdoc />
         /// <summary>

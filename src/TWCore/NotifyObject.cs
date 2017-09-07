@@ -17,6 +17,8 @@ limitations under the License.
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore
 {
@@ -41,11 +43,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void SetValue<TK>(ref TK valueField, TK value, [CallerMemberName] string propertyName = null)
         {
-            if (!Equals(valueField, value))
-            {
-                valueField = value;
-                OnPropertyChanged(propertyName);
-            }
+            if (Equals(valueField, value)) return;
+            valueField = value;
+            OnPropertyChanged(propertyName);
         }
         /// <summary>
         /// Triggers the PropertyChanged event

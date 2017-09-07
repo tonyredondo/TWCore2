@@ -35,6 +35,8 @@ using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Settings;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
@@ -89,11 +91,11 @@ namespace TWCore
         /// <summary>
         /// App global data dictionary
         /// </summary>
-        public static Dictionary<string, object> Data { get; private set; } = new Dictionary<string, object>();
+        public static Dictionary<string, object> Data { get; } = new Dictionary<string, object>();
         /// <summary>
         /// App global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ObjectData { get; private set; } = new Dictionary<object, object>();
+        public static Dictionary<object, object> ObjectData { get; } = new Dictionary<object, object>();
         /// <summary>
         /// App Settings
         /// </summary>
@@ -115,7 +117,7 @@ namespace TWCore
         /// <summary>
         /// Current Framework version
         /// </summary>
-        public static string FrameworkVersion { get; private set; } = typeof(Core).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
+        public static string FrameworkVersion { get; } = typeof(Core).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
         /// <summary>
         /// Global TApp settings
         /// </summary>
@@ -124,25 +126,23 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (_globalSettings == null)
+                if (_globalSettings != null) return _globalSettings;
+                _globalSettings = GetSettings<CoreSettings>();
+                _globalSettings.OnSettingsReload += (s, e) =>
                 {
-                    _globalSettings = GetSettings<CoreSettings>();
-                    _globalSettings.OnSettingsReload += (s, e) =>
-                    {
-                        Status.Enabled = GlobalSettings.StatusEnabled;
-                        Log.MaxLogLevel = (LogLevel)GlobalSettings.LogMaxLogLevel;
-                        Log.Enabled = GlobalSettings.LogEnabled;
-                        Trace.Enabled = GlobalSettings.TraceEnabled;
-                        DebugMode = GlobalSettings.DebugMode;
-                    };
-                }
+                    Status.Enabled = GlobalSettings.StatusEnabled;
+                    Log.MaxLogLevel = (LogLevel)GlobalSettings.LogMaxLogLevel;
+                    Log.Enabled = GlobalSettings.LogEnabled;
+                    Trace.Enabled = GlobalSettings.TraceEnabled;
+                    DebugMode = GlobalSettings.DebugMode;
+                };
                 return _globalSettings;
             }
         }
         /// <summary>
         /// Core services
         /// </summary>
-        public static CoreServices Services { get; private set; } = new CoreServices();
+        public static CoreServices Services { get; } = new CoreServices();
         /// <summary>
         /// Faster DateTime.Now
         /// </summary>

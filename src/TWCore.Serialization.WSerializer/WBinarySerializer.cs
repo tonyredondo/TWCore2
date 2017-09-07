@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertToAutoPropertyWhenPossible
 
 namespace TWCore.Serialization.WSerializer
 {

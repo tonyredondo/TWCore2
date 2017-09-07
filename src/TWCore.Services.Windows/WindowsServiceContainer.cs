@@ -22,6 +22,8 @@ using System.Text.RegularExpressions;
 using TWCore.Settings;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Local
+// ReSharper disable ClassNeverInstantiated.Local
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services.Windows
 {

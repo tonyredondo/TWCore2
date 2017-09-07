@@ -195,39 +195,44 @@ namespace TWCore.Messaging.RabbitMQ
                 if (!(obj is RabbitMessage message)) return;
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
-                if (messageBody is RequestMessage request && request.Header != null)
+                switch (messageBody)
                 {
-                    request.Header.ApplicationReceivedTime = Core.Now;
-                    Counters.IncrementReceivingTime(request.Header.TotalTime);
-                    if (request.Header.ClientName != Config.Name)
-                        Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                    var evArgs =
-                        new RequestReceivedEventArgs(_name, _receiver, request)
-                        {
-                            Metadata =
+                    case RequestMessage request when request.Header != null:
+                    {
+                        request.Header.ApplicationReceivedTime = Core.Now;
+                        Counters.IncrementReceivingTime(request.Header.TotalTime);
+                        if (request.Header.ClientName != Config.Name)
+                            Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+                        var evArgs =
+                            new RequestReceivedEventArgs(_name, _receiver, request)
                             {
-                                ["ReplyTo"] = message.Properties.ReplyTo,
-                                ["MessageId"] = message.Properties.MessageId
-                            }
-                        };
-                    if (request.Header.ResponseQueue != null)
-                        evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                    OnRequestReceived(evArgs);
-                }
-                else if (messageBody is ResponseMessage response && response.Header != null)
-                {
-                    response.Header.Response.ApplicationReceivedTime = Core.Now;
-                    Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                    var evArgs =
-                        new ResponseReceivedEventArgs(_name, response)
-                        {
-                            Metadata =
+                                Metadata =
+                                {
+                                    ["ReplyTo"] = message.Properties.ReplyTo,
+                                    ["MessageId"] = message.Properties.MessageId
+                                }
+                            };
+                        if (request.Header.ResponseQueue != null)
+                            evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+                        OnRequestReceived(evArgs);
+                        break;
+                    }
+                    case ResponseMessage response when response.Header != null:
+                    {
+                        response.Header.Response.ApplicationReceivedTime = Core.Now;
+                        Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+                        var evArgs =
+                            new ResponseReceivedEventArgs(_name, response)
                             {
-                                ["ReplyTo"] = message.Properties.ReplyTo,
-                                ["MessageId"] = message.Properties.MessageId
-                            }
-                        };
-                    OnResponseReceived(evArgs);
+                                Metadata =
+                                {
+                                    ["ReplyTo"] = message.Properties.ReplyTo,
+                                    ["MessageId"] = message.Properties.MessageId
+                                }
+                            };
+                        OnResponseReceived(evArgs);
+                        break;
+                    }
                 }
                 Counters.IncrementTotalMessagesProccesed();
             }

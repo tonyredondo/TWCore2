@@ -18,11 +18,13 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RabbitMQ
 {
+    /// <inheritdoc />
     /// <summary>
     /// RabbitMQ administration class
     /// </summary>
     public class RabbitMQueueAdmin : IMQueueAdmin
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new message queue
         /// </summary>
@@ -30,20 +32,16 @@ namespace TWCore.Messaging.RabbitMQ
         /// <returns>true if the message queue was created; otherwise, false.</returns>
         public bool Create(MQConnection queue)
         {
-            if (!Exist(queue))
-            {
-                var rabbitQueue = new RabbitMQueue(queue);
-                if (rabbitQueue.EnsureConnection())
-                {
-                    rabbitQueue.EnsureQueue();
-                    rabbitQueue.EnsureExchange();
-                    rabbitQueue.Close();
-                    return true;
-                }
-            }
-            return false;
+            if (Exist(queue)) return false;
+            var rabbitQueue = new RabbitMQueue(queue);
+            if (!rabbitQueue.EnsureConnection()) return false;
+            rabbitQueue.EnsureQueue();
+            rabbitQueue.EnsureExchange();
+            rabbitQueue.Close();
+            return true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Delete a message queue
         /// </summary>
@@ -58,6 +56,7 @@ namespace TWCore.Messaging.RabbitMQ
             return true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Check if the message queue exists
         /// </summary>
@@ -79,20 +78,20 @@ namespace TWCore.Messaging.RabbitMQ
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Purge all messages from a message queue
         /// </summary>
         /// <param name="queue">Message Queue connection instance</param>
         public void Purge(MQConnection queue)
         {
-            if (Exist(queue))
-            {
-                var rabbitQueue = new RabbitMQueue(queue);
-                rabbitQueue.EnsureConnection();
-                rabbitQueue.Channel.QueuePurge(queue.Name);
-                rabbitQueue.Close();
-            }
+            if (!Exist(queue)) return;
+            var rabbitQueue = new RabbitMQueue(queue);
+            rabbitQueue.EnsureConnection();
+            rabbitQueue.Channel.QueuePurge(queue.Name);
+            rabbitQueue.Close();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Set permission for a user in a queue
         /// </summary>

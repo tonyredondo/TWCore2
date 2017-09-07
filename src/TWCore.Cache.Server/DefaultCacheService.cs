@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
 {

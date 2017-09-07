@@ -19,11 +19,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Text
 {
+    /// <inheritdoc />
     /// <summary>
     /// IgnoreCase Comparer, Ignore Cases at char comparisson
     /// </summary>
     public class IgnoreCaseCharComparer : IEqualityComparer<char>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Compare two chars and return if equal or not
         /// </summary>
@@ -33,6 +35,7 @@ namespace TWCore.Text
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(char x, char y) 
             => char.ToLowerInvariant(x) == char.ToLowerInvariant(y);
+        /// <inheritdoc />
         /// <summary>
         /// Get HahsCode from char
         /// </summary>

@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue transport definition
     /// </summary>

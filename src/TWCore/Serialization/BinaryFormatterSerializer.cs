@@ -19,27 +19,32 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Binary Formatter serializer
     /// </summary>
     public class BinaryFormatterSerializer : BinarySerializer
     {
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
-        public override string[] Extensions { get; } = new string[] { ".bin" };
+        public override string[] Extensions { get; } = { ".bin" };
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
-        public override string[] MimeTypes { get; } = new string[] { "application/binary-formatter" };
+        public override string[] MimeTypes { get; } = { "application/binary-formatter" };
         /// <summary>
         /// Internal type serialization binder
         /// </summary>
         public SerializationBinder Binder { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the object instance deserialized from a stream
         /// </summary>
@@ -54,6 +59,7 @@ namespace TWCore.Serialization
                 bformatter.Binder = Binder;
             return bformatter.Deserialize(stream);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object and writes it to the stream
         /// </summary>
@@ -69,6 +75,7 @@ namespace TWCore.Serialization
                 bformatter.Binder = Binder;
             bformatter.Serialize(stream, item);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

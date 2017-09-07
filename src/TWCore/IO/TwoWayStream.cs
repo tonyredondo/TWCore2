@@ -19,30 +19,36 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// Two Way Stream decorator
     /// </summary>
     public class TwoWayStream : Stream
     {
-        readonly Stream _readStream;
-        readonly Stream _writeStream;
+        private readonly Stream _readStream;
+        private readonly Stream _writeStream;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
         public override bool CanRead => _readStream.CanRead;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         public override bool CanSeek => false;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         public override bool CanWrite => _writeStream.CanWrite;
+        /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
@@ -54,6 +60,7 @@ namespace TWCore.IO
                 throw new NotSupportedException();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
@@ -73,6 +80,7 @@ namespace TWCore.IO
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Two Way Stream decorator
         /// </summary>
@@ -85,12 +93,14 @@ namespace TWCore.IO
         #endregion
 
         #region Methods
+        /// <inheritdoc />
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Flush()
             => _writeStream.Flush();
+        /// <inheritdoc />
         /// <summary>
         /// Reads a byte from the stream and advances the position within the stream by one byte, or returns -1 if at the end of the stream.
         /// </summary>
@@ -98,6 +108,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int ReadByte()
             => _readStream.ReadByte();
+        /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -108,12 +119,14 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int Read(byte[] buffer, int offset, int count)
             => _readStream.Read(buffer, offset, count);
+        /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => _readStream.ReadAsync(buffer, offset, count, cancellationToken);
+        /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
@@ -123,12 +136,14 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
             => _writeStream.Write(buffer, offset, count);
+        /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             => _writeStream.WriteAsync(buffer, offset, count, cancellationToken);
+        /// <inheritdoc />
         /// <summary>
         /// Sets the position within the current stream.
         /// </summary>
@@ -137,6 +152,7 @@ namespace TWCore.IO
         /// <returns>The new position within the current stream.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>

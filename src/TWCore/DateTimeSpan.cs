@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable ConvertToAutoPropertyWhenPossible
+// ReSharper disable UnusedMember.Global
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore
 {
@@ -71,7 +73,6 @@ namespace TWCore
         #endregion
 
         #region Equality
-
         /// <summary>
         /// Get Hash Code
         /// </summary>
@@ -79,6 +80,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
             => _hashCode;
+        /// <inheritdoc />
         /// <summary>
         /// Check if this DateTimeSpan is equal to other
         /// </summary>

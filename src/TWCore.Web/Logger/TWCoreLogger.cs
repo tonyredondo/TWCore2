@@ -20,6 +20,7 @@ using System;
 
 namespace TWCore.Web.Logger
 {
+    /// <inheritdoc />
     /// <summary>
     /// Logger for TWCore Log
     /// </summary>
@@ -39,18 +40,21 @@ namespace TWCore.Web.Logger
         #endregion
 
         #region ILogger
+        /// <inheritdoc />
         /// <summary>
         /// Begins a logical operation scope.
         /// </summary>
         /// <param name="state">The identifier for the scope.</param>
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         public IDisposable BeginScope<TState>(TState state) => null;
+        /// <inheritdoc />
         /// <summary>
         /// Checks if the given logLevel is enabled.
         /// </summary>
         /// <param name="logLevel">level to be checked.</param>
         /// <returns>true if enabled.</returns>
         public bool IsEnabled(LogLevel logLevel) => true;
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log entry.
         /// </summary>

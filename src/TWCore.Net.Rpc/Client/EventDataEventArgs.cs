@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Net.RPC.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for the received event data from the server
     /// </summary>
@@ -27,16 +28,17 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Service Name
         /// </summary>
-        public string ServiceName { get; private set; }
+        public string ServiceName { get; }
         /// <summary>
         /// Event name that got fired
         /// </summary>
-        public string EventName { get; private set; }
+        public string EventName { get; }
         /// <summary>
         /// Event arguments
         /// </summary>
-        public EventArgs EventArgs { get; private set; }
+        public EventArgs EventArgs { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Event args for the received event data from the server
         /// </summary>

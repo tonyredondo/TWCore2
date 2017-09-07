@@ -17,6 +17,7 @@ limitations under the License.
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Settings
 {
@@ -26,6 +27,7 @@ namespace TWCore.Settings
     [DataContract]
     public class AppSettings : SettingsSet, INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Application name
         /// </summary>

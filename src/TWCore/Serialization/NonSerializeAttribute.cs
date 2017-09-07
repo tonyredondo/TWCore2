@@ -18,6 +18,7 @@ using System;
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Attribute to mark a property non serializable, when is supported by a serializer
     /// </summary>

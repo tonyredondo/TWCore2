@@ -18,9 +18,12 @@ using System.Collections.Generic;
 using System.Dynamic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Adds a dynamic wrapper to an object
     /// </summary>
@@ -34,6 +37,7 @@ namespace TWCore
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Adds a dynamic wrapper to an object
         /// </summary>
@@ -46,6 +50,7 @@ namespace TWCore
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// Returns the enumeration of all dynamic member names.
         /// </summary>
@@ -59,6 +64,7 @@ namespace TWCore
             type.GetRuntimeMethods().Each(i => lstMembers.Add(i.Name));
             return lstMembers;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that get member values.
         /// </summary>
@@ -81,6 +87,7 @@ namespace TWCore
                 return false;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that invoke a member.
         /// </summary>
@@ -104,6 +111,7 @@ namespace TWCore
                 return false;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that set member values.
         /// </summary>
@@ -125,6 +133,7 @@ namespace TWCore
                 return false;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that get a value by index.
         /// </summary>
@@ -148,6 +157,7 @@ namespace TWCore
                 return false;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that set a value by index.
         /// </summary>

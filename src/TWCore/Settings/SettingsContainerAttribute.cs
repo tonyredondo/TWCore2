@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Class container attribute for Settings parser
     /// </summary>
@@ -28,8 +29,9 @@ namespace TWCore.Settings
         /// <summary>
         /// Container name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Class container attribute for Settings parser
         /// </summary>

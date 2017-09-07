@@ -16,9 +16,12 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Services
 {
+    /// <inheritdoc />
     /// <summary>
     /// Container Parameter Service
     /// </summary>

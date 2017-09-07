@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Injector
 {
+    /// <inheritdoc />
     /// <summary>
     /// Defines an instance to a noninstantiable type
     /// </summary>
@@ -28,20 +29,21 @@ namespace TWCore.Injector
         /// <summary>
         /// Non instantiable object type
         /// </summary>
-        public Type NonInstantiableType { get; private set; }
+        public Type NonInstantiableType { get; }
         /// <summary>
         /// Instantiable object type
         /// </summary>
-        public Type InstantiableType { get; private set; }
+        public Type InstantiableType { get; }
         /// <summary>
         /// Indicates the instantiable object should be a singleton
         /// </summary>
-        public bool Singleton { get; private set; }
+        public bool Singleton { get; }
         /// <summary>
         /// Instance name
         /// </summary>
-        public string Name { get; private set; }
+        public string Name { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Defines an instance to a noninstantiable type
         /// </summary>

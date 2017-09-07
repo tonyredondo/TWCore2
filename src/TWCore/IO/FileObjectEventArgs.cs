@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// FileObject event args
     /// </summary>
@@ -28,24 +29,25 @@ namespace TWCore.IO
         /// <summary>
         /// File path for the object
         /// </summary>
-        public string FilePath { get; private set; }
+        public string FilePath { get; }
         /// <summary>
         /// Old identifier
         /// </summary>
-        public Guid OldId { get; private set; }
+        public Guid OldId { get; }
         /// <summary>
         /// Old object value
         /// </summary>
-        public T OldValue { get; private set; }
+        public T OldValue { get; }
         /// <summary>
         /// New identifier
         /// </summary>
-        public Guid NewId { get; private set; }
+        public Guid NewId { get; }
         /// <summary>
         /// New object value
         /// </summary>
-        public T NewValue { get; private set; }
+        public T NewValue { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// FileObject event args
         /// </summary>

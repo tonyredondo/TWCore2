@@ -20,6 +20,7 @@ using System.Runtime.Serialization;
 
 namespace TWCore.Net.RPC
 {
+    /// <inheritdoc />
     /// <summary>
     /// RPC Response Message
     /// </summary>
@@ -43,12 +44,14 @@ namespace TWCore.Net.RPC
         public SerializableException Exception { get; set; }
 
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// RPC Response Message
         /// </summary>
         public RPCResponseMessage()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// RPC Response Message
         /// </summary>

@@ -20,19 +20,23 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Compression
 {
+    /// <inheritdoc />
     /// <summary>
     /// Implements a Deflate Compressor
     /// </summary>
     public class DeflateCompressor : StreamCompressor
     {
+        /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
         public override string EncodingType { get; } = "deflate";
+        /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
         public override string FileExtension { get; } = ".deflate";
+        /// <inheritdoc />
         /// <summary>
         /// Creates a new compression stream wrapper for the stream source
         /// </summary>
@@ -40,6 +44,7 @@ namespace TWCore.Compression
         /// <returns>Stream compression wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Stream GetCompressionStream(Stream source) => new DeflateStream(source, CompressionLevel.Fastest, true);
+        /// <inheritdoc />
         /// <summary>
         /// Creates a new decompression stream wrapper for the stream source
         /// </summary>

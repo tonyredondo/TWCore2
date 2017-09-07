@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Dictionary attribute attribute for Settings parser
     /// </summary>
@@ -28,12 +29,13 @@ namespace TWCore.Settings
         /// <summary>
         /// Item separator
         /// </summary>
-        public char ItemSeparator { get; private set; }
+        public char ItemSeparator { get; }
         /// <summary>
         /// KeyValue separator
         /// </summary>
-        public char KeyValueSeparator { get; private set; }
+        public char KeyValueSeparator { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dictionary attribute attribute for Settings parser
         /// </summary>

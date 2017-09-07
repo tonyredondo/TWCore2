@@ -19,6 +19,7 @@ using System;
 
 namespace TWCore.Net.RPC.Attributes
 {
+    /// <inheritdoc />
     /// <summary>
     /// When is supported execute the method when a new client connects
     /// </summary>

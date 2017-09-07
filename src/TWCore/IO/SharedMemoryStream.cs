@@ -22,6 +22,7 @@ using System.Threading;
 
 namespace TWCore.IO
 {
+    /// <inheritdoc />
     /// <summary>
     /// Shared Memory circular stream
     /// </summary>
@@ -36,22 +37,27 @@ namespace TWCore.IO
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         ///  Gets a value indicating whether the current stream supports reading.
         /// </summary>
         public override bool CanRead => true;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports seeking.
         /// </summary>
         public override bool CanSeek => false;
+        /// <inheritdoc />
         /// <summary>
         /// Gets a value indicating whether the current stream supports writing.
         /// </summary>
         public override bool CanWrite => true;
+        /// <inheritdoc />
         /// <summary>
         /// Gets the length in bytes of the stream.
         /// </summary>
         public override long Length => -1;
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the position within the current stream.
         /// </summary>
@@ -59,6 +65,7 @@ namespace TWCore.IO
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Circular buffer stream
         /// </summary>
@@ -80,17 +87,20 @@ namespace TWCore.IO
         #endregion
 
         #region Not Implemented Methods
+        /// <inheritdoc />
         /// <summary>
         /// Clears all buffers for this stream and causes any buffered data to be written to the underlying device.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Flush() { }
+        /// <inheritdoc />
         /// <summary>
         /// Sets the length of the current stream.
         /// </summary>
         /// <param name="value">The desired length of the current stream in bytes.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void SetLength(long value) { }
+        /// <inheritdoc />
         /// <summary>
         /// Sets the position within the current stream.
         /// </summary>
@@ -102,6 +112,7 @@ namespace TWCore.IO
         #endregion
 
         #region Override Methods
+        /// <inheritdoc />
         /// <summary>
         /// Reads a sequence of bytes from the current stream and advances the position within the stream by the number of bytes read.
         /// </summary>
@@ -152,6 +163,7 @@ namespace TWCore.IO
             _readEvent.Set();
             return totalRead;
         }
+        /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
         /// </summary>

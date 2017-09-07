@@ -20,6 +20,7 @@ using System.Runtime.Serialization;
 
 namespace TWCore.Net.RPC
 {
+    /// <inheritdoc />
     /// <summary>
     /// RPC Request Message
     /// </summary>

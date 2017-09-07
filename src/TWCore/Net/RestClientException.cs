@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Net
 {
+    /// <inheritdoc />
     /// <summary>
     /// Exception for the Rest Client object
     /// </summary>
@@ -50,16 +51,19 @@ namespace TWCore.Net
         /// Server exception
         /// </summary>
         public SerializableHttpError ServerException { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Exception for the Rest Client object
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RestClientException() : base("Rest client exception") { }
+        /// <inheritdoc />
         /// <summary>
         /// Exception for the Rest Client object
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RestClientException(string message) : base("Rest client exception.\r\n" + message) { }
+        /// <inheritdoc />
         /// <summary>
         /// Exception for the Rest Client object
         /// </summary>

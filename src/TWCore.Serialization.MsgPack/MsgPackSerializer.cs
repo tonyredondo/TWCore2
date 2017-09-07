@@ -23,6 +23,7 @@ using MP = ProGaudi.MsgPack.Light;
 
 namespace TWCore.Serialization.MsgPack
 {
+    /// <inheritdoc />
     /// <summary>
     /// MsgPack Serializer
     /// </summary>
@@ -34,10 +35,12 @@ namespace TWCore.Serialization.MsgPack
         private static readonly MethodInfo SerializeMethod;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
         public override string[] Extensions => SExtensions;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
@@ -82,6 +85,7 @@ namespace TWCore.Serialization.MsgPack
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

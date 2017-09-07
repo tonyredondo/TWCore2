@@ -16,9 +16,12 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable SwitchStatementMissingSomeCases
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Writes the Logs items using the Console.Writeline method
     /// </summary>
@@ -29,6 +32,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         public static bool UseColor { get; set; } = true;
 
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
         /// </summary>
@@ -108,6 +112,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 desc += GetExceptionDescription(itemEx.InnerException);
             return desc;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
@@ -117,6 +122,7 @@ namespace TWCore.Diagnostics.Log.Storages
             lock (Console.Out)
                 Console.WriteLine();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

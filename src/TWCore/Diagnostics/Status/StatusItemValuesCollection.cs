@@ -16,9 +16,11 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Collection of values for a Status Item
     /// </summary>
@@ -36,7 +38,7 @@ namespace TWCore.Diagnostics.Status
         /// <param name="status">Value status</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(string key, object value, StatusItemValueStatus status = StatusItemValueStatus.Unknown)
-            => base.Add(new StatusItemValue(key, value?.ToString(), status));
+            => Add(new StatusItemValue(key, value?.ToString(), status));
         /// <summary>
         /// Adds a good item value
         /// </summary>

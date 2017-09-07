@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Property data format attribute for Settings parser
     /// </summary>
@@ -28,8 +29,9 @@ namespace TWCore.Settings
         /// <summary>
         /// Data format
         /// </summary>
-        public string DataFormat { get; private set; }
+        public string DataFormat { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Property data format attribute for Settings parser
         /// </summary>

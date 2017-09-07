@@ -33,7 +33,7 @@ namespace TWCore
         /// <summary>
         /// Internal action worker for async statistics
         /// </summary>
-        private static readonly ActionWorker Worker = new ActionWorker();
+        private static readonly ActionWorker<Stopwatch> Worker = new ActionWorker<Stopwatch>();
 
         #region Functions
         /// <summary>

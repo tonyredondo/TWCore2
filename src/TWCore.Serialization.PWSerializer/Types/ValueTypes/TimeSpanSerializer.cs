@@ -21,6 +21,7 @@ using TWCore.IO;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
+    /// <inheritdoc />
     /// <summary>
     /// TimeSpan value type serializer
     /// </summary>

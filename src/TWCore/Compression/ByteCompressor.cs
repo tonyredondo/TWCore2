@@ -20,16 +20,19 @@ using System.Threading.Tasks;
 
 namespace TWCore.Compression
 {
+    /// <inheritdoc />
     /// <summary>
     /// Byte Compressor base class
     /// </summary>
     public abstract class ByteCompressor : ICompressor
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
         public abstract string EncodingType { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
@@ -37,6 +40,7 @@ namespace TWCore.Compression
         #endregion
 
         #region Compression Methods
+        /// <inheritdoc />
         /// <summary>
         /// Compress a stream into another stream
         /// </summary>
@@ -48,6 +52,7 @@ namespace TWCore.Compression
             using (var ms = Compress(source.ReadBytes()).ToMemoryStream())
                 ms.CopyTo(destination);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Compress a stream into another stream
         /// </summary>
@@ -59,6 +64,7 @@ namespace TWCore.Compression
             using (var ms = Compress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
                 await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
         /// </summary>
@@ -66,6 +72,7 @@ namespace TWCore.Compression
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract SubArray<byte> Compress(SubArray<byte> source);
+        /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
         /// </summary>
@@ -77,6 +84,7 @@ namespace TWCore.Compression
         #endregion
 
         #region Decompression Methods
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a stream into another stream
         /// </summary>
@@ -88,6 +96,7 @@ namespace TWCore.Compression
             using (var ms = Decompress(source.ReadBytes()).ToMemoryStream())
                 ms.CopyTo(destination);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a stream into another stream
         /// </summary>
@@ -99,6 +108,7 @@ namespace TWCore.Compression
             using (var ms = Decompress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
                 await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
         /// </summary>
@@ -106,6 +116,7 @@ namespace TWCore.Compression
         /// <returns>Decompressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract SubArray<byte> Decompress(SubArray<byte> source);
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
         /// </summary>

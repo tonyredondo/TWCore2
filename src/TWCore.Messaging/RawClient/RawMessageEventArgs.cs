@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.RawClient
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for raw message
     /// </summary>
@@ -35,6 +36,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         public byte[] Message { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Event args for raw message
         /// </summary>

@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Property settings key attribute for Settings parser
     /// </summary>
@@ -28,12 +29,13 @@ namespace TWCore.Settings
         /// <summary>
         /// Settings key
         /// </summary>
-        public string SettingsKey { get; private set; }
+        public string SettingsKey { get; }
         /// <summary>
         /// Get if the container name should be added to the settings key
         /// </summary>
-        public bool UseContainerName { get; private set; } = true;
+        public bool UseContainerName { get; } = true;
 
+        /// <inheritdoc />
         /// <summary>
         /// Property settings key attribute for Settings parser adding the container name to the key.
         /// </summary>
@@ -43,6 +45,7 @@ namespace TWCore.Settings
         {
             SettingsKey = key;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Property settings key attribute for Settings parser
         /// </summary>

@@ -19,6 +19,8 @@ using System.Runtime.CompilerServices;
 using RabbitMQ.Client;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
+// ReSharper disable InheritdocConsiderUsage
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -43,11 +45,11 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Exchange Name
         /// </summary>
-        public string ExchangeName { get; private set; }
+        public string ExchangeName { get; }
         /// <summary>
         /// Exchange Type
         /// </summary>
-        public string ExchangeType { get; private set; }
+        public string ExchangeType { get; }
         #endregion
 
         #region .ctor

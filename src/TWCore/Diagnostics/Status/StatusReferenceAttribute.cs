@@ -18,6 +18,7 @@ using System;
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Attribute to define an item to show in the status library
     /// </summary>

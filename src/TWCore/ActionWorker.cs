@@ -16,20 +16,24 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Worker where the Queue elements are actions to be executed in order
     /// </summary>
     public class ActionWorker : Worker<ActionWorker.WorkerItem>
     {
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ActionWorker() : base((item) => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
@@ -65,18 +69,81 @@ namespace TWCore
             /// <summary>
             /// Action to be executed
             /// </summary>
-            public Action<object> Action { get; private set; }
+            public Action<object> Action { get; }
             /// <summary>
             /// Saves the state to be used by the action
             /// </summary>
-            public object State { get; private set; }
+            public object State { get; }
             /// <summary>
             /// Action executed in case of an Exception
             /// </summary>
-            public Action<Exception> OnExceptionCallback { get; private set; }
+            public Action<Exception> OnExceptionCallback { get; }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             internal WorkerItem(Action<object> action, object state, Action<Exception> onExceptionCallback)
+            {
+                Action = action;
+                State = state;
+                OnExceptionCallback = onExceptionCallback;
+            }
+        }
+        #endregion
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Worker where the Queue elements are actions to be executed in order
+    /// </summary>
+    public class ActionWorker<T> : Worker<ActionWorker<T>.WorkerItem>
+    {
+        #region .ctors
+        /// <inheritdoc />
+        /// <summary>
+        /// Worker where all elements are actions to be executed in order
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ActionWorker() : base((item) => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        /// <inheritdoc />
+        /// <summary>
+        /// Worker where all elements are actions to be executed in order
+        /// </summary>
+        /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ActionWorker(Func<bool> precondition) : base(precondition, item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        #endregion
+
+        #region Methods
+        /// <summary>
+        /// Enqueue a new Action on the queue
+        /// </summary>
+        /// <param name="action">Action to be executed</param>
+        /// <param name="state">State object to pass to the action</param>
+        /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Enqueue(Action<T> action, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(action, state, onExceptionCallback));
+        #endregion
+
+        #region Nested classes
+        /// <summary>
+        /// Action Worker queue item where is stored the action to be executed and the action when an exception occurs
+        /// </summary>
+        public class WorkerItem
+        {
+            /// <summary>
+            /// Action to be executed
+            /// </summary>
+            public Action<T> Action { get; }
+            /// <summary>
+            /// Saves the state to be used by the action
+            /// </summary>
+            public T State { get; }
+            /// <summary>
+            /// Action executed in case of an Exception
+            /// </summary>
+            public Action<Exception> OnExceptionCallback { get; }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal WorkerItem(Action<T> action, T state, Action<Exception> onExceptionCallback)
             {
                 Action = action;
                 State = state;

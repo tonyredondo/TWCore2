@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Net.HttpServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Define a Http Route on the method
     /// </summary>
@@ -28,12 +29,13 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Http Method
         /// </summary>
-        public HttpMethod Method { get; private set; }
+        public HttpMethod Method { get; }
         /// <summary>
         /// Route url
         /// </summary>
-        public string Url { get; private set; }
+        public string Url { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Define a Http Route on the method
         /// </summary>

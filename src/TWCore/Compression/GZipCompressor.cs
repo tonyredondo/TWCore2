@@ -20,19 +20,23 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Compression
 {
+    /// <inheritdoc />
     /// <summary>
     /// Implements a Gzip Compresor
     /// </summary>
     public class GZipCompressor : StreamCompressor
     {
+        /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
         public override string EncodingType { get; } = "gzip";
+        /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
         public override string FileExtension { get; } = ".gz";
+        /// <inheritdoc />
         /// <summary>
         /// Gets a new compression stream wrapper for the stream source
         /// </summary>
@@ -40,6 +44,7 @@ namespace TWCore.Compression
         /// <returns>Stream compression wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override Stream GetCompressionStream(Stream source) => new GZipStream(source, CompressionLevel.Fastest, true);
+        /// <inheritdoc />
         /// <summary>
         /// Gets a new decompression stream wrapper for the stream source
         /// </summary>

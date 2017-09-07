@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Attribute to define an item to show in the status library
     /// </summary>
@@ -34,6 +35,7 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         public StatusItemValueStatus Status { get; private set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Attribute to define an item to show in the status library
         /// </summary>
@@ -41,6 +43,7 @@ namespace TWCore.Diagnostics.Status
         public StatusPropertyAttribute()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attribute to define an item to show in the status library
         /// </summary>
@@ -50,6 +53,7 @@ namespace TWCore.Diagnostics.Status
         {
             Name = name;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attribute to define an item to show in the status library
         /// </summary>

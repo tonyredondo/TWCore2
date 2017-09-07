@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Net.RPC.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Method event args. To use when the server received a RPC method call request.
     /// </summary>
@@ -27,16 +28,17 @@ namespace TWCore.Net.RPC.Server
         /// <summary>
         /// Client identifier
         /// </summary>
-        public Guid ClientId { get; private set; }
+        public Guid ClientId { get; }
         /// <summary>
         /// RPC Request message
         /// </summary>
-        public RPCRequestMessage Request { get; private set; }
+        public RPCRequestMessage Request { get; }
         /// <summary>
         /// RPC Response message
         /// </summary>
         public RPCResponseMessage Response { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Method event args. To use when the server received a RPC method call request.
         /// </summary>

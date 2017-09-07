@@ -21,11 +21,13 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.NSQ
 {
+    /// <inheritdoc />
     /// <summary>
     /// NSQ administration class
     /// </summary>
     public class NSQueueAdmin : IMQueueAdmin
     {
+        /// <inheritdoc />
         /// <summary>
         /// Create a new message queue
         /// </summary>
@@ -40,6 +42,7 @@ namespace TWCore.Messaging.NSQ
             return true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Delete a message queue
         /// </summary>
@@ -53,6 +56,7 @@ namespace TWCore.Messaging.NSQ
             return true;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Check if the message queue exists
         /// </summary>
@@ -63,6 +67,7 @@ namespace TWCore.Messaging.NSQ
             return false;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Purge all messages from a message queue
         /// </summary>
@@ -74,6 +79,7 @@ namespace TWCore.Messaging.NSQ
             client.EmptyChannel(queue.Name, queue.Name);
             client.EmptyTopic(queue.Name);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Set permission for a user in a queue
         /// </summary>

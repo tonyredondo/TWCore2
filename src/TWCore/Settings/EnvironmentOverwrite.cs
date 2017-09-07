@@ -17,15 +17,18 @@ limitations under the License.
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Settings
 {
+    /// <inheritdoc />
     /// <summary>
     /// Environment overwrites
     /// </summary>
     [DataContract]
     public class EnvironmentOverwrite : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Environment name
         /// </summary>

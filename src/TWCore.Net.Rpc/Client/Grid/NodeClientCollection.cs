@@ -21,6 +21,7 @@ using System.Threading;
 
 namespace TWCore.Net.RPC.Client.Grid
 {
+    /// <inheritdoc />
     /// <summary>
     /// Grid node client collection
     /// </summary>

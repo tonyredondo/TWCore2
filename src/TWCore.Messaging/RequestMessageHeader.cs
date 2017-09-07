@@ -21,6 +21,7 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Request Header
     /// </summary>

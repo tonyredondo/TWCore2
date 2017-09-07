@@ -22,6 +22,7 @@ using TWCore.Messaging.RawServer;
 
 namespace TWCore.Messaging.RabbitMQ
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// RabbitMQ Server Implementation
 	/// </summary>
@@ -29,6 +30,7 @@ namespace TWCore.Messaging.RabbitMQ
     {
         private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
 
+        /// <inheritdoc />
         /// <summary>
         /// On Create all server listeners
         /// </summary>
@@ -38,6 +40,7 @@ namespace TWCore.Messaging.RabbitMQ
         protected override IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
             => new RabbitMQueueRawServerListener(connection, this, responseServer);
 
+        /// <inheritdoc />
         /// <summary>
         /// On Send message data
         /// </summary>
@@ -112,6 +115,7 @@ namespace TWCore.Messaging.RabbitMQ
             return response;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// On Dispose
         /// </summary>

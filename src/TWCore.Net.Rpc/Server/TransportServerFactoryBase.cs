@@ -20,15 +20,18 @@ using TWCore.Configuration;
 
 namespace TWCore.Net.RPC.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Transport server type factory
     /// </summary>
     public abstract class TransportServerFactoryBase : ITypeFactory
     {
+        /// <inheritdoc />
         /// <summary>
         /// Object type of the result of the factory
         /// </summary>
         public Type ObjectType => typeof(ITransportServer);
+        /// <inheritdoc />
         /// <summary>
         /// Create a new object from a KeyValueCollection parameters
         /// </summary>

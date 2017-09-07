@@ -19,9 +19,11 @@ using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Net.RPC.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Define a RPC client transport
     /// </summary>

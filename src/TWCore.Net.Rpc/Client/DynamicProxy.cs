@@ -22,16 +22,16 @@ using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Dynamic RPC client proxy object
     /// </summary>
     public class DynamicProxy : DynamicObject
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly RPCClient _client;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-        readonly ServiceDescriptor _descriptor;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
 
+        /// <inheritdoc />
         /// <summary>
         /// Dynamic RPC client proxy object
         /// </summary>
@@ -44,6 +44,7 @@ namespace TWCore.Net.RPC.Client
             _descriptor = descriptor;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Provides the implementation for operations that invoke a member.
         /// </summary>

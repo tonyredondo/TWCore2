@@ -19,6 +19,7 @@ using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Server descriptor event args, for the event when the server receive a server descriptor request.
     /// </summary>

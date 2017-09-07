@@ -19,19 +19,23 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Compression
 {
+    /// <inheritdoc />
     /// <summary>
     /// Implements a MiniLZO Compresor
     /// </summary>
     public class MiniLZOCompressor : ByteCompressor
     {
+        /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
         public override string EncodingType { get; } = "lzo";
+        /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
         public override string FileExtension { get; } = ".lzo";
+        /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
         /// </summary>
@@ -39,6 +43,7 @@ namespace TWCore.Compression
         /// <returns>Compressed byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override SubArray<byte> Compress(SubArray<byte> source) => MiniLZO.Compress(source);
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
         /// </summary>

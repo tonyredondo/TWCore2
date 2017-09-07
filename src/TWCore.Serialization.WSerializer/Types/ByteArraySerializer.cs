@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer.Types
 {
+    /// <inheritdoc />
     /// <summary>
     /// Byte array optimized serializer
     /// </summary>

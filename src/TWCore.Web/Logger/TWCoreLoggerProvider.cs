@@ -20,6 +20,7 @@ using System.Collections.Concurrent;
 
 namespace TWCore.Web.Logger
 {
+    /// <inheritdoc />
     /// <summary>
     /// Logger provider for TWCoreLogger
     /// </summary>
@@ -27,6 +28,7 @@ namespace TWCore.Web.Logger
     {
         private readonly ConcurrentDictionary<string, TWCoreLogger> _loggers = new ConcurrentDictionary<string, TWCoreLogger>();
 
+        /// <inheritdoc />
         /// <summary>
         /// Creates a new Microsoft.Extensions.Logging.ILogger instance.
         /// </summary>

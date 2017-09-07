@@ -17,19 +17,23 @@ limitations under the License.
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Compression
 {
+    /// <inheritdoc />
     /// <summary>
     /// Stream Compressor base class
     /// </summary>
     public abstract class StreamCompressor : ICompressor
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Compressor encoding type
         /// </summary>
         public abstract string EncodingType { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Compressor file extension
         /// </summary>
@@ -45,6 +49,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract Stream GetCompressionStream(Stream source);
 
+        /// <inheritdoc />
         /// <summary>
         /// Compress a stream into another stream
         /// </summary>
@@ -56,6 +61,7 @@ namespace TWCore.Compression
             using (var compressed = GetCompressionStream(destination))
                 source.CopyTo(compressed);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Compress a stream into another stream
         /// </summary>
@@ -67,6 +73,7 @@ namespace TWCore.Compression
             using (var compressed = GetCompressionStream(destination))
                 await source.CopyToAsync(compressed).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
         /// </summary>
@@ -82,6 +89,7 @@ namespace TWCore.Compression
                 return msDes.ToSubArray();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Compress a byte array
         /// </summary>
@@ -106,6 +114,7 @@ namespace TWCore.Compression
         /// <returns>Stream decompression wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public abstract Stream GetDecompressionStream(Stream source);
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a stream into another stream
         /// </summary>
@@ -117,6 +126,7 @@ namespace TWCore.Compression
             using (var decompressed = GetDecompressionStream(source))
                 decompressed.CopyTo(destination);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a stream into another stream
         /// </summary>
@@ -128,6 +138,7 @@ namespace TWCore.Compression
             using (var decompressed = GetDecompressionStream(source))
                 await decompressed.CopyToAsync(destination).ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
         /// </summary>
@@ -143,6 +154,7 @@ namespace TWCore.Compression
                 return msDes.ToSubArray();
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Decompress a byte array
         /// </summary>

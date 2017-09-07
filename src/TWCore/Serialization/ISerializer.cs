@@ -18,9 +18,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using TWCore.Compression;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Serializer interface
     /// </summary>

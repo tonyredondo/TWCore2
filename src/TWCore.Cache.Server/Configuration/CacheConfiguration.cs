@@ -19,6 +19,8 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
 // ReSharper disable CheckNamespace
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable CollectionNeverUpdated.Global
 
 namespace TWCore.Services.Configuration
 {

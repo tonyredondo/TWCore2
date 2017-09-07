@@ -17,6 +17,10 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable CollectionNeverUpdated.Global
 
 namespace TWCore.Cache.Client.Configuration
 {

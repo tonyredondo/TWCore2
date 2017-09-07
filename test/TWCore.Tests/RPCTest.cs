@@ -13,6 +13,7 @@ using TWCore.Services;
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable InconsistentNaming
 // ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 // ReSharper disable UnusedVariable
 

@@ -19,6 +19,7 @@ using System.Net;
 
 namespace TWCore.Net.Multicast
 {
+    /// <inheritdoc />
     /// <summary>
     /// PeerConnection Message Received EventArgs
     /// </summary>
@@ -33,6 +34,7 @@ namespace TWCore.Net.Multicast
         /// </summary>
         public byte[] Data { get; set; }
 
+        /// <inheritdoc />
         /// <summary>
         /// PeerConnection Message Received EventArgs
         /// </summary>

@@ -18,6 +18,7 @@ using System;
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Status Engine Transport definition
     /// </summary>

@@ -15,25 +15,30 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.Exceptions
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue timeout exception
     /// </summary>
     public class MessageQueueTimeoutException : MessageQueueException
     {
+        /// <inheritdoc />
         /// <summary>
         /// Message queue timeout exception
         /// </summary>
         /// <param name="innerException">Inner exception</param>
         public MessageQueueTimeoutException(Exception innerException = null) : base("Timeout for response on Message Queue was reached.", innerException) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue timeout exception
         /// </summary>
         /// <param name="time">Time waiting for the message</param>
         /// <param name="innerException">Inner exception</param>
         public MessageQueueTimeoutException(TimeSpan time, Exception innerException = null) : base(string.Format("Timeout of {0}sec for response on Message Queue was reached.", time.TotalSeconds), innerException) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue timeout exception
         /// </summary>
@@ -41,6 +46,7 @@ namespace TWCore.Messaging.Exceptions
         /// <param name="correlationId">Message correlation id</param>
         /// <param name="innerException">Inner exception</param>
         public MessageQueueTimeoutException(TimeSpan time, string correlationId, Exception innerException = null) : base(string.Format("Timeout of {0}sec for response with CorrelationId '{1}' on Message Queue was reached.", time.TotalSeconds, correlationId), innerException) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue timeout exception
         /// </summary>

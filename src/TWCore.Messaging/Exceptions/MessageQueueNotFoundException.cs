@@ -15,19 +15,23 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.Exceptions
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue not found exception
     /// </summary>
     public class MessageQueueNotFoundException : MessageQueueException
     {
+        /// <inheritdoc />
         /// <summary>
         /// Message queue not found exception
         /// </summary>
         /// <param name="innerException">Inner exception</param>
         public MessageQueueNotFoundException(Exception innerException = null) : base("Message Queue was not found.", innerException) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue not found exception
         /// </summary>

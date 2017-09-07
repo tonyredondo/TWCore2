@@ -16,9 +16,12 @@ limitations under the License.
 
 using System;
 using TWCore.Diagnostics.Trace.Storages;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Trace
 {
+    /// <inheritdoc />
     /// <summary>
     /// Interface for Trace engine
     /// </summary>

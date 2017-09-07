@@ -18,6 +18,7 @@ using System;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Log Storage interface
     /// </summary>

@@ -16,9 +16,11 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Messaging.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Queue server definition
     /// </summary>

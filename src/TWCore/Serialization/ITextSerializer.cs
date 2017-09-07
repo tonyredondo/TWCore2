@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Text serializer interface
     /// </summary>

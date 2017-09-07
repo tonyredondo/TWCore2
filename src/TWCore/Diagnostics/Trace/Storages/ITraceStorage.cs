@@ -18,6 +18,7 @@ using System;
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Trace storage interface
     /// </summary>

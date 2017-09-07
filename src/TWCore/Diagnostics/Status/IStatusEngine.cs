@@ -16,9 +16,11 @@ limitations under the License.
 
 using System;
 using System.Collections.ObjectModel;
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Interface for Status Engine
     /// </summary>

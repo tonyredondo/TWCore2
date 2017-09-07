@@ -19,6 +19,7 @@ using TWCore.Diagnostics.Log.Storages;
 
 namespace TWCore.Diagnostics.Log
 {
+    /// <inheritdoc />
     /// <summary>
     /// Interface for Log Engines
     /// </summary>

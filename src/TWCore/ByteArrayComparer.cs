@@ -19,11 +19,13 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Byte array comparer
     /// </summary>
     public class ByteArrayComparer : IEqualityComparer<byte[]>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Determines whether the specified objects are equal.
         /// </summary>
@@ -33,6 +35,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Equals(byte[] x, byte[] y)
             => Factory.BytesEquals(x, y);
+        /// <inheritdoc />
         /// <summary>
         /// Returns a hash code for the specified object.
         /// </summary>
@@ -41,9 +44,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int GetHashCode(byte[] data)
         {
-            int res = 0x2D2816FE;
-            int step = (data.Length / 64) + 1;
-            for (int i = 0; i < data.Length; i += step)
+            var res = 0x2D2816FE;
+            var step = (data.Length / 64) + 1;
+            for (var i = 0; i < data.Length; i += step)
                 res = res * 31 + data[i];
             return res;
         }

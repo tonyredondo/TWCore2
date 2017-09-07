@@ -15,19 +15,23 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.Exceptions
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message queue access denied exception
     /// </summary>
     public class MessageQueueAccessDeniedException : MessageQueueException
     {
+        /// <inheritdoc />
         /// <summary>
         /// Message queue access denied exception
         /// </summary>
         /// <param name="innerException">Inner exception</param>
         public MessageQueueAccessDeniedException(Exception innerException = null) : base("Access Denied on Message Queue", innerException) { }
+        /// <inheritdoc />
         /// <summary>
         /// Message queue access denied exception
         /// </summary>

@@ -1,6 +1,9 @@
 ﻿// ReSharper disable ParameterHidesMember
 // ReSharper disable CheckNamespace
 
+using System;
+using System.Diagnostics;
+
 namespace DasMulli.Win32.ServiceUtils
 {
     public sealed class SimpleServiceStateMachine : IWin32ServiceStateMachine
@@ -48,7 +51,11 @@ namespace DasMulli.Win32.ServiceUtils
                     {
                         win32ExitCode = -1;
                     }
-                    _statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    finally
+                    {
+                        _statusReportCallback(ServiceState.Stopped, ServiceAcceptedControlCommandsFlags.None,
+                            win32ExitCode, waitHint: 0);
+                    }
                     break;
                 }
                 case ServiceControlCommand.Pause:
@@ -63,7 +70,7 @@ namespace DasMulli.Win32.ServiceUtils
                     {
                         win32ExitCode = -1;
                     }
-                    _statusReportCallback(ServiceState.Paused, ServiceAcceptedControlCommandsFlags.None, win32ExitCode, waitHint: 0);
+                    _statusReportCallback(ServiceState.Paused, ServiceAcceptedControlCommandsFlags.PauseContinue | ServiceAcceptedControlCommandsFlags.Stop, win32ExitCode, waitHint: 0);
                     break;
                 }
                 case ServiceControlCommand.Continue:

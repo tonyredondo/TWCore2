@@ -24,6 +24,7 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable IntroduceOptionalParameters.Global
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Services
 {
@@ -62,6 +63,7 @@ namespace TWCore.Services
         public static string BannerText { get; set; }
         #endregion
 
+        private IService _service;
         protected internal readonly Action InitAction;
 
         #region Properties
@@ -69,11 +71,21 @@ namespace TWCore.Services
         /// <summary>
         /// Service to execute
         /// </summary>
-        public IService Service { get; internal set; }
+        public IService Service
+        {
+            get => _service;
+            internal set
+            {
+                if (value is ServiceWrapper sWrap)
+                    _service = sWrap;
+                else
+                    _service = new ServiceWrapper(value, ServiceName);
+            }
+        }
         /// <summary>
         /// Service name
         /// </summary>
-        public string ServiceName { get; private set; }
+        public string ServiceName { get; }
         #endregion
 
         #region .ctor

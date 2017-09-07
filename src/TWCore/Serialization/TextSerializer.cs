@@ -22,9 +22,12 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Compression;
 using TWCore.IO;
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore.Serialization
 {
+    /// <inheritdoc />
     /// <summary>
     /// Text serializer base class
     /// </summary>
@@ -33,14 +36,17 @@ namespace TWCore.Serialization
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Serializer Type
         /// </summary>
         public SerializerType SerializerType { get; } = SerializerType.Text;
+        /// <inheritdoc />
         /// <summary>
         /// Supported mime types
         /// </summary>
         public abstract string[] MimeTypes { get; }
+        /// <inheritdoc />
         /// <summary>
         /// Supported file extensions
         /// </summary>
@@ -49,15 +55,18 @@ namespace TWCore.Serialization
         /// Encoding to use.
         /// </summary>
         public virtual Encoding Encoding { get; set; } = new UTF8Encoding(false);
+        /// <inheritdoc />
         /// <summary>
         /// Known types to add to the serializer
         /// </summary>
         public virtual List<Type> KnownTypes { get; } = new List<Type>();
+        /// <inheritdoc />
         /// <summary>
         /// Compresor used on Serialization and Deserialization of byte arrays, streams and files
         /// </summary>
         /// <remarks>This compressor is ignored on TextSerializer</remarks>
         public ICompressor Compressor { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// true if the serializer extension and/or compressor extension would be appended to the filePath; otherwise, false.
         /// </summary>
@@ -96,6 +105,7 @@ namespace TWCore.Serialization
         #endregion
 
         #region ISerializer
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a stream
         /// </summary>
@@ -117,6 +127,7 @@ namespace TWCore.Serialization
                 Compressor.Compress(ms, stream);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a stream content to a object
         /// </summary>
@@ -137,6 +148,7 @@ namespace TWCore.Serialization
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a byte array
         /// </summary>
@@ -150,6 +162,7 @@ namespace TWCore.Serialization
             Serialize(item, itemType, ms);
             return ms.ToSubArray();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a byte array value to an item type
         /// </summary>
@@ -160,6 +173,7 @@ namespace TWCore.Serialization
         public object Deserialize(SubArray<byte> value, Type valueType)
             => Deserialize(value.ToMemoryStream(), valueType);
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a string
         /// </summary>
@@ -173,6 +187,7 @@ namespace TWCore.Serialization
             OnSerialize(ms, item, itemType);
             return Encoding.GetString(ms.GetBuffer(), 0, (int)ms.Length);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a string to an object value
         /// </summary>
@@ -187,6 +202,7 @@ namespace TWCore.Serialization
         }
 
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a filepath
         /// </summary>
@@ -225,6 +241,7 @@ namespace TWCore.Serialization
                 FilePathLocker.RemoveLock(fPath[0]);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a file to an object instance
         /// </summary>
@@ -275,6 +292,7 @@ namespace TWCore.Serialization
         #endregion
 
         #region ISerializer<T>
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a stream
         /// </summary>
@@ -283,6 +301,7 @@ namespace TWCore.Serialization
         /// <param name="stream">Stream data destination</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize<T>(T item, Stream stream) => Serialize(item, item?.GetType() ?? typeof(T), stream);
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a stream content to a object
         /// </summary>
@@ -292,6 +311,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Deserialize<T>(Stream stream) => (T)Deserialize(stream, typeof(T));
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a byte array
         /// </summary>
@@ -300,6 +320,7 @@ namespace TWCore.Serialization
         /// <returns>Serialized byte array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SubArray<byte> Serialize<T>(T item) => ((ISerializer)this).Serialize(item, item?.GetType() ?? typeof(T));
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a byte array value to an item type
         /// </summary>
@@ -309,6 +330,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Deserialize<T>(SubArray<byte> value) => (T)((ISerializer)this).Deserialize(value, typeof(T));
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a string
         /// </summary>
@@ -317,6 +339,7 @@ namespace TWCore.Serialization
         /// <returns>Serialized string</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string SerializeToString<T>(T item) => SerializeToString(item, item?.GetType() ?? typeof(T));
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a string to an object value
         /// </summary>
@@ -326,6 +349,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T DeserializeFromString<T>(string value) => (T)DeserializeFromString(value, typeof(T));
 
+        /// <inheritdoc />
         /// <summary>
         /// Serialize an object to a filepath
         /// </summary>
@@ -334,6 +358,7 @@ namespace TWCore.Serialization
         /// <param name="filePath">File path to write the results of the serialization</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializeToFile<T>(T item, string filePath) => SerializeToFile(item, item?.GetType() ?? typeof(T), filePath);
+        /// <inheritdoc />
         /// <summary>
         /// Deserialize a file to an object instance
         /// </summary>
@@ -345,6 +370,7 @@ namespace TWCore.Serialization
         #endregion
 
         #region IDeepCloneable
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

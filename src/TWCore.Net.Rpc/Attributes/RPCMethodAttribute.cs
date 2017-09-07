@@ -19,6 +19,7 @@ using System;
 
 namespace TWCore.Net.RPC.Attributes
 {
+    /// <inheritdoc />
     /// <summary>
     /// Define the method as a RPC Method, so it will be available for the client to make RPC calls
     /// </summary>

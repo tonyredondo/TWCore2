@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Numerics
 {
+    /// <inheritdoc />
     /// <summary>
     /// This class implements a group of 2 items.
     /// </summary>
@@ -33,7 +35,6 @@ namespace TWCore.Numerics
         public TItem0 Item0
         {
             get;
-            private set;
         }
 
         /// <summary>
@@ -42,7 +43,6 @@ namespace TWCore.Numerics
         public TItem1 Item1
         {
             get;
-            private set;
         }
 
         #region Constructors
@@ -89,7 +89,7 @@ namespace TWCore.Numerics
         /// </returns>
         public int CompareTo(ComparableTuple2<TItem0, TItem1> group)
         {
-            int result = Item0.CompareTo(group.Item0);
+            var result = Item0.CompareTo(group.Item0);
 
             if (result == 0)
             {

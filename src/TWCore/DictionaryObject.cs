@@ -20,9 +20,11 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Xml.Linq;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Create a dynamic object and stores data on a dictionary
     /// </summary>
@@ -32,7 +34,7 @@ namespace TWCore
         /// <summary>
         /// Object Dictionary
         /// </summary>
-        IDictionary<string, object> BaseDictionary { get; set; }
+        private IDictionary<string, object> BaseDictionary { get; }
 
         /// <summary>
         /// Properties count
@@ -40,10 +42,7 @@ namespace TWCore
         public int PropertyCount
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return BaseDictionary.Count;
-            }
+            get => BaseDictionary.Count;
         }
         #endregion
 
@@ -56,19 +55,14 @@ namespace TWCore
         public object this[string key]
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return BaseDictionary[key];
-            }
+            get => BaseDictionary[key];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set
-            {
-                BaseDictionary[key] = value;
-            }
+            set => BaseDictionary[key] = value;
         }
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Create a dynamic object and stores data on a dictionary
         /// </summary>
@@ -142,6 +136,7 @@ namespace TWCore
         #endregion
 
         #region Overrides
+        /// <inheritdoc />
         /// <summary>
         /// Returns the enumeration of all dynamic member names.
         /// </summary>

@@ -18,9 +18,11 @@ using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Messaging.RawServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for response sent event
     /// </summary>
@@ -39,6 +41,7 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         public SubArray<byte> Message { get; set; }
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event
 		/// </summary>

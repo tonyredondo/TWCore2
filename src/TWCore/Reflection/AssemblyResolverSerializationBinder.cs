@@ -21,6 +21,7 @@ using System.Runtime.Serialization;
 
 namespace TWCore.Reflection
 {
+    /// <inheritdoc />
     /// <summary>
     /// Serialization binder for the BinaryFormatter serializer that uses the AssemblyResolver
     /// </summary>
@@ -31,6 +32,7 @@ namespace TWCore.Reflection
         /// </summary>
         public AssemblyResolver AssemblyResolver { get; }
         
+        /// <inheritdoc />
         /// <summary>
         /// Serialization binder for the BinaryFormatter serializer that uses the AssemblyResolver
         /// </summary>
@@ -41,6 +43,7 @@ namespace TWCore.Reflection
             AssemblyResolver = assemblyResolver;
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// When overridden in a derived class, controls the binding of a serialized object to a type.
         /// </summary>

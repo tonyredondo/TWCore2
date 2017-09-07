@@ -19,9 +19,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.RawServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Message Queue raw server listener definition
     /// </summary>

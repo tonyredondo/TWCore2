@@ -20,12 +20,14 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Text
 {
+    /// <inheritdoc />
     /// <summary>
     /// Calculate the Difference-Distance between to String
     /// Using Levenshtein : https://en.wikipedia.org/wiki/Levenshtein_distance
     /// </summary>
     public class LevenshteinStringDistance : IStringDistance
     {
+        /// <inheritdoc />
         /// <summary>
         /// Calculate the Difference-Distance between to String
         /// Using Levenshtein : https://en.wikipedia.org/wiki/Levenshtein_distance

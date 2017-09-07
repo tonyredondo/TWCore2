@@ -21,55 +21,67 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Services
 {
+    /// <inheritdoc cref="IService" />
     /// <summary>
     /// Collection of IService to support multiple services on the same container
     /// </summary>
     public class ServiceList : Collection<IService>, IService
     {
+        #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Collection of IService to support multiple services on the same container
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceList() { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of IService to support multiple services on the same container
         /// </summary>
         /// <param name="col">Collection of services</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceList(IList<IService> col) : base(col) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of IService to support multiple services on the same container
         /// </summary>
         /// <param name="services">Collection of services</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceList(params IService[] services) : base(services) { }
+        #endregion
 
         #region IService Implementation
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
         public bool CanPauseAndContinue => this.All(i => i.CanPauseAndContinue);
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnContinue() => this.Each(i => i.OnContinue());
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnPause() => this.Each(i => i.OnPause());
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnShutdown() => this.Each(i => i.OnShutdown());
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
         /// <param name="args">Start arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void OnStart(string[] args) => this.Each(i => i.OnStart(args));
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>

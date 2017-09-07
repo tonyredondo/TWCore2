@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.Client
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for request sent event
     /// </summary>
@@ -35,6 +36,7 @@ namespace TWCore.Messaging.Client
         /// </summary>
         public RequestMessage Message { get; }
 
+        /// <inheritdoc />
         /// <summary>
         /// Event args for request sent event
         /// </summary>

@@ -18,9 +18,11 @@ using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Diagnostics.Log
 {
+    /// <inheritdoc />
     /// <summary>
     /// Log item
     /// </summary>
@@ -33,76 +35,91 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         [XmlAttribute, DataMember]
         public Guid Id { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Environment name
         /// </summary>
         [XmlAttribute, DataMember]
         public string EnvironmentName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Machine name
         /// </summary>
         [XmlAttribute, DataMember]
         public string MachineName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Application name
         /// </summary>
         [XmlAttribute, DataMember]
         public string ApplicationName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Process name
         /// </summary>
         [XmlAttribute, DataMember]
         public string ProcessName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Process Id
         /// </summary>
         [XmlAttribute, DataMember]
         public int ProcessId { get; set; } = -1;
+        /// <inheritdoc />
         /// <summary>
         /// Thread Id
         /// </summary>
         [XmlAttribute, DataMember]
         public int ThreadId { get; set; } = -1;
+        /// <inheritdoc />
         /// <summary>
         /// Assembly name
         /// </summary>
         [XmlAttribute, DataMember]
         public string AssemblyName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Type name
         /// </summary>
         [XmlAttribute, DataMember]
         public string TypeName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Line number
         /// </summary>
         [XmlAttribute, DataMember]
         public int LineNumber { get; set; } = -1;
+        /// <inheritdoc />
         /// <summary>
         /// Nivel de log
         /// </summary>
         [XmlAttribute, DataMember]
         public LogLevel Level { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Message code
         /// </summary>
         [XmlAttribute, DataMember]
         public string Code { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Message
         /// </summary>
         [XmlAttribute, DataMember]
         public string Message { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Item timestamp
         /// </summary>
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Message group name
         /// </summary>
         [XmlAttribute, DataMember]
         public string GroupName { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// If is an error log item, the exception object instance
         /// </summary>
@@ -111,6 +128,7 @@ namespace TWCore.Diagnostics.Log
     }
 
 
+    /// <inheritdoc />
     /// <summary>
     /// NewLine Log item
     /// </summary>

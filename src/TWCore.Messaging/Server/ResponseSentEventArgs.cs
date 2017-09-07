@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Messaging.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for response sent event
     /// </summary>
@@ -35,6 +36,7 @@ namespace TWCore.Messaging.Server
         /// </summary>
         public ResponseMessage Message { get; }
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event
 		/// </summary>

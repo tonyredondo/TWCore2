@@ -17,11 +17,11 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Exception event args object
     /// </summary>
@@ -30,13 +30,14 @@ namespace TWCore
         /// <summary>
         /// Exception object
         /// </summary>
-        public Exception Exception { get; private set; }
+        public Exception Exception { get; }
         /// <summary>
         /// Complementary Data
         /// </summary>
-        public object Data { get; private set; }
+        public object Data { get; }
 
         #region Constructor
+        /// <inheritdoc />
         /// <summary>
         /// Exception event args
         /// </summary>

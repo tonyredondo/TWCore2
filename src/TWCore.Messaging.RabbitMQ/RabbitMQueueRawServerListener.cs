@@ -28,6 +28,7 @@ using TWCore.Messaging.RawServer;
 
 namespace TWCore.Messaging.RabbitMQ
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// RabbitMQ server listener implementation
 	/// </summary>
@@ -55,6 +56,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// RabbitMQ server listener implementation
         /// </summary>
@@ -69,6 +71,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Override Methods
+        /// <inheritdoc />
         /// <summary>
         /// Start the queue listener for request messages
         /// </summary>
@@ -113,6 +116,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (tasksToWait.Length > 0)
                 Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Dispose
         /// </summary>

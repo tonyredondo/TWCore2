@@ -138,12 +138,12 @@ namespace TWCore.Collections
     }
 
 
+    /// <inheritdoc />
     /// <summary>
     /// A generic dictionary, which allows both its keys and values 
     /// to be garbage collected if there are no other references
     /// to them than from the dictionary itself.
     /// </summary>
-    /// 
     /// <remarks>
     /// If either the key or value of a particular entry in the dictionary
     /// has been collected, then both the key and value become effectively

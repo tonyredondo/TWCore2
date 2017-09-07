@@ -21,17 +21,16 @@ using System.Runtime.CompilerServices;
 using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Writes a simple trace file
     /// </summary>
     public class SimpleFileTraceStorage : ITraceStorage
     {
-        /// <summary>
-        /// All file log storage writers
-        /// </summary>
         private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
         private StreamWriter _sWriter;
         private string _currentFileName;
@@ -40,11 +39,11 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <summary>
         /// Serializer
         /// </summary>
-        public ISerializer Serializer { get; private set; }
+        public ISerializer Serializer { get; }
         /// <summary>
         /// File name with path
         /// </summary>
-        public string FileName { get; private set; }
+        public string FileName { get; }
         /// <summary>
         /// File creation date
         /// </summary>
@@ -52,11 +51,11 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <summary>
         /// True if a new log file is created each day; otherwise, false
         /// </summary>
-        public bool CreateByDay { get; private set; }
+        public bool CreateByDay { get; }
         /// <summary>
         /// Base path
         /// </summary>
-        public string BasePath { get; private set; }
+        public string BasePath { get; }
         #endregion
 
         #region .ctor
@@ -197,6 +196,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Writes a trace item to the storage
         /// </summary>
@@ -235,6 +235,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             }
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

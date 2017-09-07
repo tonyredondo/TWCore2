@@ -22,6 +22,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Serialization
 {
@@ -76,6 +77,7 @@ namespace TWCore.Serialization
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Json Serializer
         /// </summary>

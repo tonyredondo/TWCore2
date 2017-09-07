@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer
 {
+    /// <inheritdoc />
     /// <summary>
     /// PW Binary Serializer
     /// </summary>
@@ -72,6 +73,7 @@ namespace TWCore.Serialization.PWSerializer
             _pool.Store(ser);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object
         /// </summary>

@@ -28,6 +28,7 @@ using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Server
 {
+    /// <inheritdoc />
     /// <summary>
     /// RPC Standard server
     /// </summary>
@@ -38,10 +39,12 @@ namespace TWCore.Net.RPC.Server
         private ITransportServer _transport;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Service descriptor collection
         /// </summary>
         public ServiceDescriptorCollection Descriptors { get; private set; }
+        /// <inheritdoc />
         /// <summary>
         /// Server transport
         /// </summary>
@@ -58,6 +61,7 @@ namespace TWCore.Net.RPC.Server
                     throw new Exception("The RPC server is started, you can't modify the transport, please Stop first");
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// true if the RPC server is running; otherwise, false.
         /// </summary>
@@ -80,6 +84,7 @@ namespace TWCore.Net.RPC.Server
                 Core.Status.AttachChild(Transport, this);
             });
         }
+        /// <inheritdoc />
         /// <summary>
         /// RPC Standard server
         /// </summary>
@@ -92,6 +97,7 @@ namespace TWCore.Net.RPC.Server
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Starts the RPC server listener
         /// </summary>
@@ -113,6 +119,7 @@ namespace TWCore.Net.RPC.Server
             Running = true;
             Core.Log.LibVerbose("RPC Server started.");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stops the RPC server listener
         /// </summary>
@@ -193,10 +200,10 @@ namespace TWCore.Net.RPC.Server
             private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
 
             [StatusProperty]
-            public Type ServiceType { get; set; }
+            public Type ServiceType { get; }
             [StatusProperty, StatusReference]
-            public object ServiceInstance { get; set; }
-            public ServiceDescriptor Descriptor { get; set; }
+            public object ServiceInstance { get; }
+            public ServiceDescriptor Descriptor { get; }
             public readonly Dictionary<EventInfo, EventHandler> ServiceEventHandlers = new Dictionary<EventInfo, EventHandler>();
             public MethodInfo OnClientConnectMethod;
 

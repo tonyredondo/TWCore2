@@ -29,6 +29,7 @@ using TWCore.Reflection;
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default status engine
     /// </summary>
@@ -42,10 +43,12 @@ namespace TWCore.Diagnostics.Status
         //bool applyProperties = false;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Current status engine transport
         /// </summary>
         public ObservableCollection<IStatusTransport> Transports { get; } = new ObservableCollection<IStatusTransport>();
+        /// <inheritdoc />
         /// <summary>
         /// Enable or Disable the Log engine
         /// </summary>
@@ -112,6 +115,7 @@ namespace TWCore.Diagnostics.Status
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Attach a status item delegate 
         /// </summary>
@@ -126,6 +130,7 @@ namespace TWCore.Diagnostics.Status
                 _statusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
             AttachChild(null, parent);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attach a values filler delegate
         /// </summary>
@@ -144,6 +149,7 @@ namespace TWCore.Diagnostics.Status
                     WeakObject = new WeakReference<object>(objectToAttach)
                 });
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attach an object without values
         /// </summary>
@@ -156,6 +162,7 @@ namespace TWCore.Diagnostics.Status
                 BindPropertiesFromAnObject(objectToAttach);
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Attach a child object
         /// </summary>
@@ -191,6 +198,7 @@ namespace TWCore.Diagnostics.Status
             BindPropertiesFromAnObject(childObject);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// DeAttach all handlers for an object
         /// </summary>
@@ -543,6 +551,7 @@ namespace TWCore.Diagnostics.Status
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose
         /// </summary>

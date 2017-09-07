@@ -273,6 +273,7 @@ namespace TWCore.Net.Multicast
             /// </summary>
             public SerializedObject Data { get; set; }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Received Service
         /// </summary>

@@ -28,16 +28,19 @@ namespace TWCore.Collections
         /// </summary>
         string Name { get; set; }
     }
+    /// <inheritdoc />
     /// <summary>
     /// Collection of INameItems
     /// </summary>
     public class NameCollection<TItem> : KeyStringDelegatedCollection<TItem> where TItem : INameItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Collection of INameItems
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NameCollection() : base(item => item.Name) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of INameItems
         /// </summary>

@@ -131,6 +131,7 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="traceObject">Trace object</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(object traceObject) => Write(null, traceObject);
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all the object resources
         /// </summary>

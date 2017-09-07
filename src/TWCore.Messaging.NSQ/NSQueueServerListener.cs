@@ -29,6 +29,7 @@ using TWCore.Messaging.Server;
 
 namespace TWCore.Messaging.NSQ
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// NSQ server listener implementation
 	/// </summary>
@@ -94,6 +95,7 @@ namespace TWCore.Messaging.NSQ
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// NSQ server listener implementation
         /// </summary>
@@ -113,6 +115,7 @@ namespace TWCore.Messaging.NSQ
 		#endregion
 
 		#region Override Methods
+		/// <inheritdoc />
 		/// <summary>
 		/// Start the queue listener for request messages
 		/// </summary>
@@ -133,6 +136,7 @@ namespace TWCore.Messaging.NSQ
 			if (tasksToWait.Length > 0)
 				Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// On Dispose
 		/// </summary>

@@ -19,9 +19,13 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// Key/Value Item
 	/// </summary>
@@ -32,6 +36,7 @@ namespace TWCore.Collections
 	public class KeyValue<TKey, TValue> : IKeyItem<TKey>
 	{
 		#region Properties
+		/// <inheritdoc />
 		/// <summary>
 		/// Key
 		/// </summary>
@@ -84,6 +89,7 @@ namespace TWCore.Collections
 		#endregion
 	}
 
+    /// <inheritdoc />
     /// <summary>
     /// Key/Value Item
     /// </summary>
@@ -92,11 +98,13 @@ namespace TWCore.Collections
     public class KeyValue : KeyValue<string, string>
     {
         #region .ctors
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Item
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValue() { }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Item
         /// </summary>

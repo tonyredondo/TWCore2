@@ -30,24 +30,28 @@ namespace TWCore.Collections
         /// </summary>
         TKey Key { get; set; }
     }
+    /// <inheritdoc />
     /// <summary>
     /// Collection of IKeyItems
     /// </summary>
 	[Serializable]
     public class KeyCollection<TKey, TItem> : KeyDelegatedCollection<TKey, TItem> where TItem : IKeyItem<TKey>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Collection of IKeyItems
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyCollection() : base(item => item.Key) { }
     }
+    /// <inheritdoc />
     /// <summary>
     /// Collection of IKeyItem with strings
     /// </summary>
 	[Serializable]
     public class KeyCollection<TItem> : KeyStringDelegatedCollection<TItem> where TItem : IKeyItem<string>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Collection of IKeyItem with strings
         /// </summary>

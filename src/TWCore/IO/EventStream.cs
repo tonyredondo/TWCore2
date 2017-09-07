@@ -121,6 +121,7 @@ namespace TWCore.IO
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Stream decorator with events for Reading and Writing
         /// </summary>

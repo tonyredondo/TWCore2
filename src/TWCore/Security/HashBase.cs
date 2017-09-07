@@ -21,6 +21,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Collections;
 using TWCore.Serialization;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Security
 {
@@ -36,6 +38,7 @@ namespace TWCore.Security
         private readonly string _instanceName;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Hash algorithm used
         /// </summary>
@@ -70,6 +73,7 @@ namespace TWCore.Security
         #endregion
 
         #region Methods
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash bytes from a bytes array
         /// </summary>
@@ -80,6 +84,7 @@ namespace TWCore.Security
         {
             return GetHashValue(bytes);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the string hash value from a bytes array
         /// </summary>
@@ -88,12 +93,13 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string Get(byte[] bytes)
         {
-            byte[] data = GetBytes(bytes);
+            var data = GetBytes(bytes);
             var sb = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
+            for (var i = 0; i < data.Length; i++)
                 sb.Append(data[i].ToString("x2"));
             return sb.ToString();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from a bytes array
         /// </summary>
@@ -108,6 +114,7 @@ namespace TWCore.Security
 			return new Guid(newGuid);
 		}
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash bytes from an object
         /// </summary>
@@ -115,6 +122,7 @@ namespace TWCore.Security
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from an object
         /// </summary>
@@ -122,6 +130,7 @@ namespace TWCore.Security
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from an object
         /// </summary>
@@ -130,6 +139,7 @@ namespace TWCore.Security
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
 
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash bytes from a string value
         /// </summary>
@@ -137,6 +147,7 @@ namespace TWCore.Security
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual byte[] GetBytes(string obj) => StringBytesHashCache.GetOrAdd(_instanceName + obj, key => GetBytes(Encoding.GetBytes(obj)));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from a string value
         /// </summary>
@@ -144,6 +155,7 @@ namespace TWCore.Security
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string Get(string obj) => StringHashCache.GetOrAdd(_instanceName + obj, key => Get(Encoding.GetBytes(obj)));
+        /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from a string value
         /// </summary>
@@ -155,7 +167,7 @@ namespace TWCore.Security
 
         #region Private Method
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ISerializer GetSerializer()
+        private ISerializer GetSerializer()
         {
             return Serializer ?? SerializerManager.DefaultBinarySerializer ?? SerializerManager.Serializers.FirstOrDefault() ??
                 throw new NullReferenceException("The aren't any default Serializer loaded.");

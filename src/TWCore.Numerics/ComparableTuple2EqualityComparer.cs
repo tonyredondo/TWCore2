@@ -19,6 +19,7 @@ using System.Collections.Generic;
 
 namespace TWCore.Numerics
 {
+    /// <inheritdoc />
     /// <summary>
     /// This class implements the IEqualityComparer ComparableTuple2 TItem0, TItem1 interface
     /// to allow using ComparableTuple2 ComparableTuple2 TItem0, TItem1  class instances as keys in a dictionary.
@@ -29,6 +30,7 @@ namespace TWCore.Numerics
         where TItem0 : IComparable<TItem0>
         where TItem1 : IComparable<TItem1>
     {
+        /// <inheritdoc />
         /// <summary>
         /// Compares the items in this group for equality.
         /// </summary>
@@ -42,6 +44,7 @@ namespace TWCore.Numerics
                 && (groupA.Item1.Equals(groupB.Item1)));
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Returns a hash code for an object.
         /// </summary>
@@ -49,9 +52,9 @@ namespace TWCore.Numerics
         /// <returns>A hash code for the object.</returns>
         public int GetHashCode(ComparableTuple2<TItem0, TItem1> group)
         {
-            int hash0 = group.Item0.GetHashCode();
-            int hash1 = group.Item1.GetHashCode();
-            int hash = 577 * hash0 + 599 * hash1;
+            var hash0 = group.Item0.GetHashCode();
+            var hash1 = group.Item1.GetHashCode();
+            var hash = 577 * hash0 + 599 * hash1;
             return hash.GetHashCode();
         }
     }

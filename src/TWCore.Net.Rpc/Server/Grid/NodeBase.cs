@@ -108,6 +108,7 @@ namespace TWCore.Net.RPC.Server.Grid
             Core.Log.LibDebug("Process call received.");
             return OnProcess(args);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>

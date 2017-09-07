@@ -22,6 +22,7 @@ using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -34,10 +35,12 @@ namespace TWCore.Net.RPC.Server.Transports
         private readonly SimpleHttpServer _httpServer;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// true if the transport server can send the services descriptors; otherwise, false
         /// </summary>
         public bool EnableGetDescriptors { get; set; } = true;
+        /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
@@ -46,6 +49,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Http server port
         /// </summary>
         public int Port { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Transport Counters
         /// </summary>
@@ -87,6 +91,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 Core.Status.AttachChild(Serializer, this);
             });
         }
+        /// <inheritdoc />
         /// <summary>
         /// Http RPC Transport server
         /// </summary>
@@ -103,6 +108,7 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Starts the server listener
         /// </summary>
@@ -114,6 +120,7 @@ namespace TWCore.Net.RPC.Server.Transports
             await _httpServer.StartAsync(Port).ConfigureAwait(false);
             Core.Log.LibVerbose("Transport Listener Started");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stops the server listener
         /// </summary>
@@ -125,6 +132,7 @@ namespace TWCore.Net.RPC.Server.Transports
             await _httpServer.StopAsync().ConfigureAwait(false);
             Core.Log.LibVerbose("Transport Listener Stopped");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Send a fire event trigger to a RPC client.
         /// </summary>

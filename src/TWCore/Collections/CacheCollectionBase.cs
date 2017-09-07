@@ -242,6 +242,7 @@ namespace TWCore.Collections
                 }
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets or sets the value associated with the specified key.
         /// </summary>

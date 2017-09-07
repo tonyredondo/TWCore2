@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
 using TWCore.Text;
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Injector
 {
@@ -34,6 +36,7 @@ namespace TWCore.Injector
     /// <returns>Instance of the object type</returns>
     public delegate object TypeInstanceResolverDelegate(Type type, string name);
 
+    /// <inheritdoc />
     /// <summary>
     /// Inject instances for non instantiable class
     /// </summary>
@@ -520,8 +523,7 @@ namespace TWCore.Injector
                 var argument = Settings.Arguments[name];
                 return GetArgumentValue(argument, valueType);
             }
-            else
-                throw new ArgumentNullException(name);
+            throw new ArgumentNullException(name);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetArgumentValue(Argument argument, Type valueType)
@@ -574,6 +576,7 @@ namespace TWCore.Injector
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose resources
         /// </summary>

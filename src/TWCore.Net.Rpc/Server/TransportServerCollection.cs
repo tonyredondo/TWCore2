@@ -25,12 +25,14 @@ using TWCore.Serialization;
 
 namespace TWCore.Net.RPC.Server
 {
+    /// <inheritdoc cref="ITransportServer" />
     /// <summary>
     /// Collection of transport servers
     /// </summary>
     public class TransportServerCollection : ObservableCollection<ITransportServer>, ITransportServer
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// true if the transport server can send the service descriptor; otherwise, false
         /// </summary>
@@ -41,6 +43,7 @@ namespace TWCore.Net.RPC.Server
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => this.Each(i => i.EnableGetDescriptors = value); 
         }
+        /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
@@ -51,6 +54,7 @@ namespace TWCore.Net.RPC.Server
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set => this.Each(i => i.Serializer = value);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Transport Counters
         /// </summary>
@@ -81,6 +85,7 @@ namespace TWCore.Net.RPC.Server
         #endregion
         
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Collection of transport servers
         /// </summary>
@@ -125,6 +130,7 @@ namespace TWCore.Net.RPC.Server
         #endregion
         
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Send a fire event trigger to a RPC client.
         /// </summary>
@@ -140,6 +146,7 @@ namespace TWCore.Net.RPC.Server
             foreach (var item in this)
                 item.FireEvent(eventAttribute, clientId, serviceName, eventName, sender, e);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Starts the server listener
         /// </summary>
@@ -150,6 +157,7 @@ namespace TWCore.Net.RPC.Server
             foreach (var item in this)
                 await item.StartListenerAsync().ConfigureAwait(false);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stops the server listener
         /// </summary>

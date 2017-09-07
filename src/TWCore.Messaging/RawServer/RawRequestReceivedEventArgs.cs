@@ -24,6 +24,7 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RawServer
 {
+    /// <inheritdoc />
     /// <summary>
     /// Event args for raw request received event
     /// </summary>
@@ -62,6 +63,7 @@ namespace TWCore.Messaging.RawServer
         /// </summary>
         public KeyValueCollection Metadata { get; } = new KeyValueCollection();
 
+		/// <inheritdoc />
 		/// <summary>
 		/// Event args for request sent event
 		/// </summary>

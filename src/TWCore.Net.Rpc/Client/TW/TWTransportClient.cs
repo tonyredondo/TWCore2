@@ -31,6 +31,10 @@ using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
@@ -62,11 +66,13 @@ namespace TWCore.Net.RPC.Client.Transports
         #endregion
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
         [StatusReference]
         public ISerializer Serializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Services descriptors to use on RPC Request messages
         /// </summary>
@@ -106,6 +112,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         [StatusProperty]
         public int PingTimeInSeconds { get; set; } = 30;
+        /// <inheritdoc />
         /// <summary>
         /// Transport Counters
         /// </summary>
@@ -210,18 +217,21 @@ namespace TWCore.Net.RPC.Client.Transports
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task InitAsync() => Task.CompletedTask;
+        /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init() { }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the descriptors for the RPC service
         /// </summary>
@@ -233,6 +243,7 @@ namespace TWCore.Net.RPC.Client.Transports
             var response = await InvokeMethodAsync(request).ConfigureAwait(false);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the descriptors for the RPC service
         /// </summary>
@@ -244,6 +255,7 @@ namespace TWCore.Net.RPC.Client.Transports
             var response = InvokeMethod(request);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
@@ -287,6 +299,7 @@ namespace TWCore.Net.RPC.Client.Transports
             return await InvokeMethodAsync(messageRQ).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
@@ -367,13 +380,10 @@ namespace TWCore.Net.RPC.Client.Transports
                         _connectionResetEvent.Set();
                         return Task.CompletedTask;
                     }
-                    else
-                    {
-                        Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
-                        Status = ConnectionStatus.Disconnected;
-                        _connectionResetEvent.Set();
-                        return Task.CompletedTask;
-                    }
+                    Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
+                    Status = ConnectionStatus.Disconnected;
+                    _connectionResetEvent.Set();
+                    return Task.CompletedTask;
                 }
                 catch (Exception ex)
                 {
@@ -383,8 +393,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     return Task.CompletedTask;
                 }
             }
-            else
-                return Task.CompletedTask;
+            return Task.CompletedTask;
         }
         /// <summary>
         /// Disconnect from the transport server
@@ -407,6 +416,7 @@ namespace TWCore.Net.RPC.Client.Transports
             OnDisconnected?.Invoke(this, new EventArgs());
             return Task.CompletedTask;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

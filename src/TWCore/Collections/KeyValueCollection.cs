@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
@@ -111,6 +112,7 @@ namespace TWCore.Collections
         #endregion
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Key/Value Collection
     /// </summary>
@@ -118,11 +120,13 @@ namespace TWCore.Collections
     public class KeyValueCollection : KeyStringDelegatedCollection<KeyValue<string, string>>
     {
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection() : base(i => i.Key) { }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -130,6 +134,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection(bool throwExceptionOnDuplicateKeys) : base(i => i.Key, throwExceptionOnDuplicateKeys) { }
 
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -141,6 +146,7 @@ namespace TWCore.Collections
             foreach (var item in dictionary)
                 Add(new KeyValue<string, string>(item.Key, item.Value));
         }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -153,6 +159,7 @@ namespace TWCore.Collections
             foreach (var item in dictionary)
                 Add(new KeyValue<string, string>(item.Key, item.Value));
         }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>
@@ -166,6 +173,7 @@ namespace TWCore.Collections
                 if (!Contains(item.Key))
                     Add(new KeyValue<string, string>(item.Key, item.Value));
         }
+        /// <inheritdoc />
         /// <summary>
         /// Key/Value Collection
         /// </summary>

@@ -25,10 +25,11 @@ using System.Xml.Serialization;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
-	/// Generic EventArgs
-	/// </summary>
-	/// <typeparam name="T1">Type 1 of EventArgs</typeparam>
+    /// Generic EventArgs
+    /// </summary>
+    /// <typeparam name="T1">Type 1 of EventArgs</typeparam>
     [Serializable, DataContract]
     public class EventArgs<T1> : EventArgs
     {
@@ -39,6 +40,7 @@ namespace TWCore
         public T1 Item1 { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -46,6 +48,7 @@ namespace TWCore
         public EventArgs()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -57,6 +60,7 @@ namespace TWCore
         }
         #endregion
     }
+    /// <inheritdoc />
     /// <summary>
     /// Generic EventArgs
     /// </summary>
@@ -77,6 +81,7 @@ namespace TWCore
         public T2 Item2 { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -84,6 +89,7 @@ namespace TWCore
         public EventArgs()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -97,6 +103,7 @@ namespace TWCore
         }
         #endregion
     }
+    /// <inheritdoc />
     /// <summary>
     /// Generic EventArgs
     /// </summary>
@@ -123,6 +130,7 @@ namespace TWCore
         public T3 Item3 { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -130,6 +138,7 @@ namespace TWCore
         public EventArgs()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -145,6 +154,7 @@ namespace TWCore
         }
         #endregion
     }
+    /// <inheritdoc />
     /// <summary>
     /// Generic EventArgs
     /// </summary>
@@ -177,6 +187,7 @@ namespace TWCore
         public T4 Item4 { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -184,6 +195,7 @@ namespace TWCore
         public EventArgs()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -201,6 +213,7 @@ namespace TWCore
         }
         #endregion
     }
+    /// <inheritdoc />
     /// <summary>
     /// Generic EventArgs
     /// </summary>
@@ -239,6 +252,7 @@ namespace TWCore
         public T5 Item5 { get; set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>
@@ -246,6 +260,7 @@ namespace TWCore
         public EventArgs()
         {
         }
+        /// <inheritdoc />
         /// <summary>
         /// Generic EventArgs
         /// </summary>

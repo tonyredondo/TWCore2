@@ -30,6 +30,7 @@ using TWCore.Messaging.RawClient;
 
 namespace TWCore.Messaging.RabbitMQ
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// RabbitMQ Queue Raw Client
 	/// </summary>
@@ -67,6 +68,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Init and Dispose Methods
+        /// <inheritdoc />
         /// <summary>
         /// On client initialization
         /// </summary>
@@ -132,6 +134,7 @@ namespace TWCore.Messaging.RabbitMQ
                     collection.Add(nameof(_receiver) + " Path", _receiver.Factory.HostName);
             });
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Dispose
         /// </summary>
@@ -167,6 +170,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Send Method
+        /// <inheritdoc />
         /// <summary>
         /// On Send message data
         /// </summary>
@@ -221,6 +225,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Receive Method
+        /// <inheritdoc />
         /// <summary>
         /// On Receive message data
         /// </summary>

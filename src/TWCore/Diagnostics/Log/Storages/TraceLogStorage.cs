@@ -73,6 +73,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             System.Diagnostics.Trace.WriteLine(string.Empty);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>

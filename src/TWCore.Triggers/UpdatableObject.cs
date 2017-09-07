@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Triggers
 {
@@ -27,10 +29,11 @@ namespace TWCore.Triggers
         public static readonly object ParentSync = new object();
     }
     
+    /// <inheritdoc />
     /// <summary>
-	/// Class to handle an object instances that updates based on triggers
-	/// </summary>
-	/// <typeparam name="T">Type of instance</typeparam>
+    /// Class to handle an object instances that updates based on triggers
+    /// </summary>
+    /// <typeparam name="T">Type of instance</typeparam>
 	public class UpdatableObject<T> : IDisposable where T : class
     {
         /// <summary>
@@ -94,6 +97,7 @@ namespace TWCore.Triggers
                     Core.Status.AttachChild(trigger, this);
             });
         }
+        /// <inheritdoc />
         /// <summary>
         /// Class to handle an object instances that updates based on triggers
         /// </summary>
@@ -228,6 +232,7 @@ namespace TWCore.Triggers
         }
         #endregion
 
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

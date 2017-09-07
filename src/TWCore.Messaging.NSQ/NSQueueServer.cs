@@ -25,6 +25,7 @@ using System.Threading.Tasks;
 
 namespace TWCore.Messaging.NSQ
 {
+	/// <inheritdoc />
 	/// <summary>
 	/// NSQ Server Implementation
 	/// </summary>
@@ -42,6 +43,7 @@ namespace TWCore.Messaging.NSQ
 		}
 		#endregion
 
+		/// <inheritdoc />
 		/// <summary>
 		/// On Create all server listeners
 		/// </summary>
@@ -51,6 +53,7 @@ namespace TWCore.Messaging.NSQ
 		protected override IMQueueServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
 			=> new NSQueueServerListener(connection, this, responseServer);
 
+		/// <inheritdoc />
 		/// <summary>
 		/// On Send message data
 		/// </summary>
@@ -92,6 +95,7 @@ namespace TWCore.Messaging.NSQ
 			return response;
 		}
 
+		/// <inheritdoc />
 		/// <summary>
 		/// On Dispose
 		/// </summary>

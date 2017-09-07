@@ -28,6 +28,7 @@ using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable MethodSupportsCancellation
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -46,11 +47,13 @@ namespace TWCore.Net.RPC.Server.Transports
         private Timer _disconnectionTimer;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// true if the transport server can send the services descriptors; otherwise, false
         /// </summary>
         [StatusProperty]
         public bool EnableGetDescriptors { get { return false; } set { } }
+        /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
@@ -66,6 +69,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         [StatusProperty]
         public int DisconnectedSessionTimeoutInMinutes { get; set; } = 10;
+        /// <inheritdoc />
         /// <summary>
         /// Transport Counters
         /// </summary>
@@ -104,6 +108,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     Core.Status.AttachChild(ses.Value, this);
             });
         }
+        /// <inheritdoc />
         /// <summary>
         /// TW RPC Transport server
         /// </summary>
@@ -118,6 +123,7 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Starts the server listener
         /// </summary>
@@ -167,6 +173,7 @@ namespace TWCore.Net.RPC.Server.Transports
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Stops the server listener
         /// </summary>
@@ -192,6 +199,7 @@ namespace TWCore.Net.RPC.Server.Transports
             _sessions.Clear();
             Core.Log.LibVerbose("Transport Listener Stopped");
         }
+        /// <inheritdoc />
         /// <summary>
         /// Send a fire event trigger to a RPC client.
         /// </summary>

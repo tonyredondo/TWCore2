@@ -30,6 +30,7 @@ namespace TWCore.Diagnostics.Log
     [DataContract]
     public class LogItem : ILogItem
     {
+        /// <inheritdoc />
         /// <summary>
         /// Item unique identifier
         /// </summary>

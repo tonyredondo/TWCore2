@@ -30,6 +30,7 @@ namespace TWCore.Collections
         /// </summary>
         public static string DefaultKeyArraySeparator { get; set; } = ",";
     }
+    /// <inheritdoc />
     /// <summary>
     /// Collection of Items where the Key is calculated from a delegate.
     /// </summary>
@@ -47,23 +48,27 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection() { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(bool throwExceptionOnDuplicateKeys) : base(throwExceptionOnDuplicateKeys) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(IEnumerable<TItem> enumerable) : base(enumerable) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -71,11 +76,13 @@ namespace TWCore.Collections
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(IEnumerable<TItem> enumerable, bool throwExceptionOnDuplicateKeys) : base(enumerable, throwExceptionOnDuplicateKeys) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(Func<TItem, string> keySelector) : base(keySelector) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -83,6 +90,7 @@ namespace TWCore.Collections
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(Func<TItem, string> keySelector, bool throwExceptionOnDuplicateKeys) : base(keySelector, throwExceptionOnDuplicateKeys) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
@@ -90,6 +98,7 @@ namespace TWCore.Collections
         /// <param name="enumerable">Enumerable to fill the instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyStringDelegatedCollection(Func<TItem, string> keySelector, IEnumerable<TItem> enumerable) : base(keySelector, enumerable) { }
+        /// <inheritdoc />
         /// <summary>
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>

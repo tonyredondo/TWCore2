@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
 // ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable InheritdocConsiderUsage
 
 namespace TWCore.Net.RPC.Client
 {

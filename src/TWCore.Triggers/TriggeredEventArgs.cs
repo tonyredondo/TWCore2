@@ -21,6 +21,7 @@ using System;
 
 namespace TWCore.Triggers
 {
+    /// <inheritdoc />
     /// <summary>
     /// Triggered instance event args
     /// </summary>
@@ -41,6 +42,7 @@ namespace TWCore.Triggers
         public double Elapsed { get; private set; }
 
         #region .ctor
+        /// <inheritdoc />
         /// <summary>
         /// Triggered instance event args
         /// </summary>

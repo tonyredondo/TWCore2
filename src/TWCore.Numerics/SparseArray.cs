@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Numerics
 {
@@ -151,6 +152,7 @@ namespace TWCore.Numerics
 
         #region IEnumerable<KeyValuePair<TKey, TValue>> Members
 
+        /// <inheritdoc />
         /// <summary>
         /// The Generic IEnumerator GetEnumerator method
         /// </summary>
@@ -161,6 +163,7 @@ namespace TWCore.Numerics
 
         #region IEnumerable Members
 
+        /// <inheritdoc />
         /// <summary>
         /// The non-generic IEnumerator GetEnumerator method
         /// </summary>

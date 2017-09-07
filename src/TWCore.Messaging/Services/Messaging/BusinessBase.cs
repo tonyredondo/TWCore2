@@ -17,6 +17,7 @@ limitations under the License.
 using System.Threading;
 // ReSharper disable NotAccessedField.Global
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services.Messaging
 {
@@ -30,13 +31,13 @@ namespace TWCore.Services.Messaging
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize business instance
         /// </summary>
-        public void Init()
-        {
-            OnInit();
-        }
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -47,6 +48,7 @@ namespace TWCore.Services.Messaging
         {
             return Process((T)message, cancellationToken);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -58,6 +60,7 @@ namespace TWCore.Services.Messaging
             TimeoutCancellationToken = cancellationToken;
             return OnProcess(message);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
@@ -94,13 +97,13 @@ namespace TWCore.Services.Messaging
         protected CancellationToken TimeoutCancellationToken;
 
         #region IBusiness Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize business instance
         /// </summary>
-        public void Init()
-        {
-            OnInit();
-        }
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
         /// <summary>
         /// Process message
         /// </summary>
@@ -112,6 +115,7 @@ namespace TWCore.Services.Messaging
             TimeoutCancellationToken = cancellationToken;
             return OnProcess(message);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

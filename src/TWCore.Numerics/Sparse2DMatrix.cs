@@ -218,6 +218,7 @@ namespace TWCore.Numerics
 
         #region IEnumerable<KeyValuePair<ComparableTuple2<TKey0, TKey1>, TValue>> Members
 
+        /// <inheritdoc />
         /// <summary>
         /// The Generic IEnumerator GetEnumerator method
         /// </summary>
@@ -231,6 +232,7 @@ namespace TWCore.Numerics
 
         #region IEnumerable Members
 
+        /// <inheritdoc />
         /// <summary>
         /// The non-generic IEnumerator GetEnumerator method
         /// </summary>

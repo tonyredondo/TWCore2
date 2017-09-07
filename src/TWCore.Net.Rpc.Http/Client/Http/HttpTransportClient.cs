@@ -26,9 +26,11 @@ using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
+    /// <inheritdoc />
     /// <summary>
     /// Http RPC Transport client
     /// </summary>
@@ -39,11 +41,13 @@ namespace TWCore.Net.RPC.Client.Transports
 	    private HttpClient _httpClient;
 
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
         [StatusProperty, StatusReference]
         public ISerializer Serializer { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Services descriptors to use on RPC Request messages
         /// </summary>
@@ -69,6 +73,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         [StatusProperty]
         public string Url { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Transport Counters
         /// </summary>
@@ -104,6 +109,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 Core.Status.AttachChild(_httpClient, this);
             }, this);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Http RPC Transport client
         /// </summary>
@@ -118,18 +124,21 @@ namespace TWCore.Net.RPC.Client.Transports
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task InitAsync() { return Task.CompletedTask; }
+        /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init() {}
+        /// <inheritdoc />
         /// <summary>
         /// Gets the descriptor for the RPC service
         /// </summary>
@@ -141,6 +150,7 @@ namespace TWCore.Net.RPC.Client.Transports
             var data = await result.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             return Serializer.Deserialize<ServiceDescriptorCollection>(data);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Gets the descriptor for the RPC service
         /// </summary>
@@ -152,6 +162,7 @@ namespace TWCore.Net.RPC.Client.Transports
             var data = result.Content.ReadAsByteArrayAsync().WaitAsync();
             return Serializer.Deserialize<ServiceDescriptorCollection>(data);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
@@ -178,6 +189,7 @@ namespace TWCore.Net.RPC.Client.Transports
             var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);
             return res;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
@@ -186,6 +198,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
 			=> InvokeMethodAsync(messageRQ).WaitAndResults();
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>

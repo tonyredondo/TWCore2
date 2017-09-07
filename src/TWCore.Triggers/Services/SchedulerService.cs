@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using TWCore.Triggers;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
 {
@@ -28,10 +29,12 @@ namespace TWCore.Services
     public abstract class SchedulerService : ISchedulerService
     {
         #region Properties
+        /// <inheritdoc />
         /// <summary>
         /// Get if the service support pause and continue
         /// </summary>
         public bool CanPauseAndContinue => true;
+        /// <inheritdoc />
         /// <summary>
         /// Triggered actions list
         /// </summary>
@@ -39,27 +42,25 @@ namespace TWCore.Services
         #endregion
 
         #region Public Methods
+        /// <inheritdoc />
         /// <summary>
         /// On Continue from pause method
         /// </summary>
-        public void OnContinue()
-        {
-            OnStart(null);
-        }
+        public void OnContinue() => OnStart(null);
+
+        /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
-        public void OnPause()
-        {
-            OnStop();
-        }
+        public void OnPause() => OnStop();
+
+        /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
-        public void OnShutdown()
-        {
-            OnStop();
-        }
+        public void OnShutdown() => OnStop();
+
+        /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
@@ -80,6 +81,7 @@ namespace TWCore.Services
                 throw;
             }
         }
+        /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>

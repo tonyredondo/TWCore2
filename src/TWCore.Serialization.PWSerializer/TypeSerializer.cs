@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using TWCore.IO;
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Serialization.PWSerializer
 {
@@ -143,6 +144,7 @@ namespace TWCore.Serialization.PWSerializer
         }
     }
 
+    /// <inheritdoc />
     /// <summary>
     /// Definition for a type serializer
     /// </summary>

@@ -351,6 +351,7 @@ namespace TWCore.Net.RPC.Server.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SendEventMessage(RPCEventMessage message)
             => WriteRPCMessageData(message, RPCMessageType.EventMessage);
+        /// <inheritdoc />
         /// <summary>
         /// Dispose all the object resources
         /// </summary>

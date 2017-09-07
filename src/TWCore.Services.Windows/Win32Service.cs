@@ -23,7 +23,7 @@ namespace TWCore.Services.Windows
     /// </summary>
     internal class Win32Service : IWin32Service
     {
-        readonly IService _service;
+        private readonly IService _service;
 
         #region Properties
         /// <summary>

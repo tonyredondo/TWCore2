@@ -902,9 +902,9 @@ namespace TWCore.Data
                         if (propertyType == typeof(Guid) && valueType == typeof(string))
                             result = new Guid((string)value);
                         else if (propertyType.GetTypeInfo().IsEnum &&
-                            (valueType == typeof(int) || valueType == typeof(Int64) || valueType == typeof(string) || valueType == typeof(byte)))
+                            (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), out object valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, typeof(T), out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {
@@ -1940,9 +1940,9 @@ namespace TWCore.Data
                         if (propertyType == typeof(Guid) && valueType == typeof(string))
                             result = new Guid((string)value);
                         else if (propertyType.GetTypeInfo().IsEnum &&
-                            (valueType == typeof(int) || valueType == typeof(Int64) || valueType == typeof(string) || valueType == typeof(byte)))
+                            (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte)))
                             result = Enum.Parse(propertyType, value.ToString());
-                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, out object valueConverterResult))
+                        else if (EntityValueConverter != null && EntityValueConverter.Convert(value, valueType, propertyType, out var valueConverterResult))
                             result = valueConverterResult;
                         else
                         {

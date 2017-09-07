@@ -264,7 +264,7 @@ namespace TWCore.Numerics
         /// This function resets the parser to its initial state for parsing
         /// a new set of simultaneous linear equations.
         /// </summary>
-        void Reset()
+        private void Reset()
         {
             m_startPosition = 0;
             ErrorPosition = 0;
@@ -439,15 +439,15 @@ namespace TWCore.Numerics
                             // Is the exponent a valid exponent.
                             //--------------------------------------------------
 
-                            int exponentLength = exponentString.Length;
+                            var exponentLength = exponentString.Length;
 
                             if (exponentLength <= 2)
                             {
-                                bool exponent_error_flag = false;
+                                var exponent_error_flag = false;
 
-                                for (int i = 0; i < exponentLength; ++i)
+                                for (var i = 0; i < exponentLength; ++i)
                                 {
-                                    if (!Char.IsDigit(exponentString[i]))
+                                    if (!char.IsDigit(exponentString[i]))
                                     {
                                         exponent_error_flag = true;
                                     }
@@ -724,22 +724,18 @@ namespace TWCore.Numerics
                                      ref int positionIndex,
                                      ref string variableName)
         {
-            bool haveVariableNameFlag = false;
-            bool continueFlag = positionIndex < inputLine.Length;
+            var haveVariableNameFlag = false;
+            var continueFlag = positionIndex < inputLine.Length;
 
             while (continueFlag)
             {
-                Char c = inputLine[positionIndex];
-
-                continueFlag = (Char.IsLetter(c) || c == '_');
-
-                if (continueFlag)
-                {
-                    haveVariableNameFlag = true;
-                    variableName += c;
-                    positionIndex++;
-                    continueFlag = positionIndex < inputLine.Length;
-                }
+                var c = inputLine[positionIndex];
+                continueFlag = (char.IsLetter(c) || c == '_');
+                if (!continueFlag) continue;
+                haveVariableNameFlag = true;
+                variableName += c;
+                positionIndex++;
+                continueFlag = positionIndex < inputLine.Length;
             }
 
             return haveVariableNameFlag;
@@ -801,19 +797,14 @@ namespace TWCore.Numerics
         /// in the input string</param>
         private void SkipSpaces(string inputLine, ref int positionIndex)
         {
-            bool continueFlag = positionIndex < inputLine.Length;
-
+            var continueFlag = positionIndex < inputLine.Length;
             while (continueFlag)
             {
-                char c = inputLine[positionIndex];
-
-                continueFlag = Char.IsWhiteSpace(c);
-
-                if (continueFlag)
-                {
-                    positionIndex++;
-                    continueFlag = positionIndex < inputLine.Length;
-                }
+                var c = inputLine[positionIndex];
+                continueFlag = char.IsWhiteSpace(c);
+                if (!continueFlag) continue;
+                positionIndex++;
+                continueFlag = positionIndex < inputLine.Length;
             }
         }
 

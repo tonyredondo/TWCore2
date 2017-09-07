@@ -21,6 +21,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Data
 {
@@ -55,7 +56,7 @@ namespace TWCore.Data
         /// <summary>
         /// Concurrent list with all casting errors
         /// </summary>
-        static ConcurrentBag<InvalidCast> InvalidCastList { get; } = new ConcurrentBag<InvalidCast>();
+        private static ConcurrentBag<InvalidCast> InvalidCastList { get; } = new ConcurrentBag<InvalidCast>();
         /// <summary>
         /// Value converter from the data source to the entity properties.
         /// </summary>
@@ -183,7 +184,7 @@ namespace TWCore.Data
         /// <summary>
         /// Invalid cast item
         /// </summary>
-        class InvalidCast
+        private class InvalidCast
         {
             public readonly Type ValueType;
             public readonly Type PropertyType;

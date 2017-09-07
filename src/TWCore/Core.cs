@@ -440,7 +440,7 @@ namespace TWCore
 
         #region Time Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void UpdateLocalUtc(Task tsk = null)
+        private static void UpdateLocalUtc(Task tsk = null)
         {
             LocalUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
             Task.Delay(5000).ContinueWith(UpdateLocalUtc);

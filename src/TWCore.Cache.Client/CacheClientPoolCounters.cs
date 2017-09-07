@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Cache.Client
 {
@@ -26,7 +27,7 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientPoolCounters
     {
-		readonly Queue<double>[] _times = new Queue<double>[13];
+        private readonly Queue<double>[] _times = new Queue<double>[13];
 
         #region Calls methods
         /// <summary>
@@ -318,7 +319,7 @@ namespace TWCore.Cache.Client
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void IncrementQueue(int idx, ref double executionTime)
+        private void IncrementQueue(int idx, ref double executionTime)
         {
 			var queue = _times[idx];
 			lock(queue) 
@@ -329,7 +330,7 @@ namespace TWCore.Cache.Client
 			}
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        double GetAverage(int idx)
+        private double GetAverage(int idx)
         {
 			var queue = _times[idx];
 			lock(queue)

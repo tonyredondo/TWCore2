@@ -51,7 +51,7 @@ namespace TWCore.Settings
         /// Load Settings
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void LoadSettings()
+        private void LoadSettings()
         {
             SettingsEngine.ApplySettings(this);
             OnSettingsReload?.Invoke(this, EventArgs.Empty);

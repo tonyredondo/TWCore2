@@ -267,7 +267,7 @@ namespace TWCore.Collections
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        TimeoutClass Create(TKey key, TValue value, TimeSpan valueTimeout)
+        private TimeoutClass Create(TKey key, TValue value, TimeSpan valueTimeout)
         {
             var cts = new CancellationTokenSource();
             return new TimeoutClass
@@ -291,7 +291,7 @@ namespace TWCore.Collections
 
         private class TimeoutDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
-            IEnumerator<KeyValuePair<TKey, TimeoutClass>> _enumerator;
+            private IEnumerator<KeyValuePair<TKey, TimeoutClass>> _enumerator;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TimeoutDictionaryEnumerator(IEnumerator<KeyValuePair<TKey, TimeoutClass>> enumerator) 

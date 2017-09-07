@@ -215,7 +215,7 @@ namespace TWCore
         /// Attach to the status process
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void AttachStatus()
+        private static void AttachStatus()
         {
             Core.Status.Attach(() =>
             {

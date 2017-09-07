@@ -1,4 +1,5 @@
 ﻿using System;
+// ReSharper disable ArgumentsStyleNamedExpression
 
 // ReSharper disable CheckNamespace
 

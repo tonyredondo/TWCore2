@@ -60,7 +60,7 @@ namespace TWCore.Serialization.WSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static byte GetDecreaseDataType(ulong value)
+        private static byte GetDecreaseDataType(ulong value)
         {
             if (value <= 255)
                 return DataType.Byte;

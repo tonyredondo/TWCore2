@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
@@ -108,7 +109,7 @@ namespace TWCore.Collections
         #endregion
 
         #region Overrides
-        LinkedListNode<ValueNode.CountNode> _insertionPoint;
+        private LinkedListNode<ValueNode.CountNode> _insertionPoint;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void UpdateList(TKey key, ValueNode node)

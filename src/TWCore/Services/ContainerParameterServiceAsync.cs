@@ -57,7 +57,7 @@ namespace TWCore.Services
         /// OnHandler Method 
         /// </summary>
         /// <param name="info">Parameter handler info</param>
-        void OnHandler(ParameterHandlerInfo info) => OnHandlerAsync(info).WaitAsync();
+        private void OnHandler(ParameterHandlerInfo info) => OnHandlerAsync(info).WaitAsync();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICoreStart.CoreInit(Factories factories)

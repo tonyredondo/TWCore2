@@ -52,7 +52,7 @@ namespace TWCore.Net.RPC.Client.Transports
         private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(2048);
         private int _connectedSocketsCount;
         private int _socketTurn;
-        readonly byte _socketsPerClient = 2;
+        private readonly byte _socketsPerClient = 2;
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
 

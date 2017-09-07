@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
@@ -179,13 +180,8 @@ namespace TWCore
         /// <param name="obj">Object to compare</param>
         /// <returns>true if the object is equal; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool Equals(Object obj)
-        {
-            if (obj is SubArray<T> sobj)
-                return Equals(sobj);
-            else
-                return false;
-        }
+        public override bool Equals(object obj) => obj is SubArray<T> sobj && Equals(sobj);
+
         /// <summary>
         /// Gets if the SubArray is equal to another SubArray
         /// </summary>

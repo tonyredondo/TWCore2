@@ -30,7 +30,7 @@ namespace TWCore
     /// </summary>
     public static class Factory
     {
-        static Factories _factories;
+        private static Factories _factories;
 
         #region Properties
         /// <summary>

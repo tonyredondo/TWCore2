@@ -22,6 +22,8 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.Multicast
 {
@@ -30,19 +32,19 @@ namespace TWCore.Net.Multicast
     /// </summary>
     public class PeerConnection
     {
-        const int PacketSize = 512;
-        readonly TimeoutDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<Guid, ReceivedDatagrams>();
-        readonly List<UdpClient> _clients = new List<UdpClient>();
-        readonly List<UdpClient> _sendClients = new List<UdpClient>();
-        readonly List<Thread> _clientsReceiveThreads = new List<Thread>();
-        readonly TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
+        private const int PacketSize = 512;
+        private readonly TimeoutDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<Guid, ReceivedDatagrams>();
+        private readonly List<UdpClient> _clients = new List<UdpClient>();
+        private readonly List<UdpClient> _sendClients = new List<UdpClient>();
+        private readonly List<Thread> _clientsReceiveThreads = new List<Thread>();
+        private readonly TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
 
-        IPAddress _multicastIp;
-        IPEndPoint _sendEndpoint;
-        IPEndPoint _receiveEndpoint;
-        CancellationTokenSource _tokenSource;
-        CancellationToken _token;
-        bool _connected;
+        private IPAddress _multicastIp;
+        private IPEndPoint _sendEndpoint;
+        private IPEndPoint _receiveEndpoint;
+        private CancellationTokenSource _tokenSource;
+        private CancellationToken _token;
+        private bool _connected;
 
         /// <summary>
         /// On receive message event
@@ -224,7 +226,8 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Private Methods
-        void ReceiveSocketThread(object clientObject)
+
+        private void ReceiveSocketThread(object clientObject)
         {
             var guidBytes = new byte[16];
             var client = (UdpClient)clientObject;
@@ -284,7 +287,7 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Nested Types
-        class ReceivedDatagrams
+        private class ReceivedDatagrams
         {
             public byte[][] Datagrams { get; }
             public string Address { get; }

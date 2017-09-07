@@ -109,6 +109,12 @@ namespace TWCore.Services.Windows
             if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase))
             {
                 InitAction?.Invoke();
+                if (!string.IsNullOrWhiteSpace(BannerText))
+                {
+                    var bannerText = BannerText.Split("\r\n");
+                    foreach (var line in bannerText)
+                        Core.Log.InfoBasic(line);
+                }
                 Core.Log.InfoBasic("*** RUNNING AS WINDOWS SERVICE ***");
                 ShowFullHeader();
                 try

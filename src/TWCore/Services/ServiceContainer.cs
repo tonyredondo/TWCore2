@@ -56,6 +56,10 @@ namespace TWCore.Services
                 }
             }
         }
+        /// <summary>
+        /// Banner text
+        /// </summary>
+        public static string BannerText { get; set; }
         #endregion
 
         protected internal readonly Action InitAction;
@@ -323,6 +327,12 @@ namespace TWCore.Services
         protected internal virtual void InternalRun(string[] args)
         {
             InitAction?.Invoke();
+            if (!string.IsNullOrWhiteSpace(BannerText))
+            {
+                var bannerText = BannerText.Split("\r\n");
+                foreach (var line in bannerText)
+                    Core.Log.InfoBasic(line);
+            }
             ShowFullHeader();
 
             if (HasConsole)

@@ -100,7 +100,7 @@ namespace TWCore.Services
                 sItem.Values.Add("Service Status", _serviceStatus, siv);
                 sItem.Values.Add("Service Start Arguments", string.Join(" ", args ?? new string[0]));
                 return sItem;
-            });
+            }, this);
 
             try
             {

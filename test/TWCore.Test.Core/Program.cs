@@ -34,7 +34,7 @@ namespace TWCore.Test.Core
             TWCore.Core.Log.InfoBasic("Core Service Discovery Add: {0}, {1}, {2}, {3}, {4}, {5}, {6}", e.Item1.Category, e.Item1.ApplicationName, e.Item1.Name, e.Item1.Description, e.Item1.ApplicationName, e.Item1.MachineName, e.Item1.Address);
             if (!(e.Item1.Data.GetValue() is Dictionary<string, object> value)) return;
             foreach (var item in value)
-                TWCore.Core.Log.InfoDetail("Param {0} = {1}", item.Key, item.Value);
+                TWCore.Core.Log.InfoDetail("\tParam {0} = {1}", item.Key, item.Value);
         }
 
 

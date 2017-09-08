@@ -200,13 +200,13 @@ namespace ($NAMESPACE$).($DATABASENAME$).Dal.($PROVIDERNAME$)
     {($METHODS$)
 
         #region Private Methods
-        Dictionary<string, object> PrepareEntity(($DATATYPE$) value, string transaction)
+        private Dictionary<string, object> PrepareEntity(($DATATYPE$) value, string transaction)
         {
             var param = new Dictionary<string, object>();
 ($PREPAREENTITY$)
             return param;
         }
-        ($DATATYPE$) FillEntity(EntityBinder binder, object[] rowValues)
+        private ($DATATYPE$) FillEntity(EntityBinder binder, object[] rowValues)
         {
             var ($DATATYPE2$) = binder.Bind<($DATATYPE$)>(rowValues);
 ($FILLENTITY$)

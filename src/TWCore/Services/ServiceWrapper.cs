@@ -60,7 +60,7 @@ namespace TWCore.Services
         {
             Core.Status.Attach(() =>
             {
-                var sItem = new StatusItem { Name = "Process Information" };
+                var sItem = new StatusItem { Name = "Process Information - Service" };
                 var siv = StatusItemValueStatus.Unknown;
                 switch (wrapper._serviceStatus)
                 {

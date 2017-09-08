@@ -125,7 +125,7 @@ namespace TWCore.Diagnostics.Status
         public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
         {
             if (statusItemDelegate == null) return;
-            var weakFunc = WeakDelegate.Create(statusItemDelegate);
+            var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : statusItemDelegate;
             lock (_statusItemsDelegates)
                 _statusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
             AttachChild(null, parent);

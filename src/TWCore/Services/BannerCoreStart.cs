@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System.IO;
+using System.Reflection;
+
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
@@ -29,9 +31,15 @@ namespace TWCore.Services
         private const string BannerFilePath = "banner.bnn";
         void ICoreStart.CoreInit(Factories factories)
         {
-            if (!File.Exists(BannerFilePath)) return;
-            if (ServiceContainer.BannerText != null) return;
-            ServiceContainer.BannerText = File.ReadAllText(BannerFilePath);
+            var entryAssembly = Assembly.GetEntryAssembly();
+            var bannerText = entryAssembly.GetResourceString(BannerFilePath);
+            if (bannerText == null)
+            {
+                if (!File.Exists(BannerFilePath)) return;
+                if (ServiceContainer.BannerText != null) return;
+                bannerText = File.ReadAllText(BannerFilePath);
+            }
+            ServiceContainer.BannerText = bannerText;
         }
     }
 }

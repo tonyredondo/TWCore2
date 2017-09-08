@@ -225,6 +225,17 @@ namespace TWCore
                 sItem.Values.Add(nameof(Factory.PlatformType), Factory.PlatformType);
                 sItem.Values.Add(nameof(Environment.ProcessorCount), Environment.ProcessorCount);
                 sItem.Values.Add(nameof(Environment.TickCount), Environment.TickCount);
+                sItem.Values.Add(nameof(Environment.CommandLine), Environment.CommandLine);
+                sItem.Values.Add(nameof(Environment.Is64BitOperatingSystem), Environment.Is64BitOperatingSystem);
+                sItem.Values.Add(nameof(Environment.Is64BitProcess), Environment.Is64BitProcess);
+                sItem.Values.Add(nameof(Environment.OSVersion), Environment.OSVersion);
+                sItem.Values.Add(nameof(Environment.SystemDirectory), Environment.SystemDirectory);
+                sItem.Values.Add(nameof(Environment.SystemPageSize), Environment.SystemPageSize);
+                sItem.Values.Add(nameof(Environment.UserDomainName), Environment.UserDomainName);
+                sItem.Values.Add(nameof(Environment.UserInteractive), Environment.UserInteractive);
+                sItem.Values.Add(nameof(Environment.UserName), Environment.UserName);
+                sItem.Values.Add(nameof(Environment.Version), Environment.Version);
+                sItem.Values.Add(nameof(Environment.WorkingSet), Environment.WorkingSet);
                 sItem.Values.Add(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription);
                 sItem.Values.Add(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture);
                 sItem.Values.Add(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription);

@@ -37,7 +37,7 @@ namespace TWCore
         public static Stream GetResourceStream(this Assembly assembly, string resourceName)
         {
             var currentAssembly = assembly;
-            if (currentAssembly == null || !resourceName.IsNotNullOrEmpty()) return null;
+            if (currentAssembly == null || resourceName.IsNullOrEmpty()) return null;
             var asmNames = currentAssembly.GetManifestResourceNames();
             var validResourceName = asmNames.FirstOrDefault(name => name.EndsWith(resourceName));
             return validResourceName != null ? 
@@ -51,6 +51,6 @@ namespace TWCore
         /// <param name="resourceName">Resource name to extract</param>
         /// <returns>String object value with the resource content</returns>
         public static string GetResourceString(this Assembly assembly, string resourceName) 
-            => GetResourceStream(assembly, resourceName).TextReadToEnd();
+            => GetResourceStream(assembly, resourceName)?.TextReadToEnd();
     }
 }

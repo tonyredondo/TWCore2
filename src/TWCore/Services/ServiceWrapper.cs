@@ -29,6 +29,7 @@ namespace TWCore.Services
     public class ServiceWrapper : IService
     {
         private ServiceStatus _serviceStatus;
+        private string[] _args;
 
         #region Properties
         /// <summary>
@@ -54,24 +55,14 @@ namespace TWCore.Services
         }
         #endregion
 
-        #region IService
-        /// <inheritdoc />
-        /// <summary>
-        /// Get if the service support pause and continue
-        /// </summary>
-        public bool CanPauseAndContinue => Service.CanPauseAndContinue;
-        /// <inheritdoc />
-        /// <summary>
-        /// On Service Start method
-        /// </summary>
-        /// <param name="args">Start arguments</param>
-        public void OnStart(string[] args)
+        #region Static Method
+        private static void RegisterStatus(ServiceWrapper wrapper)
         {
             Core.Status.Attach(() =>
             {
-                var sItem = new StatusItem { Name = "Process Information - Service" };
+                var sItem = new StatusItem { Name = "Process Information" };
                 var siv = StatusItemValueStatus.Unknown;
-                switch (_serviceStatus)
+                switch (wrapper._serviceStatus)
                 {
                     case ServiceStatus.Starting:
                         siv = StatusItemValueStatus.Yellow;
@@ -95,16 +86,33 @@ namespace TWCore.Services
                         siv = StatusItemValueStatus.Yellow;
                         break;
                 }
-                sItem.Values.Add("Service Name", ServiceName);
-                sItem.Values.Add("Service can Pause and Continue", CanPauseAndContinue ? "Yes" : "No", CanPauseAndContinue ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
-                sItem.Values.Add("Service Status", _serviceStatus, siv);
-                sItem.Values.Add("Service Start Arguments", string.Join(" ", args ?? new string[0]));
+                sItem.Values.Add("Service Name", wrapper.ServiceName);
+                sItem.Values.Add("Service can Pause and Continue", wrapper.CanPauseAndContinue ? "Yes" : "No", wrapper.CanPauseAndContinue ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
+                sItem.Values.Add("Service Status", wrapper._serviceStatus, siv);
+                sItem.Values.Add("Service Start Arguments", string.Join(" ", wrapper._args ?? new string[0]));
                 return sItem;
             });
+        }
+        #endregion
 
+        #region IService
+        /// <inheritdoc />
+        /// <summary>
+        /// Get if the service support pause and continue
+        /// </summary>
+        public bool CanPauseAndContinue => Service.CanPauseAndContinue;
+        /// <inheritdoc />
+        /// <summary>
+        /// On Service Start method
+        /// </summary>
+        /// <param name="args">Start arguments</param>
+        public void OnStart(string[] args)
+        {
+            RegisterStatus(this);
             try
             {
                 _serviceStatus = ServiceStatus.Starting;
+                _args = args;
                 Service.OnStart(args);
             }
             catch (Exception ex)

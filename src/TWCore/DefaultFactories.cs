@@ -235,7 +235,7 @@ namespace TWCore
                 sItem.Values.Add(nameof(Environment.UserInteractive), Environment.UserInteractive);
                 sItem.Values.Add(nameof(Environment.UserName), Environment.UserName);
                 sItem.Values.Add(nameof(Environment.Version), Environment.Version);
-                sItem.Values.Add(nameof(Environment.WorkingSet), Environment.WorkingSet);
+                sItem.Values.Add(nameof(Environment.WorkingSet), Environment.WorkingSet.ToReadeableBytes());
                 sItem.Values.Add(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription);
                 sItem.Values.Add(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture);
                 sItem.Values.Add(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription);

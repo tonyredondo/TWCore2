@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using TWCore.Text;
+// ReSharper disable UnusedMember.Global
+// ReSharper disable ForCanBeConvertedToForeach
 
 // ReSharper disable CheckNamespace
 
@@ -39,6 +41,7 @@ namespace TWCore
         private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
         private static readonly Regex ShrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
         private static readonly Regex InvalidXmlChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
+        private static Encoding DefaultEncoding = new UTF8Encoding(false);
 
         #region Is? conditionals
         /// <summary>
@@ -566,7 +569,7 @@ namespace TWCore
         /// <returns>A string containing all lines of the file.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadTextFromFile(this string path, Encoding encoding = null)
-            => File.ReadAllText(path, encoding);
+            => File.ReadAllText(path, encoding ?? DefaultEncoding);
         /// <summary>
         /// Faster Index Of method
         /// </summary>

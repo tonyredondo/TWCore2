@@ -18,6 +18,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
+using TWCore.Services.Configuration;
+
 // ReSharper disable CheckNamespace
 // ReSharper disable UnusedMember.Global
 
@@ -29,6 +31,8 @@ namespace TWCore.Services
     /// </summary>
     public class DefaultCacheService : CacheService
     {
+        private ServerOptions _serverOptions;
+
         /// <inheritdoc />
         /// <summary>
         /// Gets the cache storage manager
@@ -36,7 +40,13 @@ namespace TWCore.Services
         /// <returns>StorageManager instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override StorageManager GetManager()
-            => Core.Services.GetDefaultCacheServerOptions().StorageStack.GetStorageManager();
+        {
+            if (_serverOptions == null)
+                _serverOptions = Core.Services.GetDefaultCacheServerOptions();
+            Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
+            return _serverOptions.StorageStack.GetStorageManager();
+        }
+
         /// <inheritdoc />
         /// <summary>
         /// Gets the cache server transports
@@ -44,6 +54,11 @@ namespace TWCore.Services
         /// <returns>ITransportServer[] instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ITransportServer[] GetTransports()
-            => Core.Services.GetDefaultCacheServerOptions().Transports.Select(t => t.CreateInstance<ITransportServer>()).ToArray();
+        {
+            if (_serverOptions == null)
+                _serverOptions = Core.Services.GetDefaultCacheServerOptions();
+            Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
+            return _serverOptions.Transports.Select(t => t.CreateInstance<ITransportServer>()).ToArray();
+        }
     }
 }

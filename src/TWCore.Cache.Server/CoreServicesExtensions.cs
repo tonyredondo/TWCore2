@@ -21,6 +21,7 @@ using TWCore.Serialization;
 using TWCore.Services.Configuration;
 using TWCore.Settings;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
 {
@@ -42,7 +43,6 @@ namespace TWCore.Services
 
             var cacheSettings = Core.GetSettings<CacheConfigurationSettings>();
             if (string.IsNullOrEmpty(cacheSettings.ConfigFile)) return;
-            if (string.IsNullOrEmpty(cacheSettings.ServerName)) return;
 
             //Cache configuration
             var cachesConfigFile = cacheSettings.ConfigFile;
@@ -70,7 +70,7 @@ namespace TWCore.Services
                 return;
             }
 
-            _cacheConfiguration = serverCacheSettings.Caches?.FirstOrDefault(c => c.Name == cacheSettings.ServerName);
+            _cacheConfiguration = serverCacheSettings.Caches?.FirstOrDefault(c => c.Name == (cacheSettings.ServerName ?? Core.ApplicationName));
             _serverOptions =
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??

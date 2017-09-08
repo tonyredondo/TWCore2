@@ -49,6 +49,12 @@ namespace TWCore.Net.RPC.Server.Transports
         #region Properties
         /// <inheritdoc />
         /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        [StatusProperty]
+        public string Name => "TWTransport";
+        /// <inheritdoc />
+        /// <summary>
         /// true if the transport server can send the services descriptors; otherwise, false
         /// </summary>
         [StatusProperty]

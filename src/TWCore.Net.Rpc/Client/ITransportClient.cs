@@ -20,6 +20,7 @@ using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Client
 {
@@ -29,6 +30,10 @@ namespace TWCore.Net.RPC.Client
     /// </summary>
     public interface ITransportClient : IDisposable
     {
+        /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        string Name { get; }
         /// <summary>
         /// Events received from the RPC transport server
         /// </summary>

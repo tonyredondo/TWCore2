@@ -18,6 +18,9 @@ using System;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Server
 {
@@ -26,6 +29,10 @@ namespace TWCore.Net.RPC.Server
     /// </summary>
     public interface ITransportServer
     {
+        /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        string Name { get; }
         /// <summary>
         /// true if the transport server can send the service descriptor; otherwise, false
         /// </summary>

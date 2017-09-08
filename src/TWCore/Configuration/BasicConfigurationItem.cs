@@ -21,6 +21,8 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Configuration
 {

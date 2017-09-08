@@ -34,6 +34,11 @@ namespace TWCore.Net.RPC.Server
         #region Properties
         /// <inheritdoc />
         /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        public string Name => string.Join(";", this.Select(i => i.Name).ToArray());
+        /// <inheritdoc />
+        /// <summary>
         /// true if the transport server can send the service descriptor; otherwise, false
         /// </summary>
         public bool EnableGetDescriptors
@@ -41,7 +46,7 @@ namespace TWCore.Net.RPC.Server
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => this.Any(i => i.EnableGetDescriptors);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set => this.Each(i => i.EnableGetDescriptors = value); 
+            set => this.Each(i => i.EnableGetDescriptors = value);
         }
         /// <inheritdoc />
         /// <summary>
@@ -60,7 +65,7 @@ namespace TWCore.Net.RPC.Server
         /// </summary>
         public RPCTransportCounters Counters { get; } = null;
         #endregion
-        
+
         #region Events
         /// <summary>
         /// Event that fires when a Descriptor request is received.
@@ -83,7 +88,7 @@ namespace TWCore.Net.RPC.Server
             remove => base.CollectionChanged -= value;
         }
         #endregion
-        
+
         #region .ctor
         /// <inheritdoc />
         /// <summary>
@@ -93,7 +98,7 @@ namespace TWCore.Net.RPC.Server
         public TransportServerCollection()
         {
             CollectionChanged += (s, e) =>
-            {                
+            {
                 if ((e.Action == NotifyCollectionChangedAction.Add || e.Action == NotifyCollectionChangedAction.Replace) && e.NewItems != null)
                 {
                     foreach (ITransportServer item in e.NewItems)
@@ -117,7 +122,7 @@ namespace TWCore.Net.RPC.Server
             };
         }
         #endregion
-        
+
         #region Private Methods
         private void Item_OnClientConnect(object sender, ClientConnectEventArgs e)
             => OnClientConnect?.Invoke(sender, e);
@@ -128,7 +133,7 @@ namespace TWCore.Net.RPC.Server
         private void Item_OnMethodCall(object sender, MethodEventArgs e)
             => OnMethodCall?.Invoke(sender, e);
         #endregion
-        
+
         #region Public Methods
         /// <inheritdoc />
         /// <summary>

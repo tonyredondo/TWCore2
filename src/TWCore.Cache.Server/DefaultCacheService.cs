@@ -14,9 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
+using TWCore.Net.Multicast;
 using TWCore.Net.RPC.Server;
 using TWCore.Services.Configuration;
 
@@ -44,6 +46,7 @@ namespace TWCore.Services
             if (_serverOptions == null)
                 _serverOptions = Core.Services.GetDefaultCacheServerOptions();
             Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
+            Ensure.ReferenceNotNull(_serverOptions.StorageStack, "The Cache server was loaded but the StorageStack is not defined. Please check your configuration files.");
             return _serverOptions.StorageStack.GetStorageManager();
         }
 
@@ -58,7 +61,29 @@ namespace TWCore.Services
             if (_serverOptions == null)
                 _serverOptions = Core.Services.GetDefaultCacheServerOptions();
             Ensure.ReferenceNotNull(_serverOptions, "The Cache server configuration couldn't be loaded. Please check your configuration files.");
-            return _serverOptions.Transports.Select(t => t.CreateInstance<ITransportServer>()).ToArray();
+            Ensure.ReferenceNotNull(_serverOptions.Transports, "The Cache server configuration was loaded but there is not TransportServers defined. Please check your configuration files.");
+            var lstTransports = new List<ITransportServer>();
+            foreach(var transportItem in _serverOptions.Transports)
+            {
+                if (!transportItem.Enabled) continue;
+                var parameters = new Dictionary<string, object>
+                {
+                    ["Transport.TypeFactory"] = transportItem.TypeFactory,
+                };
+                if (transportItem.Parameters != null)
+                {
+                    foreach (var paramItem in transportItem.Parameters)
+                    {
+                        if (!parameters.ContainsKey(paramItem.Key))
+                            parameters[paramItem.Key] = paramItem.Value;
+                    }
+                }
+                var transport = transportItem.CreateInstance<ITransportServer>();
+                parameters["Transport.Name"] = transport.Name;
+                lstTransports.Add(transport);
+                DiscoveryService.RegisterService(DiscoveryService.AppCategory, nameof(DefaultCacheService), $"{Core.ApplicationName} Cache Service", parameters);
+            }
+            return lstTransports.ToArray();
         }
     }
 }

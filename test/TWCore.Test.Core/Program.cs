@@ -26,12 +26,12 @@ namespace TWCore.Test.Core
 
         private static void DiscoveryService_OnServiceExpired(object sender, EventArgs<DiscoveryService.ReceivedService> e)
         {
-            TWCore.Core.Log.InfoBasic("Core Service Discovery Remove: {0}, {1}, {2}, {3}, {4}, {5}", e.Item1.Category, e.Item1.Name, e.Item1.Description, e.Item1.ApplicationName, e.Item1.MachineName, e.Item1.Address);
+            TWCore.Core.Log.InfoBasic("Core Service Discovery Remove: {0}, {1}, {2}, {3}, {4}, {5}, {6}", e.Item1.Category, e.Item1.ApplicationName, e.Item1.Name, e.Item1.Description, e.Item1.ApplicationName, e.Item1.MachineName, e.Item1.Address);
         }
 
         private static void DiscoveryService_OnServiceReceived(object sender, EventArgs<DiscoveryService.ReceivedService> e)
         {
-            TWCore.Core.Log.InfoBasic("Core Service Discovery Add: {0}, {1}, {2}, {3}, {4}, {5}", e.Item1.Category, e.Item1.Name, e.Item1.Description, e.Item1.ApplicationName, e.Item1.MachineName, e.Item1.Address);
+            TWCore.Core.Log.InfoBasic("Core Service Discovery Add: {0}, {1}, {2}, {3}, {4}, {5}, {6}", e.Item1.Category, e.Item1.ApplicationName, e.Item1.Name, e.Item1.Description, e.Item1.ApplicationName, e.Item1.MachineName, e.Item1.Address);
             if (!(e.Item1.Data.GetValue() is Dictionary<string, object> value)) return;
             foreach (var item in value)
                 TWCore.Core.Log.InfoDetail("Param {0} = {1}", item.Key, item.Value);

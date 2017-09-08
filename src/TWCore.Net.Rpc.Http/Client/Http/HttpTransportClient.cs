@@ -43,6 +43,12 @@ namespace TWCore.Net.RPC.Client.Transports
         #region Properties
         /// <inheritdoc />
         /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        [StatusProperty]
+        public string Name => "HttpTransport";
+        /// <inheritdoc />
+        /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
         [StatusProperty, StatusReference]

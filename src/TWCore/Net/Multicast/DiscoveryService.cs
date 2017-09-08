@@ -32,7 +32,7 @@ namespace TWCore.Net.Multicast
         private static readonly PeerConnection PeerConnection;
         private static readonly List<RegisteredService> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
-        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(15);
         private static Thread _sendThread;
         private static CancellationTokenSource _tokenSource;
         private static CancellationToken _token;
@@ -40,6 +40,7 @@ namespace TWCore.Net.Multicast
 
         #region Consts
         public const string FrameworkCategory = "FRAMEWORK";
+        public const string AppCategory = "APP";
         #endregion
 
         #region Events
@@ -225,7 +226,7 @@ namespace TWCore.Net.Multicast
                     if (_token.IsCancellationRequested)
                         return;
                 }
-                _token.WhenCanceledAsync().Wait(10000);
+                _token.WhenCanceledAsync().Wait(5000);
             }
         }
         #endregion

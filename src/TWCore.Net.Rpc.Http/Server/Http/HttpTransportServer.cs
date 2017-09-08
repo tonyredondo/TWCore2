@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
@@ -35,6 +36,11 @@ namespace TWCore.Net.RPC.Server.Transports
         private readonly SimpleHttpServer _httpServer;
 
         #region Properties
+        /// <inheritdoc />
+        /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        public string Name => "HttpTransport";
         /// <inheritdoc />
         /// <summary>
         /// true if the transport server can send the services descriptors; otherwise, false
@@ -83,6 +89,7 @@ namespace TWCore.Net.RPC.Server.Transports
 			Serializer = new JsonTextSerializer();
             Core.Status.Attach(collection =>
             {
+                collection.Add(nameof(Name), Name);
                 collection.Add(nameof(Port), Port);
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
                 collection.Add("Bytes Sent", Counters.BytesSent);

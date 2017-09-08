@@ -196,7 +196,11 @@ namespace TWCore
                         if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.Debug("Loading log storage: {0}", name);
                         var lSto = Injector.New<ILogStorage>(name);
-                        if (lSto == null) continue;
+                        if (lSto == null)
+                        {
+                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
+                            continue;
+                        }
                         if (lSto.GetType() == typeof(ConsoleLogStorage))
                         {
                             Log.Debug("Console log storage already added, ignoring.");
@@ -221,7 +225,13 @@ namespace TWCore
                     {
                         if (!Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.Debug("Loading trace storage: {0}", name);
-                        Trace.Storage.Add(Injector.New<ITraceStorage>(name));
+                        var lTrace = Injector.New<ITraceStorage>(name);
+                        if (lTrace == null)
+                        {
+                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
+                            continue;
+                        }
+                        Trace.Storage.Add(lTrace);
                     }
                 }
                 Trace.Enabled = GlobalSettings.TraceEnabled;
@@ -235,7 +245,13 @@ namespace TWCore
                     {
                         if (!Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false)) continue;
                         Log.Debug("Loading status transport: {0}", name);
-                        Status.Transports.Add(Injector.New<IStatusTransport>(name));
+                        var sTransport = Injector.New<IStatusTransport>(name);
+                        if (sTransport == null)
+                        {
+                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(IStatusTransport).Name, name);
+                            continue;
+                        }
+                        Status.Transports.Add(sTransport);
                     }
                 }
                 Status.Enabled = GlobalSettings.StatusEnabled;

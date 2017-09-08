@@ -96,7 +96,7 @@ namespace TWCore.Services
         /// <param name="service">Service instance</param>
         /// <param name="initAction">Init Action</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(IService service, Action initAction) : this(Core.ApplicationDisplayName, service, initAction)
+        public ServiceContainer(IService service, Action initAction) : this(Core.ApplicationName, service, initAction)
         {
         }
         /// <inheritdoc />
@@ -105,7 +105,7 @@ namespace TWCore.Services
         /// </summary>
         /// <param name="service">Service instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceContainer(IService service) : this(Core.ApplicationDisplayName, service, null)
+        public ServiceContainer(IService service) : this(Core.ApplicationName, service, null)
         {
         }
         /// <inheritdoc />

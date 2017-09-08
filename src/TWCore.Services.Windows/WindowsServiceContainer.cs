@@ -161,8 +161,8 @@ namespace TWCore.Services.Windows
                 var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
 
 
-                _settings.DisplayName = _settings.DisplayName ?? ServiceName;
-                _settings.Description = _settings.Description ?? ServiceName;
+                _settings.DisplayName = _settings.DisplayName ?? Core.ApplicationDisplayName;
+                _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
 
                 Win32ServiceCredentials credentials;
                 switch (_settings.Credentials)
@@ -225,6 +225,7 @@ namespace TWCore.Services.Windows
 
 
         #region Nested Types
+        [SettingsContainer("Core.Services")]
         private class WindowsServiceSettings : SettingsBase
         {
             public string DisplayName { get; set; }

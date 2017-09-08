@@ -65,39 +65,75 @@ namespace TWCore.Diagnostics.Status
         {
             Transports.CollectionChanged += (s, e) =>
             {
+                if (e == null) return;
                 switch (e.Action)
                 {
                     case NotifyCollectionChangedAction.Add:
                         if (e.NewItems != null)
                         {
                             foreach (IStatusTransport item in e.NewItems)
+                            {
+                                if (item == null)
+                                {
+                                    Core.Log.LibDebug("The IStatusTransport item is null");
+                                    continue;
+                                }
                                 item.OnFetchStatus += Transport_OnFetchStatus;
+                            }
                         }
                         break;
                     case NotifyCollectionChangedAction.Remove:
                         if (e.OldItems != null)
                         {
                             foreach (IStatusTransport item in e.OldItems)
+                            {
+                                if (item == null)
+                                {
+                                    Core.Log.LibDebug("The IStatusTransport item is null");
+                                    continue;
+                                }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                            }
                         }
                         break;
                     case NotifyCollectionChangedAction.Replace:
                         if (e.NewItems != null)
                         {
                             foreach (IStatusTransport item in e.NewItems)
+                            {
+                                if (item == null)
+                                {
+                                    Core.Log.LibDebug("The IStatusTransport item is null");
+                                    continue;
+                                }
                                 item.OnFetchStatus += Transport_OnFetchStatus;
+                            }
                         }
                         if (e.OldItems != null)
                         {
                             foreach (IStatusTransport item in e.OldItems)
+                            {
+                                if (item == null)
+                                {
+                                    Core.Log.LibDebug("The IStatusTransport item is null");
+                                    continue;
+                                }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                            }
                         }
                         break;
                     case NotifyCollectionChangedAction.Reset:
                         if (e.OldItems != null)
                         {
                             foreach (IStatusTransport item in e.OldItems)
+                            {
+                                if (item == null)
+                                {
+                                    Core.Log.LibDebug("The IStatusTransport item is null");
+                                    continue;
+                                }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                            }
                         }
                         break;
                 }

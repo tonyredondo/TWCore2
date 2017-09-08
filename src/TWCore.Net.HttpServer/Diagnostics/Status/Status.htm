@@ -397,9 +397,9 @@
                     $("#chartvar h3").prop('onclick', null).off('click');
                     $("#chartvar h3").click(function (evt) { $(evt.currentTarget).parent().children(".chartOption").toggle(); });
 
-                    if (chartValueId == "" && document.getElementById("status0__2$WorkingSet64")) {
-                        $($("#chartvar h3")[2]).click();
-                        document.getElementById("status0__2$WorkingSet64").click();
+                    if (chartValueId == "" && document.getElementById("status0__0$WorkingSet")) {
+                        $($("#chartvar h3")[0]).click();
+                        document.getElementById("status0__0$WorkingSet").click();
                     }
                     displayChart();
                 }).always(function () {
@@ -453,7 +453,7 @@
             <div id="chartvarOutter">
                 <div id="chartvar"></div>
             </div>
-            <div id="chartTitle">WorkingSet64</div>
+            <div id="chartTitle">WorkingSet</div>
             <canvas id="myChart"></canvas>
             <div class="clear"></div>
         </div>

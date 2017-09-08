@@ -21,8 +21,10 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting Dal Generator Test");
 
-            string folder = "./dalTest";
-            string connectionString = "Data Source=10.10.1.50;Initial Catalog=MRFLY_MIDDLE;User Id=MRFLY_SVC;Password=mISTERfLY13;Pooling=True";
+            string folder = "./Data";
+            string connectionString =
+                "Data Source=10.10.1.21;Initial Catalog=AGSW_MIDDLE;User Id=sa;Password=genesis;Pooling=True";
+                //"Data Source=10.10.1.50;Initial Catalog=MRFLY_MIDDLE;User Id=MRFLY_SVC;Password=mISTERfLY13;Pooling=True";
 
             var ssda = new SqlServerDataAccess(connectionString, DataAccessType.Query);
 
@@ -35,16 +37,16 @@ namespace TWCore.Tests
 
             Core.Log.InfoBasic("Creating Generator");
 
-            var dGen = new DalGenerator(schema, "MrFly.Data")
+            var dGen = new DalGenerator(schema, "Agsw.Travel.Data")
             {
                 GetEntityNameDelegate = name =>
                 {
                     name = name.Replace("_", " ");
-                    name = name.Substring(0, 3) + "_" + name.Substring(4).CapitalizeEachWords();
+                    name = name.Substring(0, 3) + name.Substring(4).CapitalizeEachWords();
                     name = name.Replace("-", "_");
                     return name.RemoveSpaces();
                 },
-                GeneratorType = DalGeneratorType.Embedded
+                GeneratorType = DalGeneratorType.StoredProcedure
             };
 
 

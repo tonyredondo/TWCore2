@@ -20,6 +20,7 @@ using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable CheckNamespace
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
@@ -56,15 +57,15 @@ namespace TWCore.Net.RPC.Client.Transports
                 InvokeMethodTimeout = timeout
             };
             ITransportClient client = lclient;
-            Core.Log.LibDebug("TW Transport Client created with parameters:");
-            Core.Log.LibDebug("Host: {0}", host);
-            Core.Log.LibDebug("Port: {0}", port);
-            Core.Log.LibDebug("SocketsPerClient: {0}", socketsPerClient);
+            Core.Log.LibDebug("Creating a new TWTransportClient with parameters:");
+            Core.Log.LibDebug("\tHost: {0}", host);
+            Core.Log.LibDebug("\tPort: {0}", port);
+            Core.Log.LibDebug("\tSocketsPerClient: {0}", socketsPerClient);
             if (serializerMimeType == null) 
                 return client;
-            Core.Log.LibDebug("SerializerMimeType: {0}", serializerMimeType);
+            Core.Log.LibDebug("\tSerializer: {0}", serializer);
             if (serializer?.Compressor != null)
-                Core.Log.LibDebug("CompressorEncoding: {0}", compressorEncoding);
+                Core.Log.LibDebug("\tCompressorEncoding: {0}", compressorEncoding);
             return client;
         }
     }

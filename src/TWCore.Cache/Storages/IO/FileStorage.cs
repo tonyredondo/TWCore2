@@ -105,6 +105,7 @@ namespace TWCore.Cache.Storages.IO
         /// </summary>
         protected override void OnInit()
         {
+            Ensure.ReferenceNotNull(BasePath, "The FileStorage BasePath, is null.");
             Core.Log.InfoBasic("Initializing FileStorage...");
             if (_storages?.Any() == true)
             {
@@ -122,7 +123,7 @@ namespace TWCore.Cache.Storages.IO
             for (var i = 0; i < NumberOfSubFolders; i++)
             {
                 var folder = Path.Combine(BasePath, i.ToString());
-                Core.Log.InfoBasic("Initializing Subfolder: {0}", i);
+                Core.Log.InfoBasic("Initializing Subfolder: {0} on {1}", i, folder);
                 _storages[i] = new FolderStorage(folder, this);
             }
             Core.Log.InfoBasic("Waiting the storages to be loaded.");

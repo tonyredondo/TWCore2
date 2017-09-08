@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using TWCore.Cache.Storages;
 using TWCore.Collections;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Cache.Configuration
 {
@@ -38,17 +39,30 @@ namespace TWCore.Cache.Configuration
             var name = parameters["Name"];
 
             if (string.Equals(name, "LRUStorage", StringComparison.OrdinalIgnoreCase))
+            {
+                Core.Log.LibDebug("Creating a new MemoryStorage with the parameters:");
+                Core.Log.LibDebug("\tName: {0}", name);
+                Core.Log.LibDebug("\tCapacity: {0}", capacity);
                 return new LRUStorage(capacity);
+            }
 
             if (string.Equals(name, "LRU2QSimpleStorage", StringComparison.OrdinalIgnoreCase))
             {
                 var thresholdDiv = parameters["ThresholdDiv"].ParseTo(4);
+                Core.Log.LibDebug("Creating a new MemoryStorage with the parameters:");
+                Core.Log.LibDebug("\tName: {0}", name);
+                Core.Log.LibDebug("\tCapacity: {0}", capacity);
+                Core.Log.LibDebug("\tThresholdDiv: {0}", thresholdDiv);
                 return new LRU2QSimpleStorage(capacity, capacity / thresholdDiv);
             }
 
             if (string.Equals(name, "LFUStorage", StringComparison.OrdinalIgnoreCase))
             {
                 var agePolicy = parameters["AgePolicy"].ParseTo(1000);
+                Core.Log.LibDebug("Creating a new MemoryStorage with the parameters:");
+                Core.Log.LibDebug("\tName: {0}", name);
+                Core.Log.LibDebug("\tCapacity: {0}", capacity);
+                Core.Log.LibDebug("\tAgePolicy: {0}", agePolicy);
                 return new LFUStorage(capacity, agePolicy);
             }
 
@@ -56,6 +70,11 @@ namespace TWCore.Cache.Configuration
             {
                 var kInDiv = parameters["KInDiv"].ParseTo(4);
                 var kOutDiv = parameters["KOutDiv"].ParseTo(2);
+                Core.Log.LibDebug("Creating a new MemoryStorage with the parameters:");
+                Core.Log.LibDebug("\tName: {0}", name);
+                Core.Log.LibDebug("\tCapacity: {0}", capacity);
+                Core.Log.LibDebug("\tKInDiv: {0}", kInDiv);
+                Core.Log.LibDebug("\tKOutDiv: {0}", kOutDiv);
                 return new LRU2QStorage(capacity, capacity / kInDiv, capacity / kOutDiv);
             }
 

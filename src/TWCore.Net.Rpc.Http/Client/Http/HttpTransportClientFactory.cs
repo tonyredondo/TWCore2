@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
@@ -39,6 +40,9 @@ namespace TWCore.Net.RPC.Client.Transports
             var url = parameters["Url"];
             var serializerMimeType = parameters["SerializerMimeType"];
             var serializer = SerializerManager.GetByMimeType(serializerMimeType);
+            Core.Log.LibDebug("Creating a new HttpTransportClient with the parameters:");
+            Core.Log.LibDebug("\tUrl: {0}", url);
+            Core.Log.LibDebug("\tSerializer: {0}", serializer);
             return new HttpTransportClient(url, serializer);
         }
     }

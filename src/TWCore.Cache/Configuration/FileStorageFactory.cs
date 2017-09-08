@@ -18,6 +18,7 @@ using TWCore.Cache.Storages.IO;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Cache.Configuration
 {
@@ -54,6 +55,13 @@ namespace TWCore.Cache.Configuration
             switch (storageType)
             {
                 case FileStorageType.Normal:
+                    Core.Log.LibDebug("Creating a new FileStorage with the parameters:");
+                    Core.Log.LibDebug("\tBasePath: {0}", basePath);
+                    Core.Log.LibDebug("\tNumberOfSubFolders: {0}", numberOfSubFolder);
+                    Core.Log.LibDebug("\tTransactionLogThreshold: {0}", transactionLogThreshold);
+                    Core.Log.LibDebug("\tSlowDownWriteThreshold: {0}", slowDownWriteThreshold);
+                    Core.Log.LibDebug("\tMetaSerializer: {0}", metaSerializer);
+                    Core.Log.LibDebug("\tSerializer: {0}", serializer);
                     return new FileStorage(basePath)
                     {
 						NumberOfSubFolders = numberOfSubFolder,

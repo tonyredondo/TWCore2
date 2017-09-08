@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using TWCore.Services;
+
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable SwitchStatementMissingSomeCases
 
@@ -40,6 +42,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(ILogItem item)
         {
+            if (!ServiceContainer.HasConsole) return;
             lock(Console.Out) 
             {
                 Console.ResetColor();

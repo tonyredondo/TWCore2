@@ -27,11 +27,11 @@ using TWCore.IO;
 
 namespace TWCore.Serialization
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITextSerializer" />
     /// <summary>
     /// Text serializer base class
     /// </summary>
-    public abstract class TextSerializer : ITextSerializer
+    public abstract class TextSerializer : ITextSerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
 
@@ -71,17 +71,6 @@ namespace TWCore.Serialization
         /// true if the serializer extension and/or compressor extension would be appended to the filePath; otherwise, false.
         /// </summary>
         public bool UseFileExtensions { get; set; } = true;
-        #endregion
-
-        #region .ctor
-        /// <summary>
-        /// Text serializer base class
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected TextSerializer()
-        {
-            SerializerManager.Register(this);
-        }
         #endregion
 
         #region Abstract Methods
@@ -383,6 +372,11 @@ namespace TWCore.Serialization
         public SerializedObject GetSerializedObject(object item) => new SerializedObject(item, this);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject GetSerializedObject<T>(T item) => new SerializedObject(item, this);
+        #endregion
+
+        #region CoreStart
+        public void CoreInit(Factories factories)
+            => SerializerManager.Register(this);
         #endregion
     }
 }

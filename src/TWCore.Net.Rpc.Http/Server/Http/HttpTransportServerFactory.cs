@@ -18,6 +18,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -40,6 +41,10 @@ namespace TWCore.Net.RPC.Server.Transports
             var enableGetDescriptors = parameters["EnableGetDescriptors"].ParseTo(true);
             var serializerMimeType = parameters["SerializerMimeType"];
             var serializer = SerializerManager.GetByMimeType(serializerMimeType);
+            Core.Log.LibDebug("Creating a new HttpTransportServer with the parameters:");
+            Core.Log.LibDebug("\tPort: {0}", port);
+            Core.Log.LibDebug("\tEnableGetDescriptors: {0}", enableGetDescriptors);
+            Core.Log.LibDebug("\tSerializer: {0}", serializer);
             return new HttpTransportServer(port, serializer, enableGetDescriptors);
         }
     }

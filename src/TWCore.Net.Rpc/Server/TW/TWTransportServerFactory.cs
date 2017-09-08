@@ -20,6 +20,7 @@ using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {
@@ -52,15 +53,15 @@ namespace TWCore.Net.RPC.Server.Transports
             var twServer = new TWTransportServer(port, serializer);
             if (disconnectedSessionTimeoutInMinutes > 0)
                 twServer.DisconnectedSessionTimeoutInMinutes = disconnectedSessionTimeoutInMinutes;
-            Core.Log.LibDebug("TWTransportServer created with parameters:");
-            Core.Log.LibDebug("Port: {0}", port);
+            Core.Log.LibDebug("Creating a new TWTransportServer with parameters:");
+            Core.Log.LibDebug("\tPort: {0}", port);
             if (serializerMimeType != null)
             {
-                Core.Log.LibDebug("SerializerMimeType: {0}", serializerMimeType);
+                Core.Log.LibDebug("\tSerializer: {0}", serializer);
                 if (serializer?.Compressor != null)
-                    Core.Log.LibDebug("CompressorEncoding: {0}", compressorEncoding);
+                    Core.Log.LibDebug("\tCompressorEncoding: {0}", compressorEncoding);
             }
-            Core.Log.LibDebug("DisconnectedSessionTimeoutInMinutes: {0}", disconnectedSessionTimeoutInMinutes);
+            Core.Log.LibDebug("\tDisconnectedSessionTimeoutInMinutes: {0}", disconnectedSessionTimeoutInMinutes);
             return twServer;
         }
     }

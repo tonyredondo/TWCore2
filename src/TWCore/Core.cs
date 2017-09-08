@@ -195,7 +195,14 @@ namespace TWCore
                     {
                         if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
                         Log.Debug("Loading log storage: {0}", name);
-                        Log.Storage.Add(Injector.New<ILogStorage>(name), Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
+                        var lSto = Injector.New<ILogStorage>(name);
+                        if (lSto == null) continue;
+                        if (lSto.GetType() == typeof(ConsoleLogStorage))
+                        {
+                            Log.Debug("Console log storage already added, ignoring.");
+                            continue;
+                        }
+                        Log.Storage.Add(lSto, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
                     }
                 }
                 var logStorage = Log.Storage.Get(typeof(ConsoleLogStorage));

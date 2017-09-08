@@ -358,7 +358,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             var dayHasChange = FileDate.Date != DateTime.Today;
             var maxLengthReached = false;
-            if (UseMaxLength)
+            if (UseMaxLength && _currentFileName.IsNotNullOrWhitespace() && File.Exists(_currentFileName))
             {
                 var fileLength = new FileInfo(_currentFileName).Length;
                 if (fileLength >= MaxLength)

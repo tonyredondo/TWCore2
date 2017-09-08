@@ -66,7 +66,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="serializer">Serializer</param>
         /// <param name="createByDay">True if a new trace file is created each day; otherwise, false</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SimpleFileTraceStorage(string basePath, ISerializer serializer, bool createByDay = true)
+        public SimpleFileTraceStorage(string basePath, ISerializer serializer = null, bool createByDay = true)
         {
             BasePath = basePath;
             FileName = Path.Combine(basePath, "Trace.txt");

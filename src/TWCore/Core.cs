@@ -198,7 +198,7 @@ namespace TWCore
                         var lSto = Injector.New<ILogStorage>(name);
                         if (lSto == null)
                         {
-                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ILogStorage).Name, name);
                             continue;
                         }
                         if (lSto.GetType() == typeof(ConsoleLogStorage))
@@ -228,7 +228,7 @@ namespace TWCore
                         var lTrace = Injector.New<ITraceStorage>(name);
                         if (lTrace == null)
                         {
-                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(ITraceStorage).Name, name);
                             continue;
                         }
                         Trace.Storage.Add(lTrace);
@@ -248,7 +248,7 @@ namespace TWCore
                         var sTransport = Injector.New<IStatusTransport>(name);
                         if (sTransport == null)
                         {
-                            Core.Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(IStatusTransport).Name, name);
+                            Log.Warning("The Injection for \"{0}\" with name \"{1}\" is null.", typeof(IStatusTransport).Name, name);
                             continue;
                         }
                         Status.Transports.Add(sTransport);
@@ -383,7 +383,7 @@ namespace TWCore
         public static void RunService<TIService>(string[] args) where TIService : class, new()
         {
             InitDefaults();
-            var service = (IService)Activator.CreateInstance<TIService>();
+            var service = (IService)Injector.New<TIService>(); // Activator.CreateInstance<TIService>();
 			ServiceContainerFactory(service, null).Run(args);
         }
         /// <summary>
@@ -565,7 +565,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReplaceSettingsTemplate(string source)
         {
-            StringBuilder sb = new StringBuilder(source, source.Length * 2);
+            var sb = new StringBuilder(source, source.Length * 2);
             foreach (var setting in Settings)
                 sb = sb.Replace(SettingsTemplateFormat.ApplyFormat(setting.Key), setting.Value);
             return sb.ToString();

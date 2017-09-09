@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Log;
 using TWCore.Text;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Injector
 {
@@ -420,13 +421,7 @@ namespace TWCore.Injector
         {
             RegisterAttributes();
             var instanceDefinition = Settings.GetInstantiableClassDefinition(type);
-            if (instanceDefinition == null)
-            {
-                if (name.IsNullOrEmpty())
-                    throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
-                else
-                    throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
-            }
+            if (instanceDefinition == null) return null;
             if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator))
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);

@@ -16,6 +16,10 @@ limitations under the License.
 
 using System;
 using System.Threading;
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging.RawClient
 {

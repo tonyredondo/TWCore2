@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable IntroduceOptionalParameters.Global
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
 
 namespace TWCore.Diagnostics.Log.Storages
 {

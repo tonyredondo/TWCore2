@@ -28,6 +28,7 @@ using TWCore.Serialization;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable ParameterTypeCanBeEnumerable.Local
 
 namespace TWCore.Cache
 {

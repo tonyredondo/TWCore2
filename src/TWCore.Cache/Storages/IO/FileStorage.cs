@@ -24,6 +24,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable ReturnTypeCanBeEnumerable.Local
 
 namespace TWCore.Cache.Storages.IO
 {

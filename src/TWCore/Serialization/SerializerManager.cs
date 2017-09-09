@@ -26,6 +26,7 @@ using TWCore.Diagnostics.Status;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
 
 namespace TWCore.Serialization
 {

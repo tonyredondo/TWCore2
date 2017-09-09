@@ -21,6 +21,7 @@ using System.Threading;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
+// ReSharper disable ReturnTypeCanBeEnumerable.Global
 
 namespace TWCore.Net.Multicast
 {

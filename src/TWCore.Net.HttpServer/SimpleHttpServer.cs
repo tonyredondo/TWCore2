@@ -283,7 +283,7 @@ namespace TWCore.Net.HttpServer
                 ctl.Context = context;
                 if (action == null)
                     action = url.Substring(1);
-                var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault(m => m.Name.ToLowerInvariant() == action.ToLowerInvariant());
+                var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault(m => string.Equals(m.Name, action, StringComparison.InvariantCultureIgnoreCase));
                 if (ctlMethod == null) return;
                 var mParams = ctlMethod.GetParameters();
                 if (mParams.Length > 0)

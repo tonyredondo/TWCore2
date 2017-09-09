@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using TWCore.Diagnostics.Log.Storages;
+// ReSharper disable ParameterTypeCanBeEnumerable.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Diagnostics.Log
 {

@@ -178,7 +178,7 @@ namespace TWCore.Tests
 
 
 
-        EntCity FillEntity(EntityBinder binder, object[] rowValues)
+        private static EntCity FillEntity(EntityBinder binder, object[] rowValues)
         {
             var EntCity = binder.Bind<EntCity>(rowValues);
             return EntCity;

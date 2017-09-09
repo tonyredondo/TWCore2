@@ -21,6 +21,7 @@ using System;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeMadeStatic.Local
 #pragma warning disable 219
 
 namespace TWCore.Numerics

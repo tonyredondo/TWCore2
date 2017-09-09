@@ -1,4 +1,6 @@
 ﻿using System;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeMadeStatic.Local
 
 // ReSharper disable CheckNamespace
 

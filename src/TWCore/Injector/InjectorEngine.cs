@@ -173,8 +173,7 @@ namespace TWCore.Injector
             if (typeInfo.IsAbstract)
                 return Settings.GetAbstractDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
             if (!typeInfo.IsClass) return EmptyStringArray;
-            var instantiable = Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName);
-            return instantiable != null ? new[] { instantiable.Name } : EmptyStringArray;
+            return Settings.GetInstantiableClassDefinition(type.AssemblyQualifiedName)?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
         }
 
         /// <summary>
@@ -420,7 +419,7 @@ namespace TWCore.Injector
         private object CreateClassInstance(string type, string name)
         {
             RegisterAttributes();
-            var instanceDefinition = Settings.GetInstantiableClassDefinition(type);
+            var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault(i => i.Name == name);
             if (instanceDefinition == null) return null;
             if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator))
                 return activator.SingletonValue;

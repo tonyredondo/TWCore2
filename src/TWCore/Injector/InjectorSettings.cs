@@ -105,9 +105,9 @@ namespace TWCore.Injector
         /// <param name="type">AssemblyQualifiedName of the type</param>
         /// <returns>Instantiable instance definition</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Instantiable GetInstantiableClassDefinition(string type)
+        public IEnumerable<Instantiable> GetInstantiableClassDefinition(string type)
         {
-            return InstantiableClasses.FirstOrDefault(i =>
+            return InstantiableClasses.Where(i =>
             {
                 if (type.Length == i.Type.Length)
                     return type == i.Type;

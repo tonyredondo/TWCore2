@@ -392,10 +392,9 @@ namespace TWCore.Injector
             {
                 if (name.IsNullOrEmpty())
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
-                else
-                    throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
+                throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator))
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
@@ -408,10 +407,9 @@ namespace TWCore.Injector
             {
                 if (name.IsNullOrEmpty())
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
-                else
-                    throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
+                throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator))
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
@@ -421,7 +419,7 @@ namespace TWCore.Injector
             RegisterAttributes();
             var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault(i => i.Name == name);
             if (instanceDefinition == null) return null;
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator))
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }

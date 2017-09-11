@@ -62,12 +62,13 @@ namespace TWCore.Cache.Client.Configuration
             if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
             {
                 serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
+                Ensure.ReferenceNotNull(serializer, $"The Serializer \"{cConfig.Pool.SerializerMimeType}\" couldn't be loaded.");
                 if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
                     serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
             }
             else
                 serializer = SerializerManager.DefaultBinarySerializer;
-            
+
             var ccp =
                 new CacheClientPool(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder)
                 {
@@ -132,6 +133,7 @@ namespace TWCore.Cache.Client.Configuration
             if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
             {
                 serializer = SerializerManager.GetByMimeType(cConfig.Pool.SerializerMimeType);
+                Ensure.ReferenceNotNull(serializer, $"The Serializer \"{cConfig.Pool.SerializerMimeType}\" couldn't be loaded.");
                 if (cConfig.Pool.CompressorEncoding.IsNotNullOrEmpty())
                     serializer.Compressor = CompressorManager.GetByEncodingType(cConfig.Pool.CompressorEncoding);
             }

@@ -140,7 +140,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="useSSL">Smtp server use SSL</param>
         /// <param name="timeout">Smtp server Timeout</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetSMTP(string host, int port, bool useDefaultCredentials, string user = null, string password = null, bool useSSL = false, int timeout = 30)
+        public static void SetSMTP(string host, int port, bool useDefaultCredentials, string user = null, string password = null, bool useSSL = false, int timeout = 30)
         {
             if (!_waiting)
             {

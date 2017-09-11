@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable NotAccessedField.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeMadeStatic.Global
 
 namespace TWCore.Serialization.WSerializer.Serializer
 {
@@ -40,7 +42,7 @@ namespace TWCore.Serialization.WSerializer.Serializer
 
         #region Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string GetTypeName(Type type)
+        public static string GetTypeName(Type type)
         {
             return AllTypeNames.GetOrAdd(type, gType =>
             {
@@ -56,7 +58,7 @@ namespace TWCore.Serialization.WSerializer.Serializer
             });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Tuple<string, string, string> GetTypeNameTuple(Type type)
+        public static Tuple<string, string, string> GetTypeNameTuple(Type type)
         {
             return AllTypeNamesTuples.GetOrAdd(type, gType =>
             {

@@ -33,6 +33,7 @@ using TWCore.Data.Schema.Generator;
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeMadeStatic.Global
 
 namespace TWCore.Data
 {

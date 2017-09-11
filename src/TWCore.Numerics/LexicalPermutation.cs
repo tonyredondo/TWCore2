@@ -96,10 +96,10 @@ namespace TWCore.Numerics
         /// <summary>
         /// Calculates n!
         /// </summary>
-        private long GetFactorial(long n)
+        private static long GetFactorial(long n)
         {
             var retVal = 1;
-            for (int i = 1; i <= n; i++) retVal *= i;
+            for (var i = 1; i <= n; i++) retVal *= i;
             return retVal;
         }
 
@@ -109,8 +109,8 @@ namespace TWCore.Numerics
         private void SetCurrentFactorialNumber(long nIn)
         {
             // Convert
-            long currentNumber = nIn;
-            for (int i = _currentFactorialNumber.Length - 1; i >= 0; i--)
+            var currentNumber = nIn;
+            for (var i = _currentFactorialNumber.Length - 1; i >= 0; i--)
             {
                 _currentFactorialNumber[i] = (int)(currentNumber / _knownFactorials[i]);
                 currentNumber %= _knownFactorials[i];

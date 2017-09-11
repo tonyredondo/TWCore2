@@ -175,7 +175,7 @@ namespace TWCore.Net.Multicast
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Send(byte[] buffer, int offset, int count)
         {
-            var dtsize = PacketSize - 16 - 2 - 2 - 2;
+            const int dtsize = PacketSize - 16 - 2 - 2 - 2;
             var numMsgs = (int)Math.Ceiling((double)count / dtsize);
             if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
             var guidBytes = Guid.NewGuid().ToByteArray();

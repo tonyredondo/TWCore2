@@ -57,8 +57,8 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
 
         #region Fields
+        private const long _socketErrorsToDisconnection = 2;
         private readonly Task _receiveTask;
-        private readonly long _socketErrorsToDisconnection = 2;
         private readonly CancellationTokenSource _tokenSource;
         private readonly BufferedStream _readStream;
         private readonly BufferedStream _writeStream;

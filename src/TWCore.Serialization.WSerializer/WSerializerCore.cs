@@ -28,6 +28,7 @@ using TWCore.Security;
 using TWCore.Serialization.WSerializer.Deserializer;
 using TWCore.Serialization.WSerializer.Serializer;
 using TWCore.Serialization.WSerializer.Types;
+// ReSharper disable MemberCanBeMadeStatic.Global
 
 namespace TWCore.Serialization.WSerializer
 {

@@ -45,6 +45,7 @@ namespace TWCore.Services
 
             var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
             if (string.IsNullOrEmpty(queueSettings.ConfigFile)) return;
+            queueSettings.ServerName = queueSettings.ServerName ?? Core.ApplicationName;
 
             var queuesConfigFile = queueSettings.ConfigFile;
             queuesConfigFile = queuesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);

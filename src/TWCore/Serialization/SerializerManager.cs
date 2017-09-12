@@ -51,8 +51,10 @@ namespace TWCore.Serialization
                 foreach(var mime in DefaultBinarySerializerMimeTypes)
                 {
                     var serializer = GetByMimeType(mime);
-                    if (serializer != null)
-                        return serializer;
+                    if (serializer == null) continue;
+                    if (mime == SerializerMimeTypes.BinaryFormatter && DefaultBinarySerializerMimeTypes.Last() == mime)
+                        Core.Log.Warning("The BinaryFormatter serializer was loaded and this probably is not what you want. Please check the nuget package references for other serializer. If this is intented, ignore the message.");
+                    return serializer;
                 }
                 return Serializers.FirstOrDefault(s => s.SerializerType == SerializerType.Binary);
             }

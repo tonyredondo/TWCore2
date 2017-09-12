@@ -11,6 +11,7 @@ using TWCore.Data.SQLite;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable ConvertToConstant.Local
 
 namespace TWCore.Tests
 {
@@ -21,8 +22,8 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting Dal Generator Test");
 
-            string folder = "./Data";
-            string connectionString =
+            var folder = "./Data";
+            var connectionString =
                 "Data Source=10.10.1.21;Initial Catalog=AGSW_MIDDLE;User Id=sa;Password=genesis;Pooling=True";
                 //"Data Source=10.10.1.50;Initial Catalog=MRFLY_MIDDLE;User Id=MRFLY_SVC;Password=mISTERfLY13;Pooling=True";
 
@@ -54,7 +55,7 @@ namespace TWCore.Tests
             dGen.Create(folder);
 
             Core.Log.InfoBasic("Generating PostgreSQL Dal: {0}", folder);
-            string connectionString2 = "Server=10.10.1.50;Port=5432;Database=FLY_MIDDLE;User Id=postgres;Password=genesis;";
+            var connectionString2 = "Server=10.10.1.50;Port=5432;Database=FLY_MIDDLE;User Id=postgres;Password=genesis;";
             var pdal = new PostgreSQLDataAccess(connectionString2, DataAccessType.Query);
 
 
@@ -64,13 +65,13 @@ namespace TWCore.Tests
 
 
             Core.Log.InfoBasic("Generating MySql Dal: {0}", folder);
-            string connectionString3 = "MySqlConnString";
+            var connectionString3 = "MySqlConnString";
             var sdal = new MySqlDataAccess(connectionString3, DataAccessType.Query);
             dGen.Create(folder, sdal);
 
 
             Core.Log.InfoBasic("Generating Sqlite Dal: {0}", folder);
-            string connectionString4 = "SqliteConnString";
+            var connectionString4 = "SqliteConnString";
             var sldal = new SQLiteDataAccess(connectionString4);
             dGen.Create(folder, sldal);
         }

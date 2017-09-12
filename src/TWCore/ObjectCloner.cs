@@ -24,6 +24,8 @@ using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable MemberCanBeProtected.Local
+// ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable ForCanBeConvertedToForeach
 
 // ReSharper disable UnusedMember.Local
 // ReSharper disable NotAccessedField.Local

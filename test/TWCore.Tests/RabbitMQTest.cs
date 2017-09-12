@@ -6,6 +6,7 @@ using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RabbitMQ;
 using TWCore.Serialization;
 using TWCore.Services;
+// ReSharper disable ConvertToConstant.Local
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedVariable

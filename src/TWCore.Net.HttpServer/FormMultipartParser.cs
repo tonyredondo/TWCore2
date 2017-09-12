@@ -21,6 +21,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Net.HttpServer
 {

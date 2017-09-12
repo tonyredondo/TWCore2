@@ -21,6 +21,8 @@ using System.IO.Compression;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.IO;
+// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable InvertIf
 
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming

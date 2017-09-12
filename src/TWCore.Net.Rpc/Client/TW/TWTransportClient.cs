@@ -35,6 +35,7 @@ using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Net.RPC.Client.Transports
 {

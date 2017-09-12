@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Net.RPC
 {

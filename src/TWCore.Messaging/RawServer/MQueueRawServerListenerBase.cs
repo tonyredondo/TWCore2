@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Messaging.RawServer
 {

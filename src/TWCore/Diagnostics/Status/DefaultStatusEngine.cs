@@ -26,6 +26,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable ForCanBeConvertedToForeach
 
 namespace TWCore.Diagnostics.Status
 {

@@ -23,6 +23,7 @@ using TWCore.Collections;
 // ReSharper disable CollectionNeverUpdated.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Injector
 {

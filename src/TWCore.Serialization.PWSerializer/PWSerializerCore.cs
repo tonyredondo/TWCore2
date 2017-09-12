@@ -27,6 +27,8 @@ using TWCore.IO;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.PWSerializer.Serializer;
 using TWCore.Serialization.PWSerializer.Types;
+// ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable ForCanBeConvertedToForeach
 
 // ReSharper disable InconsistentNaming
 

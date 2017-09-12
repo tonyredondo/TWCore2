@@ -1,5 +1,6 @@
 using TWCore.Security;
 using TWCore.Services;
+// ReSharper disable ConvertToConstant.Local
 
 namespace TWCore.Tests
 {

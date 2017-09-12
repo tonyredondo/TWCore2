@@ -24,6 +24,7 @@ using TWCore.Reflection;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeMadeStatic.Global
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Serialization.WSerializer.Serializer
 {

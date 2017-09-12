@@ -26,6 +26,7 @@ using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Net.RPC.Client
 {

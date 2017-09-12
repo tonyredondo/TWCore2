@@ -25,6 +25,10 @@ using System.Threading.Tasks;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable TailRecursiveCall
+// ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable LoopCanBeConvertedToQuery
 
 // ReSharper disable CheckNamespace
 

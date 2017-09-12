@@ -103,7 +103,7 @@ namespace TWCore.Services
         public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            return _queueServer.GetServer(responseServer);
+            return _queueServer?.GetServer(responseServer);
         }
 
         /// <summary>
@@ -114,7 +114,7 @@ namespace TWCore.Services
         public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            return _queueServer.GetRawServer(responseServer);
+            return _queueServer?.GetRawServer(responseServer);
         }
 
         /// <summary>

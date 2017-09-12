@@ -73,7 +73,7 @@ namespace TWCore.Services
 		/// Gets a value indicating enable messages trace.
 		/// </summary>
 		/// <value><c>true</c> if enable messages trace; otherwise, <c>false</c>.</value>
-		public bool EnableMessagesTrace { get; private set; }
+		public bool EnableMessagesTrace { get; set; }
         #endregion
 
         #region Public Methods

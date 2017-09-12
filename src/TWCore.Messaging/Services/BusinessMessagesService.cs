@@ -25,32 +25,14 @@ namespace TWCore.Services
 	/// <summary>
 	/// Business messages service.
 	/// </summary>
-	public class BusinessMessagesService : MessagingService
+	public class BusinessMessagesService<TBusiness> : MessagingService where TBusiness : IBusiness, new()
 	{
-	    private readonly Func<IBusiness> _businessFactory;
-	    private readonly Func<IMQueueServer> _queueServerFactory;
-
-		#region .ctor
-		/// <summary>
-		/// Business messages service.
-		/// </summary>
-		/// <param name="businessFactory">Business factory delegate</param>
-		public BusinessMessagesService(Func<IBusiness> businessFactory)
-		{
-			_businessFactory = businessFactory;
-			_queueServerFactory = () => Core.Services.GetQueueServer();
-		}
-		/// <summary>
-		/// Business messages service.
-		/// </summary>
-		/// <param name="businessFactory">Business factory delegate</param>
-		/// <param name="queueServerFactory">QueueServer factory delegate</param>
-		public BusinessMessagesService(Func<IBusiness> businessFactory, Func<IMQueueServer> queueServerFactory)
-		{
-			_businessFactory = businessFactory;
-			_queueServerFactory = queueServerFactory;
-		}
-		#endregion
+        #region Properties
+        /// <summary>
+        /// Get or set the IMQueueServer factory, by default is loaded using the queues.xml configuration file
+        /// </summary>
+	    public Func<IMQueueServer> QueueServerFactory { get; set; } = () => Core.Services.GetQueueServer();
+        #endregion
 
 		#region Overrides
 		/// <inheritdoc />
@@ -60,14 +42,14 @@ namespace TWCore.Services
 		/// <param name="server">Queue server object instance</param>
 		/// <returns>Message processor instance</returns>
 		protected override IMessageProcessor GetMessageProcessor(IMQueueServer server)
-			=> new BusinessMessageProcessor(server, _businessFactory);
+			=> new BusinessMessageProcessor(server, () => new TBusiness());
 		/// <inheritdoc />
 		/// <summary>
 		/// Gets the queue server object
 		/// </summary>
 		/// <returns>IMQueueServer object instance</returns>
 		protected override IMQueueServer GetQueueServer()
-			=> _queueServerFactory();
+			=> QueueServerFactory();
 		#endregion
 	}
 }

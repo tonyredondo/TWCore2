@@ -59,6 +59,27 @@ namespace TWCore.Diagnostics.Trace.Storages
         #endregion
 
         #region .ctor
+        /// <inheritdoc />
+        /// <summary>
+        /// Writes a simple trace file
+        /// </summary>
+        /// <param name="basePath">Base path</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SimpleFileTraceStorage(string basePath) : this(
+            basePath, null, true)
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Writes a simple trace file
+        /// </summary>
+        /// <param name="basePath">Base path</param>
+        /// <param name="serializer">Serializer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SimpleFileTraceStorage(string basePath, ISerializer serializer) : this(
+            basePath, serializer, true)
+        {
+        }
         /// <summary>
         /// Writes a simple trace file
         /// </summary>
@@ -66,7 +87,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="serializer">Serializer</param>
         /// <param name="createByDay">True if a new trace file is created each day; otherwise, false</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SimpleFileTraceStorage(string basePath, ISerializer serializer = null, bool createByDay = true)
+        public SimpleFileTraceStorage(string basePath, ISerializer serializer, bool createByDay)
         {
             BasePath = basePath;
             FileName = Path.Combine(basePath, "Trace.txt");

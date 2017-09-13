@@ -93,8 +93,7 @@ namespace TWCore.Services
             Init();
             if (_queues?.Items?.Contains(queuePairName) == true)
                 return _queues.Items[queuePairName].GetClient();
-            Core.Log.Warning("The Queue Pair Name: {0} not found in the configuration file.", queuePairName);
-            return null;
+            throw new NullReferenceException($"The Queue Pair Name: {queuePairName} not found in the configuration file.");
         }
         /// <summary>
         /// Gets the queue server object
@@ -104,7 +103,9 @@ namespace TWCore.Services
         public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            return _queueServer?.GetServer(responseServer);
+            if (_queueServer == null)
+                throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
+            return _queueServer.GetServer(responseServer);
         }
 
         /// <summary>
@@ -115,7 +116,9 @@ namespace TWCore.Services
         public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
         {
             Init();
-            return _queueServer?.GetRawServer(responseServer);
+            if (_queueServer == null)
+                throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
+            return _queueServer.GetRawServer(responseServer);
         }
 
         /// <summary>

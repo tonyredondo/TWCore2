@@ -205,7 +205,7 @@ namespace TWCore.Messaging.RabbitMQ
             foreach (var sender in _senders)
             {
                 if (!sender.EnsureConnection()) continue;
-                else sender.EnsureExchange();
+                sender.EnsureExchange();
                 var props = sender.Channel.CreateBasicProperties();
                 props.CorrelationId = correlationId;
                 props.ReplyTo = replyTo;

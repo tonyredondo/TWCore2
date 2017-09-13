@@ -245,12 +245,26 @@ namespace TWCore.Diagnostics.Trace.Storages
 
             lock (_sWriter)
             {
-                var line = string.Format("{0} ({1, 15}) {2}: {3}",
-                    item.Timestamp.GetTimeSpanFormat(),
-                    (!string.IsNullOrEmpty(item.GroupName)) ? item.GroupName + " " : string.Empty,
-                    item.TraceName,
-                    traceFilePath
-                );
+                string line;
+
+                if (string.IsNullOrEmpty(item.GroupName))
+                {
+                    line = string.Format("{0} ({1, 15}) {2}: {3}",
+                        item.Timestamp.GetTimeSpanFormat(),
+                        "NO GROUP",
+                        item.TraceName,
+                        traceFilePath
+                    );
+                }
+                else
+                {
+                    line = string.Format("{0} ({1, 15}) {2}: {3}",
+                        item.Timestamp.GetTimeSpanFormat(),
+                        item.GroupName,
+                        item.TraceName,
+                        traceFilePath
+                    );
+                }
                 _sWriter.WriteLine(line);
                 _sWriter.Flush();
             }

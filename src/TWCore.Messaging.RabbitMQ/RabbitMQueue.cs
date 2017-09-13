@@ -63,7 +63,6 @@ namespace TWCore.Messaging.RabbitMQ
             Route = queue.Route;
             Name = queue.Name;
             Parameters = queue.Parameters ?? new KeyValueCollection();
-            Factory = new ConnectionFactory { Uri = new Uri(Route) };
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
         }
@@ -82,13 +81,10 @@ namespace TWCore.Messaging.RabbitMQ
         {
             try
             {
-                if (Connection == null)
-                {
-                    Connection = Factory.CreateConnection();
-                    Channel = Connection.CreateModel();
-                }
-                if (Channel == null)
-                    Channel = Connection.CreateModel();
+                if (Channel != null) return true;
+                Factory = new ConnectionFactory { Uri = new Uri(Route) };
+                Connection = Factory.CreateConnection();
+                Channel = Connection.CreateModel();
                 return true;
             }
             catch (Exception ex)
@@ -121,12 +117,14 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Close()
         {
-            if (Channel?.IsOpen == true)
+            if (Channel == null) return;
+            if (Channel.IsOpen)
                 Channel.Close();
-            if (Connection?.IsOpen == true)
+            if (Connection.IsOpen)
                 Connection.Close();
             Connection = null;
             Channel = null;
+            Factory = null;
         }
 
         public void Dispose()

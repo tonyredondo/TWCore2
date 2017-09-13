@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
@@ -48,6 +49,8 @@ namespace TWCore.Messaging.RabbitMQ
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
+        private long _receiverThreads;
+        private CancellationTokenSource _receiverRemoveDelayTokenSource;
         #endregion
 
         #region Properties
@@ -91,37 +94,20 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
-                if (_clientQueues?.SendQueues?.Any() == true)
+                if (_clientQueues != null)
                 {
-                    foreach (var queue in _clientQueues.SendQueues)
+                    if (_clientQueues.SendQueues?.Any() == true)
                     {
-                        var rabbitQueue = new RabbitMQueue(queue);
-                        rabbitQueue.EnsureConnection();
-                        rabbitQueue.EnsureExchange();
-                        _senders.Add(rabbitQueue);
-                    }
-                }
-                if (_clientQueues?.RecvQueue != null)
-                {
-                    var rabbitQueue = new RabbitMQueue(_clientQueues.RecvQueue);
-                    _receiver = rabbitQueue;
-                    if (UseSingleResponseQueue)
-                    {
-                        _receiver.EnsureConnection();
-                        _receiver.EnsureQueue();
-                        _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
-                        _receiverConsumer.Received += (ch, ea) =>
+                        foreach (var queue in _clientQueues.SendQueues)
                         {
-                            var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
-                            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
-                            message.CorrelationId = correlationId;
-                            message.Body = ea.Body;
-                            message.Properties = ea.BasicProperties;
-                            message.WaitHandler.Set();
-                            _receiver.Channel.BasicAck(ea.DeliveryTag, false);
-                        };
-                        _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                            var rabbitQueue = new RabbitMQueue(queue);
+                            rabbitQueue.EnsureConnection();
+                            rabbitQueue.EnsureExchange();
+                            _senders.Add(rabbitQueue);
+                        }
                     }
+                    if (_clientQueues.RecvQueue != null)
+                        _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
             }
 
@@ -152,9 +138,7 @@ namespace TWCore.Messaging.RabbitMQ
             }
             if (_receiver != null)
             {
-                if (!string.IsNullOrEmpty(_receiverConsumerTag))
-                    _receiver.Channel.BasicCancel(_receiverConsumerTag);
-                _receiver.Close();
+                RemoveReceiverConsumer();
                 _receiver = null;
             }
             foreach (var pools in _routeConnection)
@@ -240,11 +224,17 @@ namespace TWCore.Messaging.RabbitMQ
             if (_receiverOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
+            Interlocked.Increment(ref _receiverThreads);
+
             var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
 
-            if (!UseSingleResponseQueue)
+            if (UseSingleResponseQueue)
+            {
+                CreateReceiverConsumer();
+            }
+            else
             {
                 var recName = _receiver.Name + "_" + correlationId;
                 var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
@@ -277,7 +267,65 @@ namespace TWCore.Messaging.RabbitMQ
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
+
+            if (Interlocked.Decrement(ref _receiverThreads) <= 0)
+                RemoveReceiverConsumer();
+
             return message.Body;
+        }
+        #endregion
+
+        #region Private Methods
+        private void CreateReceiverConsumer()
+        {
+            if (_receiverConsumer != null) return;
+            if (_receiver == null) return;
+            lock (_receiver)
+            {
+
+                _receiver.EnsureConnection();
+                _receiver.EnsureQueue();
+                _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
+                _receiverConsumer.Received += (ch, ea) =>
+                {
+                    var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
+                    var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
+                    message.CorrelationId = correlationId;
+                    message.Body = ea.Body;
+                    message.Properties = ea.BasicProperties;
+                    message.WaitHandler.Set();
+                    _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+                };
+                _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", _receiver.Name);
+            }
+        }
+        private void RemoveReceiverConsumer()
+        {
+            try
+            {
+                _receiverRemoveDelayTokenSource?.Cancel();
+                _receiverRemoveDelayTokenSource = new CancellationTokenSource();
+                var token = _receiverRemoveDelayTokenSource.Token;
+                Task.Delay(2000, token).ContinueWith(tsk =>
+                {
+                    if (tsk.IsCanceled) return;
+                    if (token.IsCancellationRequested) return;
+                    if (Interlocked.Read(ref _receiverThreads) > 0) return;
+                    if (_receiver == null) return;
+                    if (!string.IsNullOrEmpty(_receiverConsumerTag))
+                    {
+                        _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                        _receiverConsumerTag = null;
+                    }
+                    _receiverConsumer = null;
+                    _receiver.Close();
+                    Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", _receiver.Name);
+                }, token);
+            }
+            catch (TaskCanceledException)
+            {
+            }
         }
         #endregion
     }

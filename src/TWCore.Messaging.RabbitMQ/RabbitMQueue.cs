@@ -24,11 +24,13 @@ using TWCore.Messaging.Configuration;
 
 namespace TWCore.Messaging.RabbitMQ
 {
-	/// <summary>
-	/// RabbitMQ Queue
-	/// </summary>
-	internal class RabbitMQueue : MQConnection, IDisposable
+    /// <summary>
+    /// RabbitMQ Queue
+    /// </summary>
+    internal class RabbitMQueue : MQConnection, IDisposable
     {
+        private Action _autoCloseAction;
+
         #region Properties
         /// <summary>
         /// Connection Factory
@@ -65,6 +67,7 @@ namespace TWCore.Messaging.RabbitMQ
             Parameters = queue.Parameters ?? new KeyValueCollection();
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
+            _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(3000);
         }
         ~RabbitMQueue()
         {
@@ -81,11 +84,14 @@ namespace TWCore.Messaging.RabbitMQ
         {
             try
             {
-                if (Channel != null) return true;
-                Factory = new ConnectionFactory { Uri = new Uri(Route) };
-                Connection = Factory.CreateConnection();
-                Channel = Connection.CreateModel();
-                return true;
+                lock (this)
+                {
+                    if (Channel != null) return true;
+                    Factory = new ConnectionFactory { Uri = new Uri(Route) };
+                    Connection = Factory.CreateConnection();
+                    Channel = Connection.CreateModel();
+                    return true;
+                }
             }
             catch (Exception ex)
             {
@@ -117,16 +123,26 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Close()
         {
-            if (Channel == null) return;
-            if (Channel.IsOpen)
-                Channel.Close();
-            if (Connection.IsOpen)
-                Connection.Close();
-            Connection = null;
-            Channel = null;
-            Factory = null;
+            lock (this)
+            {
+                if (Channel == null) return;
+                if (Channel.IsOpen)
+                    Channel.Close();
+                if (Connection.IsOpen)
+                    Connection.Close();
+                Connection = null;
+                Channel = null;
+                Factory = null;
+            }
         }
-
+        /// <summary>
+        /// Autoclose connection when inactive.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AutoClose()
+        {
+            _autoCloseAction();
+        }
         public void Dispose()
         {
             Close();

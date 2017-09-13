@@ -86,6 +86,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 lock (this)
                 {
+                    Core.Log.LibVerbose("Creating channel for: {0}", Name);
                     if (Channel != null) return true;
                     Factory = new ConnectionFactory { Uri = new Uri(Route) };
                     Connection = Factory.CreateConnection();
@@ -133,6 +134,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Connection = null;
                 Channel = null;
                 Factory = null;
+                Core.Log.LibVerbose("Closing channel for: {0}", Name);
             }
         }
         /// <summary>

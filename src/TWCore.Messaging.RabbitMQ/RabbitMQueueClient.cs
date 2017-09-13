@@ -21,13 +21,13 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -50,7 +50,7 @@ namespace TWCore.Messaging.RabbitMQ
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
         private long _receiverThreads;
-        private CancellationTokenSource _receiverRemoveDelayTokenSource;
+        private Action _receiverStopBuffered;
         #endregion
 
         #region Properties
@@ -81,7 +81,8 @@ namespace TWCore.Messaging.RabbitMQ
             OnDispose();
             _senders = new List<RabbitMQueue>();
             _receiver = null;
-
+            _receiverStopBuffered = ActionDelegate.Create(RemoveReceiverConsumer).CreateBufferedAction(2000);
+            
             if (Config != null)
             {
                 if (Config.ClientQueues != null)
@@ -269,6 +270,7 @@ namespace TWCore.Messaging.RabbitMQ
                     if (_correlationIdConsumers.TryGetValue(crId, out var consumerTag))
                         cReceiver.Channel.BasicCancel(consumerTag);
                     cReceiver.Channel.QueueDeleteNoWait(recName);
+                    cReceiver.AutoClose();
                     pool.Store(cReceiver);
                 };
                 _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
@@ -285,7 +287,7 @@ namespace TWCore.Messaging.RabbitMQ
             sw.Stop();
 
             if (Interlocked.Decrement(ref _receiverThreads) <= 0)
-                RemoveReceiverConsumer();
+                _receiverStopBuffered();
 
             return response;
         }
@@ -319,30 +321,16 @@ namespace TWCore.Messaging.RabbitMQ
         }
         private void RemoveReceiverConsumer()
         {
-            try
+            if (Interlocked.Read(ref _receiverThreads) > 0) return;
+            if (_receiver == null) return;
+            if (!string.IsNullOrEmpty(_receiverConsumerTag))
             {
-                _receiverRemoveDelayTokenSource?.Cancel();
-                _receiverRemoveDelayTokenSource = new CancellationTokenSource();
-                var token = _receiverRemoveDelayTokenSource.Token;
-                Task.Delay(2000, token).ContinueWith(tsk =>
-                {
-                    if (tsk.IsCanceled) return;
-                    if (token.IsCancellationRequested) return;
-                    if (Interlocked.Read(ref _receiverThreads) > 0) return;
-                    if (_receiver == null) return;
-                    if (!string.IsNullOrEmpty(_receiverConsumerTag))
-                    {
-                        _receiver.Channel.BasicCancel(_receiverConsumerTag);
-                        _receiverConsumerTag = null;
-                    }
-                    _receiverConsumer = null;
-                    _receiver.Close();
-                    Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", _receiver.Name);
-                }, token);
+                _receiver.Channel.BasicCancel(_receiverConsumerTag);
+                _receiverConsumerTag = null;
             }
-            catch (TaskCanceledException)
-            {
-            }
+            _receiverConsumer = null;
+            _receiver.Close();
+            Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been disposed.", _receiver.Name);
         }
         #endregion
     }

@@ -245,8 +245,8 @@ namespace TWCore.Diagnostics.Trace.Storages
 
             lock (_sWriter)
             {
-                var line = string.Format("{0} [TRACE] ({1};{2}) {3}: {4} ({5})",
-                    item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss.fff"),
+                var line = string.Format("{0} ({1, 15}) {2}: {3}",
+                    item.Timestamp.GetTimeSpanFormat(),
                     (!string.IsNullOrEmpty(item.GroupName)) ? item.GroupName + " " : string.Empty,
                     item.TraceName,
                     traceFilePath

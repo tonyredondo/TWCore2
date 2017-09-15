@@ -42,12 +42,12 @@ namespace TWCore.Object.Compiler
             get
             {
                 if (_references != null) return _references;
-
                 var locationReferences = new HashSet<string>
                 {
                     typeof(object).Assembly.Location,
                     typeof(Enumerable).Assembly.Location,
                     typeof(CodeCompiler).Assembly.Location,
+                    typeof(Core).Assembly.Location,
                     typeof(System.Diagnostics.Process).Assembly.Location
                 };
                 var assemblies = Factory.GetAllAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));

@@ -1,9 +1,11 @@
 using TWCore.Security;
 using TWCore.Services;
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class EncryptionTest : ContainerParameterService
     {
         public EncryptionTest() : base("encryptiontest", "Encryption Test") { }

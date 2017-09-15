@@ -3,9 +3,11 @@ using System.Text;
 using System.Threading.Tasks;
 using TWCore.Net.Browser;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class BrowserEmulatorTest : ContainerParameterServiceAsync
     {
         public BrowserEmulatorTest() : base("browserTest", "Browser Emulator Test") { }

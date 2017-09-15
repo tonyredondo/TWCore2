@@ -12,9 +12,11 @@ using TWCore.Data.SQLite;
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class DalGeneratorTest : ContainerParameterService
     {
         public DalGeneratorTest() : base("dalgeneratortest", "DalGenerator Test") { }

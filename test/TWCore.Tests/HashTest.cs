@@ -1,9 +1,11 @@
 using System;
 using TWCore.Security;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class HashTest : ContainerParameterService
     {
         public HashTest() : base("hashtest", "Hash Test") { }

@@ -9,13 +9,14 @@ using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable FieldCanBeMadeReadOnly.Local
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
-
+    /// <inheritdoc />
     public class CacheServerTest : ContainerParameterService
     {
-        static ISerializer GlobalSerializer = new WBinarySerializer();
+        private static ISerializer GlobalSerializer = new WBinarySerializer();
 
         public CacheServerTest() : base("cacheservertest", "Cache server test")
         {
@@ -26,7 +27,8 @@ namespace TWCore.Tests
             info.ShouldEndExecution = false;
         }
 
-        class TestCacheService : CacheService
+        /// <inheritdoc />
+        private class TestCacheService : CacheService
         {
             protected override StorageManager GetManager()
             {

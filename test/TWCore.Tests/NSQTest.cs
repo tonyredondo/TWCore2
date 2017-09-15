@@ -7,6 +7,7 @@ using TWCore.Messaging.NSQ;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable ConvertToConstant.Local
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedVariable
@@ -14,6 +15,7 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class NSQTest : ContainerParameterService
     {
         public NSQTest() : base("nsqtest", "NSQ Test") { }

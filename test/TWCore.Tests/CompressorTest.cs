@@ -1,9 +1,11 @@
 using System;
 using TWCore.Compression;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class CompressorTest : ContainerParameterService
     {
         public CompressorTest() : base("compressortest", "Compressor Test") { }

@@ -6,9 +6,11 @@ using TWCore.Data.SqlServer;
 using System.Linq;
 using System.Threading.Tasks;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class SqlServerTest : ContainerParameterService
     {
         public SqlServerTest() : base("sqlservertest", "SqlServer Test") { }

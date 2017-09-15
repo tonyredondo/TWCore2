@@ -6,9 +6,11 @@ using TWCore.Cache.Storages;
 using TWCore.Cache.Storages.IO;
 using TWCore.Serialization;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class CacheTest : ContainerParameterService
     {
         public CacheTest() : base("cachetest", "Cache Test") { }
@@ -27,7 +29,7 @@ namespace TWCore.Tests
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void FileStorageTest()
+        private static void FileStorageTest()
         {
             Core.Log.Warning("FileStorage Test");
             using (var fSto = new FileStorage("./data"))
@@ -39,7 +41,7 @@ namespace TWCore.Tests
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void Lru2QStorageTest()
+        private static void Lru2QStorageTest()
         {
             Core.Log.Warning("LRU2QStorage Test");
             using (var sto = new LRU2QStorage(20000))
@@ -51,7 +53,7 @@ namespace TWCore.Tests
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void CombinedTest()
+        private static void CombinedTest()
         {
             Core.Log.Warning("Combined Test");
             using (var sto = new LRU2QStorage(20000))
@@ -71,7 +73,7 @@ namespace TWCore.Tests
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static void ApplyTest(IStorage fSto)
+        private static void ApplyTest(IStorage fSto)
         {
             var sobj = new SerializedObject("Esto es un ejemplo del hola mundo");
 

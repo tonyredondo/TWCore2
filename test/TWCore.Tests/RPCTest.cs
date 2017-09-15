@@ -14,11 +14,13 @@ using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable UnusedVariable
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class RpcTest : ContainerParameterServiceAsync
     {
         public RpcTest() : base("rpctest", "RPC Test") { }

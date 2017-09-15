@@ -4,6 +4,7 @@ using System.Text;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using TWCore.Serialization.PWSerializer.Deserializer;
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
@@ -13,7 +14,7 @@ using TWCore.Serialization.PWSerializer.Deserializer;
 
 namespace TWCore.Tests
 {
-    [SuppressMessage("ReSharper", "UnusedVariable")]
+    /// <inheritdoc />
     public class SerializerTest : ContainerParameterService
     {
         public SerializerTest() : base("serializertest", "PWSerializer Test") { }

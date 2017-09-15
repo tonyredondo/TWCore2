@@ -4,9 +4,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class CollectionTest : ContainerParameterService
     {
         public CollectionTest() : base("collectionTest", "Collections Test") { }

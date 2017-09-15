@@ -7,9 +7,11 @@ using TWCore.Services;
 // ReSharper disable UnusedVariable
 // ReSharper disable AccessToDisposedClosure
 // ReSharper disable MethodSupportsCancellation
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
 {
+    /// <inheritdoc />
     public class MemoryStreamsTest : ContainerParameterService
     {
         public MemoryStreamsTest() : base("memtest", "Memory Streams test") { }
@@ -54,13 +56,13 @@ namespace TWCore.Tests
                     {
                         for (var x = 0; x < 1; x++)
                         {
-                            for (int i = 0; i < 10000; i++)
+                            for (var i = 0; i < 10000; i++)
                                 rms.Write(xbuffer, 0, xbuffer.Length);
                         }
                         rms.Position = 0;
                         for (var x = 0; x < 10; x++)
                         {
-                            for (int i = 0; i < 2000; i++)
+                            for (var i = 0; i < 2000; i++)
                             {
                                 var bt = rms.ReadByte();
                             }
@@ -76,7 +78,7 @@ namespace TWCore.Tests
             Console.ReadLine();
             using (var cbs = new CircularBufferStream(50))
             {
-                CancellationTokenSource cts = new CancellationTokenSource();
+                var cts = new CancellationTokenSource();
                 Task.Run(async () =>
                 {
                     var i = 0;

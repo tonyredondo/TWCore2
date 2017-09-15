@@ -16,9 +16,11 @@ limitations under the License.
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Net.Http.Headers;
 using System;
 using TWCore.Serialization;
 using TWCore.Web.Logger;
@@ -76,11 +78,19 @@ namespace TWCore.Web
             {
                 try
                 {
+                    options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+                    options.FormatterMappings.SetMediaTypeMappingForFormat
+                        ("xml", MediaTypeHeaderValue.Parse("application/xml"));
+                    options.FormatterMappings.SetMediaTypeMappingForFormat
+                        ("js", MediaTypeHeaderValue.Parse("application/json"));
+
                     var serializers = SerializerManager.GetBinarySerializers();
                     foreach (var serializer in serializers)
                     {
                         options.AddISerializerInputFormatter(serializer);
                         options.AddISerializerOutputFormatter(serializer);
+                        options.FormatterMappings.SetMediaTypeMappingForFormat
+                            (serializer.Extensions[0].Substring(1), MediaTypeHeaderValue.Parse(serializer.MimeTypes[0]));
                     }
                 }
                 catch (Exception ex)

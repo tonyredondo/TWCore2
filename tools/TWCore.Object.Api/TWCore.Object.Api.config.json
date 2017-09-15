@@ -1,0 +1,11 @@
+﻿{
+  "appSettings": {
+    "Core.DebugMode": true,
+    "FileSystem.RootPath" : "c:\\temp"
+  },
+  "Core": {
+    "environmentName": "DEV",
+    "applicationName": "TWCore.Object.Api",
+    "applicationDisplayName": "Avant-Garde Software Object Api",
+  }
+}

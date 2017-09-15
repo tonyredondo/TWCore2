@@ -48,9 +48,12 @@ namespace TWCore.Object.Compiler
                     typeof(Enumerable).Assembly.Location,
                     typeof(CodeCompiler).Assembly.Location,
                     typeof(Core).Assembly.Location,
-                    typeof(System.Diagnostics.Process).Assembly.Location
+                    typeof(System.Diagnostics.Process).Assembly.Location,
+                    typeof(IDisposable).Assembly.Location,
+                    typeof(Type).Assembly.Location,
+                    typeof(Console).Assembly.Location,
                 };
-                var assemblies = Factory.GetAllAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
                 foreach (var asm in assemblies)
                     locationReferences.Add(asm.Location);
                 _references = locationReferences.Select(location => Try.Do(() => (MetadataReference)MetadataReference.CreateFromFile(location))).RemoveNulls().ToArray();
@@ -87,7 +90,7 @@ namespace TWCore.Object.Compiler
                     sbErrors.AppendLine("Compilation error:");
                     var failures = compilerResult.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
                     foreach (var diagnostic in failures)
-                        sbErrors.AppendLine(diagnostic.Id + ": " + diagnostic.GetMessage());
+                        sbErrors.AppendLine(diagnostic.Id + " (" + diagnostic.Severity + ") : " + diagnostic.GetMessage());
                     throw new Exception(sbErrors.ToString());
                 }
 

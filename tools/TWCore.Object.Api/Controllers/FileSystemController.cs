@@ -69,23 +69,6 @@ namespace TWCore.Object.Api.Controllers
             };
         }
 
-
-        // GET api/values/5
-        [HttpGet("api/files/list/{virtualPath}.{format}")]
-        [HttpGet("api/files/list/{virtualPath}")]
-        [FormatFilter]
-        public string Get(string virtualPath)
-        {
-            return "value";
-        }
-
-        // POST api/values
-        [HttpPost]
-        public void Post([FromBody]string value)
-        {
-        }
-
-
         #region Nested types
         private class FileSystemSettings : SettingsBase
         {

@@ -24,6 +24,7 @@ namespace TWCore.Web.Logger
     /// <summary>
     /// Logger for TWCore Log
     /// </summary>
+    [IgnoreStackFrameLog]
     public class TWCoreLogger : ILogger
     {
         private readonly string _name;
@@ -92,7 +93,12 @@ namespace TWCore.Web.Logger
                     cLogLevel = Diagnostics.Log.LogLevel.Verbose;
                     break;
             }
-            Core.Log.Write(cLogLevel, eventId.Id.ToString(), formatter(state, exception), _name, exception, string.Empty, "Logger");
+            var type = _name ?? string.Empty;
+            var dotIdx = type?.LastIndexOf(".") ?? -1;
+            if (dotIdx > -1)
+                type = type.Substring(dotIdx + 1);
+            
+            Core.Log.Write(cLogLevel, eventId.Id.ToString(), formatter(state, exception), "AspNetCore", exception, string.Empty, type);
         }
         #endregion
     }

@@ -26,38 +26,48 @@ namespace TWCore.Object.Api.Controllers
         [FormatFilter]
         public PathEntryCollection Get()
         {
-            string virtualPath;
+            string virtualPath = null;
             if (Request.Query.TryGetValue("path", out var folderValues))
                 virtualPath = folderValues;
-            else
-                virtualPath = "";
 
-            var path = Path.Combine(Settings.RootPath, virtualPath);
-            path = Path.GetFullPath(path);
+            if (string.IsNullOrWhiteSpace(virtualPath))
+                return GetRootEntryCollection();
+            
+            var path = Path.GetFullPath(virtualPath);
             if (!Directory.Exists(path))
                 return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty };
-            if (!path.StartsWith(Settings.RootPath))
-                return new PathEntryCollection { Current = virtualPath, Entries = PathEmpty };
-
-            var rPath = Path.GetFullPath(Settings.RootPath);
+            if (Settings.RootPaths.All(rp => !path.StartsWith(Path.GetFullPath(rp), StringComparison.OrdinalIgnoreCase)))
+                return GetRootEntryCollection();
 
             var pathEntries = Directory.EnumerateDirectories(path)
                 .Select(d => new PathEntry
                 {
-                    Name  = Path.GetFullPath(d).Replace(rPath, string.Empty, StringComparison.OrdinalIgnoreCase),
+                    Name  = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
                     Type =  PathEntryType.Directory
                 })
                 .Concat(Directory.EnumerateFiles(path)
                 .Where(file => Extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
                 .Select(d => new PathEntry
                 {
-                    Name = Path.GetFullPath(d).Replace(rPath, string.Empty, StringComparison.OrdinalIgnoreCase),
+                    Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
                     Type = PathEntryType.File
                 }))
                 .ToArray();
             return new PathEntryCollection { Current = virtualPath, Entries = pathEntries };
         }
 
+        private static PathEntryCollection GetRootEntryCollection()
+        {
+            return new PathEntryCollection
+            {
+                Current = string.Empty,
+                Entries = Settings.RootPaths.Select(p => new PathEntry
+                {
+                    Name = Path.GetFullPath(p),
+                    Type = PathEntryType.Directory
+                }).ToArray()
+            };
+        }
 
 
         // GET api/values/5
@@ -75,23 +85,12 @@ namespace TWCore.Object.Api.Controllers
         {
         }
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
-
 
         #region Nested types
         private class FileSystemSettings : SettingsBase
         {
-            public string RootPath { get; set; }
+            [SettingsArray(';')]
+            public string[] RootPaths { get; set; } = new string[0];
         }
         public enum PathEntryType
         {

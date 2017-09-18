@@ -1,7 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Xml.Serialization;
 using Microsoft.AspNetCore.Mvc;
 using TWCore.Object.Compiler;
 using TWCore.Object.Descriptor;
+using ValueType = TWCore.Object.Descriptor.ValueType;
 
 namespace TWCore.Object.Api.Controllers
 {
@@ -37,7 +41,7 @@ namespace TWCore.Object.Api.Controllers
             {
                 sessionData.CompiledResult = CodeCompiler.Run(sessionData.SourceCode, sessionData.FileObject);
                 var descriptor = new Descriptor.Descriptor();
-                return new ObjectResult(descriptor.GetDescription(sessionData.CompiledResult));
+                return new ObjectResult(GetTreeListData(descriptor.GetDescription(sessionData.CompiledResult)));
             }
             catch(Exception ex)
             {
@@ -48,11 +52,60 @@ namespace TWCore.Object.Api.Controllers
         [HttpGet("api/code/results.{format}")]
         [HttpGet("api/code/results")]
         [FormatFilter]
-        public ObjectDescription GetDescription()
+        public TreeListCollection GetDescription()
         {
             var sessionData = HttpContext.Session.GetSessionData();
             var descriptor = new Descriptor.Descriptor();
-            return descriptor.GetDescription(sessionData.CompiledResult);
+            return GetTreeListData(descriptor.GetDescription(sessionData.CompiledResult));
         }
+
+
+        public TreeListCollection GetTreeListData(ObjectDescription description)
+        {
+            var collection = new TreeListCollection();
+            if (description == null) return collection;
+            if (description.Value == null)
+            {
+                collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown"});
+                return collection;
+            }
+            int id = 0;
+            FillCollection("Value", MemberType.Field, description.Value, null);
+            return collection;
+
+            void FillCollection(string name, MemberType type, Value value, int? parentId)
+            {
+                id++;
+                collection.Add(new TreeListItem { Id = id, Name = name, Value = value.ValueString, Type = value.ValueType, Member = type.ToString(), ParentId = parentId });
+                if (value.Members?.Length > 0)
+                {
+                    var idParent = id;
+                    foreach (var member in value.Members)
+                        FillCollection(member.Name, member.Type, member.Value, idParent);
+                }
+            }
+        }
+
+        #region Nested Types
+        [DataContract]
+        public class TreeListCollection : List<TreeListItem>
+        { }
+        [DataContract]
+        public class TreeListItem
+        {
+            [XmlAttribute, DataMember]
+            public int Id { get; set; }
+            [XmlAttribute, DataMember]
+            public string Name { get; set; }
+            [XmlAttribute, DataMember]
+            public string Value { get; set; }
+            [XmlAttribute, DataMember]
+            public string Type { get; set; }
+            [XmlAttribute, DataMember]
+            public string Member { get; set; }
+            [DataMember]
+            public int? ParentId { get; set; }
+        }
+        #endregion
     }
 }

@@ -35,7 +35,7 @@
                 orientation: "vertical",
                 panes: [
                     { collapsible: true },
-                    { collapsible: true },
+                    { collapsible: true, size:"300px" },
                 ]
             });
 
@@ -132,10 +132,12 @@
                                                             }
                                                         }
                                                     },
+                                                    selectable: true,
+                                                    resizable: true,
                                                     columns: [
-                                                        { field: "Name" },
-                                                        { field: "Value" },
-                                                        { field: "Type" }
+                                                        { field: "name", title: "Name" },
+                                                        { field: "value", title: "Value"  },
+                                                        { field: "type", title: "Type" }
                                                     ]
                                                 });
                                             }
@@ -222,7 +224,12 @@
         #description {
             overflow: hidden;
         }
-
+        #descriptionInner{
+            border-width: 0;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
         #editor {
             position: absolute;
             color: #ffffff;

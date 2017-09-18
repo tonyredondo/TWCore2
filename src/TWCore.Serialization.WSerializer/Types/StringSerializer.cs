@@ -347,7 +347,7 @@ namespace TWCore.Serialization.WSerializer.Types
                     else if (length <= ushort.MaxValue)
                         WriteUshort(writer, DataType.StringLengthUShort, (ushort)length);
                     else
-                        WriteInt(writer, DataType.StringLengthUShort, length);
+                        WriteInt(writer, DataType.StringLengthInt, length);
                     break;
             }
             #endregion

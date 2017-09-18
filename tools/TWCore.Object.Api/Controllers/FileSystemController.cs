@@ -57,7 +57,7 @@ namespace TWCore.Object.Api.Controllers
         [HttpGet("api/files/load.{format}")]
         [HttpGet("api/files/load")]
         [FormatFilter]
-        public async Task<FileLoadedStatus> LoadFile()
+        public FileLoadedStatus LoadFile()
         {
             object obj;
             SessionData sessionData;
@@ -98,7 +98,7 @@ namespace TWCore.Object.Api.Controllers
                 string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
                 serializer?.SerializerType == SerializerType.Text)
             {
-                obj = await System.IO.File.ReadAllTextAsync(path);
+                obj = System.IO.File.ReadAllText(path);
                 sessionData = HttpContext.Session.GetSessionData();
                 sessionData.FilePath = path;
                 sessionData.FileObject = obj;
@@ -111,7 +111,7 @@ namespace TWCore.Object.Api.Controllers
                 };
             }
 
-            obj = await System.IO.File.ReadAllBytesAsync(path);
+            obj = System.IO.File.ReadAllBytes(path);
             sessionData = HttpContext.Session.GetSessionData();
             sessionData.FilePath = path;
             sessionData.FileObject = obj;

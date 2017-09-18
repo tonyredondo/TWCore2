@@ -38,6 +38,7 @@ namespace TWCore.Object.Api
                 options.Cookie.Name = ".TWCore.Object.Api.Session";
                 options.Cookie.HttpOnly = true;
             });
+            services.AddCors();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -48,6 +49,12 @@ namespace TWCore.Object.Api
             {
                 app.UseDeveloperExceptionPage();
             }
+            app.UseCors(builder =>
+                builder.AllowAnyOrigin()
+                    .AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowCredentials()
+            );
             app.UseMvc();
         }
     }

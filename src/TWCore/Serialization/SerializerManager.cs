@@ -198,7 +198,7 @@ namespace TWCore.Serialization
             if (mimeType == null)
                 return null;
             mimeType = mimeType.ToLowerInvariant();
-            var ser = Serializers.FirstOrDefault(i => i.MimeTypes.Any(s => s.ToLowerInvariant() == mimeType));
+            var ser = Serializers.FirstOrDefault(i => i.MimeTypes.Any(s => string.Equals(s, mimeType)));
             return ser?.DeepClone();
         }
         /// <summary>
@@ -221,7 +221,7 @@ namespace TWCore.Serialization
         public static ISerializer GetByFileExtension(string fileExtension)
         {
             fileExtension = fileExtension.ToLowerInvariant();
-            var ser = Serializers.FirstOrDefault(i => i.Extensions.Any(s => s.ToLowerInvariant() == fileExtension));
+            var ser = Serializers.FirstOrDefault(i => i.Extensions.Any(s => string.Equals(s, fileExtension, StringComparison.OrdinalIgnoreCase)));
             return ser?.DeepClone();
         }
         /// <summary>
@@ -259,7 +259,7 @@ namespace TWCore.Serialization
             ISerializer serializer = null;
             foreach (var ext in extensions)
             {
-                serializer = Serializers.FirstOrDefault(i => i.Extensions.Any(s => s.ToLowerInvariant() == "." + ext));
+                serializer = Serializers.FirstOrDefault(i => i.Extensions.Any(s => string.Equals(s, "." + ext, StringComparison.OrdinalIgnoreCase)));
                 if (serializer != null)
                 {
                     serializer = serializer.DeepClone();

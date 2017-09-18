@@ -11,8 +11,7 @@ namespace TWCore.Object.Api
     {
         public string FilePath { get; set; }
         public object FileObject { get; set; }
-        public string SourceCode { get; set; } = @"
-using TWCore;
+        public string SourceCode { get; set; } = @"using TWCore;
 using TWCore.Object.Compiler;
 using System;
 

@@ -1,7 +1,7 @@
 ﻿{
   "appSettings": {
     "Core.DebugMode": true,
-    "FileSystem.RootPaths" : "/Users/danielredondo;/Users/rociomelero"
+    "FileSystem.RootPaths" : "/Users/danielredondo;/Users/rociomelero; c:\\temp"
   },
   "Core": {
     "environmentName": "DEV",

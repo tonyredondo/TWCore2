@@ -18,7 +18,7 @@ namespace TWCore.Object.Api.Controllers
     {
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
-        private static readonly string[] Extensions = SerializerManager.Serializers.Select(s => s.Extensions).SelectMany(i => i).Distinct().ToArray();
+        private static readonly string[] Extensions = SerializerManager.Serializers.Select(s => s.Extensions).SelectMany(i => i).Distinct().Concat(".txt", ".html", ".htm").ToArray();
 
         // GET api/values
         [HttpGet("api/files/list.{format}")]
@@ -35,9 +35,9 @@ namespace TWCore.Object.Api.Controllers
             
             var path = Path.GetFullPath(virtualPath);
             if (!Directory.Exists(path))
-                return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty };
+                return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty, Error = "Directory doesn't exist." };
             if (Settings.RootPaths.All(rp => !path.StartsWith(Path.GetFullPath(rp), StringComparison.OrdinalIgnoreCase)))
-                return GetRootEntryCollection();
+                return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty, Error = "The path is outside of allowed folders." };
 
             var pathEntries = Directory.EnumerateDirectories(path)
                 .Select(d => new PathEntry
@@ -58,14 +58,17 @@ namespace TWCore.Object.Api.Controllers
 
         private static PathEntryCollection GetRootEntryCollection()
         {
+            var entries = Settings.RootPaths.Select(p => new PathEntry
+            {
+                Name = Path.GetFullPath(p),
+                Type = PathEntryType.Directory
+            }).Where(p => Directory.Exists(p.Name)).ToArray();
+
             return new PathEntryCollection
             {
                 Current = string.Empty,
-                Entries = Settings.RootPaths.Select(p => new PathEntry
-                {
-                    Name = Path.GetFullPath(p),
-                    Type = PathEntryType.Directory
-                }).ToArray()
+                Entries = entries,
+                Error = entries.Length == 0 ? "There isn't any valid folder." : null
             };
         }
 
@@ -95,6 +98,8 @@ namespace TWCore.Object.Api.Controllers
             public string Current { get; set; }
             [XmlElement("Entry"), DataMember]
             public PathEntry[] Entries { get; set; }
+            [XmlAttribute, DataMember]
+            public string Error { get; set; }
         }
         #endregion
     }

@@ -52,9 +52,9 @@ namespace TWCore.Object.Descriptor
         {
             _depth = 0;
             var oDesc = new ObjectDescription();
-            valueType = valueType ?? value.GetType();
-            oDesc.Type = valueType.AssemblyQualifiedName;
-            oDesc.Value = ExtractValue(value, valueType);
+            valueType = valueType ?? value?.GetType();
+            oDesc.Type = valueType?.AssemblyQualifiedName;
+            oDesc.Value = value != null ? ExtractValue(value, valueType) : null;
             return oDesc;
         }
         #endregion

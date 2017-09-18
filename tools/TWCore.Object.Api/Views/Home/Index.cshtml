@@ -12,6 +12,7 @@
         </div>
         <div id="objectPanel">
             <div id="description">
+                <div id="descriptionInner"></div>
             </div>
             <div id="code">
                 <textarea id="editor"></textarea>
@@ -116,12 +117,26 @@
                                                 console.log(data);
                                                 popupNotification.show(" Description loaded.", "info");
 
-                                                var ktl = $("#description").data("kendoTreeList");
+                                                var ktl = $("#descriptionInner").data("kendoTreeList");
                                                 if (ktl) {
                                                     ktl.destroy();
-                                                    $("#description").empty();
+                                                    $("#descriptionInner").empty();
                                                 }
-                                                $("#description").kendoTreeList({
+                                                $("#descriptionInner").kendoTreeList({
+                                                    dataSource: {
+                                                        data: data,
+                                                        schema: {
+                                                            model: {
+                                                                id: "id",
+                                                                expanded: false
+                                                            }
+                                                        }
+                                                    },
+                                                    columns: [
+                                                        { field: "Name" },
+                                                        { field: "Value" },
+                                                        { field: "Type" }
+                                                    ]
                                                 });
                                             }
                                         });
@@ -193,6 +208,7 @@
         #objectPanel {
             padding: 0px;
             margin: 0px;
+            overflow: hidden;
         }
 
         #fileView {
@@ -201,19 +217,23 @@
             top: 0px;
             bottom: 0px;
         }
+        #code {
+        }
+        #description {
+            overflow: hidden;
+        }
 
         #editor {
             position: absolute;
             color: #ffffff;
             background-color: transparent;
             font-family: Courier New;
-            top: 0px;
-            bottom: 0px;
-            width: 95%;
+            width: 97%;
+            height: 91.5%;
             border: solid 0px;
             font-size: 1em;
             resize: none;
-            padding:10px;
+            padding: 15px;
         }
 
         #fileView .k-sprite {

@@ -1,7 +1,7 @@
 ﻿{
   "appSettings": {
     "Core.DebugMode": true,
-    "FileSystem.RootPaths" : "/Users/danielredondo;/Users/rociomelero; c:\\temp"
+    "FileSystem.RootPaths": "/Users/danielredondo;/Users/rociomelero; c:\\\\temp; C:\\AGSW_GIT\\FrameworkSamples\\MessageService\\Agsw.Messaging.Service\\bin\\Debug\\netcoreapp2.0"
   },
   "Core": {
     "environmentName": "DEV",

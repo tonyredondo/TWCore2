@@ -23,6 +23,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Cache\TWCore.Cache.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Collections\TWCore.Collections.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Object\TWCore.Object.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />

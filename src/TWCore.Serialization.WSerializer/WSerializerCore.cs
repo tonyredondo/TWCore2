@@ -39,8 +39,6 @@ namespace TWCore.Serialization.WSerializer
     /// </summary>
     public class WSerializerCore
     {
-        private const int MinimumLengthToCompress = 2048;
-
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(pool =>
                 Tuple.Create(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
@@ -99,8 +97,8 @@ namespace TWCore.Serialization.WSerializer
             var scope = new SerializerScope(plan, value);
             scopeStack.Push(scope);
 
-            var mStream = new MemoryStream(1024);
-            var bw = new FastBinaryWriter(mStream, DefaultUtf8Encoding, true);
+            var bw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
+            bw.Write(DataType.FileStart);
             bw.Write((byte)Mode);
             do
             {
@@ -486,21 +484,6 @@ namespace TWCore.Serialization.WSerializer
 
             SerializersTable.ReturnTable(serializersTable);
             StackPool.Store(scopeStack);
-
-            var globalBw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
-            mStream.Position = 0;
-            if (mStream.Length > MinimumLengthToCompress)
-            {
-                globalBw.Write(DataType.FileStartCompressed);
-                var dataBytes = Compression.MiniLZO.Compress(mStream.ToSubArray());
-                globalBw.Write(dataBytes.Count);
-                globalBw.Write(dataBytes.Array, dataBytes.Offset, dataBytes.Count);
-            }
-            else
-            {
-                globalBw.Write(DataType.FileStart);
-                mStream.WriteTo(stream);
-            }
         }
         #endregion
 
@@ -737,21 +720,10 @@ namespace TWCore.Serialization.WSerializer
         {
             type = type ?? typeof(object);
             var fStart = stream.ReadByte();
-            if (fStart != DataType.FileStart && fStart != DataType.FileStartCompressed)
-                throw new FormatException(string.Format("The stream is not in WBinary format. Byte {0} or {1} was expected, received: {2}", DataType.FileStart, DataType.FileStartCompressed, fStart));
+            if (fStart != DataType.FileStart)
+                throw new FormatException(string.Format("The stream is not in WBinary format. Byte {0} was expected, received: {1}", DataType.FileStart, fStart));
             
-            FastBinaryReader br;
-            if (fStart == DataType.FileStartCompressed)
-            {
-                var gbr = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
-                var cLength = gbr.ReadInt32();
-                var bytes = Compression.MiniLZO.Decompress(gbr.ReadBytes(cLength));
-                stream = bytes.ToMemoryStream();
-                br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
-            }
-            else
-                br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
-
+            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
             var bMode = br.ReadByte();
             var sMode = (SerializerMode)bMode;
             var serializersTable = DeserializersTable.GetTable(sMode);

@@ -1,0 +1,208 @@
+﻿@{
+    ViewData["Title"] = "TWCore Object Viewer";
+}
+
+<div id="viewport">
+    <div id="head">
+        TWCore Object Viewer
+    </div>
+    <div id="body">
+        <div id="fileMenu" class="k-content">
+            <ul id="fileView"></ul>
+        </div>
+        <div id="objectPanel">
+            <div id="description">
+            </div>
+            <div id="code">
+                <textarea id="editor" rows="10" cols="30" style="height:440px" aria-label="editor"></textarea>
+            </div>
+        </div>
+    </div>
+    <span id="popupNotification"></span>
+
+
+    <script>
+                var apiUrl = "http://localhost:52298/api/";
+                $(document).ready(function() {
+                    $("#body").kendoSplitter({
+                        panes: [
+                            { collapsible: true, size: "300px"  },
+                            { collapsible: false, min: "50%" },
+                        ]
+                    });
+                    $("#objectPanel").kendoSplitter({
+                        orientation : "vertical",
+                        panes: [
+                            { collapsible: true },
+                            { collapsible: true },
+                        ]
+                    });
+
+                    var popupNotification = $("#popupNotification").kendoNotification().data("kendoNotification");
+
+                    var fileListUrl = apiUrl + "files/list.json";
+                    var fileDataSource = new kendo.data.HierarchicalDataSource({
+                        transport: {
+                            read: {
+                                url: function(options) {
+                                    if (options.name)
+                                        return fileListUrl + "?path=" + options.name;
+                                    else
+                                        return fileListUrl;
+                                },
+                                dataType: "json"
+                            }
+                        },
+                        schema: {
+                            data: function(response) {
+                                for(var i = 0; i < response.entries.length > 0; i++) {
+                                    var entry = response.entries[i];
+                                    entry.isDirectory = entry.type == "Directory";
+                                    entry.path = response.current + entry.name;
+                                    if (entry.name.substring(0, 1) == "\\" || entry.name.substring(0, 1) == "/")
+                                        entry.name = entry.name.substring(1);
+                                    entry.spriteCssClass = entry.isDirectory ? "folder" : "html";
+                                }
+                              return response.entries;
+                            },
+                            model: {
+                                id: "path",
+                                hasChildren: "isDirectory"
+                            }
+                        }
+                    });
+
+                    $("#fileView").kendoTreeView({
+                        dataSource: fileDataSource,
+                        dataTextField: "name",
+                        select: function(e) {
+                            e.preventDefault();
+                            var tree = $('#fileView').data('kendoTreeView');
+                            var dataItem = tree.dataItem(e.node)
+                            if (dataItem.isDirectory) return;
+                            $.ajax({
+                                url: apiUrl + "files/load.json?path=" + dataItem.path,
+                                headers: {'Cookie' : document.cookie },
+                                dataType: 'json',
+                                crossDomain: true,
+                                xhrFields: {
+                                    withCredentials: true
+                                },
+                                success: function(result) {
+                                    if (result.loaded) {
+                                        popupNotification.show(" File " + dataItem.path + " was loaded, compiling...", "info");
+                                        $.ajax({
+                                            url: apiUrl + "code/compile.json",
+                                            headers: {'Cookie' : document.cookie },
+                                            dataType: 'json',
+                                            crossDomain: true,
+                                            xhrFields: {
+                                                withCredentials: true
+                                            },
+                                            success: function(data) {
+                                                console.log(data);
+                                                popupNotification.show(" Description loaded.", "info");
+
+                                                var ktl = $("#description").data("kendoTreeList");
+                                                if (ktl) {
+                                                    ktl.destroy();
+                                                    $("#description").empty();
+                                                }
+                                                $("#description").kendoTreeList({
+                                                });
+                                            }
+                                        });
+                                    }
+                                    else {
+                                        kendo.alert("Error loading file.");
+                                    }
+                                }
+                            });
+                        }
+                    });
+
+                    $("#editor").kendoEditor({
+                        //tools : []
+                    });
+                });
+    </script>
+
+
+
+    <style>
+        html, body {
+            margin: 0 0;
+            padding: 0 0;
+            overflow: hidden;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.9em;
+        }
+
+        #viewport {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #head {
+            background-color: #222222;
+            color: #ffffff;
+            padding: 15px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.2em;
+        }
+
+        #body {
+            height: 100%;
+            padding: 0px;
+            margin: 0px;
+        }
+
+        #fileMenu {
+            display: flex;
+            flex-direction: column;
+            font-size: 1em;
+        }
+
+        #objectPanel {
+            padding: 0px;
+            margin: 0px;
+        }
+
+        #fileView {
+            position: absolute;
+            padding: 10px;
+            top: 0px;
+            bottom: 0px;
+        }
+
+        #editor {
+            background-color: black;
+        }
+
+        #fileView .k-sprite {
+            background-image: url("images/coloricons-sprite.png");
+        }
+
+        .rootfolder {
+            background-position: 0 0;
+        }
+
+        .folder {
+            background-position: 0 -16px;
+        }
+
+        .pdf {
+            background-position: 0 -32px;
+        }
+
+        .html {
+            background-position: 0 -48px;
+        }
+
+        .image {
+            background-position: 0 -64px;
+        }
+    </style>
+</div>
+

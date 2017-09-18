@@ -79,7 +79,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Object", "src\TWCore
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{B83306E0-118A-4F00-B7ED-2D8EF4F9ECE8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Object.Api", "tools\TWCore.Object.Api\TWCore.Object.Api.csproj", "{34C2763E-D060-44FC-88D6-743D68D4DA0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Object.Api", "tools\TWCore.Object.Api\TWCore.Object.Api.csproj", "{34C2763E-D060-44FC-88D6-743D68D4DA0D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

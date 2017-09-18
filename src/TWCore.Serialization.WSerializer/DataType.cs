@@ -251,7 +251,7 @@ namespace TWCore.Serialization.WSerializer
         public const byte   RefObjectUShort				= 222;
 
         public const byte   FileStart                   = 225;
-        public const byte   FileStartCompressed         = 226;
+        //public const byte   FileStartCompressed         = 226;
 
         public const byte   TypeNameDecimal             = 233;
         public const byte   TypeNameDouble              = 234;

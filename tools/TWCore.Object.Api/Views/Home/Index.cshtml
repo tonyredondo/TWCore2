@@ -181,8 +181,10 @@
                                                 if (data[0].type == "System.String") {
                                                     textContent.setValue(data[0].value);
                                                     var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0])
-                                                    textContent.setOption("mode", info.mime);
-                                                    CodeMirror.autoLoadMode(textContent, info.mode);
+                                                    if (info) {
+                                                        textContent.setOption("mode", info.mime);
+                                                        CodeMirror.autoLoadMode(textContent, info.mode);
+                                                    }
                                                     $("#textContent").show();
                                                     textContent.refresh();
                                                 }

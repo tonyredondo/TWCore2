@@ -22,6 +22,8 @@ using System.Reflection;
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using TWCore.Collections;
+
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
 // ReSharper disable UnusedMember.Global
 
@@ -32,6 +34,7 @@ namespace TWCore.Object.Compiler
     /// </summary>
     public static class CodeCompiler
     {
+        private static readonly LRU2QCollection<string, IRuntimeCode> CachedCompilations = new LRU2QCollection<string, IRuntimeCode>(100);
         private static MetadataReference[] _references;
 
         /// <summary>
@@ -70,42 +73,49 @@ namespace TWCore.Object.Compiler
         /// <returns>IRuntimeCode response</returns>
         public static object Run(string code, object value)
         {
-            Core.Log.InfoBasic("Compiling code...");
-            var syntax = CSharpSyntaxTree.ParseText(code);
-            var assemblyName = Path.GetRandomFileName();
-            var csCompilation = CSharpCompilation.Create(assemblyName,
-                syntaxTrees: new[] { syntax },
-                references: References,
-                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
-            using (var compiledCode = new MemoryStream())
-            using (var compiledPdb = new MemoryStream())
+            var instance = CachedCompilations.GetOrAdd(code, mCode =>
             {
-                var compilerResult = csCompilation.Emit(compiledCode, compiledPdb);
+                Core.Log.InfoBasic("Compiling code...");
+                var syntax = CSharpSyntaxTree.ParseText(code);
+                var assemblyName = Path.GetRandomFileName();
+                var csCompilation = CSharpCompilation.Create(assemblyName,
+                    syntaxTrees: new[] { syntax },
+                    references: References,
+                    options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-                if (!compilerResult.Success)
+                using (var compiledCode = new MemoryStream())
+                using (var compiledPdb = new MemoryStream())
                 {
-                    Core.Log.Warning("Error when compiling the code.");
-                    var sbErrors = new StringBuilder();
-                    sbErrors.AppendLine("Compilation error:");
-                    var failures = compilerResult.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
-                    foreach (var diagnostic in failures)
-                        sbErrors.AppendLine(diagnostic.Id + " (" + diagnostic.Severity + ") : " + diagnostic.GetMessage());
-                    throw new Exception(sbErrors.ToString());
+                    var compilerResult = csCompilation.Emit(compiledCode, compiledPdb);
+
+                    if (!compilerResult.Success)
+                    {
+                        Core.Log.Warning("Error when compiling the code.");
+                        var sbErrors = new StringBuilder();
+                        sbErrors.AppendLine("Compilation error:");
+                        var failures = compilerResult.Diagnostics.Where(diagnostic => diagnostic.IsWarningAsError || diagnostic.Severity == DiagnosticSeverity.Error);
+                        foreach (var diagnostic in failures)
+                            sbErrors.AppendLine(diagnostic.Id + " (" + diagnostic.Severity + ") : " + diagnostic.GetMessage());
+                        throw new Exception(sbErrors.ToString());
+                    }
+
+                    Core.Log.InfoBasic("Compilation Success.");
+                    compiledCode.Position = 0;
+                    compiledPdb.Position = 0;
+
+                    var assembly = Assembly.Load(compiledCode.ToArray(), compiledPdb.ToArray());
+
+
+                    var runType = assembly.GetTypes().FirstOrDefault(type => type.GetInterface(typeof(IRuntimeCode).FullName) != null);
+                    if (runType == null)
+                        throw new Exception("An implementation of the IRuntimeCode interface can't be found.");
+
+                    var runCode = (IRuntimeCode)Activator.CreateInstance(runType);
+                    return runCode;
+                    
                 }
-
-                Core.Log.InfoBasic("Compilation Success.");
-                compiledCode.Position = 0;
-                compiledPdb.Position = 0;
-
-                var assembly = Assembly.Load(compiledCode.ToArray(), compiledPdb.ToArray());
-                var runType = assembly.GetTypes().FirstOrDefault(type => type.GetInterface(typeof(IRuntimeCode).FullName) != null);
-                if (runType == null)
-                    throw new Exception("An implementation of the IRuntimeCode interface can't be found.");
-
-                var runCode = (IRuntimeCode)Activator.CreateInstance(runType);
-                return runCode.Execute(value);
-            }
+            });
+            return instance.Execute(value);
         }
     }
 }

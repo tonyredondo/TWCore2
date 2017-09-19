@@ -42,117 +42,143 @@ namespace TWCore.Object.Api.Controllers
         [HttpGet("api/files/list.{format}")]
         [HttpGet("api/files/list")]
         [FormatFilter]
-        public PathEntryCollection Get()
+        public ActionResult Get()
         {
-            string virtualPath = null;
-            if (Request.Query.TryGetValue("path", out var folderValues))
-                virtualPath = folderValues;
+            try
+            {
+                string virtualPath = null;
+                if (Request.Query.TryGetValue("path", out var folderValues))
+                    virtualPath = folderValues;
 
-            if (string.IsNullOrWhiteSpace(virtualPath))
-                return GetRootEntryCollection();
-            
-            var path = Path.GetFullPath(virtualPath);
-            if (!Directory.Exists(path))
-                return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty, Error = "Directory doesn't exist." };
-            if (Settings.RootPaths.All(rp => !path.StartsWith(Path.GetFullPath(rp), StringComparison.OrdinalIgnoreCase)))
-                return new PathEntryCollection { Current = virtualPath, Entries =  PathEmpty, Error = "The path is outside of allowed folders." };
+                if (string.IsNullOrWhiteSpace(virtualPath))
+                    return new ObjectResult(GetRootEntryCollection());
 
-            var pathEntries = Directory.EnumerateDirectories(path)
-                .Select(d => new PathEntry
-                {
-                    Name  = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
-                    Type =  PathEntryType.Directory
-                })
-                .Concat(Directory.EnumerateFiles(path)
-                .Where(file =>
-                {
-                    foreach (var ext in Extensions)
+                var path = Path.GetFullPath(virtualPath);
+                if (!Directory.Exists(path))
+                    return new ObjectResult(new PathEntryCollection
                     {
-                        if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
-                            return true;
-                    }
-                    return false;
-                })
-                .Select(d => new PathEntry
-                {
-                    Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
-                    Type = PathEntryType.File,
-                    IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
-                }))
-                .ToArray();
-            return new PathEntryCollection { Current = virtualPath, Entries = pathEntries };
+                        Current = virtualPath,
+                        Entries = PathEmpty,
+                        Error = "Directory doesn't exist."
+                    });
+
+                if (Settings.RootPaths.All(rp =>
+                    !path.StartsWith(Path.GetFullPath(rp), StringComparison.OrdinalIgnoreCase)))
+                    return new ObjectResult(new PathEntryCollection
+                    {
+                        Current = virtualPath,
+                        Entries = PathEmpty,
+                        Error = "The path is outside of allowed folders."
+                    });
+
+                var pathEntries = Directory.EnumerateDirectories(path)
+                    .Select(d => new PathEntry
+                    {
+                        Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
+                        Type = PathEntryType.Directory
+                    })
+                    .Concat(Directory.EnumerateFiles(path)
+                        .Where(file =>
+                        {
+                            foreach (var ext in Extensions)
+                            {
+                                if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                                    return true;
+                            }
+                            return false;
+                        })
+                        .Select(d => new PathEntry
+                        {
+                            Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
+                            Type = PathEntryType.File,
+                            IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
+                        }))
+                    .ToArray();
+                return new ObjectResult(new PathEntryCollection {Current = virtualPath, Entries = pathEntries});
+            }
+            catch (Exception ex)
+            {
+                return new ObjectResult(new SerializableException(ex));
+            }
         }
 
         [HttpGet("api/files/load.{format}")]
         [HttpGet("api/files/load")]
         [FormatFilter]
-        public FileLoadedStatus LoadFile()
+        public ActionResult LoadFile()
         {
-            object obj;
-            SessionData sessionData;
-            Type fileType = null;
-
-            if (Request.Query.TryGetValue("type", out var type))
-                fileType = Core.GetType(type);
-            if (!Request.Query.TryGetValue("path", out var path))
-                return new FileLoadedStatus { Loaded = false };
-            if (string.IsNullOrWhiteSpace(path))
-                return new FileLoadedStatus { Loaded = false };
-            path = Path.GetFullPath(path);
-            if (!System.IO.File.Exists(path))
-                return new FileLoadedStatus { FilePath = path, Loaded = false };
-
-            var serializer = SerializerManager.GetByFileName(path);
-            if (serializer != null && (serializer.SerializerType == SerializerType.Binary || fileType != null))
+            try
             {
-                Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
-                obj = serializer.DeserializeFromFile(fileType, path);
+                object obj;
+                SessionData sessionData;
+                Type fileType = null;
+
+                if (Request.Query.TryGetValue("type", out var type))
+                    fileType = Core.GetType(type);
+                if (!Request.Query.TryGetValue("path", out var path))
+                    return new ObjectResult(new FileLoadedStatus { Loaded = false });
+                if (string.IsNullOrWhiteSpace(path))
+                    return new ObjectResult(new FileLoadedStatus { Loaded = false });
+                path = Path.GetFullPath(path);
+                if (!System.IO.File.Exists(path))
+                    return new ObjectResult(new FileLoadedStatus { FilePath = path, Loaded = false });
+
+                var serializer = SerializerManager.GetByFileName(path);
+                if (serializer != null && (serializer.SerializerType == SerializerType.Binary || fileType != null))
+                {
+                    Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
+                    obj = serializer.DeserializeFromFile(fileType, path);
+                    sessionData = HttpContext.Session.GetSessionData();
+                    sessionData.FilePath = path;
+                    sessionData.FileObject = obj;
+                    HttpContext.Session.SetSessionData(sessionData);
+                    Core.Log.InfoBasic("File {0} was loaded.", path);
+                    return new ObjectResult(new FileLoadedStatus
+                    {
+                        FilePath = sessionData.FilePath,
+                        ObjectType = sessionData.FileObject?.GetType().Name
+                    });
+                }
+
+                Core.Log.Warning("The serializer for file {0} wasn't found.", path);
+                var extension = Path.GetExtension(path);
+
+                if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                    serializer?.SerializerType == SerializerType.Text)
+                {
+                    obj = System.IO.File.ReadAllText(path);
+                    sessionData = HttpContext.Session.GetSessionData();
+                    sessionData.FilePath = path;
+                    sessionData.FileObject = obj;
+                    HttpContext.Session.SetSessionData(sessionData);
+                    Core.Log.InfoBasic("File {0} was loaded as text data.", path);
+                    return new ObjectResult(new FileLoadedStatus
+                    {
+                        FilePath = sessionData.FilePath,
+                        ObjectType = sessionData.FileObject?.GetType().Name
+                    });
+                }
+
+                obj = System.IO.File.ReadAllBytes(path);
                 sessionData = HttpContext.Session.GetSessionData();
                 sessionData.FilePath = path;
                 sessionData.FileObject = obj;
                 HttpContext.Session.SetSessionData(sessionData);
-                Core.Log.InfoBasic("File {0} was loaded.", path);
-                return new FileLoadedStatus
+                Core.Log.InfoBasic("File {0} was loaded as bytes data.", path);
+                return new ObjectResult(new FileLoadedStatus
                 {
                     FilePath = sessionData.FilePath,
                     ObjectType = sessionData.FileObject?.GetType().Name
-                };
+                });
             }
-
-            Core.Log.Warning("The serializer for file {0} wasn't found.", path);
-            var extension = Path.GetExtension(path);
-
-            if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase) || 
-                string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) || 
-                string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
-                serializer?.SerializerType == SerializerType.Text)
+            catch (Exception ex)
             {
-                obj = System.IO.File.ReadAllText(path);
-                sessionData = HttpContext.Session.GetSessionData();
-                sessionData.FilePath = path;
-                sessionData.FileObject = obj;
-                HttpContext.Session.SetSessionData(sessionData);
-                Core.Log.InfoBasic("File {0} was loaded as text data.", path);
-                return new FileLoadedStatus
-                {
-                    FilePath = sessionData.FilePath,
-                    ObjectType = sessionData.FileObject?.GetType().Name
-                };
+                return new ObjectResult(new SerializableException(ex));
             }
-
-            obj = System.IO.File.ReadAllBytes(path);
-            sessionData = HttpContext.Session.GetSessionData();
-            sessionData.FilePath = path;
-            sessionData.FileObject = obj;
-            HttpContext.Session.SetSessionData(sessionData);
-            Core.Log.InfoBasic("File {0} was loaded as bytes data.", path);
-            return new FileLoadedStatus
-            {
-                FilePath = sessionData.FilePath,
-                ObjectType = sessionData.FileObject?.GetType().Name
-            };
         }
 
         [HttpGet("api/files/unload.{format}")]

@@ -323,6 +323,10 @@
                 },
                 schema: {
                     data: function (response) {
+                        if (response.exceptionType) {
+                            kendo.alert(response.message);
+                            return null;
+                        }
                         for (var i = 0; i < response.entries.length > 0; i++) {
                             var entry = response.entries[i];
                             entry.isDirectory = entry.type == "Directory";
@@ -357,6 +361,10 @@
                             withCredentials: true
                         },
                         success: function (result) {
+                            if (result.exceptionType) {
+                                kendo.alert(result.message);
+                                return;
+                            }
                             if (result.loaded) {
                                 popupNotification.show(" File " + dataItem.path + " was loaded.", "info");
                                 compileAndRun();

@@ -17,6 +17,7 @@
                 <div id="descriptionInner"></div>
             </div>
             <div id="code">
+                <div id="codeToolbar"></div>
                 <textarea id="editor"></textarea>
             </div>
         </div>
@@ -55,7 +56,11 @@
                     if (textContent) textContent.refresh();
                 }
             });
-
+            $("#codeToolbar").kendoToolBar({
+                items: [
+                    { type: "button", overflow: "never", spriteCssClass: "Run", click: function () { compileAndRun() } }
+                ]
+            });
             CodeMirror.modeURL = "mode/%N/%N.js";
             var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
                 theme: 'lesser-dark',
@@ -141,75 +146,8 @@
                         },
                         success: function (result) {
                             if (result.loaded) {
-                                popupNotification.show(" File " + dataItem.path + " was loaded, compiling...", "info");
-
-
-                                $.ajax({
-                                    url: apiUrl + "code/set.json",
-                                    contentType: "application/json",
-                                    type: "POST",
-                                    dataType: 'json',
-                                    crossDomain: true,
-                                    xhrFields: {
-                                        withCredentials: true
-                                    },
-                                    data: "\"" + editor.getValue() + "\"",
-                                    success: function (data) {
-                                        editor.setValue(data);
-
-                                        $.ajax({
-                                            url: apiUrl + "code/compile.json",
-                                            dataType: 'json',
-                                            crossDomain: true,
-                                            xhrFields: {
-                                                withCredentials: true
-                                            },
-                                            success: function (data) {
-                                                console.log(data);
-                                                popupNotification.show(" Description loaded.", "info");
-                                                $("#textContent").hide();
-                                                var ktl = $("#descriptionInner").data("kendoTreeList");
-                                                if (ktl) {
-                                                    ktl.destroy();
-                                                    $("#descriptionInner").empty();
-                                                }
-
-                                                if (!data) return;
-
-                                                $("#descriptionHeader").text(currentFilePath);
-                                                $("#descriptionHeader").show();
-                                                if (data[0].type == "System.String") {
-                                                    textContent.setValue(data[0].value);
-                                                    var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0])
-                                                    if (info) {
-                                                        textContent.setOption("mode", info.mime);
-                                                        CodeMirror.autoLoadMode(textContent, info.mode);
-                                                    }
-                                                    $("#textContent").show();
-                                                    textContent.refresh();
-                                                }
-                                                else {
-                                                    $("#descriptionInner").kendoTreeList({
-                                                        dataSource: {
-                                                            data: data,
-                                                            schema: {
-                                                                model: { id: "id", expanded: false }
-                                                            }
-                                                        },
-                                                        selectable: true,
-                                                        resizable: true,
-                                                        columns: [
-                                                            { field: "name", title: "Name", template: $("#description-template").html() },
-                                                            { field: "value", title: "Value" },
-                                                            { field: "type", title: "Type" }
-                                                        ]
-                                                    });
-                                                }
-                                            }
-                                        });
-
-                                    }
-                                });
+                                popupNotification.show(" File " + dataItem.path + " was loaded.", "info");
+                                compileAndRun();
                             }
                             else {
                                 kendo.alert("Error loading file.");
@@ -218,6 +156,79 @@
                     });
                 }
             });
+
+            var compileAndRun = function () {
+                popupNotification.show(" Compiling and running source code...", "info");
+                $.ajax({
+                    url: apiUrl + "code/set.json",
+                    contentType: "application/json",
+                    type: "POST",
+                    dataType: 'json',
+                    crossDomain: true,
+                    xhrFields: {
+                        withCredentials: true
+                    },
+                    data: JSON.stringify(editor.getValue()),
+                    success: function (data) {
+                        editor.setValue(data);
+
+                        $.ajax({
+                            url: apiUrl + "code/compile.json",
+                            dataType: 'json',
+                            crossDomain: true,
+                            xhrFields: {
+                                withCredentials: true
+                            },
+                            success: function (data) {
+                                console.log(data);
+                                popupNotification.show(" Results loaded.", "info");
+                                $("#textContent").hide();
+                                var ktl = $("#descriptionInner").data("kendoTreeList");
+                                if (ktl) {
+                                    ktl.destroy();
+                                    $("#descriptionInner").empty();
+                                }
+
+                                if (!data) return;
+
+                                $("#descriptionHeader").text(currentFilePath);
+                                $("#descriptionHeader").show();
+                                if (data[0].type == "System.String") {
+                                    textContent.setValue(data[0].value);
+                                    if (currentFilePath) {
+                                        var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0])
+                                        if (info) {
+                                            textContent.setOption("mode", info.mime);
+                                            CodeMirror.autoLoadMode(textContent, info.mode);
+                                        }
+                                    }
+                                    $("#textContent").show();
+                                    textContent.refresh();
+                                }
+                                else {
+                                    $("#descriptionInner").kendoTreeList({
+                                        dataSource: {
+                                            data: data,
+                                            schema: {
+                                                model: { id: "id", expanded: false }
+                                            }
+                                        },
+                                        selectable: true,
+                                        resizable: true,
+                                        columns: [
+                                            { field: "name", title: "Name", template: $("#description-template").html() },
+                                            { field: "value", title: "Value" },
+                                            { field: "type", title: "Type" }
+                                        ]
+                                    });
+                                }
+                            }
+                        });
+
+                    }
+                });
+            }
+
             $.ajax({
                 url: apiUrl + "code/get.json",
                 headers: { 'Cookie': document.cookie },
@@ -292,7 +303,15 @@
             bottom: 0px;
         }
         #code {
-            font-size: 1.3em;
+            font-size: 1.2em;
+            display: flex;
+            flex-direction: column;
+        }
+        #codeToolbar {
+            font-size: 0.8em;
+            background-image: none;
+            line-height: 2.3;
+            height: 20px;
         }
         #description {
             overflow: hidden;
@@ -356,6 +375,9 @@
         }
         .Object {
             background-image: url("images/Object_16x.png");
+        }
+        .Run {
+            background-image: url("images/Run_16x.png");
         }
         .k-grid td {
             border-width: 0 0 1px 1px;

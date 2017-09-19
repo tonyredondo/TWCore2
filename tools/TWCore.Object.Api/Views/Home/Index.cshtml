@@ -79,7 +79,7 @@
             var currentFilePath = null;
             var currentFilter = null;
             var popupNotification = $("#popupNotification").kendoNotification().data("kendoNotification");
-
+            var expandedNodes = {};
 
             var snippetClick = function(item) {
                 var value = snippets[item.id];
@@ -87,7 +87,12 @@
             };
 
             var fileRefresh = function() {
-                fileDataSource.read();
+                fileDataSource.read().then(function() {
+                    var nodesToExpand = [];
+                    for (var i in expandedNodes) nodesToExpand.push(i);
+                    var tree = $('#fileView').data('kendoTreeView');
+                    tree.expandPath(nodesToExpand);
+                });
             }
 
             var fileUnload = function() {
@@ -115,6 +120,7 @@
             var fileFilter = function() {
                 kendo.prompt("Enter the filter value for the file name.", currentFilter).then(function (data) {
                     currentFilter = data;
+                    fileRefresh();
                 }, function () {
                 })
             }
@@ -349,6 +355,9 @@
                         id: "path",
                         hasChildren: "isDirectory"
                     }
+                },
+                change: function() {
+                    
                 }
             });
 
@@ -358,7 +367,7 @@
                 select: function (e) {
                     e.preventDefault();
                     var tree = $('#fileView').data('kendoTreeView');
-                    var dataItem = tree.dataItem(e.node)
+                    var dataItem = tree.dataItem(e.node);
                     if (dataItem.isDirectory) return;
                     currentFilePath = dataItem.path;
                     $.ajax({
@@ -382,6 +391,17 @@
                             }
                         }
                     });
+                },
+                expand : function(e) {
+                    var tree = $('#fileView').data('kendoTreeView');
+                    var dataItem = tree.dataItem(e.node);
+                    expandedNodes[dataItem.id] = true;
+                },
+                collapse : function(e) {
+                    var tree = $('#fileView').data('kendoTreeView');
+                    var dataItem = tree.dataItem(e.node);
+                    expandedNodes[dataItem.id] = false;
+                    delete expandedNodes[dataItem.id];
                 }
             });
 

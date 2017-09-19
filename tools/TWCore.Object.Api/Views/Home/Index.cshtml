@@ -314,6 +314,8 @@
             padding: 0px;
             margin: 0px;
             overflow: hidden;
+            border-width: 0px;
+            border-top-width: 1px;
         }
 
         #fileView {
@@ -330,8 +332,11 @@
         #codeToolbar {
             font-size: 0.8em;
             background-image: none;
-            line-height: 2.3;
-            height: 20px;
+            line-height: 2.5;
+            height: 37px;
+            border-width: 0px;
+            background-color: #363636;
+            padding: 0px 2px;
         }
         #description {
             overflow: hidden;
@@ -419,6 +424,15 @@
             padding: .1em .4em;
             line-height: 1.5em;
         }
+        .k-grid tr:hover {
+            background-image: none;
+            background: #616161;
+        }
+        .k-treelist .k-alt.k-state-selected, .k-treelist .k-alt.k-state-selected>td, .k-treelist .k-state-selected, .k-treelist .k-state-selected td {
+            background-color: #312fb7;
+            border-color: #242486;
+        }
+
         .CodeMirror {
             height: 100%;
         }

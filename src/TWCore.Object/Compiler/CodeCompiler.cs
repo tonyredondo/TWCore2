@@ -34,7 +34,7 @@ namespace TWCore.Object.Compiler
     /// </summary>
     public static class CodeCompiler
     {
-        private static readonly LRU2QCollection<string, IRuntimeCode> CachedCompilations = new LRU2QCollection<string, IRuntimeCode>(100);
+        private static readonly LRU2QCollection<string, IRuntimeCode> CachedCompilations = new LRU2QCollection<string, IRuntimeCode>(1024);
         private static MetadataReference[] _references;
 
         /// <summary>

@@ -125,6 +125,8 @@ namespace TWCore.Object.Api.Controllers
             if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase) || 
                 string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) || 
                 string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
                 serializer?.SerializerType == SerializerType.Text)
             {
                 obj = System.IO.File.ReadAllText(path);

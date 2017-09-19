@@ -39,7 +39,7 @@
         var apiUrl = "/api/";
 
         var snippets = [
-        'using TWCore;\nusing TWCore.Object.Compiler;\nusing TWCore.Serialization;\nusing System;\n\nnamespace Runtime\n{\n\
+        'using TWCore;\nusing TWCore.Object.Compiler;\nusing System;\n\nnamespace Runtime\n{\n\
     public class RuntimeCode : IRuntimeCode\n\
     {\n\
         public object Execute(object value)\n\
@@ -62,6 +62,14 @@
         {\n\
             JsonTextSerializerExtensions.Serializer.Indent = true;\n\
             return value.SerializeToJson();\n\
+        }\n\
+    }\n}\n',
+    'using TWCore;\nusing TWCore.Object.Compiler;\nusing System;\nusing System.Text;\n\nnamespace Runtime\n{\n\
+    public class RuntimeCode : IRuntimeCode\n\
+    {\n\
+        public object Execute(object value)\n\
+        {\n\
+            return Encoding.UTF8.GetString((byte[])value);\n\
         }\n\
     }\n}\n',
         ];
@@ -167,7 +175,7 @@
 
                                 if (!data) return;
                                 if (data.exceptionType) {
-                                    kendo.alert("Error on the compiler:  " + data.message);
+                                    kendo.alert(data.message);
                                     return;
                                 }
                                 $("#descriptionHeader").text(currentFilePath);
@@ -253,9 +261,10 @@
                 items: [
                     { type: "button", text: "Run", overflow: "never", spriteCssClass: "Run", click: function () { compileAndRun() } },
                     { type: "splitButton", text:"Snippets", overflow: "never", spriteCssClass:"Snnipet", menuButtons: [
-                        { id: 0, text: "Bypass the value", spriteCssClass:"CSharp", click : snippetClick }, 
-                        { id: 1, text: "Serialize to XML", spriteCssClass:"CSharp", click : snippetClick },
-                        { id: 2, text: "Serialize to Json", spriteCssClass:"CSharp", click : snippetClick }
+                        { id: 0, text: "Bypass the value", spriteCssClass: "CSharp", click : snippetClick }, 
+                        { id: 1, text: "Serialize to XML", spriteCssClass: "CSharp", click : snippetClick },
+                        { id: 2, text: "Serialize to Json", spriteCssClass: "CSharp", click: snippetClick },
+                        { id: 3, text: "Get UTF8 string from byte array", spriteCssClass: "CSharp", click : snippetClick }
                         ] 
                     }
                 ]

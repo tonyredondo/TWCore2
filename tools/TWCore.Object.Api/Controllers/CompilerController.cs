@@ -66,7 +66,7 @@ namespace TWCore.Object.Api.Controllers
             if (description == null) return collection;
             if (description.Value == null)
             {
-                collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown"});
+                collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown", Member = "object" });
                 return collection;
             }
             int id = 0;

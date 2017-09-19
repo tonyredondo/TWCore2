@@ -216,7 +216,8 @@ namespace TWCore.Object.Descriptor
                         try
                         {
                             if (prop.GetGetMethod().IsStatic)
-                                innerValue = prop.GetValue(null);
+                                //innerValue = prop.GetValue(null);
+                                continue;
                             else
                                 innerValue = value != null ? prop.GetFastPropertyInfo().GetValue(value) : null;
                         }
@@ -240,7 +241,8 @@ namespace TWCore.Object.Descriptor
                         try
                         {
                             if (field.IsStatic)
-                                innerValue = field.GetValue(null);
+                                //innerValue = field.GetValue(null);
+                                continue;
                             else
                                 innerValue = value != null ? field.GetValue(value) : null;
                         }

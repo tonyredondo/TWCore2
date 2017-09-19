@@ -20,6 +20,7 @@ namespace TWCore.Object.Api.Controllers
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
         private static readonly string[] Extensions;
+        private static readonly string[] TextExtensions = new[] {".xml", ".js", ".txt", ".log", ".json"};
 
         static FileSystemController()
         {
@@ -35,6 +36,7 @@ namespace TWCore.Object.Api.Controllers
                     extensions.Add(serExt + comExt);
                 }
             }
+            TextExtensions.Each(i => extensions.Add(i));
             Extensions = extensions.ToArray();
         }
 
@@ -75,7 +77,8 @@ namespace TWCore.Object.Api.Controllers
                 .Select(d => new PathEntry
                 {
                     Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
-                    Type = PathEntryType.File
+                    Type = PathEntryType.File,
+                    IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
                 }))
                 .ToArray();
             return new PathEntryCollection { Current = virtualPath, Entries = pathEntries };
@@ -214,6 +217,8 @@ namespace TWCore.Object.Api.Controllers
             public string Name { get; set; }
             [XmlAttribute, DataMember]
             public PathEntryType Type { get; set; }
+            [XmlAttribute, DataMember]
+            public bool IsBinary { get; set; }
         }
         [DataContract]
         public class PathEntryCollection

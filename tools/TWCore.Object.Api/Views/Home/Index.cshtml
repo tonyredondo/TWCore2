@@ -12,6 +12,8 @@
         </div>
         <div id="objectPanel">
             <div id="description">
+                <div id="descriptionHeader"></div>
+                <div id="textContent"></div>
                 <div id="descriptionInner"></div>
             </div>
             <div id="code">
@@ -24,6 +26,10 @@
     <script id="description-template" type="text/x-kendo-template">
         <div class='description-name #:data.member#'>#: name #</div>
     </script>
+    
+    
+
+    
 
     <script>
         var apiUrl = "/api/";
@@ -32,15 +38,54 @@
                 panes: [
                     { collapsible: true, size: "300px" },
                     { collapsible: false, min: "30%" },
-                ]
+                ],
+                resize: function () {
+                    if (editor) editor.refresh();
+                    if (textContent) textContent.refresh();
+                }
             });
             $("#objectPanel").kendoSplitter({
                 orientation: "vertical",
                 panes: [
                     { collapsible: true },
                     { collapsible: true, size:"300px" },
-                ]
+                ],
+                resize: function () {
+                    if (editor) editor.refresh();
+                    if (textContent) textContent.refresh();
+                }
             });
+
+            CodeMirror.modeURL = "mode/%N/%N.js";
+            var editor = CodeMirror.fromTextArea(document.getElementById("editor"), {
+                theme: 'lesser-dark',
+                lineNumbers: true,
+                styleActiveLine: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                extraKeys: {"Alt-F": "findPersistent"}
+            });
+            var info = CodeMirror.findModeByExtension("cs")
+            editor.setOption("mode", info.mime);
+            CodeMirror.autoLoadMode(editor, info.mode);
+
+            var textContent = CodeMirror(document.getElementById("textContent"), {
+                theme: 'lesser-dark',
+                lineNumbers: true,
+                styleActiveLine: true,
+                matchBrackets: true,
+                autoCloseBrackets: true,
+                foldGutter: true,
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter"],
+                extraKeys: {"Alt-F": "findPersistent"}
+            });
+            var info = CodeMirror.findModeByExtension("xml")
+            textContent.setOption("mode", info.mime);
+            CodeMirror.autoLoadMode(textContent, info.mode);
+            $("#textContent").hide();
+            $("#descriptionHeader").hide();
 
             var popupNotification = $("#popupNotification").kendoNotification().data("kendoNotification");
 
@@ -76,6 +121,8 @@
                 }
             });
 
+            var currentFilePath = null;
+
             $("#fileView").kendoTreeView({
                 dataSource: fileDataSource,
                 dataTextField: "name",
@@ -84,6 +131,7 @@
                     var tree = $('#fileView').data('kendoTreeView');
                     var dataItem = tree.dataItem(e.node)
                     if (dataItem.isDirectory) return;
+                    currentFilePath = dataItem.path;
                     $.ajax({
                         url: apiUrl + "files/load.json?path=" + dataItem.path,
                         dataType: 'json',
@@ -105,9 +153,9 @@
                                     xhrFields: {
                                         withCredentials: true
                                     },
-                                    data: "\"" + $("#editor").val() + "\"",
+                                    data: "\"" + editor.getValue() + "\"",
                                     success: function (data) {
-                                        $("#editor").val(data);
+                                        editor.setValue(data);
 
                                         $.ajax({
                                             url: apiUrl + "code/compile.json",
@@ -119,30 +167,42 @@
                                             success: function (data) {
                                                 console.log(data);
                                                 popupNotification.show(" Description loaded.", "info");
-
+                                                $("#textContent").hide();
                                                 var ktl = $("#descriptionInner").data("kendoTreeList");
                                                 if (ktl) {
                                                     ktl.destroy();
                                                     $("#descriptionInner").empty();
                                                 }
-                                                $("#descriptionInner").kendoTreeList({
-                                                    dataSource: {
-                                                        data: data,
-                                                        schema: {
-                                                            model: {
-                                                                id: "id",
-                                                                expanded: false
+
+                                                if (!data) return;
+
+                                                $("#descriptionHeader").text(currentFilePath);
+                                                $("#descriptionHeader").show();
+                                                if (data[0].type == "System.String") {
+                                                    textContent.setValue(data[0].value);
+                                                    var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0])
+                                                    textContent.setOption("mode", info.mime);
+                                                    CodeMirror.autoLoadMode(textContent, info.mode);
+                                                    $("#textContent").show();
+                                                    textContent.refresh();
+                                                }
+                                                else {
+                                                    $("#descriptionInner").kendoTreeList({
+                                                        dataSource: {
+                                                            data: data,
+                                                            schema: {
+                                                                model: { id: "id", expanded: false }
                                                             }
-                                                        }
-                                                    },
-                                                    selectable: true,
-                                                    resizable: true,
-                                                    columns: [
-                                                        { field: "name", title: "Name", template: $("#description-template").html() },
-                                                        { field: "value", title: "Value" },
-                                                        { field: "type", title: "Type" }
-                                                    ]
-                                                });
+                                                        },
+                                                        selectable: true,
+                                                        resizable: true,
+                                                        columns: [
+                                                            { field: "name", title: "Name", template: $("#description-template").html() },
+                                                            { field: "value", title: "Value" },
+                                                            { field: "type", title: "Type" }
+                                                        ]
+                                                    });
+                                                }
                                             }
                                         });
 
@@ -156,7 +216,6 @@
                     });
                 }
             });
-
             $.ajax({
                 url: apiUrl + "code/get.json",
                 headers: { 'Cookie': document.cookie },
@@ -167,12 +226,11 @@
                 },
                 success: function (data) {
                     console.log(data);
-                    $("#editor").val(data);
+                    editor.setValue(data);
                 }
             });
         });
     </script>
-
 
 
     <style>
@@ -232,6 +290,7 @@
             bottom: 0px;
         }
         #code {
+            font-size: 1.3em;
         }
         #description {
             overflow: hidden;
@@ -242,6 +301,10 @@
             padding: 0;
             height: 100%;
         }
+        #textContent {
+            height: 100%;
+            font-size:1.2em;
+        }
         #editor {
             position: absolute;
             color: #ffffff;
@@ -250,11 +313,14 @@
             width: 97%;
             height: 91.5%;
             border: solid 0px;
-            font-size: 1em;
             resize: none;
             padding: 15px;
         }
-
+        #descriptionHeader {
+            padding: 5px;
+            text-align: center;
+            border-bottom: solid 1px #222;
+        }
         #fileView .k-sprite {
         }
 
@@ -293,6 +359,9 @@
             border-width: 0 0 1px 1px;
             padding: .1em .4em;
             line-height: 1.5em;
+        }
+        .CodeMirror {
+            height: 100%;
         }
     </style>
 </div>

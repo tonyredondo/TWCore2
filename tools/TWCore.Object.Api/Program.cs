@@ -14,7 +14,10 @@ namespace TWCore.Object.Api
     public class Program
     {
         public static void Main(string[] args)
-            => Core.RunService(() => new WebService(BuildWebHost), args);
+        {
+            Core.InitAspNet();
+            Core.RunService(() => new WebService(BuildWebHost), args);
+        }
 
         public static IWebHost BuildWebHost(string[] args) =>
             WebHost.CreateDefaultBuilder(args)

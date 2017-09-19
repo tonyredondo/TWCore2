@@ -37,7 +37,6 @@ namespace TWCore.Compression
         {
             Register(new GZipCompressor());
             Register(new DeflateCompressor());
-            Register(new MiniLZOCompressor());
         }
 
         #region Register and Deregister

@@ -13,6 +13,7 @@ namespace TWCore.Object.Api
         public object FileObject { get; set; }
         public string SourceCode { get; set; } = @"using TWCore;
 using TWCore.Object.Compiler;
+using TWCore.Serialization;
 using System;
 
 namespace Runtime 

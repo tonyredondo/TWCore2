@@ -13,8 +13,10 @@
         <div id="objectPanel">
             <div id="description">
                 <div id="descriptionHeader"></div>
-                <div id="textContent"></div>
-                <div id="descriptionInner"></div>
+                <div id="descriptionContent">
+                    <div id="textContent"></div>
+                    <div id="descriptionInner"></div>
+                </div>
             </div>
             <div id="code">
                 <div id="codeToolbar"></div>
@@ -77,7 +79,7 @@
             CodeMirror.autoLoadMode(editor, info.mode);
 
             var textContent = CodeMirror(document.getElementById("textContent"), {
-                theme: 'lesser-dark',
+                theme: 'icecoder',
                 lineNumbers: true,
                 styleActiveLine: true,
                 matchBrackets: true,
@@ -190,18 +192,36 @@
                                 }
 
                                 if (!data) return;
-
+                                if (data.exceptionType) {
+                                    kendo.alert("Error on the compiler:  " + data.message);
+                                    return;
+                                }
                                 $("#descriptionHeader").text(currentFilePath);
                                 $("#descriptionHeader").show();
-                                if (data[0].type == "System.String") {
+                                if (data.length > 0 && data[0].type == "System.String") {
                                     textContent.setValue(data[0].value);
+                                    var setted = false;
                                     if (currentFilePath) {
-                                        var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0])
+                                        var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0]);
                                         if (info) {
+                                            textContent.setOption("mode", info.mime);
+                                            CodeMirror.autoLoadMode(textContent, info.mode);
+                                            setted = true;
+                                        }
+                                    }
+                                    if (!setted) {
+                                        if (data[0].value.startsWith("<?xml")) {
+                                            var info = CodeMirror.findModeByExtension("xml");
+                                            textContent.setOption("mode", info.mime);
+                                            CodeMirror.autoLoadMode(textContent, info.mode);
+                                        }
+                                        if (data[0].value.startsWith("{")) {
+                                            var info = CodeMirror.findModeByExtension("json");
                                             textContent.setOption("mode", info.mime);
                                             CodeMirror.autoLoadMode(textContent, info.mode);
                                         }
                                     }
+
                                     $("#textContent").show();
                                     textContent.refresh();
                                 }
@@ -341,6 +361,21 @@
             padding: 5px;
             text-align: center;
             border-bottom: solid 1px #222;
+            position: absolute;
+            top: 0px;
+            left: 0px;
+            right: 0px;
+            height: 26px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        #descriptionContent {
+            position: absolute;
+            bottom: 0px;
+            left: 0px;
+            right: 0px;
+            top: 26px;
         }
         #fileView .k-sprite {
         }

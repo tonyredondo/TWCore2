@@ -1,10 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using TWCore.Compression;
 using TWCore.Serialization;
 using TWCore.Settings;
 
@@ -17,7 +19,24 @@ namespace TWCore.Object.Api.Controllers
     {
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
-        private static readonly string[] Extensions = SerializerManager.Serializers.Select(s => s.Extensions).SelectMany(i => i).Distinct().Concat(".txt", ".html", ".htm").ToArray();
+        private static readonly string[] Extensions;
+
+        static FileSystemController()
+        {
+            var serExtensions = SerializerManager.Serializers.Select(s => s.Extensions).SelectMany(i => i).ToArray();
+            var comExtensions = CompressorManager.Compressors.Select(s => s.Value.FileExtension).ToArray();
+
+            var extensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var serExt in serExtensions)
+            {
+                extensions.Add(serExt);
+                foreach (var comExt in comExtensions)
+                {
+                    extensions.Add(serExt + comExt);
+                }
+            }
+            Extensions = extensions.ToArray();
+        }
 
         [HttpGet("api/files/list.{format}")]
         [HttpGet("api/files/list")]
@@ -44,7 +63,15 @@ namespace TWCore.Object.Api.Controllers
                     Type =  PathEntryType.Directory
                 })
                 .Concat(Directory.EnumerateFiles(path)
-                .Where(file => Extensions.Contains(Path.GetExtension(file), StringComparer.OrdinalIgnoreCase))
+                .Where(file =>
+                {
+                    foreach (var ext in Extensions)
+                    {
+                        if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
+                            return true;
+                    }
+                    return false;
+                })
                 .Select(d => new PathEntry
                 {
                     Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),

@@ -1,11 +1,10 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc;
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
-using Microsoft.AspNetCore.Mvc;
 using TWCore.Object.Compiler;
 using TWCore.Object.Descriptor;
-using ValueType = TWCore.Object.Descriptor.ValueType;
 
 namespace TWCore.Object.Api.Controllers
 {

@@ -241,6 +241,8 @@
                                             { field: "type", title: "Type" }
                                         ]
                                     });
+                                    var descriptionInner = $("#descriptionInner").data("kendoTreeList");
+                                    descriptionInner.expand($("#descriptionInner tbody>tr:eq(0)"));
                                 }
                             }
                         });
@@ -429,10 +431,15 @@
             background: #616161;
         }
         .k-treelist .k-alt.k-state-selected, .k-treelist .k-alt.k-state-selected>td, .k-treelist .k-state-selected, .k-treelist .k-state-selected td {
-            background-color: #312fb7;
-            border-color: #242486;
+            background-color: #3f51b5;
+            border-color: #3f51b5;
         }
-
+		.k-grid td.k-state-selected, .k-grid tr.k-state-selected>td {
+		    border-color: #3f51b5;
+		}
+		.k-grid td.k-state-selected:hover, .k-grid tr.k-state-selected:hover td {
+		    background-color: #3f51b5;
+		}
         .CodeMirror {
             height: 100%;
         }

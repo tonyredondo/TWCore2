@@ -31,11 +31,12 @@ namespace TWCore
         /// <typeparam name="T">Function type</typeparam>
         /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
         /// <param name="onException">Function to be executed in case an Exception catch</param>
+        /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, Func<Exception, T> onException)
+        public static T Do<T>(Func<T> tryFunction, Func<Exception, T> onException, T defaultValue = default(T))
         {
-            var res = default(T);
+            var res = defaultValue;
             try
             {
                 res = tryFunction();
@@ -56,11 +57,12 @@ namespace TWCore
         /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
         /// <param name="onException">Action to be executed in case an Exception catch</param>
         /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, Action<Exception> onException = null, bool throwsAfter = false)
+        public static T Do<T>(Func<T> tryFunction, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default(T))
         {
-            var res = default(T);
+            var res = defaultValue;
             try
             {
                 res = tryFunction();
@@ -82,11 +84,12 @@ namespace TWCore
         /// <typeparam name="T">Function type</typeparam>
         /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
         /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <param name="defaultValue">Default value</param>
         /// <returns>Function result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T Do<T>(Func<T> tryFunction, bool throwsAfter)
+        public static T Do<T>(Func<T> tryFunction, bool throwsAfter, T defaultValue = default(T))
         {
-            var res = default(T);
+            var res = defaultValue;
             try
             {
                 res = tryFunction();

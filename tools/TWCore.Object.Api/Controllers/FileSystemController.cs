@@ -72,6 +72,7 @@ namespace TWCore.Object.Api.Controllers
                     });
 
                 var pathEntries = Directory.EnumerateDirectories(path)
+                    .Where(d => Try.Do(() => Directory.EnumerateDirectories(d).Any(), false) || Try.Do(() => Directory.EnumerateFiles(d).Any(), false))
                     .Select(d => new PathEntry
                     {
                         Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),

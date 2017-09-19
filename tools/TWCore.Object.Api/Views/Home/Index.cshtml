@@ -77,6 +77,7 @@
         $(document).ready(function () {
             var fileListUrl = apiUrl + "files/list.json";
             var currentFilePath = null;
+            var currentFilter = null;
             var popupNotification = $("#popupNotification").kendoNotification().data("kendoNotification");
 
 
@@ -109,6 +110,13 @@
                         }
                     }
                 });
+            }
+            
+            var fileFilter = function() {
+                kendo.prompt("Enter the filter value for the file name.", currentFilter).then(function (data) {
+                    currentFilter = data;
+                }, function () {
+                })
             }
 
             var fileReload = function() {
@@ -274,7 +282,7 @@
                     { type: "button", text: "Refresh", overflow: "never", spriteCssClass: "Refresh", click: fileRefresh },
                     { type: "button", text: "Unload", overflow: "never", spriteCssClass: "Unload", click: fileUnload },
                     { type: "separator", overflow: "never" },
-                    { type: "button", text: "Find", overflow: "never", spriteCssClass: "Find", enable : false },
+                    { type: "button", text: "Filter", overflow: "never", spriteCssClass: "Find", click : fileFilter },
                 ]
             });
             
@@ -314,9 +322,9 @@
                     read: {
                         url: function (options) {
                             if (options.name)
-                                return fileListUrl + "?path=" + options.name;
+                                return fileListUrl + "?path=" + options.name + (currentFilter ? "&filter=" + currentFilter : "");
                             else
-                                return fileListUrl;
+                                return fileListUrl + (currentFilter ? "?filter=" + currentFilter : "");
                         },
                         dataType: "json"
                     }

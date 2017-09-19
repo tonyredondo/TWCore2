@@ -50,6 +50,9 @@ namespace TWCore.Object.Api.Controllers
                 if (Request.Query.TryGetValue("path", out var folderValues))
                     virtualPath = folderValues;
 
+                Request.Query.TryGetValue("filter", out var filter);
+                var withFilters = !string.IsNullOrWhiteSpace(filter);
+                
                 if (string.IsNullOrWhiteSpace(virtualPath))
                     return new ObjectResult(GetRootEntryCollection());
 
@@ -72,7 +75,12 @@ namespace TWCore.Object.Api.Controllers
                     });
 
                 var pathEntries = Directory.EnumerateDirectories(path)
-                    .Where(d => Try.Do(() => Directory.EnumerateDirectories(d).Any(), false) || Try.Do(() => Directory.EnumerateFiles(d).Any(), false))
+                    .Where(d =>
+                    {
+                        if (Path.GetFileName(d)[0] == '.') return false;
+                        return Try.Do(() => Directory.EnumerateDirectories(d).Any(), false) ||
+                               Try.Do(() => Directory.EnumerateFiles(d).Any(), false);
+                    })
                     .Select(d => new PathEntry
                     {
                         Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
@@ -81,6 +89,11 @@ namespace TWCore.Object.Api.Controllers
                     .Concat(Directory.EnumerateFiles(path)
                         .Where(file =>
                         {
+                            if (Path.GetFileName(file)[0] == '.') return false;
+                            if (withFilters)
+                            {
+                                if (file.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) return false;
+                            }
                             foreach (var ext in Extensions)
                             {
                                 if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))

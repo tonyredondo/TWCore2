@@ -14,13 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Settings;
-
+// ReSharper disable UnusedMember.Global
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services
@@ -48,6 +49,25 @@ namespace TWCore.Services
         public WebService(Func<string[], IWebHost> webHostFactory)
         {
             _webHostFactory = webHostFactory;
+        }
+        #endregion
+
+        #region Statics
+        /// <summary>
+        /// Create WebService with default WebHost
+        /// </summary>
+        /// <typeparam name="TStartUp">StartuUp class</typeparam>
+        /// <returns>WebService default instance</returns>
+        public static WebService Create<TStartUp>() where TStartUp : class
+        {
+            if (Settings?.Urls?.Any() == true)
+                return new WebService(args => WebHost.CreateDefaultBuilder(args)
+                    .UseStartup<TStartUp>()
+                    .UseUrls(Settings.Urls)
+                    .Build());
+            return new WebService(args => WebHost.CreateDefaultBuilder(args)
+                .UseStartup<TStartUp>()
+                .Build());
         }
         #endregion
 

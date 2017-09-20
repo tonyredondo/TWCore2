@@ -27,6 +27,6 @@ namespace TWCore.Services
     public class WebServiceSettings : SettingsBase
     {
         [SettingsArray(';')]
-        public string[] Urls { get; set; } = { "http://*:52298" };
+        public string[] Urls { get; set; } //= { "http://*:52298" };
     }
 }

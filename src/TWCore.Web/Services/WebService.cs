@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Settings;
+
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services
@@ -29,6 +31,12 @@ namespace TWCore.Services
     /// </summary>
     public class WebService : SimpleServiceAsync
     {
+        /// <summary>
+        /// Web Service Default Settings
+        /// </summary>
+        public static WebServiceSettings Settings { get; } = Core.GetSettings<WebServiceSettings>();
+
+
         private readonly Func<string[], IWebHost> _webHostFactory;
 
         #region .ctor

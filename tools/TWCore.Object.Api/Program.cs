@@ -23,7 +23,7 @@ namespace TWCore.Object.Api
         {
             return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
-                .UseUrls("http://*:52298")
+                .UseUrls(WebService.Settings.Urls)
                 .Build();
         }
     }

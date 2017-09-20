@@ -16,12 +16,14 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Net.Multicast
 {
@@ -138,6 +140,8 @@ namespace TWCore.Net.Multicast
             PeerConnection.Disconnect();
             _connected = false;
         }
+
+        #region Register Service
         /// <summary>
         /// Register service
         /// </summary>
@@ -145,7 +149,8 @@ namespace TWCore.Net.Multicast
         /// <param name="name">Service name</param>
         /// <param name="description">Service description</param>
         /// <param name="data">Service additional data</param>
-        public static void RegisterService(string category, string name, string description, SerializedObject data)
+        /// <returns>Service Id</returns>
+        public static Guid RegisterService(string category, string name, string description, SerializedObject data)
         {
             var service = new RegisteredService
             {
@@ -161,7 +166,41 @@ namespace TWCore.Net.Multicast
             var serviceText = service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
             service.ServiceId = serviceText.GetHashSHA1Guid();
             lock (LocalServices)
-                LocalServices.Add(service);
+            {
+                if (LocalServices.All(s => s.ServiceId != service.ServiceId))
+                    LocalServices.Add(service);
+            }
+            return service.ServiceId;
+        }
+        /// <summary>
+        /// Register service
+        /// </summary>
+        /// <param name="category">Service category</param>
+        /// <param name="name">Service name</param>
+        /// <param name="description">Service description</param>
+        /// <param name="getData">Service additional data func</param>
+        /// <returns>Service Id</returns>
+        public static Guid RegisterService(string category, string name, string description, Func<SerializedObject> getData)
+        {
+            var service = new RegisteredService
+            {
+                Category = category,
+                Name = name,
+                Description = description,
+                MachineName = Core.MachineName,
+                ApplicationName = Core.ApplicationName,
+                FrameworkVersion = Core.FrameworkVersion,
+                EnvironmentName = Core.EnvironmentName,
+                GetDataFunc = getData
+            };
+            var serviceText = service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
+            service.ServiceId = serviceText.GetHashSHA1Guid();
+            lock (LocalServices)
+            {
+                if (LocalServices.All(s => s.ServiceId != service.ServiceId))
+                    LocalServices.Add(service);
+            }
+            return service.ServiceId;
         }
         /// <summary>
         /// Register service
@@ -170,8 +209,35 @@ namespace TWCore.Net.Multicast
         /// <param name="name">Service name</param>
         /// <param name="description">Service description</param>
         /// <param name="data">Service additional data</param>
-        public static void RegisterService(string category, string name, string description, Dictionary<string, object> data)
+        /// <returns>Service Id</returns>
+        public static Guid RegisterService(string category, string name, string description, Dictionary<string, object> data)
             => RegisterService(category, name, description, new SerializedObject(data));
+        /// <summary>
+        /// Register service
+        /// </summary>
+        /// <param name="category">Service category</param>
+        /// <param name="name">Service name</param>
+        /// <param name="description">Service description</param>
+        /// <param name="getData">Service additional data func</param>
+        /// <returns>Service Id</returns>
+        public static Guid RegisterService(string category, string name, string description, Func<Dictionary<string, object>> getData)
+            => RegisterService(category, name, description, () => getData != null ? new SerializedObject(getData()) : null);
+        #endregion
+
+        #region Unregister Service
+        /// <summary>
+        /// Unregister service
+        /// </summary>
+        /// <param name="serviceId">Service Id</param>
+        /// <returns>True if a service was removed; otherwise, false.</returns>
+        public static bool UnregisterService(Guid serviceId)
+        {
+            lock (LocalServices)
+                return LocalServices.RemoveAll(s => s.ServiceId == serviceId) > 0;
+        }
+        #endregion
+
+        #region Get Registered Services
         /// <summary>
         /// Get registered services
         /// </summary>
@@ -179,10 +245,39 @@ namespace TWCore.Net.Multicast
         public static ReceivedService[] GetRegisteredServices()
         {
             lock (ReceivedServices)
-            {
                 return ReceivedServices.ToValueArray();
-            }
         }
+        /// <summary>
+        /// Get registered services
+        /// </summary>
+        /// <returns>Received registered services array</returns>
+        public static ReceivedService[] GetLocalRegisteredServices()
+        {
+            lock (ReceivedServices)
+                return ReceivedServices.ToValueArray().Where(s => s.MachineName == Core.MachineName).ToArray();
+        }
+        /// <summary>
+        /// Get registered services
+        /// </summary>
+        /// <param name="name">Service name</param>
+        /// <returns>Received registered services array</returns>
+        public static ReceivedService[] GetRegisteredServices(string name)
+        {
+            lock (ReceivedServices)
+                return ReceivedServices.ToValueArray().Where(r => r.Name == name).ToArray();
+        }
+        /// <summary>
+        /// Get registered services
+        /// </summary>
+        /// <param name="name">Service name</param>
+        /// <returns>Received registered services array</returns>
+        public static ReceivedService[] GetLocalRegisteredServices(string name)
+        {
+            lock (ReceivedServices)
+                return ReceivedServices.ToValueArray().Where(s => s.MachineName == Core.MachineName && s.Name == name).ToArray();
+        }
+        #endregion
+
         #endregion
 
         #region Private Methods
@@ -200,12 +295,14 @@ namespace TWCore.Net.Multicast
                 FrameworkVersion = rService.FrameworkVersion,
                 EnvironmentName = rService.EnvironmentName,
                 Data = rService.Data,
-                Address = e.Address
+                Addresses = new []{ e.Address }
             };
             bool exist;
             lock (ReceivedServices)
             {
-                exist = ReceivedServices.TryRemove(received.ServiceId, out var _);
+                exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
+                if (exist)
+                    received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
                 ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
             }
             var eArgs = new EventArgs<ReceivedService>(received);
@@ -222,6 +319,8 @@ namespace TWCore.Net.Multicast
                     rSrv = LocalServices.ToArray();
                 foreach (var srv in rSrv)
                 {
+                    if (srv.GetDataFunc != null)
+                        srv.Data = srv.GetDataFunc();
                     var srvValue = Serializer.Serialize(srv);
                     PeerConnection.Send(srvValue);
                     if (_token.IsCancellationRequested)
@@ -238,6 +337,10 @@ namespace TWCore.Net.Multicast
         /// </summary>
         public class RegisteredService
         {
+            [NonSerialize, NonSerialized]
+            public Func<SerializedObject> GetDataFunc;
+
+            #region Properties
             /// <summary>
             /// Service Id
             /// </summary>
@@ -274,6 +377,7 @@ namespace TWCore.Net.Multicast
             /// Additional Data
             /// </summary>
             public SerializedObject Data { get; set; }
+            #endregion
         }
         /// <inheritdoc />
         /// <summary>
@@ -282,9 +386,9 @@ namespace TWCore.Net.Multicast
         public class ReceivedService : RegisteredService
         {
             /// <summary>
-            /// Remote IpAddress
+            /// Remote IpAddresses
             /// </summary>
-            public IPAddress Address { get; set; }
+            public IPAddress[] Addresses { get; set; }
         }
         #endregion
     }

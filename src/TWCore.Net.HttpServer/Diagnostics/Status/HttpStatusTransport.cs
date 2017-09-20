@@ -35,6 +35,7 @@ namespace TWCore.Diagnostics.Status.Transports
     {
         private const int MaxNumberOfTries = 3;
         private readonly int _numberOfTries;
+        private readonly Guid _discoveryServiceId;
         private SimpleHttpServer _httpServer;
 
         #region Events
@@ -84,7 +85,7 @@ namespace TWCore.Diagnostics.Status.Transports
             _httpServer.AddGetHandler("/discovery", ctx =>
             {
                 var services = DiscoveryService.GetRegisteredServices();
-                var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS").ToArray();
+                var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS.HTTP").ToArray();
                 ctx.Response.WriteLine("<html><head><title>Discovered Status Services</title></head><body style='padding:30px;'><h1 style='text-align:center;'>Discovered status services</h1>");
                 foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
                 {
@@ -93,7 +94,12 @@ namespace TWCore.Diagnostics.Status.Transports
                     foreach (var ss in g)
                     {
                         var dct = (Dictionary<string, object>)ss.Data.GetValue();
-                        ctx.Response.WriteLine($"<li style='list-style-type: none;'><a href='http://{ss.Address.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ss.ApplicationName}</a></li>");
+                        ctx.Response.WriteLine("<li style='list-style-type: none;'>");
+                        foreach (var ssAddress in ss.Addresses)
+                        {
+                            ctx.Response.WriteLine($"<a href='http://{ssAddress.ToString()}:{dct["Port"]}/' target='_blank' style='text-decoration: none;color: blue;'>{ssAddress.ToString()}</a> /");
+                        }
+                        ctx.Response.WriteLine($" {ss.ApplicationName}</li>");
                     }
                     ctx.Response.WriteLine("</ul>");
                 }
@@ -126,7 +132,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 var settings = Core.GetSettings<HttpStatusSettings>();
                 if (settings.Discovery)
                 {
-                    DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS", "Status engine http transport service", new Dictionary<string, object>
+                    _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS.HTTP", "Status engine http transport service", new Dictionary<string, object>
                     {
                         ["Port"] = port
                     });
@@ -140,6 +146,7 @@ namespace TWCore.Diagnostics.Status.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ~HttpStatusTransport()
         {
+            DiscoveryService.UnregisterService(_discoveryServiceId);
             Dispose();
         }
         /// <inheritdoc />

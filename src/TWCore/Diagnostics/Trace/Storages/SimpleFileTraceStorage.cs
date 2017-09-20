@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TWCore.Compression;
+using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable UnusedMember.Global
@@ -32,6 +33,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     public class SimpleFileTraceStorage : ITraceStorage
     {
         private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
 
@@ -104,6 +106,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             }
             CreateByDay = createByDay;
             EnsureTraceFile(FileName);
+            _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "TRACE.FILE", "This is the File Trace base path", new SerializedObject(BasePath));
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(FileName), FileName);
@@ -119,6 +122,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ~SimpleFileTraceStorage()
         {
+            DiscoveryService.UnregisterService(_discoveryServiceId);
             Dispose();
         }
         #endregion

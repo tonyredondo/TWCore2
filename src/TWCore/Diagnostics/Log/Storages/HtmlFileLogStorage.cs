@@ -19,6 +19,9 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TWCore.Net.Multicast;
+using TWCore.Serialization;
+
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable IntroduceOptionalParameters.Global
 
@@ -31,6 +34,7 @@ namespace TWCore.Diagnostics.Log.Storages
 	public class HtmlFileLogStorage : ILogStorage
     {
         private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
         private int _numbersOfFiles;
@@ -329,7 +333,7 @@ namespace TWCore.Diagnostics.Log.Storages
             UseMaxLength = useMaxLength;
             MaxLength = maxLength;
             EnsureLogFile(fileName);
-
+            _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.HTML", "This is the File Log base path", new SerializedObject(Path.GetDirectoryName(fileName)));
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(FileName), FileName);
@@ -347,6 +351,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		~HtmlFileLogStorage()
         {
+            DiscoveryService.UnregisterService(_discoveryServiceId);
             Core.Status.DeAttachObject(this);
             Dispose();
         }

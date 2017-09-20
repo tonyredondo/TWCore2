@@ -47,6 +47,8 @@ if (window.FileReader) {
             var files = dt.files;
             for (var i = 0; i < files.length; i++) {
                 var file = files[i];
+                if (file.size > 2097152) 
+                    continue;
                 var reader = new FileReader();
 
                 addEventHandler(reader, 'loadend', function (e, file) {

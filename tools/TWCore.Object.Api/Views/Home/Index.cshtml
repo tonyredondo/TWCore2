@@ -421,8 +421,6 @@
             fileReload();
 
             addOnDropFileHandler(function(file, value) {
-                console.log(file);
-                console.log(value);
                 popupNotification.show(" Uploading: " + file + " ...", "info");
 
                 $.ajax({

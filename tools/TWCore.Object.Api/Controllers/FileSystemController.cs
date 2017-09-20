@@ -237,6 +237,9 @@ namespace TWCore.Object.Api.Controllers
                 if (!Request.Query.TryGetValue("name", out var name))
                     throw new Exception("You must specify a name of the file.");
 
+                if (Request.ContentLength.HasValue && Request.ContentLength.Value > 2097152)
+                    throw new Exception("The file is too large.");
+
                 object obj;
                 SessionData sessionData;
 

@@ -19,9 +19,12 @@ namespace TWCore.Object.Api
             Core.RunService(() => new WebService(BuildWebHost), args);
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        public static IWebHost BuildWebHost(string[] args)
+        {
+            return WebHost.CreateDefaultBuilder(args)
                 .UseStartup<Startup>()
+                .UseUrls("http://*:52298")
                 .Build();
+        }
     }
 }

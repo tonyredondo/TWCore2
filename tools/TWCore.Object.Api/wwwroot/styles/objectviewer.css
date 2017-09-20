@@ -1,0 +1,250 @@
+﻿html, body {
+    margin: 0 0;
+    padding: 0 0;
+    overflow: hidden;
+    font-family: 'Roboto', sans-serif;
+    font-size: 0.9em;
+    border-width: 0px;
+}
+
+#viewport {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+#head {
+    background-color: #222222;
+    color: #ffffff;
+    padding: 15px;
+    font-family: 'Roboto', sans-serif;
+    font-size: 2em;
+    background-image: url("../images/CSWPFWeb_32x.png");
+    background-repeat: no-repeat;
+    padding-left: 64px;
+    background-size: 32px;
+    background-position-y: center;
+    background-position-x: 20px;
+}
+
+#body {
+    height: 100%;
+    padding: 0px;
+    margin: 0px;
+    border-width: 0px;
+}
+
+#fileMenu {
+    background-color: #222;
+}
+
+#toolbar {
+    font-size: 1em;
+}
+
+#objectPanel {
+    padding: 0px;
+    margin: 0px;
+    overflow: hidden;
+    border-width: 0px;
+    border-top-width: 1px;
+    font-family: 'Droid Sans';
+}
+
+#fileView {
+    position: absolute;
+    padding: 5px;
+    top: 37px;
+    bottom: 0px;
+    right: 0px;
+    left: 0px;
+    overflow: auto;
+}
+
+#code {
+    font-size: 1.2em;
+    display: flex;
+    flex-direction: column;
+}
+
+#description {
+    overflow: hidden;
+}
+
+#descriptionInner {
+    border-width: 0;
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+
+#textContent {
+    height: 100%;
+    font-size: 1.2em;
+}
+
+#codeToolbar {
+    height: 42px;
+}
+
+#editor {
+    position: absolute;
+    color: #ffffff;
+    background-color: transparent;
+    font-family: Courier New;
+    width: 97%;
+    height: 91.5%;
+    border: solid 0px;
+    resize: none;
+    padding: 15px;
+}
+
+#descriptionHeader {
+    text-align: center;
+    border-bottom: solid 1px #222;
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 28px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-top: 10px;
+}
+
+#descriptionContent {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    top: 38px;
+}
+
+#fileView .k-sprite {
+}
+
+.folder {
+    background-image: url("../images/Folder_16x.png");
+}
+
+.file {
+    background-image: url("../images/Mail_16x.png");
+}
+
+.text {
+    background-image: url("../images/MarkupTag_16x.png");
+}
+
+.description-name {
+    width: 16px;
+    height: 16px;
+    padding-left: 22px;
+    background-repeat: no-repeat;
+    display: inline;
+}
+
+.Field {
+    background-image: url("../images/Field_16x.png");
+}
+
+.Property {
+    background-image: url("../images/Property_20x.png");
+}
+
+.Method {
+    background-image: url("../images/Method_16x.png");
+}
+
+.Object {
+    background-image: url("../images/Object_16x.png");
+}
+
+.Run {
+    background-image: url("../images/Run_16x.png");
+}
+
+.Snnipet {
+    background-image: url("../images/Snippet_16x.png");
+}
+
+.CSharp {
+    background-image: url("../images/CS_16x.png");
+}
+
+.Unload {
+    background-image: url("../images/CleanData_16x.png");
+}
+
+.Refresh {
+    background-image: url("../images/Refresh_16x.png");
+}
+
+.Filter {
+    background-image: url("../images/Filter_16x.png");
+}
+
+.k-grid td {
+    border-width: 0 0 1px 1px;
+    padding: .1em .4em;
+    line-height: 1.5em;
+}
+
+.k-grid tr:hover {
+    background-image: none;
+    background: #616161;
+}
+
+.k-treelist .k-alt.k-state-selected, .k-treelist .k-alt.k-state-selected > td, .k-treelist .k-state-selected, .k-treelist .k-state-selected td {
+    background-color: #3f51b5;
+    border-color: #3f51b5;
+}
+
+.k-grid td.k-state-selected, .k-grid tr.k-state-selected > td {
+    border-color: #3f51b5;
+}
+
+    .k-grid td.k-state-selected:hover, .k-grid tr.k-state-selected:hover td {
+        background-color: #3f51b5;
+    }
+
+.k-toolbar .k-button, .k-toolbar .k-button-group, .k-toolbar .k-separator, .k-toolbar .k-split-button, .k-toolbar .k-textbox, .k-toolbar .k-widget, .k-toolbar label {
+    margin: 0 .2em;
+    line-height: 1.8em;
+    vertical-align: middle;
+}
+
+    .k-toolbar .k-split-button .k-split-button-arrow {
+        margin: 0 0 0 -1px;
+        line-height: 1.8em;
+        height: 28px;
+    }
+
+.k-toolbar {
+    font-size: 0.8em;
+    background-image: none;
+    /*line-height: 2.5;*/
+    border-width: 0px;
+    background-color: #363636;
+    padding: 0px 2px;
+    border-color: #4d4d4d;
+}
+
+.k-treeview .k-item {
+    display: block;
+    border-width: 0;
+    margin: 0;
+    padding: 0 0 0 14px;
+}
+
+.k-notification-info {
+    border-color: #324191;
+    color: #ffffff;
+    background-color: #3f51b5;
+    background-image: none;
+    padding: 5px;
+}
+
+.CodeMirror {
+    height: 100%;
+}

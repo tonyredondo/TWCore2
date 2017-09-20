@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Compression;
 using TWCore.Serialization;
@@ -19,7 +20,7 @@ namespace TWCore.Object.Api.Controllers
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
         private static readonly string[] Extensions;
-        private static readonly string[] TextExtensions = new[] {".xml", ".js", ".txt", ".log", ".json"};
+        private static readonly string[] TextExtensions = new[] { ".xml", ".js", ".txt", ".log", ".json", ".ini", ".srt" };
 
         static FileSystemController()
         {
@@ -52,7 +53,7 @@ namespace TWCore.Object.Api.Controllers
 
                 Request.Query.TryGetValue("filter", out var filter);
                 var withFilters = !string.IsNullOrWhiteSpace(filter);
-                
+
                 if (string.IsNullOrWhiteSpace(virtualPath))
                     return new ObjectResult(GetRootEntryCollection());
 
@@ -108,7 +109,7 @@ namespace TWCore.Object.Api.Controllers
                             IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
                         }))
                     .ToArray();
-                return new ObjectResult(new PathEntryCollection {Current = virtualPath, Entries = pathEntries});
+                return new ObjectResult(new PathEntryCollection { Current = virtualPath, Entries = pathEntries });
             }
             catch (Exception ex)
             {
@@ -162,6 +163,8 @@ namespace TWCore.Object.Api.Controllers
                     string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".ini", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".srt", StringComparison.OrdinalIgnoreCase) ||
                     serializer?.SerializerType == SerializerType.Text)
                 {
                     obj = System.IO.File.ReadAllText(path);
@@ -222,6 +225,78 @@ namespace TWCore.Object.Api.Controllers
                 ObjectType = sessionData.FileObject?.GetType().Name,
                 Loaded = sessionData.FileObject != null
             };
+        }
+
+        [HttpPost("api/files/upload.{format}")]
+        [HttpPost("api/files/upload")]
+        [FormatFilter]
+        public async Task<ActionResult> UploadFile()
+        {
+            try
+            {
+                if (!Request.Query.TryGetValue("name", out var name))
+                    throw new Exception("You must specify a name of the file.");
+
+                object obj;
+                SessionData sessionData;
+
+
+                var serializer = SerializerManager.GetByFileName(name);
+                if (serializer != null && serializer.SerializerType == SerializerType.Binary)
+                {
+                    Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
+                    obj = serializer.Deserialize(Request.Body, typeof(object));
+                    sessionData = HttpContext.Session.GetSessionData();
+                    sessionData.FilePath = name;
+                    sessionData.FileObject = obj;
+                    HttpContext.Session.SetSessionData(sessionData);
+                    Core.Log.InfoBasic("File {0} was loaded.", name);
+                    return new ObjectResult(new FileLoadedStatus
+                    {
+                        FilePath = sessionData.FilePath,
+                        ObjectType = sessionData.FileObject?.GetType().Name
+                    });
+                }
+
+                Core.Log.Warning("The serializer for file {0} wasn't found.", name);
+                var extension = Path.GetExtension(name);
+
+                if (string.Equals(extension, ".txt", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                    serializer?.SerializerType == SerializerType.Text)
+                {
+                    obj = await Request.Body.TextReadToEndAsync();
+                    sessionData = HttpContext.Session.GetSessionData();
+                    sessionData.FilePath = name;
+                    sessionData.FileObject = obj;
+                    HttpContext.Session.SetSessionData(sessionData);
+                    Core.Log.InfoBasic("File {0} was loaded as text data.", name);
+                    return new ObjectResult(new FileLoadedStatus
+                    {
+                        FilePath = sessionData.FilePath,
+                        ObjectType = sessionData.FileObject?.GetType().Name
+                    });
+                }
+
+                obj = (byte[]) await Request.Body.ReadBytesAsync();
+                sessionData = HttpContext.Session.GetSessionData();
+                sessionData.FilePath = name;
+                sessionData.FileObject = obj;
+                HttpContext.Session.SetSessionData(sessionData);
+                Core.Log.InfoBasic("File {0} was loaded as bytes data.", name);
+                return new ObjectResult(new FileLoadedStatus
+                {
+                    FilePath = sessionData.FilePath,
+                    ObjectType = sessionData.FileObject?.GetType().Name
+                });
+            }
+            catch (Exception ex)
+            {
+                return new ObjectResult(new SerializableException(ex));
+            }
         }
 
         private static PathEntryCollection GetRootEntryCollection()

@@ -71,6 +71,15 @@
             return Encoding.UTF8.GetString((byte[])value);\n\
         }\n\
     }\n}\n',
+            'using TWCore;\nusing TWCore.Object.Compiler;\nusing System;\nusing System.Xml.Linq;\n\nnamespace Runtime\n{\n\
+    public class RuntimeCode : IRuntimeCode\n\
+    {\n\
+        public object Execute(object value)\n\
+        {\n\
+            var doc = XDocument.Parse((string)value);\n\
+            return doc.ToString();\n\
+        }\n\
+    }\n}\n',
         ];
 
         $(document).ready(function () {
@@ -278,7 +287,8 @@
                             { id: 0, text: "Bypass the value", spriteCssClass: "CSharp", click : snippetClick }, 
                             { id: 1, text: "Serialize to XML", spriteCssClass: "CSharp", click : snippetClick },
                             { id: 2, text: "Serialize to Json", spriteCssClass: "CSharp", click: snippetClick },
-                            { id: 3, text: "Get UTF8 string from byte array", spriteCssClass: "CSharp", click : snippetClick }
+                            { id: 3, text: "Get UTF8 string from byte array", spriteCssClass: "CSharp", click: snippetClick },
+                            { id: 4, text: "Format XML string", spriteCssClass: "CSharp", click : snippetClick }
                         ] 
                     }
                 ]

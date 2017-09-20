@@ -288,7 +288,7 @@
                     { type: "button", text: "Refresh", overflow: "never", spriteCssClass: "Refresh", click: fileRefresh },
                     { type: "button", text: "Unload", overflow: "never", spriteCssClass: "Unload", click: fileUnload },
                     { type: "separator", overflow: "never" },
-                    { type: "button", text: "Filter", overflow: "never", spriteCssClass: "Find", click : fileFilter },
+                    { type: "button", text: "Filter", overflow: "never", spriteCssClass: "Filter", click : fileFilter },
                 ]
             });
             
@@ -364,6 +364,7 @@
             $("#fileView").kendoTreeView({
                 dataSource: fileDataSource,
                 dataTextField: "name",
+                animation: false,
                 select: function (e) {
                     e.preventDefault();
                     var tree = $('#fileView').data('kendoTreeView');
@@ -383,7 +384,7 @@
                                 return;
                             }
                             if (result.loaded) {
-                                popupNotification.show(" File " + dataItem.path + " was loaded.", "info");
+                                popupNotification.show(" File: " + dataItem.name + " was loaded.", "info");
                                 compileAndRun();
                             }
                             else {
@@ -505,24 +506,24 @@
             padding: 15px;
         }
         #descriptionHeader {
-            padding: 5px;
             text-align: center;
             border-bottom: solid 1px #222;
             position: absolute;
             top: 0px;
             left: 0px;
             right: 0px;
-            height: 26px;
+            height: 28px;
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
+            padding-top:10px;
         }
         #descriptionContent {
             position: absolute;
             bottom: 0px;
             left: 0px;
             right: 0px;
-            top: 26px;
+            top: 38px;
         }
         #fileView .k-sprite {
         }
@@ -573,8 +574,8 @@
         .Refresh {
             background-image: url("images/Refresh_16x.png");
         }
-        .Find {
-            background-image: url("images/FindDown_16x.png");
+        .Filter {
+            background-image: url("images/Filter_16x.png");
         }
         .k-grid td {
             border-width: 0 0 1px 1px;
@@ -619,6 +620,13 @@
             border-width: 0;
             margin: 0;
             padding: 0 0 0 14px;
+        }
+        .k-notification-info {
+            border-color: #324191;
+            color: #ffffff;
+            background-color: #3f51b5;
+            background-image: none;
+            padding: 5px;
         }
         .CodeMirror {
             height: 100%;

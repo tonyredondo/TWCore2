@@ -77,7 +77,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
-        [StatusReference]
+        [StatusProperty]
         public ISerializer Serializer { get; set; }
         /// <inheritdoc />
         /// <summary>

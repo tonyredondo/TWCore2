@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -94,9 +95,26 @@ namespace TWCore.Net.Multicast
             _sendEndpoint = new IPEndPoint(_multicastIp, Port);
             _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
 
+            var availableInterfaces = NetworkInterface.GetAllNetworkInterfaces().Where(nic =>
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up) return false;
+                if (nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) return false;
+                //if (nic.Name.StartsWith("vEthernet")) return false;
+                //if (nic.Name.StartsWith("Hyper-v")) return false;
+                var ipProp = nic.GetIPProperties();
+
+                var addresses = ipProp.UnicastAddresses;
+                if (addresses.All(a => a.Address.AddressFamily != AddressFamily.InterNetwork)) return false;
+                
+                var ip4Prop = ipProp.GetIPv4Properties();
+                if (ip4Prop == null) return false;
+                return true;
+            }).ToArray();
+            
             foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
                 .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
             {
+                
                 var client = new UdpClient();
                 client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);

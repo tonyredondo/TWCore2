@@ -43,7 +43,6 @@ namespace TWCore.Diagnostics.Trace
         /// <summary>
         /// Gets or sets the trace item factory
         /// </summary>
-        [StatusProperty, StatusReference]
         public CreateTraceItemDelegate ItemFactory { get; set; } = Factory.CreateTraceItem;
         /// <inheritdoc />
         /// <summary>

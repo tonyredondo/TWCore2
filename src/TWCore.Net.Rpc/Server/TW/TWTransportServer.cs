@@ -63,7 +63,7 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
-        [StatusProperty, StatusReference]
+        [StatusProperty]
         public ISerializer Serializer { get; set; }
         /// <summary>
         /// Server port
@@ -109,7 +109,6 @@ namespace TWCore.Net.RPC.Server.Transports
             Core.Status.Attach(collection =>
             {
                 collection.Add("Sessions Count", _sessions.Count);
-                Core.Status.AttachChild(_listener, this);
                 foreach (var ses in _sessions)
                     Core.Status.AttachChild(ses.Value, this);
             });

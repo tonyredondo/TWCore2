@@ -57,7 +57,6 @@ namespace TWCore.Diagnostics.Log
         /// <summary>
         /// Gets or sets the log item factory
         /// </summary>
-        [StatusProperty, StatusReference]
         public CreateLogItemDelegate ItemFactory { get; set; } = (level, code, message, groupName, ex, assemblyName, typeName) =>
         {
             var lItem = new LogItem

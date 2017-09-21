@@ -106,7 +106,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             }
             CreateByDay = createByDay;
             EnsureTraceFile(FileName);
-            _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "TRACE.FILE", "This is the File Trace base path", new SerializedObject(BasePath));
+            _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "TRACE.FILE", "This is the File Trace base path", new SerializedObject(Path.GetFullPath(BasePath)));
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(FileName), FileName);

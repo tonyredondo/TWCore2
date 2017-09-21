@@ -333,7 +333,8 @@ namespace TWCore.Diagnostics.Log.Storages
             UseMaxLength = useMaxLength;
             MaxLength = maxLength;
             EnsureLogFile(fileName);
-            _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.HTML", "This is the File Log base path", new SerializedObject(Path.GetDirectoryName(fileName)));
+            if (!string.IsNullOrWhiteSpace(fileName))
+                _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.HTML", "This is the Html Log base path", new SerializedObject(Path.GetDirectoryName(Path.GetFullPath(fileName))));
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(FileName), FileName);

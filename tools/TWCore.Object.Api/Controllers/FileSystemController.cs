@@ -309,9 +309,16 @@ namespace TWCore.Object.Api.Controllers
             var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
             var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
 
-            var entries = Settings.RootPaths.Select(p => new PathEntry
+            var logFilesPaths = logFilesServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
+            var logHttpPaths = logHttpServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
+            var traceFilesPath = traceFilesServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
+
+            var paths = Settings.RootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
+                .Select(Path.GetFullPath).Distinct().ToArray();
+            
+            var entries = paths.Select(p => new PathEntry
             {
-                Name = Path.GetFullPath(p),
+                Name = p,
                 Type = PathEntryType.Directory
             }).Where(p => Directory.Exists(p.Name)).ToArray();
 

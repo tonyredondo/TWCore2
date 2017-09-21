@@ -94,23 +94,45 @@ namespace TWCore.Net.Multicast
             _multicastIp = IPAddress.Parse(MulticastIp);
             _sendEndpoint = new IPEndPoint(_multicastIp, Port);
             _receiveEndpoint = new IPEndPoint(IPAddress.Any, Port);
-
-            var availableInterfaces = NetworkInterface.GetAllNetworkInterfaces().Where(nic =>
-            {
-                if (nic.OperationalStatus != OperationalStatus.Up) return false;
-                if (nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) return false;
-                //if (nic.Name.StartsWith("vEthernet")) return false;
-                //if (nic.Name.StartsWith("Hyper-v")) return false;
-                var ipProp = nic.GetIPProperties();
-
-                var addresses = ipProp.UnicastAddresses;
-                if (addresses.All(a => a.Address.AddressFamily != AddressFamily.InterNetwork)) return false;
-                
-                var ip4Prop = ipProp.GetIPv4Properties();
-                if (ip4Prop == null) return false;
-                return true;
-            }).ToArray();
             
+            foreach(var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up) continue;
+                if (nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
+                var nicProp = nic.GetIPProperties();
+                if (nicProp == null) continue;
+                var nicPropv4 = nicProp.GetIPv4Properties();
+                if (nicPropv4 == null) continue;
+                var addresses = nicProp.UnicastAddresses
+                    .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork).Select(a => a.Address);
+
+                foreach (var ipAddress in addresses)
+                {
+                    var client = new UdpClient();
+                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 255);
+                    client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(nicPropv4.Index));
+                    if (EnableReceive)
+                        client.Client.Bind(new IPEndPoint(ipAddress, Port));
+                    client.MulticastLoopback = true;
+                    client.JoinMulticastGroup(_multicastIp, ipAddress);
+
+                    if (EnableReceive)
+                    {
+                        var thread = new Thread(ReceiveSocketThread)
+                        {
+                            Name = "PeerConnectionReceiveThread:" + ipAddress,
+                            IsBackground = true
+                        };
+                        thread.Start(client);
+                        _clientsReceiveThreads.Add(thread);
+                    }
+                    _clients.Add(client);
+                    _sendClients.Add(client);
+                }
+            }
+
+            /*
             foreach (var localIp in Dns.GetHostAddresses(Dns.GetHostName())
                 .Where(i => i.AddressFamily == AddressFamily.InterNetwork))
             {
@@ -163,6 +185,7 @@ namespace TWCore.Net.Multicast
                 _clientsReceiveThreads.Add(thread);
                 _clients.Add(basicReceiver);
             }
+            */
         }
         /// <summary>
         /// Disconnect and leave the peer group

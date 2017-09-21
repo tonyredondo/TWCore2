@@ -23,7 +23,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Log.AddHtmlFileStorage("testlog.htm");
                 DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
-                DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
+                //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
             });
             TWCore.Core.RunService<TestService>(args);
         }

@@ -88,6 +88,7 @@
             var currentFilter = null;
             var popupNotification = $("#popupNotification").kendoNotification().data("kendoNotification");
             var expandedNodes = {};
+            var selectedNode = null;
 
             var snippetClick = function(item) {
                 var value = snippets[item.id];
@@ -99,7 +100,15 @@
                     var nodesToExpand = [];
                     for (var i in expandedNodes) nodesToExpand.push(i);
                     var tree = $('#fileView').data('kendoTreeView');
-                    tree.expandPath(nodesToExpand);
+                    tree.expandPath(nodesToExpand, function () {
+                        if (selectedNode) {
+                            var item = fileDataSource.get(selectedNode);
+                            if (!item) return;
+                            var node = tree.findByUid(item.uid);
+                            if (node != null)
+                                tree.select(node);
+                        }
+                    });
                 });
             }
 
@@ -186,7 +195,6 @@
                                 withCredentials: true
                             },
                             success: function (data) {
-                                console.log(data);
                                 popupNotification.show(" Results loaded.", "info");
                                 $("#textContent").hide();
                                 var ktl = $("#descriptionInner").data("kendoTreeList");
@@ -378,9 +386,9 @@
                 dataTextField: "name",
                 animation: false,
                 select: function (e) {
-                    e.preventDefault();
                     var tree = $('#fileView').data('kendoTreeView');
                     var dataItem = tree.dataItem(e.node);
+                    selectedNode = dataItem.id;
                     if (dataItem.isDirectory) return;
                     currentFilePath = dataItem.path;
                     $.ajax({

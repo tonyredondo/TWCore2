@@ -7,6 +7,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Compression;
+using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Settings;
 
@@ -304,6 +305,10 @@ namespace TWCore.Object.Api.Controllers
 
         private static PathEntryCollection GetRootEntryCollection()
         {
+            var logFilesServices = DiscoveryService.GetLocalRegisteredServices("LOG.FILE");
+            var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
+            var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
+
             var entries = Settings.RootPaths.Select(p => new PathEntry
             {
                 Name = Path.GetFullPath(p),

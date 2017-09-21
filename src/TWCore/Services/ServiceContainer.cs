@@ -416,8 +416,9 @@ namespace TWCore.Services
         private bool _discovery;
         protected virtual void RegisterDiscovery()
         {
-            if (!Core.GlobalSettings.EnableDiscovery || !DiscoveryService.HasRegisteredLocalService ||
-                _discovery) return;
+            if (_discovery) return;
+            if (!Core.GlobalSettings.EnableDiscovery) return;
+            
             _discovery = true;
 
             var serializer = SerializerManager.DefaultBinarySerializer;

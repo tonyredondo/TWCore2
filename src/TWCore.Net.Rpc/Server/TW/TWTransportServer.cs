@@ -108,7 +108,7 @@ namespace TWCore.Net.RPC.Server.Transports
             Serializer = Serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             Core.Status.Attach(collection =>
             {
-                collection.Add("Sessions Count", _sessions.Count);
+                collection.Add("Sessions Count", _sessions.Count, true);
                 foreach (var ses in _sessions)
                     Core.Status.AttachChild(ses.Value, this);
             });

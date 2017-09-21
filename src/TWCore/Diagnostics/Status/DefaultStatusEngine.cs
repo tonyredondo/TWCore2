@@ -464,7 +464,8 @@ namespace TWCore.Diagnostics.Status
                     if (col.Any(c => c.Key == name)) continue;
                     var value = tuple.Item1.GetValue(obj);
                     var status = tuple.Item2.Status;
-                    col.Add(name, value, status);
+                    var plot = tuple.Item2.PlotEnabled;
+                    col.Add(name, value, status, plot);
                 }
                 for (var i = 0; i < statusReferenceAttributes.Length; i++)
                 {

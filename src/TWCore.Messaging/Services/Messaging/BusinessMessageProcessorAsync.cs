@@ -115,7 +115,7 @@ namespace TWCore.Services.Messaging
                 collection.Add("Business preallocation threshold in percent of the total maximum items", BusinessesPreallocationPercent);
                 collection.Add("Business initial count", BusinessInitialCount);
                 collection.Add("Business preallocation threshold", BusinessPreallocationThreshold);
-                collection.Add("Available business on the pool", _businessPool?.Count);
+                collection.Add("Available business on the pool", _businessPool?.Count, true);
             });
         }
         #endregion

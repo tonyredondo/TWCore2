@@ -191,7 +191,7 @@ namespace TWCore.Net.RPC.Client.Transports
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count);
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);
                 foreach (var cnn in _availableConnections)
                     Core.Status.AttachChild(cnn, this);
             });
@@ -216,7 +216,7 @@ namespace TWCore.Net.RPC.Client.Transports
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count);
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);
                 foreach (var cnn in _availableConnections)
                     Core.Status.AttachChild(cnn, this);
             });

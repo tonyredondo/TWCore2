@@ -106,78 +106,78 @@ namespace TWCore.Diagnostics.Status
 
                 _lastMinuteValues.Calculate();
                 var c1 = new StatusItem { Name = "Last Minute" };
-                c1.Values.Add("Calls", _lastMinuteValues.CallsQuantity);
+                c1.Values.Add("Calls", _lastMinuteValues.CallsQuantity, true);
                 c1.Values.Add("Lowest Value", _lastMinuteValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c1.Values.Add("Lowest Value Date", _lastMinuteValues.LowestValue?.ValueDate);
                 c1.Values.Add("Highest Value", _lastMinuteValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c1.Values.Add("Highest Value Date", _lastMinuteValues.HighestValue?.ValueDate);
-                c1.Values.Add("Average Value", _lastMinuteValues.AverageValue);
-                c1.Values.Add("Standard Deviation", _lastMinuteValues.StandardDeviation);
+                c1.Values.Add("Average Value", _lastMinuteValues.AverageValue, true);
+                c1.Values.Add("Standard Deviation", _lastMinuteValues.StandardDeviation, true);
                 foreach (var percentil in _lastMinuteValues.Percentils)
                     c1.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c1);
 
                 _last10MinutesValues.Calculate();
                 var c2 = new StatusItem { Name = "Last 10 Minutes" };
-                c2.Values.Add("Calls", _last10MinutesValues.CallsQuantity);
+                c2.Values.Add("Calls", _last10MinutesValues.CallsQuantity, true);
                 c2.Values.Add("Lowest Value", _last10MinutesValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c2.Values.Add("Lowest Value Date", _last10MinutesValues.LowestValue?.ValueDate);
                 c2.Values.Add("Highest Value", _last10MinutesValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c2.Values.Add("Highest Value Date", _last10MinutesValues.HighestValue?.ValueDate);
-                c2.Values.Add("Average Value", _last10MinutesValues.AverageValue);
-                c2.Values.Add("Standard Deviation", _last10MinutesValues.StandardDeviation);
+                c2.Values.Add("Average Value", _last10MinutesValues.AverageValue, true);
+                c2.Values.Add("Standard Deviation", _last10MinutesValues.StandardDeviation, true);
                 foreach (var percentil in _last10MinutesValues.Percentils)
                     c2.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c2);
 
                 _last20MinutesValues.Calculate();
                 var c3 = new StatusItem { Name = "Last 20 Minutes" };
-                c3.Values.Add("Calls", _last20MinutesValues.CallsQuantity);
+                c3.Values.Add("Calls", _last20MinutesValues.CallsQuantity, true);
                 c3.Values.Add("Lowest Value", _last20MinutesValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c3.Values.Add("Lowest Value Date", _last20MinutesValues.LowestValue?.ValueDate);
                 c3.Values.Add("Highest Value", _last20MinutesValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c3.Values.Add("Highest Value Date", _last20MinutesValues.HighestValue?.ValueDate);
-                c3.Values.Add("Average Value", _last20MinutesValues.AverageValue);
-                c3.Values.Add("Standard Deviation", _last20MinutesValues.StandardDeviation);
+                c3.Values.Add("Average Value", _last20MinutesValues.AverageValue, true);
+                c3.Values.Add("Standard Deviation", _last20MinutesValues.StandardDeviation, true);
                 foreach (var percentil in _last20MinutesValues.Percentils)
                     c3.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c3);
 
                 _last30MinutesValues.Calculate();
                 var c4 = new StatusItem { Name = "Last 30 Minutes" };
-                c4.Values.Add("Calls", _last30MinutesValues.CallsQuantity);
+                c4.Values.Add("Calls", _last30MinutesValues.CallsQuantity, true);
                 c4.Values.Add("Lowest Value", _last30MinutesValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c4.Values.Add("Lowest Value Date", _last30MinutesValues.LowestValue?.ValueDate);
                 c4.Values.Add("Highest Value", _last30MinutesValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c4.Values.Add("Highest Value Date", _last30MinutesValues.HighestValue?.ValueDate);
-                c4.Values.Add("Average Value", _last30MinutesValues.AverageValue);
-                c4.Values.Add("Standard Deviation", _last30MinutesValues.StandardDeviation);
+                c4.Values.Add("Average Value", _last30MinutesValues.AverageValue, true);
+                c4.Values.Add("Standard Deviation", _last30MinutesValues.StandardDeviation, true);
                 foreach (var percentil in _last30MinutesValues.Percentils)
                     c4.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c4);
 
                 _oneHourValues.Calculate();
                 var c5 = new StatusItem { Name = "Last Hour" };
-                c5.Values.Add("Calls", _oneHourValues.CallsQuantity);
+                c5.Values.Add("Calls", _oneHourValues.CallsQuantity, true);
                 c5.Values.Add("Lowest Value", _oneHourValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c5.Values.Add("Lowest Value Date", _oneHourValues.LowestValue?.ValueDate);
                 c5.Values.Add("Highest Value", _oneHourValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c5.Values.Add("Highest Value Date", _oneHourValues.HighestValue?.ValueDate);
-                c5.Values.Add("Average Value", _oneHourValues.AverageValue);
-                c5.Values.Add("Minutes Standard Deviation", _oneHourValues.StandardDeviation);
+                c5.Values.Add("Average Value", _oneHourValues.AverageValue, true);
+                c5.Values.Add("Minutes Standard Deviation", _oneHourValues.StandardDeviation, true);
                 foreach (var percentil in _oneHourValues.Percentils)
                     c5.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c5);
 
                 _sixHourValues.Calculate();
                 var c6 = new StatusItem { Name = "Last 6 Hours" };
-                c6.Values.Add("Calls", _sixHourValues.CallsQuantity);
+                c6.Values.Add("Calls", _sixHourValues.CallsQuantity, true);
                 c6.Values.Add("Lowest Value", _sixHourValues.LowestValue?.Value, StatusItemValueStatus.Green);
                 c6.Values.Add("Lowest Value Date", _sixHourValues.LowestValue?.ValueDate);
                 c6.Values.Add("Highest Value", _sixHourValues.HighestValue?.Value, StatusItemValueStatus.Red);
                 c6.Values.Add("Highest Value Date", _sixHourValues.HighestValue?.ValueDate);
-                c6.Values.Add("Average Value", _sixHourValues.AverageValue);
-                c6.Values.Add("Standard Deviation", _sixHourValues.StandardDeviation);
+                c6.Values.Add("Average Value", _sixHourValues.AverageValue, true);
+                c6.Values.Add("Standard Deviation", _sixHourValues.StandardDeviation, true);
                 foreach (var percentil in _sixHourValues.Percentils)
                     c6.Values.Add($"Percentil {percentil.Percentil * 100}%", $"[{percentil.Min} - {percentil.Max}]");
                 cStatus.Childrens.Add(c6);

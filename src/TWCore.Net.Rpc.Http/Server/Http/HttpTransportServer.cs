@@ -91,8 +91,8 @@ namespace TWCore.Net.RPC.Server.Transports
                 collection.Add(nameof(Name), Name);
                 collection.Add(nameof(Port), Port);
                 collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
-                collection.Add("Bytes Sent", Counters.BytesSent);
-                collection.Add("Bytes Received", Counters.BytesReceived);
+                collection.Add("Bytes Sent", Counters.BytesSent, true);
+                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(_httpServer, this);
                 Core.Status.AttachChild(Serializer, this);
             });

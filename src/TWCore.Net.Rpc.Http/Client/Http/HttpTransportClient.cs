@@ -51,7 +51,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
-        [StatusProperty, StatusReference]
+        [StatusProperty]
         public ISerializer Serializer { get; set; }
         /// <inheritdoc />
         /// <summary>
@@ -110,8 +110,8 @@ namespace TWCore.Net.RPC.Client.Transports
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Bytes Sent", Counters.BytesSent);
-                collection.Add("Bytes Received", Counters.BytesReceived);
+                collection.Add("Bytes Sent", Counters.BytesSent, true);
+                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(_httpClient, this);
             }, this);
         }

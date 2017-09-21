@@ -232,7 +232,7 @@ namespace TWCore
                 sItem.Values.Add(nameof(Environment.UserInteractive), Environment.UserInteractive);
                 sItem.Values.Add(nameof(Environment.UserName), Environment.UserName);
                 sItem.Values.Add(nameof(Environment.Version), Environment.Version);
-                sItem.Values.Add(nameof(Environment.WorkingSet), Environment.WorkingSet.ToReadeableBytes());
+                sItem.Values.Add(nameof(Environment.WorkingSet), Environment.WorkingSet.ToReadeableBytes(), true);
                 sItem.Values.Add(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription);
                 sItem.Values.Add(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture);
                 sItem.Values.Add(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription);
@@ -252,11 +252,11 @@ namespace TWCore
                 sItem.Values.Add(nameof(process.ProcessName), process.ProcessName);
                 sItem.Values.Add("RunningTime", Core.Now - process.StartTime);
                 sItem.Values.Add(nameof(process.StartTime), process.StartTime);
-                sItem.Values.Add(nameof(process.Threads) + " Count", process.Threads.Count);
+                sItem.Values.Add(nameof(process.Threads) + " Count", process.Threads.Count, true);
                 sItem.Values.Add(nameof(process.TotalProcessorTime), process.TotalProcessorTime);
                 sItem.Values.Add(nameof(process.UserProcessorTime), process.UserProcessorTime);
-                sItem.Values.Add(nameof(process.VirtualMemorySize64), process.VirtualMemorySize64.ToReadeableBytes());
-                sItem.Values.Add(nameof(process.WorkingSet64), process.WorkingSet64.ToReadeableBytes());
+                sItem.Values.Add(nameof(process.VirtualMemorySize64), process.VirtualMemorySize64.ToReadeableBytes(), true);
+                sItem.Values.Add(nameof(process.WorkingSet64), process.WorkingSet64.ToReadeableBytes(), true);
                 return sItem;
             });
             Core.Status.Attach(() =>
@@ -268,7 +268,7 @@ namespace TWCore
                 {
                     sItem.Values.Add("Collection Count Gen " + i, GC.CollectionCount(i));
                 }
-                sItem.Values.Add("Memory allocated", GC.GetTotalMemory(false).ToReadeableBytes());
+                sItem.Values.Add("Memory allocated", GC.GetTotalMemory(false).ToReadeableBytes(), true);
                 sItem.Values.Add("Is Server GC", GCSettings.IsServerGC);
                 sItem.Values.Add("Latency Mode", GCSettings.LatencyMode);
                 return sItem;

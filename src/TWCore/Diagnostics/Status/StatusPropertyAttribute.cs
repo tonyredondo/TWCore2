@@ -34,6 +34,10 @@ namespace TWCore.Diagnostics.Status
         /// Status to show in the status library
         /// </summary>
         public StatusItemValueStatus Status { get; private set; }
+        /// <summary>
+        /// Enable for plot
+        /// </summary>
+        public bool PlotEnabled { get; private set; }
 
         /// <inheritdoc />
         /// <summary>
@@ -64,6 +68,32 @@ namespace TWCore.Diagnostics.Status
         {
             Name = name;
             Status = status;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Attribute to define an item to show in the status library
+        /// </summary>
+        /// <param name="name">Name to show in the status library</param>
+        /// <param name="status">Status to show in the status library</param>
+        /// <param name="plotEnabled">Enable for plot</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusPropertyAttribute(string name, StatusItemValueStatus status, bool plotEnabled)
+        {
+            Name = name;
+            Status = status;
+            PlotEnabled = plotEnabled;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Attribute to define an item to show in the status library
+        /// </summary>
+        /// <param name="name">Name to show in the status library</param>
+        /// <param name="plotEnabled">Enable for plot</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusPropertyAttribute(string name, bool plotEnabled)
+        {
+            Name = name;
+            PlotEnabled = plotEnabled;
         }
     }
 }

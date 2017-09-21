@@ -38,12 +38,12 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Number of Messages on process
         /// </summary>
-        [StatusProperty("Number of Messages on process")]
+        [StatusProperty("Number of Messages on process", true)]
         public long CurrentMessages { get; private set; }
         /// <summary>
         /// Peak value of number of messages on process
         /// </summary>
-        [StatusProperty("Peak value of number of messages on process")]
+        [StatusProperty("Peak value of number of messages on process", true)]
         public long PeakCurrentMessages { get; private set; }
         /// <summary>
         /// Date and time of the peak value of number of message on process
@@ -54,12 +54,12 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Number of messages processed on the last minute
         /// </summary>
-        [StatusProperty("Number of messages processed on the last minute")]
+        [StatusProperty("Number of messages processed on the last minute", true)]
         public long LastMinuteMessages { get; private set; }
         /// <summary>
         /// Peak value of number of message processed on the last minute
         /// </summary>
-        [StatusProperty("Peak value of number of message processed on the last minute")]
+        [StatusProperty("Peak value of number of message processed on the last minute", true)]
         public long PeakLastMinuteMessages { get; private set; }
         /// <summary>
         /// Date and time of the peak value of number of message processed on the last minute
@@ -70,12 +70,12 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Number of current active processing threads
         /// </summary>
-        [StatusProperty("Number of current active processing threads")]
+        [StatusProperty("Number of current active processing threads", true)]
         public long CurrentProcessingThreads { get; private set; }
         /// <summary>
         /// Peak value of number of active processing threads
         /// </summary>
-        [StatusProperty("Peak value of number of active processing threads")]
+        [StatusProperty("Peak value of number of active processing threads", true)]
         public long PeakCurrentProcessingThreads { get; private set; }
         /// <summary>
         /// Date and time of the peak value of number of active processing threads
@@ -86,12 +86,12 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Number of active processing threads on the last minute
         /// </summary>
-        [StatusProperty("Number of active processing threads on the last minute")]
+        [StatusProperty("Number of active processing threads on the last minute", true)]
         public long LastMinuteProcessingThreads { get; private set; }
         /// <summary>
         /// Peak value of the number of active processing threads on the last minute
         /// </summary>
-        [StatusProperty("Peak value of the number of active processing threads on the last minute")]
+        [StatusProperty("Peak value of the number of active processing threads on the last minute", true)]
         public long PeakLastMinuteProcessingThreads { get; private set; }
         /// <summary>
         /// Date and time of the peak value of number of active processing threads on the last minute
@@ -113,28 +113,28 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Number of received messages
         /// </summary>
-        [StatusProperty("Number of received messages", StatusItemValueStatus.Green)]
+        [StatusProperty("Number of received messages", StatusItemValueStatus.Green, true)]
         public long TotalMessagesReceived { get; private set; }
         /// <summary>
         /// Number of processed messages
         /// </summary>
-        [StatusProperty("Number of processed messages", StatusItemValueStatus.Green)]
+        [StatusProperty("Number of processed messages", StatusItemValueStatus.Green, true)]
         public long TotalMessagesProccesed { get; private set; }
         /// <summary>
         /// Number of exceptions
         /// </summary>
-        [StatusProperty("Number of exceptions", StatusItemValueStatus.Red)]
+        [StatusProperty("Number of exceptions", StatusItemValueStatus.Red, true)]
         public long TotalExceptions { get; private set; }
 
         /// <summary>
         /// Total network time
         /// </summary>
-        [StatusProperty("Total network time")]
+        [StatusProperty("Total network time", true)]
         public double TotalNetworkTime { get; private set; }
         /// <summary>
         /// Total receiving time
         /// </summary>
-        [StatusProperty("Total receiving bytes")]
+        [StatusProperty("Total receiving bytes", true)]
         public double TotalReceivingBytes { get; private set; }
 		#endregion
 

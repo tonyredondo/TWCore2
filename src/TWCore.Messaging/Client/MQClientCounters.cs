@@ -35,23 +35,23 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Number of messages Sent
         /// </summary>
-        [StatusProperty("Number of messages sent")]
+        [StatusProperty("Number of messages sent", true)]
         public long MessagesSent { get; private set; }
         /// <summary>
         /// Number of messages sent in the last minute
         /// </summary>
-        [StatusProperty("Number of messages sent in the last minute")]
+        [StatusProperty("Number of messages sent in the last minute", true)]
         public long LastMinuteMessagesSent { get; private set; }
 
         /// <summary>
         /// Number of messages received
         /// </summary>
-        [StatusProperty("Number of messages received")]
+        [StatusProperty("Number of messages received", true)]
         public long MessagesReceived { get; private set; }
         /// <summary>
         /// Number of messages received in the last minute
         /// </summary>
-        [StatusProperty("Number of messages received in the last minute")]
+        [StatusProperty("Number of messages received in the last minute", true)]
         public long LastMinuteMessagesReceived { get; private set; }
         
         /// <summary>

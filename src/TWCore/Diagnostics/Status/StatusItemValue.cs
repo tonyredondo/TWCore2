@@ -44,6 +44,11 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         [XmlAttribute, DataMember]
         public StatusItemValueStatus Status { get; set; }
+        /// <summary>
+        /// Enable to plot
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public bool PlotEnabled { get; set; }
 
         #region .ctor
         /// <summary>
@@ -57,12 +62,14 @@ namespace TWCore.Diagnostics.Status
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="status">Value status</param>
+        /// <param name="plotEnabled">Enable to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusItemValue(string key, string value, StatusItemValueStatus status)
+        public StatusItemValue(string key, string value, StatusItemValueStatus status, bool plotEnabled)
         {
             Key = key;
             Value = value;
             Status = status;
+            PlotEnabled = plotEnabled;
         }
         #endregion
     }

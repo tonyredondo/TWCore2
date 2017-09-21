@@ -415,7 +415,7 @@ namespace TWCore.Net.HttpServer
         {
             var client = (TcpClient)objClient;
             var reqNumber = Interlocked.Increment(ref _requestCount);
-            using (var watch = Watch.Create($"HTTP REQUEST START: {reqNumber}", $"HTTP REQUEST END: {reqNumber}"))
+            //using (var watch = Watch.Create($"HTTP REQUEST START: {reqNumber}", $"HTTP REQUEST END: {reqNumber}"))
             {
                 HttpContext context = null;
 
@@ -430,7 +430,7 @@ namespace TWCore.Net.HttpServer
                         client.Dispose();
                         return;
                     }
-                    watch.Tap("Request Loaded.");
+                    //watch.Tap("Request Loaded.");
                     #endregion
 
                     var handled = false;
@@ -447,7 +447,8 @@ namespace TWCore.Net.HttpServer
                     var uHandler = RouteHandlers.TryGetValue(context.Request.Method, out var handlers) ? handlers.FirstOrDefault(r => r.Match(context.Request.Url.AbsolutePath)) : null;
                     if (uHandler != null)
                     {
-                        watch.Tap("Url Handle: " + uHandler.Method + " " + uHandler.Url);
+                        //watch.Tap("Url Handle: " + uHandler.Method + " " + uHandler.Url);
+                        Core.Log.LibDebug("Url Handle: " + uHandler.Method + " " + uHandler.Url);
                         context.Response.StatusCode = HttpResponse.HttpStatusCode.OK;
                         context.Route = uHandler;
                         uHandler.Handler?.Invoke(context);

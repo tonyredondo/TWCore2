@@ -121,7 +121,7 @@
             }
             #chartvar{
                 height: 235px;
-                overflow-y: scroll;
+                overflow-y: auto;
                 padding: 0em 0.1em;
             }
             #chartvarOutter {
@@ -130,15 +130,15 @@
                 float: left;
                 /*border: solid 0.1em #9e9e9e;*/
                 background: #fff;
-                border-radius: 0.5em;
+                /*border-radius: 0.5em;*/
                 overflow-x: hidden;
                 overflow-y: hidden;
-                font-size: 0.9em;
+                /*font-size: 0.9em;*/
             }
             .chartTitle{
                 font-size: 0.7em;
                 font-weight: bold;
-                padding-top: 0.1em;
+                /*padding-top: 0.1em;*/
                 color: #444;
                 white-space: nowrap;
             }
@@ -148,11 +148,12 @@
                 font-size: 1em;
                 padding: 0.5em 1em;
                 /*border-radius: 0.5em;*/
+                cursor: default;
             }
             .chartOption {
                 font-weight: normal;
-                padding: 3px 10px;
-                display:none;
+                padding: 5px 12px;
+                /*display:none;*/
             }
             .chartOption input {
                 float:left;
@@ -161,8 +162,6 @@
                 display:block;
                 float:left;
                 padding:0px 5px;
-                font-family: consolas, arial;
-                font-weight:bold;
             }
             #myChart {
                 width: 61%;
@@ -173,11 +172,11 @@
                 /*border: solid 0.1em #9E9E9E;*/
                 background: #fff;
                 margin-left: 1%;
-                padding: 0.5em;
+                padding: 0em 0.5em;
                 border-radius: 0.5em;
             }
             .tableBtn{
-                font-size: 0.6em;
+                font-size: 0.6em;i
                 padding: 0em 1em 0.5em 1em;
                 font-weight: bold;
                 cursor: pointer;
@@ -198,7 +197,7 @@
             }
             #chartTitle {
                 text-align: center; 
-                font-size: 10px;
+                font-size: 12px;
             }
         </style>
         <script>
@@ -249,8 +248,9 @@
                             var oldVal = GetValueByKey(oldItem, val.Key);
                             //if (val.Key == "Hits")
                             //    debugger;
-                            if (!chartItem["Values"]) chartItem["Values"] = {};
-                            var chartValue = chartItem["Values"];
+                            var enablePlot = val.PlotEnabled;
+                            if (enablePlot && !chartItem["Values"]) chartItem["Values"] = {};
+                            var chartValue = enablePlot? chartItem["Values"] : null;
                             var status = "";
                             if (val.Status == 1) status = "good";
                             if (val.Status == 2) status = "bad";
@@ -259,11 +259,13 @@
                             if (val.Value) {
                                 var nValue = parseFloat(val.Value.replace(",", "."));
                                 if (nValue.toString() != "NaN") {
-                                    if (!chartValue[val.Key]) chartValue[val.Key] = [];
-                                    if (chartValue[val.Key].length == 50)
-                                        chartValue[val.Key].shift();
-                                    chartValue[val.Key].push({ label: new Date(), value: nValue });
-                                    bAnyValue = true;
+                                    if (enablePlot) {
+                                        if (!chartValue[val.Key]) chartValue[val.Key] = [];
+                                        if (chartValue[val.Key].length == 50)
+                                            chartValue[val.Key].shift();
+                                        chartValue[val.Key].push({ label: new Date(), value: nValue });
+                                        bAnyValue = true;
+                                    }
                                 
                                     if (oldVal != null && oldVal.Value != val.Value) {
                                         var oValue = parseFloat(oldVal.Value.replace(",", "."));
@@ -330,15 +332,18 @@
 
             function displayChart() {
                 if (chartValueId) {
+
                     var dArr = chartValueId.split("$");
                     var cValues = chartData[dArr[0]].Values[dArr[1]];
                     mChartData.labels = [];
                     mChartData.datasets[0].data = [];
-                    if (cValues.length < 50)
-                        cValues = new Array(50 - cValues.length).fill({ label:null, value:0 }).concat(cValues);
+                    var initial = 0;
+                    if (cValues.length > 0) initial = cValues[0].value;
+                    if (cValues.length < 25)
+                        cValues = new Array(25 - cValues.length).fill({ label: parseInt(initial), value: initial }).concat(cValues);
                     for (var i = 0; i < cValues.length; i++) {
                         var item = cValues[i];
-                        mChartData.labels.push("");
+                        mChartData.labels.push(parseInt(item.value));
                         mChartData.datasets[0].data.push(item.value);
                     }
                     $("#myChart").attr("style", "");
@@ -395,11 +400,12 @@
                         }
                     }
                     $("#chartvar h3").prop('onclick', null).off('click');
-                    $("#chartvar h3").click(function (evt) { $(evt.currentTarget).parent().children(".chartOption").toggle(); });
+                    //$("#chartvar h3").click(function (evt) { $(evt.currentTarget).parent().children(".chartOption").toggle(); });
 
-                    if (chartValueId == "" && document.getElementById("status0__0$WorkingSet")) {
-                        $($("#chartvar h3")[0]).click();
-                        document.getElementById("status0__0$WorkingSet").click();
+                    if (chartValueId == "") {
+                        var firstH3 = $("#chartvar h3").first();
+                        firstH3.click();
+                        firstH3.next().find("input").click()
                     }
                     displayChart();
                 }).always(function () {

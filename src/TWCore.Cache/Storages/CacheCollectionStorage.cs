@@ -54,10 +54,10 @@ namespace TWCore.Cache.Storages
                     return;
                 var percent = (double)_storage.Count / _storage.Capacity;
                 collection.Add(nameof(_storage.Capacity), _storage.Capacity);
-                collection.Add(nameof(_storage.Count), _storage.Count, percent <= 0.8 ? StatusItemValueStatus.Green : percent > 0.75 && percent < 1 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Green);
-                collection.Add(nameof(_storage.Hits), _storage.Hits);
-                collection.Add(nameof(_storage.Inserts), _storage.Inserts);
-                collection.Add(nameof(_storage.Deletes), _storage.Deletes);
+                collection.Add(nameof(_storage.Count), _storage.Count, percent <= 0.8 ? StatusItemValueStatus.Green : percent > 0.75 && percent < 1 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Green, true);
+                collection.Add(nameof(_storage.Hits), _storage.Hits, true);
+                collection.Add(nameof(_storage.Inserts), _storage.Inserts, true);
+                collection.Add(nameof(_storage.Deletes), _storage.Deletes, true);
             });
         }
         #endregion

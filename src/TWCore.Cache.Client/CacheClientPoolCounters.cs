@@ -153,34 +153,34 @@ namespace TWCore.Cache.Client
             {
                 collection.SortValues = false;
 
-                collection.Add("Calls to exist key method", ExistKeyCalls);
-                collection.Add("Calls to get method", GetCalls);
-                collection.Add("Calls to get by tag method", GetByTagCalls);
-                collection.Add("Calls to get creation date method", GetCreationDateCalls);
-                collection.Add("Calls to get expiration date method", GetExpirationDateCalls);
-                collection.Add("Calls to get keys method", GetKeysCalls);
-                collection.Add("Calls to get meta method", GetMetaCalls);
-                collection.Add("Calls to get meta by tag method", GetMetaByTagCalls);
-                collection.Add("Calls to get or set method", GetOrSetCalls);
-                collection.Add("Calls to remove method", RemoveCalls);
-                collection.Add("Calls to remove by tag method", RemoveByTagCalls);
-                collection.Add("Calls to set method", SetCalls);
-                collection.Add("Calls to update data method", UpdateDataCalls);
+                collection.Add("Calls to exist key method", ExistKeyCalls, true);
+                collection.Add("Calls to get method", GetCalls, true);
+                collection.Add("Calls to get by tag method", GetByTagCalls, true);
+                collection.Add("Calls to get creation date method", GetCreationDateCalls, true);
+                collection.Add("Calls to get expiration date method", GetExpirationDateCalls, true);
+                collection.Add("Calls to get keys method", GetKeysCalls, true);
+                collection.Add("Calls to get meta method", GetMetaCalls, true);
+                collection.Add("Calls to get meta by tag method", GetMetaByTagCalls, true);
+                collection.Add("Calls to get or set method", GetOrSetCalls, true);
+                collection.Add("Calls to remove method", RemoveCalls, true);
+                collection.Add("Calls to remove by tag method", RemoveByTagCalls, true);
+                collection.Add("Calls to set method", SetCalls, true);
+                collection.Add("Calls to update data method", UpdateDataCalls, true);
 
                 //
-                collection.Add("Average time on milliseconds of ExistKey execution", ExistKeyAverageTime);
-                collection.Add("Average time on milliseconds of Get execution", GetAverageTime);
-                collection.Add("Average time on milliseconds of GetByTag execution", GetByTagAverageTime);
-                collection.Add("Average time on milliseconds of GetCreationDate execution", GetCreationDateAverageTime);
-                collection.Add("Average time on milliseconds of GetExpirationDate execution", GetExpirationDateAverageTime);
-                collection.Add("Average time on milliseconds of GetKeys execution", GetKeysAverageTime);
-                collection.Add("Average time on milliseconds of GetMeta execution", GetMetaAverageTime);
-                collection.Add("Average time on milliseconds of GetMetaByTag execution", GetMetaByTagAverageTime);
-                collection.Add("Average time on milliseconds of GetOrSet execution", GetOrSetAverageTime);
-                collection.Add("Average time on milliseconds of Remove execution", RemoveAverageTime);
-                collection.Add("Average time on milliseconds of RemoveByTag execution", RemoveByTagAverageTime);
-                collection.Add("Average time on milliseconds of Set execution", SetAverageTime);
-                collection.Add("Average time on milliseconds of UpdateData execution", UpdateDataAverageTime);
+                collection.Add("Average time on milliseconds of ExistKey execution", ExistKeyAverageTime, true);
+                collection.Add("Average time on milliseconds of Get execution", GetAverageTime, true);
+                collection.Add("Average time on milliseconds of GetByTag execution", GetByTagAverageTime, true);
+                collection.Add("Average time on milliseconds of GetCreationDate execution", GetCreationDateAverageTime, true);
+                collection.Add("Average time on milliseconds of GetExpirationDate execution", GetExpirationDateAverageTime, true);
+                collection.Add("Average time on milliseconds of GetKeys execution", GetKeysAverageTime, true);
+                collection.Add("Average time on milliseconds of GetMeta execution", GetMetaAverageTime, true);
+                collection.Add("Average time on milliseconds of GetMetaByTag execution", GetMetaByTagAverageTime, true);
+                collection.Add("Average time on milliseconds of GetOrSet execution", GetOrSetAverageTime, true);
+                collection.Add("Average time on milliseconds of Remove execution", RemoveAverageTime, true);
+                collection.Add("Average time on milliseconds of RemoveByTag execution", RemoveByTagAverageTime, true);
+                collection.Add("Average time on milliseconds of Set execution", SetAverageTime, true);
+                collection.Add("Average time on milliseconds of UpdateData execution", UpdateDataAverageTime, true);
             });
         }
         #endregion

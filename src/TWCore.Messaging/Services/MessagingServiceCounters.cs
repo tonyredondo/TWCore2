@@ -146,26 +146,26 @@ namespace TWCore.Services
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Process average time in ms", ProcessAverageTime);
-                collection.Add("Peak value of process average time in ms", PeakProcessAverageTime);
+                collection.Add("Process average time in ms", ProcessAverageTime, true);
+                collection.Add("Peak value of process average time in ms", PeakProcessAverageTime, true);
                 collection.Add("Date and time of the peak value of process average time", PeakProcessAverageTimeLastDate);
 
-                collection.Add("Process average time on the last minute in ms", LastMinuteProcessAverageTime);
-                collection.Add("Peak value of Process average time on the last minute in ms", PeakLastMinuteProcessAverageTime);
+                collection.Add("Process average time on the last minute in ms", LastMinuteProcessAverageTime, true);
+                collection.Add("Peak value of Process average time on the last minute in ms", PeakLastMinuteProcessAverageTime, true);
                 collection.Add("Date and time of the peak value of Process average time on the last minute", PeakLastMinuteProcessAverageTimeLastDate);
 
-                collection.Add("Number of current active processing threads", CurrentMessagesBeingProcessed);
-                collection.Add("Peak value of number of active processing threads", PeakCurrentMessagesBeingProcessed);
+                collection.Add("Number of current active processing threads", CurrentMessagesBeingProcessed, true);
+                collection.Add("Peak value of number of active processing threads", PeakCurrentMessagesBeingProcessed, true);
                 collection.Add("Date and time of the peak value of number of active processing threads", PeakCurrentMessagesBeingProcessedLastDate);
-                collection.Add("Number of active processing threads on the last minute", LastMinuteMessagesBeingProcessed);
-                collection.Add("Peak value of the number of active processing threads on the last minute", PeakLastMinuteMessagesBeingProcessed);
+                collection.Add("Number of active processing threads on the last minute", LastMinuteMessagesBeingProcessed, true);
+                collection.Add("Peak value of the number of active processing threads on the last minute", PeakLastMinuteMessagesBeingProcessed, true);
                 collection.Add("Date and time of the peak value of number of active processing threads on the last minute", PeakLastMinuteMessagesBeingProcessedLastDate);
                 collection.Add("Date and time of the last received message", LastMessageDateTime);
                 collection.Add("Date and time of the last process of a message", LastProcessingDateTime);
 
-                collection.Add("Number of received messages", TotalMessagesReceived, StatusItemValueStatus.Green);
-                collection.Add("Number of processed messages", TotalMessagesProccesed, StatusItemValueStatus.Green);
-                collection.Add("Number of exceptions", TotalExceptions, StatusItemValueStatus.Red);
+                collection.Add("Number of received messages", TotalMessagesReceived, StatusItemValueStatus.Green, true);
+                collection.Add("Number of processed messages", TotalMessagesProccesed, StatusItemValueStatus.Green, true);
+                collection.Add("Number of exceptions", TotalExceptions, StatusItemValueStatus.Red, true);
             });
         }
         #endregion

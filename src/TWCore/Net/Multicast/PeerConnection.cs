@@ -136,7 +136,8 @@ namespace TWCore.Net.Multicast
                 try
                 {
                     var basicReceiver = new UdpClient();
-                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress,
+                        true);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive,
                         50);
                     basicReceiver.Client.Bind(new IPEndPoint(IPAddress.Any, Port));

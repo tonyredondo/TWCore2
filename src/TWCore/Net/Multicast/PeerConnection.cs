@@ -23,6 +23,8 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
+using TWCore.Diagnostics.Log;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -131,19 +133,27 @@ namespace TWCore.Net.Multicast
             }
             if (EnableReceive)
             {
-                var basicReceiver = new UdpClient();
-                basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-                basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
-                basicReceiver.Client.Bind(new IPEndPoint(IPAddress.Any, Port));
-                basicReceiver.JoinMulticastGroup(_multicastIp);
-                var thread = new Thread(ReceiveSocketThread)
+                try
                 {
-                    Name = "PeerConnectionReceiveThread",
-                    IsBackground = true
-                };
-                thread.Start(basicReceiver);
-                _clientsReceiveThreads.Add(thread);
-                _clients.Add(basicReceiver);
+                    var basicReceiver = new UdpClient();
+                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive,
+                        50);
+                    basicReceiver.Client.Bind(new IPEndPoint(IPAddress.Any, Port));
+                    basicReceiver.JoinMulticastGroup(_multicastIp);
+                    var thread = new Thread(ReceiveSocketThread)
+                    {
+                        Name = "PeerConnectionReceiveThread",
+                        IsBackground = true
+                    };
+                    thread.Start(basicReceiver);
+                    _clientsReceiveThreads.Add(thread);
+                    _clients.Add(basicReceiver);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(LogLevel.Warning, ex);
+                }
             }
         }
         /// <summary>

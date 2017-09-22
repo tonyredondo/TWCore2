@@ -261,7 +261,7 @@
                                 if (nValue.toString() != "NaN") {
                                     if (enablePlot) {
                                         if (!chartValue[val.Key]) chartValue[val.Key] = [];
-                                        if (chartValue[val.Key].length == 50)
+                                        if (chartValue[val.Key].length == 25)
                                             chartValue[val.Key].shift();
                                         chartValue[val.Key].push({ label: new Date(), value: nValue });
                                         bAnyValue = true;

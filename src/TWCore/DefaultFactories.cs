@@ -28,6 +28,8 @@ using System.Threading;
 using Newtonsoft.Json;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
+using TWCore.Services;
+
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -155,60 +157,88 @@ namespace TWCore
 
             AttachStatus();
 
-            var configFile = $"{Core.ApplicationName}.config.json";
-            if (File.Exists(configFile))
+            ServiceContainer.RegisterParametersHandler("configfile=[Path]", "Load the application using other configuration file.",
+                obj => { });
+            
+            var line = Environment.CommandLine;
+            var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
+            var arguments = line.Replace(asmLocation, string.Empty).Split(new[] { '/' }, StringSplitOptions.None)
+                .Skip(1).ToArray();
+            var argConfigFile = arguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
+            
+            if (!string.IsNullOrWhiteSpace(argConfigFile))
+            {
+                argConfigFile = argConfigFile.Substring(11).Trim();
+                if (!LoadConfigFile(argConfigFile))
+                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.", argConfigFile));
+            }
+            else
+            {
+                if (!LoadConfigFile($"{Core.ApplicationName}.config.json"))
+                    LoadConfigFile($"{Core.ApplicationName}.json");
+            }
+            SetLargeObjectHeapCompactTimeout();
+        }
+
+        private static bool LoadConfigFile(string configFile)
+        {
+            if (!File.Exists(configFile)) return false;
+            try
             {
                 var jser = JsonSerializer.CreateDefault();
                 var fSettings = jser.Deserialize<FactorySettings>(new JsonTextReader(new StreamReader(configFile)));
+                if (fSettings == null) return true;
 
-                if (fSettings != null)
+                if (fSettings.Core != null)
                 {
-                    if (fSettings.Core != null)
-                    {
-                        if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace())
-                            Core.EnvironmentName = fSettings.Core.EnvironmentName;
-                        if (fSettings.Core.MachineName.IsNotNullOrWhitespace())
-                            Core.MachineName = fSettings.Core.MachineName;
-                        if (fSettings.Core.ApplicationName.IsNotNullOrWhitespace())
-                            Core.ApplicationName = fSettings.Core.ApplicationName;
-                        if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
-                            Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
-                        if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
-                            Core.LoadSettings(fSettings.Core.SettingsFile);
-                    }
+                    if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace())
+                        Core.EnvironmentName = fSettings.Core.EnvironmentName;
+                    if (fSettings.Core.MachineName.IsNotNullOrWhitespace())
+                        Core.MachineName = fSettings.Core.MachineName;
+                    if (fSettings.Core.ApplicationName.IsNotNullOrWhitespace())
+                        Core.ApplicationName = fSettings.Core.ApplicationName;
+                    if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
+                        Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
+                    if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
+                        Core.LoadSettings(fSettings.Core.SettingsFile);
+                }
 
-                    if (fSettings.AppSettings != null)
+                if (fSettings.AppSettings != null)
+                {
+                    foreach (var item in fSettings.AppSettings)
                     {
-                        foreach (var item in fSettings.AppSettings)
+                        if (item.Key.IndexOf(">", StringComparison.Ordinal) > -1)
                         {
-                            if (item.Key.IndexOf(">", StringComparison.Ordinal) > -1)
-                            {
-                                var keyPair = item.Key.SplitAndTrim(">");
-                                var k1 = keyPair[0].SplitAndTrim(".");
-                                var env = k1[0];
-                                var mac = k1.Length > 1 ? k1[1] : null;
-                                var ckey = keyPair[1];
-                                if (env != Core.EnvironmentName || (mac != null && mac != Core.MachineName)) continue;
-                                Core.Settings.Remove(ckey);
-                                Core.Settings.Add(ckey, item.Value);
-                            }
-                            else
-                            {
-                                if (!Core.Settings.Contains(item.Key))
-                                    Core.Settings.Add(item.Key, item.Value);
-                            }
+                            var keyPair = item.Key.SplitAndTrim(">");
+                            var k1 = keyPair[0].SplitAndTrim(".");
+                            var env = k1[0];
+                            var mac = k1.Length > 1 ? k1[1] : null;
+                            var ckey = keyPair[1];
+                            if (env != Core.EnvironmentName || (mac != null && mac != Core.MachineName)) continue;
+                            Core.Settings.Remove(ckey);
+                            Core.Settings.Add(ckey, item.Value);
+                        }
+                        else
+                        {
+                            if (!Core.Settings.Contains(item.Key))
+                                Core.Settings.Add(item.Key, item.Value);
                         }
                     }
-
-                    Core.RebindSettings();
-
-                    if (fSettings.Core != null)
-                        if (fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
-                            Core.LoadInjector(fSettings.Core.InjectorFile);
                 }
-            }
 
-            SetLargeObjectHeapCompactTimeout();
+                Core.RebindSettings();
+
+                if (fSettings.Core != null)
+                    if (fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
+                        Core.LoadInjector(fSettings.Core.InjectorFile);
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                return false;
+            }
         }
 
         /// <summary>

@@ -44,6 +44,7 @@ namespace TWCore.Object.Api.Controllers
             }
             catch(Exception ex)
             {
+                Core.Log.Write(ex);
                 return new ObjectResult(new SerializableException(ex));
             }
         }
@@ -75,12 +76,13 @@ namespace TWCore.Object.Api.Controllers
             void FillCollection(string name, MemberType type, Value value, int? parentId)
             {
                 id++;
-                collection.Add(new TreeListItem { Id = id, Name = name, Value = value.ValueString, Type = value.ValueType, Member = type.ToString(), ParentId = parentId });
-                if (value.Members?.Length > 0)
+                collection.Add(new TreeListItem { Id = id, Name = name, Value = value?.ValueString, Type = value?.ValueType, Member = type.ToString(), ParentId = parentId });
+                if (value?.Members?.Length > 0)
                 {
                     var idParent = id;
                     foreach (var member in value.Members)
-                        FillCollection(member.Name, member.Type, member.Value, idParent);
+                        if (member != null)
+                            FillCollection(member.Name, member.Type, member.Value, idParent);
                 }
             }
         }

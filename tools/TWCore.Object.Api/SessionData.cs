@@ -16,13 +16,13 @@ using TWCore.Object.Compiler;
 using TWCore.Serialization;
 using System;
 
-namespace Runtime 
+namespace Runtime
 {
-    public class RuntimeCode : IRuntimeCode 
+    public class RuntimeCode : IRuntimeCode
     {
         public object Execute(object value)
         {
-            return value;
+            return value is SerializedObject obj ? obj.GetValue() : value;
         }
     }
 }

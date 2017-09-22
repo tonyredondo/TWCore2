@@ -153,7 +153,7 @@ namespace TWCore.Net.Multicast
                 }
                 catch (Exception ex)
                 {
-                    Core.Log.Write(LogLevel.Warning, ex);
+                    Core.Log.Warning(ex.Message);
                 }
             }
         }

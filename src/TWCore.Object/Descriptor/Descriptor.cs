@@ -76,6 +76,8 @@ namespace TWCore.Object.Descriptor
                 oValue.Type = ValueType.String;
             else if (valueType.IsEnum)
                 oValue.Type = ValueType.Enum;
+            else if (valueType == typeof(DateTime?))
+                oValue.Type = ValueType.Date;
             else
                 switch (value)
                 {

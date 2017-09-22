@@ -76,6 +76,8 @@ namespace TWCore.Object.Api.Controllers
             void FillCollection(string name, MemberType type, Value value, int? parentId)
             {
                 id++;
+                if (id > 100000)
+                    return;
                 collection.Add(new TreeListItem { Id = id, Name = name, Value = value?.ValueString, Type = value?.ValueType, Member = type.ToString(), ParentId = parentId });
                 if (value?.Members?.Length > 0)
                 {

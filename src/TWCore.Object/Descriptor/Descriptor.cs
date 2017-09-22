@@ -60,6 +60,57 @@ namespace TWCore.Object.Descriptor
         #endregion
 
         #region Private Methods
+
+        private ValueType GetValueType(object value, Type valueType)
+        {
+            if (valueType.IsEnum)
+                return ValueType.Enum;
+            if (valueType == typeof(string))
+                return ValueType.String;
+            if (valueType == typeof(bool))
+                return ValueType.Bool;
+            if (valueType == typeof(DateTime))
+                return ValueType.Date;
+            if (valueType == typeof(int))
+                return ValueType.Number;
+            if (valueType == typeof(long))
+                return ValueType.Number;
+            if (valueType == typeof(float))
+                return ValueType.Number;
+            if (valueType == typeof(decimal))
+                return ValueType.Number;
+            if (valueType == typeof(short))
+                return ValueType.Number;
+            if (valueType == typeof(ushort))
+                return ValueType.Number;
+            if (valueType == typeof(byte))
+                return ValueType.Number;
+            if (valueType == typeof(double))
+                return ValueType.Number;
+            if (valueType == typeof(TimeSpan))
+                return ValueType.Time;
+            if (valueType == typeof(Guid))
+                return ValueType.Guid;
+            if (valueType == typeof(MethodInfo))
+                return ValueType.Method;
+            if (valueType == typeof(RuntimeMethodHandle))
+                return ValueType.Method;
+            if (valueType == typeof(RuntimeTypeHandle))
+                return ValueType.Type;
+            if (value is MethodInfo)
+                return ValueType.Method;
+            if (value is Type)
+                return ValueType.Type;
+            if (valueType == typeof(Type))
+                return ValueType.Type;
+            if (valueType.GetTypeInfo().IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                return GetValueType(value, Nullable.GetUnderlyingType(valueType));
+            if (valueType.GetInterfaces().Any(i =>
+                (i == typeof(IEnumerable) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))))
+                return ValueType.Enumerable;
+            return ValueType.Complex;
+        } 
+        
         private Value ExtractValue(object value, Type valueType)
         {
             if (_depth > 15)
@@ -69,52 +120,8 @@ namespace TWCore.Object.Descriptor
             {
                 ValueType = valueType.FullName,
                 ValueString = value?.ToString() ?? "(null)",
-                Type = ValueType.Complex
+                Type = GetValueType(value, valueType)
             };
-
-            if (valueType == typeof(string))
-                oValue.Type = ValueType.String;
-            else if (valueType.IsEnum)
-                oValue.Type = ValueType.Enum;
-            else if (valueType == typeof(DateTime?))
-                oValue.Type = ValueType.Date;
-            else
-                switch (value)
-                {
-                    case bool _:
-                        oValue.Type = ValueType.Bool;
-                        break;
-                    case DateTime _:
-                        oValue.Type = ValueType.Date;
-                        break;
-                    case int _:
-                    case long _:
-                    case float _:
-                    case decimal _:
-                    case short _:
-                    case ushort _:
-                    case byte _:
-                    case double _:
-                        oValue.Type = ValueType.Number;
-                        break;
-                    case TimeSpan _:
-                        oValue.Type = ValueType.Time;
-                        break;
-                    case Guid _:
-                        oValue.Type = ValueType.Guid;
-                        break;
-                    case MethodInfo _:
-                        oValue.Type = ValueType.Method;
-                        break;
-                    case Type _:
-                        oValue.Type = ValueType.Type;
-                        break;
-                    default:
-                        if (valueType.GetInterfaces().Any(i =>
-                            (i == typeof(IEnumerable) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))))
-                            oValue.Type = ValueType.Enumerable;
-                        break;
-                }
 
             switch (oValue.Type)
             {

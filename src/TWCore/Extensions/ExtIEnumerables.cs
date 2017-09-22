@@ -35,6 +35,28 @@ using System.Threading.Tasks;
 namespace TWCore
 {
 	/// <summary>
+	/// Action for object ref delegate
+	/// </summary>
+	/// <param name="obj">Object reference</param>
+	/// <typeparam name="T">Object type</typeparam>
+	public delegate void ActionRef<T>(ref T obj);
+	/// <summary>
+	/// Action for object ref delegate
+	/// </summary>
+	/// <param name="obj">Object reference</param>
+	/// <typeparam name="T">Object type</typeparam>
+	/// <typeparam name="T1">Object argument 1</typeparam>
+	public delegate void ActionRef<T, in T1>(ref T obj, T1 arg1);
+	/// <summary>
+	/// Action for object ref delegate
+	/// </summary>
+	/// <param name="obj">Object reference</param>
+	/// <typeparam name="T">Object type</typeparam>
+	/// <typeparam name="T1">Object argument 1</typeparam>
+	/// <typeparam name="T2">Object argument 2</typeparam>
+	public delegate void ActionRef<T, in T1, in T2>(ref T obj, T1 arg1, T2 arg2);
+	
+	/// <summary>
 	/// Extension for IEnumerables interface
 	/// </summary>
 	public static partial class Extensions
@@ -47,10 +69,13 @@ namespace TWCore
 		/// </summary>
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object> action)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action)
 		{
-			if (enumerable == null || action == null) return;
-			foreach (var obj in enumerable) action(obj);
+			if (enumerable == null || action == null) return enumerable;
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var obj in eachObject) action(obj);
+			return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -58,26 +83,32 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
 		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
-			foreach (var obj in enumerable)
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var obj in eachObject)
 			{
 				if (token.IsCancellationRequested)
 					break;
 				action(obj);
 			}
+			return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
 		/// </summary>
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object, int> action)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action)
 		{
-			if (enumerable == null || action == null) return;
+			if (enumerable == null || action == null) return enumerable;
 			var idx = 0;
-			foreach (var obj in enumerable) action(obj, idx++);
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var obj in eachObject) action(obj, idx++);
+			return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -85,16 +116,19 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
 		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
 			var idx = 0;
-			foreach (var obj in enumerable)
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var obj in eachObject)
 			{
 				if (token.IsCancellationRequested)
 					break;
 				action(obj, idx++);
 			}
+			return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -102,11 +136,14 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state)
 		{
-			if (enumerable == null || action == null) return;
+			if (enumerable == null || action == null) return enumerable;
 			var idx = 0;
-			foreach (var innerObj in enumerable) action(innerObj, idx++, state);
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var innerObj in eachObject) action(innerObj, idx++, state);
+			return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -115,17 +152,230 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state, CancellationToken token)
 		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
 			var idx = 0;
-			foreach (var innerObj in enumerable)
+			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
+			foreach (var innerObj in eachObject)
 			{
 				if (token.IsCancellationRequested)
 					break;
 				action(innerObj, idx++, state);
 			}
+			return eachObject;
 		}
+		#endregion
+
+		#region IEnumerable<T>		
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			foreach (var obj in objs) action(obj);
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for(var i = 0; i < objs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(objs[i]);
+			}
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for(var i = 0; i < objs.Length; i++)
+				action(objs[i], i);
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for(var i = 0; i < objs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(objs[i], i);
+			}
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
+			for(var i = 0; i < innerObjs.Length; i++)
+				action(innerObjs[i], i, state);
+			return innerObjs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
+			for(var i = 0; i < innerObjs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(innerObjs[i], i, state);
+			}
+			return innerObjs;
+		}
+        #endregion
+
+		#region IEnumerable<T> by Reference
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < objs.Length; i++)
+				action(ref objs[i]);
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T> action, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < objs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(ref objs[i]);
+			}
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < objs.Length; i++)
+				action(ref objs[i], i);
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int> action, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var objs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < objs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(ref objs[i], i);
+			}
+			return objs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int, object> action, object state)
+		{
+			if (enumerable == null || action == null) return enumerable;
+			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < innerObjs.Length; i++)
+				action(ref innerObjs[i], i, state);
+			return innerObjs;
+		}
+		/// <summary>
+		/// Performs the specified action on each element of the IEnumerable
+		/// </summary>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
+		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
+		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int, object> action, object state, CancellationToken token)
+		{
+			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
+			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
+			for (var i = 0; i < innerObjs.Length; i++)
+			{
+				if (token.IsCancellationRequested)
+					break;
+				action(ref innerObjs[i], i, state);
+			}
+			return innerObjs;
+		}
+        #endregion
+
+		#region Other IEnumerable Methods
 		/// <summary>
 		/// Enumerate the Linq expression to a IList
 		/// </summary>
@@ -139,107 +389,20 @@ namespace TWCore
 				return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
 			return linqExpression;
 		}
-		#endregion
-
-		#region IEnumerable<T>
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T> action)
-		{
-			if (enumerable == null || action == null) return;
-			foreach (var obj in enumerable) action(obj);
-		}
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
-		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
-			foreach (var obj in enumerable)
-			{
-				if (token.IsCancellationRequested)
-					break;
-				action(obj);
-			}
-		}
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
-		{
-			if (enumerable == null || action == null) return;
-			var idx = 0;
-			foreach (var obj in enumerable) action(obj, idx++);
-		}
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
-		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
-			var idx = 0;
-			foreach (var obj in enumerable)
-			{
-				if (token.IsCancellationRequested)
-					break;
-				action(obj, idx++);
-			}
-		}
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state)
-		{
-			if (enumerable == null || action == null) return;
-			var idx = 0;
-			foreach (var innerObj in enumerable) action(innerObj, idx++, state);
-		}
-		/// <summary>
-		/// Performs the specified action on each element of the IEnumerable
-		/// </summary>
-		/// <param name="enumerable">IEnumerable source object</param>
-		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
-		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state, CancellationToken token)
-		{
-			if (enumerable == null || action == null || token.IsCancellationRequested) return;
-			var idx = 0;
-			foreach (var innerObj in enumerable)
-			{
-				if (token.IsCancellationRequested)
-					break;
-				action(innerObj, idx++, state);
-			}
-		}
 		/// <summary>
 		/// Enumerate the Linq expression to a IList
 		/// </summary>
 		/// <param name="linqExpression">Linq expression</param>
 		/// <returns>IList with the result of the enumeration</returns>
-		public static IEnumerable Enumerate<T>(this IEnumerable<T> linqExpression)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> Enumerate<T>(this IEnumerable<T> linqExpression)
 		{
 			if (linqExpression == null || linqExpression is IList || linqExpression is string) return linqExpression;
 			var bType = linqExpression.GetType().GetTypeInfo().BaseType;
 			if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
-				return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
+				return (IList<T>)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
 			return linqExpression;
 		}
-
 		/// <summary>
 		/// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
 		/// </summary>
@@ -265,8 +428,8 @@ namespace TWCore
 			}
 			return foundArray.FirstOrDefault(item => !comparer.Equals(item, default(T)));
 		}
-        #endregion
-
+		#endregion
+		
         #endregion
 
         #region Sets Management
@@ -839,10 +1002,13 @@ namespace TWCore
 		/// </summary>
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action)
 		{
-			if (enumerable != null && action != null)
-				Parallel.ForEach(enumerable, action);
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, action);
+			return parallelEach;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -850,28 +1016,32 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null)
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, (t, state) =>
 			{
-				Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, (t, state) =>
-				{
-					if (!token.IsCancellationRequested)
-						action(t);
-					else if (!state.IsStopped)
-						state.Stop();
-				});
-			}
+				if (!token.IsCancellationRequested)
+					action(t);
+				else if (!state.IsStopped)
+					state.Stop();
+			});
+			return parallelEach;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
 		/// </summary>
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action)
 		{
-			if (enumerable != null && action != null)
-				Parallel.ForEach(enumerable, new ParallelOptions(), (t, state, idx) => action(t, idx));
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, new ParallelOptions(), (t, state, idx) => action(t, idx));
+			return parallelEach;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -879,18 +1049,19 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long> action, CancellationToken token)
 		{
-			if (enumerable != null && action != null)
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, (t, state, idx) =>
 			{
-				Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, (t, state, idx) =>
-				{
-					if (!token.IsCancellationRequested)
-						action(t, idx);
-					else if (!state.IsStopped)
-						state.Stop();
-				});
-			}
+				if (!token.IsCancellationRequested)
+					action(t, idx);
+				else if (!state.IsStopped)
+					state.Stop();
+			});
+			return parallelEach;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -898,10 +1069,13 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long, object> action, object state)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long, object> action, object state)
 		{
-			if (enumerable != null && action != null)
-				Parallel.ForEach(enumerable, new ParallelOptions(), (t, s, idx) => action(t, idx, state));
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, new ParallelOptions(), (t, s, idx) => action(t, idx, state));
+			return parallelEach;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable using Parallel computing
@@ -910,18 +1084,19 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
-		public static void ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long, object> action, object state, CancellationToken token)
+		/// <returns>IEnumerable instance</returns>
+		public static IEnumerable<T> ParallelEach<T>(this IEnumerable<T> enumerable, Action<T, long, object> action, object state, CancellationToken token)
 		{
-			if (enumerable != null && action != null)
+			if (enumerable == null || action == null) return enumerable;
+			var parallelEach = enumerable as T[] ?? enumerable.ToArray();
+			Parallel.ForEach(parallelEach, new ParallelOptions { CancellationToken = token }, (t, s, idx) =>
 			{
-				Parallel.ForEach(enumerable, new ParallelOptions { CancellationToken = token }, (t, s, idx) =>
-				{
-					if (!token.IsCancellationRequested)
-						action(t, idx, state);
-					else if (!s.IsStopped)
-						s.Stop();
-				});
-			}
+				if (!token.IsCancellationRequested)
+					action(t, idx, state);
+				else if (!s.IsStopped)
+					s.Stop();
+			});
+			return parallelEach;
 		}
 		#endregion
 

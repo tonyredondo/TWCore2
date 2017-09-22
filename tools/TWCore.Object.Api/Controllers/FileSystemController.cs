@@ -85,7 +85,8 @@ namespace TWCore.Object.Api.Controllers
                     })
                     .Select(d => new PathEntry
                     {
-                        Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
+                        Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
+                        Path = Path.GetFullPath(d),
                         Type = PathEntryType.Directory
                     })
                     .Concat(Directory.EnumerateFiles(path)
@@ -105,7 +106,8 @@ namespace TWCore.Object.Api.Controllers
                         })
                         .Select(d => new PathEntry
                         {
-                            Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase),
+                            Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
+                            Path = Path.GetFullPath(d),
                             Type = PathEntryType.File,
                             IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
                         }))
@@ -309,19 +311,47 @@ namespace TWCore.Object.Api.Controllers
             var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
             var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
 
-            var logFilesPaths = logFilesServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
-            var logHttpPaths = logHttpServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
-            var traceFilesPath = traceFilesServices.Select(ls => ls.Data.GetValue() as string).RemoveNulls().ToArray();
-
-            var paths = Settings.RootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
-                .Select(Path.GetFullPath).Distinct().ToArray();
+            var logFilesPaths = logFilesServices
+                .Select(ls => new PathEntry { Name = ls.ApplicationName + " (LOGS)", Path = ls.Data.GetValue() as string })
+                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
+                .Each(ls =>
+                {
+                    ls.Path = Path.GetFullPath(ls.Path);
+                })
+                .ToArray();
             
-            var entries = paths.Select(p => new PathEntry
-            {
-                Name = p,
-                Type = PathEntryType.Directory
-            }).Where(p => Directory.Exists(p.Name)).ToArray();
+            var logHttpPaths = logHttpServices
+                .Select(ls => new PathEntry { Name =  ls.ApplicationName + " (HTTP LOGS)", Path = ls.Data.GetValue() as string })
+                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
+                .Each(ls =>
+                {
+                    ls.Path = Path.GetFullPath(ls.Path);
+                })
+                .ToArray();
+            
+            var traceFilesPath = traceFilesServices
+                .Select(ls => new PathEntry { Name =  ls.ApplicationName + " (TRACES)", Path = ls.Data.GetValue() as string })
+                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
+                .Each(ls =>
+                {
+                    ls.Path = Path.GetFullPath(ls.Path);
+                })
+                .ToArray();
 
+            var rootPaths = Settings.RootPaths
+                .Select(p => new PathEntry { Name =  p, Path = p })
+                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
+                .Each(ls =>
+                {
+                    ls.Path = Path.GetFullPath(ls.Path);
+                })
+                .ToArray();
+
+            var entries = rootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
+                .DistinctBy(p => p.Path)
+                .Where(p => Directory.Exists(p.Path))
+                .ToArray();
+            
             return new PathEntryCollection
             {
                 Current = string.Empty,
@@ -346,6 +376,8 @@ namespace TWCore.Object.Api.Controllers
         {
             [XmlAttribute, DataMember]
             public string Name { get; set; }
+            [XmlAttribute, DataMember]
+            public string Path { get; set; }
             [XmlAttribute, DataMember]
             public PathEntryType Type { get; set; }
             [XmlAttribute, DataMember]

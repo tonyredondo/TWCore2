@@ -1269,7 +1269,7 @@ namespace TWCore.Serialization.WSerializer
 
             GlobalKnownTypes.GetOrAdd(type, mType =>
             {
-                var hashBytes = Hash.GetBytes(mType.AssemblyQualifiedName);
+                var hashBytes = Hash.GetBytes(mType.GetTypeName());
                 GlobalKnownTypesValues[hashBytes] = mType;
                 return hashBytes;
             });

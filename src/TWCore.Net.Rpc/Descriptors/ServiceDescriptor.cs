@@ -147,7 +147,7 @@ namespace TWCore.Net.RPC.Descriptors
             var typeInfo = type.GetTypeInfo();
             var asmName = typeInfo.Assembly.GetName();
 
-            if (asmName.Name != "mscorlib")
+            if (asmName.Name != "mscorlib" && asmName.Name != "System.Private.CoreLib")
             {
                 var name = GetTypeName(type);
                 if (descriptor.Types.ContainsKey(name)) return;
@@ -170,7 +170,7 @@ namespace TWCore.Net.RPC.Descriptors
             }
             else
             {
-                if (typeInfo.GenericTypeArguments.Any(t => t.GetTypeInfo().Assembly.GetName().Name != "mscorlib"))
+                if (typeInfo.GenericTypeArguments.Any(t => t.GetTypeInfo().Assembly.GetName().Name != "mscorlib" && t.GetTypeInfo().Assembly.GetName().Name != "System.Private.CoreLib"))
                 {
                     var name = GetTypeName(type);
                     if (descriptor.Types.ContainsKey(name)) return;

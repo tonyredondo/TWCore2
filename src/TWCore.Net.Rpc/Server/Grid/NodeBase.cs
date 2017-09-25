@@ -70,7 +70,7 @@ namespace TWCore.Net.RPC.Server.Grid
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected NodeBase()
         {
-            Type = GetType().AssemblyQualifiedName;
+            Type = GetType().GetTypeName();
             ServiceName = GetType().Name;
 
             Core.Status.Attach(collection =>

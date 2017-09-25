@@ -53,7 +53,7 @@ namespace TWCore.Object.Descriptor
             _depth = 0;
             var oDesc = new ObjectDescription();
             valueType = valueType ?? value?.GetType();
-            oDesc.Type = valueType?.AssemblyQualifiedName;
+            oDesc.Type = valueType?.GetTypeName();
             oDesc.Value = value != null ? ExtractValue(value, valueType) : null;
             return oDesc;
         }
@@ -118,7 +118,7 @@ namespace TWCore.Object.Descriptor
             _depth++;
             var oValue = new Value
             {
-                ValueType = valueType.FullName,
+                ValueType = valueType.GetTypeName(),
                 ValueString = value?.ToString() ?? "(null)",
                 Type = GetValueType(value, valueType)
             };

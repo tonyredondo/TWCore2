@@ -67,8 +67,10 @@ namespace TWCore.Object.Api.Controllers
                         Error = "Directory doesn't exist."
                     });
 
-                if (Settings.RootPaths.All(rp =>
-                    !path.StartsWith(Path.GetFullPath(rp), StringComparison.OrdinalIgnoreCase)))
+                
+
+                if (GetRootEntryCollection().Entries.All(rp =>
+                    !path.StartsWith(rp.Path, StringComparison.OrdinalIgnoreCase)))
                     return new ObjectResult(new PathEntryCollection
                     {
                         Current = virtualPath,
@@ -170,7 +172,10 @@ namespace TWCore.Object.Api.Controllers
                     string.Equals(extension, ".srt", StringComparison.OrdinalIgnoreCase) ||
                     serializer?.SerializerType == SerializerType.Text)
                 {
-                    obj = System.IO.File.ReadAllText(path);
+
+                    using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                    using (var sr = new StreamReader(fs))
+                        obj = sr.ReadToEnd();
                     sessionData = HttpContext.Session.GetSessionData();
                     sessionData.FilePath = path;
                     sessionData.FileObject = obj;
@@ -183,7 +188,9 @@ namespace TWCore.Object.Api.Controllers
                     });
                 }
 
-                obj = System.IO.File.ReadAllBytes(path);
+                using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var sr = new BinaryReader(fs))
+                    obj = sr.ReadBytes((int)fs.Length);
                 sessionData = HttpContext.Session.GetSessionData();
                 sessionData.FilePath = path;
                 sessionData.FileObject = obj;

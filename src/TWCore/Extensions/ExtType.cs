@@ -15,10 +15,12 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using TWCore.Reflection;
 // ReSharper disable CheckNamespace
 
@@ -29,6 +31,11 @@ namespace TWCore
     /// </summary>
     public static partial class Extensions
     {
+        private static readonly string[] IgnoredAssemblies = { ", System.Private.CoreLib", ", mscorlib", ", NETStandard" };
+        private static readonly Regex AssemblyVersionRegex =
+            new Regex(", Version=[a-zA-Z0-9.]*, Culture=[a-zA-Z0-9]*, PublicKeyToken=[a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly ConcurrentDictionary<Type, string> TypesNameCache = new ConcurrentDictionary<Type, string>();
+
         /// <summary>
         /// Gets the UnderlyingType behind a Base type in case a nullable type.
         /// </summary>
@@ -150,6 +157,23 @@ namespace TWCore
                    from method in type.GetTypeInfo().DeclaredMethods
                    where method.IsSpecialName == false
                    select method;
+        }
+        /// <summary>
+        /// Get Type name (short version for AssemblyQualifiedName)
+        /// </summary>
+        /// <param name="type">Source type</param>
+        /// <returns></returns>
+        public static string GetTypeName(this Type type)
+        {
+            Ensure.ArgumentNotNull(type, "The type can't be null.");
+            return TypesNameCache.GetOrAdd(type, mType =>
+            {
+                var aqn = mType.AssemblyQualifiedName;
+                var asn = AssemblyVersionRegex.Replace(aqn, string.Empty);
+                foreach (var iasm in IgnoredAssemblies)
+                    asn = asn.Replace(iasm, string.Empty);
+                return asn;
+            });
         }
     }
 }

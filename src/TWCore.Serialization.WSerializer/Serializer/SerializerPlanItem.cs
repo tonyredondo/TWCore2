@@ -53,7 +53,7 @@ namespace TWCore.Serialization.WSerializer.Serializer
                 var mType = typeInfo.IsGenericType ? 
                     string.Format("{0}.{1}[{2}]", typeInfo.Namespace, typeInfo.Name, typeInfo.GenericTypeArguments.Select(a => "[" + GetTypeName(a) + "]").ToArray().Join(",")) : 
                     type.FullName;
-                if (mType != null && assemblyName.Name != "mscorlib")
+                if (mType != null && assemblyName.Name != "mscorlib" && assemblyName.Name != "System.Private.CoreLib")
                     mType += "," + assemblyName.Name;
                 return mType;
             });
@@ -82,7 +82,7 @@ namespace TWCore.Serialization.WSerializer.Serializer
                     mNamespace = type.Namespace;
                     mType = type.Name;
                 }
-                if (mType != null && assemblyName.Name != "mscorlib")
+                if (mType != null && assemblyName.Name != "mscorlib" && assemblyName.Name != "System.Private.CoreLib")
                     asmName = assemblyName.Name;
 
                 if (type.DeclaringType != null)

@@ -63,7 +63,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set => Client = value?.AssemblyQualifiedName;
+            set => Client = value?.GetTypeName();
         }
         /// <summary>
         /// Gets or Sets the Message queue server System.Type
@@ -83,7 +83,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set => Server = value?.AssemblyQualifiedName;
+            set => Server = value?.GetTypeName();
         }
         /// <summary>
         /// Gets or Sets the Message queue admin System.Type
@@ -103,7 +103,7 @@ namespace TWCore.Messaging.Configuration
                 }
                 return null;
             }
-            set => Admin = value?.AssemblyQualifiedName;
+            set => Admin = value?.GetTypeName();
         }
     }
 }

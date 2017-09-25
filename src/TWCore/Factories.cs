@@ -227,7 +227,7 @@ namespace TWCore
                         typeName = actualType.Name;
                         break;
                     }
-                    if (!method.Name.Contains("<") && !method.DeclaringType.Name.Contains("<") && !method.DeclaringType.AssemblyQualifiedName.Contains("System.Private"))
+                    if (!method.Name.Contains("<") && !method.DeclaringType.Name.Contains("<") && !method.DeclaringType.AssemblyQualifiedName.Contains("System.Private") && !method.DeclaringType.AssemblyQualifiedName.Contains("mscorlib"))
                     {
                         assemblyName = method.DeclaringType.Assembly.FullName;
                         typeName = method.DeclaringType.Name;

@@ -845,7 +845,10 @@ namespace TWCore.Net.RPC.Client.Transports
                         Core.Log.Write(ex);
                     }
                     if (_readCounterStream != null)
-                        _counters.SetBytesReceived(_readCounterStream.BytesRead);
+                    {
+                        _counters.IncrementBytesReceived(_readCounterStream.BytesRead);
+                        _readCounterStream.ClearBytesCounters();
+                    }
                     return (mTypeEnum, message);
                 }
             }
@@ -872,7 +875,10 @@ namespace TWCore.Net.RPC.Client.Transports
                         }
                         _writeStream.Flush();
                         if (_writeCounterStream != null)
-                            _counters.SetBytesSent(_writeCounterStream.BytesWrite);
+                        {
+                            _counters.IncrementBytesSent(_writeCounterStream.BytesWrite);
+                            _writeCounterStream.ClearBytesCounters();
+                        }
                     }
                     catch (Exception ex)
                     {

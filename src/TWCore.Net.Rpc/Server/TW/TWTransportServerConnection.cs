@@ -166,8 +166,10 @@ namespace TWCore.Net.RPC.Server.Transports
                             ThreadPool.QueueUserWorkItem(ProcessSessionRequestMessage, message);
                             break;
                     }
-                    _server.Counters.SetBytesReceived(readCounterStream.BytesRead);
-                    _server.Counters.SetBytesSent(writeCounterStream.BytesWrite);
+                    _server.Counters.IncrementBytesReceived(readCounterStream.BytesRead);
+                    readCounterStream.ClearBytesCounters();
+                    _server.Counters.IncrementBytesSent(writeCounterStream.BytesWrite);
+                    writeCounterStream.ClearBytesCounters();
                 }
                 if (!Disconnected) return;
                 Core.Log.Warning("Session {0} had disconnected.", SessionId);

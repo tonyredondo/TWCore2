@@ -21,7 +21,7 @@ namespace TWCore.Object.Api.Controllers
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
         private static readonly string[] Extensions;
-        private static readonly string[] TextExtensions = new[] { ".xml", ".js", ".txt", ".log", ".json", ".ini", ".srt" };
+        private static readonly string[] TextExtensions = { ".xml", ".js", ".txt", ".log", ".json", ".ini", ".srt", ".htm", ".html" };
 
         static FileSystemController()
         {
@@ -146,18 +146,47 @@ namespace TWCore.Object.Api.Controllers
                 var serializer = SerializerManager.GetByFileName(path);
                 if (serializer != null && (serializer.SerializerType == SerializerType.Binary || fileType != null))
                 {
-                    Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
-                    obj = serializer.DeserializeFromFile(fileType, path);
-                    sessionData = HttpContext.Session.GetSessionData();
-                    sessionData.FilePath = path;
-                    sessionData.FileObject = obj;
-                    HttpContext.Session.SetSessionData(sessionData);
-                    Core.Log.InfoBasic("File {0} was loaded.", path);
-                    return new ObjectResult(new FileLoadedStatus
+                    try
                     {
-                        FilePath = sessionData.FilePath,
-                        ObjectType = sessionData.FileObject?.GetType().Name
-                    });
+                        Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
+                        obj = serializer.DeserializeFromFile(fileType, path);
+                        sessionData = HttpContext.Session.GetSessionData();
+                        sessionData.FilePath = path;
+                        sessionData.FileObject = obj;
+                        HttpContext.Session.SetSessionData(sessionData);
+                        Core.Log.InfoBasic("File {0} was loaded.", path);
+                        return new ObjectResult(new FileLoadedStatus
+                        {
+                            FilePath = sessionData.FilePath,
+                            ObjectType = sessionData.FileObject?.GetType().Name
+                        });
+                    }
+                    catch(Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                        Core.Log.InfoBasic("Trying to deserialize from a continous stream...");
+                        using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        {
+                            var lstObj = new List<object>();
+                            while (fs.Position != fs.Length)
+                            {
+                                var item = serializer.Deserialize<object>(fs);
+                                if (item != null)
+                                    lstObj.Add(item);
+                            }
+                            obj = lstObj;
+                            sessionData = HttpContext.Session.GetSessionData();
+                            sessionData.FilePath = path;
+                            sessionData.FileObject = obj;
+                            HttpContext.Session.SetSessionData(sessionData);
+                            Core.Log.InfoBasic("File {0} was loaded.", path);
+                            return new ObjectResult(new FileLoadedStatus
+                            {
+                                FilePath = sessionData.FilePath,
+                                ObjectType = sessionData.FileObject?.GetType().Name
+                            });
+                        }
+                    }
                 }
 
                 Core.Log.Warning("The serializer for file {0} wasn't found.", path);

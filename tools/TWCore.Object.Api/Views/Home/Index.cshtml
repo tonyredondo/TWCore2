@@ -227,6 +227,11 @@
                                             textContent.setOption("mode", info.mime);
                                             CodeMirror.autoLoadMode(textContent, info.mode);
                                         }
+                                        if (data[0].value.startsWith("<html") || data[0].value.startsWith("<!DOCTYPE")) {
+                                            var info = CodeMirror.findModeByExtension("htm");
+                                            textContent.setOption("mode", info.mime);
+                                            CodeMirror.autoLoadMode(textContent, info.mode);
+                                        }
                                         if (data[0].value.startsWith("{")) {
                                             var info = CodeMirror.findModeByExtension("json");
                                             textContent.setOption("mode", info.mime);

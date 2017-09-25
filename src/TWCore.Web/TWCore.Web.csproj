@@ -37,4 +37,8 @@ A multipurpose framework library for .net core</Description>
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Middlewares\" />
+  </ItemGroup>
+
 </Project>

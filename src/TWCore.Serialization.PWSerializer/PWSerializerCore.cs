@@ -682,7 +682,7 @@ namespace TWCore.Serialization.PWSerializer
                         for (var i = 0; i < vTypePartsLength; i++)
                             vTypeParts[i] = propertySerializer.ReadValue(br);
                         var vType = string.Join(",", vTypeParts);
-                        valueType = Core.GetType(vType);
+                        valueType = Core.GetType(vType, false) ?? valueType;
                         continue;
                     case DataType.TypeStart:
                         var typePropertiesLength = numberSerializer.ReadValue(br);

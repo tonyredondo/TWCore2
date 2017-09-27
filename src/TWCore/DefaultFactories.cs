@@ -65,17 +65,11 @@ namespace TWCore
             GetAssemblies = () =>
             {
                 if (_assemblies != null) return _assemblies;
-
                 _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
                 {
                     if (d.IsDynamic) return false;
                     var assemblyName = d.GetName();
-                    return !assemblyName.Name.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) &&
-                           !assemblyName.Name.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) &&
-                           !assemblyName.Name.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) &&
-                           !assemblyName.Name.StartsWith("System.", StringComparison.OrdinalIgnoreCase) &&
-                           !assemblyName.Name.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) &&
-                           !assemblyName.Name.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
+                    return !IsExcludedAssembly(assemblyName.Name);
                 }).DistinctBy(i => i.Location).ToArray();
                 return _assemblies;
             };
@@ -97,6 +91,7 @@ namespace TWCore
                             try
                             {
                                 var name = AssemblyName.GetAssemblyName(file);
+                                if (IsExcludedAssembly(name.Name)) continue;
                                 if (loaded.All(l => l.FullName != name.FullName))
                                     AppDomain.CurrentDomain.Load(name);
                             }
@@ -178,6 +173,20 @@ namespace TWCore
                     LoadConfigFile($"{Core.ApplicationName}.json");
             }
             SetLargeObjectHeapCompactTimeout();
+        }
+
+        private static bool IsExcludedAssembly(string assemblyName)
+        {
+            return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("StackExchange.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
 
         private static bool LoadConfigFile(string configFile)

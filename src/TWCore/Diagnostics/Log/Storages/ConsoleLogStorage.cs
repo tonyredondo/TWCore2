@@ -29,6 +29,8 @@ namespace TWCore.Diagnostics.Log.Storages
     /// </summary>
     public class ConsoleLogStorage : ILogStorage
     {
+        private static readonly object PadLock = new object();
+
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>
@@ -43,7 +45,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public void Write(ILogItem item)
         {
             if (!ServiceContainer.HasConsole) return;
-            lock(Console.Out) 
+            lock(PadLock) 
             {
                 Console.ResetColor();
 
@@ -122,7 +124,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteEmptyLine()
         {
-            lock (Console.Out)
+            lock (PadLock)
                 Console.WriteLine();
         }
         /// <inheritdoc />

@@ -187,14 +187,14 @@ namespace TWCore
             if (Injector?.Settings != null && Injector.Settings.Interfaces.Count > 0)
             {
                 //Init Log
-                Log.Debug("Loading log engine configuration");
+                Log.LibDebug("Loading log engine configuration");
                 var logStorages = Injector.GetNames<ILogStorage>();
                 if (logStorages?.Any() == true)
                 {
                     foreach (var name in logStorages)
                     {
                         if (!Settings[$"Core.Log.Storage.{name}.Enabled"].ParseTo(false)) continue;
-                        Log.Debug("Loading log storage: {0}", name);
+                        Log.LibDebug("Loading log storage: {0}", name);
                         var lSto = Injector.New<ILogStorage>(name);
                         if (lSto == null)
                         {
@@ -203,7 +203,7 @@ namespace TWCore
                         }
                         if (lSto.GetType() == typeof(ConsoleLogStorage))
                         {
-                            Log.Debug("Console log storage already added, ignoring.");
+                            Log.LibDebug("Console log storage already added, ignoring.");
                             continue;
                         }
                         Log.Storage.Add(lSto, Settings[$"Core.Log.Storage.{name}.LogLevel"].ParseTo(LogLevel.Error | LogLevel.Warning));
@@ -217,14 +217,14 @@ namespace TWCore
                 Log.Enabled = GlobalSettings.LogEnabled;
 
                 //Init Trace
-                Log.Debug("Loading trace engine configuration");
+                Log.LibDebug("Loading trace engine configuration");
                 var traceStorages = Injector.GetNames<ITraceStorage>();
                 if (traceStorages?.Any() == true)
                 {
                     foreach (var name in traceStorages)
                     {
                         if (!Settings[$"Core.Trace.Storage.{name}.Enabled"].ParseTo(false)) continue;
-                        Log.Debug("Loading trace storage: {0}", name);
+                        Log.LibDebug("Loading trace storage: {0}", name);
                         var lTrace = Injector.New<ITraceStorage>(name);
                         if (lTrace == null)
                         {
@@ -237,14 +237,14 @@ namespace TWCore
                 Trace.Enabled = GlobalSettings.TraceEnabled;
 
                 //Init Status
-                Log.Debug("Loading status engine configuration");
+                Log.LibDebug("Loading status engine configuration");
                 var statusTransports = Injector.GetNames<IStatusTransport>();
                 if (statusTransports?.Any() == true)
                 {
                     foreach (var name in statusTransports)
                     {
                         if (!Settings[$"Core.Status.Transport.{name}.Enabled"].ParseTo(false)) continue;
-                        Log.Debug("Loading status transport: {0}", name);
+                        Log.LibDebug("Loading status transport: {0}", name);
                         var sTransport = Injector.New<IStatusTransport>(name);
                         if (sTransport == null)
                         {
@@ -279,7 +279,7 @@ namespace TWCore
                         try
                         {
                             var instance = (ICoreStart)Activator.CreateInstance(type.AsType());
-                            Log.Debug("Loading CoreStart from: {0}", instance);
+                            Log.LibDebug("Loading CoreStart from: {0}", instance);
                             instance.CoreInit(factories);
                         }
                         catch (Exception ex)
@@ -329,6 +329,7 @@ namespace TWCore
 
             if (onError)
                 throw new Exception("Error initializing the application.");
+            Log.LibDebug("Core has been initialized.");
         }
 
         /// <summary>

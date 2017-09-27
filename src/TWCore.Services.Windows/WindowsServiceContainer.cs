@@ -108,6 +108,7 @@ namespace TWCore.Services.Windows
         {
             if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase))
             {
+                Core.Log.LibDebug("Starting...");
                 InitAction?.Invoke();
                 if (!string.IsNullOrWhiteSpace(BannerText))
                 {

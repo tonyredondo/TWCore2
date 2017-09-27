@@ -312,9 +312,7 @@ namespace TWCore.Services
             var assemblies = Factory.GetAllAssemblies();
             foreach (var assembly in assemblies)
             {
-                var name = assembly.GetName().Name;
-                if (name == "Microsoft.GeneratedCode")
-                    continue;
+                var name = assembly.GetName()?.Name;
                 var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
                 Console.WriteLine("{0} = {1}", name, version);
             }
@@ -338,6 +336,7 @@ namespace TWCore.Services
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected internal virtual void InternalRun(string[] args)
         {
+            Core.Log.LibDebug("Starting...");
             InitAction?.Invoke();
             if (!string.IsNullOrWhiteSpace(BannerText))
             {
@@ -418,7 +417,8 @@ namespace TWCore.Services
         {
             if (_discovery) return;
             if (!Core.GlobalSettings.EnableDiscovery) return;
-            
+
+            Core.Log.LibDebug("Registering Discovery services.");
             _discovery = true;
 
             var serializer = SerializerManager.DefaultBinarySerializer;

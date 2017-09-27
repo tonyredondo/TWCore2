@@ -38,6 +38,7 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         public string Name { get; set; } = "Status Counters";
 
+        #region .ctor
         /// <summary>
         /// Default Status Counter class.
         /// </summary>
@@ -46,6 +47,34 @@ namespace TWCore.Diagnostics.Status
         {
             Core.Status.Attach(GetStatusItem);
         }
+        /// <summary>
+        /// Default Status Counter class.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusCounter(string name)
+        {
+            Name = name;
+            Core.Status.Attach(GetStatusItem);
+        }
+        /// <summary>
+        /// Default Status Counter class.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusCounter(object parent)
+        {
+            Core.Status.Attach(GetStatusItem, parent);
+        }
+        /// <summary>
+        /// Default Status Counter class.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusCounter(string name, object parent)
+        {
+            Name = name;
+            Core.Status.Attach(GetStatusItem, parent);
+        }
+
+        #endregion
 
         /// <summary>
         /// Register a value to a counter
@@ -63,7 +92,7 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         /// <returns>StatusItem</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusItem GetStatusItem()
+        private StatusItem GetStatusItem()
         {
             var status = new StatusItem { Name = Name };
             var counterValues = _counterValues.ToArray().OrderBy(k => k.Key);

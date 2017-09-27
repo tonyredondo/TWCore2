@@ -30,6 +30,9 @@ namespace TWCore.Messaging.RawClient
     {
         private readonly object _locker = new object();
         private Timer _timer;
+        private Timer _timerTen;
+        private Timer _timerTwenty;
+        private Timer _timerThirty;
 
         #region Properties
         /// <summary>
@@ -42,6 +45,21 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         [StatusProperty("Number of messages sent in the last minute", true)]
         public long LastMinuteMessagesSent { get; private set; }
+        /// <summary>
+        /// Number of messages sent in the last ten minutes
+        /// </summary>
+        [StatusProperty("Number of messages sent in the last ten minutes", true)]
+        public long LastTenMinutesMessagesSent { get; private set; }
+        /// <summary>
+        /// Number of messages sent in the last twenty minutes
+        /// </summary>
+        [StatusProperty("Number of messages sent in the last twenty minutes", true)]
+        public long LastTwentyMinutesMessagesSent { get; private set; }
+        /// <summary>
+        /// Number of messages sent in the last thirty minutes
+        /// </summary>
+        [StatusProperty("Number of messages sent in the last thirty minutes", true)]
+        public long LastThirtyMinutesMessagesSent { get; private set; }
 
         /// <summary>
         /// Number of messages received
@@ -53,7 +71,22 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         [StatusProperty("Number of messages received in the last minute", true)]
         public long LastMinuteMessagesReceived { get; private set; }
-        
+        /// <summary>
+        /// Number of messages received in the last ten minutes
+        /// </summary>
+        [StatusProperty("Number of messages received in the last ten minutes", true)]
+        public long LastTenMinutesMessagesReceived { get; private set; }
+        /// <summary>
+        /// Number of messages received in the last twenty minutes
+        /// </summary>
+        [StatusProperty("Number of messages received in the last twenty minutes", true)]
+        public long LastTwentyMinutesMessagesReceived { get; private set; }
+        /// <summary>
+        /// Number of messages received in the last thirty minutes
+        /// </summary>
+        [StatusProperty("Number of messages received in the last thirty minutes", true)]
+        public long LastThirtyMinutesMessagesReceived { get; private set; }
+
         /// <summary>
         /// Total bytes sent
         /// </summary>
@@ -75,12 +108,39 @@ namespace TWCore.Messaging.RawClient
         {
             _timer = new Timer(state =>
             {
-                lock(_locker)
+                lock (_locker)
                 {
-                    LastMinuteMessagesSent = MessagesSent;
-                    LastMinuteMessagesReceived = MessagesReceived;
+                    LastMinuteMessagesSent = 0;
+                    LastMinuteMessagesReceived = 0;
                 }
             }, this, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
+
+            _timerTen = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastTenMinutesMessagesSent = 0;
+                    LastTenMinutesMessagesReceived = 0;
+                }
+            }, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+
+            _timerTwenty = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastTwentyMinutesMessagesSent = 0;
+                    LastTwentyMinutesMessagesReceived = 0;
+                }
+            }, this, TimeSpan.FromMinutes(20), TimeSpan.FromMinutes(20));
+
+            _timerThirty = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastThirtyMinutesMessagesSent = 0;
+                    LastThirtyMinutesMessagesReceived = 0;
+                }
+            }, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
         }
         #endregion
 
@@ -115,6 +175,9 @@ namespace TWCore.Messaging.RawClient
             {
                 MessagesSent++;
                 LastMinuteMessagesSent++;
+                LastTenMinutesMessagesSent++;
+                LastTwentyMinutesMessagesSent++;
+                LastThirtyMinutesMessagesSent++;
             }
         }
         /// <summary>
@@ -127,6 +190,9 @@ namespace TWCore.Messaging.RawClient
             {
                 MessagesReceived++;
                 LastMinuteMessagesReceived++;
+                LastTenMinutesMessagesReceived++;
+                LastTwentyMinutesMessagesReceived++;
+                LastThirtyMinutesMessagesReceived++;
             }
         }
         #endregion

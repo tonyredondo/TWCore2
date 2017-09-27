@@ -32,9 +32,12 @@ namespace TWCore.Messaging.RawServer
     public class MQRawServerCounters
     {
         private readonly object _locker = new object();
-        private Timer _timer;
+        private Timer _timerOneMinute;
+        private Timer _timerTenMinutes;
+        private Timer _timerTwentyMinutes;
+        private Timer _timerThirtyMinutes;
 
-        #region Properties
+        #region Messages On Process
         /// <summary>
         /// Number of Messages on process
         /// </summary>
@@ -68,6 +71,56 @@ namespace TWCore.Messaging.RawServer
         public DateTime PeakLastMinuteMessagesLastDate { get; private set; }
 
         /// <summary>
+        /// Number of messages processed on the last ten minutes
+        /// </summary>
+        [StatusProperty("Number of messages processed on the last ten minutes", true)]
+        public long LastTenMinutesMessages { get; private set; }
+        /// <summary>
+        /// Peak value of number of message processed on the last ten minutes
+        /// </summary>
+        [StatusProperty("Peak value of number of message processed on the last ten minutes", true)]
+        public long PeakLastTenMinutesMessages { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of message processed on the last ten minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of message processed on the last ten minutes")]
+        public DateTime PeakLastTenMinutesMessagesLastDate { get; private set; }
+
+        /// <summary>
+        /// Number of messages processed on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Number of messages processed on the last twenty minutes", true)]
+        public long LastTwentyMinutesMessages { get; private set; }
+        /// <summary>
+        /// Peak value of number of message processed on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Peak value of number of message processed on the last twenty minutes", true)]
+        public long PeakLastTwentyMinutesMessages { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of message processed on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of message processed on the last twenty minutes")]
+        public DateTime PeakLastTwentyMinutesMessagesLastDate { get; private set; }
+
+        /// <summary>
+        /// Number of messages processed on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Number of messages processed on the last thirty minutes", true)]
+        public long LastThirtyMinutesMessages { get; private set; }
+        /// <summary>
+        /// Peak value of number of message processed on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Peak value of number of message processed on the last thirty minutes", true)]
+        public long PeakLastThirtyMinutesMessages { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of message processed on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of message processed on the last thirty minutes")]
+        public DateTime PeakLastThirtyMinutesMessagesLastDate { get; private set; }
+        #endregion
+
+        #region Processing Threads
+        /// <summary>
         /// Number of current active processing threads
         /// </summary>
         [StatusProperty("Number of current active processing threads", true)]
@@ -99,6 +152,56 @@ namespace TWCore.Messaging.RawServer
         [StatusProperty("Date and time of the peak value of number of active processing threads on the last minute")]
         public DateTime PeakLastMinuteProcessingThreadsLastDate { get; private set; }
 
+        /// <summary>
+        /// Number of active processing threads on the last ten minutes
+        /// </summary>
+        [StatusProperty("Number of active processing threads on the last ten minutes", true)]
+        public long LastTenMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Peak value of the number of active processing threads on the last ten minutes
+        /// </summary>
+        [StatusProperty("Peak value of the number of active processing threads on the last ten minutes", true)]
+        public long PeakLastTenMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of active processing threads on the last ten minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of active processing threads on the last ten minutes")]
+        public DateTime PeakLastTenMinutesProcessingThreadsLastDate { get; private set; }
+
+        /// <summary>
+        /// Number of active processing threads on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Number of active processing threads on the last twenty minutes", true)]
+        public long LastTwentyMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Peak value of the number of active processing threads on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Peak value of the number of active processing threads on the last twenty minutes", true)]
+        public long PeakLastTwentyMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of active processing threads on the last twenty minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of active processing threads on the last twenty minutes")]
+        public DateTime PeakLastTwentyMinutesProcessingThreadsLastDate { get; private set; }
+
+        /// <summary>
+        /// Number of active processing threads on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Number of active processing threads on the last thirty minutes", true)]
+        public long LastThirtyMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Peak value of the number of active processing threads on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Peak value of the number of active processing threads on the last thirty minutes", true)]
+        public long PeakLastThirtyMinutesProcessingThreads { get; private set; }
+        /// <summary>
+        /// Date and time of the peak value of number of active processing threads on the last thirty minutes
+        /// </summary>
+        [StatusProperty("Date and time of the peak value of number of active processing threads on the last thirty minutes")]
+        public DateTime PeakLastThirtyMinutesProcessingThreadsLastDate { get; private set; }
+        #endregion
+
+        #region Properties
         /// <summary>
         /// Date and time of the last received message
         /// </summary>
@@ -145,9 +248,9 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQRawServerCounters()
         {
-            _timer = new Timer(state =>
+            _timerOneMinute = new Timer(state =>
             {
-                lock(_locker)
+                lock (_locker)
                 {
                     LastMinuteMessages = CurrentMessages;
                     PeakLastMinuteMessages = CurrentMessages;
@@ -158,15 +261,57 @@ namespace TWCore.Messaging.RawServer
                     PeakLastMinuteProcessingThreadsLastDate = LastProcessingDateTime;
                 }
             }, this, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
-        }
-		#endregion
 
-		#region Public Methods
-		/// <summary>
-		/// Increments the total network time
-		/// </summary>
-		/// <param name="increment">Increment value</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            _timerTenMinutes = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastTenMinutesMessages = CurrentMessages;
+                    PeakLastTenMinutesMessages = CurrentMessages;
+                    PeakLastTenMinutesMessagesLastDate = LastMessageDateTime;
+
+                    LastTenMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastTenMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastTenMinutesProcessingThreadsLastDate = LastProcessingDateTime;
+                }
+            }, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
+
+            _timerTwentyMinutes = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastTwentyMinutesMessages = CurrentMessages;
+                    PeakLastTwentyMinutesMessages = CurrentMessages;
+                    PeakLastTwentyMinutesMessagesLastDate = LastMessageDateTime;
+
+                    LastTwentyMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastTwentyMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastTwentyMinutesProcessingThreadsLastDate = LastProcessingDateTime;
+                }
+            }, this, TimeSpan.FromMinutes(20), TimeSpan.FromMinutes(20));
+
+            _timerThirtyMinutes = new Timer(state =>
+            {
+                lock (_locker)
+                {
+                    LastThirtyMinutesMessages = CurrentMessages;
+                    PeakLastThirtyMinutesMessages = CurrentMessages;
+                    PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
+
+                    LastThirtyMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastThirtyMinutesProcessingThreads = CurrentProcessingThreads;
+                    PeakLastThirtyMinutesProcessingThreadsLastDate = LastProcessingDateTime;
+                }
+            }, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
+        }
+        #endregion
+
+        #region Public Methods
+        /// <summary>
+        /// Increments the total network time
+        /// </summary>
+        /// <param name="increment">Increment value</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalNetworkTime(TimeSpan increment)
         {
             lock (_locker)
@@ -209,8 +354,11 @@ namespace TWCore.Messaging.RawServer
             lock (_locker)
             {
                 CurrentMessages++;
-                TotalMessagesReceived++;
                 LastMinuteMessages++;
+                LastTenMinutesMessages++;
+                LastTwentyMinutesMessages++;
+                LastThirtyMinutesMessages++;
+                TotalMessagesReceived++;
                 LastMessageDateTime = Core.Now;
                 if (CurrentMessages >= PeakCurrentMessages)
                 {
@@ -221,6 +369,21 @@ namespace TWCore.Messaging.RawServer
                 {
                     PeakLastMinuteMessages = LastMinuteMessages;
                     PeakLastMinuteMessagesLastDate = LastMessageDateTime;
+                }
+                if (LastTenMinutesMessages >= PeakLastTenMinutesMessages)
+                {
+                    PeakLastTenMinutesMessages = LastTenMinutesMessages;
+                    PeakLastTenMinutesMessagesLastDate = LastMessageDateTime;
+                }
+                if (LastTwentyMinutesMessages >= PeakLastTwentyMinutesMessages)
+                {
+                    PeakLastTwentyMinutesMessages = LastTwentyMinutesMessages;
+                    PeakLastTwentyMinutesMessagesLastDate = LastMessageDateTime;
+                }
+                if (LastThirtyMinutesMessages >= PeakLastThirtyMinutesMessages)
+                {
+                    PeakLastThirtyMinutesMessages = LastThirtyMinutesMessages;
+                    PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
                 }
             }
         }
@@ -243,6 +406,9 @@ namespace TWCore.Messaging.RawServer
             {
                 CurrentProcessingThreads++;
                 LastMinuteProcessingThreads++;
+                LastTenMinutesProcessingThreads++;
+                LastTwentyMinutesProcessingThreads++;
+                LastThirtyMinutesProcessingThreads++;
                 LastProcessingDateTime = Core.Now;
                 if (CurrentProcessingThreads >= PeakCurrentProcessingThreads)
                 {
@@ -253,6 +419,21 @@ namespace TWCore.Messaging.RawServer
                 {
                     PeakLastMinuteProcessingThreads = LastMinuteProcessingThreads;
                     PeakLastMinuteProcessingThreadsLastDate = LastMessageDateTime;
+                }
+                if (LastTenMinutesProcessingThreads >= PeakLastTenMinutesProcessingThreads)
+                {
+                    PeakLastTenMinutesProcessingThreads = LastTenMinutesProcessingThreads;
+                    PeakLastTenMinutesProcessingThreadsLastDate = LastMessageDateTime;
+                }
+                if (LastTwentyMinutesProcessingThreads >= PeakLastTwentyMinutesProcessingThreads)
+                {
+                    PeakLastTwentyMinutesProcessingThreads = LastTwentyMinutesProcessingThreads;
+                    PeakLastTwentyMinutesProcessingThreadsLastDate = LastMessageDateTime;
+                }
+                if (LastThirtyMinutesProcessingThreads >= PeakLastThirtyMinutesProcessingThreads)
+                {
+                    PeakLastThirtyMinutesProcessingThreads = LastThirtyMinutesProcessingThreads;
+                    PeakLastThirtyMinutesProcessingThreadsLastDate = LastMessageDateTime;
                 }
             }
         }

@@ -356,10 +356,22 @@
             $("#textContent").hide();
             $("#descriptionHeader").hide();
 
+            var processEntries = function(entries) {
+                if (entries) {
+                    for (var i = 0; i < entries.length > 0; i++) {
+                        var entry = entries[i];
+                        entry.isDirectory = entry.type == "Directory";
+                        entry.spriteCssClass = entry.isDirectory ? "folder" : entry.isBinary ? "file" : "text";
+                        entry.hasChildren = entry.isDirectory || entry.type == "Service";
+                    }
+                }
+            }
+            
             var fileDataSource = new kendo.data.HierarchicalDataSource({
                 transport: {
                     read: {
                         url: function (options) {
+                            console.log("Loading");
                             if (options.name)
                                 return fileListUrl + "?path=" + options.name + (currentFilter ? "&filter=" + currentFilter : "");
                             else
@@ -374,19 +386,11 @@
                             kendo.alert(response.message);
                             return null;
                         }
-                        for (var i = 0; i < response.entries.length > 0; i++) {
-                            var entry = response.entries[i];
-                            entry.isDirectory = entry.type == "Directory";
-                            //entry.path = response.current + entry.name;
-                            //if (entry.name.substring(0, 1) == "\\" || entry.name.substring(0, 1) == "/")
-                            //    entry.name = entry.name.substring(1);
-                            entry.spriteCssClass = entry.isDirectory ? "folder" : entry.isBinary ? "file" : "text";
-                        }
+                        processEntries(response.entries);
                         return response.entries;
                     },
                     model: {
-                        id: "path",
-                        hasChildren: "isDirectory"
+                        id: "path"
                     }
                 },
                 change: function() {
@@ -403,6 +407,7 @@
                     var dataItem = tree.dataItem(e.node);
                     selectedNode = dataItem.id;
                     if (dataItem.isDirectory) return;
+                    if (dataItem.type == "Service") return;
                     currentFilePath = dataItem.path;
                     $.ajax({
                         url: apiUrl + "files/load.json?path=" + dataItem.path,

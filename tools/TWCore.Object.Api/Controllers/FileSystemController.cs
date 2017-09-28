@@ -6,6 +6,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
@@ -18,6 +19,7 @@ namespace TWCore.Object.Api.Controllers
 {
     public class FileSystemController : Controller
     {
+        private static readonly TimeoutDictionary<bool, Dictionary<string, PathEntry>> LocalServicesCache = new TimeoutDictionary<bool, Dictionary<string, PathEntry>>();
         private static readonly FileSystemSettings Settings = Core.GetSettings<FileSystemSettings>();
         private static readonly PathEntry[] PathEmpty = new PathEntry[0];
         private static readonly string[] Extensions;
@@ -58,6 +60,17 @@ namespace TWCore.Object.Api.Controllers
                 if (string.IsNullOrWhiteSpace(virtualPath))
                     return new ObjectResult(GetRootEntryCollection());
 
+                if (virtualPath.StartsWith("SRV:", StringComparison.OrdinalIgnoreCase))
+                {
+                    var services = GetLocalServices(true);
+                    if (services.TryGetValue(virtualPath, out var entry))
+                        return new ObjectResult(new PathEntryCollection
+                        {
+                            Current = virtualPath,
+                            Entries = entry.Entries?.ToArray(),
+                        });
+                }
+                
                 var path = Path.GetFullPath(virtualPath);
                 if (!Directory.Exists(path))
                     return new ObjectResult(new PathEntryCollection
@@ -343,36 +356,7 @@ namespace TWCore.Object.Api.Controllers
 
         private static PathEntryCollection GetRootEntryCollection()
         {
-            var logFilesServices = DiscoveryService.GetLocalRegisteredServices("LOG.FILE");
-            var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
-            var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
-
-            var logFilesPaths = logFilesServices
-                .Select(ls => new PathEntry { Name = ls.ApplicationName + " (LOGS)", Path = ls.Data.GetValue() as string })
-                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
-                .Each(ls =>
-                {
-                    ls.Path = Path.GetFullPath(ls.Path);
-                })
-                .ToArray();
-            
-            var logHttpPaths = logHttpServices
-                .Select(ls => new PathEntry { Name =  ls.ApplicationName + " (HTTP LOGS)", Path = ls.Data.GetValue() as string })
-                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
-                .Each(ls =>
-                {
-                    ls.Path = Path.GetFullPath(ls.Path);
-                })
-                .ToArray();
-            
-            var traceFilesPath = traceFilesServices
-                .Select(ls => new PathEntry { Name =  ls.ApplicationName + " (TRACES)", Path = ls.Data.GetValue() as string })
-                .Where(ls => !string.IsNullOrWhiteSpace(ls.Path))
-                .Each(ls =>
-                {
-                    ls.Path = Path.GetFullPath(ls.Path);
-                })
-                .ToArray();
+            var servicesPathEntries = GetLocalServices(false);
 
             var rootPaths = Settings.RootPaths
                 .Select(p => new PathEntry { Name =  p, Path = p })
@@ -381,11 +365,12 @@ namespace TWCore.Object.Api.Controllers
                 {
                     ls.Path = Path.GetFullPath(ls.Path);
                 })
+                .Where(p => Directory.Exists(p.Path))
                 .ToArray();
 
-            var entries = rootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
+            var entries = rootPaths.Concat(servicesPathEntries.Values)
+                //rootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
                 .DistinctBy(p => p.Path)
-                .Where(p => Directory.Exists(p.Path))
                 .ToArray();
             
             return new PathEntryCollection
@@ -394,6 +379,81 @@ namespace TWCore.Object.Api.Controllers
                 Entries = entries,
                 Error = entries.Length == 0 ? "There isn't any valid folder." : null
             };
+        }
+
+        private static Dictionary<string, PathEntry> GetLocalServices(bool withChildren)
+        {
+            return LocalServicesCache.GetOrAdd(withChildren, wChildren =>
+            {
+                var logFilesServices = DiscoveryService.GetLocalRegisteredServices("LOG.FILE");
+                var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
+                var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
+                var servicesPathEntries = new Dictionary<string, PathEntry>();
+    
+                foreach (var srv in logFilesServices)
+                {
+                    var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
+                    if (!wChildren) continue;
+                    var path = srv.Data.GetValue() as string;
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    path = Path.GetFullPath(path);
+                    if (!Directory.Exists(path)) continue;
+                    if (srvPe.Entries.All(c => c.Path != path))
+                        srvPe.Entries.Add(new PathEntry
+                        {
+                            Name = "LOGS",
+                            Path = Path.GetFullPath(path),
+                            Type = PathEntryType.Directory
+                        });
+                }
+                foreach (var srv in logHttpServices)
+                {
+                    var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
+                    if (!wChildren) continue;
+                    var path = srv.Data.GetValue() as string;
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    path = Path.GetFullPath(path);
+                    if (!Directory.Exists(path)) continue;
+                    if (srvPe.Entries.All(c => c.Path != path))
+                        srvPe.Entries.Add(new PathEntry
+                        {
+                            Name = "HTTP LOGS",
+                            Path = Path.GetFullPath(path),
+                            Type = PathEntryType.Directory
+                        });
+                }
+                foreach (var srv in traceFilesServices)
+                {
+                    var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
+                    if (!wChildren) continue;
+                    var path = srv.Data.GetValue() as string;
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    path = Path.GetFullPath(path);
+                    if (!Directory.Exists(path)) continue;
+                    if (srvPe.Entries.All(c => c.Path != path))
+                        srvPe.Entries.Add(new PathEntry
+                        {
+                            Name = "TRACES",
+                            Path = Path.GetFullPath(path),
+                            Type = PathEntryType.Directory
+                        });
+                }
+                return (servicesPathEntries, TimeSpan.FromSeconds(10));
+            });
+            
+        }
+        private static PathEntry EnsureServiceEntry(Dictionary<string, PathEntry> servicesPathEntries, DiscoveryService.ReceivedService srv)
+        {
+            if (servicesPathEntries.TryGetValue(srv.ApplicationName, out var srvPe)) return srvPe;
+            srvPe = new PathEntry
+            {
+                Name = srv.ApplicationName,
+                Path = "SRV:" + srv.ApplicationName,
+                Type = PathEntryType.Service,
+                Entries = new List<PathEntry>()
+            };
+            servicesPathEntries.Add(srvPe.Path, srvPe);
+            return srvPe;
         }
 
         #region Nested types
@@ -405,7 +465,9 @@ namespace TWCore.Object.Api.Controllers
         public enum PathEntryType
         {
             Directory,
-            File
+            File,
+            Url,
+            Service
         }
         [DataContract]
         public class PathEntry
@@ -418,6 +480,8 @@ namespace TWCore.Object.Api.Controllers
             public PathEntryType Type { get; set; }
             [XmlAttribute, DataMember]
             public bool IsBinary { get; set; }
+            [XmlArray, DataMember]
+            public List<PathEntry> Entries { get; set; }
         }
         [DataContract]
         public class PathEntryCollection

@@ -1,12 +1,13 @@
 ﻿{
   "appSettings": {
     "Core.DebugMode": true,
-    "FileSystem.RootPaths": "/Users/danielredondo;/Users/rociomelero; c:\\\\temp; C:\\AGSW_GIT\\FrameworkSamples\\MessageService\\Agsw.Messaging.Service\\bin\\Debug\\netcoreapp2.0",
-    "WebService.Urls": "http://*:52298"
+    "FileSystem.RootPaths": "/Users/danielredondo;/Users/rociomelero; c:\\\\temp;/var/agsw",
+    "WebService.Urls": "http://*:50999",
+    "AssemblyResolverManager.Paths" :  "./assemblies"
   },
   "Core": {
     "environmentName": "DEV",
     "applicationName": "TWCore.Object.Api",
-    "applicationDisplayName": "Avant-Garde Software Object Api"
+    "applicationDisplayName": "TWCore Object Api"
   }
 }

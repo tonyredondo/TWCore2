@@ -285,7 +285,7 @@ namespace TWCore
                 _frequency = Stopwatch.Frequency;
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
-                _lastTapTicks = 0;
+                _lastTapTicks = _ticksTimestamp;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -383,7 +383,7 @@ namespace TWCore
             {
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
-                _lastTapTicks = 0;
+                _lastTapTicks = _ticksTimestamp;
                 _disposedValue = false;
             }
             #endregion

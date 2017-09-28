@@ -35,7 +35,7 @@
 
     
 
-    <script>
+<script>
         var apiUrl = "/api/";
         var snippets = [
             'using TWCore;\nusing TWCore.Object.Compiler;\nusing TWCore.Serialization;\nusing System;\n\nnamespace Runtime\n{\n\
@@ -126,10 +126,9 @@
                         $("#descriptionHeader").hide();
                         $("#textContent").hide();
                         var ktl = $("#descriptionInner").data("kendoTreeList");
-                        if (ktl) {
+                        if (ktl)
                             ktl.destroy();
-                            $("#descriptionInner").empty();
-                        }
+                        $("#descriptionInner").empty();
                     }
                 });
             }
@@ -198,10 +197,9 @@
                                 popupNotification.show(" Results loaded.", "info");
                                 $("#textContent").hide();
                                 var ktl = $("#descriptionInner").data("kendoTreeList");
-                                if (ktl) {
+                                if (ktl)
                                     ktl.destroy();
-                                    $("#descriptionInner").empty();
-                                }
+                                $("#descriptionInner").empty();
 
                                 if (!data) return;
                                 if (data.exceptionType) {
@@ -214,7 +212,13 @@
                                     textContent.setValue(data[0].value);
                                     var setted = false;
                                     if (currentFilePath) {
-                                        var info = CodeMirror.findModeByExtension(currentFilePath.split('.').reverse()[0]);
+                                        var fileExtension = currentFilePath.split('.').reverse()[0];
+                                        if (fileExtension.toLowerCase() == "htm" || fileExtension.toLowerCase() == "html") {
+                                            $("#descriptionInner").append($("<iframe id='descriptionIframe' style='width:100%; height:100%;border:0px;'></iframe>"));
+                                            document.getElementById('descriptionIframe').src = "data:text/html;charset=utf-8," + escape(data[0].value);
+                                            return;
+                                        }
+                                        var info = CodeMirror.findModeByExtension(fileExtension);
                                         if (info) {
                                             textContent.setOption("mode", info.mime);
                                             CodeMirror.autoLoadMode(textContent, info.mode);
@@ -226,16 +230,20 @@
                                             var info = CodeMirror.findModeByExtension("xml");
                                             textContent.setOption("mode", info.mime);
                                             CodeMirror.autoLoadMode(textContent, info.mode);
-                                        }
-                                        if (data[0].value.startsWith("<html") || data[0].value.startsWith("<!DOCTYPE")) {
-                                            var info = CodeMirror.findModeByExtension("htm");
-                                            textContent.setOption("mode", info.mime);
-                                            CodeMirror.autoLoadMode(textContent, info.mode);
+                                            setted = true;
                                         }
                                         if (data[0].value.startsWith("{")) {
                                             var info = CodeMirror.findModeByExtension("json");
                                             textContent.setOption("mode", info.mime);
                                             CodeMirror.autoLoadMode(textContent, info.mode);
+                                            setted = true;
+                                        }
+                                        var htmlIdx = data[0].value.indexOf("<html");
+                                        var docTypeIdx = data[0].value.indexOf("<!DOCTYPE");
+                                        if ((htmlIdx > -1 && htmlIdx < 100) || (docTypeIdx > -1 && docTypeIdx < 100 )) {
+                                            $("#descriptionInner").append($("<iframe id='descriptionIframe' style='width:100%; height:100%;border:0px;'></iframe>"));
+                                            document.getElementById('descriptionIframe').src = "data:text/html;charset=utf-8," + escape(data[0].value);
+                                            return;
                                         }
                                     }
 

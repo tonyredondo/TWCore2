@@ -79,7 +79,7 @@ namespace TWCore.Web.Logger
                     cLogLevel = Diagnostics.Log.LogLevel.Error;
                     break;
                 case LogLevel.Information:
-                    cLogLevel = Diagnostics.Log.LogLevel.InfoBasic;
+                    cLogLevel = Diagnostics.Log.LogLevel.InfoMedium;
                     break;
                 case LogLevel.Trace:
                     cLogLevel = Diagnostics.Log.LogLevel.InfoDetail;

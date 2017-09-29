@@ -40,7 +40,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 System.Diagnostics.Trace.Write(string.Format( "{0, 10}: ", item.Level));
 
                 if (!string.IsNullOrEmpty(item.GroupName))
-                    System.Diagnostics.Trace.Write(item.GroupName + " ");
+                    System.Diagnostics.Trace.Write(item.GroupName + " - ");
 
                 if (item.LineNumber > 0)
                     System.Diagnostics.Trace.Write(string.Format("<{0};{1:000}> ", item.TypeName, item.LineNumber));

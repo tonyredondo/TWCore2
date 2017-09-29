@@ -273,7 +273,8 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Related exception if is available</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Exception ex) => Write(LogLevel.Error, null, (ex as SerializableException.WrappedException)?.Message ?? ex.Message, null, ex);
-
+        
+        #region Basic Members
         /// <inheritdoc />
         /// <summary>
         /// Write a debug item into the log storages
@@ -285,7 +286,7 @@ namespace TWCore.Diagnostics.Log
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.Debug))
-                WriteUnsafe(LogLevel.Debug, message, args);
+                WriteUnsafe(LogLevel.Debug, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -297,7 +298,7 @@ namespace TWCore.Diagnostics.Log
         public void Verbose(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.Verbose))
-                WriteUnsafe(LogLevel.Verbose, message, args);
+                WriteUnsafe(LogLevel.Verbose, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -310,7 +311,7 @@ namespace TWCore.Diagnostics.Log
         public void Error(Exception ex, string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.Error))
-                WriteUnsafe(LogLevel.Error, message, args, ex);
+                WriteUnsafe(LogLevel.Error, null, message, args, ex);
         }
         /// <inheritdoc />
         /// <summary>
@@ -322,7 +323,7 @@ namespace TWCore.Diagnostics.Log
         public void Error(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.Error))
-                WriteUnsafe(LogLevel.Error, message, args);
+                WriteUnsafe(LogLevel.Error, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -334,7 +335,7 @@ namespace TWCore.Diagnostics.Log
         public void Warning(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.Warning))
-                WriteUnsafe(LogLevel.Warning, message, args);
+                WriteUnsafe(LogLevel.Warning, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -346,7 +347,7 @@ namespace TWCore.Diagnostics.Log
         public void InfoBasic(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.InfoBasic))
-                WriteUnsafe(LogLevel.InfoBasic, message, args);
+                WriteUnsafe(LogLevel.InfoBasic, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -358,7 +359,7 @@ namespace TWCore.Diagnostics.Log
         public void InfoMedium(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.InfoMedium))
-                WriteUnsafe(LogLevel.InfoMedium, message, args);
+                WriteUnsafe(LogLevel.InfoMedium, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -370,7 +371,7 @@ namespace TWCore.Diagnostics.Log
         public void InfoDetail(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.InfoDetail))
-                WriteUnsafe(LogLevel.InfoDetail, message, args);
+                WriteUnsafe(LogLevel.InfoDetail, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -382,8 +383,119 @@ namespace TWCore.Diagnostics.Log
         public void Stats(string message, params object[] args)
         {
             if (IsLogLevelValid(LogLevel.Stats))
-                WriteUnsafe(LogLevel.Stats, message, args);
+                WriteUnsafe(LogLevel.Stats, null, message, args);
         }
+        #endregion
+        
+        #region Basic Group Members
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void DebugGroup(string groupName, string message, params object[] args)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.Debug))
+                WriteUnsafe(LogLevel.Debug, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a verbose item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void VerboseGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.Verbose))
+                WriteUnsafe(LogLevel.Verbose, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="ex">Exception</param>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ErrorGroup(Exception ex, string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.Error))
+                WriteUnsafe(LogLevel.Error, groupName, message, args, ex);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ErrorGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.Error))
+                WriteUnsafe(LogLevel.Error, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a warning item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WarningGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.Warning))
+                WriteUnsafe(LogLevel.Warning, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a InfoLevel1 item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InfoBasicGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.InfoBasic))
+                WriteUnsafe(LogLevel.InfoBasic, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a InfoMedium item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InfoMediumGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.InfoMedium))
+                WriteUnsafe(LogLevel.InfoMedium, groupName, message, args);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a InfoDetailed item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InfoDetailGroup(string groupName, string message, params object[] args)
+        {
+            if (IsLogLevelValid(LogLevel.InfoDetail))
+                WriteUnsafe(LogLevel.InfoDetail, groupName, message, args);
+        }
+        #endregion
+        
         /// <inheritdoc />
         /// <summary>
         /// Write a LibDebug item into the log storages
@@ -395,7 +507,7 @@ namespace TWCore.Diagnostics.Log
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.LibDebug))
-                WriteUnsafe(LogLevel.LibDebug, message, args);
+                WriteUnsafe(LogLevel.LibDebug, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -408,7 +520,7 @@ namespace TWCore.Diagnostics.Log
         {
             if (!Core.DebugMode) return;
             if (IsLogLevelValid(LogLevel.LibVerbose))
-                WriteUnsafe(LogLevel.LibVerbose, message, args);
+                WriteUnsafe(LogLevel.LibVerbose, null, message, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -455,12 +567,12 @@ namespace TWCore.Diagnostics.Log
             return Storage.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storage.GetMaxLogLevel());
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void WriteUnsafe(LogLevel level, string message, object[] args, Exception ex = null)
+        private void WriteUnsafe(LogLevel level, string groupName, string message, object[] args, Exception ex = null)
         {
             if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
             if (args?.Length > 0)
                 message = string.Format(message, args);
-            var item = ItemFactory(level, null, message, null, ex, null, null);
+            var item = ItemFactory(level, null, message, groupName, ex, null, null);
             if (item == null) return;
             _itemsWorker?.Enqueue(item);
             if (item.Level != LogLevel.Error) return;

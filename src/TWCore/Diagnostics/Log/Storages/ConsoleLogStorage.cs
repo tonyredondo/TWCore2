@@ -87,7 +87,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 Console.Write("{0, 10}: ",item.Level);
 
                 if (!string.IsNullOrEmpty(item.GroupName))
-                    Console.Write(item.GroupName + " ");
+                    Console.Write(item.GroupName + " | ");
 
                 if (item.LineNumber > 0)
                     Console.Write("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);

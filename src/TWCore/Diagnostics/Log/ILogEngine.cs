@@ -95,6 +95,7 @@ namespace TWCore.Diagnostics.Log
         /// Write a log empty line
         /// </summary>
         void WriteEmptyLine();
+        
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
@@ -162,6 +163,66 @@ namespace TWCore.Diagnostics.Log
         /// <param name="message">Item message with pattern support</param>
         /// <param name="args">Arguments to bing with the pattern</param>
         void LibVerbose(string message, params object[] args);
+        
+        
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void DebugGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a verbose item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void VerboseGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="ex">Exception</param>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void ErrorGroup(Exception ex, string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void ErrorGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a warning item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void WarningGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a InfoBasic item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void InfoBasicGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a InfoMedium item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void InfoMediumGroup(string groupName, string message, params object[] args);
+        /// <summary>
+        /// Write a InfoDetailed item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void InfoDetailGroup(string groupName, string message, params object[] args);
+        
         /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>

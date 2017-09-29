@@ -475,7 +475,7 @@ namespace TWCore.Diagnostics.Log.Storages
             sbuilder.AppendFormat("{0, 10}: ", item.Level);
 
             if (!string.IsNullOrEmpty(item.GroupName))
-                sbuilder.Append(item.GroupName + " ");
+                sbuilder.Append(item.GroupName + " | ");
 
             if (item.LineNumber > 0)
                 sbuilder.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);

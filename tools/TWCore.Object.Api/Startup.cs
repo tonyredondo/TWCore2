@@ -13,6 +13,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TWCore.Net.Multicast;
+using TWCore.Serialization;
 using TWCore.Web;
 
 namespace TWCore.Object.Api
@@ -52,6 +54,8 @@ namespace TWCore.Object.Api
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory("AllowAllOrigins"));
             });
+
+            DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "OBJECT.API", "TWCore Object Api", new SerializedObject(Core.Settings["WebService.Urls"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

@@ -1,13 +1,13 @@
 ﻿{
   "appSettings": {
     "Core.DebugMode": true,
-    "FileSystem.RootPaths": "/Users/danielredondo;/Users/rociomelero; c:\\\\temp;/var/agsw",
+    "FileSystem.RootPaths": "",
     "WebService.Urls": "http://*:50999",
     "AssemblyResolverManager.Paths" :  "./assemblies"
   },
   "Core": {
     "environmentName": "DEV",
     "applicationName": "TWCore.Object.Api",
-    "applicationDisplayName": "TWCore Object Api"
+    "applicationDisplayName": "TWCore Services Tools"
   }
 }

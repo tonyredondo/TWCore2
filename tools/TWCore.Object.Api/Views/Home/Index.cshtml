@@ -1,10 +1,11 @@
-﻿@{
-    ViewData["Title"] = "TWCore Object Viewer";
+﻿@using TWCore
+@{
+    ViewData["Title"] = Core.ApplicationDisplayName;
 }
 
 <div id="viewport">
     <div id="head">
-        TWCore Object Viewer
+        @Core.ApplicationDisplayName
     </div>
     <div id="body">
         <div id="fileMenu" class="k-content">

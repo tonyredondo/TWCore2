@@ -18,6 +18,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Compression;
 
@@ -37,7 +38,7 @@ namespace TWCore.Net
         /// <param name="cancellationToken">A cancellation token to cancel operation.</param>
         /// <returns>Returns System.Threading.Tasks.Task`1. The task object representing the asynchronous operation.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, System.Threading.CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var response = await base.SendAsync(request, cancellationToken).ConfigureAwait(false);
             if (response.Content?.Headers?.ContentEncoding.IsNotNullOrEmpty() != true) return response;

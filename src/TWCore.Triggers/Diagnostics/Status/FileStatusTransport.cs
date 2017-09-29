@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.IO;
+using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Triggers;
 using SPath = System.IO.Path;
@@ -29,6 +30,8 @@ namespace TWCore.Diagnostics.Status.Transports
     /// </summary>
     public class FileStatusTransport : TriggeredActionBase, IStatusTransport
     {
+        private readonly Guid _discoveryServiceId;
+
         #region Events
         /// <summary>
         /// Handles when a fetch status event has been received
@@ -58,6 +61,8 @@ namespace TWCore.Diagnostics.Status.Transports
         /// </summary>
         public FileStatusTransport()
         {
+            if (!string.IsNullOrWhiteSpace(Path))
+                _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS.FILE", "This is the File Log base path", new SerializedObject(SPath.GetFullPath(Path)));
         }
         /// <inheritdoc />
         /// <summary>
@@ -67,6 +72,8 @@ namespace TWCore.Diagnostics.Status.Transports
         public FileStatusTransport(params TriggerBase[] triggers)
         {
             triggers?.Each(AddTrigger);
+            if (!string.IsNullOrWhiteSpace(Path))
+                _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS.FILE", "This is the File Log base path", new SerializedObject(SPath.GetFullPath(Path)));
         }
         /// <inheritdoc />
         /// <summary>
@@ -81,6 +88,13 @@ namespace TWCore.Diagnostics.Status.Transports
             FileNameFormat = filenameFormat;
             Path = path;
             Serializer = serializer;
+
+            if (!string.IsNullOrWhiteSpace(Path))
+                _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "STATUS.FILE", "This is the File Log base path", new SerializedObject(SPath.GetFullPath(Path)));
+        }
+        ~FileStatusTransport()
+        {
+            DiscoveryService.UnregisterService(_discoveryServiceId);
         }
         #endregion
 

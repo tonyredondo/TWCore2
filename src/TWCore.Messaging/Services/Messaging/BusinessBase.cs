@@ -25,6 +25,61 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Business base class
     /// </summary>
+    public abstract class BusinessBase : IBusiness
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(object message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(object message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Business base class
+    /// </summary>
     /// <typeparam name="T">Message object type to process</typeparam>
     public abstract class BusinessBase<T> : IBusiness<T>
     {
@@ -92,7 +147,9 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Business base class
     /// </summary>
-    public abstract class BusinessBase : IBusiness
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    public abstract class BusinessBase<T1, T2> : IBusiness<T1, T2>
     {
         protected CancellationToken TimeoutCancellationToken;
 
@@ -111,6 +168,31 @@ namespace TWCore.Services.Messaging
         /// <param name="cancellationToken">Cancellation token for process message timeout</param>
         /// <returns>Process result</returns>
         public object Process(object message, CancellationToken cancellationToken)
+        {
+            if (message is T1 mt1)
+                return Process(mt1, cancellationToken);
+            return Process((T2)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T2 message, CancellationToken cancellationToken)
         {
             TimeoutCancellationToken = cancellationToken;
             return OnProcess(message);
@@ -131,11 +213,416 @@ namespace TWCore.Services.Messaging
         /// </summary>
         protected virtual void OnInit() { }
         /// <summary>
-        /// On Process message
+        /// On Process T1 message
         /// </summary>
         /// <param name="message">Message to process</param>
         /// <returns>Process result</returns>
-        protected abstract object OnProcess(object message);
+        protected abstract object OnProcess(T1 message);
+        /// <summary>
+        /// On Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T2 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Business base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    public abstract class BusinessBase<T1, T2, T3> : IBusiness<T1, T2, T3>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return Process(mt1, cancellationToken);
+                case T2 mt2:
+                    return Process(mt2, cancellationToken);
+            }
+            return Process((T3)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T1 message);
+        /// <summary>
+        /// On Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T2 message);
+        /// <summary>
+        /// On Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T3 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Business base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    /// <typeparam name="T4">Message object type 4 to process</typeparam>
+    public abstract class BusinessBase<T1, T2, T3, T4> : IBusiness<T1, T2, T3, T4>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return Process(mt1, cancellationToken);
+                case T2 mt2:
+                    return Process(mt2, cancellationToken);
+                case T3 mt3:
+                    return Process(mt3, cancellationToken);
+            }
+            return Process((T4)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T4 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T1 message);
+        /// <summary>
+        /// On Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T2 message);
+        /// <summary>
+        /// On Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T3 message);
+        /// <summary>
+        /// On Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T4 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Business base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    /// <typeparam name="T4">Message object type 4 to process</typeparam>
+    /// <typeparam name="T5">Message object type 5 to process</typeparam>
+    public abstract class BusinessBase<T1, T2, T3, T4, T5> : IBusiness<T1, T2, T3, T4, T5>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init() => OnInit();
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return Process(mt1, cancellationToken);
+                case T2 mt2:
+                    return Process(mt2, cancellationToken);
+                case T3 mt3:
+                    return Process(mt3, cancellationToken);
+                case T4 mt4:
+                    return Process(mt4, cancellationToken);
+            }
+            return Process((T5)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T4 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process T5 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public object Process(T5 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcess(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T1 message);
+        /// <summary>
+        /// On Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T2 message);
+        /// <summary>
+        /// On Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T3 message);
+        /// <summary>
+        /// On Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T4 message);
+        /// <summary>
+        /// On Process T5 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract object OnProcess(T5 message);
         /// <summary>
         /// On Dispose business
         /// </summary>

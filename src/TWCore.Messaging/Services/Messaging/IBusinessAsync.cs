@@ -55,4 +55,148 @@ namespace TWCore.Services.Messaging
         /// <returns>Process result</returns>
         Task<object> ProcessAsync(T message, CancellationToken cancellationToken);
     }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Defines a business instance for message processing
+    /// </summary>
+    /// <typeparam name="T1">Message Type 1</typeparam>
+    /// <typeparam name="T2">Message Type 2</typeparam>
+    public interface IBusinessAsync<in T1, in T2> : IBusinessAsync
+    {
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Defines a business instance for message processing
+    /// </summary>
+    /// <typeparam name="T1">Message Type 1</typeparam>
+    /// <typeparam name="T2">Message Type 2</typeparam>
+    /// <typeparam name="T3">Message Type 3</typeparam>
+    public interface IBusinessAsync<in T1, in T2, in T3> : IBusinessAsync
+    {
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Defines a business instance for message processing
+    /// </summary>
+    /// <typeparam name="T1">Message Type 1</typeparam>
+    /// <typeparam name="T2">Message Type 2</typeparam>
+    /// <typeparam name="T3">Message Type 3</typeparam>
+    /// <typeparam name="T4">Message Type 3</typeparam>
+    public interface IBusinessAsync<in T1, in T2, in T3, in T4> : IBusinessAsync
+    {
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken);
+    }
+
+    /// <inheritdoc />
+    /// <summary>
+    /// Defines a business instance for message processing
+    /// </summary>
+    /// <typeparam name="T1">Message Type 1</typeparam>
+    /// <typeparam name="T2">Message Type 2</typeparam>
+    /// <typeparam name="T3">Message Type 3</typeparam>
+    /// <typeparam name="T4">Message Type 3</typeparam>
+    /// <typeparam name="T5">Message Type 3</typeparam>
+    public interface IBusinessAsync<in T1, in T2, in T3, in T4, in T5> : IBusinessAsync
+    {
+        /// <summary>
+        /// Process T1 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T2 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T3 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T4 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken);
+        /// <summary>
+        /// Process T5 message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken);
+    }
 }

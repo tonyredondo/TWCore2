@@ -171,6 +171,16 @@
                 });            
             }
 
+            var cleanResults = function () {
+                $("#textContent").hide();
+                $("#descriptionHeader").text("");
+                $("#descriptionHeader").hide();
+                var ktl = $("#descriptionInner").data("kendoTreeList");
+                if (ktl)
+                    ktl.destroy();
+                $("#descriptionInner").empty();
+            }
+
             var compileAndRun = function () {
                 popupNotification.show(" Compiling and running source code...", "info");
                 $.ajax({
@@ -194,13 +204,8 @@
                                 withCredentials: true
                             },
                             success: function (data) {
+                                cleanResults();
                                 popupNotification.show(" Results loaded.", "info");
-                                $("#textContent").hide();
-                                var ktl = $("#descriptionInner").data("kendoTreeList");
-                                if (ktl)
-                                    ktl.destroy();
-                                $("#descriptionInner").empty();
-
                                 if (!data) return;
                                 if (data.exceptionType) {
                                     kendo.alert(data.message);
@@ -360,9 +365,24 @@
                 if (entries) {
                     for (var i = 0; i < entries.length > 0; i++) {
                         var entry = entries[i];
-                        entry.isDirectory = entry.type == "Directory";
-                        entry.spriteCssClass = entry.isDirectory ? "folder" : entry.isBinary ? "file" : "text";
-                        entry.hasChildren = entry.isDirectory || entry.type == "Service";
+                        entry.isDirectory = false;
+                        entry.spriteCssClass = "text";
+                        entry.hasChildren = false;
+                        if (entry.type == "Directory") {
+                            entry.isDirectory = true;
+                            entry.spriteCssClass = "folder";
+                            entry.hasChildren = true;
+                        }
+                        else if (entry.type == "Service") {
+                            entry.spriteCssClass = "service";
+                            entry.hasChildren = true;
+                        }
+                        else if (entry.type == "Status") {
+                            entry.spriteCssClass = "status";
+                        }
+                        else if (entry.isBinary) {
+                            entry.spriteCssClass = "file";
+                        }
                     }
                 }
             }
@@ -408,6 +428,16 @@
                     selectedNode = dataItem.id;
                     if (dataItem.isDirectory) return;
                     if (dataItem.type == "Service") return;
+                    if (dataItem.type == "Status") {
+                        cleanResults();
+                        $("#descriptionHeader").text("Current Status");
+                        $("#descriptionHeader").show();
+                        $("#descriptionInner").append($("<iframe id='descriptionIframe' style='width:100%; height:100%;border:0px;'></iframe>"));
+                        var statusUrl = location.protocol + "//" + location.hostname + ":" + dataItem.path + "/";
+                        console.log(statusUrl);
+                        document.getElementById('descriptionIframe').src = statusUrl;
+                        return;
+                    }
                     currentFilePath = dataItem.path;
                     $.ajax({
                         url: apiUrl + "files/load.json?path=" + dataItem.path,

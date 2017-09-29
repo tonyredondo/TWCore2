@@ -60,9 +60,9 @@ namespace TWCore.Object.Api.Controllers
                 if (string.IsNullOrWhiteSpace(virtualPath))
                     return new ObjectResult(GetRootEntryCollection());
 
+                var services = GetLocalServices(true);
                 if (virtualPath.StartsWith("SRV:", StringComparison.OrdinalIgnoreCase))
                 {
-                    var services = GetLocalServices(true);
                     if (services.TryGetValue(virtualPath, out var entry))
                         return new ObjectResult(new PathEntryCollection
                         {
@@ -80,9 +80,7 @@ namespace TWCore.Object.Api.Controllers
                         Error = "Directory doesn't exist."
                     });
 
-                
-
-                if (GetRootEntryCollection().Entries.All(rp =>
+                if (GetRootEntryCollection().Entries.Concat(services.Values.SelectMany(v => v.Entries)).All(rp =>
                     !path.StartsWith(rp.Path, StringComparison.OrdinalIgnoreCase)))
                     return new ObjectResult(new PathEntryCollection
                     {
@@ -388,6 +386,8 @@ namespace TWCore.Object.Api.Controllers
                 var logFilesServices = DiscoveryService.GetLocalRegisteredServices("LOG.FILE");
                 var logHttpServices = DiscoveryService.GetLocalRegisteredServices("LOG.HTTP");
                 var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
+                var statusHttpServices = DiscoveryService.GetLocalRegisteredServices("STATUS.HTTP");
+                var statusFilesServices = DiscoveryService.GetLocalRegisteredServices("STATUS.FILE");
                 var servicesPathEntries = new Dictionary<string, PathEntry>();
     
                 foreach (var srv in logFilesServices)
@@ -438,21 +438,40 @@ namespace TWCore.Object.Api.Controllers
                             Type = PathEntryType.Directory
                         });
                 }
+
+                foreach(var srv in statusHttpServices)
+                {
+                    var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
+                    if (!wChildren) continue;
+                    var data = srv.Data.GetValue() as Dictionary<string, object>;
+                    if (data == null) continue;
+                    if (!data.TryGetValue("Port", out var port)) continue;
+                    var strPort = port.ToString();
+                    if (srvPe.Entries.All(c => c.Path != strPort))
+                        srvPe.Entries.Add(new PathEntry
+                        {
+                            Name = "CURRENT STATUS",
+                            Path = strPort,
+                            Type = PathEntryType.Status
+                        });
+                }
+
                 return (servicesPathEntries, TimeSpan.FromSeconds(10));
             });
             
         }
         private static PathEntry EnsureServiceEntry(Dictionary<string, PathEntry> servicesPathEntries, DiscoveryService.ReceivedService srv)
         {
-            if (servicesPathEntries.TryGetValue(srv.ApplicationName, out var srvPe)) return srvPe;
+            var path = "SRV:" + srv.ApplicationName;
+            if (servicesPathEntries.TryGetValue(path, out var srvPe)) return srvPe;
             srvPe = new PathEntry
             {
                 Name = srv.ApplicationName,
-                Path = "SRV:" + srv.ApplicationName,
+                Path = path,
                 Type = PathEntryType.Service,
                 Entries = new List<PathEntry>()
             };
-            servicesPathEntries.Add(srvPe.Path, srvPe);
+            servicesPathEntries.Add(path, srvPe);
             return srvPe;
         }
 
@@ -467,6 +486,7 @@ namespace TWCore.Object.Api.Controllers
             Directory,
             File,
             Url,
+            Status,
             Service
         }
         [DataContract]
@@ -480,7 +500,7 @@ namespace TWCore.Object.Api.Controllers
             public PathEntryType Type { get; set; }
             [XmlAttribute, DataMember]
             public bool IsBinary { get; set; }
-            [XmlArray, DataMember]
+            [XmlIgnore]
             public List<PathEntry> Entries { get; set; }
         }
         [DataContract]

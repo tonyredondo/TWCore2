@@ -135,7 +135,12 @@
 .text {
     background-image: url("../images/MarkupTag_16x.png");
 }
-
+.service {
+    background-image: url("../images/Service_16x.png");
+}
+.status {
+    background-image: url("../images/Status_16x.png");
+}
 .description-name {
     width: 16px;
     height: 16px;

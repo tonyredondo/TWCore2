@@ -168,6 +168,7 @@ namespace TWCore.Injector
         public string[] GetNames(Type type)
         {
             var typeInfo = type.GetTypeInfo();
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             if (typeInfo.IsInterface)
                 return Settings.GetInterfaceDefinition(type.AssemblyQualifiedName)?.ClassDefinitions?.Select(c => c.Name).ToArray() ?? EmptyStringArray;
             if (typeInfo.IsAbstract)
@@ -243,6 +244,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(Type noninstantiableType, Type instantiableType, bool singleton, string name, params object[] args)
         {
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
             if (nonTypeInfo.IsInterface)
@@ -339,6 +341,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetTypeDefault(Type noninstantiableType, string name)
         {
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             var nonTypeInfo = noninstantiableType.GetTypeInfo();
             NonInstantiable def = null;
             if (nonTypeInfo.IsInterface)
@@ -386,6 +389,7 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateInterfaceInstance(string type, string name)
         {
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetInterfaceInstanceDefinition(type, name);
             if (instanceDefinition == null)
@@ -394,13 +398,14 @@ namespace TWCore.Injector
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
                 throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateAbstractInstance(string type, string name)
         {
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetAbstractInstanceDefinition(type, name);
             if (instanceDefinition == null)
@@ -409,17 +414,18 @@ namespace TWCore.Injector
                     throw new NotImplementedException($"The instace definition for the type: {type} can't be found.");
                 throw new NotImplementedException($"The instace definition '{name}' for the type: {type} can't be found.");
             }
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateClassInstance(string type, string name)
         {
+            if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
             var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault(i => i.Name == name);
             if (instanceDefinition == null) return null;
-            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator.SingletonValue != null)
+            if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
                 return activator.SingletonValue;
             return CreateInstance(instanceDefinition);
         }

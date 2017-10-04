@@ -17,6 +17,7 @@ limitations under the License.
 using DasMulli.Win32.ServiceUtils;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TWCore.Settings;
@@ -61,19 +62,32 @@ namespace TWCore.Services
                 // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
                 var remainingArgs = Environment.GetCommandLineArgs()
                     .Where(arg => arg != "/service-install")
-                    .Select(EscapeCommandLineArgument)
-                    .Append("/service-run");
+                    .Select(EscapeCommandLineArgument);
 
                 var host = Process.GetCurrentProcess().MainModule.FileName;
-                if (!host.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+                string directory;
+                if (!host.EndsWith("dotnet", StringComparison.OrdinalIgnoreCase))
                 {
                     // For self-contained apps, skip the dll path
                     remainingArgs = remainingArgs.Skip(1);
+                    directory = Path.GetDirectoryName(host);
                 }
+                else
+                {
+                    directory = Path.GetDirectoryName(remainingArgs.First().Replace("\"", string.Empty).Trim());
+                }
+                
                 var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
-
+                
                 _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationDisplayName;
                 _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
+
+                var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
+                
+                Core.Log.Warning(serviceName);
+                Core.Log.Warning(_settings.Description);
+                Core.Log.Warning(directory);
+                Core.Log.Warning(fullServiceCommand);
                 
                 Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
             }
@@ -99,6 +113,7 @@ namespace TWCore.Services
         {
             // http://stackoverflow.com/a/6040946/784387
             arg = Regex.Replace(arg, @"(\\*)" + "\"", @"$1$1\" + "\"");
+            //arg = Regex.Replace(arg, @"(\\+)$", @"$1$1");
             arg = "\"" + Regex.Replace(arg, @"(\\+)$", @"$1$1") + "\"";
             return arg;
         }

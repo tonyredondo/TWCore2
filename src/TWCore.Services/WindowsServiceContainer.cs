@@ -226,7 +226,7 @@ namespace TWCore.Services
 
 
         #region Nested Types
-        [SettingsContainer("Core.Services")]
+        [SettingsContainer("Core.Services.Windows")]
         private class WindowsServiceSettings : SettingsBase
         {
             public string DisplayName { get; set; }

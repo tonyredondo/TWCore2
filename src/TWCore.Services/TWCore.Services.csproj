@@ -28,6 +28,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="SystemdServicePattern.service" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="SystemdServicePattern.service" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\TWCore\TWCore.csproj" />
   </ItemGroup>
 

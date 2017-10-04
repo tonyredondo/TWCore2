@@ -176,6 +176,10 @@
       <Project>{61ab6b30-242b-41fb-9e7e-87f3f8093a23}</Project>
       <Name>TWCore.Serialization.WSerializer</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Services\TWCore.Services.csproj">
+      <Project>{d801a072-159c-48d8-8180-9120f2f343ef}</Project>
+      <Name>TWCore.Services</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj">
       <Project>{78b31e9b-eed7-41e4-896c-cbc53e3f53d5}</Project>
       <Name>TWCore.Triggers</Name>

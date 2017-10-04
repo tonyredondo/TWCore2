@@ -38,7 +38,7 @@
     <ProjectReference Include="..\..\src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
-    <ProjectReference Include="..\..\src\TWCore.Services.Windows\TWCore.Services.Windows.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Services\TWCore.Services.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Web\TWCore.Web.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />

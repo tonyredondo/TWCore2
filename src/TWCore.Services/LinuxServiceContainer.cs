@@ -78,12 +78,12 @@ namespace TWCore.Services
                 }
                 
                 var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
-                
                 _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationDisplayName;
                 _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
-
                 var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
-                
+                var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
+
+                Core.Log.Warning(res);
                 Core.Log.Warning(serviceName);
                 Core.Log.Warning(_settings.Description);
                 Core.Log.Warning(directory);

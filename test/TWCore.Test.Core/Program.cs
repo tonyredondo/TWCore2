@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Diagnostics.Status.Transports;
+using TWCore.Injector;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Services;
@@ -49,6 +51,17 @@ namespace TWCore.Test.Core
             protected override async Task OnActionAsync(CancellationToken token)
             {
                 TWCore.Core.Log.InfoBasic("STARTING TEST SERVICE");
+                //**
+                TWCore.Core.Injector.Settings.Interfaces.Add(new NonInstantiable
+                {
+                    Type = "TWCore.ICoreStart, TWCore",
+                    ClassDefinitions = new NameCollection<Instantiable>
+                    {
+                        new Instantiable { Name = "C1", Type = "TWCore.CoreStart, TWCore", Singleton = true }
+                    }
+                });
+                var value = TWCore.Core.Injector.New<ICoreStart>("C1");
+                //**
                 await Task.Delay(10000, token);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }

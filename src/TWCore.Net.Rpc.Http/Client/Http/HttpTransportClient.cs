@@ -136,7 +136,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() { return Task.CompletedTask; }
+        public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client

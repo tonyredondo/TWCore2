@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+using TWCore.Messaging.Client;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
@@ -35,9 +36,12 @@ namespace TWCore.Net.RPC.Client.Transports
     /// </summary>
     public class MessagingTransportClient : ITransportClient
     {
+        private readonly IMQueueClient _queueClient;
         private readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
         private ServiceDescriptorCollection _descriptors;
-
+        private readonly Func<Task<ServiceDescriptorCollection>> _getDescriptionAsync;
+        private readonly Func<RPCRequestMessage, Task<RPCResponseMessage>> _invokeMethodAsync;
+        
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -50,7 +54,16 @@ namespace TWCore.Net.RPC.Client.Transports
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
         [StatusProperty]
-        public ISerializer Serializer { get; set; }
+        public ISerializer Serializer
+        {
+            get => _queueClient?.SenderSerializer;
+            set
+            {
+                if (_queueClient == null) return;
+                _queueClient.SenderSerializer = value;
+                _queueClient.ReceiverSerializer = value;
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Services descriptors to use on RPC Request messages
@@ -83,6 +96,28 @@ namespace TWCore.Net.RPC.Client.Transports
         public event EventHandler<EventDataEventArgs> OnEventReceived;
         #endregion
 
+        #region .ctor
+        /// <summary>
+        /// Messaging RPC Transport client
+        /// </summary>
+        /// <param name="queueClient">QueueClient instance</param>
+        /// <param name="serializer">Serializer instance</param>
+        public MessagingTransportClient(IMQueueClient queueClient, ISerializer serializer)
+        {
+            _getDescriptionAsync = FuncDelegate.CreateAsync(GetDescriptors);
+            _invokeMethodAsync = FuncDelegate.CreateAsync<RPCRequestMessage, RPCResponseMessage>(InvokeMethod);
+            _queueClient = queueClient;
+            Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
+            Core.Status.Attach(collection =>
+            {
+                collection.Add("Bytes Sent", Counters.BytesSent, true);
+                collection.Add("Bytes Received", Counters.BytesReceived, true);
+                Core.Status.AttachChild(Serializer, this);
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
+        }
+        #endregion
+        
         #region Public Methods
         /// <inheritdoc />
         /// <summary>
@@ -90,7 +125,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() { return Task.CompletedTask; }
+        public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
@@ -104,10 +139,8 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
-        {
-            throw new NotImplementedException();
-        }
+        public Task<ServiceDescriptorCollection> GetDescriptorsAsync()
+            => _getDescriptionAsync();
         /// <inheritdoc />
         /// <summary>
         /// Gets the descriptor for the RPC service
@@ -115,9 +148,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceDescriptorCollection GetDescriptors()
-        {
-            throw new NotImplementedException();
-        }
+            => _queueClient.SendAndReceive<ServiceDescriptorCollection>("GetDescription");
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -125,10 +156,8 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <param name="messageRQ">RPC request message to send to the server</param>
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
-        {
-            throw new NotImplementedException();
-        }
+        public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
+            => _invokeMethodAsync(messageRQ);
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -137,16 +166,14 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-            => throw new NotImplementedException();
+            => _queueClient.SendAndReceive<RPCResponseMessage>(messageRQ);
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
-        {
-            throw new NotImplementedException();
-        }
+            => _queueClient.Dispose();
         #endregion
     }
 }

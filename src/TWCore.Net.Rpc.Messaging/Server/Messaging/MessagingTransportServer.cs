@@ -78,10 +78,21 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <summary>
         /// Messaging RPC Transport server
         /// </summary>
+        /// <param name="queueServer">QueueServer instance</param>
+        /// <param name="serializer">Serializer instance</param>
         public MessagingTransportServer(IMQueueServer queueServer, ISerializer serializer = null)
         {
             _queueServer = queueServer;
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
+            Core.Status.Attach(collection =>
+            {
+                collection.Add(nameof(Name), Name);
+                collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
+                collection.Add("Bytes Sent", Counters.BytesSent, true);
+                collection.Add("Bytes Received", Counters.BytesReceived, true);
+                Core.Status.AttachChild(Serializer, this);
+                Core.Status.AttachChild(_queueServer, this);
+            }, this);
         }
         #endregion
         

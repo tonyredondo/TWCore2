@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 
@@ -227,7 +228,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(WorkerMethod);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly StatusCounter DefaultCounter = new StatusCounter("Watch Counters");
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<string, StatusCounter> Counters = new ConcurrentDictionary<string, StatusCounter>();
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(150);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
             
@@ -254,7 +255,6 @@ namespace TWCore
                         {
                             Core.Log.Write(item.Level, indent + string.Format("  [{0:00}-TAP, Time = {1:0.0000}ms] {2}", item.Id, cTime, item.Message));
                         }
-                        //Counters.Register(item.Message, cTime);
                         break;
                     case 2:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
@@ -264,7 +264,6 @@ namespace TWCore
                             Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));
                         else
                             Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Total Time = {1:0.0000}ms] {2}", item.Id, gTime, item.Message));
-                        //Counters.Register(item.Message, cTime);
                         break;
                 }
             }

@@ -23,7 +23,9 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
 using TWCore.Net.RPC.Descriptors;
+using TWCore.Net.RPC.Server.Transports;
 using TWCore.Serialization;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -110,8 +112,6 @@ namespace TWCore.Net.RPC.Client.Transports
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
             Core.Status.Attach(collection =>
             {
-                collection.Add("Bytes Sent", Counters.BytesSent, true);
-                collection.Add("Bytes Received", Counters.BytesReceived, true);
                 Core.Status.AttachChild(Serializer, this);
                 Core.Status.AttachChild(_queueClient, this);
             }, this);

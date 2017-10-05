@@ -24,7 +24,7 @@ namespace TWCore.Net.RPC.Server.Transports
 {
     /// <inheritdoc />
     /// <summary>
-    /// Http Transport client factory
+    /// Http Transport server factory
     /// </summary>
     public class HttpTransportServerFactory : TransportServerFactoryBase
     {

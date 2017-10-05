@@ -98,6 +98,8 @@ namespace TWCore.Services
         /// <summary>
         /// Gets the queue server object
         /// </summary>
+        /// <param name="services">Current services instance</param>
+        /// <param name="responseServer">true if the server must be a response server</param>
         /// <returns>IMQueueServer object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IMQueueServer GetQueueServer(this CoreServices services, bool responseServer = false)
@@ -107,10 +109,30 @@ namespace TWCore.Services
                 throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
             return _queueServer.GetServer(responseServer);
         }
+        /// <summary>
+        /// Gets the queue server object
+        /// </summary>
+        /// <param name="services">Current services instance</param>
+        /// <param name="queuePairName">Queue config pair name</param>
+        /// <param name="responseServer">true if the server must be a response server</param>
+        /// <returns>IMQueueServer object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueServer GetQueueServer(this CoreServices services, string queuePairName, bool responseServer = false)
+        {
+            Init();
+            if (_queues.Items?.Contains(queuePairName) != true)
+                throw new KeyNotFoundException(
+                    $"The Queue server name: {queuePairName} couldn't be found in the queue configuration file.");
+            
+            var serverPair = _queues.Items[queuePairName];
+            return serverPair.GetServer(responseServer);
+        }
 
         /// <summary>
         /// Gets the queue raw server object
         /// </summary>
+        /// <param name="services">Current services instance</param>
+        /// <param name="responseServer">true if the server must be a response server</param>
         /// <returns>IMQueueRawServer object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static IMQueueRawServer GetQueueRawServer(this CoreServices services, bool responseServer = false)
@@ -120,7 +142,25 @@ namespace TWCore.Services
                 throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
             return _queueServer.GetRawServer(responseServer);
         }
-
+        /// <summary>
+        /// Gets the queue raw server object
+        /// </summary>
+        /// <param name="services">Current services instance</param>
+        /// <param name="queuePairName">Queue config pair name</param>
+        /// <param name="responseServer">true if the server must be a response server</param>
+        /// <returns>IMQueueServer object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IMQueueRawServer GetQueueRawServer(this CoreServices services, string queuePairName, bool responseServer = false)
+        {
+            Init();
+            if (_queues.Items?.Contains(queuePairName) != true)
+                throw new KeyNotFoundException(
+                    $"The Queue server name: {queuePairName} couldn't be found in the queue configuration file.");
+            
+            var serverPair = _queues.Items[queuePairName];
+            return serverPair.GetRawServer(responseServer);
+        }
+        
         /// <summary>
         /// Gets the Default Queues Configuration
         /// </summary>

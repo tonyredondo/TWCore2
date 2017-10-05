@@ -117,8 +117,11 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
+                    {
+                        if (_senders[i]?.Factory == null) continue;
                         collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Factory.HostName);
-                if (_receiver != null)
+                    }
+                if (_receiver?.Factory != null)
                     collection.Add(nameof(_receiver) + " Path", _receiver.Factory.HostName);
             });
         }

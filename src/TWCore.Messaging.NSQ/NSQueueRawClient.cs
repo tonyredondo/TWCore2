@@ -152,7 +152,7 @@ namespace TWCore.Messaging.NSQ
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
                         collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Item1.Route);
-                if (_receiver != null)
+                if (_clientQueues?.RecvQueue != null)
                     collection.Add(nameof(_receiver) + " Path", _clientQueues.RecvQueue.Route);
             });
         }

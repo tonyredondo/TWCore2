@@ -62,7 +62,11 @@ namespace TWCore.Messaging.RawServer
         /// Listener Metadata
         /// </summary>
         public KeyValueCollection Metadata { get; } = new KeyValueCollection();
-
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; }
+	    
 		/// <inheritdoc />
 		/// <summary>
 		/// Event args for request sent event
@@ -71,13 +75,15 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="sender">Sender queue</param>
 		/// <param name="request">Request message</param>
 		/// <param name="correlationId">Correlation Id</param>
+		/// <param name="messageLength">Message length</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RawRequestReceivedEventArgs(string name, MQConnection sender, SubArray<byte> request, Guid correlationId)
+		public RawRequestReceivedEventArgs(string name, MQConnection sender, SubArray<byte> request, Guid correlationId, int messageLength)
         {
             Name = name;
             Request = request;
             CorrelationId = correlationId;
             Sender = sender;
+	        MessageLength = messageLength;
         }
     }
 }

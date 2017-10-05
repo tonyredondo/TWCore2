@@ -208,7 +208,7 @@ namespace TWCore.Messaging.RabbitMQ
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
                         var evArgs =
-                            new RequestReceivedEventArgs(_name, _receiver, request)
+                            new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length)
                             {
                                 Metadata =
                                 {
@@ -226,7 +226,7 @@ namespace TWCore.Messaging.RabbitMQ
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
                         var evArgs =
-                            new ResponseReceivedEventArgs(_name, response)
+                            new ResponseReceivedEventArgs(_name, response, message.Body.Length)
                             {
                                 Metadata =
                                 {

@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Messaging.Server;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 // ReSharper disable RedundantAssignment
@@ -33,6 +34,8 @@ namespace TWCore.Net.RPC.Server.Transports
     /// </summary>
     public class MessagingTransportServer : ITransportServer
     {
+        private readonly IMQueueServer _queueServer;
+        
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -71,6 +74,17 @@ namespace TWCore.Net.RPC.Server.Transports
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
         #endregion
 
+        #region .ctor
+        /// <summary>
+        /// Messaging RPC Transport server
+        /// </summary>
+        public MessagingTransportServer(IMQueueServer queueServer, ISerializer serializer = null)
+        {
+            _queueServer = queueServer;
+            Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
+        }
+        #endregion
+        
         #region Public Methods
         /// <inheritdoc />
         /// <summary>
@@ -81,10 +95,13 @@ namespace TWCore.Net.RPC.Server.Transports
         public Task StartListenerAsync()
         {
             Core.Log.LibVerbose("Starting Transport Listener");
-
+            _queueServer.StartListeners();
+            _queueServer.RequestReceived += QueueServerOnRequestReceived;
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;
         }
+
+
         /// <inheritdoc />
         /// <summary>
         /// Stops the server listener
@@ -94,7 +111,8 @@ namespace TWCore.Net.RPC.Server.Transports
         public Task StopListenerAsync()
         {
             Core.Log.LibVerbose("Stopping Transport Listener");
-
+            _queueServer.StopListeners();
+            _queueServer.RequestReceived -= QueueServerOnRequestReceived;
             Core.Log.LibVerbose("Transport Listener Stopped");
             return Task.CompletedTask;
         }
@@ -112,6 +130,37 @@ namespace TWCore.Net.RPC.Server.Transports
         public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
         {
             Core.Log.Warning("Events is not supported on MessagingTransportServer");
+        }
+        #endregion
+        
+        #region Private Methods
+        private void QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
+        {
+            var body = requestReceivedEventArgs.Request.Body;
+            Counters.IncrementBytesReceived(requestReceivedEventArgs.MessageLength);
+            switch (body)
+            {
+                case string strValue:
+                    if (strValue == "GetDescription")
+                    {
+                        var sDesc = new ServerDescriptorsEventArgs();
+                        if (OnGetDescriptorsRequest != null)
+                        {
+                            OnGetDescriptorsRequest(requestReceivedEventArgs.Request.CorrelationId, sDesc);
+                            requestReceivedEventArgs.Response.Body = sDesc.Descriptors;
+                        }
+                    }
+                    break;
+                case RPCRequestMessage rqMessage:
+                    var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage);
+                    if (OnMethodCall != null)
+                    {
+                        OnMethodCall(this, mEvent);
+                        requestReceivedEventArgs.Response.Body = mEvent.Response;
+                        return;
+                    }
+                    break;
+            }
         }
         #endregion
     }

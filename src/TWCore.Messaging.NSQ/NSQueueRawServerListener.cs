@@ -219,18 +219,24 @@ namespace TWCore.Messaging.NSQ
 				if (ResponseServer)
 				{
 				    var evArgs =
-				        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId)
+				        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Count)
 				        {
-				            Metadata = { ["ReplyTo"] = message.Name }
+				            Metadata =
+				            {
+					            ["ReplyTo"] = message.Name
+				            }
 				        };
 				    OnResponseReceived(evArgs);
 				}
 				else
 				{
 				    var evArgs =
-				        new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId)
+				        new RawRequestReceivedEventArgs(_name, Connection, message.Body, message.CorrelationId, message.Body.Count)
 				        {
-				            Metadata = { ["ReplyTo"] = message.Name }
+				            Metadata =
+				            {
+					            ["ReplyTo"] = message.Name
+				            }
 				        };
 				    OnRequestReceived(evArgs);
 				}

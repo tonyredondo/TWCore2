@@ -195,7 +195,7 @@ namespace TWCore.Messaging.RabbitMQ
                 if (ResponseServer)
                 {
                     var evArgs =
-                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId)
+                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Count)
                         {
                             Metadata =
                             {
@@ -217,7 +217,7 @@ namespace TWCore.Messaging.RabbitMQ
                 else
                 {
                     var evArgs =
-                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId)
+                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId, message.Body.Count)
                         {
                             Metadata =
                             {

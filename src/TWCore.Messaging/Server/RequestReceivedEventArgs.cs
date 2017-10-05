@@ -67,6 +67,10 @@ namespace TWCore.Messaging.Server
         /// Listener Metadata
         /// </summary>
         public KeyValueCollection Metadata { get; } = new KeyValueCollection();
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; }
 
 
 		/// <inheritdoc />
@@ -76,12 +80,14 @@ namespace TWCore.Messaging.Server
 		/// <param name="name">Client name</param>
 		/// <param name="sender">Sender queue</param>
 		/// <param name="request">Request message</param>
+		/// <param name="messageLength">Message length</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request)
+		public RequestReceivedEventArgs(string name, MQConnection sender, RequestMessage request, int messageLength)
         {
             Name = name;
             Request = request;
             Sender = sender;
+	        MessageLength = messageLength;
             SendResponse = request?.Header?.ResponseExpected ?? true;
             ProcessResponseTimeoutInSeconds = request?.Header?.ResponseTimeoutInSeconds ?? -1;
             Response = new ResponseMessage(request, null);

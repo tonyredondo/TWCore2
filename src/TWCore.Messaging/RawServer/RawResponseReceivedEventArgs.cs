@@ -45,7 +45,11 @@ namespace TWCore.Messaging.RawServer
         /// Listener Metadata
         /// </summary>
         public KeyValueCollection Metadata { get; } = new KeyValueCollection();
-
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; }
+	    
 		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event
@@ -53,12 +57,14 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="name">Client name</param>
 		/// <param name="message">Response message received</param>
 		/// <param name="correlationId">Correlation Id</param>
+		/// <param name="messageLength">Message length</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public RawResponseReceivedEventArgs(string name, SubArray<byte> message, Guid correlationId)
+		public RawResponseReceivedEventArgs(string name, SubArray<byte> message, Guid correlationId, int messageLength)
         {
             Name = name;
             Message = message;
             CorrelationId = correlationId;
+	        MessageLength = messageLength;
         }
     }
 }

@@ -41,18 +41,24 @@ namespace TWCore.Messaging.Server
         /// Listener Metadata
         /// </summary>
         public KeyValueCollection Metadata { get; } = new KeyValueCollection();
-
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; }
+	    
 		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event
 		/// </summary>
 		/// <param name="name">Client name</param>
 		/// <param name="message">Response message received</param>
+		/// <param name="messageLength">Message length</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public ResponseReceivedEventArgs(string name, ResponseMessage message)
+		public ResponseReceivedEventArgs(string name, ResponseMessage message, int messageLength)
         {
             Name = name;
             Message = message;
+	        MessageLength = messageLength;
         }
     }
 }

@@ -52,10 +52,10 @@ namespace TWCore.Services
         {
             if (Service == null) return;
             _settings = Core.GetSettings<LinuxServiceSettings>();
-            RegisterParametersHandler("service-install", "Install Systemd Service", InstallService);
-            RegisterParametersHandler("service-uninstall", "Uninstall Systemd Service", UninstallService);
+            RegisterParametersHandler("service-create", "Create Systemd service file", CreateService);
+            RegisterParametersHandler("service-remove", "Remove Systemd service file", RemoveService);
         }
-        private void InstallService(ParameterHandlerInfo parameterHandlerInfo)
+        private void CreateService(ParameterHandlerInfo parameterHandlerInfo)
         {
             try
             {
@@ -112,16 +112,16 @@ namespace TWCore.Services
                 res = res.Replace("{{WORKINGDIRECTORY}}", directory);
                 res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
                 using (var fStream = File.Open(servicePath, FileMode.Create, FileAccess.Write))
-                    using (var sWriter = new StreamWriter(fStream))
-                        sWriter.WriteLine(res);
+                using (var sWriter = new StreamWriter(fStream))
+                    sWriter.WriteLine(res);
 
                 if (withInstall)
                 {
-                    Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
+                    Core.Log.Warning($"The file {serviceName}, was copied to /etc/systemd/system/ path.");
                 }
                 else
                 {
-                    Core.Log.Warning($"The file {serviceName}, was copied to the current path, but not installed.");
+                    Core.Log.Warning($"The file {serviceName}, was copied to the current path.");
                 }
             }
             catch (Exception ex)
@@ -129,11 +129,47 @@ namespace TWCore.Services
                 Core.Log.Error(ex.Message);
             }
         }
-        private void UninstallService(ParameterHandlerInfo parameterHandlerInfo)
+        private void RemoveService(ParameterHandlerInfo parameterHandlerInfo)
         {
             try
             {
-                Core.Log.Warning($"The Service \"{ServiceName}\" was uninstalled successfully.");
+                // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
+                var remainingArgs = Environment.GetCommandLineArgs()
+                    .Where(arg => arg != "/service-uninstall")
+                    .Select(EscapeCommandLineArgument)
+                    .ToArray();
+
+                var host = Process.GetCurrentProcess().MainModule.FileName;
+                if (!host.EndsWith("dotnet", StringComparison.OrdinalIgnoreCase))
+                {
+                    // For self-contained apps, skip the dll path
+                    remainingArgs = remainingArgs.Skip(1).ToArray();
+                }
+
+                _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationName;
+
+                var withInstall = true;
+                var servicePath = "/etc/systemd/system/";
+                if (!Directory.Exists(servicePath))
+                {
+                    servicePath = "./";
+                    withInstall = false;
+                }
+
+                var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
+                servicePath = Path.Combine(servicePath, serviceName);
+
+                if (File.Exists(servicePath))
+                {
+                    File.Delete(servicePath);
+
+                    if (withInstall)
+                        Core.Log.Warning($"The file {serviceName}, was deleted from /etc/systemd/system/ path.");
+                    else
+                        Core.Log.Warning($"The file {serviceName}, was deleted from the current path.");
+                }
+                else
+                    Core.Log.InfoDetail("Nothing to do.");
             }
             catch (Exception ex)
             {

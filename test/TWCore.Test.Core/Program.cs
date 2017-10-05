@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -61,6 +62,13 @@ namespace TWCore.Test.Core
                     }
                 });
                 var value = TWCore.Core.Injector.New<ICoreStart>("C1");
+
+                var cd = new ConcurrentDictionary<string, string>();
+                cd.GetOrAdd(string.Empty, k =>
+                {
+                    TWCore.Core.Log.Warning("HOLA MUNDO!!!");
+                    return string.Empty;
+                });
                 //**
                 await Task.Delay(10000, token);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");

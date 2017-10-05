@@ -227,8 +227,13 @@ namespace TWCore
                         typeName = actualType.Name;
                         break;
                     }
-                    if (!method.Name.Contains("<") && !method.DeclaringType.Name.Contains("<") && !method.DeclaringType.AssemblyQualifiedName.Contains("System.Private") && !method.DeclaringType.AssemblyQualifiedName.Contains("mscorlib"))
+                    if (!method.Name.Contains("<") && 
+                        !method.DeclaringType.Name.Contains("<") && 
+                        !method.DeclaringType.AssemblyQualifiedName.Contains("System.Private") && 
+                        !method.DeclaringType.AssemblyQualifiedName.Contains("mscorlib"))
                     {
+                        if (method.DeclaringType.Name.Contains("ConcurrentDictionary"))
+                            continue;
                         assemblyName = method.DeclaringType.Assembly.FullName;
                         typeName = method.DeclaringType.Name;
                         break;

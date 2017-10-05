@@ -17,8 +17,10 @@ limitations under the License.
 #pragma warning disable 0067
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
@@ -27,48 +29,124 @@ using TWCore.Serialization;
 
 namespace TWCore.Net.RPC.Client.Transports
 {
+    /// <inheritdoc />
+    /// <summary>
+    /// Messaging RPC Transport client
+    /// </summary>
     public class MessagingTransportClient : ITransportClient
     {
-        public string Name => throw new NotImplementedException();
-        public ISerializer Serializer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public ServiceDescriptorCollection Descriptors { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public RPCTransportCounters Counters => throw new NotImplementedException();
+        private readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
+        private ServiceDescriptorCollection _descriptors;
 
+        #region Properties
+        /// <inheritdoc />
+        /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        [StatusProperty]
+        public string Name => "MessagingTransport";
+        /// <inheritdoc />
+        /// <summary>
+        /// Serializer to encode and decode the incoming and outgoing data
+        /// </summary>
+        [StatusProperty]
+        public ISerializer Serializer { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Services descriptors to use on RPC Request messages
+        /// </summary>
+        public ServiceDescriptorCollection Descriptors
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _descriptors;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set
+            {
+                _descriptors = value;
+                if (_descriptors == null) return;
+                _methods.Clear();
+                foreach (var descriptor in _descriptors.Items.Values)
+                {
+                    foreach (var mtd in descriptor.Methods)
+                        _methods.Add(mtd.Key, descriptor);
+                }
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
+        #endregion
+
+        #region Events
         public event EventHandler<EventDataEventArgs> OnEventReceived;
+        #endregion
 
-        public void Dispose()
+        #region Public Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize the Transport client
+        /// </summary>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task InitAsync() { return Task.CompletedTask; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize the Transport client
+        /// </summary>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Init() { }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the descriptor for the RPC service
+        /// </summary>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<ServiceDescriptorCollection> GetDescriptorsAsync()
         {
             throw new NotImplementedException();
         }
-
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the descriptor for the RPC service
+        /// </summary>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceDescriptorCollection GetDescriptors()
         {
             throw new NotImplementedException();
         }
-
-        public Task<ServiceDescriptorCollection> GetDescriptorsAsync()
+        /// <inheritdoc />
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <returns>RPC response message from the server</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
         {
             throw new NotImplementedException();
         }
-
-        public void Init()
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task InitAsync()
-        {
-            throw new NotImplementedException();
-        }
-
+        /// <inheritdoc />
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <returns>RPC response message from the server</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
+            => throw new NotImplementedException();
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
         {
             throw new NotImplementedException();
         }
-
-        public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
-        {
-            throw new NotImplementedException();
-        }
+        #endregion
     }
 }

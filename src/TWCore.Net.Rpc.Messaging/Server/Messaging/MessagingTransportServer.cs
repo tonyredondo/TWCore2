@@ -27,31 +27,92 @@ using TWCore.Serialization;
 
 namespace TWCore.Net.RPC.Server.Transports
 {
+    /// <inheritdoc />
+    /// <summary>
+    /// Messaging RPC Transport server
+    /// </summary>
     public class MessagingTransportServer : ITransportServer
     {
-        public string Name => throw new NotImplementedException();
-        public bool EnableGetDescriptors { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public ISerializer Serializer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        public RPCTransportCounters Counters => throw new NotImplementedException();
+        #region Properties
+        /// <inheritdoc />
+        /// <summary>
+        /// Transport name, should be the same name for Server and Client
+        /// </summary>
+        public string Name => "MessagingTransport";
+        /// <inheritdoc />
+        /// <summary>
+        /// true if the transport server can send the services descriptors; otherwise, false
+        /// </summary>
+        public bool EnableGetDescriptors { get; set; } = true;
+        /// <inheritdoc />
+        /// <summary>
+        /// Serializer to encode and decode the incoming and outgoing data
+        /// </summary>
+        public ISerializer Serializer { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Transport Counters
+        /// </summary>
+        public RPCTransportCounters Counters { get; } = new RPCTransportCounters();
+        #endregion
 
+        #region Events
+        /// <summary>
+        /// Event that fires when a Descriptors request is received.
+        /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
+        /// <summary>
+        /// Event that fires when a Method call is received
+        /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
+        /// <summary>
+        /// Event that fires when a client connects.
+        /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
+        #endregion
 
-
-        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
-        {
-            throw new NotImplementedException();
-        }
-
+        #region Public Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Starts the server listener
+        /// </summary>
+        /// <returns>Task as result of the startup process</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task StartListenerAsync()
         {
-            throw new NotImplementedException();
-        }
+            Core.Log.LibVerbose("Starting Transport Listener");
 
+            Core.Log.LibVerbose("Transport Listener Started");
+            return Task.CompletedTask;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Stops the server listener
+        /// </summary>
+        /// <returns>Task as result of the stop process</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task StopListenerAsync()
         {
-            throw new NotImplementedException();
+            Core.Log.LibVerbose("Stopping Transport Listener");
+
+            Core.Log.LibVerbose("Transport Listener Stopped");
+            return Task.CompletedTask;
         }
+        /// <inheritdoc />
+        /// <summary>
+        /// Send a fire event trigger to a RPC client.
+        /// </summary>
+        /// <param name="eventAttribute">Event attribute</param>
+        /// <param name="clientId">Client identifier</param>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="eventName">Event name</param>
+        /// <param name="sender">Sender information</param>
+        /// <param name="e">Event args</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        {
+            Core.Log.Warning("Events is not supported on MessagingTransportServer");
+        }
+        #endregion
     }
 }

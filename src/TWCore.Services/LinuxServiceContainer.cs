@@ -95,11 +95,13 @@ namespace TWCore.Services
                     _settings.User = user;
                 }
 
+                var withInstall = true;
                 var servicePath = "/etc/systemd/system/";
                 if (!Directory.Exists(servicePath))
                 {
                     Core.Log.Error("The systemd path can't be found: {0}, copying on the same folder.", servicePath);
                     servicePath = "./";
+                    withInstall = false;
                 }
 
                 var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
@@ -109,12 +111,18 @@ namespace TWCore.Services
                 res = res.Replace("{{USER}}", _settings.User);
                 res = res.Replace("{{WORKINGDIRECTORY}}", directory);
                 res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
-
                 using (var fStream = File.Open(servicePath, FileMode.Create, FileAccess.Write))
                     using (var sWriter = new StreamWriter(fStream))
                         sWriter.WriteLine(res);
 
-                Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
+                if (withInstall)
+                {
+                    Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
+                }
+                else
+                {
+                    Core.Log.Warning($"The file {serviceName}, was copied to the current path, but not installed.");
+                }
             }
             catch (Exception ex)
             {

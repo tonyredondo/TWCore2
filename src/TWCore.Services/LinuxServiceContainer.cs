@@ -96,7 +96,7 @@ namespace TWCore.Services
                 }
 
                 var servicePath = "/etc/systemd/system/";
-                if (Directory.Exists(servicePath))
+                if (!Directory.Exists(servicePath))
                 {
                     Core.Log.Error("The systemd path can't be found: {0}, copying on the same folder.", servicePath);
                     servicePath = "./";

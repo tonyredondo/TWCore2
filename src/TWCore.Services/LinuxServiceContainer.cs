@@ -94,8 +94,16 @@ namespace TWCore.Services
                     }
                     _settings.User = user;
                 }
-                
+
+                var servicePath = "/etc/systemd/system/";
+                if (Directory.Exists(servicePath))
+                {
+                    Core.Log.Error("The systemd path can't be found: {0}", servicePath);
+                    return;
+                }
+
                 var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
+                servicePath = Path.Combine(servicePath, serviceName);
 
                 var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
                 res = res.Replace("{{DESCRIPTION}}", _settings.Description);
@@ -103,7 +111,7 @@ namespace TWCore.Services
                 res = res.Replace("{{WORKINGDIRECTORY}}", directory);
                 res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
 
-                Core.Log.Warning(serviceName);
+                Core.Log.Warning(servicePath);
                 Core.Log.Warning(res);
                 Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
             }

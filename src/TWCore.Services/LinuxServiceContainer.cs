@@ -74,26 +74,37 @@ namespace TWCore.Services
                     directory = Path.GetDirectoryName(host);
                 }
                 else
-                {
                     directory = Path.GetDirectoryName(remainingArgs.First().Replace("\"", string.Empty).Trim());
-                }
                 
                 var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
-                _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationDisplayName;
+                _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationName;
                 _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
-                var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
-                var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
 
+                if (string.IsNullOrWhiteSpace(_settings.User))
+                {
+                    string user;
+                    while (true)
+                    {
+                        Console.WriteLine("Please enter the user to run the service or press enter [{0}]:", Environment.UserName);
+                        user = Console.ReadLine();
+                        if (string.IsNullOrEmpty(user))
+                            user = Environment.UserName;
+                        if (!string.IsNullOrWhiteSpace(user))
+                            break;
+                    }
+                    _settings.User = user;
+                }
+                
+                var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
+
+                var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
                 res = res.Replace("{{DESCRIPTION}}", _settings.Description);
+                res = res.Replace("{{USER}}", _settings.User);
                 res = res.Replace("{{WORKINGDIRECTORY}}", directory);
                 res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
 
-                Core.Log.Warning(res);
                 Core.Log.Warning(serviceName);
-                Core.Log.Warning(_settings.Description);
-                Core.Log.Warning(directory);
-                Core.Log.Warning(fullServiceCommand);
-                
+                Core.Log.Warning(res);
                 Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
             }
             catch (Exception ex)

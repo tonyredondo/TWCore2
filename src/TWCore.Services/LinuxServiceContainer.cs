@@ -75,7 +75,7 @@ namespace TWCore.Services
                 }
                 else
                     directory = Path.GetDirectoryName(remainingArgs.First().Replace("\"", string.Empty).Trim());
-                
+
                 var fullServiceCommand = host + " " + string.Join(" ", remainingArgs);
                 _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationName;
                 _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
@@ -104,15 +104,16 @@ namespace TWCore.Services
 
                 var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
                 servicePath = Path.Combine(servicePath, serviceName);
-
                 var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
                 res = res.Replace("{{DESCRIPTION}}", _settings.Description);
                 res = res.Replace("{{USER}}", _settings.User);
                 res = res.Replace("{{WORKINGDIRECTORY}}", directory);
                 res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
 
-                Core.Log.Warning(servicePath);
-                Core.Log.Warning(res);
+                using (var fStream = File.Open(servicePath, FileMode.Create, FileAccess.Write))
+                    using (var sWriter = new StreamWriter(fStream))
+                        sWriter.WriteLine(res);
+
                 Core.Log.Warning($"The Service \"{ServiceName}\" was installed successfully.");
             }
             catch (Exception ex)

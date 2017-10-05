@@ -18,13 +18,57 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using TWCore.Net.RPC.Descriptors;
+using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
-    public class MessagingTransportClient
+    public class MessagingTransportClient : ITransportClient
     {
+        public string Name => throw new NotImplementedException();
+        public ISerializer Serializer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public ServiceDescriptorCollection Descriptors { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public RPCTransportCounters Counters => throw new NotImplementedException();
+
+        public event EventHandler<EventDataEventArgs> OnEventReceived;
+
+        public void Dispose()
+        {
+            throw new NotImplementedException();
+        }
+
+        public ServiceDescriptorCollection GetDescriptors()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<ServiceDescriptorCollection> GetDescriptorsAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Init()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task InitAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

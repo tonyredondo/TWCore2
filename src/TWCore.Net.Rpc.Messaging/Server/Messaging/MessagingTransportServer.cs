@@ -18,13 +18,40 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using TWCore.Net.RPC.Attributes;
+using TWCore.Serialization;
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {
-    public class MessagingTransportServer
+    public class MessagingTransportServer : ITransportServer
     {
+        public string Name => throw new NotImplementedException();
+        public bool EnableGetDescriptors { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public ISerializer Serializer { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public RPCTransportCounters Counters => throw new NotImplementedException();
+
+        public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
+        public event EventHandler<MethodEventArgs> OnMethodCall;
+        public event EventHandler<ClientConnectEventArgs> OnClientConnect;
+
+
+        public void FireEvent(RPCEventAttribute eventAttribute, Guid clientId, string serviceName, string eventName, object sender, EventArgs e)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StartListenerAsync()
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task StopListenerAsync()
+        {
+            throw new NotImplementedException();
+        }
     }
 }

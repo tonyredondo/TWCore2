@@ -1,3 +1,4 @@
+using System;
 using TWCore.Services;
 using TWCore.Serialization;
 using System.Text;
@@ -129,6 +130,7 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("PW: {0}", Encoding.UTF8.GetString(pwBytes));
             Core.Log.InfoBasic("WBytes: {0}", wBytes.Count);
             Core.Log.InfoBasic("W: {0}", Encoding.UTF8.GetString(wBytes));
+            Console.ReadLine();
         }
     }
 

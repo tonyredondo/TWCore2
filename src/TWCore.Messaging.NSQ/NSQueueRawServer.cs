@@ -59,7 +59,7 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override bool OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
+        protected override int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
             queues.Add(new MQConnection
@@ -114,7 +114,7 @@ namespace TWCore.Messaging.NSQ
                     Core.Log.Write(ex);
                 }
             }
-            return response;
+            return response ? message.Count : -1;
         }
 
         /// <inheritdoc />

@@ -47,10 +47,10 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override bool OnSend(ResponseMessage message, RequestReceivedEventArgs e)
+        protected override int OnSend(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return false;
+                return -1;
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
             if (senderOptions == null)
@@ -92,7 +92,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Core.Log.Write(ex);
                 }
             }
-            return response;
+            return response ? data.Count : -1;
         }
 
         /// <inheritdoc />

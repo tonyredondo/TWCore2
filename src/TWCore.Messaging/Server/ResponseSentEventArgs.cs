@@ -35,7 +35,11 @@ namespace TWCore.Messaging.Server
         /// Response message received
         /// </summary>
         public ResponseMessage Message { get; }
-
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; set;  }
+	    
 		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event

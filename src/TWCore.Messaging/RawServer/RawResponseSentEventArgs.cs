@@ -40,7 +40,11 @@ namespace TWCore.Messaging.RawServer
         /// Response message received
         /// </summary>
         public SubArray<byte> Message { get; set; }
-
+	    /// <summary>
+	    /// Message Length
+	    /// </summary>
+	    public int MessageLength { get; set; }
+	    
 		/// <inheritdoc />
 		/// <summary>
 		/// Event args for response received event

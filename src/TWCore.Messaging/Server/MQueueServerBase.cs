@@ -258,8 +258,10 @@ namespace TWCore.Messaging.Server
                     OnBeforeSend(e.Response, e.Request, e.Metadata);
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueServerEvents.FireBeforeSendResponse(this, rsea);
-                    if (OnSend(e.Response, e))
+                    var sentBytes = OnSend(e.Response, e);
+                    if (sentBytes > -1)
                     {
+                        rsea.MessageLength = sentBytes;
                         ResponseSent?.Invoke(this, rsea);
                         MQueueServerEvents.FireResponseSent(this, rsea);
                     }
@@ -304,9 +306,9 @@ namespace TWCore.Messaging.Server
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Request received event args</param>
-        /// <returns>true if message has been sent; otherwise, false.</returns>
+        /// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract bool OnSend(ResponseMessage message, RequestReceivedEventArgs e);
+		protected abstract int OnSend(ResponseMessage message, RequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose
 		/// </summary>

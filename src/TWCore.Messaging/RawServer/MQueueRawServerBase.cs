@@ -250,8 +250,10 @@ namespace TWCore.Messaging.RawServer
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueRawServerEvents.FireBeforeSendResponse(this, rsea);
                     response = rsea.Message;
-                    if (OnSend(response, e))
+	                var sentBytes = OnSend(response, e);
+                    if (sentBytes > -1)
                     {
+	                    rsea.MessageLength = sentBytes;
                         ResponseSent?.Invoke(this, rsea);
                         MQueueRawServerEvents.FireResponseSent(this, rsea);
                     }
@@ -295,9 +297,9 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">Request event args</param>
-		/// <returns>true if message has been sent; otherwise, false.</returns>
+		/// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract bool OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e);
+		protected abstract int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose
 		/// </summary>

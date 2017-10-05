@@ -46,7 +46,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">RawRequest received event args</param>
-        protected override bool OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
+        protected override int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
             queues.Add(new MQConnection
@@ -112,7 +112,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Core.Log.Write(ex);
                 }
             }
-            return response;
+            return response ? message.Count : -1;
         }
 
         /// <inheritdoc />

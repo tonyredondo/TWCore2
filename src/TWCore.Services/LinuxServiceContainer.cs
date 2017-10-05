@@ -62,14 +62,15 @@ namespace TWCore.Services
                 // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
                 var remainingArgs = Environment.GetCommandLineArgs()
                     .Where(arg => arg != "/service-install")
-                    .Select(EscapeCommandLineArgument);
+                    .Select(EscapeCommandLineArgument)
+                    .ToArray();
 
                 var host = Process.GetCurrentProcess().MainModule.FileName;
                 string directory;
                 if (!host.EndsWith("dotnet", StringComparison.OrdinalIgnoreCase))
                 {
                     // For self-contained apps, skip the dll path
-                    remainingArgs = remainingArgs.Skip(1);
+                    remainingArgs = remainingArgs.Skip(1).ToArray();
                     directory = Path.GetDirectoryName(host);
                 }
                 else
@@ -82,6 +83,10 @@ namespace TWCore.Services
                 _settings.Description = _settings.Description ?? Core.ApplicationDisplayName;
                 var serviceName = _settings.ServiceName?.ToLowerInvariant().Replace(" ", "-") + ".service";
                 var res = typeof(LinuxServiceContainer).Assembly.GetResourceString("SystemdServicePattern.service");
+
+                res = res.Replace("{{DESCRIPTION}}", _settings.Description);
+                res = res.Replace("{{WORKINGDIRECTORY}}", directory);
+                res = res.Replace("{{EXECUTIONPATH}}", fullServiceCommand);
 
                 Core.Log.Warning(res);
                 Core.Log.Warning(serviceName);
@@ -100,8 +105,6 @@ namespace TWCore.Services
         {
             try
             {
-                var serviceManager = new Win32ServiceManager();
-                serviceManager.DeleteService(ServiceName);
                 Core.Log.Warning($"The Service \"{ServiceName}\" was uninstalled successfully.");
             }
             catch (Exception ex)

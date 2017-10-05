@@ -15,11 +15,14 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Log;
+using TWCore.Diagnostics.Status;
+
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore
@@ -176,10 +179,25 @@ namespace TWCore
         /// <summary>
         /// Create a new watch item to log execution times
         /// </summary>
+        /// <param name="level">Log level</param>
+        /// <returns>Watch item</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static WItem Create(LogLevel level) => WItem.CreateItem(level);
+        /// <summary>
+        /// Create a new watch item to log execution times
+        /// </summary>
         /// <param name="message">Message before disposal</param>
         /// <returns>Watch item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WItem Create(string message) => WItem.CreateItem(message);
+        /// <summary>
+        /// Create a new watch item to log execution times
+        /// </summary>
+        /// <param name="message">Message before disposal</param>
+        /// <param name="level">Log level</param>
+        /// <returns>Watch item</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static WItem Create(string message, LogLevel level) => WItem.CreateItem(message, level);
         /// <summary>
         /// Create a new watch item to log execution times
         /// </summary>
@@ -188,6 +206,15 @@ namespace TWCore
         /// <returns>Watch item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WItem Create(string startMessage, string endMessage) => WItem.CreateItem(startMessage, endMessage);
+        /// <summary>
+        /// Create a new watch item to log execution times
+        /// </summary>
+        /// <param name="startMessage">Message start</param>
+        /// <param name="endMessage">Message before disposal</param>
+        /// <param name="level">Log level</param>
+        /// <returns>Watch item</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static WItem Create(string startMessage, string endMessage, LogLevel level) => WItem.CreateItem(startMessage, endMessage, level);
 
         #region Nested Class
         /// <inheritdoc />
@@ -199,39 +226,45 @@ namespace TWCore
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(WorkerMethod);
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly StatusCounter DefaultCounter = new StatusCounter("Watch Counters");
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<string, StatusCounter> Counters = new ConcurrentDictionary<string, StatusCounter>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
-
+            
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void WorkerMethod(LogStatItem item)
             {
                 double gTime;
                 double cTime;
+                var indent = new string(' ', (item.Id - 1) * 4);
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-START] {1}", item.Id, item.Message);
+                        Core.Log.Write(item.Level, indent + string.Format("[{0:00}-START] {1}", item.Id, item.Message));
                         break;
                     case 1:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.0000001)
                         {
                             gTime = (item.GlobalTicks / _frequency) * 1000;
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "  [{0:00}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
+                            Core.Log.Write(item.Level, indent + string.Format("  [{0:00}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));
                         }
                         else
                         {
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "  [{0:00}-TAP, Time = {1:0.0000}ms] {2}", item.Id, cTime, item.Message);
+                            Core.Log.Write(item.Level, indent + string.Format("  [{0:00}-TAP, Time = {1:0.0000}ms] {2}", item.Id, cTime, item.Message));
                         }
+                        //Counters.Register(item.Message, cTime);
                         break;
                     case 2:
                         cTime = (item.LastTapTicks / _frequency) * 1000;
                         gTime = (item.GlobalTicks / _frequency) * 1000;
+
                         if (Math.Abs(cTime - gTime) > 0.0000001)
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message);
+                            Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));
                         else
-                            Core.Log.Stats(new string(' ', (item.Id - 1) * 4) + "[{0:00}-END, Total Time = {1:0.0000}ms] {2}", item.Id, gTime, item.Message);
+                            Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Total Time = {1:0.0000}ms] {2}", item.Id, gTime, item.Message));
+                        //Counters.Register(item.Message, cTime);
                         break;
                 }
             }
@@ -239,8 +272,11 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _initTicks;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _ticksTimestamp;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _lastTapTicks;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private LogLevel _level;
             private int _id;
             private string _lastMessage;
+            private StatusCounter _counter = null;
+            private const string CounterPreffix = "Watch Counters: ";
 
             #region Properties
             /// <summary>
@@ -265,11 +301,13 @@ namespace TWCore
                 public readonly double LastTapTicks;
                 public readonly string Message;
                 public readonly int Type;
+                public readonly LogLevel Level;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, double globalTicks, double lastTapTicks, string message, int type)
+                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, int type)
                 {
                     Id = id;
+                    Level = level;
                     GlobalTicks = globalTicks;
                     LastTapTicks = lastTapTicks;
                     Message = message;
@@ -286,6 +324,7 @@ namespace TWCore
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
                 _lastTapTicks = _ticksTimestamp;
+                _level = LogLevel.Stats;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -293,6 +332,16 @@ namespace TWCore
             {
                 var item = ItemPools.New();
                 item._id = Interlocked.Increment(ref _watcherCount);
+                item._counter = DefaultCounter;
+                return item;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static WItem CreateItem(LogLevel level)
+            {
+                var item = ItemPools.New();
+                item._id = Interlocked.Increment(ref _watcherCount);
+                item._level = level;
+                item._counter = DefaultCounter;
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -301,6 +350,18 @@ namespace TWCore
                 var item = ItemPools.New();
                 item._lastMessage = message;
                 item._id = Interlocked.Increment(ref _watcherCount);
+                item._counter = Counters.GetOrAdd(message, msg =>  new StatusCounter(CounterPreffix + msg));
+                item.StartedTap(message);
+                return item;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static WItem CreateItem(string message, LogLevel level)
+            {
+                var item = ItemPools.New();
+                item._lastMessage = message;
+                item._id = Interlocked.Increment(ref _watcherCount);
+                item._level = level;
+                item._counter = Counters.GetOrAdd(message, msg =>  new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(message);
                 return item;
             }
@@ -310,6 +371,18 @@ namespace TWCore
                 var item = ItemPools.New();
                 item._lastMessage = lastMessage;
                 item._id = Interlocked.Increment(ref _watcherCount);
+                item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
+                item.StartedTap(startMessage);
+                return item;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            internal static WItem CreateItem(string startMessage, string lastMessage, LogLevel level)
+            {
+                var item = ItemPools.New();
+                item._lastMessage = lastMessage;
+                item._id = Interlocked.Increment(ref _watcherCount);
+                item._level = level;
+                item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(startMessage);
                 return item;
             }
@@ -329,7 +402,8 @@ namespace TWCore
                 if (Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 1));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 1));
+                    _counter.Register(message, (_lastTapTicks / _frequency) * 1000);
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -345,7 +419,7 @@ namespace TWCore
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 0));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 0));
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -361,7 +435,11 @@ namespace TWCore
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
                 {
                     var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, globalTicks, _lastTapTicks, message, 2));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 2));
+                    if (_counter.Name == CounterPreffix + message)
+                        _counter.Register("Total", (_lastTapTicks / _frequency) * 1000);
+                    else
+                        _counter.Register(message, (_lastTapTicks / _frequency) * 1000);
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -384,7 +462,9 @@ namespace TWCore
                 _ticksTimestamp = Stopwatch.GetTimestamp();
                 _initTicks = _ticksTimestamp;
                 _lastTapTicks = _ticksTimestamp;
+                _level = LogLevel.Stats;
                 _disposedValue = false;
+                _counter = null;
             }
             #endregion
 

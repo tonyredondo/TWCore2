@@ -21,6 +21,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
+
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Local
 
@@ -29,10 +31,12 @@ namespace TWCore.Diagnostics.Status
     /// <summary>
     /// Default Status Counter class.
     /// </summary>
-    public class StatusCounter
+    public class StatusCounter : IDisposable
     {
-        private readonly ConcurrentDictionary<string, NumberItem> _counterValues = new ConcurrentDictionary<string, NumberItem>();
-
+        private readonly LRU2QCollection<string, NumberItem> _counterValues = new LRU2QCollection<string, NumberItem>(100);
+        private bool _disposed = false;
+        private int _index = 0;
+        
         /// <summary>
         /// Status Counter Name
         /// </summary>
@@ -56,24 +60,16 @@ namespace TWCore.Diagnostics.Status
             Name = name;
             Core.Status.Attach(GetStatusItem);
         }
-        /// <summary>
-        /// Default Status Counter class.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusCounter(object parent)
+        ~StatusCounter()
         {
-            Core.Status.Attach(GetStatusItem, parent);
+            Dispose();
         }
-        /// <summary>
-        /// Default Status Counter class.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusCounter(string name, object parent)
+        public void Dispose()
         {
-            Name = name;
-            Core.Status.Attach(GetStatusItem, parent);
+            Core.Status.DeAttachObject(this);
+            _counterValues.Clear();
+            _disposed = true;
         }
-
         #endregion
 
         /// <summary>
@@ -84,7 +80,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(string counterName, double value)
         {
-            var numberItem = _counterValues.GetOrAdd(counterName, _ => new NumberItem());
+            var numberItem = _counterValues.GetOrAdd(counterName, _ => new NumberItem(_index++));
             numberItem.Register(value);
         }
         /// <summary>
@@ -94,17 +90,21 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private StatusItem GetStatusItem()
         {
+            if (_disposed) return null;
+            var counterValues = _counterValues.ToArray().OrderBy(k => k.Value.Index).ToArray();
+            if (counterValues.Length == 0) return null;
             var status = new StatusItem { Name = Name };
-            var counterValues = _counterValues.ToArray().OrderBy(k => k.Key);
             foreach (var counter in counterValues)
                 status.Childrens.Add(counter.Value.GetStatusItem(counter.Key));
             return status;
         }
-
+        
+        
         #region Nested Classes
 
         private class NumberItem
         {
+            public int Index { get; }
             private ItemValue<double> _lastestValue;
             private readonly ItemInterval<double> _lastMinuteValues = new ItemInterval<double>(TimeSpan.FromMinutes(1), val => (decimal)val.Value);
             private readonly ItemInterval<double> _last10MinutesValues = new ItemInterval<double>(TimeSpan.FromMinutes(10), val => (decimal)val.Value);
@@ -113,6 +113,11 @@ namespace TWCore.Diagnostics.Status
             private readonly ItemInterval<double> _oneHourValues = new ItemInterval<double>(TimeSpan.FromHours(1), val => (decimal)val.Value);
             private readonly ItemInterval<double> _sixHourValues = new ItemInterval<double>(TimeSpan.FromHours(6), val => (decimal)val.Value);
 
+            public NumberItem(int index)
+            {
+                Index = index;
+            }
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Register(double value)
             {
@@ -342,5 +347,6 @@ namespace TWCore.Diagnostics.Status
             }
         }
         #endregion
+
     }
 }

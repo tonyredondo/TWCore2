@@ -228,7 +228,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(WorkerMethod);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly StatusCounter DefaultCounter = new StatusCounter("Watch Counters");
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(150);
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
             
@@ -268,13 +268,18 @@ namespace TWCore
                 }
             }
 
+            static WItem()
+            {
+                Counters.NodeRemoved += (key, value) => value.Dispose();
+            }
+            
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _initTicks;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _ticksTimestamp;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _lastTapTicks;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private LogLevel _level;
             private int _id;
             private string _lastMessage;
-            private StatusCounter _counter = null;
+            private StatusCounter _counter;
             private const string CounterPreffix = "Watch Counters: ";
 
             #region Properties
@@ -402,7 +407,7 @@ namespace TWCore
                 {
                     var globalTicks = currentTicks - _initTicks;
                     LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 1));
-                    _counter.Register(message, (_lastTapTicks / _frequency) * 1000);
+                    _counter?.Register(message, (_lastTapTicks / _frequency) * 1000);
                 }
                 _ticksTimestamp = currentTicks;
             }
@@ -435,10 +440,8 @@ namespace TWCore
                 {
                     var globalTicks = currentTicks - _initTicks;
                     LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 2));
-                    if (_counter.Name == CounterPreffix + message)
-                        _counter.Register("Total", (_lastTapTicks / _frequency) * 1000);
-                    else
-                        _counter.Register(message, (_lastTapTicks / _frequency) * 1000);
+                    _counter?.Register(_counter.Name == CounterPreffix + message ? "Total" : message,
+                        (_lastTapTicks / _frequency) * 1000);
                 }
                 _ticksTimestamp = currentTicks;
             }

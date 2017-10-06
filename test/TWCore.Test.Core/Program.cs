@@ -39,29 +39,29 @@ namespace TWCore.Test.Core
                 //consumer.Add(Task.Delay(5000).ContinueWith(t => "Esperó 5 segundos"));
                 //consumer.Add(Task.Delay(2000).ContinueWith(t => "Mundo (tenia una espera de 2 pero ya se habia cumplido)"));
                 //consumer.Add(Task.Run(() => new[] { "Tambien", "Soporto", "Arrays" }));
-                
-                //var consumer = new ProducerConsumerEnumerable<string>((producer, token) =>
-                //{
-                //    for(var i = 0; i < 25; i++)
-                //    {
-                //        producer.Add("Valor: " + i);
-                //        Thread.Sleep(200);
-                //    }
-                //});
 
-                //foreach (var value in consumer)
-                //{
-                //    Console.WriteLine(value);
-                //}
-                //Console.WriteLine("Done 1 ");
+                var consumer = new ProducerConsumerEnumerable<string>(async (producer, token) =>
+                {
+                    for (var i = 0; i < 250; i++)
+                    {
+                        producer.Add("Valor: " + i);
+                        await Task.Delay(10, token).ConfigureAwait(false);
+                    }
+                });
 
-                //foreach (var value in consumer)
-                //{
-                //    Console.WriteLine(value);
-                //}
-                //Console.WriteLine("Done 2");
+                foreach (var value in consumer)
+                {
+                    Console.WriteLine(value);
+                }
+                Console.WriteLine("Done 1 ");
 
-                //Console.ReadLine();
+                foreach (var value in consumer)
+                {
+                    Console.WriteLine(value);
+                }
+                Console.WriteLine("Done 2");
+
+                Console.ReadLine();
                 //**********************************************************************************
 
             });

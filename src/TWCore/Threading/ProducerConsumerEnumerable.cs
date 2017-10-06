@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable once UnusedMember.Global
@@ -31,7 +32,7 @@ namespace TWCore.Threading
     public class ProducerConsumerEnumerable<T> : IEnumerable<T>, IDisposable
     {
         private readonly object _padlock = new object();
-        private readonly Action<ProducerMethods, CancellationToken> _producerAction;
+        private readonly Func<ProducerMethods, CancellationToken, Task> _producerFunc;
         private readonly List<T> _collection;
         private readonly CancellationTokenSource _tokenSource;
         private readonly ManualResetEventSlim _producerAddEvent;
@@ -43,11 +44,24 @@ namespace TWCore.Threading
         /// <summary>
         /// Producer / Consumer schema enumerable
         /// </summary>
-        /// <param name="producerAction">Action to perform for the production of data</param>
-        public ProducerConsumerEnumerable(Action<ProducerMethods, CancellationToken> producerAction)
+        /// <param name="producerFunc">Func to perform for the production of data</param>
+        public ProducerConsumerEnumerable(Func<ProducerMethods, CancellationToken, Task> producerFunc)
         {
             _started = false;
-            _producerAction = producerAction;
+            _producerFunc = producerFunc;
+            _collection = new List<T>();
+            _tokenSource = new CancellationTokenSource();
+            _producerAddEvent = new ManualResetEventSlim(false);
+            _producerEndEvent = new ManualResetEventSlim(true);
+        }
+        /// <summary>
+        /// Producer / Consumer schema enumerable
+        /// </summary>
+        /// <param name="actionFunc">Action to perform for the production of data</param>
+        public ProducerConsumerEnumerable(Action<ProducerMethods, CancellationToken> actionFunc)
+        {
+            _started = false;
+            _producerFunc = (pMethods, token) => Task.Run(()=> actionFunc(pMethods, token));
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new ManualResetEventSlim(false);
@@ -81,11 +95,11 @@ namespace TWCore.Threading
             if (_started) return;
             _started = true;
             _producerEndEvent.Reset();
-            Task.Factory.StartNew(() =>
+            Task.Factory.StartNew(async () =>
             {
                 try
                 {
-                    _producerAction?.Invoke(new ProducerMethods(this), _tokenSource.Token);
+                    await _producerFunc(new ProducerMethods(this), _tokenSource.Token);
                 }
                 catch (Exception ex)
                 {
@@ -161,24 +175,25 @@ namespace TWCore.Threading
             public bool MoveNext()
             {
                 _data.StartProducer();
-                if (_data._collection.Count == 0 || _data._collection.Count <= _index)
+                if (_data._collection.Count - _index == 0)
                 {
-                    if (_data._producerEndEvent.IsSet)
-                        return false;
-                    var waitValue = WaitHandle.WaitAny(new[] {
-                        _data._producerAddEvent.WaitHandle,
-                        _data._producerEndEvent.WaitHandle,
-                        _data._tokenSource.Token.WaitHandle
-                    });
-                    if (waitValue != 0)
-                        return false;
-                    _data._producerAddEvent.Reset();
+                    var waitValue = WaitHandle.WaitAny(new[] { _data._producerAddEvent.WaitHandle, _data._producerEndEvent.WaitHandle, _data._tokenSource.Token.WaitHandle });
+                    if (waitValue != 0) return false;
                 }
                 lock (_data._padlock)
                 {
-                    Current = _data._collection[_index];
-                    _index++;
-                    return true;
+                    if (_data._collection.Count > _index)
+                    {
+                        Current = _data._collection[_index++];
+                        if (_data._collection.Count - _index == 0)
+                            _data._producerAddEvent.Reset();
+                        return true;
+                    }
+                    else
+                    {
+                        Core.Log.Error("The index is out of the range of the collection.");
+                        return false;
+                    }
                 }
             }
 

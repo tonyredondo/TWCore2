@@ -35,14 +35,6 @@ namespace TWCore.Tests
                 var deflateBytes = deflateCompressor.Compress(bytes);
                 Core.Log.InfoBasic("Total DEFLATE Bytes = {0} - {1:0.000}%", deflateBytes.Count.ToReadeableBytes(), ((double)deflateBytes.Count * 100) / bytes.Length);
             }
-
-            Core.Log.InfoBasic("Creating LZO Compressor");
-            var lzoCompressor = CompressorManager.GetByEncodingType("lzo");
-            using(Watch.Create("LZO COMPRESSOR"))
-            {
-                var lzoBytes = lzoCompressor.Compress(bytes);
-                Core.Log.InfoBasic("Total LZO Bytes = {0} - {1:0.000}%", lzoBytes.Count.ToReadeableBytes(), ((double)lzoBytes.Count * 100) / bytes.Length);
-            }
         }
     }
 }

@@ -225,8 +225,6 @@ namespace TWCore.Diagnostics.Status
             private readonly TimeSpan _sinceSlideTime;
             private readonly ConcurrentQueue<ItemValue<T>> _queue;
             private readonly Func<ItemValue<T>, double> _funcToAverage;
-            private readonly CancellationTokenSource _tokenSource;
-            private Task _tsk;
             private bool _dirty;
 
             public double CallsQuantity;
@@ -243,36 +241,13 @@ namespace TWCore.Diagnostics.Status
                 _sinceSlideTime = sinceSlideTime;
                 _funcToAverage = funcToAverage;
                 _queue = new ConcurrentQueue<ItemValue<T>>();
-                _tokenSource = new CancellationTokenSource();
                 Percentiles = new List<ItemPercentile> {
                     new ItemPercentile(0.8),
                     new ItemPercentile(0.9),
                     new ItemPercentile(0.95),
                     new ItemPercentile(0.99),
                 };
-                var token = _tokenSource.Token;
-                _tsk = Task.Run(async () =>
-                {
-                    try
-                    {
-                        while (!token.IsCancellationRequested)
-                        {
-                            Calculate();
-                            await Task.Delay(5000, token);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                }, token);
             }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            ~ItemInterval()
-            {
-                _tokenSource.Cancel();
-            }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Register(T value)
             {
@@ -281,7 +256,6 @@ namespace TWCore.Diagnostics.Status
                 _queue.Enqueue(itemValue);
                 _dirty = true;
             }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Calculate()
             {
@@ -326,6 +300,7 @@ namespace TWCore.Diagnostics.Status
                 }
                 _dirty = false;
             }
+
         }
         private class ItemValue<T>
         {

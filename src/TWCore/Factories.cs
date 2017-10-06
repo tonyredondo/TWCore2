@@ -234,6 +234,8 @@ namespace TWCore
                     {
                         if (method.DeclaringType.Name.Contains("ConcurrentDictionary"))
                             continue;
+                        if (method.DeclaringType.Name.Contains("CacheCollectionBase`3"))
+                            continue;
                         assemblyName = method.DeclaringType.Assembly.FullName;
                         typeName = method.DeclaringType.Name;
                         break;

@@ -135,7 +135,7 @@ namespace TWCore.Diagnostics.Status
             {
                 var cStatus = new StatusItem { Name = name };
 
-                cStatus.Values.Add("Lastest Value", _lastestValue?.Value.ToString("0.####"));
+                cStatus.Values.Add("Lastest Value", _lastestValue?.Value.ToString("0.####"), true);
                 cStatus.Values.Add("Lastest Value Date", _lastestValue?.ValueDate);
 
                 _lastMinuteValues.Calculate();

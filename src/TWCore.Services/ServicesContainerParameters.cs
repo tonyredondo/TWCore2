@@ -35,7 +35,6 @@ namespace TWCore.Services
                     Core.ServiceContainerFactory = (service, action) => new LinuxServiceContainer(service, action);
                     break;
                 case PlatformType.Mac:
-                    Core.ServiceContainerFactory = (service, action) => new LinuxServiceContainer(service, action);
                     break;
                 case PlatformType.Android:
                     break;

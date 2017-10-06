@@ -1191,22 +1191,35 @@ namespace TWCore
 				response.Add(source.Current);
 			return response;
 		}
-		#endregion
+        #endregion
 
-		#region Math
-		/// <summary>
-		/// Gets the standard deviation
-		/// </summary>
-		/// <param name="values">Values Set</param>
-		/// <returns>Standard deviation value</returns>
-		public static double GetStdDev(this IEnumerable<double> values)
+        #region Math
+	    /// <summary>
+	    /// Gets the standard deviation
+	    /// </summary>
+	    /// <param name="values">Values Set</param>
+	    /// <returns>Standard deviation value</returns>
+	    public static (double Average, double StandardDeviation) GetAverageAndStdDev(this IEnumerable<double> values)
+	    {
+	        var valArray = values?.ToArray();
+	        if (valArray == null || valArray.Length <= 1) return (0, 0);
+            var avg = valArray.Average();
+	        var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
+	        var res = Math.Sqrt((sum) / (valArray.Length - 1));
+	        return (avg, res);
+	    }
+        /// <summary>
+        /// Gets the standard deviation
+        /// </summary>
+        /// <param name="values">Values Set</param>
+        /// <returns>Standard deviation value</returns>
+        public static double GetStdDev(this IEnumerable<double> values)
 		{
-			double res = 0;
 			var valArray = values?.ToArray();
-		    if (valArray == null || valArray.Length <= 1) return res;
-		    var avg = valArray.Average();
+		    if (valArray == null || valArray.Length <= 1) return 0;
+            var avg = valArray.Average();
 		    var sum = valArray.Sum(d => Math.Pow(d - avg, 2));
-		    res = Math.Sqrt((sum) / (valArray.Length - 1));
+		    var res = Math.Sqrt((sum) / (valArray.Length - 1));
 		    return res;
 		}
 		/// <summary>
@@ -1217,15 +1230,39 @@ namespace TWCore
 		/// <param name="selectFunction">Select function</param>
 		/// <returns>Standard deviation value</returns>
 		public static double GetStdDev<T>(this IEnumerable<T> enumerable, Func<T, double> selectFunction) => enumerable.Select(selectFunction).GetStdDev();
-		#endregion
+	    /// <summary>
+	    /// Gets the standard deviation
+	    /// </summary>
+	    /// <typeparam name="T">Enumerable type</typeparam>
+	    /// <param name="enumerable">Values set</param>
+	    /// <param name="selectFunction">Select function</param>
+	    /// <returns>Standard deviation value</returns>
+	    public static double GetStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select(i => (double)selectFunction(i)).GetStdDev();
+        /// <summary>
+        /// Gets the average and the standard deviation
+        /// </summary>
+        /// <typeparam name="T">Enumerable type</typeparam>
+        /// <param name="enumerable">Values set</param>
+        /// <param name="selectFunction">Select function</param>
+        /// <returns>Average and Standard deviation value</returns>
+        public static (double Average, double StandardDeviation) GetAverageAndStdDev<T>(this IEnumerable<T> enumerable, Func<T, double> selectFunction) => enumerable.Select(selectFunction).GetAverageAndStdDev();
+	    /// <summary>
+	    /// Gets the average and the standard deviation
+	    /// </summary>
+	    /// <typeparam name="T">Enumerable type</typeparam>
+	    /// <param name="enumerable">Values set</param>
+	    /// <param name="selectFunction">Select function</param>
+	    /// <returns>Average and Standard deviation value</returns>
+	    public static (double Average, double StandardDeviation) GetAverageAndStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select(i => (double)selectFunction(i)).GetAverageAndStdDev();
+        #endregion
 
-		#region KeyedCollections
-		/// <summary>
-		/// Adds a IEnumerable to the collection
-		/// </summary>
-		/// <param name="keyedCollection">Keyed collection object</param>
-		/// <param name="col">IEnumerable instance</param>
-		public static void AddRange<TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, IEnumerable<TItem> col)
+        #region KeyedCollections
+        /// <summary>
+        /// Adds a IEnumerable to the collection
+        /// </summary>
+        /// <param name="keyedCollection">Keyed collection object</param>
+        /// <param name="col">IEnumerable instance</param>
+        public static void AddRange<TKey, TItem>(this KeyedCollection<TKey, TItem> keyedCollection, IEnumerable<TItem> col)
 		{
 			if (keyedCollection == null) return;
 			if (col == null) return;

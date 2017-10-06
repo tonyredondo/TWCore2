@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,8 @@ using TWCore.Injector;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Services;
+using TWCore.Threading;
+using Thread = System.Threading.Thread;
 
 namespace TWCore.Test.Core
 {
@@ -27,6 +30,40 @@ namespace TWCore.Test.Core
                 DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
+
+
+                //**********************************************************************************
+                //var consumer = new AsyncConsumerEnumerable<string>();
+
+                //consumer.Add(Task.Run(() => "Hola"));
+                //consumer.Add(Task.Delay(5000).ContinueWith(t => "Esperó 5 segundos"));
+                //consumer.Add(Task.Delay(2000).ContinueWith(t => "Mundo (tenia una espera de 2 pero ya se habia cumplido)"));
+                //consumer.Add(Task.Run(() => new[] { "Tambien", "Soporto", "Arrays" }));
+                
+                //var consumer = new ProducerConsumerEnumerable<string>((producer, token) =>
+                //{
+                //    for(var i = 0; i < 25; i++)
+                //    {
+                //        producer.Add("Valor: " + i);
+                //        Thread.Sleep(200);
+                //    }
+                //});
+
+                //foreach (var value in consumer)
+                //{
+                //    Console.WriteLine(value);
+                //}
+                //Console.WriteLine("Done 1 ");
+
+                //foreach (var value in consumer)
+                //{
+                //    Console.WriteLine(value);
+                //}
+                //Console.WriteLine("Done 2");
+
+                //Console.ReadLine();
+                //**********************************************************************************
+
             });
             TWCore.Core.RunService<TestService>(args);
         }

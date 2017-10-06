@@ -11,6 +11,7 @@
                 padding: 0px;
                 font-family: Verdana;
                 background: #222222;
+                font-size:0.92em;
             }
             h2 {
                 font-size: 1.2em;
@@ -45,6 +46,12 @@
             .clear { clear: both; }
             .body {
                 padding:0px;
+                position: absolute;
+                top:256px;
+                left:0px;
+                right:0px;
+                bottom:0px;
+                overflow-y:auto;
             }
             .statusItem {
                 padding-bottom: 0px;
@@ -116,10 +123,12 @@
                 padding: 8px;
             }
             .charts {
-                padding: 5px;
-                background: #363636;
+                padding: 0px;
                 border-top: 4px solid #616161;
                 border-bottom: 4px solid #616161;
+            }
+            .chartsInner {
+                padding: 5px 10px;
             }
             #chartvar{
                 height: 235px;
@@ -162,15 +171,10 @@
                 padding:0px 5px;
             }
             #myChart {
-                width: 61%;
-                max-width: 61%;
-                height: 200px;
-                max-height: 218px;
-                float: left;
-                margin-left: 1%;
-                padding: 0em 0.5em;
-                border-radius: 7px;
-                background: #222222;
+                width: 100%;
+                max-width: 100%;
+                height: 160px;
+                max-height: 178px;
             }
             .tableBtn {
                 font-size: 0.6em;
@@ -193,13 +197,59 @@
                 font-size: 12px;
                 color: #01b0df;
                 padding: 5px 0px 7px 0px;
+                background:#363636;
             }
+
+
+            [type="radio"]:checked,
+            [type="radio"]:not(:checked) {
+                position: absolute;
+                left: -9999px;
+            }
+            [type="radio"]:checked + label,
+            [type="radio"]:not(:checked) + label
+            {
+                position: relative;
+                padding-left: 22px;
+                cursor: pointer;
+                line-height: 18px;
+                display: inline-block;
+            }
+            [type="radio"]:checked + label:before,
+            [type="radio"]:not(:checked) + label:before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 16px;
+                height: 16px;
+                border: 1px solid #ddd;
+                border-radius: 100%;
+                background: #222222;
+            }
+            [type="radio"]:checked + label:after,
+            [type="radio"]:not(:checked) + label:after {
+                content: '';
+                width: 12px;
+                height: 12px;
+                background: #03a9f4;
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                border-radius: 100%;
+            }
+            [type="radio"]:not(:checked) + label:after {
+                opacity: 0;
+            }
+            [type="radio"]:checked + label:after {
+                opacity: 1;
+            }
+            
         </style>
         <script>
             var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="childrens"></div></div></div>';
-            //var tableItem = '<table><tr><th class="thKey">Key</th><th>Value</th></tr>{{Item.Values}}</table>';
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
-            var valueItem = '<tr><td>{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
+            var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var tout = null;
 
             var chartData = {};
@@ -222,7 +272,7 @@
                         chartItem["Name"] = item.Name;
 
                         var element = parentElement.children("#" + id);
-                        if (element.length == 0) {
+                        if (element.length === 0) {
                             parentElement.append(statusItem.replace("{{ItemId}}", id));
                             element = parentElement.children("#" + id);
                             $(element).children("h2").on("click", function (sEvt) {
@@ -247,16 +297,16 @@
                             if (enablePlot && !chartItem["Values"]) chartItem["Values"] = {};
                             var chartValue = enablePlot? chartItem["Values"] : null;
                             var status = "";
-                            if (val.Status == 1) status = "good";
-                            if (val.Status == 2) status = "bad";
-                            if (val.Status == 3) status = "ugly";
+                            if (val.Status === 1) status = "good";
+                            if (val.Status === 2) status = "bad";
+                            if (val.Status === 3) status = "ugly";
                             var diff = "";
                             if (val.Value) {
                                 var nValue = parseFloat(val.Value.replace(",", "."));
                                 if (nValue.toString() != "NaN") {
                                     if (enablePlot) {
                                         if (!chartValue[val.Key]) chartValue[val.Key] = [];
-                                        if (chartValue[val.Key].length == 25)
+                                        if (chartValue[val.Key].length == 50)
                                             chartValue[val.Key].shift();
                                         chartValue[val.Key].push({ label: new Date(), value: nValue });
                                         bAnyValue = true;
@@ -279,7 +329,12 @@
                                     val.Value = val.Value.replace(/(?:\r\n|\r|\n)/g, '<br />');
                                 }
                             }
-                            iSValues += valueItem.replace("{{Key}}", val.Key).replace("{{Value}}", val.Value + diff).replace("{{status}}", status);
+                            var inputId = chartId + "-" + val.Key;
+                            iSValues += valueItem
+                                .replace("{{Radio}}", enablePlot ? "<input type='radio' id='" + inputId + "' name='chartValue' value='" + val.Key + "' />" : "")
+                                .replace("{{Key}}", "<label for='" + inputId + "'>" + val.Key + "</label>")
+                                .replace("{{Value}}", val.Value + diff)
+                                .replace("{{status}}", status);
                         }
                         if (item.Values.length > 0) {
                             element.children(".wrapStatus").children(".innerStatus").html(tableItem.replace("{{Item.Values}}", iSValues));
@@ -322,21 +377,27 @@
                     var sItemsLength = parentElement.children(".statusItem").length;
                     for (i = items.length; i < sItemsLength; i++)
                         parentElement.children("#status" + depth + "_" + itemidx + "_" + i).remove();
+
+                    $("input[name='chartValue']").click(function (sEvt) {
+                        var target = $(sEvt.currentTarget);
+                        chartValueId = target.attr("id");
+                        $(chartTitle).text(target.attr("value"));
+                        displayChart();
+                    });
                 }
             }
             var chartValueId = "";
 
             function displayChart() {
                 if (chartValueId) {
-
-                    var dArr = chartValueId.split("$");
+                    var dArr = chartValueId.split("-");
                     var cValues = chartData[dArr[0]].Values[dArr[1]];
                     mChartData.labels = [];
                     mChartData.datasets[0].data = [];
                     var initial = 0;
                     if (cValues.length > 0) initial = cValues[0].value;
-                    if (cValues.length < 25)
-                        cValues = new Array(25 - cValues.length).fill({ label: parseInt(initial), value: initial }).concat(cValues);
+                    if (cValues.length < 50)
+                        cValues = new Array(50 - cValues.length).fill({ label: parseInt(initial), value: initial }).concat(cValues);
                     for (var i = 0; i < cValues.length; i++) {
                         var item = cValues[i];
                         mChartData.labels.push(parseInt(item.value));
@@ -369,41 +430,11 @@
                         AddItems($(".body"), data.Items, -1, "", statuses[0].Items);
                     else
                         AddItems($(".body"), data.Items, -1, "", null);
-
                     
-
-                    for (var cData in chartData)
-                    {
-                        var cDataDiv = $("#chartvar div[id*='" + cData + "']");
-                        if (cDataDiv.length == 0) {
-                            $("#chartvar").append("<div id='" + cData + "' class='chartTitle'><h3>" + chartData[cData].Name + "</h3></div>");
-                            cDataDiv = $("#chartvar div[id*='" + cData + "']");
-
-                            for (var cVal in chartData[cData].Values) {
-                                var cInput = cDataDiv.find("input[id*='" + cData + "$" + cVal + "']");
-                                if (cInput.length == 0) {
-                                    cDataDiv.append("<div class='chartOption'><input id='" + cData + "$" + cVal + "' type='radio' name='chartVar' value='" + cVal + "' /><label for='" + cData + "$" + cVal + "'>" + cVal + "</label><div style='clear:both;'></div></div>");
-                                    cInput = cDataDiv.find("input[id*='" + cData + "$" + cVal + "']");
-
-                                    cInput.click(function (sEvt) {
-                                        var target = $(sEvt.currentTarget);
-                                        chartValueId = target.attr("id");
-                                        $(chartTitle).text(target.next().text());
-                                        displayChart();
-                                    });
-                                }
-                            }
-                        }
-                    }
-                    $("#chartvar h3").prop('onclick', null).off('click');
-                    //$("#chartvar h3").click(function (evt) { $(evt.currentTarget).parent().children(".chartOption").toggle(); });
-
-                    if (chartValueId == "") {
-                        var firstH3 = $("#chartvar h3").first();
-                        firstH3.click();
-                        firstH3.next().find("input").click()
-                    }
-                    displayChart();
+                    if (chartValueId)
+                        $("[id='" + chartValueId + "']").click();
+                    else
+                        $("input[name='chartValue']").first().click();
                 }).always(function () {
                     if (tout)
                         clearTimeout(tout);
@@ -452,11 +483,10 @@
             <div class="clear"></div>
         </div>
         <div class="charts">
-            <div id="chartvarOutter">
-                <div id="chartvar"></div>
-            </div>
             <div id="chartTitle">WorkingSet</div>
-            <canvas id="myChart"></canvas>
+            <div class="chartsInner">
+                <canvas id="myChart"></canvas>
+            </div>
             <div class="clear"></div>
         </div>
         <div class="body">

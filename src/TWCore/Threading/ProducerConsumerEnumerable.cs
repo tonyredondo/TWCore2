@@ -122,20 +122,20 @@ namespace TWCore.Threading
             if (_started) return;
             _started = true;
             _producerEndEvent.Reset();
-            Task.Factory.StartNew(async () =>
+            Task.Run(async () =>
             {
                 try
                 {
                     var prodMethods = new ProducerMethods(this);
                     var tasks = _producerFuncs.Select(i => i(prodMethods, _tokenSource.Token)).ToArray();
-                    await Task.WhenAll(tasks);
+                    await Task.WhenAll(tasks).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
-                    TWCore.Core.Log.Write(ex);
+                    Core.Log.Write(ex);
                 }
                 _producerEndEvent.Set();
-            }, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            }, _tokenSource.Token);
         }
         #endregion
 

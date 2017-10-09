@@ -93,7 +93,7 @@ namespace TWCore.Services
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {
-                    QueueServer.ResponseReceived += async (s, e) =>
+                    QueueServer.ResponseReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Message));
                         if (e.Message?.Body == null) return;
@@ -103,7 +103,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            await Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token);
+                            Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).WaitAndResults();
                         }
                         catch(Exception ex)
                         {
@@ -119,7 +119,7 @@ namespace TWCore.Services
                 }
                 else
                 {
-                    QueueServer.RequestReceived += async (s, e) =>
+                    QueueServer.RequestReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Request));
                         if (e.Request?.Body == null) return;
@@ -130,7 +130,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            result = await Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken).ConfigureAwait(false);
+                            result = Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken).WaitAndResults();
                         }
                         catch(Exception ex)
                         {

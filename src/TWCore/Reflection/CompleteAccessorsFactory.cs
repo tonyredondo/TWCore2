@@ -112,7 +112,7 @@ namespace TWCore.Reflection
             var obj = Expression.Parameter(typeof(object), "o");
             var castedObject = Expression.Convert(obj, method.DeclaringType);
             if (_changeTypeMethodInfo == null)
-                _changeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
+                _changeTypeMethodInfo = typeof(CompleteAccessorsFactory).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
 
             var parameters = method.GetParameters();
             var paramExp = Expression.Parameter(typeof(object[]), "args");
@@ -142,6 +142,16 @@ namespace TWCore.Reflection
             else
                 callExpression = Expression.Block(callExpression, Expression.Constant(null, typeof(object)));
             return Expression.Lambda<MethodAccessorDelegate>(callExpression, obj, paramExp).Compile();
+        }
+
+        private static object ChangeType(object value, Type conversionType)
+        {
+            if (conversionType.GetTypeInfo().IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
+            {
+                if (value == null) return null;
+                conversionType = Nullable.GetUnderlyingType(conversionType);
+            }
+            return Convert.ChangeType(value, conversionType);
         }
     }
 }

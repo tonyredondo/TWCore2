@@ -175,8 +175,7 @@ namespace TWCore
 				return default(T);
 			try
 			{
-				task.Wait();
-				return task.Result;
+				return task.GetAwaiter().GetResult();
 			}
 			catch (AggregateException ex)
 			{
@@ -354,13 +353,14 @@ namespace TWCore
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
 				// or cancellation is requested.
-				var readyTask = await Task.WhenAny(asyncTask, cancellationTask);
+				var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
 
 				// In case of cancellation, register a continuation to observe any unhandled 
 				// exceptions from the asynchronous operation (once it completes).
 				// In .NET 4.0, unobserved task exceptions would terminate the process.
 				if (readyTask == cancellationTask)
-					await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+					await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+						.ConfigureAwait(false);
 
 				return await readyTask;
 			}
@@ -379,13 +379,14 @@ namespace TWCore
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
 				// or cancellation is requested.
-				var readyTask = await Task.WhenAny(asyncTask, cancellationTask);
+				var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
 
 				// In case of cancellation, register a continuation to observe any unhandled 
 				// exceptions from the asynchronous operation (once it completes).
 				// In .NET 4.0, unobserved task exceptions would terminate the process.
 				if (readyTask == cancellationTask)
-					await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+					await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+						.ConfigureAwait(false);
 
 				await readyTask;
 			}
@@ -399,7 +400,8 @@ namespace TWCore
 		{
 			if (cancellationToken.IsCancellationRequested) return;
 			var tcs = new TaskCompletionSource<object>();
-			using (cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false)) await tcs.Task;
+			using (cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false)) 
+				await tcs.Task.ConfigureAwait(false);
 		}
 
 		private delegate object InvokeDelegate(Delegate @delegate, params object[] args);

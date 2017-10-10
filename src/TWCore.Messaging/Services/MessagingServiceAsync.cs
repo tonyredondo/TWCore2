@@ -103,7 +103,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).WaitAndResults();
+                            Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).WaitAndResults(_cTokenSource.Token);
                         }
                         catch(Exception ex)
                         {
@@ -130,7 +130,8 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            result = Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken).WaitAndResults();
+                            result = Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken)
+                                .WaitAndResults(e.ProcessResponseTimeoutCancellationToken);
                         }
                         catch(Exception ex)
                         {

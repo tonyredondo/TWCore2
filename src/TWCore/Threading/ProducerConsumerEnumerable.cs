@@ -218,11 +218,8 @@ namespace TWCore.Threading
                             _data._producerAddEvent.Reset();
                         return true;
                     }
-                    else
-                    {
-                        Core.Log.Error("The index is out of the range of the collection.");
-                        return false;
-                    }
+                    Core.Log.Error("The index is out of the range of the collection.");
+                    return false;
                 }
             }
 

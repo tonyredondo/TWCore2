@@ -195,12 +195,12 @@ namespace TWCore.Messaging.Server
 
                 foreach (var listener in QueueServerListeners)
                 {
-                    var tsk = Task.Factory.StartNew(async () =>
+                    var tsk = Task.Run(async () =>
                     {
                         Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-                        await listener.TaskStartAsync(_tokenSource.Token);
+                        await listener.TaskStartAsync(_tokenSource.Token).ConfigureAwait(false);
                         Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-                    }, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    }, _tokenSource.Token);
                     _listenerTasks.Add(tsk);
                 }
             }

@@ -32,10 +32,10 @@ namespace TWCore.Threading
     public class ProducerConsumerEnumerable<T> : IEnumerable<T>, IDisposable
     {
         private readonly object _padlock = new object();
-        private readonly List<Func<ProducerMethods, CancellationToken, Task>> _producerFuncs = new List<Func<ProducerMethods, CancellationToken, Task>>();
+        private readonly Func<ProducerMethods, CancellationToken, Task> _producerFunc;
         private readonly List<T> _collection;
         private readonly CancellationTokenSource _tokenSource;
-        private readonly ManualResetEventSlim _producerAddEvent;
+        private readonly AutoResetEvent _producerAddEvent;
         private readonly ManualResetEventSlim _producerEndEvent;
         private bool _started;
         private bool _disposed;
@@ -48,23 +48,10 @@ namespace TWCore.Threading
         public ProducerConsumerEnumerable(Func<ProducerMethods, CancellationToken, Task> producerFunc)
         {
             _started = false;
-            _producerFuncs.Add(producerFunc);
+            _producerFunc = producerFunc;
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new ManualResetEventSlim(false);
-            _producerEndEvent = new ManualResetEventSlim(true);
-        }
-        /// <summary>
-        /// Producer / Consumer schema enumerable
-        /// </summary>
-        /// <param name="producerFuncs">Funcs to perform for the production of data</param>
-        public ProducerConsumerEnumerable(params Func<ProducerMethods, CancellationToken, Task>[] producerFuncs)
-        {
-            _started = false;
-            _producerFuncs.AddRange(producerFuncs);
-            _collection = new List<T>();
-            _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new ManualResetEventSlim(false);
+            _producerAddEvent = new AutoResetEvent(false);
             _producerEndEvent = new ManualResetEventSlim(true);
         }
         /// <summary>
@@ -74,24 +61,10 @@ namespace TWCore.Threading
         public ProducerConsumerEnumerable(Action<ProducerMethods, CancellationToken> actionFunc)
         {
             _started = false;
-            _producerFuncs.Add((pMethods, token) => Task.Run(()=> actionFunc(pMethods, token)));
+            _producerFunc = (pMethods, token) => Task.Run(()=> actionFunc(pMethods, token));
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new ManualResetEventSlim(false);
-            _producerEndEvent = new ManualResetEventSlim(true);
-        }
-        /// <summary>
-        /// Producer / Consumer schema enumerables
-        /// </summary>
-        /// <param name="actionFuncs">Actions to perform for the production of data</param>
-        public ProducerConsumerEnumerable(params Action<ProducerMethods, CancellationToken>[] actionFuncs)
-        {
-            _started = false;
-            _producerFuncs.AddRange(actionFuncs.Select(
-                action => new Func<ProducerMethods, CancellationToken, Task>((pMethods, token) => Task.Run(() => action(pMethods, token)))));
-            _collection = new List<T>();
-            _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new ManualResetEventSlim(false);
+            _producerAddEvent = new AutoResetEvent(false);
             _producerEndEvent = new ManualResetEventSlim(true);
         }
         ~ProducerConsumerEnumerable()
@@ -127,8 +100,7 @@ namespace TWCore.Threading
                 try
                 {
                     var prodMethods = new ProducerMethods(this);
-                    var tasks = _producerFuncs.Select(i => i(prodMethods, _tokenSource.Token)).ToArray();
-                    await Task.WhenAll(tasks).ConfigureAwait(false);
+                    await _producerFunc(prodMethods, _tokenSource.Token).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
@@ -204,9 +176,9 @@ namespace TWCore.Threading
             public bool MoveNext()
             {
                 _data.StartProducer();
-                if (_data._collection.Count - _index == 0)
-                {
-                    var waitValue = WaitHandle.WaitAny(new[] { _data._producerAddEvent.WaitHandle, _data._producerEndEvent.WaitHandle, _data._tokenSource.Token.WaitHandle });
+                while (_data._collection.Count - _index == 0)
+                {                   
+                    var waitValue = WaitHandle.WaitAny(new[] { _data._producerAddEvent, _data._producerEndEvent.WaitHandle, _data._tokenSource.Token.WaitHandle });
                     if (waitValue != 0) return false;
                 }
                 lock (_data._padlock)
@@ -214,8 +186,6 @@ namespace TWCore.Threading
                     if (_data._collection.Count > _index)
                     {
                         Current = _data._collection[_index++];
-                        if (_data._collection.Count - _index == 0)
-                            _data._producerAddEvent.Reset();
                         return true;
                     }
                     Core.Log.Error("The index is out of the range of the collection.");

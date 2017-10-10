@@ -93,6 +93,7 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {
+                Core.Log.LibVerbose("Received message by consumer.");
                 var message = new RabbitMessage
                 {
                     CorrelationId = Guid.Parse(ea.BasicProperties.CorrelationId),
@@ -100,7 +101,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Body = ea.Body
                 };
                 Counters.IncrementMessages();
-                var tsk = Task.Factory.StartNew(ProcessingTask, message, _token);
+                var tsk = Task.Factory.StartNew(ProcessingTask, message, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                 _processingTasks.TryAdd(tsk, null);
                 tsk.ContinueWith(mTsk =>
                 {
@@ -175,7 +176,7 @@ namespace TWCore.Messaging.RabbitMQ
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
                     }
 
-                    await Task.Delay(100, _token).ConfigureAwait(false);
+                    await Task.Delay(1000, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 catch (Exception ex)

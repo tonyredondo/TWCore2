@@ -74,7 +74,7 @@ namespace TWCore.Messaging.NSQ
 
 
                     _listener.Counters.IncrementMessages();
-                    var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token);
+                    var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
                     _listener._processingTasks.TryAdd(tsk, null);
                     tsk.ContinueWith(mTsk =>
                     {

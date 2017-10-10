@@ -47,13 +47,6 @@ namespace TWCore.Test.Core
                         producer.Add("Valor: " + i);
                         await Task.Delay(10, token).ConfigureAwait(false);
                     }
-                }, async (producer, token) =>
-                {
-                    for (var i = 1000; i < 1250; i++)
-                    {
-                        producer.Add("Valor: " + i);
-                        await Task.Delay(10, token).ConfigureAwait(false);
-                    }
                 });
 
                 foreach (var value in consumer)

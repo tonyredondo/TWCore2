@@ -171,14 +171,9 @@ namespace TWCore.Net.RPC.Server.Transports
                 var disconnectedSessions = _sessions.Values.ToList().Where(v => v.Disconnected);
                 foreach (var session in disconnectedSessions)
                 {
-                    if (!session.DisconnectionDateTime.HasValue ||
-                        (DateTime.UtcNow - session.DisconnectionDateTime.Value).TotalMinutes >=
-                        DisconnectedSessionTimeoutInMinutes)
-                    {
-                        Core.Log.LibVerbose("Removing SessionId={0}", session.SessionId);
-                        session.Dispose();
-                        _sessions.TryRemove(session.SessionId, out var _);
-                    }
+                    Core.Log.LibVerbose("Removing SessionId={0}", session.SessionId);
+                    session.Dispose();
+                    _sessions.TryRemove(session.SessionId, out var _);
                 }
 
             }, this, 10000, 10000);

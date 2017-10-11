@@ -172,7 +172,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     writeCounterStream.ClearBytesCounters();
                 }
                 if (!Disconnected) return;
-                Core.Log.Warning("Session {0} had disconnected.", SessionId);
+                Core.Log.Warning("Session {0} has been disconnected.", SessionId);
                 DisconnectionDateTime = DateTime.UtcNow;
                 try
                 {

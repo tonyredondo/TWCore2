@@ -305,7 +305,7 @@ namespace TWCore.Net.RPC.Server.Transports
             client.OnSessionRequestReceived = null;
             client.OnRequestReceived = null;
             client.OnSessionDisconnected = null;
-            _sessions.TryRemove(client.SessionId, out client);
+            _sessions.TryRemove(client.SessionId, out var _);
             Core.Status.DeAttachObject(client);
         }
         #endregion

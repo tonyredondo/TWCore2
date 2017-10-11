@@ -21,11 +21,14 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
+using TWCore.Threading;
+
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -66,7 +69,7 @@ namespace TWCore.Messaging.RabbitMQ
             public Guid CorrelationId;
             public IBasicProperties Properties;
             public byte[] Body;
-            public readonly ManualResetEventSlim WaitHandler = new ManualResetEventSlim(false);
+            public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
         }
         #endregion
 
@@ -236,7 +239,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override ResponseMessage OnReceive(Guid correlationId, CancellationToken cancellationToken)
+        protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
@@ -279,10 +282,10 @@ namespace TWCore.Messaging.RabbitMQ
                 _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
             }
 
-            if (!message.WaitHandler.Wait(timeout, cancellationToken))
+            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
                 throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
             if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);

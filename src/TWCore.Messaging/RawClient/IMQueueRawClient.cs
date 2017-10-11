@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
+
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
@@ -87,7 +89,7 @@ namespace TWCore.Messaging.RawClient
         /// <typeparam name="T">Type of the object to be received</typeparam>
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
-        T Receive<T>(Guid correlationId);
+        Task<T> ReceiveAsync<T>(Guid correlationId);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
@@ -95,20 +97,20 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Correlation id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        T Receive<T>(Guid correlationId, CancellationToken cancellationToken);
+        Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
-        byte[] ReceiveBytes(Guid correlationId);
+        Task<byte[]> ReceiveBytesAsync(Guid correlationId);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>
         /// <param name="correlationId">Correlation id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        byte[] ReceiveBytes(Guid correlationId, CancellationToken cancellationToken);
+        Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken);
 
         #endregion
 
@@ -118,7 +120,7 @@ namespace TWCore.Messaging.RawClient
         /// </summary>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
-        byte[] SendAndReceive(byte[] obj);
+        Task<byte[]> SendAndReceiveAsync(byte[] obj);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -126,7 +128,7 @@ namespace TWCore.Messaging.RawClient
         /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR, T>(T obj);
+        Task<TR> SendAndReceiveAsync<TR, T>(T obj);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -135,7 +137,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR, T>(T obj, CancellationToken cancellationToken);
+        Task<TR> SendAndReceiveAsync<TR, T>(T obj, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -144,7 +146,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR, T>(T obj, Guid correlationId);
+        Task<TR> SendAndReceiveAsync<TR, T>(T obj, Guid correlationId);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -154,14 +156,14 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken);
+        Task<TR> SendAndReceiveAsync<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
         /// <typeparam name="TR">Type of the object to be received</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR>(object obj);
+        Task<TR> SendAndReceiveAsync<TR>(object obj);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -169,7 +171,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR>(object obj, CancellationToken cancellationToken);
+        Task<TR> SendAndReceiveAsync<TR>(object obj, CancellationToken cancellationToken);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -177,7 +179,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR>(object obj, Guid correlationId);
+        Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId);
         /// <summary>
         /// Sends and waits for receive response from the queue (like RPC)
         /// </summary>
@@ -186,7 +188,7 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
-        TR SendAndReceive<TR>(object obj, Guid correlationId, CancellationToken cancellationToken);
+        Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId, CancellationToken cancellationToken);
         #endregion
     }
 }

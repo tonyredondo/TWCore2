@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -77,6 +78,18 @@ namespace TWCore.Threading
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
+        /// <param name="timeout">TimeSpan timeout value</param>
+        /// <returns>Task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> WaitAsync(TimeSpan timeout)
+        {
+            var delayTask = Task.Delay(timeout);
+            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
+            return finalTask != delayTask;
+        }
+        /// <summary>
+        /// Wait Async for the set event
+        /// </summary>
         /// <param name="milliseconds">Milliseconds</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task</returns>
@@ -84,6 +97,19 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
             var delayTask = Task.Delay(milliseconds);
+            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
+            return finalTask != delayTask;
+        }
+        /// <summary>
+        /// Wait Async for the set event
+        /// </summary>
+        /// <param name="timeout">TimeSpan timeout value</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
+        {
+            var delayTask = Task.Delay(timeout);
             var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
             return finalTask != delayTask;
         }

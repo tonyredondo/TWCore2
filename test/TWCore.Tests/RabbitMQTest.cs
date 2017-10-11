@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
@@ -122,7 +124,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceive<string>("Hola mundo");
+                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -134,10 +136,14 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Parallel.For(0, totalQ, i =>
-                        {
-                            var response = mqClient.SendAndReceive<string>("Hola mundo");
-                        });
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select(_ => mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
+                        );
+
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                        //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
@@ -156,7 +162,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceive<string>("Hola mundo");
+                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -168,10 +174,13 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Parallel.For(0, totalQ, i =>
-                        {
-                            var response = mqClient.SendAndReceive<string>("Hola mundo");
-                        });
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select(_ => mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
+                        );
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                        //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
@@ -203,7 +212,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceive(byteRequest);
+                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -215,10 +224,13 @@ namespace TWCore.Tests
                     Core.Log.Warning("RAW Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Parallel.For(0, totalQ, i =>
-                        {
-                            var response = mqClient.SendAndReceive(byteRequest);
-                        });
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select(_ => mqClient.SendAndReceiveAsync(byteRequest)).ToArray()
+                        );
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceive(byteRequest);
+                        //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }
@@ -237,7 +249,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceive(byteRequest);
+                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -249,10 +261,13 @@ namespace TWCore.Tests
                     Core.Log.Warning("RAW Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Parallel.For(0, totalQ, i =>
-                        {
-                            var response = mqClient.SendAndReceive(byteRequest);
-                        });
+                        Task.WaitAll(
+                            Enumerable.Range(0, totalQ).Select(_ => mqClient.SendAndReceiveAsync(byteRequest)).ToArray()
+                        );
+                        //Parallel.For(0, totalQ, i =>
+                        //{
+                        //    var response = mqClient.SendAndReceive(byteRequest);
+                        //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }

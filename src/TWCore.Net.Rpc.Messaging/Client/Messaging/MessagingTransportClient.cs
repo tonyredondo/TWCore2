@@ -41,8 +41,6 @@ namespace TWCore.Net.RPC.Client.Transports
         private readonly IMQueueClient _queueClient;
         private readonly Dictionary<Guid, ServiceDescriptor> _methods = new Dictionary<Guid, ServiceDescriptor>(100);
         private ServiceDescriptorCollection _descriptors;
-        private readonly Func<Task<ServiceDescriptorCollection>> _getDescriptionAsync;
-        private readonly Func<RPCRequestMessage, Task<RPCResponseMessage>> _invokeMethodAsync;
         
         #region Properties
         /// <inheritdoc />
@@ -106,8 +104,6 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <param name="serializer">Serializer instance</param>
         public MessagingTransportClient(IMQueueClient queueClient, ISerializer serializer)
         {
-            _getDescriptionAsync = FuncDelegate.CreateAsync(GetDescriptors);
-            _invokeMethodAsync = FuncDelegate.CreateAsync<RPCRequestMessage, RPCResponseMessage>(InvokeMethod);
             _queueClient = queueClient;
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
             Core.Status.Attach(collection =>
@@ -140,7 +136,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<ServiceDescriptorCollection> GetDescriptorsAsync()
-            => _getDescriptionAsync();
+            => _queueClient.SendAndReceiveAsync<ServiceDescriptorCollection>("GetDescription");
         /// <inheritdoc />
         /// <summary>
         /// Gets the descriptor for the RPC service
@@ -148,7 +144,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ServiceDescriptorCollection GetDescriptors()
-            => _queueClient.SendAndReceive<ServiceDescriptorCollection>("GetDescription");
+            => GetDescriptorsAsync().WaitAndResults();
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -157,7 +153,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
-            => _invokeMethodAsync(messageRQ);
+            => _queueClient.SendAndReceiveAsync<RPCResponseMessage>(messageRQ);
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -166,7 +162,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-            => _queueClient.SendAndReceive<RPCResponseMessage>(messageRQ);
+            => InvokeMethodAsync(messageRQ).WaitAndResults();
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

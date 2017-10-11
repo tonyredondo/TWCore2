@@ -28,6 +28,8 @@ using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Threading;
+
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming
 
@@ -64,7 +66,7 @@ namespace TWCore.Messaging.NSQ
         {
             public Guid CorrelationId;
             public SubArray<byte> Body;
-            public readonly ManualResetEventSlim WaitHandler = new ManualResetEventSlim(false);
+            public readonly AsyncManualResetEvent WaitHandler = new AsyncManualResetEvent(false);
             public Consumer Consumer;
             public string Route;
             public string Name;
@@ -222,7 +224,7 @@ namespace TWCore.Messaging.NSQ
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override byte[] OnReceive(Guid correlationId, CancellationToken cancellationToken)
+        protected override async Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
@@ -241,7 +243,7 @@ namespace TWCore.Messaging.NSQ
                 message.Consumer.AddHandler(MessageHandler);
                 message.Consumer.ConnectToNsqd(message.Route);
 
-                var waitResult = message.WaitHandler.Wait(timeout, cancellationToken);
+                var waitResult = await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
 
                 message.Consumer.Stop();
                 message.Consumer.DisconnectFromNsqd(message.Route);
@@ -257,19 +259,17 @@ namespace TWCore.Messaging.NSQ
                     sw.Stop();
                     return (byte[])message.Body;
                 }
-                else
-                    throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
             }
 
-            if (message.WaitHandler.Wait(timeout, cancellationToken))
+            if (await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
             {
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
                 return (byte[])message.Body;
             }
-            else
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
         }
         #endregion
 

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
@@ -174,8 +175,8 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Receive<T>(Guid correlationId)
-            => Receive<T>(correlationId, CancellationToken.None);
+        public Task<T> ReceiveAsync<T>(Guid correlationId)
+            => ReceiveAsync<T>(correlationId, CancellationToken.None);
         /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
@@ -185,9 +186,9 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T Receive<T>(Guid correlationId, CancellationToken cancellationToken)
+        public async Task<T> ReceiveAsync<T>(Guid correlationId, CancellationToken cancellationToken)
         {
-            var msg = ReceiveBytes(correlationId, cancellationToken);
+            var msg = await ReceiveBytesAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (msg == null) return default(T);
             if (typeof(T) == typeof(byte[]))
                 return (T)(object)msg;
@@ -200,8 +201,8 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Correlation id</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] ReceiveBytes(Guid correlationId)
-            => ReceiveBytes(correlationId, CancellationToken.None);
+        public Task<byte[]> ReceiveBytesAsync(Guid correlationId)
+            => ReceiveBytesAsync(correlationId, CancellationToken.None);
         /// <inheritdoc />
         /// <summary>
         /// Receive a message from the queue
@@ -210,9 +211,9 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] ReceiveBytes(Guid correlationId, CancellationToken cancellationToken)
+        public async Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            var bytes = OnReceive(correlationId, cancellationToken);
+            var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes == null) return null;
 
             OnAfterReceive(ref bytes);
@@ -230,10 +231,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] SendAndReceive(byte[] obj)
+        public Task<byte[]> SendAndReceiveAsync(byte[] obj)
         {
             var correlationId = SendBytes(obj);
-            return ReceiveBytes(correlationId);
+            return ReceiveBytesAsync(correlationId);
         }
         /// <inheritdoc />
         /// <summary>
@@ -244,10 +245,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR, T>(T obj)
+        public Task<TR> SendAndReceiveAsync<TR, T>(T obj)
         {
             var correlationId = Send(obj);
-            return Receive<TR>(correlationId);
+            return ReceiveAsync<TR>(correlationId);
         }
         /// <inheritdoc />
         /// <summary>
@@ -259,10 +260,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR, T>(T obj, CancellationToken cancellationToken)
+        public Task<TR> SendAndReceiveAsync<TR, T>(T obj, CancellationToken cancellationToken)
         {
             var correlationId = Send(obj);
-            return Receive<TR>(correlationId, cancellationToken);
+            return ReceiveAsync<TR>(correlationId, cancellationToken);
         }
         /// <inheritdoc />
         /// <summary>
@@ -274,10 +275,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR, T>(T obj, Guid correlationId)
+        public Task<TR> SendAndReceiveAsync<TR, T>(T obj, Guid correlationId)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<TR>(correlationId);
+            return ReceiveAsync<TR>(correlationId);
         }
         /// <inheritdoc />
         /// <summary>
@@ -290,10 +291,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
+        public Task<TR> SendAndReceiveAsync<TR, T>(T obj, Guid correlationId, CancellationToken cancellationToken)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<TR>(correlationId, cancellationToken);
+            return ReceiveAsync<TR>(correlationId, cancellationToken);
         }
         /// <inheritdoc />
         /// <summary>
@@ -303,10 +304,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="obj">Object to be sent</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR>(object obj)
+        public Task<TR> SendAndReceiveAsync<TR>(object obj)
         {
             var correlationId = Send(obj);
-            return Receive<TR>(correlationId);
+            return ReceiveAsync<TR>(correlationId);
         }
         /// <inheritdoc />
         /// <summary>
@@ -317,10 +318,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR>(object obj, CancellationToken cancellationToken)
+        public Task<TR> SendAndReceiveAsync<TR>(object obj, CancellationToken cancellationToken)
         {
             var correlationId = Send(obj);
-            return Receive<TR>(correlationId, cancellationToken);
+            return ReceiveAsync<TR>(correlationId, cancellationToken);
         }
         /// <inheritdoc />
         /// <summary>
@@ -331,10 +332,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR>(object obj, Guid correlationId)
+        public Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<TR>(correlationId);
+            return ReceiveAsync<TR>(correlationId);
         }
         /// <inheritdoc />
         /// <summary>
@@ -346,10 +347,10 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TR SendAndReceive<TR>(object obj, Guid correlationId, CancellationToken cancellationToken)
+        public Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId, CancellationToken cancellationToken)
         {
             correlationId = Send(obj, correlationId);
-            return Receive<TR>(correlationId, cancellationToken);
+            return ReceiveAsync<TR>(correlationId, cancellationToken);
         }
 
         /// <inheritdoc />
@@ -391,7 +392,7 @@ namespace TWCore.Messaging.RawClient
 		/// <param name="cancellationToken">Cancellation Token</param>
 		/// <returns>Response message instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract byte[] OnReceive(Guid correlationId, CancellationToken cancellationToken);
+		protected abstract Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken);
 		/// <summary>
 		/// After a response message has been received
 		/// </summary>

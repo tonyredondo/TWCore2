@@ -121,7 +121,7 @@ namespace TWCore.Threading
                 if (!tcs.Task.IsCompleted)
                     return;
 #pragma warning disable 420
-                if (Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(), tcs) == tcs)
+                if (Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously), tcs) == tcs)
 #pragma warning restore 420
                     return;
             }

@@ -112,7 +112,8 @@ namespace TWCore.Reflection
             var obj = Expression.Parameter(typeof(object), "o");
             var castedObject = Expression.Convert(obj, method.DeclaringType);
             if (_changeTypeMethodInfo == null)
-                _changeTypeMethodInfo = typeof(CompleteAccessorsFactory).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
+                _changeTypeMethodInfo = typeof(CompleteAccessorsFactory)
+                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType");
 
             var parameters = method.GetParameters();
             var paramExp = Expression.Parameter(typeof(object[]), "args");

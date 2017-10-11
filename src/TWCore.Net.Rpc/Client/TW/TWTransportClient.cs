@@ -28,6 +28,8 @@ using TWCore.Diagnostics.Status;
 using TWCore.IO;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable MemberCanBePrivate.Local
@@ -50,7 +52,7 @@ namespace TWCore.Net.RPC.Client.Transports
         private readonly List<SocketConnection> _connectedSockets = new List<SocketConnection>();
         private readonly ConcurrentDictionary<Guid, RPCResponseHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCResponseHandler>();
         private readonly HashSet<Guid> _messageRetries = new HashSet<Guid>();
-        private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(2048);
+        private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(250);
         private int _connectedSocketsCount;
         private int _socketTurn;
         private readonly byte _socketsPerClient = 2;
@@ -61,7 +63,7 @@ namespace TWCore.Net.RPC.Client.Transports
         #region Nested Class
         private sealed class RPCResponseHandler
         {
-            public readonly ManualResetEventSlim Event = new ManualResetEventSlim(false);
+            public readonly AsyncManualResetEvent Event = new AsyncManualResetEvent(false);
             public RPCResponseMessage Message;
         }
         #endregion
@@ -280,12 +282,9 @@ namespace TWCore.Net.RPC.Client.Transports
             if (_token.IsCancellationRequested) return null;
             var messageId = messageRQ.MessageId;
             var wh = _messageResponsesHandlers.GetOrAdd(messageId, id => new RPCResponseHandler());
-            //Core.Log.LibVerbose("Getting Connection for message Id={0}", messageId);
             var socketConnection = GetSocketConnection();
-            //Core.Log.LibVerbose("Connection selected, sending message Id={0} [SessionId={1}]", messageId, socketConnection.SessionId);
             await socketConnection.SendRequestMessageAsync(messageRQ).ConfigureAwait(false);
-            //Core.Log.LibVerbose("Waiting response message for Id: {0} [SessionId={1}]", messageId, socketConnection.SessionId);
-            if (wh.Event.Wait(InvokeMethodTimeout, socketConnection.OnlineToken))
+            if (await wh.Event.WaitAsync(InvokeMethodTimeout, socketConnection.OnlineToken).ConfigureAwait(false))
             {
                 return wh.Message;
             }
@@ -328,8 +327,7 @@ namespace TWCore.Net.RPC.Client.Transports
                 var wh = _messageResponsesHandlers.GetOrAdd(messageId, id => new RPCResponseHandler());
                 var socketConnection = GetSocketConnection();
                 socketConnection.SendRequestMessage(messageRQ);
-                //Core.Log.LibVerbose("Waiting response message for Id: {0} [SessionId={1}]", messageId, socketConnection.SessionId);
-                if (wh.Event.Wait(InvokeMethodTimeout, _token))
+                if (wh.Event.WaitAsync(InvokeMethodTimeout, _token).WaitAndResults())
                 {
                     return wh.Message;
                 }
@@ -548,8 +546,8 @@ namespace TWCore.Net.RPC.Client.Transports
             private BufferedStream _readStream;
             private BytesCounterStream _readCounterStream;
             private BytesCounterStream _writeCounterStream;
-            private readonly ManualResetEventSlim _connectionEvent = new ManualResetEventSlim();
-            private readonly ManualResetEventSlim _sessionMessageEvent = new ManualResetEventSlim(false);
+            private readonly AsyncManualResetEvent _connectionEvent = new AsyncManualResetEvent();
+            private readonly AsyncManualResetEvent _sessionMessageEvent = new AsyncManualResetEvent(false);
             private readonly ManualResetEventSlim _receiveMessageEvent = new ManualResetEventSlim(false);
             private readonly RPCTransportCounters _counters;
 
@@ -663,7 +661,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     _sessionMessageEvent.Reset();
                     Core.Log.LibVerbose("Sending session request...");
                     SendSessionRequest();
-                    if (!_sessionMessageEvent.Wait(10000, _connectionToken))
+                    if (!await _sessionMessageEvent.WaitAsync(10000, _connectionToken).ConfigureAwait(false))
                     {
                         _connectionStatus = ConnectionStatus.Disconnected;
                         _client.Dispose();
@@ -741,7 +739,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         try
                         {
-                            _connectionEvent.Wait(5000, _connectionToken);
+                            await _connectionEvent.WaitAsync(5000, _connectionToken).ConfigureAwait(false);
                         }
                         catch
                         {
@@ -766,7 +764,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     {
                         try
                         {
-                            _connectionEvent.Wait(5000, _connectionToken);
+                            _connectionEvent.WaitAsync(5000, _connectionToken).WaitAndResults();
                         }
                         catch
                         {

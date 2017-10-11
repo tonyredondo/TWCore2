@@ -168,12 +168,19 @@ namespace TWCore.Net.RPC.Server.Transports
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             _disconnectionTimer = new Timer(state =>
             {
-                var sessionsTimeout = _sessions.Values.ToList().Where(v => v.DisconnectionDateTime.HasValue && (DateTime.UtcNow - v.DisconnectionDateTime.Value).TotalMinutes > DisconnectedSessionTimeoutInMinutes);
-                foreach (var sTimeout in sessionsTimeout)
+                var disconnectedSessions = _sessions.Values.ToList().Where(v => v.Disconnected);
+                foreach (var session in disconnectedSessions)
                 {
-                    Core.Log.LibVerbose("Removing SessionId={0}", sTimeout.SessionId);
-                    _sessions.TryRemove(sTimeout.SessionId, out var _);
+                    if (!session.DisconnectionDateTime.HasValue ||
+                        (DateTime.UtcNow - session.DisconnectionDateTime.Value).TotalMinutes >=
+                        DisconnectedSessionTimeoutInMinutes)
+                    {
+                        Core.Log.LibVerbose("Removing SessionId={0}", session.SessionId);
+                        session.Dispose();
+                        _sessions.TryRemove(session.SessionId, out var _);
+                    }
                 }
+
             }, this, 10000, 10000);
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;

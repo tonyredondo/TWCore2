@@ -348,7 +348,7 @@ namespace TWCore
 		{
 			// Create another task that completes as soon as cancellation is requested.
 			var tcs = new TaskCompletionSource<TResult>();
-			using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+			using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
 			{
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
@@ -365,16 +365,76 @@ namespace TWCore
 				return await readyTask;
 			}
 		}
-		/// <summary>
-		/// Handles a cancellation Token for a task without support
-		/// </summary>
-		/// <param name="asyncTask">Async task without cancellation token</param>
-		/// <param name="cancellationToken">Cancellation token</param>
-		/// <returns>Task with cancellation token support</returns>
-		public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+	    /// <param name="cancellationToken2">Cancellation token 2</param>
+        /// <returns>Task with cancellation token support</returns>
+        public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
+	    {
+	        // Create another task that completes as soon as cancellation is requested.
+	        var tcs = new TaskCompletionSource<TResult>();
+	        using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+	        {
+	            var cancellationTask = tcs.Task;
+	            // Create a task that completes when either the async operation completes,
+	            // or cancellation is requested.
+	            var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
+
+	            // In case of cancellation, register a continuation to observe any unhandled 
+	            // exceptions from the asynchronous operation (once it completes).
+	            // In .NET 4.0, unobserved task exceptions would terminate the process.
+	            if (readyTask == cancellationTask)
+	                await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+	                    .ConfigureAwait(false);
+
+	            return await readyTask;
+	        }
+	    }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="cancellationToken2">Cancellation token 2</param>
+	    /// <param name="cancellationToken3">Cancellation token 3</param>
+        /// <returns>Task with cancellation token support</returns>
+        public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+	    {
+	        // Create another task that completes as soon as cancellation is requested.
+	        var tcs = new TaskCompletionSource<TResult>();
+	        using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken3.Register(() => tcs.TrySetCanceled(), false))
+	        {
+	            var cancellationTask = tcs.Task;
+	            // Create a task that completes when either the async operation completes,
+	            // or cancellation is requested.
+	            var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
+
+	            // In case of cancellation, register a continuation to observe any unhandled 
+	            // exceptions from the asynchronous operation (once it completes).
+	            // In .NET 4.0, unobserved task exceptions would terminate the process.
+	            if (readyTask == cancellationTask)
+	                await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+	                    .ConfigureAwait(false);
+
+	            return await readyTask;
+	        }
+	    }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task with cancellation token support</returns>
+        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
 		{
 			var tcs = new TaskCompletionSource<object>();
-			using (cancellationToken.Register(() => tcs.TrySetCanceled(), useSynchronizationContext: false))
+			using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
 			{
 				var cancellationTask = tcs.Task;
 				// Create a task that completes when either the async operation completes,
@@ -391,20 +451,111 @@ namespace TWCore
 				await readyTask;
 			}
 		}
-		/// <summary>
-		/// Create a Task to await the cancellation of the token
-		/// </summary>
-		/// <param name="cancellationToken">Cancellation token instance</param>
-		/// <returns>Task to await the cancellation</returns>
-		public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+	    /// <param name="cancellationToken2">Cancellation token 2</param>
+        /// <returns>Task with cancellation token support</returns>
+        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
+	    {
+	        var tcs = new TaskCompletionSource<object>();
+	        using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+	        {
+	            var cancellationTask = tcs.Task;
+	            // Create a task that completes when either the async operation completes,
+	            // or cancellation is requested.
+	            var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
+
+	            // In case of cancellation, register a continuation to observe any unhandled 
+	            // exceptions from the asynchronous operation (once it completes).
+	            // In .NET 4.0, unobserved task exceptions would terminate the process.
+	            if (readyTask == cancellationTask)
+	                await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+	                    .ConfigureAwait(false);
+
+	            await readyTask;
+	        }
+	    }
+        /// <summary>
+        /// Handles a cancellation Token for a task without support
+        /// </summary>
+        /// <param name="asyncTask">Async task without cancellation token</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <param name="cancellationToken2">Cancellation token 2</param>
+	    /// <param name="cancellationToken3">Cancellation token 3</param>
+        /// <returns>Task with cancellation token support</returns>
+        public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+	    {
+	        var tcs = new TaskCompletionSource<object>();
+	        using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+	        using (cancellationToken3.Register(() => tcs.TrySetCanceled(), false))
+	        {
+	            var cancellationTask = tcs.Task;
+	            // Create a task that completes when either the async operation completes,
+	            // or cancellation is requested.
+	            var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
+
+	            // In case of cancellation, register a continuation to observe any unhandled 
+	            // exceptions from the asynchronous operation (once it completes).
+	            // In .NET 4.0, unobserved task exceptions would terminate the process.
+	            if (readyTask == cancellationTask)
+	                await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+	                    .ConfigureAwait(false);
+
+	            await readyTask;
+	        }
+	    }
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
 		{
 			if (cancellationToken.IsCancellationRequested) return;
 			var tcs = new TaskCompletionSource<object>();
-			using (cancellationToken.Register(() => tcs.TrySetResult(null), useSynchronizationContext: false)) 
+			using (cancellationToken.Register(() => tcs.TrySetResult(null), false)) 
 				await tcs.Task.ConfigureAwait(false);
 		}
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+	    /// <param name="cancellationToken2">Cancellation token 2 instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2)
+	    {
+	        if (cancellationToken.IsCancellationRequested) return;
+	        if (cancellationToken2.IsCancellationRequested) return;
+	        var tcs = new TaskCompletionSource<object>();
+	        using (cancellationToken.Register(() => tcs.TrySetResult(null), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetResult(null), false))
+	            await tcs.Task.ConfigureAwait(false);
+	    }
+        /// <summary>
+        /// Create a Task to await the cancellation of the token
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <param name="cancellationToken2">Cancellation token 2 instance</param>
+	    /// <param name="cancellationToken3">Cancellation token 3 instance</param>
+        /// <returns>Task to await the cancellation</returns>
+        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
+	    {
+	        if (cancellationToken.IsCancellationRequested) return;
+	        if (cancellationToken2.IsCancellationRequested) return;
+	        if (cancellationToken3.IsCancellationRequested) return;
+            var tcs = new TaskCompletionSource<object>();
+	        using (cancellationToken.Register(() => tcs.TrySetResult(null), false))
+	        using (cancellationToken2.Register(() => tcs.TrySetResult(null), false))
+	        using (cancellationToken3.Register(() => tcs.TrySetResult(null), false))
+	            await tcs.Task.ConfigureAwait(false);
+	    }
 
-		private delegate object InvokeDelegate(Delegate @delegate, params object[] args);
+        private delegate object InvokeDelegate(Delegate @delegate, params object[] args);
 		/// <summary>
 		/// Invoke a delegate as an Async Task
 		/// </summary>
@@ -428,14 +579,15 @@ namespace TWCore
 			var nDelegate = new InvokeDelegate((mDel, mArgs) => mDel.DynamicInvoke(mArgs));
 			return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
 		}
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Gets the assembly of the object type
-		/// </summary>
-		/// <param name="obj">Object of the type of the assembly</param>
-		/// <returns>Assembly where type is contained</returns>
-		public static Assembly GetAssembly(this object obj)
+        #region Others
+        /// <summary>
+        /// Gets the assembly of the object type
+        /// </summary>
+        /// <param name="obj">Object of the type of the assembly</param>
+        /// <returns>Assembly where type is contained</returns>
+        public static Assembly GetAssembly(this object obj)
 			=> obj?.GetType().GetTypeInfo().Assembly;
 		/// <summary>
 		/// Gets the string from a byte array using an Encoding
@@ -491,16 +643,17 @@ namespace TWCore
 			var ipAddress = await IpHelper.GetIpFromHostAsync(host).ConfigureAwait(false);
 			await client.ConnectAsync(ipAddress, port).ConfigureAwait(false);
 		}
+        #endregion
 
-		#region WaitHandles Extensions
-		/// <summary>
-		/// WaitOne with cancellationToken
-		/// </summary>
-		/// <returns><c>true</c>, if one was waited, <c>false</c> otherwise.</returns>
-		/// <param name="handle">Handle.</param>
-		/// <param name="millisecondsTimeout">Milliseconds timeout.</param>
-		/// <param name="cancellationToken">Cancellation token.</param>
-		public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
+        #region WaitHandles Extensions
+        /// <summary>
+        /// WaitOne with cancellationToken
+        /// </summary>
+        /// <returns><c>true</c>, if one was waited, <c>false</c> otherwise.</returns>
+        /// <param name="handle">Handle.</param>
+        /// <param name="millisecondsTimeout">Milliseconds timeout.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
 		{
 			var n = WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout);
 			switch (n)

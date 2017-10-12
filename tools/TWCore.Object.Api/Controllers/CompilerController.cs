@@ -6,6 +6,7 @@ using System.Xml.Serialization;
 using TWCore.Object.Compiler;
 using TWCore.Object.Descriptor;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable TooWideLocalVariableScope
 
 namespace TWCore.Object.Api.Controllers
 {

@@ -61,7 +61,7 @@ namespace TWCore.Object.Descriptor
 
         #region Private Methods
 
-        private ValueType GetValueType(object value, Type valueType)
+        private static ValueType GetValueType(object value, Type valueType)
         {
             if (valueType.IsEnum)
                 return ValueType.Enum;

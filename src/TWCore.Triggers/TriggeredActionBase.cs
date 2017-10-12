@@ -21,6 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Triggers
 {

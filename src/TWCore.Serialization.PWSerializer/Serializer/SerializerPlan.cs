@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Serialization.PWSerializer.Serializer
 {

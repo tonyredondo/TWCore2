@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Security
 {

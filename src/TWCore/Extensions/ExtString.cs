@@ -25,6 +25,7 @@ using System.Text.RegularExpressions;
 using TWCore.Text;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable MemberCanBePrivate.Global
 
 // ReSharper disable CheckNamespace
 
@@ -41,7 +42,7 @@ namespace TWCore
         private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
         private static readonly Regex ShrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
         private static readonly Regex InvalidXmlChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
-        private static Encoding DefaultEncoding = new UTF8Encoding(false);
+        private static readonly Encoding DefaultEncoding = new UTF8Encoding(false);
 
         #region Is? conditionals
         /// <summary>

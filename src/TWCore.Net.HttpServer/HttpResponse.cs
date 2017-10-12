@@ -23,6 +23,8 @@ using System.Runtime.CompilerServices;
 using TWCore.IO;
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable InvertIf
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable InconsistentNaming

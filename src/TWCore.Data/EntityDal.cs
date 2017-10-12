@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Data.Schema;
 using TWCore.Security;
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Data
 {

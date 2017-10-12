@@ -19,6 +19,7 @@ using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable SuggestBaseTypeForParameter
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Net.RPC
 {

@@ -23,6 +23,8 @@ using System.Runtime.Serialization;
 using System.Text;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Security;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Descriptors
 {

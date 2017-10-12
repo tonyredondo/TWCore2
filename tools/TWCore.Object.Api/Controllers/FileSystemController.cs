@@ -15,6 +15,8 @@ using TWCore.Settings;
 // ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMember.Local
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Object.Api.Controllers
 {
@@ -474,7 +476,6 @@ namespace TWCore.Object.Api.Controllers
 
                 return (servicesPathEntries, TimeSpan.FromSeconds(10));
             });
-            
         }
         private static PathEntry EnsureServiceEntry(Dictionary<string, PathEntry> servicesPathEntries, DiscoveryService.ReceivedService srv)
         {

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Net.RPC.Server
 {

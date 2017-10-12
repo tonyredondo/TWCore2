@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Net.HttpServer
 {

@@ -18,6 +18,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Cache.Client
 {

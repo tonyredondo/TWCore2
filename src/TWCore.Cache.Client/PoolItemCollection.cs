@@ -22,6 +22,8 @@ using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Cache.Client
 {

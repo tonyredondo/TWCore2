@@ -21,6 +21,7 @@ using TWCore.Collections;
 using TWCore.Messaging.Configuration;
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -29,7 +30,7 @@ namespace TWCore.Messaging.RabbitMQ
     /// </summary>
     internal class RabbitMQueue : MQConnection, IDisposable
     {
-        private Action _autoCloseAction;
+        private readonly Action _autoCloseAction;
 
         #region Properties
         /// <summary>

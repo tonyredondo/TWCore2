@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Cache.Storages.IO
 {

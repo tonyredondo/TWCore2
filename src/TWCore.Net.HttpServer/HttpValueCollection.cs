@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Collections;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Net.HttpServer
 {

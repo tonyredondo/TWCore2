@@ -30,6 +30,7 @@ using System.Threading.Tasks;
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable LoopCanBeConvertedToQuery
 // ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedMethodReturnValue.Global
 
 // ReSharper disable CheckNamespace
 

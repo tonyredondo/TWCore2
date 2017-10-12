@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Serialization
 {

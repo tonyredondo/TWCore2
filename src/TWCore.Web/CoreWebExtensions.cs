@@ -25,6 +25,8 @@ using System;
 using TWCore.Serialization;
 using TWCore.Web.Logger;
 // ReSharper disable InconsistentNaming
+// ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Web
 {

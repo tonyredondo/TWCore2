@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Serialization;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Cache.Client
 {

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Linq;
 using TWCore.Messaging.Configuration;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Messaging
 {

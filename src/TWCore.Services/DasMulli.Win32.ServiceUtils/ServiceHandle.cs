@@ -107,7 +107,7 @@ namespace DasMulli.Win32.ServiceUtils
                 Marshal.StructureToPtr(failureActionsFlag, lpFailureActionsFlag, fDeleteOld: false);
                 try
                 {
-                    bool result = NativeInterop.ChangeServiceConfig2W(this, ServiceConfigInfoTypeLevel.FailureActionsFlag, lpFailureActionsFlag);
+                    var result = NativeInterop.ChangeServiceConfig2W(this, ServiceConfigInfoTypeLevel.FailureActionsFlag, lpFailureActionsFlag);
                     if (!result)
                     {
                         throw new Win32Exception(Marshal.GetLastWin32Error());

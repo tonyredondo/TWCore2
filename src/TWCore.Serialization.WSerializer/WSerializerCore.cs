@@ -755,7 +755,7 @@ namespace TWCore.Serialization.WSerializer
                         if (typeQuantity > 0)
                         {
                             var gTypes = new Type[typeQuantity];
-                            bool someNull = false;
+                            var someNull = false;
                             for (var i = 0; i < typeQuantity; i++)
                             {
                                 gTypes[i] = DeserializeType(br, stringSerializer, br.ReadByte());
@@ -970,7 +970,7 @@ namespace TWCore.Serialization.WSerializer
                     case DataType.RefObjectByte16:
                     case DataType.RefObjectUShort:
                     case DataType.RefObjectByte:
-                        int objRef = -1;
+                        var objRef = -1;
                         #region Get Object Reference
                         switch (currentByte)
                         {
@@ -1161,7 +1161,7 @@ namespace TWCore.Serialization.WSerializer
         {
             return DeserializationTypes.GetOrAdd(type, mType =>
             {
-                string key = mType.Item2 + "." + mType.Item3;
+                var key = mType.Item2 + "." + mType.Item3;
                 if (!string.IsNullOrEmpty(mType.Item1))
                     key += ", " + mType.Item1;
                 return Core.GetType(key);
@@ -1178,7 +1178,7 @@ namespace TWCore.Serialization.WSerializer
                 var typeInfo = valueType.GetTypeInfo();
                 var isGenericType = typeInfo.IsGenericType;
 
-                var tinfo = new DeserializerTypeInfo()
+                var tinfo = new DeserializerTypeInfo
                 {
                     Type = valueType,
                     Properties = valueType.GetRuntimeProperties().Where(p =>

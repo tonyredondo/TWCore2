@@ -356,7 +356,7 @@ namespace TWCore.Messaging.Client
         {
             if (messageBody == null)
                 return null;
-            if (_receivedMessagesCache.TryGetValue(messageBody, out object _out))
+            if (_receivedMessagesCache.TryGetValue(messageBody, out var _out))
                 return (ResponseMessage)_out;
             return null;
         }

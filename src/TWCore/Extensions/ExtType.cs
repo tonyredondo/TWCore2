@@ -122,7 +122,7 @@ namespace TWCore
             var methodParameters = method.GetParameters().Select(parameter => parameter.ParameterType).ToArray();
             if (methodParameters.Length != parameterTypes.Length)
                 return false;
-            for (int i = 0; i < methodParameters.Length; i++)
+            for (var i = 0; i < methodParameters.Length; i++)
                 if (methodParameters[i].ToString() != parameterTypes[i].ToString())
                     return false;
             return true;

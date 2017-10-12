@@ -53,7 +53,7 @@ namespace TWCore.Text
             {
                 longer = b; shorter = a;
             }
-            int longerLength = longer.Length;
+            var longerLength = longer.Length;
             if (longerLength == 0)
                 return 1.0;
             return (longerLength - distanceAlgo.CalculateDistance(longer, shorter, comparer)) / (double)longerLength;

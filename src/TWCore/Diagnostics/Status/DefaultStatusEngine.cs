@@ -288,7 +288,7 @@ namespace TWCore.Diagnostics.Status
                 var groups = _statusValuesDelegates.Where(i => i?.Object != null).ToArray().GroupBy(i => i.Object);
                 return groups.Select(item =>
                 {
-                    var sItem = new StatusItem() { Name = item.Key.ToString(), ObjRef = item.Key, Parent = false };
+                    var sItem = new StatusItem { Name = item.Key.ToString(), ObjRef = item.Key, Parent = false };
                     _lstObj.Add(item.Key);
                     foreach (var i in item)
                         Try.Do(() => i.Action(sItem.Values));
@@ -311,7 +311,7 @@ namespace TWCore.Diagnostics.Status
 
             lock (this)
             {
-                var collection = new StatusItemCollection()
+                var collection = new StatusItemCollection
                 {
                     Timestamp = Core.Now,
                     EnvironmentName = Core.EnvironmentName,
@@ -384,7 +384,7 @@ namespace TWCore.Diagnostics.Status
                     }
                     else if (obj.Object != null)
                     {
-                        var sItem = new StatusItem() { Name = obj.Object.ToString(), Parent = false };
+                        var sItem = new StatusItem { Name = obj.Object.ToString(), Parent = false };
                         _lstObj.Add(obj.Object);
                         var lstSType = _lstObj.Where(o => o.GetType() == obj.GetType()).ToArray();
                         sItem.Name = lstSType.Skip(1).Any() ? 

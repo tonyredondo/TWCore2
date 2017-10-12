@@ -138,7 +138,7 @@ namespace TWCore.Data
                     else if (propertyTypeInfo.IsEnum &&
                              (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
                         result = Enum.Parse(propertyType, value.ToString());
-                    else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))
+                    else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
                         result = valueConverterResult;
                     else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
                     {
@@ -173,7 +173,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T GetValue<T>(object[] rowValues, string columnName)
         {
-            if (ColumnIndex.TryGetValue(columnName, out int index) && rowValues.Length > index)
+            if (ColumnIndex.TryGetValue(columnName, out var index) && rowValues.Length > index)
                 return (T)rowValues[index];
             return default(T);
         }

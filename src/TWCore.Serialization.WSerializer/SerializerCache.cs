@@ -78,7 +78,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SerializerGet(T value)
         {
-            if (_serializationCache.TryGetValue(value, out int cIdx))
+            if (_serializationCache.TryGetValue(value, out var cIdx))
                 return cIdx;
             return -1;
         }

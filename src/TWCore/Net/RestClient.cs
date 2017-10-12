@@ -57,7 +57,7 @@ namespace TWCore.Net
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RestClient(string baseUrl = null, ISerializer serializer = null)
         {
-            var handler = new DecompressionHandler()
+            var handler = new DecompressionHandler
             {
                 InnerHandler = new HttpClientHandler()
             };

@@ -27,6 +27,7 @@ using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Client.Transports
 {
@@ -100,7 +101,7 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HttpTransportClient()
         {
-            var handler = new DecompressionHandler()
+            var handler = new DecompressionHandler
             {
                 InnerHandler = new HttpClientHandler()
             };

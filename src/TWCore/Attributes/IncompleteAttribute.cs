@@ -16,7 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
-
+// ReSharper disable UnusedMember.Global
 // ReSharper disable CheckNamespace
 
 namespace TWCore

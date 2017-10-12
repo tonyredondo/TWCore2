@@ -135,7 +135,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
         {
-            int index = System.Array.IndexOf(_array, item, _offset, _count);
+            var index = System.Array.IndexOf(_array, item, _offset, _count);
             return index >= 0 ? index - _offset : -1;
         }
         /// <summary>

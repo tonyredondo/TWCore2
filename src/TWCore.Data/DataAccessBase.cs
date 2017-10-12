@@ -399,8 +399,8 @@ namespace TWCore.Data
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        int indexNumber = 0;
-                        bool firstTime = true;
+                        var indexNumber = 0;
+                        var firstTime = true;
                         connection.Open();
                         using (var reader = command.ExecuteReader())
                         {
@@ -521,7 +521,7 @@ namespace TWCore.Data
                     return OnSelectElement(nameOrQuery, parameters, fillMethod, out returnValue);
 
                 var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out object cacheValue))
+                if (Caches.TryGetValue(key, out var cacheValue))
                 {
                     Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
                     var value = (CacheValue<T>)cacheValue;
@@ -1321,12 +1321,12 @@ namespace TWCore.Data
                         connection.Open();
                         using (var reader = command.ExecuteReader())
                         {
-                            int resultSetIndex = 0;
+                            var resultSetIndex = 0;
 
                             do
                             {
-                                int indexNumber = 0;
-                                bool firstTime = true;
+                                var indexNumber = 0;
+                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
 
                                 while (reader.Read())
@@ -1417,7 +1417,7 @@ namespace TWCore.Data
                     return await OnSelectElementsAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
 
                 var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out object cacheValue))
+                if (Caches.TryGetValue(key, out var cacheValue))
                 {
                     Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
                     var value = (CacheValue<T>)cacheValue;
@@ -1482,8 +1482,8 @@ namespace TWCore.Data
                     {
                         #region Command Execution
                         var lstRows = new List<EntityDataRow<T>>();
-                        int indexNumber = 0;
-                        bool firstTime = true;
+                        var indexNumber = 0;
+                        var firstTime = true;
                         await connection.OpenAsync().ConfigureAwait(false);
                         using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                         {
@@ -1561,7 +1561,7 @@ namespace TWCore.Data
                     return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod);
 
                 var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
-                if (Caches.TryGetValue(key, out object cacheValue))
+                if (Caches.TryGetValue(key, out var cacheValue))
                 {
                     Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
                     var value = (CacheValue<T>)cacheValue;
@@ -2304,12 +2304,12 @@ namespace TWCore.Data
                         await connection.OpenAsync().ConfigureAwait(false);
                         using (var reader = await command.ExecuteReaderAsync().ConfigureAwait(false))
                         {
-                            int resultSetIndex = 0;
+                            var resultSetIndex = 0;
 
                             do
                             {
-                                int indexNumber = 0;
-                                bool firstTime = true;
+                                var indexNumber = 0;
+                                var firstTime = true;
                                 var resultset = resultSets[resultSetIndex];
 
                                 while (reader.Read())

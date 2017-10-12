@@ -626,7 +626,7 @@ namespace TWCore.Net.RPC.Client.Transports
                     if (_client == null)
                     {
                         Core.Log.LibVerbose("Setting new TcpSocketClient.");
-                        _client = new TcpClient()
+                        _client = new TcpClient
                         {
                             NoDelay = true
                         };

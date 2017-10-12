@@ -66,7 +66,7 @@ namespace TWCore.Net.RPC.Descriptors
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ServiceDescriptor GetDescriptor(Type serviceType)
         {
-            var descriptor = new ServiceDescriptor()
+            var descriptor = new ServiceDescriptor
             {
                 Name = serviceType.FullName
             };
@@ -77,7 +77,7 @@ namespace TWCore.Net.RPC.Descriptors
                 if (!mInfo.IsPublic || mInfo.IsSpecialName) continue;
                 var isRpcMethod = mInfo.IsDefined(typeof(RPCMethodAttribute)) || isInterface;
                 if (!isRpcMethod) continue;
-                var mDesc = new MethodDescriptor()
+                var mDesc = new MethodDescriptor
                 {
                     Method = mInfo.GetMethodAccessor(),
                     Name = mInfo.Name,
@@ -90,7 +90,7 @@ namespace TWCore.Net.RPC.Descriptors
                 for (var i = 0; i < pars.Length; i++)
                 {
                     var p = pars[i];
-                    var pDes = new ParameterDescriptor()
+                    var pDes = new ParameterDescriptor
                     {
                         Parameter = p,
                         Name = p.Name,
@@ -161,7 +161,7 @@ namespace TWCore.Net.RPC.Descriptors
                 for (var i = 0; i < props.Length; i++)
                 {
                     var p = props[i];
-                    var pDesc = new PropertyDescriptor()
+                    var pDesc = new PropertyDescriptor
                     {
                         Name = p.Name,
                         Type = GetTypeName(p.PropertyType)

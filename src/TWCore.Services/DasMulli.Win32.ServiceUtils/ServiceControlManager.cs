@@ -61,7 +61,7 @@ namespace DasMulli.Win32.ServiceUtils
 
         public ServiceHandle OpenService(string serviceName, ServiceControlAccessRights desiredControlAccess)
         {
-            if (!TryOpenService(serviceName, desiredControlAccess, out ServiceHandle service, out Win32Exception errorException))
+            if (!TryOpenService(serviceName, desiredControlAccess, out var service, out var errorException))
             {
                 throw errorException;
             }

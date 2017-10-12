@@ -67,7 +67,7 @@ namespace TWCore.Messaging.NSQ
                 try
                 {
                     (var body, var correlationId, var name) = NSQueueRawClient.GetFromRawMessageBody(message.Body);
-                    var rMsg = new NSQMessage()
+                    var rMsg = new NSQMessage
                     {
                         CorrelationId = correlationId,
                         Body = body,

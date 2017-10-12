@@ -267,7 +267,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                 var typeInfo = valueType.GetTypeInfo();
                 var isGenericType = typeInfo.IsGenericType;
 
-                var tinfo = new DeserializerTypeInfo()
+                var tinfo = new DeserializerTypeInfo
                 {
                     Type = valueType,
                     Properties = valueType.GetRuntimeProperties().Where(p =>

@@ -135,7 +135,7 @@ namespace TWCore.Text
 
             // if the array ends with zeros, having the capacity set to this will help us know how much
             // 'padding' we will need to add
-            int result_length = EncodingCharsCount(bytes.Length);
+            var result_length = EncodingCharsCount(bytes.Length);
             // List<> has a(n in-place) Reverse method. StringBuilder doesn't. That's why.
             var result = new List<char>(result_length);
 
@@ -150,12 +150,12 @@ namespace TWCore.Text
             while (!dividend.IsZero)
             {
                 dividend = BigInteger.DivRem(dividend, kRadixBig, out var remainder);
-                int digit_index = Math.Abs((int)remainder);
+                var digit_index = Math.Abs((int)remainder);
                 result.Add(kDigits[digit_index]);
             }
 
             if (kIncludeProceedingZeros)
-                for (int x = result.Count; x < result.Capacity; x++)
+                for (var x = result.Count; x < result.Capacity; x++)
                     result.Add(kDigits[0]); // pad with the character that represents 'zero'
 
             // orientate the characters in big-endian ordering
@@ -246,5 +246,5 @@ namespace TWCore.Text
                 return kIncludeProceedingZeros ? DecodeImplReversedWithPadding(radixChars) : DecodeImplReversed(radixChars);
             return kIncludeProceedingZeros ? DecodeImplWithPadding(radixChars) : DecodeImpl(radixChars);
         }
-    };
+    }
 }

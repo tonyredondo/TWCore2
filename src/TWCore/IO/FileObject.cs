@@ -182,7 +182,7 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private FileSystemWatcher CreateWatcher()
         {
-            var watcher = new FileSystemWatcher()
+            var watcher = new FileSystemWatcher
             {
                 Path = Path.GetDirectoryName(FilePath),
                 NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName | NotifyFilters.Security | NotifyFilters.Size | NotifyFilters.CreationTime,

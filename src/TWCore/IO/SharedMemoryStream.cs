@@ -163,6 +163,7 @@ namespace TWCore.IO
             _readEvent.Set();
             return totalRead;
         }
+
         /// <inheritdoc />
         /// <summary>
         ///  When overridden in a derived class, writes a sequence of bytes to the current stream and advances the current position within this stream by the number of bytes written.
@@ -173,40 +174,43 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(byte[] buffer, int offset, int count)
         {
-            var rPos = GetReadPosition();
-            var wPos = GetWritePosition();
-            while (GetReadFirst() == 1 && rPos == wPos)
+            while (true)
             {
-                _readEvent.WaitOne();
-                _readEvent.Reset();
-                rPos = GetReadPosition();
-            }
-
-            var cLength = rPos <= wPos ? _length : rPos;
-            var bufRemain = cLength - wPos;
-            if (bufRemain >= count)
-            {
-                _view.WriteArray(wPos + Start, buffer, offset, count);
-                wPos += count;
-                SetWritePosition(wPos == _length ? 0 : wPos);
-                if (rPos == wPos)
-                    SetReadFirst(1);
-                _writeEvent.Set();
-            }
-            else
-            {
-                var remain = count - bufRemain;
-                _view.WriteArray(wPos + Start, buffer, offset, bufRemain);
-                wPos += bufRemain;
-                if (wPos == rPos)
+                var rPos = GetReadPosition();
+                var wPos = GetWritePosition();
+                while (GetReadFirst() == 1 && rPos == wPos)
                 {
-                    SetWritePosition(wPos);
-                    SetReadFirst(1);
+                    _readEvent.WaitOne();
+                    _readEvent.Reset();
+                    rPos = GetReadPosition();
+                }
+
+                var cLength = rPos <= wPos ? _length : rPos;
+                var bufRemain = cLength - wPos;
+                if (bufRemain >= count)
+                {
+                    _view.WriteArray(wPos + Start, buffer, offset, count);
+                    wPos += count;
+                    SetWritePosition(wPos == _length ? 0 : wPos);
+                    if (rPos == wPos)
+                        SetReadFirst(1);
                     _writeEvent.Set();
-                    Write(buffer, offset + bufRemain, remain);
                 }
                 else
                 {
+                    var remain = count - bufRemain;
+                    _view.WriteArray(wPos + Start, buffer, offset, bufRemain);
+                    wPos += bufRemain;
+                    if (wPos == rPos)
+                    {
+                        SetWritePosition(wPos);
+                        SetReadFirst(1);
+                        _writeEvent.Set();
+                        offset = offset + bufRemain;
+                        count = remain;
+                        continue;
+                    }
+                    
                     var canWrite = Math.Min(remain, rPos);
                     _view.WriteArray(Start, buffer, offset + bufRemain, canWrite);
                     if (canWrite < remain)
@@ -215,18 +219,20 @@ namespace TWCore.IO
                         remain = remain - canWrite;
                         SetReadFirst(1);
                         _writeEvent.Set();
-                        Write(buffer, offset + bufRemain + canWrite, remain);
+                        offset = offset + bufRemain + canWrite;
+                        count = remain;
+                        continue;
                     }
-                    else
-                    {
-                        if (rPos == remain)
-                            SetReadFirst(1);
-                        SetWritePosition(remain);
-                        _writeEvent.Set();
-                    }
+                    
+                    if (rPos == remain)
+                        SetReadFirst(1);
+                    SetWritePosition(remain);
+                    _writeEvent.Set();
                 }
+                break;
             }
         }
+
         #endregion
 
 

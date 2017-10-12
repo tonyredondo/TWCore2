@@ -63,7 +63,7 @@ namespace TWCore.Text
                         break;
                     case '"':
                         sb.Append(ch);
-                        bool escaped = false;
+                        var escaped = false;
                         var index = i;
                         while (index > 0 && json[--index] == '\\')
                             escaped = !escaped;

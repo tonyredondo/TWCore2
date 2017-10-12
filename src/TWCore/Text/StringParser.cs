@@ -110,7 +110,7 @@ namespace TWCore.Text
                 }
                 else if (type == typeof(bool))
                 {
-                    if (bool.TryParse(value, out bool o))
+                    if (bool.TryParse(value, out var o))
                         resp = o;
                 }
                 else if (type == typeof(uint))

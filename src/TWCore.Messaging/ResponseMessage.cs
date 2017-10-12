@@ -21,6 +21,7 @@ using TWCore.Serialization;
 // ReSharper disable ValueParameterNotUsed
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Messaging
 {
@@ -81,7 +82,7 @@ namespace TWCore.Messaging
         /// <param name="body">Response body</param>
         public ResponseMessage(RequestMessage request, object body)
         {
-            Header = new ResponseMessageHeader()
+            Header = new ResponseMessageHeader
             {
                 Request = request
             };

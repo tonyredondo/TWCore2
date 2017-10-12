@@ -16,7 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
-
+// ReSharper disable UnusedMember.Global
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable CheckNamespace
 
@@ -32,7 +32,7 @@ namespace TWCore
         /// <summary>
         /// Name of the class to show in the log.
         /// </summary>
-        public string ClassName { get; set; }
+        public string ClassName { get; }
 
         /// <inheritdoc />
         /// <summary>

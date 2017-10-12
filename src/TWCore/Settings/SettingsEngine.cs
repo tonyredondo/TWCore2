@@ -58,7 +58,7 @@ namespace TWCore.Settings
                 var arrayAttribute = p.GetAttribute<SettingsArrayAttribute>();
                 var dictionaryAttribute = p.GetAttribute<SettingsDictionaryAttribute>();
 
-                string dataFormat = attribute?.DataFormat;
+                var dataFormat = attribute?.DataFormat;
                 string settingValue;
                 if (sKeys != null)
                 {
@@ -79,8 +79,8 @@ namespace TWCore.Settings
                 {
                     var settingsValueItems = settingValue?.SplitAndTrim(dictionaryAttribute.ItemSeparator);
 
-                    Type innerKeyType = typeof(object);
-                    Type innerValueType = typeof(object);
+                    var innerKeyType = typeof(object);
+                    var innerValueType = typeof(object);
 
                     var gargs = p.PropertyType.GenericTypeArguments;
                     if (gargs.Length > 0)
@@ -111,7 +111,7 @@ namespace TWCore.Settings
                     var settingsValueArray = settingValue?.SplitAndTrim(arrayAttribute.Separators);
                     var eType = p.PropertyType.GetElementType();
                     var defaultValue = eType.GetTypeInfo().IsValueType ? Activator.CreateInstance(eType) : null;
-                    bool isDefaultValue = true;
+                    var isDefaultValue = true;
 
 
                     var valueArray = settingsValueArray?.Select(val => Try.Do(() => StringParser.Parse(val, eType, defaultValue, dataFormat, provider), false)).ToArray();

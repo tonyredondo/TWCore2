@@ -68,7 +68,7 @@ namespace TWCore.Net
         public static uint IpToInt(string ipAddress)
         {
             var uip = ipAddress.Split('.').Select(i => {
-                uint.TryParse(i, out uint puip);
+                uint.TryParse(i, out var puip);
                 return puip;
             }).ToArray();
             return uip.Length == 4 ? IpToInt(uip[0], uip[1], uip[2], uip[3]) : 0;

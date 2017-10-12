@@ -53,26 +53,26 @@ namespace TWCore.Numerics
         /// <returns>Result group collection instance</returns>
         public ResultGroupCollection Simplify()
         {
-            VectorCollection vectors = new VectorCollection();
-            foreach (Key elm in Matrix.Keys)
+            var vectors = new VectorCollection();
+            foreach (var elm in Matrix.Keys)
             {
-                Vector vect = vectors.GetVectorByKey(elm.Name);
+                var vect = vectors.GetVectorByKey(elm.Name);
                 if (vect == null)
                 {
-                    vect = new Vector() { Key = elm.Name };
+                    vect = new Vector { Key = elm.Name };
                     vectors.Add(vect);
                 }
                 vect.Values.Add(Matrix[elm]);
             }
 
-            int maxValues = vectors.GetMaxCountValues();
-            ResultGroupCollection resultGroups = new ResultGroupCollection();
+            var maxValues = vectors.GetMaxCountValues();
+            var resultGroups = new ResultGroupCollection();
 
             while (maxValues > 0)
             {
                 if (vectors.Count == 1)
                 {
-                    ResultGroup rgroup = new ResultGroup();
+                    var rgroup = new ResultGroup();
                     rgroup.Keys.Add(vectors[0].Key);
                     rgroup.Values.AddRange(vectors[0].Values);
                     resultGroups.Add(rgroup);

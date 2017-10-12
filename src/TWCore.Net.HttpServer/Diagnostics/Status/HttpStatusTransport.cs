@@ -57,7 +57,7 @@ namespace TWCore.Diagnostics.Status.Transports
         {
             var htmlPage = this.GetAssembly().GetResourceString("Status.htm");
             var xmlSerializer = new XmlTextSerializer();
-            var jsonSerializer = new JsonTextSerializer() { UseCamelCase = false };
+            var jsonSerializer = new JsonTextSerializer { UseCamelCase = false };
             _httpServer = new SimpleHttpServer();
             _httpServer.AddGetHandler("/", ctx =>
             {

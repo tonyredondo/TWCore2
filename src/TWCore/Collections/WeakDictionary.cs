@@ -113,8 +113,8 @@ namespace TWCore.Collections
         // ————————————————-
         public new bool Equals(object x, object y)
         {
-            var first = GetTarget(x, out bool xIsDead);
-            var second = GetTarget(y, out bool yIsDead);
+            var first = GetTarget(x, out var xIsDead);
+            var second = GetTarget(y, out var yIsDead);
             if (xIsDead)
                 return yIsDead && x == y;
             return !yIsDead && _comparer.Equals(first, second);

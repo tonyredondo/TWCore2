@@ -143,7 +143,7 @@ namespace TWCore.Serialization
             extraTypes.UnionWith(SerializerManager.DefaultKnownTypes);
             extraTypes.UnionWith(KnownTypes);
             var xser = CreateSerializer(itemType, extraTypes.ToArray());
-            var settings = SettingsCache.GetOrAdd((Encoding, Indent, OmitXmlDeclaration), tpl => new XmlWriterSettings()
+            var settings = SettingsCache.GetOrAdd((Encoding, Indent, OmitXmlDeclaration), tpl => new XmlWriterSettings
             {
                 Encoding = tpl.Item1,
                 Indent = tpl.Item2,

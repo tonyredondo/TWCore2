@@ -63,54 +63,59 @@ namespace TWCore.Object.Descriptor
 
         private static ValueType GetValueType(object value, Type valueType)
         {
-            if (valueType.IsEnum)
-                return ValueType.Enum;
-            if (valueType == typeof(string))
-                return ValueType.String;
-            if (valueType == typeof(bool))
-                return ValueType.Bool;
-            if (valueType == typeof(DateTime))
-                return ValueType.Date;
-            if (valueType == typeof(int))
-                return ValueType.Number;
-            if (valueType == typeof(long))
-                return ValueType.Number;
-            if (valueType == typeof(float))
-                return ValueType.Number;
-            if (valueType == typeof(decimal))
-                return ValueType.Number;
-            if (valueType == typeof(short))
-                return ValueType.Number;
-            if (valueType == typeof(ushort))
-                return ValueType.Number;
-            if (valueType == typeof(byte))
-                return ValueType.Number;
-            if (valueType == typeof(double))
-                return ValueType.Number;
-            if (valueType == typeof(TimeSpan))
-                return ValueType.Time;
-            if (valueType == typeof(Guid))
-                return ValueType.Guid;
-            if (valueType == typeof(MethodInfo))
-                return ValueType.Method;
-            if (valueType == typeof(RuntimeMethodHandle))
-                return ValueType.Method;
-            if (valueType == typeof(RuntimeTypeHandle))
-                return ValueType.Type;
-            if (value is MethodInfo)
-                return ValueType.Method;
-            if (value is Type)
-                return ValueType.Type;
-            if (valueType == typeof(Type))
-                return ValueType.Type;
-            if (valueType.GetTypeInfo().IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
-                return GetValueType(value, Nullable.GetUnderlyingType(valueType));
-            if (valueType.GetInterfaces().Any(i =>
-                (i == typeof(IEnumerable) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))))
-                return ValueType.Enumerable;
-            return ValueType.Complex;
-        } 
-        
+            while (true)
+            {
+                if (valueType.IsEnum)
+                    return ValueType.Enum;
+                if (valueType == typeof(string))
+                    return ValueType.String;
+                if (valueType == typeof(bool))
+                    return ValueType.Bool;
+                if (valueType == typeof(DateTime))
+                    return ValueType.Date;
+                if (valueType == typeof(int))
+                    return ValueType.Number;
+                if (valueType == typeof(long))
+                    return ValueType.Number;
+                if (valueType == typeof(float))
+                    return ValueType.Number;
+                if (valueType == typeof(decimal))
+                    return ValueType.Number;
+                if (valueType == typeof(short))
+                    return ValueType.Number;
+                if (valueType == typeof(ushort))
+                    return ValueType.Number;
+                if (valueType == typeof(byte))
+                    return ValueType.Number;
+                if (valueType == typeof(double))
+                    return ValueType.Number;
+                if (valueType == typeof(TimeSpan))
+                    return ValueType.Time;
+                if (valueType == typeof(Guid))
+                    return ValueType.Guid;
+                if (valueType == typeof(MethodInfo))
+                    return ValueType.Method;
+                if (valueType == typeof(RuntimeMethodHandle))
+                    return ValueType.Method;
+                if (valueType == typeof(RuntimeTypeHandle))
+                    return ValueType.Type;
+                if (value is MethodInfo)
+                    return ValueType.Method;
+                if (value is Type)
+                    return ValueType.Type;
+                if (valueType == typeof(Type))
+                    return ValueType.Type;
+                if (valueType.GetTypeInfo().IsGenericType && valueType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    valueType = Nullable.GetUnderlyingType(valueType);
+                    continue;
+                }
+                if (valueType.GetInterfaces().Any(i => i == typeof(IEnumerable) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>)))
+                    return ValueType.Enumerable;
+                return ValueType.Complex;
+            }
+        }
+
         private Value ExtractValue(object value, Type valueType)
         {
             if (_depth > 15)

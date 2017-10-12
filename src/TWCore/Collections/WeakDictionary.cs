@@ -18,6 +18,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 namespace TWCore.Collections
 {

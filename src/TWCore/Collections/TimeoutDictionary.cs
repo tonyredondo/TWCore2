@@ -23,6 +23,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable UnusedMember.Global
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 #pragma warning disable 414

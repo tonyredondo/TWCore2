@@ -17,6 +17,9 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 // ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Collections
 {

@@ -23,6 +23,6 @@ namespace TWCore.Data.Schema.Generator
     public enum DalGeneratorType
     {
         Embedded,
-        StoredProcedure,
+        StoredProcedure
     }
 }

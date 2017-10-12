@@ -54,7 +54,7 @@ namespace TWCore.Object.Compiler
                     typeof(System.Diagnostics.Process).Assembly.Location,
                     typeof(IDisposable).Assembly.Location,
                     typeof(Type).Assembly.Location,
-                    typeof(Console).Assembly.Location,
+                    typeof(Console).Assembly.Location
                 };
                 var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
                 foreach (var asm in assemblies)

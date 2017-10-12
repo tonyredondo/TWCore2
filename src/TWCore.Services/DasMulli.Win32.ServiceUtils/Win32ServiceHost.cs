@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+// ReSharper disable UnusedMethodReturnValue.Global
 
 // ReSharper disable CheckNamespace
 

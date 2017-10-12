@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+// ReSharper disable LoopCanBeConvertedToQuery
 
 namespace TWCore.Collections
 {
@@ -121,7 +122,7 @@ namespace TWCore.Collections
                 {
                     if (o.Range.From.CompareTo(value) > 0)
                         break;
-                    else if (o.Range.Contains(value))
+                    if (o.Range.Contains(value))
                         results.Add(o);
                 }
             }
@@ -151,7 +152,7 @@ namespace TWCore.Collections
                 {
                     if (o.Range.From.CompareTo(range.To) > 0)
                         break;
-                    else if (o.Range.Intersects(range))
+                    if (o.Range.Intersects(range))
                         results.Add(o);
                 }
             }

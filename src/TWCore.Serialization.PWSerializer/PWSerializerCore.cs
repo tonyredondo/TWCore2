@@ -75,7 +75,7 @@ namespace TWCore.Serialization.PWSerializer
         #region Serializer
         private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
-        private static readonly ObjectPool<(HashSet<Type>, Stack<SerializerScope>)> SerPool = new ObjectPool<(HashSet<Type>, Stack<SerializerScope>)>(pool => (new HashSet<Type>(), new Stack<SerializerScope>()), (item) =>
+        private static readonly ObjectPool<(HashSet<Type>, Stack<SerializerScope>)> SerPool = new ObjectPool<(HashSet<Type>, Stack<SerializerScope>)>(pool => (new HashSet<Type>(), new Stack<SerializerScope>()), item =>
         {
             item.Item1.Clear();
             item.Item2.Clear();
@@ -628,7 +628,7 @@ namespace TWCore.Serialization.PWSerializer
         #endregion
 
         #region Deserializer
-        private static readonly ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>)> DesPool = new ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>)>(pool => (new Dictionary<Type, Type[]>(), new Stack<DeserializerType>()), (item) =>
+        private static readonly ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>)> DesPool = new ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>)>(pool => (new Dictionary<Type, Type[]>(), new Stack<DeserializerType>()), item =>
          {
              item.Item1.Clear();
              item.Item2.Clear();

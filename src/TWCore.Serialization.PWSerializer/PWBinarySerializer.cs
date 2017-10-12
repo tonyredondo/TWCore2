@@ -85,7 +85,7 @@ namespace TWCore.Serialization.PWSerializer
             {
                 Compressor = Compressor,
                 UseFileExtensions = UseFileExtensions,
-                SerializerMode = SerializerMode,
+                SerializerMode = SerializerMode
             };
             return nSerializer;
         }

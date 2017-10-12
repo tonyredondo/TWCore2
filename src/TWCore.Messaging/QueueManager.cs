@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using TWCore.Messaging.Configuration;
 // ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Messaging
 {
@@ -275,21 +276,17 @@ namespace TWCore.Messaging
         public bool DeleteQueue(MQConnection queue)
         {
             var exist = _admin.Exist(queue);
-            if (exist)
+            if (!exist) return true;
+            try
             {
-                try
-                {
-                    Core.Log.InfoBasic("Deleting queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                    return _admin.Delete(queue);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Error(ex, "Error deleting the queue: Route={0}, Name={1}", queue.Route, queue.Name);
-                    return false;
-                }
+                Core.Log.InfoBasic("Deleting queue: Route={0}, Name={1}", queue.Route, queue.Name);
+                return _admin.Delete(queue);
             }
-            else
-                return true;
+            catch (Exception ex)
+            {
+                Core.Log.Error(ex, "Error deleting the queue: Route={0}, Name={1}", queue.Route, queue.Name);
+                return false;
+            }
         }
         #endregion
 

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore
@@ -142,7 +143,7 @@ namespace TWCore
         public static Func<T, TResult> Create<T, TResult>(Func<T, TResult> func)
         {
             var weakDelegate = new WeakDelegate(func.Target, func.GetMethodInfo());
-            return (t) => (TResult)weakDelegate.TryInvoke(t);
+            return t => (TResult)weakDelegate.TryInvoke(t);
         }
         /// <summary>
         /// Creates an Weak Func delegate from a normal Func

@@ -531,7 +531,7 @@ namespace TWCore.Net
                     {
                         Message = serHttpError.Message?.RemoveInvalidXmlChars(),
                         StackTrace = serHttpError.StackTrace,
-                        ExceptionType = serHttpError.ExceptionType,
+                        ExceptionType = serHttpError.ExceptionType
                     };
                 }
 

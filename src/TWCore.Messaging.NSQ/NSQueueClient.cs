@@ -268,7 +268,7 @@ namespace TWCore.Messaging.NSQ
                 if (waitResult)
                 {
                     if (message.Body == null)
-                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+                        throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                     Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                     var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
@@ -282,7 +282,7 @@ namespace TWCore.Messaging.NSQ
             if (await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
             {
                 if (message.Body == null)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);

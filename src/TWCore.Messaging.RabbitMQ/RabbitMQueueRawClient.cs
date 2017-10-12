@@ -271,7 +271,7 @@ namespace TWCore.Messaging.RabbitMQ
             if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
                 throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
             if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId.ToString());
+                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);

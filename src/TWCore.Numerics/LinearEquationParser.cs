@@ -43,14 +43,14 @@ namespace TWCore.Numerics
         ErrorMultipleDecimalPoints,
         ErrorTooManyDigits,
         ErrorMissingExponent,
-        ErrorIllegalExponent,
+        ErrorIllegalExponent
     }
 
     internal enum LinearEquationParserState
     {
         ParseTerm,
         ParseOperator
-    };
+    }
 
     /// <summary>
     /// This class provides a parser for strings that contain a system

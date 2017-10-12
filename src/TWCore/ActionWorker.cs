@@ -32,7 +32,7 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base((item) => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker() : base(item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
@@ -102,7 +102,7 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base((item) => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker() : base(item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order

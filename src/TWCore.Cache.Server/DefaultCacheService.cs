@@ -67,7 +67,7 @@ namespace TWCore.Services
                 if (!transportItem.Enabled) continue;
                 var parameters = new Dictionary<string, object>
                 {
-                    ["Transport.TypeFactory"] = transportItem.TypeFactory,
+                    ["Transport.TypeFactory"] = transportItem.TypeFactory
                 };
                 if (transportItem.Parameters != null)
                 {

@@ -294,7 +294,7 @@ namespace TWCore.Net.RPC.Server.Transports
                 OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
                 var response = new RPCResponseMessage(request)
                 {
-                    ReturnValue = dEventArgs.Descriptors,
+                    ReturnValue = dEventArgs.Descriptors
                 };
                 return response;
             }

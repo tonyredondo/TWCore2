@@ -28,6 +28,8 @@ using TWCore.Numerics;
 using TWCore.Reflection;
 using TWCore.Threading;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
+// ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore
 {

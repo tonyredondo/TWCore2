@@ -20,6 +20,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+
 // ReSharper disable NotAccessedField.Global
 // ReSharper disable FieldCanBeMadeReadOnly.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -97,41 +98,39 @@ namespace TWCore.Serialization.WSerializer.Serializer
         {
             if (type == typeof(string))
                 return DataType.TypeNameString;
-            else if (type == typeof(int))
+            if (type == typeof(int))
                 return DataType.TypeNameInt;
-            else if (type == typeof(Guid))
+            if (type == typeof(Guid))
                 return DataType.TypeNameGuid;
-            else if (type == typeof(DateTime))
+            if (type == typeof(DateTime))
                 return DataType.TypeNameDateTime;
-            else if (type == typeof(TimeSpan))
+            if (type == typeof(TimeSpan))
                 return DataType.TypeNameTimeSpan;
-            else if (type == typeof(decimal))
+            if (type == typeof(decimal))
                 return DataType.TypeNameDecimal;
-            else if (type == typeof(bool))
+            if (type == typeof(bool))
                 return DataType.TypeNameBool;
-            else if (type == typeof(double))
+            if (type == typeof(double))
                 return DataType.TypeNameDouble;
-            else if (type == typeof(float))
+            if (type == typeof(float))
                 return DataType.TypeNameFloat;
-            else if (type == typeof(ulong))
+            if (type == typeof(ulong))
                 return DataType.TypeNameULong;
-            else if (type == typeof(long))
+            if (type == typeof(long))
                 return DataType.TypeNameLong;
-            else if (type == typeof(uint))
+            if (type == typeof(uint))
                 return DataType.TypeNameUInt;
-            else if (type == typeof(ushort))
+            if (type == typeof(ushort))
                 return DataType.TypeNameUShort;
-            else if (type == typeof(short))
+            if (type == typeof(short))
                 return DataType.TypeNameShort;
-            else if (type == typeof(sbyte))
+            if (type == typeof(sbyte))
                 return DataType.TypeNameSByte;
-            else if (type == typeof(byte))
+            if (type == typeof(byte))
                 return DataType.TypeNameByte;
-            else if (type == typeof(char))
+            if (type == typeof(char))
                 return DataType.TypeNameChar;
-            else if (type == typeof(DateTimeOffset))
-                return DataType.TypeNameDateTimeOffset;
-            return DataType.Unknown;
+            return type == typeof(DateTimeOffset) ? DataType.TypeNameDateTimeOffset : DataType.Unknown;
         }
         #endregion
 

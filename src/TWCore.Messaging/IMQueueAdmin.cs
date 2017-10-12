@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using TWCore.Messaging.Configuration;
+// ReSharper disable UnusedParameter.Global
 
 namespace TWCore.Messaging
 {

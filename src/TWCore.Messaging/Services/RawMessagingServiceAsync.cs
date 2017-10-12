@@ -22,6 +22,7 @@ using TWCore.Services.Messaging;
 // ReSharper disable CheckNamespace
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedParameter.Global
 
 namespace TWCore.Services
 {

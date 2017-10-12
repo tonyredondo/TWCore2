@@ -102,67 +102,65 @@ namespace TWCore.Data
                 var dicData = ColumnIndex.Select(c => new KeyValuePair<string, object>(c.Key, rowValues[c.Value])).ToDictionary();
                 return (T)(object)new DictionaryObject(dicData);
             }
-            else
+            
+            var entityInfo = PrepareEntity(type);
+            var entity = (T)entityInfo.Activator();
+            foreach (var prop in entityInfo.Properties)
             {
-                var entityInfo = PrepareEntity(type);
-                var entity = (T)entityInfo.Activator();
-                foreach (var prop in entityInfo.Properties)
-                {
-                    var propName = prop.Name;
-                    if (pattern.IsNotNullOrEmpty())
-                        propName = pattern.Replace("%", propName);
+                var propName = prop.Name;
+                if (pattern.IsNotNullOrEmpty())
+                    propName = pattern.Replace("%", propName);
 
-                    if (!ColumnIndex.ContainsKey(propName)) continue;
+                if (!ColumnIndex.ContainsKey(propName)) continue;
                     
-                    var idx = ColumnIndex[propName];
-                    if (idx >= rowValues.Length || idx < 0)
-                    {
-                        Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
-                        continue;
-                    }
-                    var value = rowValues[idx];
-                    var valueType = value?.GetType();
-                    var propertyType = prop.PropertyUnderlayingType;
-                    var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
-                    var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
-
-                    if (value == null)
-                        prop.SetValue(entity, defaultValue);
-                    else if (propertyType == valueType)
-                        prop.SetValue(entity, value);
-                    else
-                    {
-                        var result = defaultValue;
-
-                        if (propertyType == typeof(Guid) && valueType == typeof(string))
-                            result = new Guid((string)value);
-                        else if (propertyTypeInfo.IsEnum &&
-                                 (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
-                            result = Enum.Parse(propertyType, value.ToString());
-                        else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))
-                            result = valueConverterResult;
-                        else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
-                        {
-                            try
-                            {
-                                result = Convert.ChangeType(value, propertyType);
-                            }
-                            catch (InvalidCastException exCast)
-                            {
-                                Core.Log.Write(exCast);
-                                InvalidCastList.Add(new InvalidCast(valueType, propertyType));
-                            }
-                            catch (Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                            }
-                        }
-
-                        prop.SetValue(entity, result);
-                    }
+                var idx = ColumnIndex[propName];
+                if (idx >= rowValues.Length || idx < 0)
+                {
+                    Core.Log.Warning($"The value for the property: {propName} on the entity: {type.Name} could'nt be found on index: {idx}. Please check if there are duplicate column names in the query.");
+                    continue;
                 }
-                return entity;
+                var value = rowValues[idx];
+                var valueType = value?.GetType();
+                var propertyType = prop.PropertyUnderlayingType;
+                var propertyTypeInfo = prop.PropertyUnderlayingTypeInfo;
+                var defaultValue = prop.PropertyTypeInfo.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
+
+                if (value == null)
+                    prop.SetValue(entity, defaultValue);
+                else if (propertyType == valueType)
+                    prop.SetValue(entity, value);
+                else
+                {
+                    var result = defaultValue;
+
+                    if (propertyType == typeof(Guid) && valueType == typeof(string))
+                        result = new Guid((string)value);
+                    else if (propertyTypeInfo.IsEnum &&
+                             (valueType == typeof(int) || valueType == typeof(long) || valueType == typeof(string) || valueType == typeof(byte) || valueType == typeof(short)))
+                        result = Enum.Parse(propertyType, value.ToString());
+                    else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out object valueConverterResult))
+                        result = valueConverterResult;
+                    else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
+                    {
+                        try
+                        {
+                            result = Convert.ChangeType(value, propertyType);
+                        }
+                        catch (InvalidCastException exCast)
+                        {
+                            Core.Log.Write(exCast);
+                            InvalidCastList.Add(new InvalidCast(valueType, propertyType));
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                    }
+
+                    prop.SetValue(entity, result);
+                }
             }
+            return entity;
         }
 
         /// <summary>

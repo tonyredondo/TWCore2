@@ -141,24 +141,22 @@ namespace TWCore.Serialization.WSerializer
                     return typeInfo.IsValueType ? Activator.CreateInstance(typeTo) : null;
                 return u == typeof(object) ? obj : Convert.ChangeType(obj, u);
             }
-            else
+            
+            if (typeTo == typeof(object))
+                return obj;
+            if (typeTo == obj?.GetType())
+                return obj;
+            if (obj != null && typeInfo.IsAssignableFrom(obj.GetType().GetTypeInfo()))
+                return obj;
+            if (typeInfo.IsEnum)
+                return Enum.ToObject(typeTo, obj);
+            try
             {
-                if (typeTo == typeof(object))
-                    return obj;
-                if (typeTo == obj?.GetType())
-                    return obj;
-                if (obj != null && typeInfo.IsAssignableFrom(obj.GetType().GetTypeInfo()))
-                    return obj;
-                if (typeInfo.IsEnum)
-                    return Enum.ToObject(typeTo, obj);
-                try
-                {
-                    return Convert.ChangeType(obj, typeTo);
-                }
-                catch
-                {
-                    return obj;
-                }
+                return Convert.ChangeType(obj, typeTo);
+            }
+            catch
+            {
+                return obj;
             }
         }
 

@@ -27,6 +27,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Reflection;
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ForCanBeConvertedToForeach
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Diagnostics.Status
 {
@@ -495,7 +496,7 @@ namespace TWCore.Diagnostics.Status
         private class StatusDelegateItem
         {
             public WeakReference<object> WeakObject { get; set; }
-            public virtual Action<StatusItemValuesCollection> Action { get; set; }
+            public Action<StatusItemValuesCollection> Action { get; set; }
 
             public object Object
             {
@@ -534,12 +535,11 @@ namespace TWCore.Diagnostics.Status
                 {
                     if (item.Object == parent)
                         return item;
-                    else if (item.Childrens.Any())
-                    {
-                        var res = item.Childrens.FindParent(parent);
-                        if (res != null)
-                            return res;
-                    }
+                    if (!item.Childrens.Any()) continue;
+                    
+                    var res = item.Childrens.FindParent(parent);
+                    if (res != null)
+                        return res;
                 }
                 return null;
             }

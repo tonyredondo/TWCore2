@@ -50,6 +50,6 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Trace Method
         /// </summary>
-        TRACE,
+        TRACE
     }
 }

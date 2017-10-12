@@ -32,6 +32,6 @@ namespace TWCore.Data.Schema
         AlternateIndex,
         ClusteredIndex,
         CoveringIndex,
-        UniqueClusteredIndex,
+        UniqueClusteredIndex
     }
 }

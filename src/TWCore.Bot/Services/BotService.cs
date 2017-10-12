@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Bot;
 using TWCore.Serialization;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedParameter.Global
 
 namespace TWCore.Services
 {

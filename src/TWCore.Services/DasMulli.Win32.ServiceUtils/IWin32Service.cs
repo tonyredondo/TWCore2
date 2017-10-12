@@ -1,5 +1,6 @@
 ﻿// ReSharper disable CheckNamespace
 
+// ReSharper disable UnusedParameter.Global
 namespace DasMulli.Win32.ServiceUtils
 {
     public delegate void ServiceStoppedCallback();

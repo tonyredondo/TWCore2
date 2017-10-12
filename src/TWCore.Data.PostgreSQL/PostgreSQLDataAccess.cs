@@ -253,16 +253,12 @@ namespace TWCore.Data.PostgreSQL
                     {
                         tIndex.Type = IndexType.UniqueClusteredIndex;
                     }
-                    else
-                    {
-
-                    }
                     table.Indexes.Add(tIndex);
                 }
 
                 var tColumn = new TableIndexColumnSchema
                 {
-                    ColumnName = columnName,
+                    ColumnName = columnName
                 };
                 tIndex.Columns.Add(tColumn);
 

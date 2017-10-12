@@ -24,6 +24,8 @@ using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
 
 namespace TWCore.Messaging.Client
 {

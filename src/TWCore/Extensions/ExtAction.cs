@@ -89,7 +89,7 @@ namespace TWCore
         public static Action<T> CreateBufferedAction<T>(this Action<T> action, int milliseconds)
         {
             Timer timer = null;
-            return (obj) =>
+            return obj =>
             {
                 if (timer != null)
                     timer.Change(milliseconds, Timeout.Infinite);
@@ -131,7 +131,7 @@ namespace TWCore
         public static Action<T> CreateThrottledAction<T>(this Action<T> action, int milliseconds)
         {
             var date = DateTime.MinValue;
-            return (obj) =>
+            return obj =>
             {
                 if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
                 action(obj);
@@ -393,7 +393,7 @@ namespace TWCore
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
-        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => (obj) => Try.Do(() => action(obj), onException);
+        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(() => action(obj), onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
         /// </summary>

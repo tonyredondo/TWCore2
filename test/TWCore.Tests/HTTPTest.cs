@@ -13,7 +13,7 @@ namespace TWCore.Tests
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting HTTP TEST");
-            info.Service = new TaskService(async (token) =>
+            info.Service = new TaskService(async token =>
             {
                 var server = new SimpleHttpServer()
                     .AddGetHandler("/", context =>

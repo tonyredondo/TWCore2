@@ -18,6 +18,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Numerics
 {
@@ -28,9 +30,8 @@ namespace TWCore.Numerics
     {
         Success,
         IllConditioned,
-        Singular,
-    };
-
+        Singular
+    }
     /// <summary>
     /// This class solves systems of linear equations.
     /// </summary>

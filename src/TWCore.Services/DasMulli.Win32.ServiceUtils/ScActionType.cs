@@ -7,6 +7,6 @@ namespace DasMulli.Win32.ServiceUtils
         ScActionNone = 0,
         ScActionRestart = 1,
         ScActionReboot = 2,
-        ScActionRunCommand = 3,
+        ScActionRunCommand = 3
     }
 }

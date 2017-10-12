@@ -17,6 +17,8 @@ limitations under the License.
 
 // ReSharper disable CheckNamespace
 
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 namespace TWCore
 {
     /// <summary>
@@ -33,10 +35,10 @@ namespace TWCore
         public static string ToReadeableBytes(this long bytes)
         {
             const int scale = 1024;
-            string[] orders = new string[] { "GB", "MB", "KB", "Bytes" };
-            long max = (long)System.Math.Pow(scale, orders.Length - 1);
+            var orders = new[] { "GB", "MB", "KB", "Bytes" };
+            var max = (long)System.Math.Pow(scale, orders.Length - 1);
 
-            foreach (string order in orders)
+            foreach (var order in orders)
             {
                 if (bytes > max)
                     return string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order);

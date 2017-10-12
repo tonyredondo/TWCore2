@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Serialization.PWSerializer.Serializer
 {
@@ -29,7 +31,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
         public int PlanLength;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void Init(SerializerPlanItem[] plan, Type type, bool isIList, bool isIDictionary)
+        public void Init(SerializerPlanItem[] plan, Type type, bool isIList, bool isIDictionary)
         {
             Plan = plan;
             PlanLength = plan?.Length ?? 0;

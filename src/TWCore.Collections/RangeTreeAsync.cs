@@ -256,18 +256,12 @@ namespace TWCore.Collections
                 var newTree = new RangeTree<TKey, T>(allItems, _rangeComparer) { AutoRebuild = false };
 
                 // if task was not cancelled, set the new tree as the current one
-                if (!_rebuildTaskCancelSource.Token.IsCancellationRequested)
+                if (_rebuildTaskCancelSource.Token.IsCancellationRequested) return;
+                lock (_locker)
                 {
-                    lock (_locker)
-                    {
-                        _rangeTree = newTree;
-                        _addedItemsRebuilding.Clear();
-                        _removedItemsRebuilding.Clear();
-                    }
-                }
-                else
-                {
-                    // nop
+                    _rangeTree = newTree;
+                    _addedItemsRebuilding.Clear();
+                    _removedItemsRebuilding.Clear();
                 }
             }, _rebuildTaskCancelSource.Token)
             .ContinueWith(task =>

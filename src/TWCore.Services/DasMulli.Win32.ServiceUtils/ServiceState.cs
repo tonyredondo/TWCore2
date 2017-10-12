@@ -10,6 +10,6 @@ namespace DasMulli.Win32.ServiceUtils
         Running = 0x00000004,
         ContinuePending = 0x00000005,
         PausePending = 0x00000006,
-        Paused = 0x00000007,
+        Paused = 0x00000007
     }
 }

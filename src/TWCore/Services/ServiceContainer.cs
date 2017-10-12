@@ -25,6 +25,8 @@ using TWCore.Serialization;
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable IntroduceOptionalParameters.Global
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Services
 {

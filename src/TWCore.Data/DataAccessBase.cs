@@ -1044,29 +1044,25 @@ namespace TWCore.Data
                     OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }, out returnValue);
                     return (rs1.Result, rs2.Result);
                 }
-                else
+                
+                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
+                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
+                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2))
                 {
-                    var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                    var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                    if (Caches.TryGetValue(key1, out object cacheValue1) && Caches.TryGetValue(key2, out object cacheValue2))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value1 = (CacheValue<T1>)cacheValue1;
-                        var value2 = (CacheValue<T2>)cacheValue2;
-                        returnValue = value1.ReturnValue;
-                        return (value1.ResponseCollection, value2.ResponseCollection);
-                    }
-                    else
-                    {
-                        var rs1 = new ResultSet<T1>(fillMethod1);
-                        var rs2 = new ResultSet<T2>(fillMethod2);
-                        OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }, out returnValue);
-
-                        Caches.TryAdd(key1, new CacheValue<T1>(rs1.Result, returnValue), CacheTimeout);
-                        Caches.TryAdd(key2, new CacheValue<T2>(rs2.Result, returnValue), CacheTimeout);
-                        return (rs1.Result, rs2.Result);
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value1 = (CacheValue<T1>)cacheValue1;
+                    var value2 = (CacheValue<T2>)cacheValue2;
+                    returnValue = value1.ReturnValue;
+                    return (value1.ResponseCollection, value2.ResponseCollection);
                 }
+                    
+                var rs1T = new ResultSet<T1>(fillMethod1);
+                var rs2T = new ResultSet<T2>(fillMethod2);
+                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T }, out returnValue);
+
+                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, returnValue), CacheTimeout);
+                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, returnValue), CacheTimeout);
+                return (rs1T.Result, rs2T.Result);
             }
             catch (Exception ex)
             {
@@ -1225,32 +1221,28 @@ namespace TWCore.Data
                     OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }, out returnValue);
                     return (rs1.Result, rs2.Result, rs3.Result);
                 }
-                else
+                
+                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
+                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
+                var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
+                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2) && Caches.TryGetValue(key3, out var cacheValue3))
                 {
-                    var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                    var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                    var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
-                    if (Caches.TryGetValue(key1, out object cacheValue1) && Caches.TryGetValue(key2, out object cacheValue2) && Caches.TryGetValue(key3, out object cacheValue3))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value1 = (CacheValue<T1>)cacheValue1;
-                        var value2 = (CacheValue<T2>)cacheValue2;
-                        var value3 = (CacheValue<T3>)cacheValue3;
-                        returnValue = value1.ReturnValue;
-                        return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
-                    }
-                    else
-                    {
-                        var rs1 = new ResultSet<T1>(fillMethod1);
-                        var rs2 = new ResultSet<T2>(fillMethod2);
-                        var rs3 = new ResultSet<T3>(fillMethod3);
-                        OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }, out returnValue);
-
-                        Caches.TryAdd(key1, new CacheValue<T1>(rs1.Result, returnValue), CacheTimeout);
-                        Caches.TryAdd(key2, new CacheValue<T2>(rs2.Result, returnValue), CacheTimeout);
-                        return (rs1.Result, rs2.Result, rs3.Result);
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value1 = (CacheValue<T1>)cacheValue1;
+                    var value2 = (CacheValue<T2>)cacheValue2;
+                    var value3 = (CacheValue<T3>)cacheValue3;
+                    returnValue = value1.ReturnValue;
+                    return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
                 }
+                    
+                var rs1T = new ResultSet<T1>(fillMethod1);
+                var rs2T = new ResultSet<T2>(fillMethod2);
+                var rs3T = new ResultSet<T3>(fillMethod3);
+                OnSelectElements(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T, rs3T }, out returnValue);
+
+                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, returnValue), CacheTimeout);
+                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, returnValue), CacheTimeout);
+                return (rs1T.Result, rs2T.Result, rs3T.Result);
             }
             catch (Exception ex)
             {
@@ -2067,28 +2059,24 @@ namespace TWCore.Data
                     await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }).ConfigureAwait(false);
                     return (rs1.Result, rs2.Result);
                 }
-                else
+                
+                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
+                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
+                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2))
                 {
-                    var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                    var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                    if (Caches.TryGetValue(key1, out object cacheValue1) && Caches.TryGetValue(key2, out object cacheValue2))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value1 = (CacheValue<T1>)cacheValue1;
-                        var value2 = (CacheValue<T2>)cacheValue2;
-                        return (value1.ResponseCollection, value2.ResponseCollection);
-                    }
-                    else
-                    {
-                        var rs1 = new ResultSet<T1>(fillMethod1);
-                        var rs2 = new ResultSet<T2>(fillMethod2);
-                        await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2 }).ConfigureAwait(false);
-
-                        Caches.TryAdd(key1, new CacheValue<T1>(rs1.Result, null), CacheTimeout);
-                        Caches.TryAdd(key2, new CacheValue<T2>(rs2.Result, null), CacheTimeout);
-                        return (rs1.Result, rs2.Result);
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value1 = (CacheValue<T1>)cacheValue1;
+                    var value2 = (CacheValue<T2>)cacheValue2;
+                    return (value1.ResponseCollection, value2.ResponseCollection);
                 }
+                
+                var rs1T = new ResultSet<T1>(fillMethod1);
+                var rs2T = new ResultSet<T2>(fillMethod2);
+                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T }).ConfigureAwait(false);
+
+                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, null), CacheTimeout);
+                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, null), CacheTimeout);
+                return (rs1T.Result, rs2T.Result);
             }
             catch (Exception ex)
             {
@@ -2230,31 +2218,27 @@ namespace TWCore.Data
                     await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }).ConfigureAwait(false);
                     return (rs1.Result, rs2.Result, rs3.Result);
                 }
-                else
+                
+                var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
+                var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
+                var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
+                if (Caches.TryGetValue(key1, out var cacheValue1) && Caches.TryGetValue(key2, out var cacheValue2) && Caches.TryGetValue(key3, out var cacheValue3))
                 {
-                    var key1 = GetCacheKey(nameOrQuery, parameters, fillMethod1);
-                    var key2 = GetCacheKey(nameOrQuery, parameters, fillMethod2);
-                    var key3 = GetCacheKey(nameOrQuery, parameters, fillMethod3);
-                    if (Caches.TryGetValue(key1, out object cacheValue1) && Caches.TryGetValue(key2, out object cacheValue2) && Caches.TryGetValue(key3, out object cacheValue3))
-                    {
-                        Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
-                        var value1 = (CacheValue<T1>)cacheValue1;
-                        var value2 = (CacheValue<T2>)cacheValue2;
-                        var value3 = (CacheValue<T3>)cacheValue3;
-                        return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
-                    }
-                    else
-                    {
-                        var rs1 = new ResultSet<T1>(fillMethod1);
-                        var rs2 = new ResultSet<T2>(fillMethod2);
-                        var rs3 = new ResultSet<T3>(fillMethod3);
-                        await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1, rs2, rs3 }).ConfigureAwait(false);
-
-                        Caches.TryAdd(key1, new CacheValue<T1>(rs1.Result, null), CacheTimeout);
-                        Caches.TryAdd(key2, new CacheValue<T2>(rs2.Result, null), CacheTimeout);
-                        return (rs1.Result, rs2.Result, rs3.Result);
-                    }
+                    Core.Log.LibVerbose("Elements found in the Cache", nameOrQuery);
+                    var value1 = (CacheValue<T1>)cacheValue1;
+                    var value2 = (CacheValue<T2>)cacheValue2;
+                    var value3 = (CacheValue<T3>)cacheValue3;
+                    return (value1.ResponseCollection, value2.ResponseCollection, value3.ResponseCollection);
                 }
+                
+                var rs1T = new ResultSet<T1>(fillMethod1);
+                var rs2T = new ResultSet<T2>(fillMethod2);
+                var rs3T = new ResultSet<T3>(fillMethod3);
+                await OnSelectElementsAsync(nameOrQuery, parameters, new IResultSet[] { rs1T, rs2T, rs3T }).ConfigureAwait(false);
+
+                Caches.TryAdd(key1, new CacheValue<T1>(rs1T.Result, null), CacheTimeout);
+                Caches.TryAdd(key2, new CacheValue<T2>(rs2T.Result, null), CacheTimeout);
+                return (rs1T.Result, rs2T.Result, rs3T.Result);
             }
             catch (Exception ex)
             {

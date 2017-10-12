@@ -628,7 +628,7 @@ namespace TWCore.Net.RPC.Client.Transports
                         Core.Log.LibVerbose("Setting new TcpSocketClient.");
                         _client = new TcpClient()
                         {
-                            NoDelay = true,
+                            NoDelay = true
                         };
                         Factory.SetSocketLoopbackFastPath(_client.Client);
                     }

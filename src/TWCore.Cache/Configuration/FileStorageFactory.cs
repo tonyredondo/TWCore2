@@ -19,6 +19,8 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable SwitchStatementMissingSomeCases
 
 namespace TWCore.Cache.Configuration
 {
@@ -82,7 +84,7 @@ namespace TWCore.Cache.Configuration
             /// <summary>
             /// Normal file storage with a single index and journal
             /// </summary>
-            Normal,
+            Normal
         }
     }
 }

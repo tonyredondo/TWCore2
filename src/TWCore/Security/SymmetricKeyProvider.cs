@@ -21,6 +21,10 @@ using System.Security.Cryptography;
 using System.Text;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable MemberCanBeProtected.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
 namespace TWCore.Security
 {
@@ -226,7 +230,7 @@ namespace TWCore.Security
             /// <summary>
             /// The TRIPLEDES algorithm.
             /// </summary>
-            TripleDes = 2,
+            TripleDes = 2
         }
 
         /// <summary>

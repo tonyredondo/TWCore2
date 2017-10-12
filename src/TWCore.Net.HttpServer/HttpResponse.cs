@@ -61,7 +61,7 @@ namespace TWCore.Net.HttpServer
             [HttpStatusCode.Too_Many_Requests] = ("429", "Too Many Requests"),
             [HttpStatusCode.Internal_Server_Error] = ("500", "Internal Server Error"),
             [HttpStatusCode.Not_Implemented] = ("501", "Not Implemented"),
-            [HttpStatusCode.Service_Unavailable] = ("503", "Service Unavailable"),
+            [HttpStatusCode.Service_Unavailable] = ("503", "Service Unavailable")
         };
         internal readonly EventStream EventStream;
         private readonly HttpContext _context;

@@ -46,6 +46,6 @@ namespace TWCore
         /// <summary>
         /// iOS platform
         /// </summary>
-        iOS,
+        iOS
     }
 }

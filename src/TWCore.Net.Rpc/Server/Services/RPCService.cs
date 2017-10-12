@@ -24,6 +24,7 @@ using TWCore.Net.RPC.Server;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable UnusedParameter.Global
 
 namespace TWCore.Services
 {

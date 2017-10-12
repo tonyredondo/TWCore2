@@ -25,6 +25,9 @@ using TWCore.Services.Messaging;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Services
 {

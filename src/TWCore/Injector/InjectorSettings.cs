@@ -20,6 +20,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Injector
 {
@@ -71,12 +73,10 @@ namespace TWCore.Injector
             {
                 if (type.Length == i.Type.Length)
                     return type == i.Type;
-                else
-                {
-                    var tArr = type.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }
+                
+                var tArr = type.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
             });
         }
         /// <summary>
@@ -91,12 +91,10 @@ namespace TWCore.Injector
             {
                 if (type.Length == i.Type.Length)
                     return type == i.Type;
-                else
-                {
-                    var tArr = type.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }
+                
+                var tArr = type.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
             });
         }
         /// <summary>
@@ -111,12 +109,10 @@ namespace TWCore.Injector
             {
                 if (type.Length == i.Type.Length)
                     return type == i.Type;
-                else
-                {
-                    var tArr = type.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }
+                
+                var tArr = type.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
             });
         }
         /// <summary>

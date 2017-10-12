@@ -23,6 +23,10 @@ using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
 // ReSharper disable CheckNamespace
 // ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedParameter.Global
+// ReSharper disable VirtualMemberNeverOverridden.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Services
 {

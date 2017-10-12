@@ -38,8 +38,8 @@ namespace TWCore.Text
         Little,
         /// <summary>Most Significant Bit order (msb)</summary>
         /// <remarks>Left-to-Right</remarks>
-        Big,
-    };
+        Big
+    }
 
     /// <summary>Encodes/decodes bytes to/from a string</summary>
     /// <remarks>

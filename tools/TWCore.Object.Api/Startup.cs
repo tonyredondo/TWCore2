@@ -11,6 +11,7 @@ using TWCore.Web;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ArgumentsStyleStringLiteral
 
 namespace TWCore.Object.Api
 {

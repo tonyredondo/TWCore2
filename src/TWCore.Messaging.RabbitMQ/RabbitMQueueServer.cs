@@ -74,7 +74,7 @@ namespace TWCore.Messaging.RabbitMQ
                         return rq;
                     });
                     if (!rabbitQueue.EnsureConnection()) continue;
-                    else rabbitQueue.EnsureExchange();
+                    rabbitQueue.EnsureExchange();
                     var props = rabbitQueue.Channel.CreateBasicProperties();
                     props.CorrelationId = correlationId;
                     props.Priority = priority;

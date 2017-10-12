@@ -70,7 +70,7 @@ namespace TWCore.Object.Api.Controllers
                         return new ObjectResult(new PathEntryCollection
                         {
                             Current = virtualPath,
-                            Entries = entry.Entries?.ToArray(),
+                            Entries = entry.Entries?.ToArray()
                         });
                 }
                 

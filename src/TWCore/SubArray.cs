@@ -280,12 +280,9 @@ namespace TWCore
         {
             if (segment._offset == 0 && segment._count == segment._array.Length)
                 return segment._array;
-            else
-            {
-                var temp = new T[segment._count];
-                System.Array.Copy(segment._array, segment._offset, temp, 0, segment._count);
-                return temp;
-            }
+            var temp = new T[segment._count];
+            System.Array.Copy(segment._array, segment._offset, temp, 0, segment._count);
+            return temp;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator SubArray<T>(T[] array) => new SubArray<T>(array);

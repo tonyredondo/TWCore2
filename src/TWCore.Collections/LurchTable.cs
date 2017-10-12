@@ -24,6 +24,7 @@ using System.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Collections
 {
@@ -40,7 +41,7 @@ namespace TWCore.Collections
         /// <summary> Linked by most recently inserted or updated </summary>
         Modified,
         /// <summary> Linked by most recently inserted, updated, or fetched </summary>
-        Access,
+        Access
     }
 
     /// <summary>

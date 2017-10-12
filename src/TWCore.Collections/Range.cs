@@ -108,14 +108,11 @@ namespace TWCore.Collections
         {
             if (From.CompareTo(other.From) < 0)
                 return -1;
-            else if (From.CompareTo(other.From) > 0)
+            if (From.CompareTo(other.From) > 0)
                 return 1;
-            else if (To.CompareTo(other.To) < 0)
+            if (To.CompareTo(other.To) < 0)
                 return -1;
-            else if (To.CompareTo(other.To) > 0)
-                return 1;
-            else
-                return 0;
+            return To.CompareTo(other.To) > 0 ? 1 : 0;
         }
 
         #endregion

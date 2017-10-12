@@ -96,7 +96,7 @@ namespace TWCore.Net.HttpServer
             [".mpeg"] = "video/mpeg",
             [".svg"] = "image/svg+xml",
             [".svgz"] = "image/svg+xml",
-            [".txt"] = "text/plain",
+            [".txt"] = "text/plain"
         };
         #endregion
 
@@ -281,7 +281,7 @@ namespace TWCore.Net.HttpServer
         /// <param name="action">Action to execute</param>
         /// <returns>SimpleHttpServer instance</returns>
         public SimpleHttpServer AddHttpController<T>(HttpMethod method, string url, string action = null) where T : HttpControllerBase
-            => AddRouteHandler(method, url, (context) =>
+            => AddRouteHandler(method, url, context =>
             {
                 var ctl = Activator.CreateInstance<T>();
                 ctl.Context = context;

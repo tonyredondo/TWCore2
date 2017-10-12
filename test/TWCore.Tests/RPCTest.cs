@@ -158,7 +158,7 @@ namespace TWCore.Tests
             new SimplePerson { Firstname = "Daniel", Lastname = "Redondo", Enabled = true, PersonId = Guid.NewGuid() },
             new SimplePerson { Firstname = "Daniel", Lastname = "Redondo", Enabled = true, PersonId = Guid.NewGuid() },
             new SimplePerson { Firstname = "Daniel", Lastname = "Redondo", Enabled = true, PersonId = Guid.NewGuid() },
-            new SimplePerson { Firstname = "Daniel", Lastname = "Redondo", Enabled = true, PersonId = Guid.NewGuid() },
+            new SimplePerson { Firstname = "Daniel", Lastname = "Redondo", Enabled = true, PersonId = Guid.NewGuid() }
         };
         #endregion
 

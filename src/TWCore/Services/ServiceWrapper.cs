@@ -19,6 +19,7 @@ using TWCore.Diagnostics.Status;
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable IntroduceOptionalParameters.Global
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Services
 {
@@ -218,7 +219,7 @@ namespace TWCore.Services
             Stopped,
             Pausing,
             Paused,
-            Continuing,
+            Continuing
         }
         #endregion
     }

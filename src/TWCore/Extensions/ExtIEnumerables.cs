@@ -424,7 +424,7 @@ namespace TWCore
 					if (!predicates[i](item)) continue;
 					if (i == 0)
 						return item;
-					else if (comparer.Equals(item, default(T)))
+					if (comparer.Equals(item, default(T)))
 						foundArray[i - 1] = item;
 				}
 			}
@@ -1283,9 +1283,7 @@ namespace TWCore
 		{
 			if (key != null && keyedCollection?.Contains(key) == true && then != null)
 				return then(keyedCollection[key]);
-			else if (fail != null)
-				return fail();
-			return default(TR);
+			return fail != null ? fail() : default(TR);
 		}
 		/// <summary>
 		/// Get a item if the key is found on the collection; otherwise returns the default value of the item

@@ -22,6 +22,8 @@ using TWCore.Messaging;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Services
 {

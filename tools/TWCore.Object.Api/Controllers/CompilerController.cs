@@ -5,6 +5,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Object.Compiler;
 using TWCore.Object.Descriptor;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Object.Api.Controllers
 {
@@ -69,7 +70,7 @@ namespace TWCore.Object.Api.Controllers
                 collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown", Member = "object" });
                 return collection;
             }
-            int id = 0;
+            int id;
             FillCollection("Value", MemberType.Field, description.Value, null);
             return collection;
 
@@ -79,13 +80,11 @@ namespace TWCore.Object.Api.Controllers
                 if (id > 100000)
                     return;
                 collection.Add(new TreeListItem { Id = id, Name = name, Value = value?.ValueString, Type = value?.ValueType, Member = type.ToString(), ParentId = parentId });
-                if (value?.Members?.Length > 0)
-                {
-                    var idParent = id;
-                    foreach (var member in value.Members)
-                        if (member != null)
-                            FillCollection(member.Name, member.Type, member.Value, idParent);
-                }
+                if (!(value?.Members?.Length > 0)) return;
+                var idParent = id;
+                foreach (var member in value.Members)
+                    if (member != null)
+                        FillCollection(member.Name, member.Type, member.Value, idParent);
             }
         }
 

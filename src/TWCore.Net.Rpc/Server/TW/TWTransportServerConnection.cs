@@ -25,6 +25,8 @@ using TWCore.IO;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Server.Transports
 {

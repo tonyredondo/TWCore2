@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +8,8 @@ using TWCore.Collections;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Injector;
 using TWCore.Net.Multicast;
-using TWCore.Serialization;
 using TWCore.Services;
-using TWCore.Threading;
-using Thread = System.Threading.Thread;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Test.Core
 {

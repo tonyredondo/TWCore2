@@ -1,12 +1,10 @@
 using System;
-using TWCore.Services;
-using TWCore.Serialization;
-using System.Text;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+using System.Text;
+using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer.Deserializer;
+using TWCore.Services;
 // ReSharper disable UnusedMember.Global
-
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable FieldCanBeMadeReadOnly.Local
@@ -32,7 +30,7 @@ namespace TWCore.Tests
             var collection = new List<List<STest>>();
             for (var i = 0; i <= 10000; i++)
             {
-                var colSTest = new List<STest>()
+                var colSTest = new List<STest>
                 {
                     sTest,sTest,sTest,sTest,sTest,sTest,
                     sTest,sTest,sTest,sTest,sTest,sTest,
@@ -55,7 +53,7 @@ namespace TWCore.Tests
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+16, Age = 17 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+17, Age = 18 },
                     new STest { FirstName = "Person" , LastName = "Person" + i + "." + i+18, Age = 19 },
-                    new STest2 { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20, New = "This is a test" },
+                    new STest2 { FirstName = "Person" , LastName = "Person" + i + "." + i+19, Age = 20, New = "This is a test" }
                 };
                 collection.Add(colSTest);
             }
@@ -66,7 +64,7 @@ namespace TWCore.Tests
             var lt = new List<STest>
             {
                 new STest { FirstName = "Name1" , LastName = "LName1" , Age = 11 },
-                new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" },
+                new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
             var fByte = lt.SerializeToPWBinary();
@@ -77,46 +75,46 @@ namespace TWCore.Tests
             var lst = obj.GetObject<List<STest>>();
             var obj2 = pwBytes.DeserializeFromPWBinary<List<STest>>();
 
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("JSON SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                     jsonText = collection[i % 10000].SerializeToJson();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("JSON DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                     jsonText.DeserializeFromJson<List<STest>>();
 
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                     pwBytes = collection[i % 10000].SerializeToPWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                     pwBytes.DeserializeFromPWBinary<List<STest>>();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER GENERIC"))
                 for (var i = 0; i < 100000; i++)
                     pwBytes.DeserializeFromPWBinary(null);
 
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("WBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                     wBytes = collection[i % 10000].SerializeToWBinary();
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("WBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)

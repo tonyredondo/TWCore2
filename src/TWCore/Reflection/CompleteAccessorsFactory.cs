@@ -19,6 +19,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+// ReSharper disable UnusedMember.Local
 
 namespace TWCore.Reflection
 {
@@ -147,11 +148,11 @@ namespace TWCore.Reflection
 
         private static object ChangeType(object value, Type conversionType)
         {
-            if (conversionType.GetTypeInfo().IsGenericType && conversionType.GetGenericTypeDefinition() == typeof(Nullable<>))
-            {
-                if (value == null) return null;
-                conversionType = Nullable.GetUnderlyingType(conversionType);
-            }
+            if (!conversionType.GetTypeInfo().IsGenericType ||
+                conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                return Convert.ChangeType(value, conversionType);
+            if (value == null) return null;
+            conversionType = Nullable.GetUnderlyingType(conversionType);
             return Convert.ChangeType(value, conversionType);
         }
     }

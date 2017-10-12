@@ -94,7 +94,7 @@ namespace TWCore.Web.Logger
                     break;
             }
             var type = _name ?? string.Empty;
-            var dotIdx = type?.LastIndexOf(".") ?? -1;
+            var dotIdx = type.LastIndexOf(".", StringComparison.Ordinal);
             if (dotIdx > -1)
                 type = type.Substring(dotIdx + 1);
             

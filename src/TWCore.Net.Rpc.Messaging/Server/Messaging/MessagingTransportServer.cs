@@ -167,7 +167,6 @@ namespace TWCore.Net.RPC.Server.Transports
                     {
                         OnMethodCall(this, mEvent);
                         requestReceivedEventArgs.Response.Body = mEvent.Response;
-                        return;
                     }
                     break;
             }

@@ -1,5 +1,4 @@
-﻿using System;
-using TWCore.Object.Compiler;
+﻿using TWCore.Object.Compiler;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 

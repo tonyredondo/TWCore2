@@ -15,7 +15,8 @@ limitations under the License.
  */
 
 using TWCore.Settings;
-
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services

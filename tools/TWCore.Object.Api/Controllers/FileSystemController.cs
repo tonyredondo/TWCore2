@@ -11,6 +11,7 @@ using TWCore.Compression;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Settings;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMember.Local
@@ -438,7 +439,22 @@ namespace TWCore.Object.Api.Controllers
                             Type = PathEntryType.Directory
                         });
                 }
-
+                foreach (var srv in statusFilesServices)
+                {
+                    var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
+                    if (!wChildren) continue;
+                    var path = srv.Data.GetValue() as string;
+                    if (string.IsNullOrWhiteSpace(path)) continue;
+                    path = Path.GetFullPath(path);
+                    if (!Directory.Exists(path)) continue;
+                    if (srvPe.Entries.All(c => c.Path != path))
+                        srvPe.Entries.Add(new PathEntry
+                        {
+                            Name = "STATUSES",
+                            Path = Path.GetFullPath(path),
+                            Type = PathEntryType.Directory
+                        });
+                }
                 foreach(var srv in statusHttpServices)
                 {
                     var srvPe = EnsureServiceEntry(servicesPathEntries, srv);

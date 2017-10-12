@@ -26,19 +26,20 @@ using TWCore.Collections;
 
 namespace TWCore.Diagnostics.Status
 {
+    /// <inheritdoc />
     /// <summary>
     /// Default Status Counter class.
     /// </summary>
     public class StatusCounter : IDisposable
     {
         private readonly LRU2QCollection<string, NumberItem> _counterValues = new LRU2QCollection<string, NumberItem>(100);
-        private bool _disposed = false;
-        private int _index = 0;
+        private bool _disposed;
+        private int _index;
         
         /// <summary>
         /// Status Counter Name
         /// </summary>
-        public string Name { get; set; } = "Status Counters";
+        public string Name { get; private set; } = "Status Counters";
 
         #region .ctor
         /// <summary>

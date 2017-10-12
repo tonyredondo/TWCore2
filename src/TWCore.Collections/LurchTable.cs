@@ -23,6 +23,7 @@ using System.Threading;
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ArrangeTypeMemberModifiers
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Collections
 {

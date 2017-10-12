@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Triggers
 {

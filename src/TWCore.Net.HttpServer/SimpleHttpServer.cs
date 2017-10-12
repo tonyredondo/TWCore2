@@ -26,6 +26,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Serialization;
 // ReSharper disable MethodSupportsCancellation
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Net.HttpServer
 {

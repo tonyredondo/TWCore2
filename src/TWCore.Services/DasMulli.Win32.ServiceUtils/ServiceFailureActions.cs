@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-
+// ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable CheckNamespace
 
 namespace DasMulli.Win32.ServiceUtils

@@ -23,7 +23,7 @@ using System.Xml.Serialization;
 
 namespace TWCore.Collections
 {
-    internal class KeyStringDelegatedCollection
+    internal static class KeyStringDelegatedCollection
     {
         /// <summary>
         /// Default Key array separator

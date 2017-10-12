@@ -22,6 +22,7 @@ using TWCore.Net.HttpServer;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Settings;
+// ReSharper disable ClassNeverInstantiated.Local
 
 // ReSharper disable CheckNamespace
 

@@ -23,6 +23,7 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable UnusedMember.Global
+// ReSharper disable IntroduceOptionalParameters.Global
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
@@ -249,26 +250,11 @@ namespace TWCore.Diagnostics.Trace.Storages
 
             lock (_sWriter)
             {
-                string line;
-
-                if (string.IsNullOrEmpty(item.GroupName))
-                {
-                    line = string.Format("{0} ({1, 15}) {2}: {3}",
-                        item.Timestamp.GetTimeSpanFormat(),
-                        "NO GROUP",
-                        item.TraceName,
-                        traceFilePath
-                    );
-                }
-                else
-                {
-                    line = string.Format("{0} ({1, 15}) {2}: {3}",
-                        item.Timestamp.GetTimeSpanFormat(),
-                        item.GroupName,
-                        item.TraceName,
-                        traceFilePath
-                    );
-                }
+                var line = string.Format("{0} ({1, 15}) {2}: {3}", 
+                    item.Timestamp.GetTimeSpanFormat(), 
+                    string.IsNullOrEmpty(item.GroupName) ? "NO GROUP" : item.GroupName, 
+                    item.TraceName, 
+                    traceFilePath);
                 _sWriter.WriteLine(line);
                 _sWriter.Flush();
             }

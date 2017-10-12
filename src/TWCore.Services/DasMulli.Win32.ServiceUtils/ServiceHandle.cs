@@ -3,6 +3,8 @@ using System.ComponentModel;
 using System.Runtime.InteropServices;
 // ReSharper disable ParameterOnlyUsedForPreconditionCheck.Global
 // ReSharper disable CheckNamespace
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace DasMulli.Win32.ServiceUtils
 {

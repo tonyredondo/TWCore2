@@ -18,6 +18,7 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TWCore.Serialization;
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.IO
 {

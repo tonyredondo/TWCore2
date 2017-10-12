@@ -25,6 +25,7 @@ using System.Threading;
 using TWCore.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable NotAccessedField.Local
 
 namespace TWCore.Net.Multicast
 {

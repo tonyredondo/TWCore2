@@ -22,6 +22,7 @@ using TWCore.Messaging;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
 // ReSharper disable CheckNamespace
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Services
 {

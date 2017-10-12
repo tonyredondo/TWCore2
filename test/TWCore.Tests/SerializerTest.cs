@@ -10,6 +10,7 @@ using TWCore.Services;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable RedundantAssignment
 // ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable UnusedVariable
 
 namespace TWCore.Tests
 {

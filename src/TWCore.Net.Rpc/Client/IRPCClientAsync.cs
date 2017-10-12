@@ -18,6 +18,8 @@ using System;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Net.RPC.Client
 {

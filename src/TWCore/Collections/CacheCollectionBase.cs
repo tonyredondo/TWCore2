@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 // ReSharper disable InconsistentlySynchronizedField
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Collections
 {
@@ -100,6 +101,7 @@ namespace TWCore.Collections
         /// Node Hitted event
         /// </summary>
         public event CacheNodeEventDelegate<TKey, TValue> NodeHitted;
+        /// <inheritdoc />
         /// <summary>
         /// Node Removed event
         /// </summary>

@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+// ReSharper disable ClassNeverInstantiated.Global
 #pragma warning disable 1591
 
 namespace TWCore.Serialization.WSerializer

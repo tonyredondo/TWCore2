@@ -15,7 +15,10 @@ using TWCore.Services;
 // ReSharper disable FieldCanBeMadeReadOnly.Local
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable UnusedMember.Global
-
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMemberInSuper.Global
+// ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable UnusedVariable
 
 namespace TWCore.Tests

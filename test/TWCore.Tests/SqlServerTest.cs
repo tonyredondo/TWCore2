@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Tests
 {

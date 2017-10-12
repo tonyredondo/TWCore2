@@ -22,6 +22,7 @@ using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Net.RPC.Client;
 using TWCore.Serialization;
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Cache.Client.Configuration
 {

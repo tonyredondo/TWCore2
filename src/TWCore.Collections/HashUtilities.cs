@@ -18,7 +18,7 @@ using System;
 
 namespace TWCore.Collections
 {
-    internal class HashUtilities
+    internal static class HashUtilities
     {
         private static readonly int[] PrimeNumbers =
             new[]

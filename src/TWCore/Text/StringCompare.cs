@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+// ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Text
 {

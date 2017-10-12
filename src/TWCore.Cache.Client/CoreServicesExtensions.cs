@@ -22,6 +22,7 @@ using TWCore.Cache.Client.Configuration;
 using TWCore.Serialization;
 using TWCore.Settings;
 // ReSharper disable CheckNamespace
+// ReSharper disable ClassNeverInstantiated.Local
 
 namespace TWCore.Services
 {

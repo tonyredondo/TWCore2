@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Messaging.RawServer
 {

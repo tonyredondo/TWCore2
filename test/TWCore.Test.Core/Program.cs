@@ -10,6 +10,7 @@ using TWCore.Injector;
 using TWCore.Net.Multicast;
 using TWCore.Services;
 // ReSharper disable ClassNeverInstantiated.Global
+// ReSharper disable UnusedVariable
 
 namespace TWCore.Test.Core
 {

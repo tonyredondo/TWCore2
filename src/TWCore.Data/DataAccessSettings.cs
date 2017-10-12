@@ -16,6 +16,7 @@ limitations under the License.
 
 using TWCore.Settings;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Data
 {

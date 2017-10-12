@@ -24,6 +24,7 @@ using TWCore.Messaging.Server;
 using TWCore.Serialization;
 using TWCore.Settings;
 // ReSharper disable CheckNamespace
+// ReSharper disable ClassNeverInstantiated.Local
 
 namespace TWCore.Services
 {
@@ -106,7 +107,7 @@ namespace TWCore.Services
         {
             Init();
             if (_queueServer == null)
-                throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
+                throw new NullReferenceException("The Queue server instance couldn't be loaded, please check the configuration file.");
             return _queueServer.GetServer(responseServer);
         }
         /// <summary>
@@ -139,7 +140,7 @@ namespace TWCore.Services
         {
             Init();
             if (_queueServer == null)
-                throw new NullReferenceException($"The Queue server instance couldn't be loaded, please check the configuration file.");
+                throw new NullReferenceException("The Queue server instance couldn't be loaded, please check the configuration file.");
             return _queueServer.GetRawServer(responseServer);
         }
         /// <summary>

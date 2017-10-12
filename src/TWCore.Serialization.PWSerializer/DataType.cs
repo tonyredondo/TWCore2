@@ -16,6 +16,7 @@ limitations under the License.
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
+// ReSharper disable ClassNeverInstantiated.Global
 #pragma warning disable 1591
 
 namespace TWCore.Serialization.PWSerializer

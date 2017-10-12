@@ -16,6 +16,7 @@ limitations under the License.
 
 using TWCore.Settings;
 // ReSharper disable InconsistentNaming
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Collections
 {

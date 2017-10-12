@@ -17,6 +17,7 @@ limitations under the License.
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Net.RPC.Client.Grid
 {

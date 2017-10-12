@@ -24,6 +24,7 @@ using TWCore.Security;
 using TWCore.Serialization;
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
 // ReSharper disable UnusedMethodReturnValue.Global
+// ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Net.Multicast
 {

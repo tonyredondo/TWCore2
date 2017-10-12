@@ -22,6 +22,7 @@ using TWCore.Services.Configuration;
 using TWCore.Settings;
 // ReSharper disable CheckNamespace
 // ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Local
 
 namespace TWCore.Services
 {

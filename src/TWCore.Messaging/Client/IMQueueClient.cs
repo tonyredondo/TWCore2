@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+// ReSharper disable EventNeverSubscribedTo.Global
+// ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Messaging.Client
 {

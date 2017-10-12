@@ -18,6 +18,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Collections;
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Settings
 {

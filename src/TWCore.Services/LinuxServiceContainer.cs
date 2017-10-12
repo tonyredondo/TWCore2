@@ -114,14 +114,9 @@ namespace TWCore.Services
                 using (var sWriter = new StreamWriter(fStream))
                     sWriter.WriteLine(res);
 
-                if (withInstall)
-                {
-                    Core.Log.Warning($"The file {serviceName}, was copied to /etc/systemd/system/ path.");
-                }
-                else
-                {
-                    Core.Log.Warning($"The file {serviceName}, was copied to the current path.");
-                }
+                Core.Log.Warning(withInstall
+                    ? $"The file {serviceName}, was copied to /etc/systemd/system/ path."
+                    : $"The file {serviceName}, was copied to the current path.");
             }
             catch (Exception ex)
             {

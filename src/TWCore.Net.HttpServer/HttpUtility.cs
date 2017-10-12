@@ -22,7 +22,7 @@ namespace TWCore.Net.HttpServer
     /// <summary>
     /// Http utility methods
     /// </summary>
-    public class HttpUtility
+    public static class HttpUtility
     {
         /// <summary>
         /// Parse a query string into a HttpValueCollection

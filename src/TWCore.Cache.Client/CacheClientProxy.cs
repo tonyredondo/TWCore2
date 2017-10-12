@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
 using TWCore.Serialization;
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Cache.Client
 {

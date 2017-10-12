@@ -12,7 +12,7 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Settings;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
-
+// ReSharper disable ClassNeverInstantiated.Local
 // ReSharper disable UnusedMember.Global
 // ReSharper disable UnusedMember.Local
 

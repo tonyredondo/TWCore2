@@ -17,11 +17,11 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable once UnusedMember.Global
 // ReSharper disable InheritdocConsiderUsage
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Threading
 {

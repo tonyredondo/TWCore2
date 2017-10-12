@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using DasMulli.Win32.ServiceUtils;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -134,6 +133,7 @@ namespace TWCore.Services
             try
             {
                 // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
+                /*
                 var remainingArgs = Environment.GetCommandLineArgs()
                     .Where(arg => arg != "/service-uninstall")
                     .Select(EscapeCommandLineArgument)
@@ -144,7 +144,7 @@ namespace TWCore.Services
                 {
                     // For self-contained apps, skip the dll path
                     remainingArgs = remainingArgs.Skip(1).ToArray();
-                }
+                }*/
 
                 _settings.ServiceName = _settings.ServiceName ?? Core.ApplicationName;
 
@@ -163,10 +163,9 @@ namespace TWCore.Services
                 {
                     File.Delete(servicePath);
 
-                    if (withInstall)
-                        Core.Log.Warning($"The file {serviceName}, was deleted from /etc/systemd/system/ path.");
-                    else
-                        Core.Log.Warning($"The file {serviceName}, was deleted from the current path.");
+                    Core.Log.Warning(withInstall
+                        ? $"The file {serviceName}, was deleted from /etc/systemd/system/ path."
+                        : $"The file {serviceName}, was deleted from the current path.");
                 }
                 else
                     Core.Log.InfoDetail("Nothing to do.");

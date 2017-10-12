@@ -23,8 +23,6 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using TWCore.Collections;
-using TWCore.Diagnostics.Log;
-
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -102,8 +100,7 @@ namespace TWCore.Net.Multicast
                 if (nic.OperationalStatus != OperationalStatus.Up) continue;
                 if (nic.NetworkInterfaceType == NetworkInterfaceType.Tunnel) continue;
                 var nicProp = nic.GetIPProperties();
-                if (nicProp == null) continue;
-                var nicPropv4 = nicProp.GetIPv4Properties();
+                var nicPropv4 = nicProp?.GetIPv4Properties();
                 if (nicPropv4 == null) continue;
                 var addresses = nicProp.UnicastAddresses
                     .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork).Select(a => a.Address);

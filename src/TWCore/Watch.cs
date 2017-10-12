@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -23,7 +22,7 @@ using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
-
+// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore

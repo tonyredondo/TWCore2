@@ -71,7 +71,7 @@ namespace TWCore.Object.Api.Controllers
                 collection.Add(new TreeListItem {Id = 0, Name = "Value", Value = "(null)", Type = "Unknown", Member = "object" });
                 return collection;
             }
-            int id;
+            var id = 0;
             FillCollection("Value", MemberType.Field, description.Value, null);
             return collection;
 

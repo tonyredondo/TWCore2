@@ -42,13 +42,7 @@ namespace TWCore.Tests
 
                 Console.WriteLine("Async Finished 2");
             });
-
-            foreach (var value in consumer)
-            {
-                Console.WriteLine(value);
-            }
-            Console.WriteLine("Done 1 ");
-
+            
             Task.Run(async () =>
             {
                 await consumer.ForEachAsync(value =>

@@ -145,7 +145,8 @@ namespace TWCore.Cache.Client
 
 	                            await Task.Delay((PingConsecutiveFailure > 15) ? PingDelayOnError : PingDelay, token).ConfigureAwait(false);
 	                        }
-	                        catch (Exception ex)
+                            catch (TaskCanceledException) { }
+                            catch (Exception ex)
 	                        {
 	                            Core.Log.Write(ex);
 	                        }

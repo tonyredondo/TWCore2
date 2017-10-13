@@ -29,11 +29,6 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientPool : IStorage
     {
-        #region Statics
-        private static readonly object Shared = new object();
-        private static readonly PoolItemCollection AllItems = new PoolItemCollection();
-        #endregion
-
         private readonly PoolItemCollection _pool;
         private readonly CacheClientPoolCounters _counters;
 
@@ -86,7 +81,6 @@ namespace TWCore.Cache.Client
                 Core.Status.AttachChild(_pool, this);
                 Core.Status.AttachChild(_counters, this);
             }, this);
-            Core.Status.DeAttachObject(AllItems);
         }
         #endregion
 
@@ -100,21 +94,8 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(string name, IStorage storage, StorageItemMode mode = StorageItemMode.ReadAndWrite)
         {
-            PoolItem pItem;
-            lock (Shared)
-            {
-                if (AllItems.Contains(name))
-                {
-                    Core.Log.LibVerbose("Getting Cache Connection: {0}", name);
-                    pItem = AllItems.GetByName(name);
-                }
-                else
-                {
-                    Core.Log.LibVerbose("Creating Cache Connection: {0}", name);
-                    pItem = new PoolItem(name, storage, mode, _pool.PingDelay, _pool.PingDelayOnError);
-                    AllItems.Add(pItem);
-                }
-            }
+            Core.Log.LibVerbose("Creating Cache Connection: {0}", name);
+            var pItem = new PoolItem(name, storage, mode, _pool.PingDelay, _pool.PingDelayOnError);
             Core.Log.LibVerbose("\tName = {0}, Mode = {1}, Type = {2}", name, pItem.Mode, pItem.Storage.Type);
             _pool.Add(pItem);
         }
@@ -770,7 +751,6 @@ namespace TWCore.Cache.Client
         /// </summary>
         public void Dispose()
         {
-            _pool?.Items?.Each(i => AllItems.Items.Remove(i));
             _pool?.Dispose();
             Core.Status.DeAttachObject(this);
         }

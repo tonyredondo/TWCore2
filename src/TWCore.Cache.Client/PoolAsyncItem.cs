@@ -192,7 +192,7 @@ namespace TWCore.Cache.Client
 	        _tokenSource.Cancel();
 	        try
 	        {
-		        _pingTask.Wait(10000);
+		        _pingTask.Wait(5000);
 	        }
 	        catch
 	        {

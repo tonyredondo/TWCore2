@@ -352,53 +352,52 @@ namespace TWCore.Net.RPC.Client.Transports
         public Task ConnectAsync()
         {
             TargetStatus = ConnectionStatus.Connected;
-            if (Status == ConnectionStatus.Disconnected)
-            {
-                Core.Log.LibVerbose("Calling Socket Connects...");
-                Status = ConnectionStatus.Connecting;
-                _tokenSource?.Cancel();
-                _connectionResetEvent.Reset();
-                _tokenSource = new CancellationTokenSource();
-                _token = _tokenSource.Token;
-                OnConnecting?.Invoke(this, new EventArgs());
+            if (Status != ConnectionStatus.Disconnected)
+                return Task.CompletedTask;
 
-                try
+            Core.Log.LibVerbose("Calling Socket Connects...");
+            Status = ConnectionStatus.Connecting;
+            _tokenSource?.Cancel();
+            _connectionResetEvent.Reset();
+            _tokenSource = new CancellationTokenSource();
+            _token = _tokenSource.Token;
+            OnConnecting?.Invoke(this, new EventArgs());
+
+            try
+            {
+                //Core.Log.LibVerbose("Setting available connections tasks...");
+                var tasks = new Task[_availableConnections.Count];
+                for (var i = 0; i < _availableConnections.Count; i++)
                 {
-                    //Core.Log.LibVerbose("Setting available connections tasks...");
-                    var tasks = new Task[_availableConnections.Count];
-                    for (var i = 0; i < _availableConnections.Count; i++)
-                    {
-                        var cnn = _availableConnections[i];
-                        cnn.Host = Host;
-                        cnn.Port = Port;
-                        cnn.Hub = Hub;
-                        cnn.ReceiveBufferSize = ReceiveBufferSize;
-                        cnn.SendBufferSize = SendBufferSize;
-                        Core.Log.LibVerbose("Connecting task");
-                        tasks[i] = cnn.ConnectAsync();
-                    }
-                    if (Task.WaitAll(tasks, 10000, _token))
-                    {
-                        OnConnected?.Invoke(this, new EventArgs());
-                        Status = ConnectionStatus.Connected;
-                        Core.Log.InfoDetail("Connected to: {0}:{1}", Host, Port);
-                        _connectionResetEvent.Set();
-                        return Task.CompletedTask;
-                    }
-                    Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
-                    Status = ConnectionStatus.Disconnected;
+                    var cnn = _availableConnections[i];
+                    cnn.Host = Host;
+                    cnn.Port = Port;
+                    cnn.Hub = Hub;
+                    cnn.ReceiveBufferSize = ReceiveBufferSize;
+                    cnn.SendBufferSize = SendBufferSize;
+                    Core.Log.LibVerbose("Connecting task");
+                    tasks[i] = cnn.ConnectAsync();
+                }
+                if (Task.WaitAll(tasks, 10000, _token))
+                {
+                    OnConnected?.Invoke(this, new EventArgs());
+                    Status = ConnectionStatus.Connected;
+                    Core.Log.InfoDetail("Connected to: {0}:{1}", Host, Port);
                     _connectionResetEvent.Set();
                     return Task.CompletedTask;
                 }
-                catch (Exception ex)
-                {
-                    Core.Log.Error(ex, "Disconnected by connection tasks errors.");
-                    Status = ConnectionStatus.Disconnected;
-                    _connectionResetEvent.Set();
-                    return Task.CompletedTask;
-                }
+                Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
+                Status = ConnectionStatus.Disconnected;
+                _connectionResetEvent.Set();
+                return Task.CompletedTask;
             }
-            return Task.CompletedTask;
+            catch (Exception ex)
+            {
+                Core.Log.Error(ex, "Disconnected by connection tasks errors.");
+                Status = ConnectionStatus.Disconnected;
+                _connectionResetEvent.Set();
+                return Task.CompletedTask;
+            }
         }
         /// <summary>
         /// Disconnect from the transport server

@@ -560,6 +560,7 @@ namespace TWCore.Cache.Client
             _worker?.Dispose();
             _worker = null;
             Items?.Each(i => i.Dispose());
+            Items?.Clear();
             Items = null;
             Core.Status.DeAttachObject(this);
         }

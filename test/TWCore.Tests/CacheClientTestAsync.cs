@@ -26,17 +26,20 @@ namespace TWCore.Tests
             for (var i = 0; i < 100; i++)
             {
                 Core.Log.Error("NUMBER: {0}", i);
-                await CacheSingleTest().ConfigureAwait(false);
+                await Task.WhenAll(
+                    CacheSingleTest(),
+                    CacheSingleTest()
+                ).ConfigureAwait(false);
                 await Task.Delay(2000).ConfigureAwait(false);
             }
         }
 
         private static async Task CacheSingleTest()
         {
-            using (var cachePool = new CacheClientPoolAsync {Serializer = GlobalSerializer})
+            using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
                 var cacheClient = await CacheClientProxy
-                    .GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
+                    .GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", (IStorageAsync)cacheClient, StorageItemMode.ReadAndWrite);
 
                 try

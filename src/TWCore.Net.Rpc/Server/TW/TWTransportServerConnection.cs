@@ -229,7 +229,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     Core.Log.Warning("RPC message received without a session, the message is not going to be processed.");
                     return;
                 }
-                var messageResponse = OnRequestReceived.Invoke(this, messageRequest);
+                var messageResponse = OnRequestReceived?.Invoke(this, messageRequest);
                 WriteRPCMessageData(messageResponse, RPCMessageType.ResponseMessage);
             }
         }

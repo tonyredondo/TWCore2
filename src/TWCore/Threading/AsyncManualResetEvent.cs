@@ -19,13 +19,15 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable MethodSupportsCancellation
+// ReSharper disable UnusedMember.Global
 
 namespace TWCore.Threading
 {
+    /// <inheritdoc />
     /// <summary>
     /// Async Manual Reset Event
     /// </summary>
-    public class AsyncManualResetEvent
+    public class AsyncManualResetEvent : IDisposable
     {
         private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
 
@@ -53,7 +55,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync()
-            => _mTcs.Task;
+            => _mTcs?.Task ?? Task.FromException(new Exception("The instance has been disposed."));
 
         /// <summary>
         /// Wait Async for the set event
@@ -62,7 +64,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync(CancellationToken cancellationToken)
-            => _mTcs.Task.HandleCancellationAsync(cancellationToken);
+            => _mTcs?.Task.HandleCancellationAsync(cancellationToken) ?? Task.FromException(new Exception("The instance has been disposed."));
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
@@ -71,6 +73,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(int milliseconds)
         {
+            if (_mTcs == null) return false;
             var delayTask = Task.Delay(milliseconds);
             var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
             return finalTask != delayTask;
@@ -83,6 +86,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(TimeSpan timeout)
         {
+            if (_mTcs == null) return false;
             var delayTask = Task.Delay(timeout);
             var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
             return finalTask != delayTask;
@@ -96,6 +100,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
+            if (_mTcs == null) return false;
             var delayTask = Task.Delay(milliseconds);
             var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
             return finalTask != delayTask;
@@ -109,6 +114,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
+            if (_mTcs == null) return false;
             var delayTask = Task.Delay(timeout);
             var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
             return finalTask != delayTask;
@@ -120,6 +126,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set()
         {
+            if (_mTcs == null) return;
             var tcs = _mTcs;
             Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
             tcs.Task.Wait();
@@ -130,6 +137,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task SetAsync()
         {
+            if (_mTcs == null) return Task.CompletedTask;
             var tcs = _mTcs;
             Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
             return tcs.Task;
@@ -141,6 +149,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Reset()
         {
+            if (_mTcs == null) return;
             while (true)
             {
                 var tcs = _mTcs;
@@ -151,6 +160,11 @@ namespace TWCore.Threading
 #pragma warning restore 420
                     return;
             }
+        }
+
+        public void Dispose()
+        {
+            _mTcs = null;
         }
     }
 }

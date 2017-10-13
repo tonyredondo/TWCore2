@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 // ReSharper disable once UnusedMember.Global
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedMember.Local
+// ReSharper disable MemberCanBePrivate.Local
 
 namespace TWCore.Threading
 {
@@ -35,8 +38,8 @@ namespace TWCore.Threading
         private readonly Func<ProducerMethods, CancellationToken, Task> _producerFunc;
         private readonly List<T> _collection;
         private readonly CancellationTokenSource _tokenSource;
-        private readonly AutoResetEvent _producerAddEvent;
-        private readonly ManualResetEventSlim _producerEndEvent;
+        private readonly AsyncManualResetEvent _producerAddEvent;
+        private readonly AsyncManualResetEvent _producerEndEvent;
         private bool _started;
         private bool _disposed;
 
@@ -51,8 +54,8 @@ namespace TWCore.Threading
             _producerFunc = producerFunc;
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new AutoResetEvent(false);
-            _producerEndEvent = new ManualResetEventSlim(true);
+            _producerAddEvent = new AsyncManualResetEvent(false);
+            _producerEndEvent = new AsyncManualResetEvent(true);
         }
         /// <summary>
         /// Producer / Consumer schema enumerable
@@ -61,11 +64,11 @@ namespace TWCore.Threading
         public ProducerConsumerEnumerable(Action<ProducerMethods, CancellationToken> actionFunc)
         {
             _started = false;
-            _producerFunc = (pMethods, token) => Task.Run(()=> actionFunc(pMethods, token));
+            _producerFunc = (pMethods, token) => Task.Run(() => actionFunc(pMethods, token));
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
-            _producerAddEvent = new AutoResetEvent(false);
-            _producerEndEvent = new ManualResetEventSlim(true);
+            _producerAddEvent = new AsyncManualResetEvent(false);
+            _producerEndEvent = new AsyncManualResetEvent(true);
         }
         ~ProducerConsumerEnumerable()
         {
@@ -106,8 +109,66 @@ namespace TWCore.Threading
                 {
                     Core.Log.Write(ex);
                 }
-                _producerEndEvent.Set();
+                await _producerEndEvent.SetAsync().ConfigureAwait(false);
             }, _tokenSource.Token);
+        }
+        /// <summary>
+        /// Async version of ForEach
+        /// </summary>
+        /// <param name="itemAction">Action for each element</param>
+        /// <returns>ForEach Task</returns>
+        public async Task ForEachAsync(Action<T> itemAction)
+        {
+            var consumer = new ConsumerEnumerator(this);
+            while(await consumer.MoveNextAsync().ConfigureAwait(false))
+                itemAction(consumer.Current);
+        }
+        /// <summary>
+        /// Async version of ForEach
+        /// </summary>
+        /// <param name="itemAction">Action for each element with index</param>
+        /// <returns>ForEach Task</returns>
+        public async Task ForEachAsync(Action<T, int> itemAction)
+        {
+            var consumer = new ConsumerEnumerator(this);
+            var idx = 0;
+            while (await consumer.MoveNextAsync().ConfigureAwait(false))
+                itemAction(consumer.Current, idx++);
+        }
+        /// <summary>
+        /// Async version of ForEach
+        /// </summary>
+        /// <param name="itemFunc">Func for each element to support tasks</param>
+        /// <returns>ForEach Task</returns>
+        public async Task ForEachAsync(Func<T, Task> itemFunc)
+        {
+            var consumer = new ConsumerEnumerator(this);
+            while (await consumer.MoveNextAsync().ConfigureAwait(false))
+                await itemFunc(consumer.Current).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Async version of ForEach
+        /// </summary>
+        /// <param name="itemFunc">Func for each element with index to support tasks</param>
+        /// <returns>ForEach Task</returns>
+        public async Task ForEachAsync(Func<T, int, Task> itemFunc)
+        {
+            var consumer = new ConsumerEnumerator(this);
+            var idx = 0;
+            while (await consumer.MoveNextAsync().ConfigureAwait(false))
+                await itemFunc(consumer.Current, idx++).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Async version of ToArray
+        /// </summary>
+        /// <returns>Array tasks</returns>
+        public async Task<T[]> ToArrayAsync()
+        {
+            var consumer = new ConsumerEnumerator(this);
+            var lst = new List<T>();
+            while (await consumer.MoveNextAsync().ConfigureAwait(false))
+                lst.Add(consumer.Current);
+            return lst.ToArray();
         }
         #endregion
 
@@ -136,6 +197,7 @@ namespace TWCore.Threading
             }
             #endregion
 
+            #region Methods
             /// <summary>
             /// Adds an item to the enumerable
             /// </summary>
@@ -143,10 +205,18 @@ namespace TWCore.Threading
             public void Add(T item)
             {
                 lock (_data._padlock)
-                {
                     _data._collection.Add(item);
-                    _data._producerAddEvent.Set();
-                }
+                _data._producerAddEvent.Set();
+            }
+            /// <summary>
+            /// Adds an item to the enumerable
+            /// </summary>
+            /// <param name="item">Item instance</param>
+            public Task AddAsync(T item)
+            {
+                lock (_data._padlock)
+                    _data._collection.Add(item);
+                return _data._producerAddEvent.SetAsync();
             }
             /// <summary>
             /// Adds a IEnumerable to the internal enumerable
@@ -155,11 +225,20 @@ namespace TWCore.Threading
             public void AddRange(IEnumerable<T> enumerable)
             {
                 lock (_data._padlock)
-                {
                     _data._collection.AddRange(enumerable);
-                    _data._producerAddEvent.Set();
-                }
+                _data._producerAddEvent.Set();
             }
+            /// <summary>
+            /// Adds a IEnumerable to the internal enumerable
+            /// </summary>
+            /// <param name="enumerable">Enumerable of items</param>
+            public Task AddRangeAsync(IEnumerable<T> enumerable)
+            {
+                lock (_data._padlock)
+                    _data._collection.AddRange(enumerable);
+                return _data._producerAddEvent.SetAsync();
+            }
+            #endregion
         }
         private class ConsumerEnumerator : IEnumerator<T>
         {
@@ -173,13 +252,16 @@ namespace TWCore.Threading
                 _data = data;
             }
 
-            public bool MoveNext()
+            public async Task<bool> MoveNextAsync()
             {
                 _data.StartProducer();
                 while (_data._collection.Count - _index == 0)
-                {                   
-                    var waitValue = WaitHandle.WaitAny(new[] { _data._producerAddEvent, _data._producerEndEvent.WaitHandle, _data._tokenSource.Token.WaitHandle });
-                    if (waitValue != 0) return false;
+                {
+                    var addTask = _data._producerAddEvent.WaitAsync();
+                    var endTask = _data._producerEndEvent.WaitAsync(_data._tokenSource.Token);
+                    var waitTask = await Task.WhenAny(endTask, addTask).ConfigureAwait(false);
+                    if (waitTask == endTask)
+                        return false;
                 }
                 lock (_data._padlock)
                 {
@@ -193,10 +275,12 @@ namespace TWCore.Threading
                 }
             }
 
+            public bool MoveNext() 
+                => MoveNextAsync().WaitAndResults();
+
             public void Reset()
-            {
-                _index = 0;
-            }
+                => _index = 0;
+
             public void Dispose()
             {
             }

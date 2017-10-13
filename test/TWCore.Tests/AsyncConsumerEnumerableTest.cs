@@ -22,6 +22,11 @@ namespace TWCore.Tests
                 Task.Run(() => new[] { "Tambien", "Soporto", "Arrays" })
             };
 
+            foreach(var c in consumer)
+            {
+                Console.WriteLine(c);
+            }
+
             Console.ReadLine();
         }
     }

@@ -262,8 +262,12 @@ namespace TWCore
             Stop(int.MaxValue);
             _processHandler.Set();
             _tokenSource.Cancel();
-            _processThread?.Wait(5000);
-            _processThread = null;
+            try
+            {
+                _processThread?.Wait(2500);
+                _processThread = null;
+            }
+            catch { }
             _processHandler.Reset();
             Core.Status.DeAttachObject(this);
         }

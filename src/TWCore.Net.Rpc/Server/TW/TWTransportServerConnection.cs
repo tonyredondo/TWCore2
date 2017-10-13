@@ -366,7 +366,7 @@ namespace TWCore.Net.RPC.Server.Transports
             _tokenSource.Cancel();
             try
             {
-                _receiveTask.Wait(1000);
+                _receiveTask.Wait(500);
             }
             catch
             {

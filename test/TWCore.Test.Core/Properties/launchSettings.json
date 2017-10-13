@@ -1,7 +1,8 @@
 {
   "profiles": {
     "TWCore.Test.Core": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "commandLineArgs": "/producerconsumer"
     }
   }
 }

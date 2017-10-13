@@ -55,7 +55,7 @@ namespace TWCore.Threading
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
-            _producerEndEvent = new AsyncManualResetEvent(true);
+            _producerEndEvent = new AsyncManualResetEvent(false);
         }
         /// <summary>
         /// Producer / Consumer schema enumerable
@@ -68,7 +68,7 @@ namespace TWCore.Threading
             _collection = new List<T>();
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
-            _producerEndEvent = new AsyncManualResetEvent(true);
+            _producerEndEvent = new AsyncManualResetEvent(false);
         }
         ~ProducerConsumerEnumerable()
         {
@@ -265,6 +265,7 @@ namespace TWCore.Threading
                 }
                 lock (_data._padlock)
                 {
+                    _data._producerAddEvent.Reset();
                     if (_data._collection.Count > _index)
                     {
                         Current = _data._collection[_index++];

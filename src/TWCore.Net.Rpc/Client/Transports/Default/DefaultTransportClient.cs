@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -34,13 +35,19 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// </summary>
     public class DefaultTransportClient : ITransportClient
     {
-        private readonly ConcurrentDictionary<Guid, (AsyncManualResetEvent Event, RPCResponseMessage Message)> _messageResponsesHandlers =
-            new ConcurrentDictionary<Guid, (AsyncManualResetEvent Event, RPCResponseMessage Message)>();
+        private readonly ConcurrentDictionary<Guid, RPCMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCMessageHandler>();
 
         private readonly int _maxIndex = 3;
         private int _currentIndex = -1;
         private RpcClient[] _clients;
 
+        #region Nested Types
+        private sealed class RPCMessageHandler
+        {
+            public readonly AsyncManualResetEvent Event = new AsyncManualResetEvent();
+            public RPCResponseMessage Message;
+        }
+        #endregion
 
         #region Properties
         /// <inheritdoc />
@@ -146,9 +153,101 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             for (var i = 0; i <= _maxIndex; i++)
             {
                 var client = new RpcClient(Host, Port, (BinarySerializer)Serializer);
+                client.OnMessageReceived += (rpcClient, message) =>
+                {
+                    if (message is RPCResponseMessage responseMessage)
+                    {
+                        if (!_messageResponsesHandlers.TryGetValue(responseMessage.RequestMessageId, out var value))
+                            return;
+
+                        value.Message = responseMessage;
+                        value.Event.Set();
+                    }
+                };
                 _clients[0] = client;
             }
         }
+        #endregion
+
+        #region Connection
+        /// <summary>
+        /// Connect to the transport server
+        /// </summary>
+        /// <returns>Task as result of the connection process</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task ConnectAsync()
+        {
+            //TargetStatus = ConnectionStatus.Connected;
+            //if (Status != ConnectionStatus.Disconnected)
+            //    return Task.CompletedTask;
+
+            //Core.Log.LibVerbose("Calling Socket Connects...");
+            //Status = ConnectionStatus.Connecting;
+            //_tokenSource?.Cancel();
+            //_connectionResetEvent.Reset();
+            //_tokenSource = new CancellationTokenSource();
+            //_token = _tokenSource.Token;
+            //OnConnecting?.Invoke(this, new EventArgs());
+
+            //try
+            //{
+            //    //Core.Log.LibVerbose("Setting available connections tasks...");
+            //    var tasks = new Task[_availableConnections.Count];
+            //    for (var i = 0; i < _availableConnections.Count; i++)
+            //    {
+            //        var cnn = _availableConnections[i];
+            //        cnn.Host = Host;
+            //        cnn.Port = Port;
+            //        cnn.Hub = Hub;
+            //        cnn.ReceiveBufferSize = ReceiveBufferSize;
+            //        cnn.SendBufferSize = SendBufferSize;
+            //        Core.Log.LibVerbose("Connecting task");
+            //        tasks[i] = cnn.ConnectAsync();
+            //    }
+            //    if (Task.WaitAll(tasks, 10000, _token))
+            //    {
+            //        OnConnected?.Invoke(this, new EventArgs());
+            //        Status = ConnectionStatus.Connected;
+            //        Core.Log.InfoDetail("Connected to: {0}:{1}", Host, Port);
+            //        _connectionResetEvent.Set();
+            //        return Task.CompletedTask;
+            //    }
+            //    Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
+            //    Status = ConnectionStatus.Disconnected;
+            //    _connectionResetEvent.Set();
+            //    return Task.CompletedTask;
+            //}
+            //catch (Exception ex)
+            //{
+            //    Core.Log.Error(ex, "Disconnected by connection tasks errors.");
+            //    Status = ConnectionStatus.Disconnected;
+            //    _connectionResetEvent.Set();
+            //    return Task.CompletedTask;
+            //}
+            return Task.CompletedTask;
+        }
+        /// <summary>
+        /// Disconnect from the transport server
+        /// </summary>
+        /// <returns>Task as result of the disconnection process</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task DisconnectAsync()
+        {
+            //TargetStatus = ConnectionStatus.Disconnected;
+            //if (Status != ConnectionStatus.Connected)
+            //    return Task.CompletedTask;
+            //Status = ConnectionStatus.Disconnecting;
+            //OnDisconnecting?.Invoke(this, new EventArgs());
+            //Core.Log.LibVerbose("Cancelling tasks...");
+            //_tokenSource?.Cancel();
+            //_tokenSource = null;
+            //Task.WaitAll(_availableConnections.Select(a => a.DisconnectAsync()).ToArray(), 11000, _token);
+            //Status = ConnectionStatus.Disconnected;
+            //Core.Log.LibVerbose("Disconnected");
+            //OnDisconnected?.Invoke(this, new EventArgs());
+            return Task.CompletedTask;
+        }
+
         #endregion
 
         #region GetDescriptors

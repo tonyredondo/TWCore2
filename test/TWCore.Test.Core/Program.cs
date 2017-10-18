@@ -40,6 +40,7 @@ namespace TWCore.Test.Core
                 DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
 
+                /*
                 var cSource = new CancellationTokenSource();
                 var lstServerClients = new List<RpcServerClient>();
                 Task.Run(async () =>
@@ -73,8 +74,6 @@ namespace TWCore.Test.Core
 
                 }, cSource.Token);
 
-
-
                 var client = new RpcClient("127.0.0.1", 8081, new WBinarySerializer());
                 client.OnConnect += (sender, eventArgs) =>
                 {
@@ -97,7 +96,7 @@ namespace TWCore.Test.Core
                 Console.ReadLine();
 
                 cSource.Cancel();
-
+                */
             });
             TWCore.Core.RunService<TestService>(args);
         }

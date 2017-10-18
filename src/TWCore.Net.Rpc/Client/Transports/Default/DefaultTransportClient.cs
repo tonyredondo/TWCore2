@@ -23,6 +23,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
+using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
@@ -36,7 +37,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     public class DefaultTransportClient : ITransportClient
     {
         private readonly ConcurrentDictionary<Guid, RPCMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCMessageHandler>();
-
+        private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(100);
+        private readonly AsyncLock _connectionLocker = new AsyncLock();
+        private CancellationTokenSource _connectionCancellationTokenSource;
+        private CancellationToken _connectionCancellationToken;
+        private bool _shouldBeConnected;
         private readonly int _maxIndex = 3;
         private int _currentIndex = -1;
         private RpcClient[] _clients;
@@ -83,6 +88,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         [StatusProperty]
         public RPCTransportCounters Counters { get; }
+        /// <summary>
+        /// Invoke Method Timeout
+        /// </summary>
+        [StatusProperty]
+        public int InvokeMethodTimeout { get; set; } = 45000;
         #endregion
 
         #region Events
@@ -90,6 +100,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// Events received from the RPC transport server
         /// </summary>
         public event EventHandler<EventDataEventArgs> OnEventReceived;
+        /// <summary>
+        /// Event when a push message has been received from server
+        /// </summary>
+        public event EventHandler<EventArgs<RPCPushMessage>> OnPushMessageReceived;
         #endregion
 
         #region .ctor
@@ -128,7 +142,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         }
         #endregion
 
-
         #region Init
         /// <inheritdoc />
         /// <summary>
@@ -136,37 +149,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync()
-        {
-            Init();
-            return Task.CompletedTask;
-        }
+        public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
-        {
-            _clients = new RpcClient[_maxIndex + 1];
-            for (var i = 0; i <= _maxIndex; i++)
-            {
-                var client = new RpcClient(Host, Port, (BinarySerializer)Serializer);
-                client.OnMessageReceived += (rpcClient, message) =>
-                {
-                    if (message is RPCResponseMessage responseMessage)
-                    {
-                        if (!_messageResponsesHandlers.TryGetValue(responseMessage.RequestMessageId, out var value))
-                            return;
-
-                        value.Message = responseMessage;
-                        value.Event.Set();
-                    }
-                };
-                _clients[0] = client;
-            }
-        }
+        public void Init() { }
         #endregion
 
         #region Connection
@@ -175,79 +165,50 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns>Task as result of the connection process</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task ConnectAsync()
+        public async Task ConnectAsync()
         {
-            //TargetStatus = ConnectionStatus.Connected;
-            //if (Status != ConnectionStatus.Disconnected)
-            //    return Task.CompletedTask;
-
-            //Core.Log.LibVerbose("Calling Socket Connects...");
-            //Status = ConnectionStatus.Connecting;
-            //_tokenSource?.Cancel();
-            //_connectionResetEvent.Reset();
-            //_tokenSource = new CancellationTokenSource();
-            //_token = _tokenSource.Token;
-            //OnConnecting?.Invoke(this, new EventArgs());
-
-            //try
-            //{
-            //    //Core.Log.LibVerbose("Setting available connections tasks...");
-            //    var tasks = new Task[_availableConnections.Count];
-            //    for (var i = 0; i < _availableConnections.Count; i++)
-            //    {
-            //        var cnn = _availableConnections[i];
-            //        cnn.Host = Host;
-            //        cnn.Port = Port;
-            //        cnn.Hub = Hub;
-            //        cnn.ReceiveBufferSize = ReceiveBufferSize;
-            //        cnn.SendBufferSize = SendBufferSize;
-            //        Core.Log.LibVerbose("Connecting task");
-            //        tasks[i] = cnn.ConnectAsync();
-            //    }
-            //    if (Task.WaitAll(tasks, 10000, _token))
-            //    {
-            //        OnConnected?.Invoke(this, new EventArgs());
-            //        Status = ConnectionStatus.Connected;
-            //        Core.Log.InfoDetail("Connected to: {0}:{1}", Host, Port);
-            //        _connectionResetEvent.Set();
-            //        return Task.CompletedTask;
-            //    }
-            //    Core.Log.LibVerbose("Disconnected by connection tasks timeout.");
-            //    Status = ConnectionStatus.Disconnected;
-            //    _connectionResetEvent.Set();
-            //    return Task.CompletedTask;
-            //}
-            //catch (Exception ex)
-            //{
-            //    Core.Log.Error(ex, "Disconnected by connection tasks errors.");
-            //    Status = ConnectionStatus.Disconnected;
-            //    _connectionResetEvent.Set();
-            //    return Task.CompletedTask;
-            //}
-            return Task.CompletedTask;
+            if (_shouldBeConnected) return;
+            using (await _connectionLocker.LockAsync().ConfigureAwait(false))
+            {
+                _shouldBeConnected = true;
+                try
+                {
+                    _connectionCancellationTokenSource = new CancellationTokenSource();
+                    _connectionCancellationToken = _connectionCancellationTokenSource.Token;
+                    if (_clients == null)
+                    {
+                        _clients = new RpcClient[_maxIndex + 1];
+                        for (var i = 0; i < _clients.Length; i++)
+                        {
+                            var client = new RpcClient(Host, Port, (BinarySerializer) Serializer);
+                            client.OnMessageReceived += ClientOnOnMessageReceived;
+                            _clients[i] = client;
+                        }
+                    }
+                    await Task.WhenAll(_clients.Select(c => c.ConnectAsync())).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _shouldBeConnected = false;
+                    throw;
+                }
+            }
         }
         /// <summary>
         /// Disconnect from the transport server
         /// </summary>
         /// <returns>Task as result of the disconnection process</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task DisconnectAsync()
+        public async Task DisconnectAsync()
         {
-            //TargetStatus = ConnectionStatus.Disconnected;
-            //if (Status != ConnectionStatus.Connected)
-            //    return Task.CompletedTask;
-            //Status = ConnectionStatus.Disconnecting;
-            //OnDisconnecting?.Invoke(this, new EventArgs());
-            //Core.Log.LibVerbose("Cancelling tasks...");
-            //_tokenSource?.Cancel();
-            //_tokenSource = null;
-            //Task.WaitAll(_availableConnections.Select(a => a.DisconnectAsync()).ToArray(), 11000, _token);
-            //Status = ConnectionStatus.Disconnected;
-            //Core.Log.LibVerbose("Disconnected");
-            //OnDisconnected?.Invoke(this, new EventArgs());
-            return Task.CompletedTask;
+            if (!_shouldBeConnected) return;
+            using (await _connectionLocker.LockAsync().ConfigureAwait(false))
+            {
+                _shouldBeConnected = false;
+                _connectionCancellationTokenSource.Cancel();
+                await Task.WhenAll(_clients.Select(c => c.DisconnectAsync())).ConfigureAwait(false);
+            }
         }
-
         #endregion
 
         #region GetDescriptors
@@ -285,9 +246,23 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <param name="messageRQ">RPC request message to send to the server</param>
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
+        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
         {
-            throw new NotImplementedException();
+            if (!_shouldBeConnected)
+                await ConnectAsync().ConfigureAwait(false);
+            if (_connectionCancellationToken.IsCancellationRequested) return null;
+            var messageId = messageRQ.MessageId;
+            var handler = new RPCMessageHandler();
+            _messageResponsesHandlers.TryAdd(messageId, handler);
+            var client = _clients[GetCurrentIndex()];
+            await client.SendRpcMessageAsync(messageRQ).ConfigureAwait(false);
+            await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
+                Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
+            if (handler.Event.IsSet)
+                return handler.Message;
+            if (_connectionCancellationToken.IsCancellationRequested) 
+                return null;
+            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
         }
         /// <inheritdoc />
         /// <summary>
@@ -298,10 +273,9 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
         {
-            throw new NotImplementedException();
+            return InvokeMethodAsync(messageRQ).WaitAndResults();
         }
         #endregion
-
 
         /// <inheritdoc />
         /// <summary>
@@ -310,7 +284,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            throw new NotImplementedException();
+            DisconnectAsync().WaitAsync();
         }
 
         #region Private Methods
@@ -319,6 +293,34 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         {
             Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
             return Interlocked.Increment(ref _currentIndex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void ClientOnOnMessageReceived(RpcClient rpcClient1, RPCMessage rpcMessage)
+        {
+            switch (rpcMessage)
+            {
+                case RPCResponseMessage responseMessage:
+                    if (!_messageResponsesHandlers.TryGetValue(responseMessage.RequestMessageId, out var value))
+                        return;
+
+                    value.Message = responseMessage;
+                    value.Event.Set();
+                    break;
+                case RPCEventMessage eventMessage:
+                    _previousMessages.GetOrAdd(eventMessage.MessageId, mId =>
+                    {
+                        OnEventReceived?.InvokeAsync(this, new EventDataEventArgs(eventMessage.ServiceName, eventMessage.EventName, eventMessage.EventArgs));
+                        return null;
+                    });
+                    break;
+                case RPCPushMessage pushMessage:
+                    _previousMessages.GetOrAdd(pushMessage.MessageId, mId =>
+                    {
+                        OnPushMessageReceived?.InvokeAsync(this, new EventArgs<RPCPushMessage>(pushMessage));
+                        return null;
+                    });
+                    break;
+            }
         }
         #endregion
     }

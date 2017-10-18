@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using TWCore.Net.RPC;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Client;
+using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Net.RPC.Server;
+using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Net.RPC.Server.Transports.TW;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -35,12 +37,13 @@ namespace TWCore.Tests
             var service = new MyService();
 
             Core.Log.InfoBasic("Setting RPC Server");
-            var rpcServer = new RPCServer(new TWTransportServer(20050, serializer));
+            //var rpcServer = new RPCServer(new TWTransportServer(20050, serializer));
+            var rpcServer = new RPCServer(new DefaultTransportServer(20050, serializer));
             rpcServer.AddService(service);
             await rpcServer.StartAsync().ConfigureAwait(false);
 
             Core.Log.InfoBasic("Setting RPC Client");
-            var rpcClient = new RPCClient(new TWTransportClient("127.0.0.1", 20050, 3, serializer));
+            var rpcClient = new RPCClient(new DefaultTransportClient("127.0.0.1", 20050, 3, serializer));
 
             //IHello test
             Core.Log.InfoBasic("IHello test");

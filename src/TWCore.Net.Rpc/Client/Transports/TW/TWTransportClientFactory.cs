@@ -22,7 +22,7 @@ using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Global
 
-namespace TWCore.Net.RPC.Client.Transports
+namespace TWCore.Net.RPC.Client.Transports.TW
 {
     /// <inheritdoc />
     /// <summary>

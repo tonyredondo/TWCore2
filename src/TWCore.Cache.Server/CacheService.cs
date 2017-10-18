@@ -19,6 +19,8 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
+using TWCore.Net.RPC.Server.Transports;
+
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Services

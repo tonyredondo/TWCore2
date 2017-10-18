@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
+using TWCore.Net.RPC.Client.Transports;
 using TWCore.Serialization;
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable ClassNeverInstantiated.Global

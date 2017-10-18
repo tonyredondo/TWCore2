@@ -39,7 +39,7 @@ using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable SuggestBaseTypeForParameter
 
-namespace TWCore.Net.RPC.Client.Transports
+namespace TWCore.Net.RPC.Client.Transports.TW
 {
     /// <inheritdoc />
     /// <summary>

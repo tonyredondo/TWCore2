@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using TWCore.Cache.Client;
-using TWCore.Net.RPC.Client.Transports;
+using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;

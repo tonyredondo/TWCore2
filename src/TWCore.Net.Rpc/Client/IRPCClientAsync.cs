@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading.Tasks;
+using TWCore.Net.RPC.Client.Transports;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
 // ReSharper disable EventNeverSubscribedTo.Global

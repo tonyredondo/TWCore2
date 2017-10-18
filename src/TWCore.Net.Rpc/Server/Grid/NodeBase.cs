@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using TWCore.Net.RPC.Grid;
+using TWCore.Net.RPC.Server.Transports;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global

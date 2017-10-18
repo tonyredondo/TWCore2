@@ -460,6 +460,19 @@ namespace TWCore
                 lock (OninitActions)
                     OninitActions.Enqueue(action);
         }
+        /// <summary>
+        /// Enqueue actions on Init
+        /// </summary>
+        /// <param name="taskFunc">Func to execute when the core is initialized</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RunOnInit(Func<Task> taskFunc)
+        {
+            if (_initialized)
+                taskFunc().WaitAsync();
+            else
+                lock (OninitActions)
+                    OninitActions.Enqueue(() => taskFunc().WaitAsync());
+        }
         #endregion  
 
         #region Time Methods

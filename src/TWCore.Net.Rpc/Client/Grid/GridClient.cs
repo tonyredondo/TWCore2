@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Net.RPC.Client.Transports;
+
 // ReSharper disable UnassignedField.Global
 // ReSharper disable MemberCanBePrivate.Global
 

@@ -22,7 +22,7 @@ using TWCore.Serialization;
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable UnusedMember.Global
 
-namespace TWCore.Net.RPC.Server
+namespace TWCore.Net.RPC.Server.Transports
 {
     /// <summary>
     /// Define a RPC Transport Server

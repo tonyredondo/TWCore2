@@ -20,7 +20,7 @@ using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Compression;
-using TWCore.Net.RPC.Client;
+using TWCore.Net.RPC.Client.Transports;
 using TWCore.Serialization;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global

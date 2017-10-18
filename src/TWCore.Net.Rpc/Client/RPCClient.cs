@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+using TWCore.Net.RPC.Client.Transports;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
 // ReSharper disable InconsistentlySynchronizedField

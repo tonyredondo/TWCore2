@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Cache;
 using TWCore.Net.Multicast;
-using TWCore.Net.RPC.Server;
+using TWCore.Net.RPC.Server.Transports;
 using TWCore.Services.Configuration;
 
 // ReSharper disable CheckNamespace

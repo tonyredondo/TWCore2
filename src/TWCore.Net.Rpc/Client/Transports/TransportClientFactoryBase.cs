@@ -18,19 +18,19 @@ using System;
 using TWCore.Collections;
 using TWCore.Configuration;
 
-namespace TWCore.Net.RPC.Server
+namespace TWCore.Net.RPC.Client.Transports
 {
     /// <inheritdoc />
     /// <summary>
-    /// Transport server type factory
+    /// Transport client type factory
     /// </summary>
-    public abstract class TransportServerFactoryBase : ITypeFactory
+    public abstract class TransportClientFactoryBase : ITypeFactory
     {
         /// <inheritdoc />
         /// <summary>
         /// Object type of the result of the factory
         /// </summary>
-        public Type ObjectType => typeof(ITransportServer);
+        public Type ObjectType => typeof(ITransportClient);
         /// <inheritdoc />
         /// <summary>
         /// Create a new object from a KeyValueCollection parameters
@@ -43,6 +43,6 @@ namespace TWCore.Net.RPC.Server
         /// </summary>
         /// <param name="parameters">Parameters to create the transport</param>
         /// <returns>Transport instance</returns>
-        protected abstract ITransportServer CreateTransport(KeyValueCollection parameters);
+        protected abstract ITransportClient CreateTransport(KeyValueCollection parameters);
     }
 }

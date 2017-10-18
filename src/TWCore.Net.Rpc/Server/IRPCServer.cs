@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
+using TWCore.Net.RPC.Server.Transports;
+
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC.Server

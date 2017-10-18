@@ -29,7 +29,7 @@ using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 
-namespace TWCore.Net.RPC.Server.Transports
+namespace TWCore.Net.RPC.Server.Transports.TW
 {
     /// <inheritdoc />
     /// <summary>

@@ -23,6 +23,8 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Descriptors;
+using TWCore.Net.RPC.Server.Transports;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Local
 

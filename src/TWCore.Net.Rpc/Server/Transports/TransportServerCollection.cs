@@ -23,7 +23,7 @@ using System.Threading.Tasks;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 
-namespace TWCore.Net.RPC.Server
+namespace TWCore.Net.RPC.Server.Transports
 {
     /// <inheritdoc cref="ITransportServer" />
     /// <summary>

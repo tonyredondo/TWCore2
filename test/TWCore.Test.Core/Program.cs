@@ -2,12 +2,14 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Injector;
 using TWCore.Net.Multicast;
+using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Threading;
 
@@ -76,6 +78,15 @@ namespace TWCore.Test.Core
                 await Task.Delay(10000, token);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }
+        }
+
+        public class RpcClient
+        {
+            private TcpClient _client;
+            private BinarySerializer _serializer;
+            private bool _shouldBeConnected;
+            
+
         }
     }
 }

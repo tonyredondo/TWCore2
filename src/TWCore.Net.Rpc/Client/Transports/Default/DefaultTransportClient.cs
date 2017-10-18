@@ -113,6 +113,21 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         public DefaultTransportClient()
         {
             Serializer = SerializerManager.DefaultBinarySerializer.DeepClone();
+            if (Serializer != null)
+            {
+                if (!Serializer.KnownTypes.Contains(typeof(RPCEventMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCEventMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCPushMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCPushMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCRequestMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCResponseMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionRequestMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionResponseMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
+            }
             Core.Status.Attach(collection =>
             {
                 collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);
@@ -133,7 +148,21 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             if (socketsPerClient > 0)
                 _maxIndex = socketsPerClient - 1;
-
+            if (Serializer != null)
+            {
+                if (!Serializer.KnownTypes.Contains(typeof(RPCEventMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCEventMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCPushMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCPushMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCRequestMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCResponseMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionRequestMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
+                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionResponseMessage)))
+                    Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
+            }
             Core.Status.Attach(collection =>
             {
                 collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);

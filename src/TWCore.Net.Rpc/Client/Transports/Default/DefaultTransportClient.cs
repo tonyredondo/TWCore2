@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
 using TWCore.Diagnostics.Status;
@@ -35,6 +36,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     {
         private readonly ConcurrentDictionary<Guid, (AsyncManualResetEvent Event, RPCResponseMessage Message)> _messageResponsesHandlers =
             new ConcurrentDictionary<Guid, (AsyncManualResetEvent Event, RPCResponseMessage Message)>();
+
+        private readonly int _maxIndex = 3;
+        private int _currentIndex = -1;
+        private RpcClient[] _clients;
 
 
         #region Properties
@@ -80,6 +85,43 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         public event EventHandler<EventDataEventArgs> OnEventReceived;
         #endregion
 
+        #region .ctor
+        /// <summary>
+        /// Default RPC Transport client
+        /// </summary>
+        public DefaultTransportClient()
+        {
+            Serializer = SerializerManager.DefaultBinarySerializer.DeepClone();
+            Core.Status.Attach(collection =>
+            {
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);
+                collection.Add("Connections count", _clients?.Length, true);
+            });
+        }
+        /// <summary>
+        /// Default RPC Transport client
+        /// </summary>
+        /// <param name="host">RPC Transport Server Host</param>
+        /// <param name="port">RPC Transport Server Port</param>
+        /// <param name="socketsPerClient">Sockets per transport client</param>
+        /// <param name="serializer">Serializer for data transfer, is is null then is XmlTextSerializer</param>
+        public DefaultTransportClient(string host, int port, byte socketsPerClient, ISerializer serializer = null)
+        {
+            Host = host;
+            Port = port;
+            Serializer = serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
+            if (socketsPerClient > 0)
+                _maxIndex = socketsPerClient - 1;
+
+            Core.Status.Attach(collection =>
+            {
+                collection.Add("Messages Waiting Response Count", _messageResponsesHandlers.Count, true);
+                collection.Add("Connections count", _clients?.Length, true);
+            });
+        }
+        #endregion
+
+
         #region Init
         /// <inheritdoc />
         /// <summary>
@@ -87,14 +129,26 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() => Task.CompletedTask;
+        public Task InitAsync()
+        {
+            Init();
+            return Task.CompletedTask;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() { }
+        public void Init()
+        {
+            _clients = new RpcClient[_maxIndex + 1];
+            for (var i = 0; i <= _maxIndex; i++)
+            {
+                var client = new RpcClient(Host, Port, (BinarySerializer)Serializer);
+                _clients[0] = client;
+            }
+        }
         #endregion
 
         #region GetDescriptors
@@ -159,5 +213,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         {
             throw new NotImplementedException();
         }
+
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private int GetCurrentIndex()
+        {
+            Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
+            return Interlocked.Increment(ref _currentIndex);
+        }
+        #endregion
     }
 }

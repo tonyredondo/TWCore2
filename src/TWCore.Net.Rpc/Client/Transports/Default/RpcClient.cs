@@ -189,8 +189,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 if (_connectionCancellationToken.IsCancellationRequested)
                     return;
-                if (!_shouldBeConnected)
-                    throw new Exception("The client is not connected.");
                 if (_client == null || !_client.Connected)
                 {
                     OnDisconnect?.Invoke(this, EventArgs.Empty);

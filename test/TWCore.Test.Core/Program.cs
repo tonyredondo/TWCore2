@@ -31,7 +31,7 @@ namespace TWCore.Test.Core
         {
             Console.WriteLine("MAIN");
             TWCore.Core.DebugMode = true;
-            TWCore.Core.RunOnInit(async () =>
+            TWCore.Core.RunOnInit(() =>
             {
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("testlog.txt");
@@ -39,64 +39,6 @@ namespace TWCore.Test.Core
                 DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
-
-                /*
-                var cSource = new CancellationTokenSource();
-                var lstServerClients = new List<RpcServerClient>();
-                Task.Run(async () =>
-                {
-                    var listener = new TcpListener(IPAddress.Any, 8081);
-                    listener.Server.NoDelay = true;
-                    listener.Server.ReceiveBufferSize = 32768;
-                    listener.Server.SendBufferSize = 32768;
-                    Factory.SetSocketLoopbackFastPath(listener.Server);
-                    listener.Start();
-
-
-                    while (!cSource.IsCancellationRequested)
-                    {
-                        var tcpClient = await listener.AcceptTcpClientAsync().ConfigureAwait(false);
-
-                        ThreadPool.QueueUserWorkItem(objClient =>
-                        {
-                            var server = new RpcServerClient((TcpClient)objClient, new WBinarySerializer());
-                            server.OnMessageReceived += (sender, message) =>
-                            {
-                                Console.WriteLine("Server message received: {0}", message);
-                                
-                            };
-
-                            lstServerClients.Add(server);
-
-                        }, tcpClient);
-                    }
-                    listener.Stop();
-
-                }, cSource.Token);
-
-                var client = new RpcClient("127.0.0.1", 8081, new WBinarySerializer());
-                client.OnConnect += (sender, eventArgs) =>
-                {
-                    Console.WriteLine("Socket On Session");
-                };
-                client.OnDisconnect += (sender, eventArgs) =>
-                {
-                    Console.WriteLine("Socket Disconnected");
-
-                };
-                client.OnMessageReceived += (sender, message) =>
-                {
-                    Console.WriteLine("Message Received: {0}", message);
-                };
-                await client.ConnectAsync().ConfigureAwait(false);
-                Console.ReadLine();
-                await client.DisconnectAsync().ConfigureAwait(false);
-                Console.ReadLine();
-                await client.ConnectAsync().ConfigureAwait(false);
-                Console.ReadLine();
-
-                cSource.Cancel();
-                */
             });
             TWCore.Core.RunService<TestService>(args);
         }

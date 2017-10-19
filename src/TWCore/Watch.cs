@@ -237,7 +237,7 @@ namespace TWCore
             {
                 double gTime;
                 double cTime;
-                var indent = new string(' ', (item.Id - 1) * 4);
+                var indent = new string(' ', (item.Id - 1) * 2);
                 switch (item.Type)
                 {
                     case 0:

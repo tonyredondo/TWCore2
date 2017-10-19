@@ -135,6 +135,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         }
         private void ReceiveThread()
         {
+            Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
             while (_client != null && _client.Connected)
             {
                 try

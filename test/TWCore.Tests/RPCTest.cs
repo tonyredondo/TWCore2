@@ -95,6 +95,8 @@ namespace TWCore.Tests
             }
 
             Core.Log.InfoBasic("Test End.");
+
+            Console.ReadLine();
         }
     }
 

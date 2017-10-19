@@ -203,6 +203,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         }
         private void ReceiveThread()
         {
+            Thread.CurrentThread.Name = "RPC.DefaultTransportClient.ReceiveThread";
             while (_shouldBeConnected && !_connectionCancellationToken.IsCancellationRequested)
             {
                 try

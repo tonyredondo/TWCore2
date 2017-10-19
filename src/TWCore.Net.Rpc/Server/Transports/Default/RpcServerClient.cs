@@ -145,7 +145,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 }
                 catch (Exception ex)
                 {
-                    TWCore.Core.Log.Write(ex);
+                    Core.Log.Write(ex);
                     break;
                 }
             }

@@ -222,7 +222,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 }
                 catch (Exception ex)
                 {
-                    TWCore.Core.Log.Write(ex);
+                    Core.Log.Write(ex);
                 }
             }
             Dispose();

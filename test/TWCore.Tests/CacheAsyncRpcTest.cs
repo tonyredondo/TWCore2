@@ -4,8 +4,10 @@ using TWCore.Cache;
 using TWCore.Cache.Client;
 using TWCore.Cache.Storages;
 using TWCore.Cache.Storages.IO;
+using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Net.RPC.Server.Transports;
+using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Net.RPC.Server.Transports.TW;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
@@ -32,7 +34,7 @@ namespace TWCore.Tests
 
 			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
-				var cacheClient = await CacheClientProxy.GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
+				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
 				cachePool.Add("localhost:20051", (IStorageAsync)cacheClient, StorageItemMode.ReadAndWrite);
 
                 for (var i = 0; i < 10; i++)
@@ -66,7 +68,7 @@ namespace TWCore.Tests
             }
             protected override ITransportServer[] GetTransports()
             {
-				return new ITransportServer[] { new TWTransportServer(20051, GlobalSerializer) };
+				return new ITransportServer[] { new DefaultTransportServer(20051, GlobalSerializer) };
             }
         }
     }

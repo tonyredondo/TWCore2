@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using TWCore.Cache.Client;
+using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
@@ -39,7 +40,7 @@ namespace TWCore.Tests
             using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
                 var cacheClient = await CacheClientProxy
-                    .GetClientAsync(new TWTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
+                    .GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", (IStorageAsync)cacheClient, StorageItemMode.ReadAndWrite);
 
                 try

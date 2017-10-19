@@ -2,6 +2,7 @@
 using TWCore.Cache.Storages;
 using TWCore.Cache.Storages.IO;
 using TWCore.Net.RPC.Server.Transports;
+using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Net.RPC.Server.Transports.TW;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
@@ -44,7 +45,7 @@ namespace TWCore.Tests
             }
             protected override ITransportServer[] GetTransports()
             {
-                return new ITransportServer[] { new TWTransportServer(20051, GlobalSerializer) };
+                return new ITransportServer[] { new DefaultTransportServer(20051, GlobalSerializer) };
             }
         }
     }

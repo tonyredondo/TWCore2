@@ -280,10 +280,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (!_shouldBeConnected)
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
-            var messageId = messageRQ.MessageId;
             var handler = new RPCMessageHandler();
-            _messageResponsesHandlers.TryAdd(messageId, handler);
-            var client = _clients[GetCurrentIndex()];
+            _messageResponsesHandlers.TryAdd(messageRQ.MessageId, handler);
+            Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
+            var client = _clients[Interlocked.Increment(ref _currentIndex)];
             await client.SendRpcMessageAsync(messageRQ).ConfigureAwait(false);
             await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
@@ -291,7 +291,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 return handler.Message;
             if (_connectionCancellationToken.IsCancellationRequested) 
                 return null;
-            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
+            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRQ.MessageId));
         }
         /// <inheritdoc />
         /// <summary>
@@ -301,9 +301,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-        {
-            return InvokeMethodAsync(messageRQ).WaitAndResults();
-        }
+            => InvokeMethodAsync(messageRQ).WaitAndResults();
         #endregion
 
         /// <inheritdoc />
@@ -317,12 +315,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         }
 
         #region Private Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private int GetCurrentIndex()
-        {
-            Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
-            return Interlocked.Increment(ref _currentIndex);
-        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ClientOnOnMessageReceived(RpcClient rpcClient1, RPCMessage rpcMessage)
         {

@@ -276,23 +276,22 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             try
             {
-                if (e is RPCRequestMessage request)
+                if (!(e is RPCRequestMessage request)) return;
+
+                if (request.MethodId == Guid.Empty)
                 {
-                    if (request.MethodId == Guid.Empty)
+                    var dEventArgs = new ServerDescriptorsEventArgs();
+                    OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
+                    var response = new RPCResponseMessage(request)
                     {
-                        var dEventArgs = new ServerDescriptorsEventArgs();
-                        OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
-                        var response = new RPCResponseMessage(request)
-                        {
-                            ReturnValue = dEventArgs.Descriptors
-                        };
-                        await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                        return;
-                    }
-                    var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request);
-                    OnMethodCall?.Invoke(this, mEventArgs);
-                    await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
+                        ReturnValue = dEventArgs.Descriptors
+                    };
+                    await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
+                    return;
                 }
+                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request);
+                OnMethodCall?.Invoke(this, mEventArgs);
+                await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

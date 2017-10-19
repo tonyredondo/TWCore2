@@ -18,17 +18,14 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
-// ReSharper disable CheckNamespace
-// ReSharper disable InconsistentNaming
-// ReSharper disable UnusedMember.Global
 
-namespace TWCore.Net.RPC.Client.Transports.TW
+namespace TWCore.Net.RPC.Server.Transports.Default
 {
     /// <inheritdoc />
     /// <summary>
-    /// TW RPC Transport client factory
+    /// Default RPC Transport server factory
     /// </summary>
-    public class TWTransportClientFactory : TransportClientFactoryBase
+    public class DefaultTransportServerFactory : TransportServerFactoryBase
     {
         /// <inheritdoc />
         /// <summary>
@@ -37,13 +34,10 @@ namespace TWCore.Net.RPC.Client.Transports.TW
         /// <param name="parameters">Parameters to create the transport</param>
         /// <returns>Transport instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override ITransportClient CreateTransport(KeyValueCollection parameters)
+        protected override ITransportServer CreateTransport(KeyValueCollection parameters)
         {
-            var host = parameters["Host"];
             var port = parameters["Port"].ParseTo(0);
-            var timeout = parameters["Timeout"].ParseTo(10000);
             var serializerMimeType = parameters["SerializerMimeType"];
-            var socketsPerClient = parameters["SocketsPerClient"].ParseTo<byte>(1);
             var compressorEncoding = parameters["CompressorEncoding"];
             var serializer = SerializerManager.GetByMimeType(serializerMimeType);
             if (compressorEncoding.IsNotNullOrEmpty())
@@ -52,21 +46,16 @@ namespace TWCore.Net.RPC.Client.Transports.TW
                 if (compressor != null)
                     serializer.Compressor = compressor;
             }
-            var lclient = new TWTransportClient(host, port, socketsPerClient, serializer)
-            {
-                InvokeMethodTimeout = timeout
-            };
-            ITransportClient client = lclient;
-            Core.Log.LibDebug("Creating a new TWTransportClient with parameters:");
-            Core.Log.LibDebug("\tHost: {0}", host);
+            var tServer = new DefaultTransportServer(port, serializer);
+            Core.Log.LibDebug("Creating a new DefaultTransportServer with parameters:");
             Core.Log.LibDebug("\tPort: {0}", port);
-            Core.Log.LibDebug("\tSocketsPerClient: {0}", socketsPerClient);
-            if (serializerMimeType == null) 
-                return client;
-            Core.Log.LibDebug("\tSerializer: {0}", serializer);
-            if (serializer?.Compressor != null)
-                Core.Log.LibDebug("\tCompressorEncoding: {0}", compressorEncoding);
-            return client;
+            if (serializerMimeType != null)
+            {
+                Core.Log.LibDebug("\tSerializer: {0}", serializer);
+                if (serializer?.Compressor != null)
+                    Core.Log.LibDebug("\tCompressorEncoding: {0}", compressorEncoding);
+            }
+            return tServer;
         }
     }
 }

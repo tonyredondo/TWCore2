@@ -18,17 +18,14 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Serialization;
-// ReSharper disable CheckNamespace
-// ReSharper disable InconsistentNaming
-// ReSharper disable UnusedMember.Global
 
-namespace TWCore.Net.RPC.Client.Transports.TW
+namespace TWCore.Net.RPC.Client.Transports.Default
 {
     /// <inheritdoc />
     /// <summary>
-    /// TW RPC Transport client factory
+    /// Default RPC Transport client factory
     /// </summary>
-    public class TWTransportClientFactory : TransportClientFactoryBase
+    public class DefaultTransportClientFactory : TransportClientFactoryBase
     {
         /// <inheritdoc />
         /// <summary>
@@ -41,7 +38,7 @@ namespace TWCore.Net.RPC.Client.Transports.TW
         {
             var host = parameters["Host"];
             var port = parameters["Port"].ParseTo(0);
-            var timeout = parameters["Timeout"].ParseTo(10000);
+            var timeout = parameters["Timeout"].ParseTo(20000);
             var serializerMimeType = parameters["SerializerMimeType"];
             var socketsPerClient = parameters["SocketsPerClient"].ParseTo<byte>(1);
             var compressorEncoding = parameters["CompressorEncoding"];
@@ -52,16 +49,16 @@ namespace TWCore.Net.RPC.Client.Transports.TW
                 if (compressor != null)
                     serializer.Compressor = compressor;
             }
-            var lclient = new TWTransportClient(host, port, socketsPerClient, serializer)
+            var lclient = new DefaultTransportClient(host, port, socketsPerClient, serializer)
             {
                 InvokeMethodTimeout = timeout
             };
             ITransportClient client = lclient;
-            Core.Log.LibDebug("Creating a new TWTransportClient with parameters:");
+            Core.Log.LibDebug("Creating a new DefaultTransportClient with parameters:");
             Core.Log.LibDebug("\tHost: {0}", host);
             Core.Log.LibDebug("\tPort: {0}", port);
             Core.Log.LibDebug("\tSocketsPerClient: {0}", socketsPerClient);
-            if (serializerMimeType == null) 
+            if (serializerMimeType == null)
                 return client;
             Core.Log.LibDebug("\tSerializer: {0}", serializer);
             if (serializer?.Compressor != null)

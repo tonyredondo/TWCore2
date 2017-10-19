@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
@@ -102,6 +103,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// </summary>
         /// <param name="client">TcpClient instance</param>
         /// <param name="serializer">BinarySerializer instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RpcServerClient(TcpClient client, BinarySerializer serializer)
         {
             _client = client;
@@ -117,6 +119,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// </summary>
         /// <param name="message">RpcMessage instance</param>
         /// <returns>Completation task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendRpcMessageAsync(RPCMessage message)
         {
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
@@ -128,11 +131,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #endregion
 
         #region Receive Background Thread
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
             if (_receiveTask == null || _receiveTask.IsCompleted)
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReceiveThread()
         {
             Thread.CurrentThread.Name = "RPC.DefaultTransportServer.ReceiveThread";
@@ -151,6 +156,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             }
             Dispose();
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void MessageReceivedHandler(object rawMessage)
         {
             switch (rawMessage)
@@ -186,6 +192,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <summary>
         /// Disposes the RpcClient instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             _client?.Dispose();

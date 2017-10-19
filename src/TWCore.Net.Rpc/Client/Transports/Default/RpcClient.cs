@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
@@ -72,7 +73,9 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         public string Hub
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _hub;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             set
             {
                 if (_client.Connected) return;
@@ -107,6 +110,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <param name="host">Hostname</param>
         /// <param name="port">Tcp port</param>
         /// <param name="serializer">Binary serializer instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RpcClient(string host, int port, BinarySerializer serializer)
         {
             _serializer = serializer;
@@ -121,6 +125,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// Connects to the Rpc Server
         /// </summary>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task ConnectAsync()
         {
             if (_client?.Connected == true) return;
@@ -154,6 +159,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// Disconnect from the Rpc Server
         /// </summary>
         /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task DisconnectAsync()
         {
             if (_client == null || !_client.Connected) return;
@@ -176,6 +182,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <param name="message">RpcMessage instance</param>
         /// <returns>Completation task</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendRpcMessageAsync(RPCMessage message)
         {
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
@@ -196,11 +203,13 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         #endregion
 
         #region Receive Background Thread
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void BindBackgroundTasks()
         {
             if (_receiveTask == null || _receiveTask.IsCompleted)
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ReceiveThread()
         {
             Thread.CurrentThread.Name = "RPC.DefaultTransportClient.ReceiveThread";
@@ -227,6 +236,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             }
             Dispose();
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void MessageReceivedHandler(object rawMessage)
         {
             switch (rawMessage)
@@ -252,6 +262,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <summary>
         /// Disposes the RpcClient instance
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             _shouldBeConnected = false;

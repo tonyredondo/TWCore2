@@ -135,6 +135,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _client?.Close();
                 _shouldBeConnected = true;
                 _onSession = false;
+                _sessionEvent.Reset();
                 _client = new TcpClient
                 {
                     NoDelay = true,
@@ -267,7 +268,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             _client?.Dispose();
             _networkStream?.Dispose();
             _connectionCancellationTokenSource?.Dispose();
-
+            _sessionEvent.Reset();
             _client = null;
             _networkStream = null;
             _onSession = false;

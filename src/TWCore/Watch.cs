@@ -215,6 +215,10 @@ namespace TWCore
         /// <returns>Watch item</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WItem Create(string startMessage, string endMessage, LogLevel level) => WItem.CreateItem(startMessage, endMessage, level);
+        /// <summary>
+        /// Enable Watch stats lines indent
+        /// </summary>
+        public static bool EnableIndent { get; set; } = true;
 
         #region Nested Class
         /// <inheritdoc />
@@ -237,7 +241,7 @@ namespace TWCore
             {
                 double gTime;
                 double cTime;
-                var indent = new string(' ', (item.Id - 1) * 2);
+                var indent = EnableIndent ? new string(' ', (item.Id - 1) * 2) : string.Empty;
                 switch (item.Type)
                 {
                     case 0:

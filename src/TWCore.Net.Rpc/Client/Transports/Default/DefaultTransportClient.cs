@@ -176,14 +176,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() => Task.CompletedTask;
+        public Task InitAsync() => ConnectAsync();
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() { }
+        public void Init() => ConnectAsync().WaitAsync();
         #endregion
 
         #region Connection

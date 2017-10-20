@@ -39,7 +39,9 @@ namespace TWCore.Net.RPC.Client
     /// </summary>
     public class RPCClient : IRPCClient, IRPCClientAsync, IDisposable
     {
-        private readonly ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, IEnumerable<Type>), MethodDescriptor>();
+        private static readonly object[] _emptyArgs = new object[0];
+        private static readonly object[] _nullItemArgs = { null };
+        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>();
         private ITransportClient _transport;
         private bool _transportInit;
         private ServiceDescriptorCollection _serverDescriptors;
@@ -355,12 +357,15 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args)
         {
-            var types = args?.Select(a => a?.GetType() ?? Type.Missing.GetType());
-            var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), kTuple =>
-            {
-                if (!Descriptors.Items.TryGetValue(kTuple.Item1, out var descriptor)) return null;
+            var cArgs = args ?? _emptyArgs;
 
-                var methods = descriptor.Methods.Values.Where(m => m.Name == kTuple.Item2 && m.Parameters?.Length == args?.Length).ToArray();
+            var types = cArgs.Select(a => a?.GetType() ?? Type.Missing.GetType()).ToArray();
+            var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), key =>
+            {
+                if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
+                var iArgs = args ?? _emptyArgs;
+
+                var methods = descriptor.Methods.Values.Where(m => m.Name == key.Method && m.Parameters?.Length == iArgs.Length).ToArray();
                 switch (methods.Length)
                 {
                     case 0:
@@ -373,11 +378,12 @@ namespace TWCore.Net.RPC.Client
                             for (var i = 0; i < m.Parameters.Length; i++)
                             {
                                 var p1 = m.Parameters[i].Parameter;
-                                var v2 = args?[i];
-                                if (v2 != null && !p1.ParameterType.GetTypeInfo().IsAssignableFrom(v2.GetType().GetTypeInfo()))
+                                var v2 = iArgs[i];
+                                var p1TypeInfo = p1.ParameterType.GetTypeInfo();
+                                if (v2 != null && !p1TypeInfo.IsAssignableFrom(v2.GetType().GetTypeInfo()))
                                     return false;
-                                if (v2 != null || !p1.ParameterType.GetTypeInfo().IsValueType) continue;
-                                if (!p1.ParameterType.GetTypeInfo().IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                                if (v2 != null || !p1TypeInfo.IsValueType) continue;
+                                if (!p1TypeInfo.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
                                     return false;
                             }
                             return true;
@@ -387,14 +393,13 @@ namespace TWCore.Net.RPC.Client
             if (mDesc == null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
-            var parameters = new List<object>(args);
-            if (args?.Length == 0 && mDesc.Parameters?.Length == 1)
-                parameters.Add(null);
+            if (cArgs.Length == 0 && mDesc.Parameters?.Length == 1)
+                cArgs = _nullItemArgs;
 
             var rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
             rqMessage.MessageId = Guid.NewGuid();
             rqMessage.MethodId = mDesc.Id;
-            rqMessage.Parameters = parameters.ToArray();
+            rqMessage.Parameters = cArgs;
             return rqMessage;
         }
         #endregion

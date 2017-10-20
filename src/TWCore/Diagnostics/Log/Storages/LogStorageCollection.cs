@@ -32,10 +32,10 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
         private readonly object _locker = new object();
-        private readonly List<Tuple<ILogStorage, LogLevel>> _items = new List<Tuple<ILogStorage, LogLevel>>();
+        private readonly List<(ILogStorage, LogLevel)> _items = new List<(ILogStorage, LogLevel)>();
         private volatile bool _isDirty;
         private LogLevel _lastMaxLogLevel = LogLevel.Error;
-        private List<Tuple<ILogStorage, LogLevel>> _cItems;
+        private List<(ILogStorage, LogLevel)> _cItems;
 
         #region.ctor
         /// <summary>
@@ -64,7 +64,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 if (_items.All(i => i.Item1 != storage))
                 {
-                    _items.Add(Tuple.Create(storage, writeLevel));
+                    _items.Add((storage, writeLevel));
                     _isDirty = true;
                     CalculateMaxLogLevel();
                 }
@@ -87,7 +87,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <returns>Storage instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILogStorage Get(Type storageType)
-            => _items.FirstOrDefault(i => i.Item1.GetType().IsAssignableFrom(storageType))?.Item1;
+            => _items.FirstOrDefault(i => i.Item1.GetType().IsAssignableFrom(storageType)).Item1;
         /// <summary>
         /// Removes a existing storage from the collection
         /// </summary>
@@ -172,7 +172,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 lock (_locker)
                 {
-                    _cItems = new List<Tuple<ILogStorage, LogLevel>>(_items);
+                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
                     _isDirty = false;
                 }
             }
@@ -200,7 +200,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 lock (_locker)
                 {
-                    _cItems = new List<Tuple<ILogStorage, LogLevel>>(_items);
+                    _cItems = new List<(ILogStorage, LogLevel)>(_items);
                     _isDirty = false;
                 }
             }

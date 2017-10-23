@@ -155,6 +155,8 @@ namespace TWCore.Reflection
             var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
             {
+                foreach (var asm in Assemblies)
+                    Core.Log.LibDebug("Name: {0}, FullName: {1}", asm.Name, asm.FullName);
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
                 return null;
             }
@@ -174,6 +176,8 @@ namespace TWCore.Reflection
             var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
             {
+                foreach (var asm in Assemblies)
+                    Core.Log.LibDebug("Name: {0}, FullName: {1}", asm.Name, asm.FullName);
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
                 return null;
             }

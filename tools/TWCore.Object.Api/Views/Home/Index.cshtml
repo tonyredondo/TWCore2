@@ -44,7 +44,8 @@
     {\n\
         public object Execute(object value)\n\
         {\n\
-            return value is SerializedObject obj ? obj.GetValue() : value;\n\
+            var iValue = value is SerializedObject obj ? obj.GetValue() : value;\n\
+            return iValue;\n\
         }\n\
     }\n}\n',
             'using TWCore;\nusing TWCore.Object.Compiler;\nusing TWCore.Serialization;\nusing System;\n\nnamespace Runtime\n{\n\
@@ -52,7 +53,8 @@
     {\n\
         public object Execute(object value)\n\
         {\n\
-            return value.SerializeToXml();\n\
+            var iValue = value is SerializedObject obj ? obj.GetValue() : value;\n\
+            return iValue.SerializeToXml();\n\
         }\n\
     }\n}\n',
             'using TWCore;\nusing TWCore.Object.Compiler;\nusing TWCore.Serialization;\nusing System;\n\nnamespace Runtime\n{\n\
@@ -61,7 +63,8 @@
         public object Execute(object value)\n\
         {\n\
             JsonTextSerializerExtensions.Serializer.Indent = true;\n\
-            return value.SerializeToJson();\n\
+            var iValue = value is SerializedObject obj ? obj.GetValue() : value;\n\
+            return iValue.SerializeToJson();\n\
         }\n\
     }\n}\n',
             'using TWCore;\nusing TWCore.Object.Compiler;\nusing System;\nusing System.Text;\n\nnamespace Runtime\n{\n\

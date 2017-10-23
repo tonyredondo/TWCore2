@@ -104,7 +104,7 @@ namespace TWCore.Reflection
                 }).RemoveNulls();
                 Assemblies.AddRange(localAssembliesInfo);
             });
-            foreach(var assembly in Assemblies)
+            foreach (var assembly in Assemblies)
             {
                 Core.Log.LibDebug("The assembly: {0} is loaded.", assembly.Name);
             }
@@ -152,9 +152,13 @@ namespace TWCore.Reflection
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
                 return Assemblies[args.Name].Instance;
             }
-            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name);
+            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
+            {
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+                return null;
+            }
+            Core.Log.LibDebug("Assembly {0} found.", args.Name);
             return asmInst?.Instance;
         }
 
@@ -167,16 +171,20 @@ namespace TWCore.Reflection
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
                 return Assemblies[args.Name].Instance;
             }
-            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name);
+            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
+            {
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+                return null;
+            }
+            Core.Log.LibDebug("Assembly {0} found.", args.Name);
             return asmInst?.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsExcludedAssembly(string assemblyName)
         {
-            return 
+            return
                    assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) ||

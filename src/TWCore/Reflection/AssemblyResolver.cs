@@ -119,8 +119,10 @@ namespace TWCore.Reflection
             if (!_assembliesInfoLoaded)
                 LoadAssembliesInfo();
             Domain.AssemblyResolve += AssemblyResolveEvent;
+            Domain.ReflectionOnlyAssemblyResolve += ReflectionOnlyAssemblyResolve;
             Core.Log.LibDebug($"Assembly resolver was registered on domain '{Domain.FriendlyName}' for paths: {Paths.Join(", ")}");
         }
+
         /// <summary>
         /// Unbind the resolver from the Domain
         /// </summary>
@@ -128,6 +130,7 @@ namespace TWCore.Reflection
         public void UnbindFromDomain()
         {
             Domain.AssemblyResolve -= AssemblyResolveEvent;
+            Domain.ReflectionOnlyAssemblyResolve -= ReflectionOnlyAssemblyResolve;
             Core.Log.LibDebug($"Assembly resolver was unregistered from domain '{Domain.FriendlyName}'");
         }
         /// <summary>
@@ -139,9 +142,37 @@ namespace TWCore.Reflection
         #endregion
 
         #region Events Handlers
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Assembly AssemblyResolveEvent(object sender, ResolveEventArgs args)
-            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].Instance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.Instance;
+        {
+            Core.Log.LibDebug("Resolving assembly for: {0}", args.Name);
+            if (Assemblies.Contains(args.Name))
+            {
+                Core.Log.LibDebug("Assembly {0} found.", args.Name);
+                return Assemblies[args.Name].Instance;
+            }
+            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name);
+            if (asmInst == null)
+                Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+            return asmInst?.Instance;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Assembly ReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
+        {
+            Core.Log.LibDebug("Resolving assembly for: {0}", args.Name);
+            if (Assemblies.Contains(args.Name))
+            {
+                Core.Log.LibDebug("Assembly {0} found.", args.Name);
+                return Assemblies[args.Name].Instance;
+            }
+            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name);
+            if (asmInst == null)
+                Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+            return asmInst?.Instance;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsExcludedAssembly(string assemblyName)
         {

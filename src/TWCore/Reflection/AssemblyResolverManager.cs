@@ -46,7 +46,7 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RegisterDomain(AppDomain domain = null)
         {
-            if (!Core.Settings[SettingsKey].IsNotNullOrWhitespace()) return;
+            if (Core.Settings[SettingsKey].IsNullOrWhitespace()) return;
             var paths = Core.Settings[SettingsKey].SplitAndTrim(',').ToArray();
             RegisterDomain(paths, domain);
         }

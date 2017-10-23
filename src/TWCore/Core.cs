@@ -173,7 +173,6 @@ namespace TWCore
             Status = Factory.CreateStatusEngine();
             Log = Factory.CreateLogEngine();
             Trace = Factory.CreateTraceEngine();
-            AssemblyResolverManager.RegisterDomain();
             factories.Init();
             GlobalSettings.ReloadSettings();
             DebugMode = DebugMode || GlobalSettings.DebugMode;
@@ -181,6 +180,7 @@ namespace TWCore
             {
                 Log.InfoBasic("Core Init - Platform: {0} - OS: {1}", Factory.PlatformType, RuntimeInformation.OSDescription);
             }
+            AssemblyResolverManager.RegisterDomain();
             if (ServiceContainer.HasConsole)
                 Log.AddConsoleStorage();
 

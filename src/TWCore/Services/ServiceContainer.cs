@@ -342,7 +342,7 @@ namespace TWCore.Services
             InitAction?.Invoke();
             if (!string.IsNullOrWhiteSpace(BannerText))
             {
-                var bannerText = BannerText.Split("\r\n");
+                var bannerText = BannerText.Replace("\r", string.Empty).Split("\n");
                 foreach (var line in bannerText)
                     Core.Log.InfoBasic(line);
             }

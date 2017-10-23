@@ -23,6 +23,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using TWCore.Collections;
+using TWCore.Reflection;
 
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
 // ReSharper disable UnusedMember.Global
@@ -56,9 +57,18 @@ namespace TWCore.Object.Compiler
                     typeof(Type).Assembly.Location,
                     typeof(Console).Assembly.Location
                 };
-                var assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
-                foreach (var asm in assemblies)
+                var assemblies1 = AppDomain.CurrentDomain.GetAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
+                foreach (var asm in assemblies1)
                     locationReferences.Add(asm.Location);
+                var assemblies2 = Factory.GetAllAssemblies().Where(asm => !asm.IsDynamic && !string.IsNullOrWhiteSpace(asm.Location));
+                foreach (var asm in assemblies2)
+                    locationReferences.Add(asm.Location);
+                var resolver = AssemblyResolverManager.GetAssemblyResolver();
+                if (resolver != null)
+                {
+                    foreach (var asm in resolver.Assemblies)
+                        locationReferences.Add(asm.FilePath);
+                }
                 _references = locationReferences.Select(location => Try.Do(() => (MetadataReference)MetadataReference.CreateFromFile(location))).RemoveNulls().ToArray();
                 return _references;
             }

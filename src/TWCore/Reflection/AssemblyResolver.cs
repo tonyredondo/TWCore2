@@ -147,6 +147,9 @@ namespace TWCore.Reflection
         private Assembly AssemblyResolveEvent(object sender, ResolveEventArgs args)
         {
             Core.Log.LibDebug("Resolving assembly for: {0}", args.Name);
+            foreach (var asm in Assemblies)
+                Core.Log.LibDebug("\tName: {0}, FullName: {1}", asm.Name, asm.FullName);
+
             if (Assemblies.Contains(args.Name))
             {
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
@@ -155,8 +158,6 @@ namespace TWCore.Reflection
             var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
             {
-                foreach (var asm in Assemblies)
-                    Core.Log.LibDebug("Name: {0}, FullName: {1}", asm.Name, asm.FullName);
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
                 return null;
             }
@@ -168,6 +169,9 @@ namespace TWCore.Reflection
         private Assembly ReflectionOnlyAssemblyResolve(object sender, ResolveEventArgs args)
         {
             Core.Log.LibDebug("Resolving assembly for: {0}", args.Name);
+            foreach (var asm in Assemblies)
+                Core.Log.LibDebug("\tName: {0}, FullName: {1}", asm.Name, asm.FullName);
+
             if (Assemblies.Contains(args.Name))
             {
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
@@ -176,8 +180,6 @@ namespace TWCore.Reflection
             var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
             if (asmInst == null)
             {
-                foreach (var asm in Assemblies)
-                    Core.Log.LibDebug("Name: {0}, FullName: {1}", asm.Name, asm.FullName);
                 Core.Log.LibDebug("Assembly {0} not found!", args.Name);
                 return null;
             }

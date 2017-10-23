@@ -155,14 +155,20 @@ namespace TWCore.Reflection
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
                 return Assemblies[args.Name].Instance;
             }
-            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
-            if (asmInst == null)
+
+            var asmName = new AssemblyName(args.Name);
+            
+            var asmInstance =
+                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version) ??
+                Assemblies.FirstOrDefault(a => a.Name == asmName.Name);
+
+            if (asmInstance == null)
             {
-                Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+                Core.Log.LibDebug("Assembly {0} not found!", asmName);
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInst?.Instance;
+            return asmInstance?.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -177,14 +183,20 @@ namespace TWCore.Reflection
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
                 return Assemblies[args.Name].Instance;
             }
-            var asmInst = Assemblies.FirstOrDefault(a => a.Name == args.Name) ?? Assemblies.FirstOrDefault(a => a.FullName == args.Name);
-            if (asmInst == null)
+
+            var asmName = new AssemblyName(args.Name);
+
+            var asmInstance =
+                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version) ??
+                Assemblies.FirstOrDefault(a => a.Name == asmName.Name);
+
+            if (asmInstance == null)
             {
-                Core.Log.LibDebug("Assembly {0} not found!", args.Name);
+                Core.Log.LibDebug("Assembly {0} not found!", asmName);
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInst?.Instance;
+            return asmInstance?.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

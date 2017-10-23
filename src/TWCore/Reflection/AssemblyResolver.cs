@@ -91,8 +91,10 @@ namespace TWCore.Reflection
                 {
                     try
                     {
-                        var assemblyName = AssemblyName.GetAssemblyName(file);
-                        return assemblyName.FullName.Contains("mscor") ? null : new AssemblyInfo { FilePath = file, AssemblyName = assemblyName };
+                        var name = AssemblyName.GetAssemblyName(file);
+                        if (IsExcludedAssembly(name.Name)) return null;
+                        if (domainAssemblies.All(l => l.FullName != name.FullName))
+                            return new AssemblyInfo {FilePath = file, AssemblyName = name};
                     }
                     catch (Exception ex)
                     {
@@ -141,6 +143,19 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private Assembly ReflectionOnlyAssemblyResolveEvent(object sender, ResolveEventArgs args)
             => Assemblies.Contains(args.Name) ? Assemblies[args.Name].ReflectionOnlyInstance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.ReflectionOnlyInstance;
+        private static bool IsExcludedAssembly(string assemblyName)
+        {
+            return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("StackExchange.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
+        }
         #endregion
 
         #region Nested Classes

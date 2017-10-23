@@ -80,7 +80,6 @@ namespace TWCore
                 {
                     if (resolver != null)
                     {
-                        resolver.Assemblies.AsParallel().Select(a => a.Instance).RemoveNulls().ToList();
                         _usedResolver = true;
                     }
                     else

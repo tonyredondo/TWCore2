@@ -72,8 +72,8 @@ namespace TWCore.Reflection
         {
             var domainAssemblies = Domain.GetAssemblies();
             var domainAssembliesInfo = domainAssemblies.AsParallel()
-                .Where(a => !a.IsDynamic && !a.FullName.Contains("mscor"))
-                .Select(a => new AssemblyInfo { FilePath = a.Location, AssemblyName = a.GetName() });
+                .Where(a => !a.IsDynamic && !IsExcludedAssembly(a.GetName().Name))
+                .Select(a => new AssemblyInfo(a.Location, a.GetName()));
             Assemblies.AddRange(domainAssembliesInfo);
 
             var searchPaths = new List<string> { Domain.BaseDirectory };
@@ -94,7 +94,7 @@ namespace TWCore.Reflection
                         var name = AssemblyName.GetAssemblyName(file);
                         if (IsExcludedAssembly(name.Name)) return null;
                         if (domainAssemblies.All(l => l.FullName != name.FullName))
-                            return new AssemblyInfo {FilePath = file, AssemblyName = name};
+                            return new AssemblyInfo(file, name);
                     }
                     catch (Exception ex)
                     {
@@ -115,7 +115,6 @@ namespace TWCore.Reflection
             if (!_assembliesInfoLoaded)
                 LoadAssembliesInfo();
             Domain.AssemblyResolve += AssemblyResolveEvent;
-            Domain.ReflectionOnlyAssemblyResolve += ReflectionOnlyAssemblyResolveEvent;
             Core.Log.LibDebug($"Assembly resolver was registered on domain '{Domain.FriendlyName}' for paths: {Paths.Join(", ")}");
         }
         /// <summary>
@@ -125,7 +124,6 @@ namespace TWCore.Reflection
         public void UnbindFromDomain()
         {
             Domain.AssemblyResolve -= AssemblyResolveEvent;
-            Domain.ReflectionOnlyAssemblyResolve -= ReflectionOnlyAssemblyResolveEvent;
             Core.Log.LibDebug($"Assembly resolver was unregistered from domain '{Domain.FriendlyName}'");
         }
         /// <summary>
@@ -141,11 +139,10 @@ namespace TWCore.Reflection
         private Assembly AssemblyResolveEvent(object sender, ResolveEventArgs args)
             => Assemblies.Contains(args.Name) ? Assemblies[args.Name].Instance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.Instance;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Assembly ReflectionOnlyAssemblyResolveEvent(object sender, ResolveEventArgs args)
-            => Assemblies.Contains(args.Name) ? Assemblies[args.Name].ReflectionOnlyInstance : Assemblies.FirstOrDefault(a => a.Name == args.Name)?.ReflectionOnlyInstance;
         private static bool IsExcludedAssembly(string assemblyName)
         {
-            return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
+            return 
+                   assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
@@ -154,6 +151,7 @@ namespace TWCore.Reflection
                    assemblyName.StartsWith("StackExchange.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.Contains("mscor") ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         #endregion
@@ -180,53 +178,16 @@ namespace TWCore.Reflection
             /// Assembly full name
             /// </summary>
             public string FullName => AssemblyName?.FullName;
-
-            private Assembly _instance;
             /// <summary>
             /// Assembly instance
             /// </summary>
-            public Assembly Instance
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    try
-                    {
-                        lock (AssemblyName)
-                            if (_instance == null)
-                                _instance = Assembly.Load(AssemblyName);
-                        return _instance;
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                    return null;
-                }
-            }
+            public Assembly Instance { get; private set; }
 
-            private Assembly _reflectionOnlyInstance;
-            /// <summary>
-            /// Assembly instance in the reflection only context
-            /// </summary>
-            public Assembly ReflectionOnlyInstance
+            public AssemblyInfo(string filePath, AssemblyName assemblyName)
             {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    try
-                    {
-                        lock (AssemblyName)
-                            if (_reflectionOnlyInstance == null)
-                                _reflectionOnlyInstance = Assembly.ReflectionOnlyLoad(FullName);
-                        return _reflectionOnlyInstance;
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                    return null;
-                }
+                FilePath = filePath;
+                AssemblyName = assemblyName;
+                Instance = Assembly.LoadFile(filePath);
             }
         }
         #endregion

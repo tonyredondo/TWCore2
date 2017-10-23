@@ -104,6 +104,10 @@ namespace TWCore.Reflection
                 }).RemoveNulls();
                 Assemblies.AddRange(localAssembliesInfo);
             });
+            foreach(var assembly in Assemblies)
+            {
+                Core.Log.LibDebug("The assembly: {0} is loaded.", assembly.Name);
+            }
             _assembliesInfoLoaded = true;
         }
         /// <summary>

@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -40,10 +42,20 @@ namespace TWCore.Diagnostics.Status
         [XmlAttribute, DataMember]
         public string Value { get; set; }
         /// <summary>
+        /// Value Type
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public StatusItemValueType Type { get; set; }
+        /// <summary>
         /// Value status
         /// </summary>
         [XmlAttribute, DataMember]
         public StatusItemValueStatus Status { get; set; }
+        /// <summary>
+        /// Values list
+        /// </summary>
+        [XmlElement("Value"), DataMember]
+        public List<StatusItemValueItem> Values { get; set; }
         /// <summary>
         /// Enable to plot
         /// </summary>
@@ -64,10 +76,78 @@ namespace TWCore.Diagnostics.Status
         /// <param name="status">Value status</param>
         /// <param name="plotEnabled">Enable to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusItemValue(string key, string value, StatusItemValueStatus status, bool plotEnabled)
+        public StatusItemValue(string key, object value, StatusItemValueStatus status, bool plotEnabled)
         {
             Key = key;
-            Value = value;
+            if (value == null)
+            {
+                Value = null;
+                Type = StatusItemValueType.Text;
+                plotEnabled = false;
+            }
+            else
+            {
+                switch (value)
+                {
+                    case int intValue:
+                        Type = StatusItemValueType.Number;
+                        Value = intValue.ToString("0.####");
+                        break;
+                    case decimal decValue:
+                        Type = StatusItemValueType.Number;
+                        Value = decValue.ToString("0.####");
+                        break;
+                    case double doubleValue:
+                        Type = StatusItemValueType.Number;
+                        Value = doubleValue.ToString("0.####");
+                        break;
+                    case float floatValue:
+                        Type = StatusItemValueType.Number;
+                        Value = floatValue.ToString("0.####");
+                        break;
+                    case long longValue:
+                        Type = StatusItemValueType.Number;
+                        Value = longValue.ToString("0.####");
+                        break;
+                    case short shortValue:
+                        Type = StatusItemValueType.Number;
+                        Value = shortValue.ToString("0.####");
+                        break;
+                    case byte byteValue:
+                        Type = StatusItemValueType.Number;
+                        Value = byteValue.ToString("0.####");
+                        break;
+                    case uint intValue:
+                        Type = StatusItemValueType.Number;
+                        Value = intValue.ToString("0.####");
+                        break;
+                    case ulong longValue:
+                        Type = StatusItemValueType.Number;
+                        Value = longValue.ToString("0.####");
+                        break;
+                    case ushort shortValue:
+                        Type = StatusItemValueType.Number;
+                        Value = shortValue.ToString("0.####");
+                        break;
+                    case sbyte byteValue:
+                        Type = StatusItemValueType.Number;
+                        Value = byteValue.ToString("0.####");
+                        break;
+                    case DateTime date:
+                        Type = StatusItemValueType.Date;
+                        Value = date.TimeOfDay.TotalSeconds > 0 ? date.ToString("s") : date.ToString("yyyy-MM-dd");
+                        break;
+                    case TimeSpan time:
+                        Type = StatusItemValueType.Time;
+                        Value = time.ToString();
+                        break;
+                    default:
+                        Type = StatusItemValueType.Text;
+                        Value = value.ToString();
+                        plotEnabled = false;
+                        break;
+                }
+            }
             Status = status;
             PlotEnabled = plotEnabled;
         }

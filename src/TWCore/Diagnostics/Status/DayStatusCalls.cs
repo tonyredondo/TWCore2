@@ -30,6 +30,7 @@ namespace TWCore.Diagnostics.Status
     public class DayStatusCalls : IStatusItemProvider
     {
         private readonly LRU2QCollection<DateTime, int[]> _values = new LRU2QCollection<DateTime, int[]>(30);
+        private readonly object _locker = new object();
 
         #region Properties
         /// <inheritdoc />
@@ -43,6 +44,7 @@ namespace TWCore.Diagnostics.Status
         /// <summary>
         /// Calls status grouped by Day/Hour
         /// </summary>
+        /// <param name="name">Name of the Calls</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DayStatusCalls(string name) => Name = name;
         #endregion
@@ -54,7 +56,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register()
         {
-            lock (this)
+            lock (_locker)
             {
                 var now = Core.Now;
                 var dayArray = _values.GetOrAdd(now.Date, _ => new int[24]);
@@ -69,7 +71,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StatusItem GetStatusItem()
         {
-            lock (this)
+            lock (_locker)
             {
                 var baseItem = new StatusItem
                 {
@@ -102,10 +104,10 @@ namespace TWCore.Diagnostics.Status
                     }
                     baseItem.Childrens.Add(dayItem);
                 }
-                baseItem.Values.AddGood("Total calls", total, true);
+                baseItem.Values.AddGreen("Total calls", total, true);
                 (var average, var standardDeviation) = daysSums.GetAverageAndStdDev(tuple => (double)tuple.TotalDay);
-                baseItem.Values.AddGood("Average of calls", average, true);
-                baseItem.Values.AddGood("Standard Deviation of calls", standardDeviation, true);
+                baseItem.Values.AddGreen("Average of calls", average, true);
+                baseItem.Values.AddGreen("Standard Deviation of calls", standardDeviation, true);
                 return baseItem;
             }
         }

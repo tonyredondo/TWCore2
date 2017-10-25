@@ -31,6 +31,7 @@ namespace TWCore.Diagnostics.Status
     public class DayStatusValue<T> : IStatusItemProvider
     {
         private readonly LRU2QCollection<DateTime, List<T>[]> _values = new LRU2QCollection<DateTime, List<T>[]>(30);
+        private readonly object _locker = new object();
 
         #region Properties
         /// <inheritdoc />
@@ -57,7 +58,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register(T value)
         {
-            lock (this)
+            lock (_locker)
             {
                 var now = Core.Now;
                 var lists = _values.GetOrAdd(now.Date, _ =>
@@ -78,7 +79,7 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StatusItem GetStatusItem()
         {
-            lock (this)
+            lock (_locker)
             {
                 var baseItem = new StatusItem
                 {
@@ -134,7 +135,7 @@ namespace TWCore.Diagnostics.Status
 
                     baseItem.Childrens.Add(dayItem);
                 }
-                baseItem.Values.AddGood("Total calls", total, true);
+                baseItem.Values.AddGreen("Total calls", total, true);
                 return baseItem;
             }
 

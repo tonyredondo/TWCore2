@@ -39,7 +39,7 @@ namespace TWCore.Diagnostics.Status
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(string key, object value, StatusItemValueStatus status = StatusItemValueStatus.Unknown, bool plotEnabled = false)
-            => Add(new StatusItemValue(key, value?.ToString(), status, plotEnabled));
+            => Add(new StatusItemValue(key, value, status, plotEnabled));
         /// <summary>
         /// Adds a new item value
         /// </summary>
@@ -48,34 +48,34 @@ namespace TWCore.Diagnostics.Status
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(string key, object value, bool plotEnabled)
-            => Add(new StatusItemValue(key, value?.ToString(), StatusItemValueStatus.Unknown, plotEnabled));
+            => Add(new StatusItemValue(key, value, StatusItemValueStatus.Unknown, plotEnabled));
         /// <summary>
-        /// Adds a good item value
+        /// Adds a green item value
         /// </summary>
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddGood(string key, object value, bool plotEnabled = false)
-            => Add(key, value?.ToString(), StatusItemValueStatus.Green, plotEnabled);
+        public void AddGreen(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Green, plotEnabled);
         /// <summary>
-        /// Adds a bad item value
+        /// Adds a yellow item value
         /// </summary>
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddBad(string key, object value, bool plotEnabled = false)
-            => Add(key, value?.ToString(), StatusItemValueStatus.Yellow, plotEnabled);
+        public void AddYellow(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Yellow, plotEnabled);
         /// <summary>
-        /// Adds a ugly item value
+        /// Adds a red item value
         /// </summary>
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddUgly(string key, object value, bool plotEnabled = false)
-            => Add(key, value?.ToString(), StatusItemValueStatus.Red, plotEnabled);
+        public void AddRed(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Red, plotEnabled);
 
         /// <summary>
         /// Sort values

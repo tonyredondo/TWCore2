@@ -84,29 +84,47 @@ namespace TWCore.Diagnostics.Status
                 {
                     var totalDay = i.Value.Sum();
                     var percentDay = (double)totalDay * 100 / total;
-                    return (i.Key, i.Value, totalDay, percentDay);
+                    return new DaysSum(i.Key, i.Value, totalDay, percentDay);
                 }).ToArray();
 
-                foreach ((var key, var dayArray, var totalDay, var percentDay) in daysSums)
+                foreach (var item in daysSums)
                 {
                     var dayItem = new StatusItem
                     {
-                        Name = key.ToString("yyyy-MM-dd"),
+                        Name = item.Key.ToString("yyyy-MM-dd"),
                         Values = { SortValues = false }
                     };
-                    dayItem.Values.Add("Total calls", totalDay, key == now.Date);
-                    dayItem.Values.Add("Percent of total calls", percentDay, key == now.Date);
-                    for (var i = 0; i < dayArray.Length; i++)
+                    dayItem.Values.Add("Total calls", item.TotalDay, item.Key == now.Date);
+                    dayItem.Values.Add("Percent of total calls", item.PercentDay, item.Key == now.Date);
+                    for (var i = 0; i < item.Value.Length; i++)
                     {
-                        dayItem.Values.Add($"Number of calls at {i}H", dayArray[i], key == now.Date && i == now.Hour);
+                        dayItem.Values.Add($"Number of calls at {i}H", item.Value[i], item.Key == now.Date && i == now.Hour);
                     }
                     baseItem.Childrens.Add(dayItem);
                 }
                 baseItem.Values.AddGood("Total calls", total, true);
-                (var average, var standardDeviation) = daysSums.GetAverageAndStdDev(tuple => (double)tuple.Item3);
+                (var average, var standardDeviation) = daysSums.GetAverageAndStdDev(tuple => (double)tuple.TotalDay);
                 baseItem.Values.AddGood("Average of calls", average, true);
                 baseItem.Values.AddGood("Standard Deviation of calls", standardDeviation, true);
                 return baseItem;
+            }
+        }
+        #endregion
+
+        #region Nested Type
+        private struct DaysSum
+        {
+            public DateTime Key;
+            public readonly int[] Value;
+            public readonly int TotalDay;
+            public readonly double PercentDay;
+
+            public DaysSum(DateTime key, int[] value, int totalDay, double percentDay)
+            {
+                Key = key;
+                Value = value;
+                TotalDay = totalDay;
+                PercentDay = percentDay;
             }
         }
         #endregion

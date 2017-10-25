@@ -91,46 +91,46 @@ namespace TWCore.Diagnostics.Status
                 {
                     var totalCallsDay = i.Value.Sum(v => v.Count);
                     var percentCallsDay = (double)totalCallsDay * 100 / total;
-                    return (i.Key, i.Value, totalCallsDay, percentCallsDay);
+                    return new DaysSum(i.Key, i.Value, totalCallsDay, percentCallsDay);
                 }).ToArray();
                 var now = Core.Now;
-                foreach ((var key, var dayArray, var totalCallsDay, var percentCallsDay) in daysSums)
+                foreach (var dsItem in daysSums)
                 {
                     var dayItem = new StatusItem
                     {
-                        Name = key.ToString("yyyy-MM-dd"),
+                        Name = dsItem.Key.ToString("yyyy-MM-dd"),
                         Values = { SortValues = false }
                     };
 
-                    dayItem.Values.Add("Total calls", totalCallsDay, key == now.Date);
-                    dayItem.Values.Add("Percent of total calls", percentCallsDay, key == now.Date);
+                    dayItem.Values.Add("Total calls", dsItem.TotalCallsDay, dsItem.Key == now.Date);
+                    dayItem.Values.Add("Percent of total calls", dsItem.PercentCallsDay, dsItem.Key == now.Date);
 
 
                     if (typeof(T) == typeof(double))
-                        RenderDayHours<double>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<double>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(decimal))
-                        RenderDayHours<decimal>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<decimal>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(int))
-                        RenderDayHours<int>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<int>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(string))
                     {
-                        for (var i = 0; i < dayArray.Length; i++)
+                        for (var i = 0; i < dsItem.Value.Length; i++)
                         {
-                            var values = dayArray[i].Cast<string>().GroupBy(v => v)
+                            var values = dsItem.Value[i].Cast<string>().GroupBy(v => v)
                                 .Select(v => $"[{v.Key} = {v.Count()}]").ToArray();
                             dayItem.Values.Add($"Number of calls at {i}H", string.Join(" - ", values));
                         }
                     }
                     else if (typeof(T) == typeof(float))
-                        RenderDayHours<float>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<float>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(long))
-                        RenderDayHours<long>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<long>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(short))
-                        RenderDayHours<short>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<short>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(byte))
-                        RenderDayHours<byte>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<byte>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
                     else if (typeof(T) == typeof(ushort))
-                        RenderDayHours<ushort>(dayArray, dayItem, totalCallsDay);
+                        RenderDayHours<ushort>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
 
                     baseItem.Childrens.Add(dayItem);
                 }
@@ -157,6 +157,24 @@ namespace TWCore.Diagnostics.Status
                 dayItem.Values.Add(
                     $"At {i}H: [Total Calls - Percentage - Lowest - Highest - Average - Standard Deviation]",
                     $"[{calls}] - [{percentage:0.#}%] - [{minValue:0.####}] - [{maxValue:0.####}] - [{averageValue:0.####}] - [{stdValue:0.####}]");
+            }
+        }
+        #endregion
+
+        #region Nested Type
+        private struct DaysSum
+        {
+            public DateTime Key;
+            public readonly List<T>[] Value;
+            public readonly int TotalCallsDay;
+            public readonly double PercentCallsDay;
+
+            public DaysSum(DateTime key, List<T>[] value, int totalCallsDay, double percentCallsDay)
+            {
+                Key = key;
+                Value = value;
+                TotalCallsDay = totalCallsDay;
+                PercentCallsDay = percentCallsDay;
             }
         }
         #endregion

@@ -214,7 +214,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     }
                     await Task.WhenAll(_clients.Select(c => c.ConnectAsync())).ConfigureAwait(false);
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     _shouldBeConnected = false;
                     throw;

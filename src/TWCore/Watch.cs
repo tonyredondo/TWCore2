@@ -230,7 +230,6 @@ namespace TWCore
         {
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset());
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(WorkerMethod);
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly StatusCounter DefaultCounter = new StatusCounter("Watch Counters");
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
@@ -339,7 +338,7 @@ namespace TWCore
             {
                 var item = ItemPools.New();
                 item._id = Interlocked.Increment(ref _watcherCount);
-                item._counter = DefaultCounter;
+                item._counter = null;
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -348,7 +347,7 @@ namespace TWCore
                 var item = ItemPools.New();
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._level = level;
-                item._counter = DefaultCounter;
+                item._counter = null;
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

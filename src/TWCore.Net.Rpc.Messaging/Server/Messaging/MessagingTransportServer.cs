@@ -24,6 +24,7 @@ using TWCore.Serialization;
 // ReSharper disable RedundantAssignment
 // ReSharper disable CheckNamespace
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+#pragma warning disable 67
 
 namespace TWCore.Net.RPC.Server.Transports
 {

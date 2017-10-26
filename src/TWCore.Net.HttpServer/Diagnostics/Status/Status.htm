@@ -109,7 +109,7 @@
                 padding-left:0.5em;
                 padding-right:0.5em;
             }
-            .statusItem .childrens {
+            .statusItem .children {
             }
             .indent {
                 margin: 0px 7px 7px 7px;
@@ -187,7 +187,7 @@
             .wrapStatus{
                 display:none;
             }
-            .childrens .wrapStatus {
+            .children .wrapStatus {
 
             }
             input[type="radio"] {
@@ -248,29 +248,49 @@
             
         </style>
         <script>
-            var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="childrens"></div></div></div>';
+            var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
             var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var tout = null;
-
             var chartData = {};
+            var chartValueId = "";
+            var statuses = [null, null];
 
-            function AddItems(parentElement, items, depth, itemidx, oldItems)
+            function getItemOnData(items, name) {
+                if (items)
+                    for (var i = 0; i < items.length; i++)
+                        if (items[i].name == name)
+                            return items[i];
+            }
+            function getValueByKey(item, key) {
+                if (item && item.values)
+                    for (var i = 0; i < item.values.length; i++)
+                        if (item.values[i].key == key)
+                            return item.values[i];
+            }
+            function getValueByValueName(value, name) {
+                if (value && value.values)
+                    for (var i = 0; i < value.values.length; i++)
+                        if (item.values[i].name == name)
+                            return item.values[i];
+            }
+
+            function addItems(parentElement, items, depth, itemidx, oldItems)
             {
                 depth++;
                 if (items) {
                     var i;
                     for (i = 0; i < items.length; i++) {
                         var item = items[i];
-                        var oldItem = GetItemOnData(oldItems, item.Name);
+                        var oldItem = getItemOnData(oldItems, item.name);
                         var id = "status" + depth + "_" + itemidx + "_" + i;
-                        var chartId = id;//item.Name + " [depth:" + depth + "]";
+                        var chartId = id;
 
                         if (!chartData[chartId])
                             chartData[chartId] = {};
 
                         var chartItem = chartData[chartId];
-                        chartItem["Name"] = item.Name;
+                        chartItem["name"] = item.name;
 
                         var element = parentElement.children("#" + id);
                         if (element.length === 0) {
@@ -280,7 +300,8 @@
                                 $(sEvt.currentTarget).parent().children(".wrapStatus").toggle();
                             });
                         }
-                        element.find("#name").html(item.Name);
+                        element.find("#name").html(item.name);
+
                         if (depth > 0)
                             element.addClass("indent");
                         else
@@ -289,32 +310,33 @@
                         var iSValues = "";
                         
                         var bAnyValue = false;
-                        for (var j = 0; j < item.Values.length; j++) {
-                            var val = item.Values[j];
-                            var oldVal = GetValueByKey(oldItem, val.Key);
-                            //if (val.Key == "Hits")
-                            //    debugger;
-                            var enablePlot = val.PlotEnabled;
-                            if (enablePlot && !chartItem["Values"]) chartItem["Values"] = {};
-                            var chartValue = enablePlot? chartItem["Values"] : null;
+                        for (var j = 0; j < item.values.length; j++) {
+                            var val = item.values[j];
+                            var oldVal = getValueByKey(oldItem, val.key);
+                            var enablePlot = val.plot;
+
+                            if (enablePlot && !chartItem["values"]) chartItem["values"] = {};
+                            var chartValue = enablePlot ? chartItem["values"] : null;
+
                             var status = "";
-                            if (val.Status === 1) status = "good";
-                            if (val.Status === 2) status = "bad";
-                            if (val.Status === 3) status = "ugly";
+                            if (val.status === 1) status = "good";
+                            if (val.status === 2) status = "bad";
+                            if (val.status === 3) status = "ugly";
+
                             var diff = "";
-                            if (val.Value) {
-                                var nValue = parseFloat(val.Value.replace(",", "."));
+                            if (val.value) {
+                                var nValue = parseFloat(val.value.replace(",", "."));
                                 if (nValue.toString() != "NaN") {
                                     if (enablePlot) {
-                                        if (!chartValue[val.Key]) chartValue[val.Key] = [];
-                                        if (chartValue[val.Key].length == 50)
-                                            chartValue[val.Key].shift();
-                                        chartValue[val.Key].push({ label: new Date(), value: nValue });
+                                        if (!chartValue[val.key]) chartValue[val.key] = [];
+                                        if (chartValue[val.key].length == 50)
+                                            chartValue[val.key].shift();
+                                        chartValue[val.key].push({ label: new Date(), value: nValue });
                                         bAnyValue = true;
                                     }
                                 
-                                    if (oldVal != null && oldVal.Value != val.Value) {
-                                        var oValue = parseFloat(oldVal.Value.replace(",", "."));
+                                    if (oldVal != null && oldVal.value != val.value) {
+                                        var oValue = parseFloat(oldVal.value.replace(",", "."));
                                         if (oValue != NaN && nValue != NaN && oValue != nValue) {
                                             diff = (nValue - oValue).toFixed(2) + "";
                                             if (diff.match(/.00$/))
@@ -327,17 +349,17 @@
                                     }
                                 }
                                 else {
-                                    val.Value = val.Value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                    val.value = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
                                 }
                             }
-                            var inputId = chartId + "-" + val.Key;
+                            var inputId = chartId + "-" + val.key;
                             iSValues += valueItem
-                                .replace("{{Radio}}", enablePlot ? "<input type='radio' id='" + inputId + "' name='chartValue' value='" + val.Key + "' />" : "")
-                                .replace("{{Key}}", "<label for='" + inputId + "'>" + val.Key + "</label>")
-                                .replace("{{Value}}", val.Value + diff)
+                                .replace("{{Radio}}", enablePlot ? "<input type='radio' id='" + inputId + "' name='chartValue' value='" + val.key + "' />" : "")
+                                .replace("{{Key}}", "<label for='" + inputId + "'>" + val.key + "</label>")
+                                .replace("{{Value}}", val.value + diff)
                                 .replace("{{status}}", status);
                         }
-                        if (item.Values.length > 0) {
+                        if (item.values.length > 0) {
                             element.children(".wrapStatus").children(".innerStatus").html(tableItem.replace("{{Item.Values}}", iSValues));
                             $(element).children(".wrapStatus").children(".tableBtn").prop('onclick', null).off('click');
                             $(element).children(".wrapStatus").children(".tableBtn").click(function (sEvt) {
@@ -348,16 +370,16 @@
                         if (!bAnyValue)
                             delete chartData[chartId];
 
-                        if (item.Childrens)
+                        if (item.children)
                         {
-                            if (item.Childrens.length == 0 || item.Values.length == 0)
+                            if (item.children.length == 0 || item.values.length == 0)
                                 $(element).children(".wrapStatus").children(".tableBtn").remove();
                             else if (!$(element).children(".wrapStatus").children(".innerStatus").data("init")) {
                                 $(element).children(".wrapStatus").children(".innerStatus").show();
                                 $(element).children(".wrapStatus").children(".innerStatus").data("init", true);
                             }
 
-                            if (item.Childrens.length == 0 && item.Values.length == 0) {
+                            if (item.children.length == 0 && item.values.length == 0) {
                                 $(element).children("h2").off("click");
                                 $(element).children("h2").css("cursor", "default");
                                 $(element).children("h2").css("background-color", "#222222");
@@ -367,9 +389,9 @@
                             }
 
                             if (oldItem)
-                                AddItems(element.children(".wrapStatus").children(".childrens"), item.Childrens, depth, itemidx + "_" + i, oldItem.Childrens);
+                                addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, oldItem.children);
                             else
-                                AddItems(element.children(".wrapStatus").children(".childrens"), item.Childrens, depth, itemidx + "_" + i, null);
+                                addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, null);
                         }
                         else
                             $(element).children(".wrapStatus").children(".tableBtn").remove();
@@ -387,12 +409,12 @@
                     });
                 }
             }
-            var chartValueId = "";
+
 
             function displayChart() {
                 if (chartValueId) {
                     var dArr = chartValueId.split("-");
-                    var cValues = chartData[dArr[0]].Values[dArr[1]];
+                    var cValues = chartData[dArr[0]].values[dArr[1]];
                     mChartData.labels = [];
                     mChartData.datasets[0].data = [];
                     var initial = 0;
@@ -409,28 +431,27 @@
                 }
             }
 
-            var statuses = [null, null];
             function retrieveData() {
                 $.ajax({ url: "/json", cache: false }).done(function (data) {
                     statuses[0] = statuses[1];
                     statuses[1] = data;
 
-                    if (data.ApplicationDisplayName) {
-                        $("#appName").html(data.ApplicationDisplayName + " (" + data.ApplicationName + ")");
-                        document.title = "Status: " + data.ApplicationDisplayName + " (" + data.ApplicationName + ")";
+                    if (data.applicationDisplayName) {
+                        $("#appName").html(data.applicationDisplayName + " (" + data.applicationName + ")");
+                        document.title = "Status: " + data.applicationDisplayName + " (" + data.applicationName + ")";
                     } else {
-                        $("#appName").html(data.ApplicationName);
-                        document.title = "Status: " + data.ApplicationName;
+                        $("#appName").html(data.applicationName);
+                        document.title = "Status: " + data.applicationName;
                     }
-                    $("#envMachine").html(data.EnvironmentName + " - " + data.MachineName);
+                    $("#envMachine").html(data.environmentName + " - " + data.machineName);
 
-                    var date = moment(new Date(data.Timestamp));
+                    var date = moment(new Date(data.timestamp));
                     $(".timestamp").html(date.format('dddd, D MMMM YYYY HH:mm:ss'));
                     
                     if (statuses[0])
-                        AddItems($(".body"), data.Items, -1, "", statuses[0].Items);
+                        addItems($(".body"), data.items, -1, "", statuses[0].items);
                     else
-                        AddItems($(".body"), data.Items, -1, "", null);
+                        addItems($(".body"), data.items, -1, "", null);
                     
                     if (chartValueId)
                         $("[id='" + chartValueId + "']").click();
@@ -454,19 +475,6 @@
                 });
             });
             retrieveData();
-
-            function GetItemOnData(items, name) {
-                if (items)
-                    for (var i = 0; i < items.length; i++)
-                        if (items[i].Name == name)
-                            return items[i];
-            }
-            function GetValueByKey(item, key) {
-                if (item)
-                    for (var i = 0; i < item.Values.length; i++)
-                        if (item.Values[i].Key == key)
-                            return item.Values[i];
-            }
         </script>
     </head>
     <body>

@@ -102,7 +102,7 @@ namespace TWCore.Diagnostics.Status
                     {
                         dayItem.Values.Add($"Number of calls at {i}H", item.Value[i], item.Key == now.Date && i == now.Hour);
                     }
-                    baseItem.Childrens.Add(dayItem);
+                    baseItem.Children.Add(dayItem);
                 }
                 (var average, var standardDeviation) = daysSums.GetAverageAndStdDev(tuple => (double)tuple.TotalDay);
                 baseItem.Values.AddOk("Total calls", total, true);

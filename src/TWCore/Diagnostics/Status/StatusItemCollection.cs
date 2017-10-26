@@ -54,6 +54,11 @@ namespace TWCore.Diagnostics.Status
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
         /// <summary>
+        /// Milliseconds to process all the status result
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public double ElapsedMilliseconds { get; set; }
+        /// <summary>
         /// Status items
         /// </summary>
         [XmlElement("StatusItem"), DataMember]

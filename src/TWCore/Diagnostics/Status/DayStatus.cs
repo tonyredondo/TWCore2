@@ -58,7 +58,7 @@ namespace TWCore.Diagnostics.Status
         {
             var baseItem = new StatusItem { Name = Name };
             var values = _data.Values.ToArray().Select(v => v.GetStatusItem());
-            baseItem.Childrens.AddRange(values);
+            baseItem.Children.AddRange(values);
             return baseItem;
         }
 

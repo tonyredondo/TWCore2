@@ -311,6 +311,7 @@ namespace TWCore.Diagnostics.Status
 
             lock (this)
             {
+                var sw = Stopwatch.StartNew();
                 var collection = new StatusItemCollection
                 {
                     Timestamp = Core.Now,
@@ -351,14 +352,14 @@ namespace TWCore.Diagnostics.Status
 
                 allList.Where(i => i.ObjRef == null).Each(item =>
                 {
-                    item.Childrens.AddRange(allList.Where(i => Equals(i.ObjRef, item)).ToList());
+                    item.Children.AddRange(allList.Where(i => Equals(i.ObjRef, item)).ToList());
                     collection.Items.Add(item);
                 });
                 collection.Items.Sort((a, b) => string.Compare(a.Name, b.Name, StringComparison.Ordinal));
 
                 allList.Where(i => i.ObjRef != null).ToList();
                 FillHierarchy(allList, collection.Items, _objectsHierarchy);
-
+                collection.ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds;
                 return collection;
             }
         }
@@ -377,10 +378,10 @@ namespace TWCore.Diagnostics.Status
                     var item = equals.FirstOrDefault(i => !i.Parent);
                     if (item != null)
                     {
-                        item.Childrens.AddRange(equals.Where(i => i.Parent));
+                        item.Children.AddRange(equals.Where(i => i.Parent));
                         item.ObjRef = null;
                         statusList.Add(item);
-                        FillHierarchy(remainingList, item.Childrens, obj.Childrens);
+                        FillHierarchy(remainingList, item.Children, obj.Childrens);
                     }
                     else if (obj.Object != null)
                     {
@@ -391,7 +392,7 @@ namespace TWCore.Diagnostics.Status
                             string.Format("{0} [{1}]", sItem.Name, lstSType.IndexOf(obj.Object)) : 
                             string.Format("{0}", sItem.Name);
                         statusList.Add(sItem);
-                        FillHierarchy(remainingList, sItem.Childrens, obj.Childrens);
+                        FillHierarchy(remainingList, sItem.Children, obj.Childrens);
                     }
                 }
             }

@@ -93,7 +93,7 @@ namespace TWCore.Diagnostics.Status
             if (counterValues.Length == 0) return null;
             var status = new StatusItem { Name = Name };
             foreach (var counter in counterValues)
-                status.Childrens.Add(counter.Value.GetStatusItem(counter.Key));
+                status.Children.Add(counter.Value.GetStatusItem(counter.Key));
             return status;
         }
 
@@ -146,7 +146,7 @@ namespace TWCore.Diagnostics.Status
                 c1.Values.Add("Standard Deviation", _lastMinuteValues.StandardDeviation, true);
                 foreach (var percentile in _lastMinuteValues.Percentiles)
                     c1.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c1);
+                cStatus.Children.Add(c1);
 
                 _last10MinutesValues.Calculate();
                 var c2 = new StatusItem { Name = "Last 10 Minutes" };
@@ -159,7 +159,7 @@ namespace TWCore.Diagnostics.Status
                 c2.Values.Add("Standard Deviation", _last10MinutesValues.StandardDeviation, true);
                 foreach (var percentile in _last10MinutesValues.Percentiles)
                     c2.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c2);
+                cStatus.Children.Add(c2);
 
                 _last20MinutesValues.Calculate();
                 var c3 = new StatusItem { Name = "Last 20 Minutes" };
@@ -172,7 +172,7 @@ namespace TWCore.Diagnostics.Status
                 c3.Values.Add("Standard Deviation", _last20MinutesValues.StandardDeviation, true);
                 foreach (var percentile in _last20MinutesValues.Percentiles)
                     c3.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c3);
+                cStatus.Children.Add(c3);
 
                 _last30MinutesValues.Calculate();
                 var c4 = new StatusItem { Name = "Last 30 Minutes" };
@@ -185,7 +185,7 @@ namespace TWCore.Diagnostics.Status
                 c4.Values.Add("Standard Deviation", _last30MinutesValues.StandardDeviation, true);
                 foreach (var percentile in _last30MinutesValues.Percentiles)
                     c4.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c4);
+                cStatus.Children.Add(c4);
 
                 _oneHourValues.Calculate();
                 var c5 = new StatusItem { Name = "Last Hour" };
@@ -198,7 +198,7 @@ namespace TWCore.Diagnostics.Status
                 c5.Values.Add("Minutes Standard Deviation", _oneHourValues.StandardDeviation, true);
                 foreach (var percentile in _oneHourValues.Percentiles)
                     c5.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c5);
+                cStatus.Children.Add(c5);
 
                 _sixHourValues.Calculate();
                 var c6 = new StatusItem { Name = "Last 6 Hours" };
@@ -211,7 +211,7 @@ namespace TWCore.Diagnostics.Status
                 c6.Values.Add("Standard Deviation", _sixHourValues.StandardDeviation, true);
                 foreach (var percentile in _sixHourValues.Percentiles)
                     c6.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
-                cStatus.Childrens.Add(c6);
+                cStatus.Children.Add(c6);
 
                 return cStatus;
             }

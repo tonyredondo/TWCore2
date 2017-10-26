@@ -133,7 +133,7 @@ namespace TWCore.Diagnostics.Status
                     else if (typeof(T) == typeof(ushort))
                         RenderDayHours<ushort>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
 
-                    baseItem.Childrens.Add(dayItem);
+                    baseItem.Children.Add(dayItem);
                 }
                 baseItem.Values.AddOk("Total calls", total, true);
                 return baseItem;

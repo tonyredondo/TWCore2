@@ -40,9 +40,9 @@ namespace TWCore.Diagnostics.Status
         [XmlElement("Value"), DataMember]
         public StatusItemValuesCollection Values { get; set; } = new StatusItemValuesCollection();
         /// <summary>
-        /// Childrens
+        /// Children
         /// </summary>
         [DataMember]
-        public List<StatusItem> Childrens { get; set; } = new List<StatusItem>();
+        public List<StatusItem> Children { get; set; } = new List<StatusItem>();
     }
 }

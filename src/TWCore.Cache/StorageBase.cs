@@ -101,8 +101,8 @@ namespace TWCore.Cache
             _name = GetType().Name;
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(Enabled), Enabled, Enabled ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
-                collection.Add(nameof(Ready), Ready, Ready ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
+                collection.Add(nameof(Enabled), Enabled, Enabled ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
+                collection.Add(nameof(Ready), Ready, Ready ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
                 collection.Add(nameof(ExpirationCheckTimeInMinutes), ExpirationCheckTimeInMinutes);
                 collection.Add(nameof(MaximumItemDuration), MaximumItemDuration);
                 collection.Add(nameof(ItemsExpirationAbsoluteDateOverwrite), ItemsExpirationAbsoluteDateOverwrite);

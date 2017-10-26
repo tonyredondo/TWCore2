@@ -81,10 +81,10 @@ namespace TWCore.Cache.Storages.IO
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(BasePath), BasePath);
-                collection.Add("Count", Metas.Count(), StatusItemValueStatus.Green);
+                collection.Add("Count", Metas.Count(), StatusItemValueStatus.Ok);
                 collection.Add(nameof(Serializer), Serializer);
                 collection.Add(nameof(MetaSerializer), MetaSerializer);
-                collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Green : NumberOfSubFolders > 2 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Red);
+                collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
                 if (_storages == null) return;
@@ -439,13 +439,13 @@ namespace TWCore.Cache.Storages.IO
                 {
                     var percentWork = (double)_storageWorker.Count / SlowDownWriteThreshold;
                     collection.Add(nameof(BasePath), BasePath);
-                    collection.Add("Count", _metas.Count, StatusItemValueStatus.Green, true);
-                    collection.Add("Pending Count", _pendingItems.Count, StatusItemValueStatus.Green, true);
-                    collection.Add("Worker Count", _storageWorker.Count, percentWork < 0.8 ? StatusItemValueStatus.Green : percentWork < 0.95 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Red, true);
-                    collection.Add("Worker Process Percent", Math.Round(percentWork * 100, 2) + "%", percentWork < 0.8 ? StatusItemValueStatus.Green : percentWork < 0.95 ? StatusItemValueStatus.Yellow : StatusItemValueStatus.Red);
-                    collection.Add("Transaction Log Length", _currentTransactionLogLength, StatusItemValueStatus.Green);
-                    collection.Add("Index File", _indexFilePath, StatusItemValueStatus.Green);
-                    collection.Add("Transaction File", _transactionLogFilePath, StatusItemValueStatus.Green);
+                    collection.Add("Count", _metas.Count, StatusItemValueStatus.Ok, true);
+                    collection.Add("Pending Count", _pendingItems.Count, StatusItemValueStatus.Ok, true);
+                    collection.Add("Worker Count", _storageWorker.Count, percentWork < 0.8 ? StatusItemValueStatus.Ok : percentWork < 0.95 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error, true);
+                    collection.Add("Worker Process Percent", Math.Round(percentWork * 100, 2) + "%", percentWork < 0.8 ? StatusItemValueStatus.Ok : percentWork < 0.95 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
+                    collection.Add("Transaction Log Length", _currentTransactionLogLength, StatusItemValueStatus.Ok);
+                    collection.Add("Index File", _indexFilePath, StatusItemValueStatus.Ok);
+                    collection.Add("Transaction File", _transactionLogFilePath, StatusItemValueStatus.Ok);
                 });
             }
             #endregion

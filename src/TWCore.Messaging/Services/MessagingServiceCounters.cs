@@ -163,9 +163,9 @@ namespace TWCore.Services
                 collection.Add("Date and time of the last received message", LastMessageDateTime);
                 collection.Add("Date and time of the last process of a message", LastProcessingDateTime);
 
-                collection.Add("Number of received messages", TotalMessagesReceived, StatusItemValueStatus.Green, true);
-                collection.Add("Number of processed messages", TotalMessagesProccesed, StatusItemValueStatus.Green, true);
-                collection.Add("Number of exceptions", TotalExceptions, StatusItemValueStatus.Red, true);
+                collection.Add("Number of received messages", TotalMessagesReceived, StatusItemValueStatus.Ok, true);
+                collection.Add("Number of processed messages", TotalMessagesProccesed, StatusItemValueStatus.Ok, true);
+                collection.Add("Number of exceptions", TotalExceptions, StatusItemValueStatus.Error, true);
             });
         }
         #endregion

@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -48,5 +51,113 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         [XmlAttribute, DataMember]
         public StatusItemValueStatus Status { get; set; }
+        /// <summary>
+        /// Enable to plot
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public bool PlotEnabled { get; set; }
+
+        #region .ctor
+        /// <summary>
+        /// Represent a status item value
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusItemValueItem() { }
+        /// <summary>
+        /// Represent a status item value
+        /// </summary>
+        /// <param name="name">Name of the value</param>
+        /// <param name="value">Value</param>
+        /// <param name="status">Value status</param>
+        /// <param name="plotEnabled">Enable to plot</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusItemValueItem(string name, object value, StatusItemValueStatus status, bool plotEnabled)
+        {
+            Name = name;
+            if (value == null)
+            {
+                Value = null;
+                Type = StatusItemValueType.Text;
+                plotEnabled = false;
+            }
+            else
+            {
+                switch (value)
+                {
+                    case int intValue:
+                        Type = StatusItemValueType.Number;
+                        Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case decimal decValue:
+                        Type = StatusItemValueType.Number;
+                        Value = decValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case double doubleValue:
+                        Type = StatusItemValueType.Number;
+                        Value = doubleValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case float floatValue:
+                        Type = StatusItemValueType.Number;
+                        Value = floatValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case long longValue:
+                        Type = StatusItemValueType.Number;
+                        Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case short shortValue:
+                        Type = StatusItemValueType.Number;
+                        Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case byte byteValue:
+                        Type = StatusItemValueType.Number;
+                        Value = byteValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case uint intValue:
+                        Type = StatusItemValueType.Number;
+                        Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case ulong longValue:
+                        Type = StatusItemValueType.Number;
+                        Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case ushort shortValue:
+                        Type = StatusItemValueType.Number;
+                        Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case sbyte byteValue:
+                        Type = StatusItemValueType.Number;
+                        Value = byteValue.ToString("0.####", CultureInfo.InvariantCulture);
+                        break;
+                    case DateTime date:
+                        Type = StatusItemValueType.Date;
+                        Value = date.TimeOfDay.TotalSeconds > 0 ? date.ToString("s") : date.ToString("yyyy-MM-dd");
+                        break;
+                    case TimeSpan time:
+                        Type = StatusItemValueType.Time;
+                        Value = time.ToString();
+                        break;
+                    default:
+                        Type = StatusItemValueType.Text;
+                        Value = value.ToString();
+                        plotEnabled = false;
+                        break;
+                }
+            }
+            Status = status;
+            PlotEnabled = plotEnabled;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Represent a status item value
+        /// </summary>
+        /// <param name="name">Name of the value</param>
+        /// <param name="value">Value</param>
+        /// <param name="plotEnabled">Enable to plot</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusItemValueItem(string name, object value, bool plotEnabled = false) : this(name, value, StatusItemValueStatus.Unknown, plotEnabled)
+        {
+        }
+        #endregion
+
     }
 }

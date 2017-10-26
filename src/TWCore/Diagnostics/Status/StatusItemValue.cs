@@ -15,7 +15,7 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -52,10 +52,10 @@ namespace TWCore.Diagnostics.Status
         [XmlAttribute, DataMember]
         public StatusItemValueStatus Status { get; set; }
         /// <summary>
-        /// Values list
+        /// Values array
         /// </summary>
         [XmlElement("Value"), DataMember]
-        public List<StatusItemValueItem> Values { get; set; }
+        public StatusItemValueItem[] Values { get; set; }
         /// <summary>
         /// Enable to plot
         /// </summary>
@@ -91,47 +91,47 @@ namespace TWCore.Diagnostics.Status
                 {
                     case int intValue:
                         Type = StatusItemValueType.Number;
-                        Value = intValue.ToString("0.####");
+                        Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case decimal decValue:
                         Type = StatusItemValueType.Number;
-                        Value = decValue.ToString("0.####");
+                        Value = decValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case double doubleValue:
                         Type = StatusItemValueType.Number;
-                        Value = doubleValue.ToString("0.####");
+                        Value = doubleValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case float floatValue:
                         Type = StatusItemValueType.Number;
-                        Value = floatValue.ToString("0.####");
+                        Value = floatValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case long longValue:
                         Type = StatusItemValueType.Number;
-                        Value = longValue.ToString("0.####");
+                        Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case short shortValue:
                         Type = StatusItemValueType.Number;
-                        Value = shortValue.ToString("0.####");
+                        Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case byte byteValue:
                         Type = StatusItemValueType.Number;
-                        Value = byteValue.ToString("0.####");
+                        Value = byteValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case uint intValue:
                         Type = StatusItemValueType.Number;
-                        Value = intValue.ToString("0.####");
+                        Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case ulong longValue:
                         Type = StatusItemValueType.Number;
-                        Value = longValue.ToString("0.####");
+                        Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case ushort shortValue:
                         Type = StatusItemValueType.Number;
-                        Value = shortValue.ToString("0.####");
+                        Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case sbyte byteValue:
                         Type = StatusItemValueType.Number;
-                        Value = byteValue.ToString("0.####");
+                        Value = byteValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case DateTime date:
                         Type = StatusItemValueType.Date;
@@ -150,6 +150,28 @@ namespace TWCore.Diagnostics.Status
             }
             Status = status;
             PlotEnabled = plotEnabled;
+        }
+        /// <summary>
+        /// Represent a status item value
+        /// </summary>
+        /// <param name="key">Key of the value</param>
+        /// <param name="values">Values array</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StatusItemValue(string key, params StatusItemValueItem[] values)
+        {
+            Key = key;
+            if (values == null)
+            {
+                Value = null;
+                Type = StatusItemValueType.Text;
+            }
+            else
+            {
+                Values = values;
+                Type = StatusItemValueType.Array;
+            }
+            Status = StatusItemValueStatus.Unknown;
+            PlotEnabled = false;
         }
         #endregion
     }

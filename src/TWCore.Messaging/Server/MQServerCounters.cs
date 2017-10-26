@@ -215,17 +215,17 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Number of received messages
         /// </summary>
-        [StatusProperty("Number of received messages", StatusItemValueStatus.Green, true)]
+        [StatusProperty("Number of received messages", StatusItemValueStatus.Ok, true)]
         public long TotalMessagesReceived { get; private set; }
         /// <summary>
         /// Number of processed messages
         /// </summary>
-        [StatusProperty("Number of processed messages", StatusItemValueStatus.Green, true)]
+        [StatusProperty("Number of processed messages", StatusItemValueStatus.Ok, true)]
         public long TotalMessagesProccesed { get; private set; }
         /// <summary>
         /// Number of exceptions
         /// </summary>
-        [StatusProperty("Number of exceptions", StatusItemValueStatus.Red, true)]
+        [StatusProperty("Number of exceptions", StatusItemValueStatus.Error, true)]
         public long TotalExceptions { get; private set; }
         /// <summary>
         /// Total receiving time

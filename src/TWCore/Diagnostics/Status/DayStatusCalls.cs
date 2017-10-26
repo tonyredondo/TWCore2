@@ -104,10 +104,10 @@ namespace TWCore.Diagnostics.Status
                     }
                     baseItem.Childrens.Add(dayItem);
                 }
-                baseItem.Values.AddGreen("Total calls", total, true);
                 (var average, var standardDeviation) = daysSums.GetAverageAndStdDev(tuple => (double)tuple.TotalDay);
-                baseItem.Values.AddGreen("Average of calls", average, true);
-                baseItem.Values.AddGreen("Standard Deviation of calls", standardDeviation, true);
+                baseItem.Values.AddOk("Total calls", total, true);
+                baseItem.Values.AddOk("Average of calls", average, true);
+                baseItem.Values.AddOk("Standard Deviation of calls", standardDeviation, true);
                 return baseItem;
             }
         }

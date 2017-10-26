@@ -163,10 +163,10 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(PingTime), PingTime);
                 collection.Add(nameof(PingDelay), PingDelay);
                 collection.Add(nameof(PingDelayOnError), PingDelayOnError);
-                collection.Add(nameof(PingResponse), PingResponse, StatusItemValueStatus.Green);
-                collection.Add(nameof(PingFailure), PingFailure, StatusItemValueStatus.Yellow);
-                collection.Add(nameof(PingConsecutiveFailure), PingConsecutiveFailure, PingConsecutiveFailure == 0 ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
-                collection.Add(nameof(Enabled), Enabled, Enabled ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
+                collection.Add(nameof(PingResponse), PingResponse, StatusItemValueStatus.Ok);
+                collection.Add(nameof(PingFailure), PingFailure, StatusItemValueStatus.Warning);
+                collection.Add(nameof(PingConsecutiveFailure), PingConsecutiveFailure, PingConsecutiveFailure == 0 ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
+                collection.Add(nameof(Enabled), Enabled, Enabled ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
                 Core.Status.AttachChild(Storage, this);
             });
         }

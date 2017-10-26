@@ -73,8 +73,8 @@ namespace TWCore.Cache
         {
             Core.Status.Attach(collection =>
             {
-                collection.AddGreen("Stack Count", _storageStack.Count);
-                collection.AddGreen("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
+                collection.AddOk("Stack Count", _storageStack.Count);
+                collection.AddOk("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
                 _storageStack.Each(s => Core.Status.AttachChild(s, this));
             });
         }

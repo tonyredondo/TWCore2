@@ -44,29 +44,37 @@ namespace TWCore.Diagnostics.Status
         /// Adds a new item value
         /// </summary>
         /// <param name="key">Key of the value</param>
+        /// <param name="values">Values</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add(string key, params StatusItemValueItem[] values)
+            => Add(new StatusItemValue(key, values));
+        /// <summary>
+        /// Adds a new item value
+        /// </summary>
+        /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Add(string key, object value, bool plotEnabled)
             => Add(new StatusItemValue(key, value, StatusItemValueStatus.Unknown, plotEnabled));
         /// <summary>
-        /// Adds a green item value
+        /// Adds a Ok item value
         /// </summary>
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddGreen(string key, object value, bool plotEnabled = false)
-            => Add(key, value, StatusItemValueStatus.Green, plotEnabled);
+        public void AddOk(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Ok, plotEnabled);
         /// <summary>
-        /// Adds a yellow item value
+        /// Adds a warning item value
         /// </summary>
         /// <param name="key">Key of the value</param>
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddYellow(string key, object value, bool plotEnabled = false)
-            => Add(key, value, StatusItemValueStatus.Yellow, plotEnabled);
+        public void AddWarning(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Warning, plotEnabled);
         /// <summary>
         /// Adds a red item value
         /// </summary>
@@ -74,8 +82,8 @@ namespace TWCore.Diagnostics.Status
         /// <param name="value">Value</param>
         /// <param name="plotEnabled">Enabled to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AddRed(string key, object value, bool plotEnabled = false)
-            => Add(key, value, StatusItemValueStatus.Red, plotEnabled);
+        public void AddError(string key, object value, bool plotEnabled = false)
+            => Add(key, value, StatusItemValueStatus.Error, plotEnabled);
 
         /// <summary>
         /// Sort values

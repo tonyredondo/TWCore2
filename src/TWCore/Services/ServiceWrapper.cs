@@ -66,29 +66,29 @@ namespace TWCore.Services
                 switch (wrapper._serviceStatus)
                 {
                     case ServiceStatus.Starting:
-                        siv = StatusItemValueStatus.Yellow;
+                        siv = StatusItemValueStatus.Warning;
                         break;
                     case ServiceStatus.Running:
-                        siv = StatusItemValueStatus.Green;
+                        siv = StatusItemValueStatus.Ok;
                         break;
                     case ServiceStatus.Stopping:
-                        siv = StatusItemValueStatus.Yellow;
+                        siv = StatusItemValueStatus.Warning;
                         break;
                     case ServiceStatus.Stopped:
-                        siv = StatusItemValueStatus.Red;
+                        siv = StatusItemValueStatus.Error;
                         break;
                     case ServiceStatus.Pausing:
-                        siv = StatusItemValueStatus.Yellow;
+                        siv = StatusItemValueStatus.Warning;
                         break;
                     case ServiceStatus.Paused:
-                        siv = StatusItemValueStatus.Red;
+                        siv = StatusItemValueStatus.Error;
                         break;
                     case ServiceStatus.Continuing:
-                        siv = StatusItemValueStatus.Yellow;
+                        siv = StatusItemValueStatus.Warning;
                         break;
                 }
                 sItem.Values.Add("Service Name", wrapper.ServiceName);
-                sItem.Values.Add("Service can Pause and Continue", wrapper.CanPauseAndContinue ? "Yes" : "No", wrapper.CanPauseAndContinue ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
+                sItem.Values.Add("Service can Pause and Continue", wrapper.CanPauseAndContinue ? "Yes" : "No", wrapper.CanPauseAndContinue ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
                 sItem.Values.Add("Service Status", wrapper._serviceStatus, siv);
                 sItem.Values.Add("Service Start Arguments", string.Join(" ", wrapper._args ?? new string[0]));
                 return sItem;

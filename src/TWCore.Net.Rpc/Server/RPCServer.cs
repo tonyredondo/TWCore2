@@ -79,7 +79,7 @@ namespace TWCore.Net.RPC.Server
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(Running), Running, Running ? StatusItemValueStatus.Green : StatusItemValueStatus.Red);
+                collection.Add(nameof(Running), Running, Running ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
                 collection.Add("Service Instances Count", _serviceInstances.Count);
                 foreach (var sItem in _serviceInstances)
                     Core.Status.AttachChild(sItem, this);

@@ -152,7 +152,7 @@ namespace TWCore.Diagnostics.Log
                 {
                     sItem.Name = $"Last {lItems.Count} error messages";
                     for (var i = 0; i < lItems.Count; i++)
-                        sItem.Values.Add("Error " + i, lItems[i].Message.RemoveInvalidXmlChars() + "\r\nStacktrace:\r\n" + lItems[i].Exception?.StackTrace.RemoveInvalidXmlChars(), StatusItemValueStatus.Red);
+                        sItem.Values.Add("Error " + i, lItems[i].Message.RemoveInvalidXmlChars() + "\r\nStacktrace:\r\n" + lItems[i].Exception?.StackTrace.RemoveInvalidXmlChars(), StatusItemValueStatus.Error);
                 }
                 else
                     sItem.Name = "There are no error messages in the log";

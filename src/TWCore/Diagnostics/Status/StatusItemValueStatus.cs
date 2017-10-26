@@ -27,16 +27,16 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         Unknown,
         /// <summary>
-        /// Green status, is a value inside the expected parameters
+        /// Ok status, is a value inside the expected parameters
         /// </summary>
-        Green,
+        Ok,
         /// <summary>
-        /// Yellow status, is a value outside the expected parameters but not critical, but should be a warning
+        /// Warning status, is a value outside the expected parameters but not critical, but should be a warning
         /// </summary>
-        Yellow,
+        Warning,
         /// <summary>
-        /// Red status, is a value considered critical
+        /// Error status, is a value considered critical
         /// </summary>
-        Red
+        Error
     }
 }

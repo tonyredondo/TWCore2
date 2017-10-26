@@ -26,6 +26,6 @@ namespace TWCore.Diagnostics.Status
         Number,
         Date,
         Time,
-        Complex
+        Array
     }
 }

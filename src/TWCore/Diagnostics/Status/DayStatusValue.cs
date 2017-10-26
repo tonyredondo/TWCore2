@@ -118,8 +118,8 @@ namespace TWCore.Diagnostics.Status
                         for (var i = 0; i < dsItem.Value.Length; i++)
                         {
                             var values = dsItem.Value[i].Cast<string>().GroupBy(v => v)
-                                .Select(v => $"[{v.Key} = {v.Count()}]").ToArray();
-                            dayItem.Values.Add($"Number of calls at {i}H", string.Join(" - ", values));
+                                .Select(v => new StatusItemValueItem(v.Key, v.Count(), StatusItemValueStatus.Unknown, dsItem.Key == now.Date && i == now.Hour)).ToArray();
+                            dayItem.Values.Add($"Number of calls at {i}H", values);
                         }
                     }
                     else if (typeof(T) == typeof(float))
@@ -135,7 +135,7 @@ namespace TWCore.Diagnostics.Status
 
                     baseItem.Childrens.Add(dayItem);
                 }
-                baseItem.Values.AddGreen("Total calls", total, true);
+                baseItem.Values.AddOk("Total calls", total, true);
                 return baseItem;
             }
 
@@ -155,9 +155,16 @@ namespace TWCore.Diagnostics.Status
                 var minValue = calls > 0 ? values.Min() : default(TValue);
                 var maxValue = calls > 0 ? values.Max() : default(TValue);
                 (var averageValue, var stdValue) = values.GetAverageAndStdDev(v => v.ToDouble(null));
-                dayItem.Values.Add(
-                    $"At {i}H: [Total Calls - Percentage - Lowest - Highest - Average - Standard Deviation]",
-                    $"[{calls}] - [{percentage:0.#}%] - [{minValue:0.####}] - [{maxValue:0.####}] - [{averageValue:0.####}] - [{stdValue:0.####}]");
+
+                var callStatus = new StatusItemValueItem("Total Calls", calls);
+                var percentageStatus = new StatusItemValueItem("Percentage", percentage);
+                var lowestStatus = new StatusItemValueItem("Lowest Value", minValue);
+                var highestStatus = new StatusItemValueItem("Highest Value", maxValue);
+                var averageStatus = new StatusItemValueItem("Average", averageValue);
+                var stdStatus = new StatusItemValueItem("Standard Deviation", stdValue);
+
+                dayItem.Values.Add($"At {i}H:", callStatus, percentageStatus, lowestStatus, highestStatus,
+                    averageStatus, stdStatus);
             }
         }
         #endregion

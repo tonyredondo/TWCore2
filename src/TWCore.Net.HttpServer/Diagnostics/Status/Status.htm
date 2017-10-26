@@ -380,6 +380,7 @@
             function displayChart() {
                 if (chartValueId) {
                     var plotValue = plotData[chartValueId];
+                    $("#chartTitle").text(plotValue.name);
                     var cValues = plotValue.values;
                     mChartData.labels = [];
                     mChartData.datasets[0].data = null;
@@ -472,7 +473,6 @@
                     $("input[name='chartValue']").click(function (sEvt) {
                         var target = $(sEvt.currentTarget);
                         chartValueId = target.attr("id");
-                        $(chartTitle).text(target.attr("value"));
                         displayChart();
                     });
 

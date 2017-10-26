@@ -252,7 +252,6 @@
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
             var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var tout = null;
-            var chartData = {};
             var plotData = {};
             var chartValueId = "";
             var statuses = [null, null];
@@ -271,20 +270,7 @@
                         if (item.values[i].id == id)
                             return item.values[i];
             }
-
-            function getItemOnData(items, name) {
-                if (items)
-                    for (var i = 0; i < items.length; i++)
-                        if (items[i].name == name)
-                            return items[i];
-            }
-            function getValueByValueName(value, name) {
-                if (value && value.values)
-                    for (var i = 0; i < value.values.length; i++)
-                        if (item.values[i].name == name)
-                            return item.values[i];
-            }
-
+            
             function addItems(parentElement, items, depth, itemidx, oldItems)
             {
                 depth++;
@@ -294,12 +280,7 @@
                         var item = items[i];
                         var oldItem = getItemById(oldItems, item.id);
 
-                        if (!chartData[item.id])
-                            chartData[item.id] = {};
-
-                        var chartItem = chartData[item.id];
-                        chartItem["name"] = item.name;
-
+                        //Configure Item element
                         var element = parentElement.children("#" + item.id);
                         if (element.length === 0) {
                             parentElement.append(statusItem.replace("{{ItemId}}", item.id));
@@ -308,75 +289,66 @@
                                 $(sEvt.currentTarget).parent().children(".wrapStatus").toggle();
                             });
                         }
-                        element.find("#name").html(item.name);
-
-                        if (depth > 0)
-                            element.addClass("indent");
-                        else
+                        if (depth == 0)
                             element.removeClass("indent");
+                        else
+                            element.addClass("indent");
+                        element.find("#name").html(item.name);
+                        //***
 
-                        var iSValues = "";
-                        
-                        var bAnyValue = false;
+                        var htmlValues = [];
                         for (var j = 0; j < item.values.length; j++) {
                             var val = item.values[j];
                             var oldVal = getValueById(oldItem, val.id);
-                            var enablePlot = val.plot;
-
-                            if (enablePlot && !chartItem["values"]) chartItem["values"] = {};
-                            var chartValue = enablePlot ? chartItem["values"] : null;
-
                             var status = "";
-                            if (val.status === 1) status = "good";
-                            if (val.status === 2) status = "bad";
-                            if (val.status === 3) status = "ugly";
+                            switch (val.status) {
+                                case 1:
+                                    status = "good";
+                                    break;
+                                case 2:
+                                    status = "bad";
+                                    break;
+                                case 3:
+                                    status = "ugly";
+                                    break;
+                            }
 
-                            var diff = "";
+                            var htmlValue = "";
                             if (val.value) {
-                                var nValue = parseFloat(val.value.replace(",", "."));
-                                if (nValue.toString() != "NaN") {
-                                    if (enablePlot) {
-                                        if (!chartValue[val.id]) chartValue[val.id] = [];
-                                        if (chartValue[val.id].length == 50)
-                                            chartValue[val.id].shift();
-                                        chartValue[val.id].push({ label: new Date(), value: nValue });
-                                        bAnyValue = true;
-                                    }
-                                
-                                    if (oldVal != null && oldVal.value != val.value) {
-                                        var oValue = parseFloat(oldVal.value.replace(",", "."));
-                                        if (oValue != NaN && nValue != NaN && oValue != nValue) {
-                                            diff = (nValue - oValue).toFixed(2) + "";
-                                            if (diff.match(/.00$/))
-                                                diff = diff.substring(0, diff.length - 3);
+                                if (val.type == 1) {
+                                    htmlValue = val.value;
+                                    var nValue = parseFloat(val.value);
+                                    if (oldVal != null) {
+                                        var oValue = parseFloat(oldVal.value);
+                                        if (oValue != nValue) {
+                                            var diff = (nValue - oValue).toFixed(2);
+                                            if (diff < 0)
+                                                diff = '<span class="diff ugly">&nbsp;(' + diff + ')</span>';
+                                            else if (diff > 0)
+                                                diff = '<span class="diff good">&nbsp;(+' + diff + ')</span>';
+                                            htmlValue += diff;
                                         }
-                                        if (diff < 0)
-                                            diff = '<span class="diff ugly">&nbsp;(' + diff + ')</span>';
-                                        if (diff > 0)
-                                            diff = '<span class="diff good">&nbsp;(+' + diff + ')</span>';
                                     }
                                 }
                                 else {
-                                    val.value = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                    htmlValue = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
                                 }
                             }
-                            var inputId = item.id + "-" + val.id;
-                            iSValues += valueItem
-                                .replace("{{Radio}}", enablePlot ? "<input type='radio' id='" + inputId + "' name='chartValue' value='" + val.key + "' />" : "")
-                                .replace("{{Key}}", "<label for='" + inputId + "'>" + val.key + "</label>")
-                                .replace("{{Value}}", val.value + diff)
-                                .replace("{{status}}", status);
+                            htmlValues.push(valueItem
+                                .replace("{{Radio}}", val.plot ? "<input type='radio' id='" + val.id + "' name='chartValue' value='" + val.key + "' />" : "")
+                                .replace("{{Key}}", "<label for='" + val.id + "'>" + val.key + "</label>")
+                                .replace("{{Value}}", htmlValue)
+                                .replace("{{status}}", status)
+                            );
                         }
+
                         if (item.values.length > 0) {
-                            element.children(".wrapStatus").children(".innerStatus").html(tableItem.replace("{{Item.Values}}", iSValues));
+                            element.children(".wrapStatus").children(".innerStatus").html(tableItem.replace("{{Item.Values}}", htmlValues.join("")));
                             $(element).children(".wrapStatus").children(".tableBtn").prop('onclick', null).off('click');
                             $(element).children(".wrapStatus").children(".tableBtn").click(function (sEvt) {
                                 $(sEvt.currentTarget).parent().children(".innerStatus").toggle();
                             });
                         }
-
-                        if (!bAnyValue)
-                            delete chartData[item.id];
 
                         if (item.children)
                         {
@@ -396,63 +368,42 @@
                                 $(element).children("h2").css("border-bottom", "0px");
                             }
 
-                            if (oldItem)
-                                addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, oldItem.children);
-                            else
-                                addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, null);
+                            addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, oldItem ? oldItem.children : null);
                         }
                         else
                             $(element).children(".wrapStatus").children(".tableBtn").remove();
                     }
-
-                    var sItemsLength = parentElement.children(".statusItem").length;
-                    for (i = items.length; i < sItemsLength; i++)
-                        parentElement.children("#status" + depth + "_" + itemidx + "_" + i).remove();
-
-                    $("input[name='chartValue']").click(function (sEvt) {
-                        var target = $(sEvt.currentTarget);
-                        chartValueId = target.attr("id");
-                        $(chartTitle).text(target.attr("value"));
-                        displayChart();
-                    });
                 }
             }
 
 
             function displayChart() {
                 if (chartValueId) {
-                    var dArr = chartValueId.split("-");
-                    var cValues = chartData[dArr[0]].values[dArr[1]];
+                    var plotValue = plotData[chartValueId];
+                    var cValues = plotValue.values;
                     mChartData.labels = [];
-                    mChartData.datasets[0].data = [];
+                    mChartData.datasets[0].data = null;
                     var initial = 0;
-                    if (cValues.length > 0) initial = cValues[0].value;
+                    if (cValues.length > 0) initial = cValues[0];
                     if (cValues.length < 50)
-                        cValues = new Array(50 - cValues.length).fill({ label: parseInt(initial), value: initial }).concat(cValues);
+                        cValues = new Array(50 - cValues.length).fill(initial).concat(cValues);
                     for (var i = 0; i < cValues.length; i++) {
-                        var item = cValues[i];
-                        mChartData.labels.push(parseInt(item.value));
-                        mChartData.datasets[0].data.push(item.value);
+                        mChartData.labels.push(parseInt(cValues[i]));
                     }
+                    mChartData.datasets[0].data = cValues;
                     $("#myChart").attr("style", "");
                     myNewChart = new Chart(ctx).Line(mChartData, { });
                 }
             }
-
             function getPlotValues(items) {
-                var plotValues = {};
                 if (items) {
                     for (var j = 0; j < items.length; j++) {
                         var item = items[j];
-                        var pValues = getItemPlotValues(item, null);
-                        for (var propName in pValues)
-                            plotValues[propName] = pValues[propName];
+                        getItemPlotValues(item, null);
                     }
                 }
-                return plotValues;
             }
             function getItemPlotValues(item, prevName) {
-                var plotValues = {};
                 if (item) {
                     var currentName = item.name;
                     if (prevName)
@@ -464,13 +415,26 @@
                             var valueName = currentName + " - " + value.key;
                             if (value.plot) {
                                 var valueVal = parseFloat(value.value);
-                                plotValues[value.id] = { name: valueName, value: valueVal };
+                                if (plotData[value.id]) {
+                                    plotData[value.id].values.push(valueVal);
+                                    if (plotData[value.id].values.length == 50)
+                                        plotData[value.id].values.shift();
+                                }
+                                else
+                                    plotData[value.id] = { name: valueName, values: [valueVal] };
+
                             } else if (value.values) {
                                 for (var x = 0; x < value.values.length; x++) {
                                     var itemValue = value.values[x];
                                     if (itemValue.plot) {
                                         var itemValueVal = parseFloat(itemValue.value);
-                                        plotValues[itemValueVal.id] = { name: valueName + " - " + itemValue.name, value: itemValueVal };
+                                        if (plotData[itemValueVal.id]) {
+                                            plotData[itemValueVal.id].values.push(itemValueVal);
+                                            if (plotData[itemValueVal.id].values.length == 50)
+                                                plotData[itemValueVal.id].values.shift();
+                                        }
+                                        else
+                                            plotData[itemValueVal.id] = { name: valueName + " - " + itemValue.name, values: [itemValueVal] };
                                     }
                                 }
                             }
@@ -480,18 +444,14 @@
                     if (item.children) {
                         for (var j = 0; j < item.children.length; j++) {
                             var child = item.children[j];
-                            var pValues = getItemPlotValues(child, currentName);
-                            for (var propName in pValues)
-                                plotValues[propName] = pValues[propName];
+                            getItemPlotValues(child, currentName);
                         }
                     }
                 }
-                return plotValues;
             }
-
             function retrieveData() {
                 $.ajax({ url: "/json", cache: false }).done(function (data) {
-                    plotData = getPlotValues(data.items);
+                    getPlotValues(data.items);
                     statuses[0] = statuses[1];
                     statuses[1] = data;
 
@@ -507,11 +467,15 @@
                     var date = moment(new Date(data.timestamp));
                     $(".timestamp").html(date.format('dddd, D MMMM YYYY HH:mm:ss'));
                     
-                    if (statuses[0])
-                        addItems($(".body"), data.items, -1, "", statuses[0].items);
-                    else
-                        addItems($(".body"), data.items, -1, "", null);
-                    
+                    addItems($(".body"), data.items, -1, "", statuses[0] ? statuses[0].items : null);
+
+                    $("input[name='chartValue']").click(function (sEvt) {
+                        var target = $(sEvt.currentTarget);
+                        chartValueId = target.attr("id");
+                        $(chartTitle).text(target.attr("value"));
+                        displayChart();
+                    });
+
                     if (chartValueId)
                         $("[id='" + chartValueId + "']").click();
                     else

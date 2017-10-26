@@ -72,7 +72,7 @@ namespace TWCore.Messaging.RabbitMQ
             _name = server.Name;
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(_messageType), _messageType);
+                collection.Add("Message Type", _messageType);
             });
         }
         #endregion

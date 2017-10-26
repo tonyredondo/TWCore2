@@ -213,7 +213,7 @@
             [type="radio"]:not(:checked) + label
             {
                 position: relative;
-                padding-left: 24px;
+                padding-left: 24px !important;
                 cursor: pointer;
                 line-height: 18px;
                 display: inline-block;
@@ -250,7 +250,7 @@
             .MultiValue {
                 font-size: 1em !important;
                 float: left !important;
-                margin: 0px 2px !important;
+                background: #222;
             }
             .MultiValue tr {
                 background: transparent !important;
@@ -258,14 +258,17 @@
             .MultiValue th {
                 height: 24px !important;
                 background: #ccc !important;
-                border-radius: 5px !important;
+                padding: 0px 15px !important;
+                border: solid 1px #222222;
             }
             .MultiValue td {
                 height: 24px !important;
-                padding: 4px 0px 4px 10px !important;
+                padding: 5px !important;
+                text-align: center !important;
+                font-weight: bold;
             }
             .MultiValue label {
-                padding-left: 0px !important;
+                padding-left: 0px;
             }
             label {
                 padding-left: 24px;
@@ -506,13 +509,13 @@
                                     var itemValue = value.values[x];
                                     if (itemValue.plot) {
                                         var itemValueVal = parseFloat(itemValue.value);
-                                        if (plotData[itemValueVal.id]) {
-                                            plotData[itemValueVal.id].values.push(itemValueVal);
-                                            if (plotData[itemValueVal.id].values.length == 50)
-                                                plotData[itemValueVal.id].values.shift();
+                                        if (plotData[itemValue.id]) {
+                                            plotData[itemValue.id].values.push(itemValueVal);
+                                            if (plotData[itemValue.id].values.length == 50)
+                                                plotData[itemValue.id].values.shift();
                                         }
                                         else
-                                            plotData[itemValueVal.id] = { name: valueName + " - " + itemValue.name, values: [itemValueVal] };
+                                            plotData[itemValue.id] = { name: valueName + " - " + itemValue.name, values: [itemValueVal] };
                                     }
                                 }
                             }

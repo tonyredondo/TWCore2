@@ -32,6 +32,11 @@ namespace TWCore.Diagnostics.Status
     public class StatusItemValue
     {
         /// <summary>
+        /// Item Id
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public string Id { get; set; }
+        /// <summary>
         /// Key of the value
         /// </summary>
         [XmlAttribute, DataMember]

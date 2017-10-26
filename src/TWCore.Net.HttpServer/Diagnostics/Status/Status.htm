@@ -256,17 +256,26 @@
             var chartValueId = "";
             var statuses = [null, null];
 
+            function getItemById(items, id) {
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].id == id)
+                            return items[i];
+                    }
+                }
+            }
+            function getValueById(item, id) {
+                if (item && item.values)
+                    for (var i = 0; i < item.values.length; i++)
+                        if (item.values[i].id == id)
+                            return item.values[i];
+            }
+
             function getItemOnData(items, name) {
                 if (items)
                     for (var i = 0; i < items.length; i++)
                         if (items[i].name == name)
                             return items[i];
-            }
-            function getValueByKey(item, key) {
-                if (item && item.values)
-                    for (var i = 0; i < item.values.length; i++)
-                        if (item.values[i].key == key)
-                            return item.values[i];
             }
             function getValueByValueName(value, name) {
                 if (value && value.values)
@@ -282,20 +291,18 @@
                     var i;
                     for (i = 0; i < items.length; i++) {
                         var item = items[i];
-                        var oldItem = getItemOnData(oldItems, item.name);
-                        var id = "status" + depth + "_" + itemidx + "_" + i;
-                        var chartId = id;
+                        var oldItem = getItemById(oldItems, item.id);
 
-                        if (!chartData[chartId])
-                            chartData[chartId] = {};
+                        if (!chartData[item.id])
+                            chartData[item.id] = {};
 
-                        var chartItem = chartData[chartId];
+                        var chartItem = chartData[item.id];
                         chartItem["name"] = item.name;
 
-                        var element = parentElement.children("#" + id);
+                        var element = parentElement.children("#" + item.id);
                         if (element.length === 0) {
-                            parentElement.append(statusItem.replace("{{ItemId}}", id));
-                            element = parentElement.children("#" + id);
+                            parentElement.append(statusItem.replace("{{ItemId}}", item.id));
+                            element = parentElement.children("#" + item.id);
                             $(element).children("h2").on("click", function (sEvt) {
                                 $(sEvt.currentTarget).parent().children(".wrapStatus").toggle();
                             });
@@ -312,7 +319,7 @@
                         var bAnyValue = false;
                         for (var j = 0; j < item.values.length; j++) {
                             var val = item.values[j];
-                            var oldVal = getValueByKey(oldItem, val.key);
+                            var oldVal = getValueById(oldItem, val.id);
                             var enablePlot = val.plot;
 
                             if (enablePlot && !chartItem["values"]) chartItem["values"] = {};
@@ -328,10 +335,10 @@
                                 var nValue = parseFloat(val.value.replace(",", "."));
                                 if (nValue.toString() != "NaN") {
                                     if (enablePlot) {
-                                        if (!chartValue[val.key]) chartValue[val.key] = [];
-                                        if (chartValue[val.key].length == 50)
-                                            chartValue[val.key].shift();
-                                        chartValue[val.key].push({ label: new Date(), value: nValue });
+                                        if (!chartValue[val.id]) chartValue[val.id] = [];
+                                        if (chartValue[val.id].length == 50)
+                                            chartValue[val.id].shift();
+                                        chartValue[val.id].push({ label: new Date(), value: nValue });
                                         bAnyValue = true;
                                     }
                                 
@@ -352,7 +359,7 @@
                                     val.value = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
                                 }
                             }
-                            var inputId = chartId + "-" + val.key;
+                            var inputId = item.id + "-" + val.id;
                             iSValues += valueItem
                                 .replace("{{Radio}}", enablePlot ? "<input type='radio' id='" + inputId + "' name='chartValue' value='" + val.key + "' />" : "")
                                 .replace("{{Key}}", "<label for='" + inputId + "'>" + val.key + "</label>")
@@ -368,7 +375,7 @@
                         }
 
                         if (!bAnyValue)
-                            delete chartData[chartId];
+                            delete chartData[item.id];
 
                         if (item.children)
                         {

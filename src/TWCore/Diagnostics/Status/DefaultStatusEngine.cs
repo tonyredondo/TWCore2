@@ -25,6 +25,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using TWCore.Reflection;
+using TWCore.Security;
+
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ForCanBeConvertedToForeach
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
@@ -359,8 +361,37 @@ namespace TWCore.Diagnostics.Status
 
                 allList.Where(i => i.ObjRef != null).ToList();
                 FillHierarchy(allList, collection.Items, _objectsHierarchy);
+
+                if (collection.Items != null)
+                {
+                    foreach (var collectionItem in collection.Items)
+                        SetIds(string.Empty, collectionItem);
+                }
+
                 collection.ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds;
                 return collection;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SetIds(string baseId, StatusItem item)
+        {
+            if (item == null) return;
+            item.Id = (baseId + item.Name).GetHashSHA1();
+            if (item.Values != null)
+            {
+                foreach(var value in item.Values)
+                {
+                    value.Id = (item.Id + value.Key).GetHashSHA1();
+                    if (value.Values == null) continue;
+                    foreach (var valueVal in value.Values)
+                        valueVal.Id = (value.Id + valueVal.Name).GetHashSHA1();
+                }
+            }
+            if (item.Children != null)
+            {
+                foreach (var child in item.Children)
+                    SetIds(item.Id, child);
             }
         }
 

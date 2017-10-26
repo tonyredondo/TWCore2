@@ -30,6 +30,11 @@ namespace TWCore.Diagnostics.Status
         internal bool Parent;
 
         /// <summary>
+        /// Item Id
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public string Id { get; set; }
+        /// <summary>
         /// Item name
         /// </summary>
         [XmlAttribute, DataMember]

@@ -60,7 +60,7 @@ namespace TWCore.Diagnostics.Status
         /// Enable to plot
         /// </summary>
         [XmlAttribute, DataMember]
-        public bool PlotEnabled { get; set; }
+        public bool Plot { get; set; }
 
         #region .ctor
         /// <summary>
@@ -74,16 +74,16 @@ namespace TWCore.Diagnostics.Status
         /// <param name="name">Name of the value</param>
         /// <param name="value">Value</param>
         /// <param name="status">Value status</param>
-        /// <param name="plotEnabled">Enable to plot</param>
+        /// <param name="plot">Enable to plot</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StatusItemValueItem(string name, object value, StatusItemValueStatus status, bool plotEnabled)
+        public StatusItemValueItem(string name, object value, StatusItemValueStatus status, bool plot)
         {
             Name = name;
             if (value == null)
             {
                 Value = null;
                 Type = StatusItemValueType.Text;
-                plotEnabled = false;
+                plot = false;
             }
             else
             {
@@ -144,12 +144,12 @@ namespace TWCore.Diagnostics.Status
                     default:
                         Type = StatusItemValueType.Text;
                         Value = value.ToString();
-                        plotEnabled = false;
+                        plot = false;
                         break;
                 }
             }
             Status = status;
-            PlotEnabled = plotEnabled;
+            Plot = plot;
         }
         /// <inheritdoc />
         /// <summary>

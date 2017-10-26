@@ -253,6 +253,7 @@
             var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var tout = null;
             var chartData = {};
+            var plotData = {};
             var chartValueId = "";
             var statuses = [null, null];
 
@@ -438,8 +439,59 @@
                 }
             }
 
+            function getPlotValues(items) {
+                var plotValues = {};
+                if (items) {
+                    for (var j = 0; j < items.length; j++) {
+                        var item = items[j];
+                        var pValues = getItemPlotValues(item, null);
+                        for (var propName in pValues)
+                            plotValues[propName] = pValues[propName];
+                    }
+                }
+                return plotValues;
+            }
+            function getItemPlotValues(item, prevName) {
+                var plotValues = {};
+                if (item) {
+                    var currentName = item.name;
+                    if (prevName)
+                        currentName = prevName + " - " + currentName;
+
+                    if (item.values) {
+                        for (var j = 0; j < item.values.length; j++) {
+                            var value = item.values[j];
+                            var valueName = currentName + " - " + value.key;
+                            if (value.plot) {
+                                var valueVal = parseFloat(value.value);
+                                plotValues[value.id] = { name: valueName, value: valueVal };
+                            } else if (value.values) {
+                                for (var x = 0; x < value.values.length; x++) {
+                                    var itemValue = value.values[x];
+                                    if (itemValue.plot) {
+                                        var itemValueVal = parseFloat(itemValue.value);
+                                        plotValues[itemValueVal.id] = { name: valueName + " - " + itemValue.name, value: itemValueVal };
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (item.children) {
+                        for (var j = 0; j < item.children.length; j++) {
+                            var child = item.children[j];
+                            var pValues = getItemPlotValues(child, currentName);
+                            for (var propName in pValues)
+                                plotValues[propName] = pValues[propName];
+                        }
+                    }
+                }
+                return plotValues;
+            }
+
             function retrieveData() {
                 $.ajax({ url: "/json", cache: false }).done(function (data) {
+                    plotData = getPlotValues(data.items);
                     statuses[0] = statuses[1];
                     statuses[1] = data;
 

@@ -47,8 +47,8 @@ namespace TWCore.Net.RPC
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Bytes Sent", BytesSent.ToReadeableBytes(), true);
-                collection.Add("Bytes Received", BytesReceived.ToReadeableBytes(), true);
+                collection.Add("MegaBytes Sent", BytesSent.ToMegabytes(), true);
+                collection.Add("MegaBytes Received", BytesReceived.ToMegabytes(), true);
             });
         }
         #endregion

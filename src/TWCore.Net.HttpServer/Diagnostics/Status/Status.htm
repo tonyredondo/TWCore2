@@ -9,9 +9,9 @@
             html, body {
                 margin: 0px;
                 padding: 0px;
-                font-family: Verdana;
+                font-family: sans-serif;
                 background: #222222;
-                font-size:0.92em;
+                font-size: 1em;
             }
             h2 {
                 font-size: 1.2em;
@@ -47,7 +47,7 @@
             .body {
                 padding:0px;
                 position: absolute;
-                top:256px;
+                top:263px;
                 left:0px;
                 right:0px;
                 bottom:0px;
@@ -58,7 +58,7 @@
                 padding-bottom: 0px;
             }
             .statusItem h2 {
-                font-size: 12px;
+                font-size: 0.7em;
                 background: rgb(54, 54, 54);
                 padding: 5px 10px;
                 cursor: pointer;
@@ -91,14 +91,15 @@
                 width:30%
             }
             .statusItem td {
-                padding: 4px;
+                padding: 5px 20px 5px 5px;
+                height: 28px;
             }
             .statusItem .good {
                 color: #13d013;
                 font-weight: bold;
             }
             .statusItem .ugly {
-                color: #F10B0B;
+                color: #bb2525;
                 font-weight: bold;
             }
             .statusItem .bad {
@@ -110,18 +111,19 @@
                 padding-right:0.5em;
             }
             .statusItem .children {
+                margin:5px 0px 10px;
             }
             .indent {
-                margin: 0px 7px 7px 7px;
+                margin: 0px 7px 4px 7px;
                 border: solid 1px #363636;
             }
             .indent h2 {
                 border-bottom: 0px;
-                font-size:11px;
+                font-size:0.65em;
                 color: #0faaf2;
             }
             .innerStatus {
-                padding: 8px;
+                padding: 4px 7px;
             }
             .charts {
                 padding: 0px;
@@ -211,7 +213,7 @@
             [type="radio"]:not(:checked) + label
             {
                 position: relative;
-                padding-left: 22px;
+                padding-left: 24px;
                 cursor: pointer;
                 line-height: 18px;
                 display: inline-block;
@@ -245,12 +247,38 @@
             [type="radio"]:checked + label:after {
                 opacity: 1;
             }
-            
+            .MultiValue {
+                font-size: 1em !important;
+                float: left !important;
+                margin: 0px 2px !important;
+            }
+            .MultiValue tr {
+                background: transparent !important;
+            }
+            .MultiValue th {
+                height: 24px !important;
+                background: #ccc !important;
+                border-radius: 5px !important;
+            }
+            .MultiValue td {
+                height: 24px !important;
+                padding: 4px 0px 4px 10px !important;
+            }
+            .MultiValue label {
+                padding-left: 0px !important;
+            }
+            label {
+                padding-left: 24px;
+                font-weight: normal;
+                word-wrap: initial;
+                white-space: pre;
+            }
         </style>
         <script>
             var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
             var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
+            var innerValueItem = '<table cellspacing="0" class="MultiValue"><tr><th>{{Radio}}{{Key}}</th></tr><tr><td class="{{status}}">{{Value}}</td></tr></table>';
             var tout = null;
             var plotData = {};
             var chartValueId = "";
@@ -333,7 +361,56 @@
                                 else {
                                     htmlValue = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
                                 }
+                            } else if (val.type == 4 && val.values) {
+                                var htmlInnerValues = [];
+                                for (var k = 0; k < val.values.length; k++) {
+                                    var innerValue = val.values[k];
+                                    if (innerValue) {
+                                        var htmlInnerValue = "";
+                                        var innerStatus = "";
+                                        switch (innerValue.status) {
+                                            case 1:
+                                                innerStatus = "good";
+                                                break;
+                                            case 2:
+                                                innerStatus = "bad";
+                                                break;
+                                            case 3:
+                                                innerStatus = "ugly";
+                                                break;
+                                        }
+                                        if (innerValue.type == 1) {
+                                            htmlInnerValue = innerValue.value;
+                                            var nValue = parseFloat(innerValue.value);
+                                            if (oldVal && oldVal.values) {
+                                                var oldValValue = getValueById(oldVal, innerValue.id);
+                                                if (oldValValue) {
+                                                    var oValue = parseFloat(oldValValue.value);
+                                                    if (oValue != nValue) {
+                                                        var diff = (nValue - oValue).toFixed(2);
+                                                        if (diff < 0)
+                                                            diff = '<span class="diff ugly">&nbsp;(' + diff + ')</span>';
+                                                        else if (diff > 0)
+                                                            diff = '<span class="diff good">&nbsp;(+' + diff + ')</span>';
+                                                        htmlInnerValue += diff;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            htmlInnerValue = innerValue.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                        }
+                                        htmlInnerValues.push(innerValueItem
+                                            .replace("{{Radio}}", innerValue.plot ? "<input type='radio' id='" + innerValue.id + "' name='chartValue' value='" + innerValue.name + "' />" : "")
+                                            .replace("{{Key}}", "<label for='" + innerValue.id + "'>" + innerValue.name + "</label>")
+                                            .replace("{{Value}}", htmlInnerValue)
+                                            .replace("{{status}}", innerStatus)
+                                        );
+                                    }
+                                }
+                                htmlValue = htmlInnerValues.join("");
                             }
+
                             htmlValues.push(valueItem
                                 .replace("{{Radio}}", val.plot ? "<input type='radio' id='" + val.id + "' name='chartValue' value='" + val.key + "' />" : "")
                                 .replace("{{Key}}", "<label for='" + val.id + "'>" + val.key + "</label>")

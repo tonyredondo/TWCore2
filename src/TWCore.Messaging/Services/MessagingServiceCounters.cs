@@ -146,26 +146,34 @@ namespace TWCore.Services
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Process average time in ms", ProcessAverageTime, true);
-                collection.Add("Peak value of process average time in ms", PeakProcessAverageTime, true);
-                collection.Add("Date and time of the peak value of process average time", PeakProcessAverageTimeLastDate);
+                collection.Add("Message process time average",
+                    new StatusItemValueItem("Time (ms)", ProcessAverageTime, true),
+                    new StatusItemValueItem("Peak Time (ms)", PeakProcessAverageTime, true),
+                    new StatusItemValueItem("Peak DateTime", PeakProcessAverageTimeLastDate));
 
-                collection.Add("Process average time on the last minute in ms", LastMinuteProcessAverageTime, true);
-                collection.Add("Peak value of Process average time on the last minute in ms", PeakLastMinuteProcessAverageTime, true);
-                collection.Add("Date and time of the peak value of Process average time on the last minute", PeakLastMinuteProcessAverageTimeLastDate);
+                collection.Add("Message process time average in last minute ",
+                    new StatusItemValueItem("Time (ms)", LastMinuteProcessAverageTime, true),
+                    new StatusItemValueItem("Peak Time (ms)", PeakLastMinuteProcessAverageTime, true),
+                    new StatusItemValueItem("Peak DateTime", PeakLastMinuteProcessAverageTimeLastDate));
 
-                collection.Add("Number of current active processing threads", CurrentMessagesBeingProcessed, true);
-                collection.Add("Peak value of number of active processing threads", PeakCurrentMessagesBeingProcessed, true);
-                collection.Add("Date and time of the peak value of number of active processing threads", PeakCurrentMessagesBeingProcessedLastDate);
-                collection.Add("Number of active processing threads on the last minute", LastMinuteMessagesBeingProcessed, true);
-                collection.Add("Peak value of the number of active processing threads on the last minute", PeakLastMinuteMessagesBeingProcessed, true);
-                collection.Add("Date and time of the peak value of number of active processing threads on the last minute", PeakLastMinuteMessagesBeingProcessedLastDate);
-                collection.Add("Date and time of the last received message", LastMessageDateTime);
-                collection.Add("Date and time of the last process of a message", LastProcessingDateTime);
+                collection.Add("Current active processing threads",
+                    new StatusItemValueItem("Quantity", CurrentMessagesBeingProcessed, true),
+                    new StatusItemValueItem("Peak Quantity", PeakCurrentMessagesBeingProcessed, true),
+                    new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesBeingProcessedLastDate));
 
-                collection.Add("Number of received messages", TotalMessagesReceived, StatusItemValueStatus.Ok, true);
-                collection.Add("Number of processed messages", TotalMessagesProccesed, StatusItemValueStatus.Ok, true);
-                collection.Add("Number of exceptions", TotalExceptions, StatusItemValueStatus.Error, true);
+                collection.Add("Last minute active processed threads",
+                    new StatusItemValueItem("Quantity", LastMinuteMessagesBeingProcessed, true),
+                    new StatusItemValueItem("Peak Quantity", PeakLastMinuteMessagesBeingProcessed, true),
+                    new StatusItemValueItem("Peak DateTime", PeakLastMinuteMessagesBeingProcessedLastDate));
+
+                collection.Add("Last DateTime",
+                    new StatusItemValueItem("Message Received", LastMessageDateTime),
+                    new StatusItemValueItem("Message Processed", LastProcessingDateTime));
+
+                collection.Add("Totals",
+                    new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
+                    new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
+                    new StatusItemValueItem("Exceptions", TotalExceptions, true));
             });
         }
         #endregion

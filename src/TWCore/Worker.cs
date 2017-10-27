@@ -123,10 +123,9 @@ namespace TWCore
 
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(Exceptions) + " Count", Exceptions?.Count);
+                collection.Add(nameof(Exceptions) + " Count", Exceptions?.Count, true);
                 collection.Add("Queue Count", _queue?.Count, true);
                 collection.Add("Status", _status);
-                collection.Add("Started Active", _startActive);
             });
         }
         #endregion

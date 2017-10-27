@@ -16,6 +16,8 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using System.Threading;
+using TWCore.Diagnostics.Status;
+
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Net.RPC
@@ -47,8 +49,9 @@ namespace TWCore.Net.RPC
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("MegaBytes Sent", BytesSent.ToMegabytes(), true);
-                collection.Add("MegaBytes Received", BytesReceived.ToMegabytes(), true);
+                collection.Add("Data Transfer",
+                    new StatusItemValueItem("Megabytes Sent", BytesSent.ToMegabytes(), true),
+                    new StatusItemValueItem("Megabytes Received", BytesReceived.ToMegabytes(), true));
             });
         }
         #endregion

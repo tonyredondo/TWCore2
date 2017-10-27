@@ -142,7 +142,6 @@ namespace TWCore.Diagnostics.Log
                     // ignored
                 }
             }, false);
-            Core.Status.AttachObject(this);
             Core.Status.AttachChild(_itemsWorker, this);
             Core.Status.Attach(() =>
             {
@@ -152,7 +151,16 @@ namespace TWCore.Diagnostics.Log
                 {
                     sItem.Name = $"Last {lItems.Count} error messages";
                     for (var i = 0; i < lItems.Count; i++)
-                        sItem.Values.Add("Error " + i, lItems[i].Message.RemoveInvalidXmlChars() + "\r\nStacktrace:\r\n" + lItems[i].Exception?.StackTrace.RemoveInvalidXmlChars(), StatusItemValueStatus.Error);
+                    {
+                        var item = lItems[i];
+                        sItem.Values.Add("Error " + i, 
+                            new StatusItemValueItem("Date", item.Timestamp),
+                            new StatusItemValueItem("Group", item.GroupName),
+                            new StatusItemValueItem("Type", item.TypeName),
+                            new StatusItemValueItem("Message", item.Message.RemoveInvalidXmlChars()),
+                            new StatusItemValueItem("StackTrace", item.Exception?.StackTrace.RemoveInvalidXmlChars())
+                        );
+                    }
                 }
                 else
                     sItem.Name = "There are no error messages in the log";

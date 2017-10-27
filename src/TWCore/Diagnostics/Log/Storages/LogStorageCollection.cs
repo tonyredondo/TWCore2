@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using TWCore.Diagnostics.Status;
+
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable IntroduceOptionalParameters.Global
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
@@ -46,7 +48,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Items", _items.Select(i => i.Item1 + "[" + i.Item2 + "]").Join(", "));
+                collection.Add("Items", _items.Select(i => new StatusItemValueItem(i.Item1?.ToString(), i.Item2)).ToArray());
             });
         }
         #endregion

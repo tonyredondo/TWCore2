@@ -145,7 +145,6 @@ namespace TWCore.Serialization
                     collection.Add(nameof(DefaultBinarySerializer), DefaultBinarySerializer);
                     collection.Add(nameof(DefaultTextSerializer), DefaultTextSerializer);
                     collection.Add("DefaultKnownTypes Count", DefaultKnownTypes.Count);
-                    collection.Add("Serializers Count", Serializers.Count);
                     collection.Add("Serializers", Serializers.Join(", "));
                     return item;
                 });

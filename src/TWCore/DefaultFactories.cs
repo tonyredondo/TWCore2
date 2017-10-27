@@ -257,58 +257,63 @@ namespace TWCore
         {
             Core.Status.Attach(() =>
             {
-                var sItem = new StatusItem { Name = "Environment Information" };
-                sItem.Values.Add(nameof(Directory.GetCurrentDirectory), Directory.GetCurrentDirectory());
-                sItem.Values.Add(nameof(Environment.MachineName), Environment.MachineName);
-                sItem.Values.Add(nameof(Factory.PlatformType), Factory.PlatformType);
-                sItem.Values.Add(nameof(Environment.ProcessorCount), Environment.ProcessorCount);
-                sItem.Values.Add(nameof(Environment.CommandLine), Environment.CommandLine);
-                sItem.Values.Add(nameof(Environment.Is64BitOperatingSystem), Environment.Is64BitOperatingSystem);
-                sItem.Values.Add(nameof(Environment.Is64BitProcess), Environment.Is64BitProcess);
-                sItem.Values.Add(nameof(Environment.OSVersion), Environment.OSVersion);
-                sItem.Values.Add(nameof(Environment.UserDomainName), Environment.UserDomainName);
-                sItem.Values.Add(nameof(Environment.UserInteractive), Environment.UserInteractive);
-                sItem.Values.Add(nameof(Environment.UserName), Environment.UserName);
-                sItem.Values.Add(nameof(Environment.Version), Environment.Version);
-                sItem.Values.Add(nameof(Environment.WorkingSet) + " in MB", Environment.WorkingSet.ToMegabytes(), true);
-                sItem.Values.Add(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription);
-                sItem.Values.Add(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture);
-                sItem.Values.Add(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription);
-                sItem.Values.Add(nameof(RuntimeInformation.ProcessArchitecture), RuntimeInformation.ProcessArchitecture);
-                sItem.Values.Add("Core Framework Version", Core.FrameworkVersion);
-                sItem.Values.Add("Core Debug Mode", Core.DebugMode);
-                return sItem;
-            });
-            Core.Status.Attach(() =>
-            {
                 var process = Process.GetCurrentProcess();
-                var sItem = new StatusItem { Name = "Process Information" };
-                sItem.Values.Add(nameof(process.BasePriority), process.BasePriority);
-                sItem.Values.Add(nameof(process.Id), process.Id);
-                sItem.Values.Add(nameof(process.MachineName), process.MachineName);
-                sItem.Values.Add(nameof(process.PrivilegedProcessorTime), process.PrivilegedProcessorTime);
-                sItem.Values.Add(nameof(process.ProcessName), process.ProcessName);
-                sItem.Values.Add("RunningTime", Core.Now - process.StartTime);
-                sItem.Values.Add(nameof(process.StartTime), process.StartTime);
-                sItem.Values.Add(nameof(process.Threads) + " Count", process.Threads.Count, true);
-                sItem.Values.Add(nameof(process.TotalProcessorTime), process.TotalProcessorTime);
-                sItem.Values.Add(nameof(process.UserProcessorTime), process.UserProcessorTime);
-                sItem.Values.Add(nameof(process.VirtualMemorySize64) + " in MB", process.VirtualMemorySize64.ToMegabytes(), true);
-                sItem.Values.Add(nameof(process.WorkingSet64) + " in MB", process.WorkingSet64.ToMegabytes(), true);
-                return sItem;
-            });
-            Core.Status.Attach(() =>
-            {
-                var sItem = new StatusItem { Name = "Garbage Collector" };
+
+                var sItem = new StatusItem { Name = "Application Information" };
+                sItem.Values.Add(nameof(Environment.CommandLine), Environment.CommandLine);
+                sItem.Values.Add(nameof(Directory.GetCurrentDirectory), Directory.GetCurrentDirectory());
+
+                sItem.Values.Add("Operating System",
+                    new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
+                    new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
+                    new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
+                    new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture),
+                    new StatusItemValueItem(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription)
+                );
+                sItem.Values.Add("User",
+                    new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
+                    new StatusItemValueItem(nameof(Environment.UserDomainName), Environment.UserDomainName),
+                    new StatusItemValueItem(nameof(Environment.UserInteractive), Environment.UserInteractive),
+                    new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
+                );
+                sItem.Values.Add("Process Information", 
+                    new StatusItemValueItem(nameof(process.Id), process.Id),
+                    new StatusItemValueItem(nameof(RuntimeInformation.ProcessArchitecture), RuntimeInformation.ProcessArchitecture),
+                    new StatusItemValueItem(nameof(process.BasePriority), process.BasePriority),
+                    new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
+                    new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
+                    new StatusItemValueItem(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription)
+                );
+                sItem.Values.Add("Process Times",
+                    new StatusItemValueItem(nameof(process.StartTime), process.StartTime),
+                    new StatusItemValueItem("RunningTime", Core.Now - process.StartTime),
+                    new StatusItemValueItem(nameof(process.UserProcessorTime), process.UserProcessorTime),
+                    new StatusItemValueItem(nameof(process.PrivilegedProcessorTime), process.PrivilegedProcessorTime),
+                    new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime)
+                );
+                sItem.Values.Add("Process Memory",
+                    new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)", Environment.WorkingSet.ToMegabytes(), true),
+                    new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)", process.VirtualMemorySize64.ToMegabytes(), true)
+                );
+
                 var maxGen = GC.MaxGeneration;
-                sItem.Values.Add("Max Generation", maxGen);
+                var lstGc = new List<StatusItemValueItem> { new StatusItemValueItem("Max Generation", maxGen) };
                 for (var i = 0; i <= maxGen; i++)
-                {
-                    sItem.Values.Add("Collection Count Gen " + i, GC.CollectionCount(i));
-                }
-                sItem.Values.Add("Memory allocated in MB", GC.GetTotalMemory(false).ToMegabytes(), true);
-                sItem.Values.Add("Is Server GC", GCSettings.IsServerGC);
-                sItem.Values.Add("Latency Mode", GCSettings.LatencyMode);
+                    lstGc.Add(new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true));
+                lstGc.Add(new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(), true));
+                lstGc.Add(new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC));
+                lstGc.Add(new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode));
+                sItem.Values.Add("Garbage Collector", lstGc.ToArray());
+
+                sItem.Values.Add("Core Framework",
+                    new StatusItemValueItem("Version", Core.FrameworkVersion),
+                    new StatusItemValueItem("Debug Mode", Core.DebugMode),
+                    new StatusItemValueItem("Environment", Core.EnvironmentName),
+                    new StatusItemValueItem("MachineName", Core.MachineName),
+                    new StatusItemValueItem("ApplicationName", Core.ApplicationName),
+                    new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
+                );
+
                 return sItem;
             });
         }

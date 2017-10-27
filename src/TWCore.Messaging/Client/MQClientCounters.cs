@@ -38,53 +38,43 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Number of messages Sent
         /// </summary>
-        [StatusProperty("Number of messages sent", true)]
         public long MessagesSent { get; private set; }
         /// <summary>
         /// Number of messages sent in the last minute
         /// </summary>
-        [StatusProperty("Number of messages sent in the last minute", true)]
         public long LastMinuteMessagesSent { get; private set; }
         /// <summary>
         /// Number of messages sent in the last ten minutes
         /// </summary>
-        [StatusProperty("Number of messages sent in the last ten minutes", true)]
         public long LastTenMinutesMessagesSent { get; private set; }
         /// <summary>
         /// Number of messages sent in the last twenty minutes
         /// </summary>
-        [StatusProperty("Number of messages sent in the last twenty minutes", true)]
         public long LastTwentyMinutesMessagesSent { get; private set; }
         /// <summary>
         /// Number of messages sent in the last thirty minutes
         /// </summary>
-        [StatusProperty("Number of messages sent in the last thirty minutes", true)]
         public long LastThirtyMinutesMessagesSent { get; private set; }
 
         /// <summary>
         /// Number of messages received
         /// </summary>
-        [StatusProperty("Number of messages received", true)]
         public long MessagesReceived { get; private set; }
         /// <summary>
         /// Number of messages received in the last minute
         /// </summary>
-        [StatusProperty("Number of messages received in the last minute", true)]
         public long LastMinuteMessagesReceived { get; private set; }
         /// <summary>
         /// Number of messages received in the last ten minutes
         /// </summary>
-        [StatusProperty("Number of messages received in the last ten minutes", true)]
         public long LastTenMinutesMessagesReceived { get; private set; }
         /// <summary>
         /// Number of messages received in the last twenty minutes
         /// </summary>
-        [StatusProperty("Number of messages received in the last twenty minutes", true)]
         public long LastTwentyMinutesMessagesReceived { get; private set; }
         /// <summary>
         /// Number of messages received in the last thirty minutes
         /// </summary>
-        [StatusProperty("Number of messages received in the last thirty minutes", true)]
         public long LastThirtyMinutesMessagesReceived { get; private set; }
 
         /// <summary>
@@ -142,8 +132,23 @@ namespace TWCore.Messaging.Client
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Total network time", TimeSpan.FromMilliseconds(TotalNetworkTime));
-                collection.Add("Total receiving time", TimeSpan.FromMilliseconds(TotalReceivingTime));
+                collection.Add("Number of messages sent",
+                    new StatusItemValueItem("Last Minute", LastMinuteMessagesSent, true),
+                    new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesSent, true),
+                    new StatusItemValueItem("Last 20 Minutes", LastTwentyMinutesMessagesSent, true),
+                    new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesSent, true),
+                    new StatusItemValueItem("Total", MessagesSent, true));
+
+                collection.Add("Number of messages received",
+                    new StatusItemValueItem("Last Minute", LastMinuteMessagesReceived, true),
+                    new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesReceived, true),
+                    new StatusItemValueItem("Last 20 Minutes", LastTwentyMinutesMessagesReceived, true),
+                    new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesReceived, true),
+                    new StatusItemValueItem("Total", MessagesReceived, true));
+
+                collection.Add("Total Time",
+                    new StatusItemValueItem("Network Time (ms)", TimeSpan.FromMilliseconds(TotalNetworkTime), true),
+                    new StatusItemValueItem("Receiving Time (ms)", TimeSpan.FromMilliseconds(TotalReceivingTime), true));
             });
         }
         #endregion

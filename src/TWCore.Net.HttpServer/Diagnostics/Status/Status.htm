@@ -60,7 +60,7 @@
             .statusItem h2 {
                 font-size: 0.7em;
                 background: rgb(54, 54, 54);
-                padding: 5px 10px;
+                padding: 6px 10px;
                 cursor: pointer;
                 color: #eaeaea;
                 border-bottom: 1px solid #222222;
@@ -75,6 +75,7 @@
                 table-layout: fixed;
                 word-wrap: break-word;
                 padding: 0em;
+                letter-spacing: 0.3px;
             }
             .statusItem tr:nth-child(odd) {
                 background-color: #616161;
@@ -91,8 +92,17 @@
                 width:30%
             }
             .statusItem td {
+                padding: 5px 10px;
+                height: 30px;
+                border-bottom: solid 1px #222222;
+            }
+            .statusItem .tdKey {
+                background-color: #24303c;
+                color: #ccc !important;
+                border-bottom: solid 1px #222222;
+                border-right: solid 1px #222222;
+                min-width: 170px;
                 padding: 5px 20px 5px 5px;
-                height: 28px;
             }
             .statusItem .good {
                 color: #13d013;
@@ -251,19 +261,21 @@
                 font-size: 1em !important;
                 float: left !important;
                 background: #222;
+                margin: 2px -2px;
+                padding: 1px !important;
             }
             .MultiValue tr {
                 background: transparent !important;
             }
             .MultiValue th {
                 height: 24px !important;
-                background: #ccc !important;
-                padding: 0px 15px !important;
-                border: solid 1px #222222;
+                background: #25303c !important;
+                padding: 0px 20px !important;
+                color: #ccc;
             }
             .MultiValue td {
                 height: 24px !important;
-                padding: 5px !important;
+                padding: 5px 10px !important;
                 text-align: center !important;
                 font-weight: bold;
             }
@@ -280,7 +292,7 @@
         <script>
             var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
-            var valueItem = '<tr><td>{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
+            var valueItem = '<tr><td class="tdKey">{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var innerValueItem = '<table cellspacing="0" class="MultiValue"><tr><th>{{Radio}}{{Key}}</th></tr><tr><td class="{{status}}">{{Value}}</td></tr></table>';
             var tout = null;
             var plotData = {};
@@ -401,7 +413,10 @@
                                             }
                                         }
                                         else {
-                                            htmlInnerValue = innerValue.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                            if (innerValue.value)
+                                                htmlInnerValue = innerValue.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                            else
+                                                htmlInnerValue = "(null)";
                                         }
                                         htmlInnerValues.push(innerValueItem
                                             .replace("{{Radio}}", innerValue.plot ? "<input type='radio' id='" + innerValue.id + "' name='chartValue' value='" + innerValue.name + "' />" : "")
@@ -412,6 +427,9 @@
                                     }
                                 }
                                 htmlValue = htmlInnerValues.join("");
+                            }
+                            else {
+                                htmlValue = "(null)";
                             }
 
                             htmlValues.push(valueItem

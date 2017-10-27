@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using TWCore.Diagnostics.Status;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Cache.Client
@@ -153,34 +155,19 @@ namespace TWCore.Cache.Client
             {
                 collection.SortValues = false;
 
-                collection.Add("Calls to exist key method", ExistKeyCalls, true);
-                collection.Add("Calls to get method", GetCalls, true);
-                collection.Add("Calls to get by tag method", GetByTagCalls, true);
-                collection.Add("Calls to get creation date method", GetCreationDateCalls, true);
-                collection.Add("Calls to get expiration date method", GetExpirationDateCalls, true);
-                collection.Add("Calls to get keys method", GetKeysCalls, true);
-                collection.Add("Calls to get meta method", GetMetaCalls, true);
-                collection.Add("Calls to get meta by tag method", GetMetaByTagCalls, true);
-                collection.Add("Calls to get or set method", GetOrSetCalls, true);
-                collection.Add("Calls to remove method", RemoveCalls, true);
-                collection.Add("Calls to remove by tag method", RemoveByTagCalls, true);
-                collection.Add("Calls to set method", SetCalls, true);
-                collection.Add("Calls to update data method", UpdateDataCalls, true);
-
-                //
-                collection.Add("Average time on milliseconds of ExistKey execution", ExistKeyAverageTime, true);
-                collection.Add("Average time on milliseconds of Get execution", GetAverageTime, true);
-                collection.Add("Average time on milliseconds of GetByTag execution", GetByTagAverageTime, true);
-                collection.Add("Average time on milliseconds of GetCreationDate execution", GetCreationDateAverageTime, true);
-                collection.Add("Average time on milliseconds of GetExpirationDate execution", GetExpirationDateAverageTime, true);
-                collection.Add("Average time on milliseconds of GetKeys execution", GetKeysAverageTime, true);
-                collection.Add("Average time on milliseconds of GetMeta execution", GetMetaAverageTime, true);
-                collection.Add("Average time on milliseconds of GetMetaByTag execution", GetMetaByTagAverageTime, true);
-                collection.Add("Average time on milliseconds of GetOrSet execution", GetOrSetAverageTime, true);
-                collection.Add("Average time on milliseconds of Remove execution", RemoveAverageTime, true);
-                collection.Add("Average time on milliseconds of RemoveByTag execution", RemoveByTagAverageTime, true);
-                collection.Add("Average time on milliseconds of Set execution", SetAverageTime, true);
-                collection.Add("Average time on milliseconds of UpdateData execution", UpdateDataAverageTime, true);
+                collection.Add("ExistKey Method", new StatusItemValueItem("Calls", ExistKeyCalls, true), new StatusItemValueItem("Average time (ms)", ExistKeyAverageTime, true));
+                collection.Add("Get Method", new StatusItemValueItem("Calls", GetCalls, true), new StatusItemValueItem("Average time (ms)", GetAverageTime, true));
+                collection.Add("GetByTag Method", new StatusItemValueItem("Calls", GetByTagCalls, true), new StatusItemValueItem("Average time (ms)", GetByTagAverageTime, true));
+                collection.Add("GetCreationDate Method", new StatusItemValueItem("Calls", GetCreationDateCalls, true), new StatusItemValueItem("Average time (ms)", GetCreationDateAverageTime, true));
+                collection.Add("GetExpirationDate Method", new StatusItemValueItem("Calls", GetExpirationDateCalls, true), new StatusItemValueItem("Average time (ms)", GetExpirationDateAverageTime, true));
+                collection.Add("GetKeys Method", new StatusItemValueItem("Calls", GetKeysCalls, true), new StatusItemValueItem("Average time (ms)", GetKeysAverageTime, true));
+                collection.Add("GetMeta Method", new StatusItemValueItem("Calls", GetMetaCalls, true), new StatusItemValueItem("Average time (ms)", GetMetaAverageTime, true));
+                collection.Add("GetMetaByTag Method", new StatusItemValueItem("Calls", GetMetaByTagCalls, true), new StatusItemValueItem("Average time (ms)", GetMetaByTagAverageTime, true));
+                collection.Add("GetOrSet Method", new StatusItemValueItem("Calls", GetOrSetCalls, true), new StatusItemValueItem("Average time (ms)", GetOrSetAverageTime, true));
+                collection.Add("Remove Method", new StatusItemValueItem("Calls", RemoveCalls, true), new StatusItemValueItem("Average time (ms)", RemoveAverageTime, true));
+                collection.Add("RemoveByTag Method", new StatusItemValueItem("Calls", RemoveByTagCalls, true), new StatusItemValueItem("Average time (ms)", RemoveByTagAverageTime, true));
+                collection.Add("Set Method", new StatusItemValueItem("Calls", SetCalls, true), new StatusItemValueItem("Average time (ms)", SetAverageTime, true));
+                collection.Add("Update Method", new StatusItemValueItem("Calls", UpdateDataCalls, true), new StatusItemValueItem("Average time (ms)", UpdateDataAverageTime, true));
             });
         }
         #endregion

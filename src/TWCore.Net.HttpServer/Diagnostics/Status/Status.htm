@@ -313,6 +313,37 @@
                         if (item.values[i].id == id)
                             return item.values[i];
             }
+            function findItemById(items, id) {
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].id == id) {
+                            return items[i];
+                        } else if (items[i].children.length > 0) {
+                            var value = findItemById(items[i].children);
+                            if (value != null)
+                                return value;
+                        }
+                    }
+                }
+                return null;
+            }
+            function removeOldItems(oldItems, newItems) {
+                if (oldItems == null || oldItems === undefined)
+                    oldItems = statuses[0] ? statuses[0].items : null;
+                if (newItems == null || newItems === undefined)
+                    newItems = statuses[1] ? statuses[1].items : null;
+                if (oldItems && newItems) {
+                    for (var i = 0; i < oldItems.length; i++) {
+                        var oldItem = oldItems[i];
+                        var newItem = findItemById(newItems, oldItem.id);
+                        if (newItem == null) {
+                            $("#" + oldItem.id).remove();
+                        } else if (oldItem.children && newItem.children) {
+                            removeOldItems(oldItem.children, newItem.children);
+                        }
+                    }
+                }
+            }
             
             function addItems(parentElement, items, depth, itemidx, oldItems)
             {
@@ -550,9 +581,10 @@
             }
             function retrieveData() {
                 $.ajax({ url: "/json", cache: false }).done(function (data) {
-                    getPlotValues(data.items);
                     statuses[0] = statuses[1];
                     statuses[1] = data;
+                    getPlotValues(data.items);
+                    removeOldItems();
 
                     if (data.applicationDisplayName) {
                         $("#appName").html(data.applicationDisplayName + " (" + data.applicationName + ")");

@@ -625,41 +625,120 @@ namespace TWCore.Diagnostics.Status
             }
         }
 
+
+
+
+        private sealed class StatusContainerCollection
+        {
+            private readonly object _locker = new object();
+            private readonly List<StatusContainer> _statusList = new List<StatusContainer>();
+
+            
+        }
         private sealed class StatusContainer
         {
+            public static readonly object Root = new object();
+            private readonly object _locker = new object();
             private WeakReference<object> _object;
             private WeakReference<object> _parent;
-            private readonly List<Action<StatusItemValuesCollection>> _lstStatusValueCollection = new List<Action<StatusItemValuesCollection>>();
-            private readonly List<Func<StatusItem>> _lstStatusItem = new List<Func<StatusItem>>();
+            private readonly List<WeakDelegate.WeakAction<StatusItemValuesCollection>> _lstStatusValueCollection = new List<WeakDelegate.WeakAction<StatusItemValuesCollection>>();
+            private readonly List<WeakDelegate.WeakFunc<StatusItem>> _lstStatusItem = new List<WeakDelegate.WeakFunc<StatusItem>>();
             
             #region Properties
             public object Object
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _object.TryGetTarget(out var item) ? item : null;
+                get => _object == null ? Root : _object.TryGetTarget(out var item) ? item : null;
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set
                 {
-                    if (value is WeakReference<object> reference)
-                        _object = reference;
-                    else
-                        _object = new WeakReference<object>(value);
+                    switch (value)
+                    {
+                        case null:
+                            _object = null;
+                            break;
+                        case WeakReference<object> reference:
+                            _object = reference;
+                            break;
+                        default:
+                            _object = new WeakReference<object>(value);
+                            break;
+                    }
                 } 
             }
             public object Parent
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _parent.TryGetTarget(out var item) ? item : null;
+                get => _parent == null ? null : _parent.TryGetTarget(out var item) ? item : null;
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 set
                 {
-                    if (value is WeakReference<object> reference)
-                        _parent = reference;
-                    else
-                        _parent = new WeakReference<object>(value);
+                    switch (value)
+                    {
+                        case null:
+                            _parent = null;
+                            break;
+                        case WeakReference<object> reference:
+                            _parent = reference;
+                            break;
+                        default:
+                            _parent = new WeakReference<object>(value);
+                            break;
+                    }
                 } 
             }
             #endregion
+
+            #region Public Methods
+            public void AddStatusItemDelegate(Func<StatusItem> statusItemFunc)
+            {
+                var wCreate = WeakDelegate.Create(statusItemFunc);
+                lock (_locker)
+                    _lstStatusItem.Add(wCreate);
+            }
+            public void AddStatusItemValuesCollection(Action<StatusItemValuesCollection> statusItemValuesAction)
+            {
+                var wCreate = WeakDelegate.Create(statusItemValuesAction);
+                lock(_locker)
+                    _lstStatusValueCollection.Add(wCreate);
+            }
+            public List<StatusItem> GetStatusItems()
+            {
+                var lstStatuses = new List<StatusItem>();
+                lock (_locker)
+                {
+                    if (Object == null) return lstStatuses;
+                    var results = _lstStatusItem
+                        .Select(s => s())
+                        .Where(r => r.Ran)
+                        .Select(s => s.Result)
+                        .Concat(_lstStatusValueCollection.Select(s => 
+                        {
+                            var item = new StatusItem();
+                            s(item.Values);
+                            return item;
+                        }))
+                        .GroupBy(s => s.Name)
+                        .Select(s =>
+                        {
+                            var value = s.SelectMany(i => i.Values).ToArray();
+                            var children = s.SelectMany(i => i.Children).ToArray();
+                            return new StatusItem
+                            {
+                                Name = s.Key,
+                                Values = new StatusItemValuesCollection(value),
+                                Children = new List<StatusItem>(children)
+                            };
+                        }).ToArray();
+                    var nullItem = results.FirstOrDefault(s => s.Name == null);
+                    if (nullItem != null)
+                        nullItem.Name = Object?.GetType().Name;
+                    lstStatuses.AddRange(results);
+                }
+                return lstStatuses;
+            }
+            #endregion
+            
         }
         #endregion
 

@@ -31,6 +31,18 @@ namespace TWCore.Diagnostics.Status
         /// </summary>
         public StatusItem Parent { get; set; }
         /// <summary>
+        /// Sort values
+        /// </summary>
+        public bool SortValues { get; set; } = true;
+
+        public StatusItemValuesCollection()
+        {
+        }
+        public StatusItemValuesCollection(IEnumerable<StatusItemValue> col) : base(col)
+        {
+        }
+        
+        /// <summary>
         /// Adds a new item value
         /// </summary>
         /// <param name="key">Key of the value</param>
@@ -85,9 +97,5 @@ namespace TWCore.Diagnostics.Status
         public void AddError(string key, object value, bool plotEnabled = false)
             => Add(key, value, StatusItemValueStatus.Error, plotEnabled);
 
-        /// <summary>
-        /// Sort values
-        /// </summary>
-        public bool SortValues { get; set; } = true;
     }
 }

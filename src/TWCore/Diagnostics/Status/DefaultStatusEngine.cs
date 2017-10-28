@@ -24,6 +24,7 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices.ComTypes;
 using TWCore.Reflection;
 using TWCore.Security;
 
@@ -165,7 +166,7 @@ namespace TWCore.Diagnostics.Status
         public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
         {
             if (statusItemDelegate == null) return;
-            var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : statusItemDelegate;
+            var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : () => (true, statusItemDelegate());
             lock (_statusItemsDelegates)
                 _statusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
             AttachChild(null, parent);
@@ -273,7 +274,7 @@ namespace TWCore.Diagnostics.Status
                 return _statusItemsDelegates.Select(i =>
                 {
                     var sw = Stopwatch.StartNew();
-                    var val = Try.Do(i.Function);
+                    var val = Try.Do(()=> i.Function().Result);
                     sw.Stop();
                     if (val == null) return null;
                     val.ObjRef = i.Parent;
@@ -459,7 +460,11 @@ namespace TWCore.Diagnostics.Status
             public StatusDelegateAttributeItem(object obj)
             {
                 WeakObject = new WeakReference<object>(obj);
-                Action = ActionMethod;
+                Action = (col) => 
+                { 
+                    ActionMethod(col);
+                    return true;
+                };
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void ActionMethod(StatusItemValuesCollection col)
@@ -528,7 +533,7 @@ namespace TWCore.Diagnostics.Status
         private class StatusDelegateItem
         {
             public WeakReference<object> WeakObject { get; set; }
-            public Action<StatusItemValuesCollection> Action { get; set; }
+            public WeakDelegate.WeakAction<StatusItemValuesCollection> Action { get; set; }
 
             public object Object
             {
@@ -544,7 +549,7 @@ namespace TWCore.Diagnostics.Status
         private class StatusItemsDelegateItem
         {
             public WeakReference<object> WeakParent { get; set; }
-            public Func<StatusItem> Function { get; set; }
+            public WeakDelegate.WeakFunc<StatusItem> Function { get; set; }
 
             public object Parent
             {
@@ -618,6 +623,43 @@ namespace TWCore.Diagnostics.Status
                     objs.Concat(child.GetAllObjectsInHierarchy());
                 return objs;
             }
+        }
+
+        private sealed class StatusContainer
+        {
+            private WeakReference<object> _object;
+            private WeakReference<object> _parent;
+            private readonly List<Action<StatusItemValuesCollection>> _lstStatusValueCollection = new List<Action<StatusItemValuesCollection>>();
+            private readonly List<Func<StatusItem>> _lstStatusItem = new List<Func<StatusItem>>();
+            
+            #region Properties
+            public object Object
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _object.TryGetTarget(out var item) ? item : null;
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                set
+                {
+                    if (value is WeakReference<object> reference)
+                        _object = reference;
+                    else
+                        _object = new WeakReference<object>(value);
+                } 
+            }
+            public object Parent
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _parent.TryGetTarget(out var item) ? item : null;
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                set
+                {
+                    if (value is WeakReference<object> reference)
+                        _parent = reference;
+                    else
+                        _parent = new WeakReference<object>(value);
+                } 
+            }
+            #endregion
         }
         #endregion
 

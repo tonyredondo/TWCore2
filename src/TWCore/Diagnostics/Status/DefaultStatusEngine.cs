@@ -21,6 +21,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -633,7 +634,32 @@ namespace TWCore.Diagnostics.Status
             private readonly object _locker = new object();
             private readonly List<StatusContainer> _statusList = new List<StatusContainer>();
 
-            
+            public void Add(object target, Func<StatusItem> func, object parent)
+            {
+                lock (_locker)
+                {
+                    var sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                    if (sItem == null)
+                    {
+                        sItem = new StatusContainer {Object = target, Parent = parent};
+                        _statusList.Add(sItem);
+                    }
+                    sItem.AddStatusItemDelegate(func);
+                }
+            }
+            public void Add(object target, Action<StatusItemValuesCollection> action, object parent)
+            {
+                lock (_locker)
+                {
+                    var sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                    if (sItem == null)
+                    {
+                        sItem = new StatusContainer {Object = target, Parent = parent};
+                        _statusList.Add(sItem);
+                    }
+                    sItem.AddStatusItemValuesCollection(action);
+                }
+            }
         }
         private sealed class StatusContainer
         {

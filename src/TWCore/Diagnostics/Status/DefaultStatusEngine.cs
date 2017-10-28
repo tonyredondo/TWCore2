@@ -636,28 +636,43 @@ namespace TWCore.Diagnostics.Status
 
             public void Add(object target, Func<StatusItem> func, object parent)
             {
+                StatusContainer sItem;
                 lock (_locker)
                 {
-                    var sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                    sItem = _statusList.FirstOrDefault(s => s.Object == target);
                     if (sItem == null)
                     {
                         sItem = new StatusContainer {Object = target, Parent = parent};
                         _statusList.Add(sItem);
                     }
-                    sItem.AddStatusItemDelegate(func);
                 }
+                sItem.AddStatusItemDelegate(func);
+                func();
             }
             public void Add(object target, Action<StatusItemValuesCollection> action, object parent)
             {
+                StatusContainer sItem;
                 lock (_locker)
                 {
-                    var sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                    sItem = _statusList.FirstOrDefault(s => s.Object == target);
                     if (sItem == null)
                     {
                         sItem = new StatusContainer {Object = target, Parent = parent};
                         _statusList.Add(sItem);
                     }
-                    sItem.AddStatusItemValuesCollection(action);
+                }
+                sItem.AddStatusItemValuesCollection(action);
+                var sI = new StatusItem();
+                action(sI.Values);
+            }
+
+            public void GetStatus()
+            {
+                lock (_locker)
+                {
+                    var values = _statusList.Where(s => s.Object != null).Select(s => (s.Object, s.GetStatusItems(), s.Parent))
+                        .ToArray();
+                    
                 }
             }
         }

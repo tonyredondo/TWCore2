@@ -670,7 +670,9 @@ namespace TWCore.Diagnostics.Status
             {
                 lock (_locker)
                 {
-                    var values = _statusList.Where(s => s.Object != null).Select(s => (s.Object, s.GetStatusItems(), s.Parent))
+                    var values = _statusList
+                        .Where(s => s.Object != null)
+                        .Select(s => (s.Object, s.GetStatusItems(), s.Parent))
                         .ToArray();
                     
                 }

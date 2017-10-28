@@ -515,8 +515,8 @@
                     mChartData.datasets[0].data = null;
                     var initial = 0;
                     if (cValues.length > 0) initial = cValues[0];
-                    if (cValues.length < 50)
-                        cValues = new Array(50 - cValues.length).fill(initial).concat(cValues);
+                    if (cValues.length < 60)
+                        cValues = new Array(60 - cValues.length).fill(initial).concat(cValues);
                     for (var i = 0; i < cValues.length; i++) {
                         mChartData.labels.push(parseInt(cValues[i]));
                     }
@@ -547,7 +547,7 @@
                                 var valueVal = parseFloat(value.value);
                                 if (plotData[value.id]) {
                                     plotData[value.id].values.push(valueVal);
-                                    if (plotData[value.id].values.length == 50)
+                                    if (plotData[value.id].values.length == 60)
                                         plotData[value.id].values.shift();
                                 }
                                 else
@@ -560,7 +560,7 @@
                                         var itemValueVal = parseFloat(itemValue.value);
                                         if (plotData[itemValue.id]) {
                                             plotData[itemValue.id].values.push(itemValueVal);
-                                            if (plotData[itemValue.id].values.length == 50)
+                                            if (plotData[itemValue.id].values.length == 60)
                                                 plotData[itemValue.id].values.shift();
                                         }
                                         else

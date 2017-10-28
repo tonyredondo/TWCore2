@@ -282,6 +282,7 @@ namespace TWCore
                     new StatusItemValueItem(nameof(process.BasePriority), process.BasePriority),
                     new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
                     new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
+                    new StatusItemValueItem("Handles", process.HandleCount, true),
                     new StatusItemValueItem(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription)
                 );
                 sItem.Values.Add("Process Times",
@@ -293,6 +294,9 @@ namespace TWCore
                 );
                 sItem.Values.Add("Process Memory",
                     new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)", Environment.WorkingSet.ToMegabytes(), true),
+                    new StatusItemValueItem(nameof(process.PrivateMemorySize64) + " (MB)", process.PrivateMemorySize64.ToMegabytes(), true),
+                    new StatusItemValueItem(nameof(process.PagedMemorySize64) + " (MB)", process.PagedMemorySize64.ToMegabytes(), true),
+                    new StatusItemValueItem(nameof(process.NonpagedSystemMemorySize64) + " (MB)", process.NonpagedSystemMemorySize64.ToMegabytes(), true),
                     new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)", process.VirtualMemorySize64.ToMegabytes(), true)
                 );
 

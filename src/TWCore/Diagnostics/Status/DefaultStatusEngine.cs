@@ -24,6 +24,7 @@ using System.Collections.Specialized;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.ComTypes;
 using TWCore.Reflection;
@@ -46,6 +47,7 @@ namespace TWCore.Diagnostics.Status
         private readonly List<StatusDelegateItem> _statusValuesDelegates = new List<StatusDelegateItem>();
         private readonly ObjectHierarchyCollection _objectsHierarchy = new ObjectHierarchyCollection();
         private readonly List<WeakReference> _deattachList = new List<WeakReference>();
+        private readonly StatusContainerCollection _statusCollection = new StatusContainerCollection();
         //bool applyProperties = false;
 
         #region Properties
@@ -166,6 +168,8 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
         {
+            _statusCollection.Add(parent, statusItemDelegate, null);
+            //
             if (statusItemDelegate == null) return;
             var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : () => (true, statusItemDelegate());
             lock (_statusItemsDelegates)
@@ -181,6 +185,8 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
         {
+            _statusCollection.Add(objectToAttach, valuesFillerDelegate, null);
+            //
             if (valuesFillerDelegate == null) return;
             objectToAttach = objectToAttach ?? valuesFillerDelegate.Target;
             var weakAction = WeakDelegate.Create(valuesFillerDelegate);
@@ -313,6 +319,8 @@ namespace TWCore.Diagnostics.Status
             if (!Enabled)
                 return null;
 
+            _statusCollection.GetStatus();
+            
             lock (this)
             {
                 var sw = Stopwatch.StartNew();

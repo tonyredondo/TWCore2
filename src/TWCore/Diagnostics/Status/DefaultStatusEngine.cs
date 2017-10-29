@@ -656,6 +656,8 @@ namespace TWCore.Diagnostics.Status
                 StatusContainer sItem;
                 lock (_locker)
                 {
+                    if (parent != null && _statusList.FirstOrDefault(s => s.Object == parent) == null)
+                        _statusList.Add(new StatusContainer { Object = parent });
                     sItem = _statusList.FirstOrDefault(s => s.Object == target);
                     if (sItem == null)
                     {
@@ -671,6 +673,8 @@ namespace TWCore.Diagnostics.Status
                 StatusContainer sItem;
                 lock (_locker)
                 {
+                    if (parent != null && _statusList.FirstOrDefault(s => s.Object == parent) == null)
+                        _statusList.Add(new StatusContainer { Object = parent });
                     sItem = _statusList.FirstOrDefault(s => s.Object == target);
                     if (sItem == null)
                     {
@@ -687,10 +691,12 @@ namespace TWCore.Diagnostics.Status
                 StatusContainer sItem;
                 lock (_locker)
                 {
+                    if (parent != null && _statusList.FirstOrDefault(s => s.Object == parent) == null)
+                        _statusList.Add(new StatusContainer { Object = parent });
                     sItem = _statusList.FirstOrDefault(s => s.Object == target);
                     if (sItem == null)
                     {
-                        sItem = new StatusContainer {Object = target, Parent = parent};
+                        sItem = new StatusContainer { Object = target, Parent = parent };
                         _statusList.Add(sItem);
                     }
                 }
@@ -713,7 +719,6 @@ namespace TWCore.Diagnostics.Status
                     var roots = values.Where(i => i.Parent == null).ToArray();
                     foreach(var root in values)
                         CreateTree(root, values);
-                    
                 }
 
                 void CreateTree(StatusData status, IEnumerable<StatusData> data)

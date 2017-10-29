@@ -171,6 +171,7 @@ namespace TWCore.Diagnostics.Status
             if (statusItemDelegate == null) return;
             //
             _statusCollection.Add(statusItemDelegate.Target, statusItemDelegate, parent != statusItemDelegate.Target ? parent : null);
+            //_statusCollection.Add(statusItemDelegate.Target, statusItemDelegate, parent);
             //
             var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : () => (true, statusItemDelegate());
             lock (_statusItemsDelegates)
@@ -715,11 +716,12 @@ namespace TWCore.Diagnostics.Status
                     
                 }
 
-                void CreateTree(StatusData status, StatusData[] data)
+                void CreateTree(StatusData status, IEnumerable<StatusData> data)
                 {
-                    status.Children.AddRange(data.Where(d => d.Parent == status.Object));
+                    (var equalSet, var notEqualSet) = data.Split(item => item.Parent == status.Object);
+                    status.Children.AddRange(equalSet.Where(s => s != status));
                     foreach (var st in status.Children)
-                        CreateTree(st, data);
+                        CreateTree(st, notEqualSet);
                 }
             }
 

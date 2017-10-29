@@ -496,7 +496,21 @@ namespace TWCore
 		/// <param name="value">Values to add to the IEnumerable</param>
 		/// <returns>IEnumerable with the values concatenated</returns>
 		public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, params T[] value) => enumerable.Concat((IEnumerable<T>)value);
-
+		/// <summary>
+		/// Split the IEnumerable in two sets using a predicate.
+		/// </summary>
+		/// <typeparam name="T">Type of the IEnumerable</typeparam>
+		/// <param name="enumerable">IEnumerable source object</param>
+		/// <param name="separatorPredicate">Predicate to separete the IEnumerable in two sets</param>
+		/// <returns>Tuple of two IEnumerable from the split of the IEnumerable using the predicate</returns>
+		public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> enumerable,
+			Predicate<T> separatorPredicate)
+		{
+			var groups = enumerable.GroupBy(item => separatorPredicate(item)).ToArray();
+			return (groups.FirstOrDefault(g => g.Key)?.ToReadOnly() ?? new T[0], 
+				groups.FirstOrDefault(g => !g.Key)?.ToReadOnly() ?? new T[0]);
+		}
+		
         #region SymmetricExceptWith
         /// <summary>
         /// Returns a new IEnumerable containing only elements that are present either in that object or in the specified collection, but not both.

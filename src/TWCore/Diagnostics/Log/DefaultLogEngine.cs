@@ -143,6 +143,7 @@ namespace TWCore.Diagnostics.Log
                 }
             }, false);
             Core.Status.AttachChild(_itemsWorker, this);
+            Core.Status.AttachChild(_lastLogItemsWorker, this);
             Core.Status.Attach(() =>
             {
                 var sItem = new StatusItem();

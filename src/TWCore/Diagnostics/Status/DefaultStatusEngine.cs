@@ -168,9 +168,10 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
         {
-            _statusCollection.Add(parent, statusItemDelegate, null);
-            //
             if (statusItemDelegate == null) return;
+            //
+            _statusCollection.Add(statusItemDelegate.Target, statusItemDelegate, parent != statusItemDelegate.Target ? parent : null);
+            //
             var weakFunc = parent != null ? WeakDelegate.Create(statusItemDelegate) : () => (true, statusItemDelegate());
             lock (_statusItemsDelegates)
                 _statusItemsDelegates.Add(new StatusItemsDelegateItem { Function = weakFunc, WeakParent = parent != null ? new WeakReference<object>(parent) : null });
@@ -185,10 +186,11 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
         {
-            _statusCollection.Add(objectToAttach, valuesFillerDelegate, null);
-            //
             if (valuesFillerDelegate == null) return;
             objectToAttach = objectToAttach ?? valuesFillerDelegate.Target;
+
+            _statusCollection.Add(objectToAttach, valuesFillerDelegate, null);
+            //
             var weakAction = WeakDelegate.Create(valuesFillerDelegate);
             lock (_statusValuesDelegates)
                 _statusValuesDelegates.Add(new StatusDelegateItem
@@ -207,6 +209,7 @@ namespace TWCore.Diagnostics.Status
         {
             if (objectToAttach != null)
             {
+                _statusCollection.Add(objectToAttach, null);
                 BindPropertiesFromAnObject(objectToAttach);
             }
         }
@@ -220,6 +223,9 @@ namespace TWCore.Diagnostics.Status
         public void AttachChild(object childObject, object parent)
         {
             if (parent == null) return;
+            if (childObject != parent)
+                _statusCollection.Add(childObject, parent);
+            
             lock (_objectsHierarchy)
             {
                 var objParent = _objectsHierarchy.FindParent(parent);
@@ -255,6 +261,8 @@ namespace TWCore.Diagnostics.Status
         public void DeAttachObject(object objectToDeattach)
         {
             if (objectToDeattach == null) return;
+            _statusCollection.RemoveTarget(objectToDeattach);
+            
             lock (_objectsHierarchy)
             {
                 lock (_deattachList)
@@ -673,7 +681,25 @@ namespace TWCore.Diagnostics.Status
                 var sI = new StatusItem();
                 action(sI.Values);
             }
-
+            public void Add(object target, object parent)
+            {
+                StatusContainer sItem;
+                lock (_locker)
+                {
+                    sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                    if (sItem == null)
+                    {
+                        sItem = new StatusContainer {Object = target, Parent = parent};
+                        _statusList.Add(sItem);
+                    }
+                }
+                sItem.Parent = parent;
+            }
+            public void RemoveTarget(object target)
+            {
+                lock (_locker)
+                    _statusList.RemoveAll(i => i.Object == target || i.Parent == target);
+            }
             public void GetStatus()
             {
                 lock (_locker)
@@ -772,6 +798,7 @@ namespace TWCore.Diagnostics.Status
                         .GroupBy(s => s.Name)
                         .Select(s =>
                         {
+                            if (s.Count() == 1) return s.First();
                             var value = s.SelectMany(i => i.Values).ToArray();
                             var children = s.SelectMany(i => i.Children).ToArray();
                             return new StatusItem

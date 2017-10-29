@@ -706,9 +706,35 @@ namespace TWCore.Diagnostics.Status
                 {
                     var values = _statusList
                         .Where(s => s.Object != null)
-                        .Select(s => (s.Object, s.GetStatusItems(), s.Parent))
+                        .Select(s => new StatusData(s.Object, s.GetStatusItems(), s.Parent))
                         .ToArray();
+
+                    var roots = values.Where(i => i.Parent == null).ToArray();
+                    foreach(var root in values)
+                        CreateTree(root, values);
                     
+                }
+
+                void CreateTree(StatusData status, StatusData[] data)
+                {
+                    status.Children.AddRange(data.Where(d => d.Parent == status.Object));
+                    foreach (var st in status.Children)
+                        CreateTree(st, data);
+                }
+            }
+
+            private class StatusData
+            {
+                public readonly object Object;
+                public readonly object Parent;
+                public List<StatusItem> Statuses;
+                public readonly List<StatusData> Children = new List<StatusData>();
+
+                public StatusData(object obj, List<StatusItem> statuses, object parent)
+                {
+                    Object = obj;
+                    Statuses = statuses;
+                    Parent = parent;
                 }
             }
         }

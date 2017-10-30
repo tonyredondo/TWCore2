@@ -77,7 +77,6 @@ namespace TWCore.Diagnostics.Trace
                 }
             });
             Core.Status.AttachObject(this);
-            Core.Status.AttachChild(_itemsWorker, this);
         }
         /// <summary>
         /// Destructor

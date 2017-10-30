@@ -279,7 +279,6 @@ namespace TWCore
                 sItem.Values.Add("Process Information", 
                     new StatusItemValueItem(nameof(process.Id), process.Id),
                     new StatusItemValueItem(nameof(RuntimeInformation.ProcessArchitecture), RuntimeInformation.ProcessArchitecture),
-                    new StatusItemValueItem(nameof(process.BasePriority), process.BasePriority),
                     new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
                     new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
                     new StatusItemValueItem("Handles", process.HandleCount, true),

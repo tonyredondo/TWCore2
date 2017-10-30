@@ -224,18 +224,17 @@ namespace TWCore.Diagnostics.Status
                 return null;
 
             var sw = Stopwatch.StartNew();
-            var collection = new StatusItemCollection
+            var items = _statusCollection.GetStatus();
+            return new StatusItemCollection
             {
                 Timestamp = Core.Now,
                 EnvironmentName = Core.EnvironmentName,
                 MachineName = Core.MachineName,
                 ApplicationDisplayName = Core.ApplicationDisplayName,
                 ApplicationName = Core.ApplicationName,
-                Items = _statusCollection.GetStatus()
+                Items = items,
+                ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds
             };
-            collection.ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds;
-            return collection;
-
         }
         #endregion
 
@@ -294,22 +293,34 @@ namespace TWCore.Diagnostics.Status
             {
                 lock (_locker)
                 {
-                    var availables = _statusList.Where(s => s.Object != null).ToArray();
                     if (_firstTime)
                     {
-                        availables.Each(i => i.GetStatusItems());
+                        var sInit = new List<StatusContainer>(_statusList);
+                        foreach (var item in sInit)
+                        {
+                            if (item.Object == null) continue;
+                            item.GetStatusItems();
+                        }
                         _firstTime = false;
                     }
-                    var values = availables
-                        .Select(s => new StatusData(s.Object, s.GetStatusItems(), s.Parent))
-                        .ToArray();
-
-                    var roots = values.Where(i => i.Parent == null).ToList();
+                    var sList = new List<StatusContainer>(_statusList);
+                    var values = new List<StatusData>();
+                    var roots = new List<StatusData>();
+                    foreach(var item in sList)
+                    {
+                        if (item.Object == null) continue;
+                        var value = new StatusData(item.Object, item.GetStatusItems(), item.Parent);
+                        values.Add(value);
+                        if (item.Parent == null)
+                            roots.Add(value);
+                    }
                     foreach (var root in values)
+                    {
                         CreateTree(root, values);
+                        SetIds(string.Empty, root.Value);
+                    }
                     roots.Sort((a, b) => string.CompareOrdinal(a.Value.Name, b.Value.Name));
-                    var items = roots.Select(i => i.Value).Each(i => SetIds(string.Empty, i)).ToList();
-                    return items;
+                    return roots.Select(i => i.Value).ToList();
                 }
             }
             #endregion
@@ -384,8 +395,10 @@ namespace TWCore.Diagnostics.Status
                 if (status.Statuses == null || status.Statuses.Count == 0)
                 {
                     if (status.Object == StatusContainer.Root) return;
-                    status.Value = new StatusItem();
-                    status.Value.Name = type.Namespace + "." + type.Name;
+                    status.Value = new StatusItem
+                    {
+                        Name = type.Namespace + "." + type.Name
+                    };
                     return;
                 }
 
@@ -586,8 +599,7 @@ namespace TWCore.Diagnostics.Status
             {
                 lock (_locker)
                 {
-                    var lstStatuses = new List<StatusItem>();
-                    if (Object == null) return lstStatuses;
+                    if (Object == null) return new List<StatusItem>();
                     var results = _lstStatusItem
                         .Select(s => s())
                         .Where(r => r.Ran)
@@ -602,20 +614,14 @@ namespace TWCore.Diagnostics.Status
                         .Select(s =>
                         {
                             if (s.Count() == 1) return s.First();
-                            var value = s.SelectMany(i => i.Values).ToArray();
-                            var children = s.SelectMany(i => i.Children).ToArray();
                             return new StatusItem
                             {
                                 Name = s.Key,
-                                Values = new StatusItemValuesCollection(value),
-                                Children = new List<StatusItem>(children)
+                                Values = new StatusItemValuesCollection(s.SelectMany(i => i.Values)),
+                                Children = new List<StatusItem>(s.SelectMany(i => i.Children))
                             };
-                        }).ToArray();
-                    //var nullItem = results.FirstOrDefault(s => s.Name == null);
-                    //if (nullItem != null)
-                    //    nullItem.Name = Object?.GetType().Name;
-                    lstStatuses.AddRange(results);
-                    return lstStatuses;
+                        }).ToList();
+                    return results;
                 }
             }
             #endregion

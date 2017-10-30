@@ -120,13 +120,6 @@ namespace TWCore
                 Thread.CurrentThread.Name = "Core.Worker";
                 OneLoopDequeueThread((CancellationToken)obj);
             }, _tokenSource.Token, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-
-            Core.Status.Attach(collection =>
-            {
-                collection.Add(nameof(Exceptions) + " Count", Exceptions?.Count, true);
-                collection.Add("Queue Count", _queue?.Count, true);
-                collection.Add("Status", _status);
-            });
         }
         #endregion
 

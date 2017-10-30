@@ -704,9 +704,10 @@ namespace TWCore.Diagnostics.Status
                         .Select(s => new StatusData(s.Object, s.GetStatusItems(), s.Parent))
                         .ToArray();
 
-                    var roots = values.Where(i => i.Parent == null).ToArray();
+                    var roots = values.Where(i => i.Parent == null).ToList();
                     foreach (var root in values)
                         CreateTree(root, values);
+                    roots.Sort((a, b) => string.CompareOrdinal(a.Value.Name, b.Value.Name));
                 }
             }
             #endregion
@@ -749,11 +750,53 @@ namespace TWCore.Diagnostics.Status
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void CreateTree(StatusData status, IEnumerable<StatusData> data)
             {
+                if (status.Processed) return;
+
                 (var equalSet, var notEqualSet) = data.Split(item => item.Parent == status.Object);
-                status.Children.AddRange(equalSet.Where(s => s != status));
-                foreach (var st in status.Children)
-                    CreateTree(st, notEqualSet);
+                FlattenStatus(status);
+                var equalSetDistinct = equalSet.Where(s => s != status).Each(FlattenStatus).ToArray();
+                if (equalSetDistinct.Length > 0)
+                {
+                    foreach (var item in equalSetDistinct)
+                    {
+                        CreateTree(item, notEqualSet);
+                        if (item.Value != null)
+                            status.Value.Children.Add(item.Value);
+                    }
+                    status.Value.Children.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+                }
+                status.Processed = true;
             }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void FlattenStatus(StatusData status)
+            {
+                if (status.Value != null) return;
+
+                var type = status.Object.GetType();
+
+                if (status.Statuses == null || status.Statuses.Count == 0)
+                {
+                    if (status.Object == StatusContainer.Root) return;
+                    status.Value = new StatusItem();
+                    status.Value.Name = type.Namespace + "." + type.Name;
+                    return;
+                }
+
+                var sValue = status.Statuses.Count > 1
+                    ? status.Statuses.FirstOrDefault(s => s.Name == null)
+                    : status.Statuses[0];
+                if (sValue == null)
+                    sValue = new StatusItem();
+                else
+                    status.Statuses.Remove(sValue);
+                if (sValue.Name == null)
+                    sValue.Name = type.Namespace + "." + type.Name;
+                sValue.Children.AddRange(status.Statuses);
+                status.Statuses = null;
+                status.Value = sValue;
+            }
+
             #endregion
 
             #region Nested Types
@@ -761,8 +804,9 @@ namespace TWCore.Diagnostics.Status
             {
                 public readonly object Object;
                 public readonly object Parent;
+                public StatusItem Value;
                 public List<StatusItem> Statuses;
-                public readonly List<StatusData> Children = new List<StatusData>();
+                public bool Processed;
 
                 #region .ctor
                 public StatusData(object obj, List<StatusItem> statuses, object parent)

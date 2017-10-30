@@ -503,12 +503,12 @@ namespace TWCore
 		/// <param name="enumerable">IEnumerable source object</param>
 		/// <param name="separatorPredicate">Predicate to separete the IEnumerable in two sets</param>
 		/// <returns>Tuple of two IEnumerable from the split of the IEnumerable using the predicate</returns>
-		public static (IEnumerable<T>, IEnumerable<T>) Split<T>(this IEnumerable<T> enumerable,
+		public static (T[], T[]) Split<T>(this IEnumerable<T> enumerable,
 			Predicate<T> separatorPredicate)
 		{
 			var groups = enumerable.GroupBy(item => separatorPredicate(item)).ToArray();
-			return (groups.FirstOrDefault(g => g.Key)?.ToReadOnly() ?? new T[0], 
-				groups.FirstOrDefault(g => !g.Key)?.ToReadOnly() ?? new T[0]);
+			return (groups.FirstOrDefault(g => g.Key)?.ToArray() ?? new T[0], 
+				groups.FirstOrDefault(g => !g.Key)?.ToArray() ?? new T[0]);
 		}
 		
         #region SymmetricExceptWith

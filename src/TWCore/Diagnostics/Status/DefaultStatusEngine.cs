@@ -652,6 +652,8 @@ namespace TWCore.Diagnostics.Status
             private readonly List<StatusContainer> _statusList = new List<StatusContainer>();
             private readonly List<StatusAttributesContainer> _statusAttributeContainer = new List<StatusAttributesContainer>();
 
+            #region Public Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, Func<StatusItem> func, object parent)
             {
                 lock (_locker)
@@ -662,6 +664,7 @@ namespace TWCore.Diagnostics.Status
                 }
                 func();
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, Action<StatusItemValuesCollection> action, object parent)
             {
                 lock (_locker)
@@ -673,6 +676,7 @@ namespace TWCore.Diagnostics.Status
                 var sI = new StatusItem();
                 action(sI.Values);
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, object parent)
             {
                 lock (_locker)
@@ -682,6 +686,7 @@ namespace TWCore.Diagnostics.Status
                     sItem.Parent = parent;
                 }
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void RemoveTarget(object target)
             {
                 lock (_locker)
@@ -689,12 +694,12 @@ namespace TWCore.Diagnostics.Status
                     _statusList.RemoveAll(i => i.Object == target || i.Parent == target);
                 }
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void GetStatus()
             {
                 lock (_locker)
                 {
                     var availables = _statusList.Where(s => s.Object != null).ToArray();
-
                     var values = availables
                         .Select(s => new StatusData(s.Object, s.GetStatusItems(), s.Parent))
                         .ToArray();
@@ -704,7 +709,9 @@ namespace TWCore.Diagnostics.Status
                         CreateTree(root, values);
                 }
             }
+            #endregion
 
+            #region Private Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void EnsureParent(object parent)
             {
@@ -747,7 +754,9 @@ namespace TWCore.Diagnostics.Status
                 foreach (var st in status.Children)
                     CreateTree(st, notEqualSet);
             }
+            #endregion
 
+            #region Nested Types
             private class StatusData
             {
                 public readonly object Object;
@@ -755,12 +764,14 @@ namespace TWCore.Diagnostics.Status
                 public List<StatusItem> Statuses;
                 public readonly List<StatusData> Children = new List<StatusData>();
 
+                #region .ctor
                 public StatusData(object obj, List<StatusItem> statuses, object parent)
                 {
                     Object = obj;
                     Statuses = statuses;
                     Parent = parent;
                 }
+                #endregion
             }
             private class StatusAttributesContainer
             {
@@ -770,6 +781,7 @@ namespace TWCore.Diagnostics.Status
                 private readonly (FastPropertyInfo, StatusPropertyAttribute)[] _statusAttributes;
                 private readonly (FastPropertyInfo, StatusReferenceAttribute)[] _statusReferenceAttributes;
 
+                #region .ctor
                 public StatusAttributesContainer(object target)
                 {
                     if (target == null) return;
@@ -792,7 +804,9 @@ namespace TWCore.Diagnostics.Status
                         return (fastProp, attr);
                     }).Where(t => t.Item2 != null).ToArray());
                 }
+                #endregion
 
+                #region Public Methods
                 public Func<StatusItem> GetFuncByAttribute()
                 {
                     if (_target == null) return null;
@@ -820,7 +834,9 @@ namespace TWCore.Diagnostics.Status
                         return sItem;
                     };
                 }
+                #endregion  
             }
+            #endregion
         }
         private sealed class StatusContainer
         {
@@ -877,6 +893,7 @@ namespace TWCore.Diagnostics.Status
             #endregion
 
             #region Public Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AddStatusItemDelegate(Func<StatusItem> statusItemFunc)
             {
                 lock (_locker)
@@ -885,6 +902,7 @@ namespace TWCore.Diagnostics.Status
                     _lstStatusItem.Add(wCreate);
                 }
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void AddStatusItemValuesCollection(Action<StatusItemValuesCollection> statusItemValuesAction)
             {
                 lock (_locker)
@@ -893,6 +911,7 @@ namespace TWCore.Diagnostics.Status
                     _lstStatusValueCollection.Add(wCreate);
                 }
             }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public List<StatusItem> GetStatusItems()
             {
                 lock (_locker)

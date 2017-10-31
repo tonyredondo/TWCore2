@@ -32,8 +32,6 @@ namespace TWCore.Messaging.Server
     {
         private readonly object _locker = new object();
         private Timer _timerOneMinute;
-        private Timer _timerTenMinutes;
-        private Timer _timerTwentyMinutes;
         private Timer _timerThirtyMinutes;
 
         #region Messages On Process
@@ -62,33 +60,7 @@ namespace TWCore.Messaging.Server
         /// Date and time of the peak value of number of message processed on the last minute
         /// </summary>
         public DateTime PeakLastMinuteMessagesLastDate { get; private set; }
-
-        /// <summary>
-        /// Number of messages processed on the last ten minutes
-        /// </summary>
-        public long LastTenMinutesMessages { get; private set; }
-        /// <summary>
-        /// Peak value of number of message processed on the last ten minutes
-        /// </summary>
-        public long PeakLastTenMinutesMessages { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of number of message processed on the last ten minutes
-        /// </summary>
-        public DateTime PeakLastTenMinutesMessagesLastDate { get; private set; }
-
-        /// <summary>
-        /// Number of messages processed on the last twenty minutes
-        /// </summary>
-        public long LastTwentyMinutesMessages { get; private set; }
-        /// <summary>
-        /// Peak value of number of message processed on the last twenty minutes
-        /// </summary>
-        public long PeakLastTwentyMinutesMessages { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of number of message processed on the last twenty minutes
-        /// </summary>
-        public DateTime PeakLastTwentyMinutesMessagesLastDate { get; private set; }
-
+        
         /// <summary>
         /// Number of messages processed on the last thirty minutes
         /// </summary>
@@ -129,33 +101,7 @@ namespace TWCore.Messaging.Server
         /// Date and time of the peak value of number of active processing threads on the last minute
         /// </summary>
         public DateTime PeakLastMinuteProcessingThreadsLastDate { get; private set; }
-
-        /// <summary>
-        /// Number of active processing threads on the last ten minutes
-        /// </summary>
-        public long LastTenMinutesProcessingThreads { get; private set; }
-        /// <summary>
-        /// Peak value of the number of active processing threads on the last ten minutes
-        /// </summary>
-        public long PeakLastTenMinutesProcessingThreads { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of number of active processing threads on the last ten minutes
-        /// </summary>
-        public DateTime PeakLastTenMinutesProcessingThreadsLastDate { get; private set; }
-
-        /// <summary>
-        /// Number of active processing threads on the last twenty minutes
-        /// </summary>
-        public long LastTwentyMinutesProcessingThreads { get; private set; }
-        /// <summary>
-        /// Peak value of the number of active processing threads on the last twenty minutes
-        /// </summary>
-        public long PeakLastTwentyMinutesProcessingThreads { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of number of active processing threads on the last twenty minutes
-        /// </summary>
-        public DateTime PeakLastTwentyMinutesProcessingThreadsLastDate { get; private set; }
-
+        
         /// <summary>
         /// Number of active processing threads on the last thirty minutes
         /// </summary>
@@ -219,34 +165,6 @@ namespace TWCore.Messaging.Server
                 }
             }, this, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
-            _timerTenMinutes = new Timer(state =>
-            {
-                lock (_locker)
-                {
-                    LastTenMinutesMessages = CurrentMessages;
-                    PeakLastTenMinutesMessages = CurrentMessages;
-                    PeakLastTenMinutesMessagesLastDate = LastMessageDateTime;
-
-                    LastTenMinutesProcessingThreads = CurrentProcessingThreads;
-                    PeakLastTenMinutesProcessingThreads = CurrentProcessingThreads;
-                    PeakLastTenMinutesProcessingThreadsLastDate = LastProcessingDateTime;
-                }
-            }, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
-
-            _timerTwentyMinutes = new Timer(state =>
-            {
-                lock (_locker)
-                {
-                    LastTwentyMinutesMessages = CurrentMessages;
-                    PeakLastTwentyMinutesMessages = CurrentMessages;
-                    PeakLastTwentyMinutesMessagesLastDate = LastMessageDateTime;
-
-                    LastTwentyMinutesProcessingThreads = CurrentProcessingThreads;
-                    PeakLastTwentyMinutesProcessingThreads = CurrentProcessingThreads;
-                    PeakLastTwentyMinutesProcessingThreadsLastDate = LastProcessingDateTime;
-                }
-            }, this, TimeSpan.FromMinutes(20), TimeSpan.FromMinutes(20));
-
             _timerThirtyMinutes = new Timer(state =>
             {
                 lock (_locker)
@@ -276,17 +194,7 @@ namespace TWCore.Messaging.Server
                     new StatusItemValueItem("Quantity", LastMinuteMessages, true),
                     new StatusItemValueItem("Peak Quantity", PeakLastMinuteMessages, true),
                     new StatusItemValueItem("Peak DateTime", PeakLastMinuteMessagesLastDate));
-
-                collection.Add("Last ten minutes processed messages",
-                    new StatusItemValueItem("Quantity", LastTenMinutesMessages, true),
-                    new StatusItemValueItem("Peak Quantity", PeakLastTenMinutesMessages, true),
-                    new StatusItemValueItem("Peak DateTime", PeakLastTenMinutesMessagesLastDate));
-
-                collection.Add("Last twenty minutes processed messages",
-                    new StatusItemValueItem("Quantity", LastTwentyMinutesMessages, true),
-                    new StatusItemValueItem("Peak Quantity", PeakLastTwentyMinutesMessages, true),
-                    new StatusItemValueItem("Peak DateTime", PeakLastTwentyMinutesMessagesLastDate));
-
+                
                 collection.Add("Last thirty minutes processed messages",
                     new StatusItemValueItem("Quantity", LastThirtyMinutesMessages, true),
                     new StatusItemValueItem("Peak Quantity", PeakLastThirtyMinutesMessages, true),
@@ -303,16 +211,6 @@ namespace TWCore.Messaging.Server
                     new StatusItemValueItem("Quantity", LastMinuteProcessingThreads, true),
                     new StatusItemValueItem("Peak Quantity", PeakLastMinuteProcessingThreads, true),
                     new StatusItemValueItem("Peak DateTime", PeakLastMinuteProcessingThreadsLastDate));
-
-                collection.Add("Last ten minutes active processed threads",
-                    new StatusItemValueItem("Quantity", LastTenMinutesProcessingThreads, true),
-                    new StatusItemValueItem("Peak Quantity", PeakLastTenMinutesProcessingThreads, true),
-                    new StatusItemValueItem("Peak DateTime", PeakLastTenMinutesProcessingThreadsLastDate));
-
-                collection.Add("Last twenty minutes active processed threads",
-                    new StatusItemValueItem("Quantity", LastTwentyMinutesProcessingThreads, true),
-                    new StatusItemValueItem("Peak Quantity", PeakLastTwentyMinutesProcessingThreads, true),
-                    new StatusItemValueItem("Peak DateTime", PeakLastTwentyMinutesProcessingThreadsLastDate));
 
                 collection.Add("Last thirty minutes active processed threads",
                     new StatusItemValueItem("Quantity", LastThirtyMinutesProcessingThreads, true),
@@ -373,8 +271,6 @@ namespace TWCore.Messaging.Server
             {
                 CurrentMessages++;
                 LastMinuteMessages++;
-                LastTenMinutesMessages++;
-                LastTwentyMinutesMessages++;
                 LastThirtyMinutesMessages++;
                 TotalMessagesReceived++;
                 LastMessageDateTime = Core.Now;
@@ -387,16 +283,6 @@ namespace TWCore.Messaging.Server
                 {
                     PeakLastMinuteMessages = LastMinuteMessages;
                     PeakLastMinuteMessagesLastDate = LastMessageDateTime;
-                }
-                if (LastTenMinutesMessages >= PeakLastTenMinutesMessages)
-                {
-                    PeakLastTenMinutesMessages = LastTenMinutesMessages;
-                    PeakLastTenMinutesMessagesLastDate = LastMessageDateTime;
-                }
-                if (LastTwentyMinutesMessages >= PeakLastTwentyMinutesMessages)
-                {
-                    PeakLastTwentyMinutesMessages = LastTwentyMinutesMessages;
-                    PeakLastTwentyMinutesMessagesLastDate = LastMessageDateTime;
                 }
                 if (LastThirtyMinutesMessages >= PeakLastThirtyMinutesMessages)
                 {
@@ -424,8 +310,6 @@ namespace TWCore.Messaging.Server
             {
                 CurrentProcessingThreads++;
                 LastMinuteProcessingThreads++;
-                LastTenMinutesProcessingThreads++;
-                LastTwentyMinutesProcessingThreads++;
                 LastThirtyMinutesProcessingThreads++;
                 LastProcessingDateTime = Core.Now;
                 if (CurrentProcessingThreads >= PeakCurrentProcessingThreads)
@@ -437,16 +321,6 @@ namespace TWCore.Messaging.Server
                 {
                     PeakLastMinuteProcessingThreads = LastMinuteProcessingThreads;
                     PeakLastMinuteProcessingThreadsLastDate = LastMessageDateTime;
-                }
-                if (LastTenMinutesProcessingThreads >= PeakLastTenMinutesProcessingThreads)
-                {
-                    PeakLastTenMinutesProcessingThreads = LastTenMinutesProcessingThreads;
-                    PeakLastTenMinutesProcessingThreadsLastDate = LastMessageDateTime;
-                }
-                if (LastTwentyMinutesProcessingThreads >= PeakLastTwentyMinutesProcessingThreads)
-                {
-                    PeakLastTwentyMinutesProcessingThreads = LastTwentyMinutesProcessingThreads;
-                    PeakLastTwentyMinutesProcessingThreadsLastDate = LastMessageDateTime;
                 }
                 if (LastThirtyMinutesProcessingThreads >= PeakLastThirtyMinutesProcessingThreads)
                 {

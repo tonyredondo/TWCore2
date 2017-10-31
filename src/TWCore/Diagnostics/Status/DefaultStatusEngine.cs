@@ -323,7 +323,16 @@ namespace TWCore.Diagnostics.Status
                     var rValues = roots.Select(i => i.Value).ToList();
                     MergeSimilar(rValues);
                     //
-                    rValues.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+                    rValues.Sort((a, b) =>
+                    {
+                        if (a.Name == "Application Information") return -1;
+                        if (b.Name == "Application Information") return 1;
+                        if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                            !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
+                        if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                            b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
+                        return string.CompareOrdinal(a.Name, b.Name);
+                    });
                     return rValues;
                 }
             }
@@ -402,7 +411,7 @@ namespace TWCore.Diagnostics.Status
                 if (status.Statuses == null || status.Statuses.Count == 0)
                 {
                     if (status.Object == StatusContainer.Root) return;
-                    
+
                     status.Value = new StatusItem
                     {
                         Name = attr?.Name ?? type.Namespace + "." + type.Name
@@ -642,6 +651,7 @@ namespace TWCore.Diagnostics.Status
                         .ToArray()
                         .Where(r => r.Ran)
                         .Select(s => s.Result)
+                        .Where(s => s != null)
                         .ToArray();
                     var resultItems2 = _lstStatusValueCollection.Select(s =>
                     {

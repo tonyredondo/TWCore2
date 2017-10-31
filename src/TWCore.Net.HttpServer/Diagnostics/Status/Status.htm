@@ -29,8 +29,9 @@
             .head {
                 /*background: rgba(63, 81, 181, 0.04);
                 background: #616161;*/
-                padding: 0.5em 1em;
+                padding: 0.4em 1em;
                 color: #ffffff;
+                font-size:0.9em;
             }
 
             .head h2 { float:left; }
@@ -47,7 +48,7 @@
             .body {
                 padding:0px;
                 position: absolute;
-                top:263px;
+                top:244px;
                 left:0px;
                 right:0px;
                 bottom:0px;
@@ -78,11 +79,11 @@
                 letter-spacing: 0.3px;
             }
             .statusItem tr:nth-child(odd) {
-                background-color: #616161;
-                color: #000000;
+                background-color: #2d2d2d;
+                color: #ccc;
             }
             .statusItem tr:nth-child(even) {
-                background-color: #363636;
+                background-color: #272727;
                 color: #ccc;
             }
             .statusItem th {
@@ -95,14 +96,15 @@
                 padding: 5px 10px;
                 height: 30px;
                 border-bottom: solid 1px #222222;
+                width: 100%;
             }
             .statusItem .tdKey {
                 background-color: #24303c;
                 color: #ccc !important;
                 border-bottom: solid 1px #222222;
                 border-right: solid 1px #222222;
-                min-width: 170px;
                 padding: 5px 20px 5px 5px;
+                width:200px;
             }
             .statusItem .good {
                 color: #13d013;
@@ -121,11 +123,13 @@
                 padding-right:0.5em;
             }
             .statusItem .children {
-                margin:5px 0px 10px;
+                /*margin:5px 0px 10px;*/
+                padding-top: 5px;
             }
             .indent {
-                margin: 0px 7px 4px 7px;
+                /*margin: 0px 7px 4px 7px;*/
                 border: solid 1px #363636;
+                margin-top: 5px;
             }
             .indent h2 {
                 border-bottom: 0px;
@@ -133,12 +137,12 @@
                 color: #0faaf2;
             }
             .innerStatus {
-                padding: 4px 7px;
+                /*padding: 4px 7px;*/
             }
             .charts {
                 padding: 0px;
                 border-top: 4px solid #616161;
-                border-bottom: 4px solid #616161;
+                /*border-bottom: 4px solid #616161;*/
             }
             .chartsInner {
                 padding: 5px 10px;
@@ -186,18 +190,18 @@
             #myChart {
                 width: 100%;
                 max-width: 100%;
-                height: 160px;
+                height: 150px;
                 max-height: 178px;
             }
             .tableBtn {
                 font-size: 0.6em;
-                font-weight: bold;
                 cursor: pointer;
-                color: #FE5101;
+                color: #01b0df;
                 padding: 5px 5px 2px;
             }
-            .wrapStatus{
-                display:none;
+            .wrapStatus {
+                display: none;
+                padding: 10px;
             }
             .children .wrapStatus {
 
@@ -290,7 +294,8 @@
             }
         </style>
         <script>
-            var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show/Hide Values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
+            //var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show or Hide values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
+            var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="innerStatus"></div><div class="children"></div></div></div>';
             var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
             var valueItem = '<tr><td class="tdKey">{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
             var innerValueItem = '<table cellspacing="0" class="MultiValue"><tr><th>{{Radio}}{{Key}}</th></tr><tr><td class="{{status}}">{{Value}}</td></tr></table>';
@@ -494,7 +499,9 @@
                                 $(element).children("h2").css("background-color", "#222222");
                                 $(element).children("h2").css("font-size", "0.6em");
                                 $(element).children("h2").css("font-weight", "normal");
+                                $(element).children("h2").css("color", "#848484");
                                 $(element).children("h2").css("border-bottom", "0px");
+                                $(element).children("h2").css("font-style", "italic");
                             }
 
                             addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, oldItem ? oldItem.children : null);
@@ -515,8 +522,8 @@
                     mChartData.datasets[0].data = null;
                     var initial = 0;
                     if (cValues.length > 0) initial = cValues[0];
-                    if (cValues.length < 60)
-                        cValues = new Array(60 - cValues.length).fill(initial).concat(cValues);
+                    if (cValues.length < 50)
+                        cValues = new Array(50 - cValues.length).fill(initial).concat(cValues);
                     for (var i = 0; i < cValues.length; i++) {
                         mChartData.labels.push(parseInt(cValues[i]));
                     }
@@ -547,7 +554,7 @@
                                 var valueVal = parseFloat(value.value);
                                 if (plotData[value.id]) {
                                     plotData[value.id].values.push(valueVal);
-                                    if (plotData[value.id].values.length == 60)
+                                    if (plotData[value.id].values.length == 50)
                                         plotData[value.id].values.shift();
                                 }
                                 else
@@ -560,7 +567,7 @@
                                         var itemValueVal = parseFloat(itemValue.value);
                                         if (plotData[itemValue.id]) {
                                             plotData[itemValue.id].values.push(itemValueVal);
-                                            if (plotData[itemValue.id].values.length == 60)
+                                            if (plotData[itemValue.id].values.length == 50)
                                                 plotData[itemValue.id].values.shift();
                                         }
                                         else

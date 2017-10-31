@@ -26,6 +26,7 @@ namespace TWCore.Diagnostics.Trace
     /// Default trace engine
     /// </summary>
     [IgnoreStackFrameLog]
+    [StatusName("Application Information\\Trace")]
     public class DefaultTraceEngine : ITraceEngine
     {
         #region Private fields

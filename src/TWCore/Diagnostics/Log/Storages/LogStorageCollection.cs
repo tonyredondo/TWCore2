@@ -48,7 +48,11 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Items", _items.Select(i => new StatusItemValueItem(i.Item1?.ToString(), i.Item2)).ToArray());
+                foreach (var item in _items)
+                {
+                    if (item.Item1 == null) continue;
+                    collection.Add(item.Item1.ToString(), item.Item2);
+                }
             });
         }
         #endregion

@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TWCore.Diagnostics.Status;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 
@@ -337,11 +338,13 @@ namespace TWCore.Diagnostics.Log.Storages
                 _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.HTML", "This is the Html Log base path", new SerializedObject(Path.GetDirectoryName(Path.GetFullPath(fileName))));
             Core.Status.Attach(collection =>
             {
-                collection.Add(nameof(FileName), FileName);
-                collection.Add(nameof(CreateByDay), CreateByDay);
-                collection.Add(nameof(FileDate), FileDate);
-                collection.Add(nameof(UseMaxLength), UseMaxLength);
-                collection.Add(nameof(MaxLength), MaxLength);
+                collection.Add("Configuration",
+                    new StatusItemValueItem(nameof(FileName), FileName),
+                    new StatusItemValueItem(nameof(CreateByDay), CreateByDay),
+                    new StatusItemValueItem(nameof(UseMaxLength), UseMaxLength),
+                    new StatusItemValueItem(nameof(MaxLength) + " (MB)", MaxLength.ToMegabytes())
+                );
+                collection.Add("Current FileDate", FileDate);
                 collection.Add("Current FileName", _currentFileName);
             });
         }

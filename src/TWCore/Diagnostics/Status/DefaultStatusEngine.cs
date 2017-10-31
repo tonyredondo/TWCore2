@@ -306,7 +306,7 @@ namespace TWCore.Diagnostics.Status
                     var sList = new List<StatusContainer>(_statusList);
                     var values = new List<StatusData>();
                     var roots = new List<StatusData>();
-                    foreach(var item in sList)
+                    foreach (var item in sList)
                     {
                         if (item.Object == null) continue;
                         var value = new StatusData(item.Object, item.GetStatusItems(), item.Parent);
@@ -314,13 +314,17 @@ namespace TWCore.Diagnostics.Status
                         if (item.Parent == null)
                             roots.Add(value);
                     }
-                    foreach (var root in values)
+                    foreach (var root in roots)
                     {
                         CreateTree(root, values);
                         SetIds(string.Empty, root.Value);
                     }
-                    roots.Sort((a, b) => string.CompareOrdinal(a.Value.Name, b.Value.Name));
-                    return roots.Select(i => i.Value).ToList();
+                    //
+                    var rValues = roots.Select(i => i.Value).ToList();
+                    MergeSimilar(rValues);
+                    //
+                    rValues.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
+                    return rValues;
                 }
             }
             #endregion
@@ -376,7 +380,8 @@ namespace TWCore.Diagnostics.Status
                         if (item.Value != null)
                             status.Value.Children.Add(item.Value);
                     }
-                    foreach(var gItem in status.Value.Children.GroupBy(g => g.Name))
+                    MergeSimilar(status.Value.Children);
+                    foreach (var gItem in status.Value.Children.GroupBy(g => g.Name))
                     {
                         if (gItem.Count() == 1) continue;
                         gItem.Each((item, index) => item.Name += " [" + index + "]");
@@ -385,19 +390,22 @@ namespace TWCore.Diagnostics.Status
                 }
                 status.Processed = true;
             }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void FlattenStatus(StatusData status)
             {
                 if (status.Value != null) return;
 
                 var type = status.Object.GetType();
+                var attr = type.GetAttribute<StatusNameAttribute>();
 
                 if (status.Statuses == null || status.Statuses.Count == 0)
                 {
                     if (status.Object == StatusContainer.Root) return;
+                    
                     status.Value = new StatusItem
                     {
-                        Name = type.Namespace + "." + type.Name
+                        Name = attr?.Name ?? type.Namespace + "." + type.Name
                     };
                     return;
                 }
@@ -410,10 +418,38 @@ namespace TWCore.Diagnostics.Status
                 else
                     status.Statuses.Remove(sValue);
                 if (sValue.Name == null)
-                    sValue.Name = type.Namespace + "." + type.Name;
+                    sValue.Name = attr?.Name ?? type.Namespace + "." + type.Name;
                 sValue.Children.AddRange(status.Statuses);
                 status.Statuses = null;
                 status.Value = sValue;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void MergeSimilar(List<StatusItem> statusValuesChildren)
+            {
+                var sSlash = statusValuesChildren.Where(s => s.Name?.IndexOf("\\", StringComparison.Ordinal) > 0).ToArray();
+                foreach (var sSlashItem in sSlash)
+                {
+                    var baseIndex = sSlashItem.Name.IndexOf("\\", StringComparison.Ordinal);
+                    var baseName = sSlashItem.Name.Substring(0, baseIndex);
+                    var baseRest = sSlashItem.Name.Substring(baseIndex + 1);
+                    var baseStatus = statusValuesChildren.FirstOrDefault(c => c.Name == baseName);
+                    if (baseStatus == null)
+                    {
+                        baseStatus = new StatusItem { Name = baseName };
+                        statusValuesChildren.Add(baseStatus);
+                    }
+                    statusValuesChildren.Remove(sSlashItem);
+                    if (!string.IsNullOrWhiteSpace(baseRest))
+                    {
+                        sSlashItem.Name = baseRest;
+                        baseStatus.Children.Add(sSlashItem);
+                    }
+                    else
+                    {
+                        baseStatus.Values.AddRange(sSlashItem.Values);
+                        baseStatus.Children.AddRange(sSlashItem.Children);
+                    }
+                }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void SetIds(string baseId, StatusItem item)

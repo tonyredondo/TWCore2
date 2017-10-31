@@ -299,7 +299,7 @@ namespace TWCore
                 if (Settings == null) return null;
                 var sItem = new StatusItem
                 {
-                    Name = "Settings"
+                    Name = "Application Information\\Settings"
                 };
                 Settings.OrderBy(i => i.Key).Each(i => sItem.Values.Add(i.Key, i.Value));
                 return sItem;

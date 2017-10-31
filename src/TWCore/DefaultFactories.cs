@@ -260,8 +260,8 @@ namespace TWCore
                 var process = Process.GetCurrentProcess();
 
                 var sItem = new StatusItem { Name = "Application Information" };
-                sItem.Values.Add(nameof(Environment.CommandLine), Environment.CommandLine);
-                sItem.Values.Add(nameof(Directory.GetCurrentDirectory), Directory.GetCurrentDirectory());
+                sItem.Values.Add("Command Line", Environment.CommandLine);
+                sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
 
                 sItem.Values.Add("Operating System",
                     new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
@@ -300,7 +300,7 @@ namespace TWCore
                 );
 
                 var maxGen = GC.MaxGeneration;
-                var lstGc = new List<StatusItemValueItem> { new StatusItemValueItem("Max Generation", maxGen) };
+                var lstGc = new List<StatusItemValueItem>();
                 for (var i = 0; i <= maxGen; i++)
                     lstGc.Add(new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true));
                 lstGc.Add(new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(), true));

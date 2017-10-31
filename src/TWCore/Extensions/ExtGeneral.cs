@@ -41,7 +41,7 @@ namespace TWCore
 		/// <returns>Attribute</returns>
 		public static T GetAttribute<T>(this object obj) where T : class
 		{
-			var objType = obj.GetType();
+			var objType = obj as Type ?? obj.GetType();
 			var objTypeInfo = objType.GetTypeInfo();
 			object[] attrs;
 			if (objTypeInfo.IsEnum)

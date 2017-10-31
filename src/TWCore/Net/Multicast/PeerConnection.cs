@@ -190,6 +190,7 @@ namespace TWCore.Net.Multicast
             var guidBytes = Guid.NewGuid().ToByteArray();
             var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
             var remain = count;
+            var endpointHash = new HashSet<EndPoint>();
             for (var i = 0; i < numMsgs; i++)
             {
                 var datagram = new byte[PacketSize];
@@ -202,6 +203,7 @@ namespace TWCore.Net.Multicast
 
                 foreach (var c in _sendClients)
                 {
+                    if (endpointHash.Contains(c.Client.LocalEndPoint)) continue;
                     try
                     {
                         c.Send(datagram, PacketSize, _sendEndpoint);
@@ -209,7 +211,8 @@ namespace TWCore.Net.Multicast
                     }
                     catch (Exception)
                     {
-                        Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
+                        if (endpointHash.Add(c.Client.LocalEndPoint))
+                            Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                 }
 

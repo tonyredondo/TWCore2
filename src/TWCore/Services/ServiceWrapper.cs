@@ -54,16 +54,20 @@ namespace TWCore.Services
             Service = service;
             ServiceName = serviceName;
         }
+        ~ServiceWrapper()
+        {
+            Console.WriteLine("SERVICE WRAPPER HAS BEEN DISPOSED!!!");
+        }
         #endregion
 
         #region Static Method
-        private static void RegisterStatus(ServiceWrapper wrapper)
+        private void RegisterStatus()
         {
             Core.Status.Attach(() =>
             {
-                var sItem = new StatusItem { Name = "Process Information - Service" };
+                var sItem = new StatusItem { Name = "Application Information\\" };
                 var siv = StatusItemValueStatus.Unknown;
-                switch (wrapper._serviceStatus)
+                switch (_serviceStatus)
                 {
                     case ServiceStatus.Starting:
                         siv = StatusItemValueStatus.Warning;
@@ -87,10 +91,11 @@ namespace TWCore.Services
                         siv = StatusItemValueStatus.Warning;
                         break;
                 }
-                sItem.Values.Add("Service Name", wrapper.ServiceName);
-                sItem.Values.Add("Service can Pause and Continue", wrapper.CanPauseAndContinue ? "Yes" : "No", wrapper.CanPauseAndContinue ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
-                sItem.Values.Add("Service Status", wrapper._serviceStatus, siv);
-                sItem.Values.Add("Service Start Arguments", string.Join(" ", wrapper._args ?? new string[0]));
+                sItem.Values.Add("Service Information",
+                    new StatusItemValueItem("Status", _serviceStatus),
+                    new StatusItemValueItem("Can Pause and Continue", CanPauseAndContinue ? "Yes" : "No", CanPauseAndContinue ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error, false),
+                    new StatusItemValueItem("Arguments", string.Join(" ", _args ?? new string[0]))
+                );
                 return sItem;
             });
         }
@@ -109,7 +114,7 @@ namespace TWCore.Services
         /// <param name="args">Start arguments</param>
         public void OnStart(string[] args)
         {
-            RegisterStatus(this);
+            RegisterStatus();
             try
             {
                 _serviceStatus = ServiceStatus.Starting;

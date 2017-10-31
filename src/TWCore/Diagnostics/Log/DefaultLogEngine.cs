@@ -31,6 +31,7 @@ namespace TWCore.Diagnostics.Log
     /// Default log engine
     /// </summary>
     [IgnoreStackFrameLog]
+    [StatusName("Application Information\\Log")]
     public sealed class DefaultLogEngine : ILogEngine
     {
         #region Private fields

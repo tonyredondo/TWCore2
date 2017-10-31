@@ -286,7 +286,10 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
             if (handler.Event.IsSet)
+            {
+                _messageResponsesHandlers.TryRemove(messageRQ.MessageId, out var _);
                 return handler.Message;
+            }
             if (_connectionCancellationToken.IsCancellationRequested) 
                 return null;
             throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRQ.MessageId));

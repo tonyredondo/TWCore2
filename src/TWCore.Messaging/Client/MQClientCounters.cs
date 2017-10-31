@@ -207,6 +207,7 @@ namespace TWCore.Messaging.Client
                 LastTenMinutesMessagesSent++;
                 LastTwentyMinutesMessagesSent++;
                 LastThirtyMinutesMessagesSent++;
+                LastHourMessagesSent++;
             }
         }
         /// <summary>
@@ -222,6 +223,7 @@ namespace TWCore.Messaging.Client
                 LastTenMinutesMessagesReceived++;
                 LastTwentyMinutesMessagesReceived++;
                 LastThirtyMinutesMessagesReceived++;
+                LastHourMessagesReceived++;
             }
         }
         #endregion

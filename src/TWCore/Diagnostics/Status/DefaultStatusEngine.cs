@@ -636,16 +636,21 @@ namespace TWCore.Diagnostics.Status
                 lock (_locker)
                 {
                     if (Object == null) return new List<StatusItem>();
-                    var results = _lstStatusItem
+
+                    var resultItems = _lstStatusItem
                         .Select(s => s())
+                        .ToArray()
                         .Where(r => r.Ran)
                         .Select(s => s.Result)
-                        .Concat(_lstStatusValueCollection.Select(s =>
-                        {
-                            var item = new StatusItem();
-                            s(item.Values);
-                            return item;
-                        }))
+                        .ToArray();
+                    var resultItems2 = _lstStatusValueCollection.Select(s =>
+                    {
+                        var item = new StatusItem();
+                        s(item.Values);
+                        return item;
+                    }).ToArray();
+
+                    var results = resultItems.Concat(resultItems2)
                         .GroupBy(s => s.Name)
                         .Select(s =>
                         {

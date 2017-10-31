@@ -26,9 +26,6 @@ namespace TWCore.Diagnostics.Status
     [DataContract]
     public class StatusItem
     {
-        internal object ObjRef;
-        internal bool Parent;
-
         /// <summary>
         /// Item Id
         /// </summary>

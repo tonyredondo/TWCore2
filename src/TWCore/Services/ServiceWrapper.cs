@@ -92,7 +92,7 @@ namespace TWCore.Services
                         break;
                 }
                 sItem.Values.Add("Service Information",
-                    new StatusItemValueItem("Status", _serviceStatus),
+                    new StatusItemValueItem("Status", _serviceStatus, siv, false),
                     new StatusItemValueItem("Can Pause and Continue", CanPauseAndContinue ? "Yes" : "No", CanPauseAndContinue ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error, false),
                     new StatusItemValueItem("Arguments", string.Join(" ", _args ?? new string[0]))
                 );

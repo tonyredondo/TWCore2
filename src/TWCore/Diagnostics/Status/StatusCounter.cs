@@ -152,7 +152,12 @@ namespace TWCore.Diagnostics.Status
                     new StatusItemValueItem("Standard Deviation", interval.StandardDeviation, true)
                 );
                 foreach (var percentile in interval.Percentiles)
-                    item.Values.Add($"Percentile {percentile.Percentil * 100}%", new StatusItemValueItem("Min", percentile.Min), new StatusItemValueItem("Max", percentile.Max));
+                    item.Values.Add($"Percentile {percentile.Percentil * 100}%", 
+                        new StatusItemValueItem("Calls", percentile.Calls), 
+                        new StatusItemValueItem("Call Diff", percentile.CallDiff), 
+                        new StatusItemValueItem("Min", percentile.Min), 
+                        new StatusItemValueItem("Max", percentile.Max)
+                        );
                 return item;
             }
         }
@@ -218,19 +223,21 @@ namespace TWCore.Diagnostics.Status
                     StandardDeviation = null;
                 }
                 var qArray = _queue.ToArray();
-                CallsQuantity = qArray.Length;
-                var sorted = qArray.Select((i, idx) => Tuple.Create(_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
-                LowestValue = sorted.FirstOrDefault()?.Item2;
-                HighestValue = sorted.LastOrDefault()?.Item2;
-                if (Percentiles == null) return;
-                if (Percentiles.Count > 0 && sorted.Length > 0)
+                if (qArray.Length > 0)
                 {
+                    var sorted = qArray.Select((i, idx) => (_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
+                    CallsQuantity = sorted.Length;
+                    LowestValue = sorted.First().Item2;
+                    HighestValue = sorted.Last().Item2;
+                    if (Percentiles == null || Percentiles.Count == 0) return;
                     var posIndexes = sorted.Length - 1;
                     foreach (var percentile in Percentiles)
                     {
                         var idx = percentile.Percentil * posIndexes;
-                        var minIdx = posIndexes - (int)idx;
-                        var maxIdx = (int)Math.Ceiling(idx);
+                        var minIdx = posIndexes - (int) idx;
+                        var maxIdx = (int) Math.Ceiling(idx);
+                        percentile.Calls = (maxIdx - minIdx) + 1;
+                        percentile.CallDiff = sorted.Length - percentile.Calls;
                         percentile.Max = sorted[maxIdx].Item1;
                         percentile.Min = sorted[minIdx].Item1;
                     }
@@ -254,8 +261,11 @@ namespace TWCore.Diagnostics.Status
         private class ItemPercentile
         {
             public readonly double Percentil;
+            public int Calls;
+            public int CallDiff;
             public double Min;
             public double Max;
+            
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ItemPercentile(double percentil)
             {

@@ -83,6 +83,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Services", "src\TWCo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc.Messaging", "src\TWCore.Net.Rpc.Messaging\TWCore.Net.Rpc.Messaging.csproj", "{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Diagnostics.Api", "tools\TWCore.Diagnostics.Api\TWCore.Diagnostics.Api.csproj", "{8BFD262D-E755-4C4D-813E-ECFB44C54884}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -221,6 +223,10 @@ Global
 		{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BFD262D-E755-4C4D-813E-ECFB44C54884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BFD262D-E755-4C4D-813E-ECFB44C54884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BFD262D-E755-4C4D-813E-ECFB44C54884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BFD262D-E755-4C4D-813E-ECFB44C54884}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -259,6 +265,7 @@ Global
 		{34C2763E-D060-44FC-88D6-743D68D4DA0D} = {B83306E0-118A-4F00-B7ED-2D8EF4F9ECE8}
 		{D801A072-159C-48D8-8180-9120F2F343EF} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{3809EE42-6144-4B99-8A39-AEE9DF31BC0E} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{8BFD262D-E755-4C4D-813E-ECFB44C54884} = {B83306E0-118A-4F00-B7ED-2D8EF4F9ECE8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

@@ -16,41 +16,38 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using TWCore.Messaging.Client;
 using TWCore.Services;
 
-// ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable UnusedMember.Global
-// ReSharper disable IntroduceOptionalParameters.Global
 
-namespace TWCore.Diagnostics.Trace.Storages
+namespace TWCore.Diagnostics.Log.Storages
 {
     /// <inheritdoc />
     /// <summary>
-    /// Messaging Trace Storage
+    /// Messaging log storage
     /// </summary>
-    public class MessagingTraceStorage : ITraceStorage
+    public class MessagingLogStorage : ILogStorage
     {
         private readonly object _locker = new object();
         private readonly IMQueueClient _queueClient;
         private readonly Timer _timer;
-        private readonly bool _sendCompleteTrace;
-        private readonly List<TraceItem> _traceItems;
-        
+        private readonly List<ILogItem> _logItems;
+        private readonly LogLevel _logLevels;
+
         #region .ctor
         /// <summary>
-        /// Messaging trace storage
+        /// Messaging log storage
         /// </summary>
         /// <param name="queueName">Queue pair config name</param>
         /// <param name="periodInSeconds">Fetch period in seconds</param>
-        /// <param name="sendCompleteTrace">Sends the complete trace</param>
-        public MessagingTraceStorage(string queueName, int periodInSeconds, bool sendCompleteTrace)
+        /// <param name="logLevels">Log levels to register</param>
+        public MessagingLogStorage(string queueName, int periodInSeconds, LogLevel logLevels)
         {
             _queueClient = Core.Services.GetQueueClient(queueName);
-            _traceItems = new List<TraceItem>();
-            _sendCompleteTrace = sendCompleteTrace;
+            _logItems = new List<ILogItem>();
+            _logLevels = logLevels;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
@@ -59,19 +56,27 @@ namespace TWCore.Diagnostics.Trace.Storages
         #region Public methods
         /// <inheritdoc />
         /// <summary>
-        /// Writes a trace item to the storage
+        /// Writes a log item to the storage
         /// </summary>
-        /// <param name="item">Trace item</param>
-        public void Write(TraceItem item)
+        /// <param name="item">Log Item</param>
+        public void Write(ILogItem item)
         {
+            if (!_logLevels.HasFlag(item.Level)) return;
             lock (_locker)
             {
-                _traceItems.Add(item);
+                _logItems.Add(item);
             }
         }
         /// <inheritdoc />
         /// <summary>
-        /// Dispose the current object resources
+        /// Writes a log item empty line
+        /// </summary>
+        public void WriteEmptyLine()
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose method
         /// </summary>
         public void Dispose()
         {
@@ -86,25 +91,15 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             try
             {
-                var mStatus = (MessagingTraceStorage) state;
-                List<MessagingTraceItem> itemsToSend;
+                var mStatus = (MessagingLogStorage) state;
+                List<ILogItem> itemsToSend;
                 lock (mStatus._locker)
                 {
-                    if (mStatus._traceItems.Count == 0) return;
-                    itemsToSend = new List<MessagingTraceItem>(mStatus._traceItems.Select(i => new MessagingTraceItem
-                    {
-                        EnvironmentName = Core.EnvironmentName,
-                        MachineName = Core.MachineName,
-                        ApplicationName = Core.ApplicationName,
-                        GroupName = i.GroupName,
-                        Id = i.Id,
-                        Timestamp = i.Timestamp,
-                        TraceName = i.TraceName,
-                        TraceObject = mStatus._sendCompleteTrace ? i.TraceObject : null
-                    }));
-                    mStatus._traceItems.Clear();
+                    if (mStatus._logItems.Count == 0) return;
+                    itemsToSend = new List<ILogItem>(mStatus._logItems);
+                    mStatus._logItems.Clear();
                 }
-                Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
+                Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
                 mStatus._queueClient.Send(itemsToSend);
             }
             catch (Exception ex)

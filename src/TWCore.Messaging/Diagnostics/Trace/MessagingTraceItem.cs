@@ -16,9 +16,11 @@ limitations under the License.
 
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
+    /// <inheritdoc />
     /// <summary>
     /// Messaging Trace Item
     /// </summary>
@@ -31,7 +33,5 @@ namespace TWCore.Diagnostics.Trace.Storages
         public string MachineName { get; set; }
         [XmlAttribute, DataMember]
         public string ApplicationName { get; set; }
-        [XmlAttribute, DataMember]
-        public string ApplicationDisplayName { get; set; }
     }
 }

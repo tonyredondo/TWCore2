@@ -63,8 +63,9 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 var mStatus = (MessagingStatusTransport) state;
                 var statusData = mStatus.OnFetchStatus?.Invoke();
-                if (statusData != null)
-                    mStatus._queueClient.Send(statusData);
+                if (statusData == null) return;
+                Core.Log.LibDebug("Sending {0} status data to the diagnostic queue.");
+                mStatus._queueClient.Send(statusData);
             }
             catch (Exception ex)
             {
@@ -80,8 +81,8 @@ namespace TWCore.Diagnostics.Status.Transports
         /// </summary>
         public void Dispose()
         {
-            _timer?.Dispose();
-            _queueClient?.Dispose();
+            _timer.Dispose();
+            _queueClient.Dispose();
         }
         #endregion
     }

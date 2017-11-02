@@ -15,14 +15,12 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.CompilerServices;
+using System.Threading;
 using TWCore.Messaging.Client;
-using TWCore.Serialization;
-using TWCore.Settings;
+using TWCore.Services;
+
+// ReSharper disable UnusedMember.Global
 // ReSharper disable ClassNeverInstantiated.Local
-// ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 // ReSharper disable CheckNamespace
 
 namespace TWCore.Diagnostics.Status.Transports
@@ -33,7 +31,8 @@ namespace TWCore.Diagnostics.Status.Transports
     /// </summary>
     public class MessagingStatusTransport : IStatusTransport
     {
-        private IMQueueClient _queueClient;
+        private readonly IMQueueClient _queueClient;
+        private readonly Timer _timer;
         
         #region Events
         /// <inheritdoc />
@@ -42,13 +41,48 @@ namespace TWCore.Diagnostics.Status.Transports
         /// </summary>
         public event FetchStatusDelegate OnFetchStatus;
         #endregion
+
+        #region .ctor
+        /// <summary>
+        /// Messaging status transport
+        /// </summary>
+        /// <param name="queueName">Queue pair config name</param>
+        /// <param name="periodInSeconds">Fetch period in seconds</param>
+        public MessagingStatusTransport(string queueName, int periodInSeconds)
+        {
+            _queueClient = Core.Services.GetQueueClient(queueName);
+            var period = TimeSpan.FromSeconds(periodInSeconds);
+            _timer = new Timer(TimerCallback, this, period, period);
+        }
+        #endregion
+
+        #region Private methods
+        private static void TimerCallback(object state)
+        {
+            try
+            {
+                var mStatus = (MessagingStatusTransport) state;
+                var statusData = mStatus.OnFetchStatus?.Invoke();
+                if (statusData != null)
+                    mStatus._queueClient.Send(statusData);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        #endregion
         
+        #region Dispose
         /// <inheritdoc />
         /// <summary>
         /// Dispose the current object resources
         /// </summary>
         public void Dispose()
         {
+            _timer?.Dispose();
+            _queueClient?.Dispose();
         }
+        #endregion
     }
 }

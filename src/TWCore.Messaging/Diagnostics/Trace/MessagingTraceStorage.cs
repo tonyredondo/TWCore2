@@ -15,7 +15,11 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using TWCore.Messaging.Client;
+using TWCore.Services;
 
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable UnusedMember.Global
@@ -29,8 +33,30 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// </summary>
     public class MessagingTraceStorage : ITraceStorage
     {
-        private IMQueueClient _queueClient;
-
+        private readonly object _locker = new object();
+        private readonly IMQueueClient _queueClient;
+        private readonly Timer _timer;
+        private readonly bool _sendCompleteTrace;
+        private readonly List<TraceItem> _traceItems;
+        
+        #region .ctor
+        /// <summary>
+        /// Messaging trace storage
+        /// </summary>
+        /// <param name="queueName">Queue pair config name</param>
+        /// <param name="periodInSeconds">Fetch period in seconds</param>
+        /// <param name="sendCompleteTrace">Sends the complete trace</param>
+        public MessagingTraceStorage(string queueName, int periodInSeconds, bool sendCompleteTrace)
+        {
+            _queueClient = Core.Services.GetQueueClient(queueName);
+            _traceItems = new List<TraceItem>();
+            _sendCompleteTrace = sendCompleteTrace;
+            var period = TimeSpan.FromSeconds(periodInSeconds);
+            _timer = new Timer(TimerCallback, this, period, period);
+        }
+        #endregion
+        
+        #region Public methods
         /// <inheritdoc />
         /// <summary>
         /// Writes a trace item to the storage
@@ -38,7 +64,10 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="item">Trace item</param>
         public void Write(TraceItem item)
         {
-            throw new NotImplementedException();
+            lock (_locker)
+            {
+                _traceItems.Add(item);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -46,7 +75,42 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         public void Dispose()
         {
-            throw new NotImplementedException();
+            _timer?.Dispose();
+            TimerCallback(this);
+            _queueClient?.Dispose();
         }
+        #endregion
+        
+        #region Private methods
+        private static void TimerCallback(object state)
+        {
+            try
+            {
+                var mStatus = (MessagingTraceStorage) state;
+                List<MessagingTraceItem> itemsToSend;
+                lock (mStatus._locker)
+                {
+                    itemsToSend = new List<MessagingTraceItem>(mStatus._traceItems.Select(i => new MessagingTraceItem
+                    {
+                        EnvironmentName = Core.EnvironmentName,
+                        MachineName = Core.MachineName,
+                        ApplicationName = Core.ApplicationName,
+                        ApplicationDisplayName = Core.ApplicationDisplayName,
+                        GroupName = i.GroupName,
+                        Id = i.Id,
+                        Timestamp = i.Timestamp,
+                        TraceName = i.TraceName,
+                        TraceObject = mStatus._sendCompleteTrace ? i.TraceObject : null
+                    }));
+                    mStatus._traceItems.Clear();
+                }
+                mStatus._queueClient.Send(itemsToSend);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+        }
+        #endregion
     }
 }

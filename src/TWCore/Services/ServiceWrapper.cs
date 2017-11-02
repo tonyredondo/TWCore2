@@ -20,6 +20,7 @@ using TWCore.Diagnostics.Status;
 // ReSharper disable IntroduceOptionalParameters.Global
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Services
 {

@@ -162,7 +162,7 @@ namespace TWCore.Reflection
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInstance?.Instance;
+            return asmInstance.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -188,7 +188,7 @@ namespace TWCore.Reflection
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInstance?.Instance;
+            return asmInstance.Instance;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

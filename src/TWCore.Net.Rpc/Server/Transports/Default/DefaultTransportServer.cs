@@ -25,6 +25,8 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable UnassignedGetOnlyAutoProperty
 
 namespace TWCore.Net.RPC.Server.Transports.Default
 {

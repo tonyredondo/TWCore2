@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Threading;
 using TWCore.Messaging.Client;
 using TWCore.Services;
+// ReSharper disable ImpureMethodCallOnReadonlyValueField
 
 // ReSharper disable UnusedMember.Global
 

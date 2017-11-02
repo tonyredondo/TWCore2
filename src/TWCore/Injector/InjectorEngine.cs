@@ -516,12 +516,10 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetArgumentValue(string name, Type valueType)
         {
-            if (Settings.Arguments.Contains(name))
-            {
-                var argument = Settings.Arguments[name];
-                return GetArgumentValue(argument, valueType);
-            }
-            throw new ArgumentNullException(name);
+            if (!Settings.Arguments.Contains(name)) 
+                throw new ArgumentNullException(name);
+            var argument = Settings.Arguments[name];
+            return GetArgumentValue(argument, valueType);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetArgumentValue(Argument argument, Type valueType)

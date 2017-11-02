@@ -259,7 +259,10 @@ namespace TWCore
                 _processThread?.Wait(2500);
                 _processThread = null;
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
             _processHandler.Reset();
             Core.Status.DeAttachObject(this);
         }

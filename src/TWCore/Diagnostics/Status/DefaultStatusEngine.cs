@@ -555,7 +555,7 @@ namespace TWCore.Diagnostics.Status
                         }
                         for (var i = 0; i < _statusReferenceAttributes.Length; i++)
                         {
-                            (var fProp, var attr) = _statusReferenceAttributes[i];
+                            (var fProp, var _) = _statusReferenceAttributes[i];
                             var value = fProp.GetValue(obj);
                             Core.Status.AttachChild(value, obj);
                         }

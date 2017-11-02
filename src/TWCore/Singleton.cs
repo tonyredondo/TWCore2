@@ -56,11 +56,9 @@ namespace TWCore
 	                var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 	                foreach (var ctor in constructors)
 	                {
-	                    if (ctor.GetParameters().Any(p => !p.HasDefaultValue) == false)
-	                    {
-	                        Value = (T)ctor.Invoke(new object[0]);
-	                        return;
-	                    }
+		                if (ctor.GetParameters().Any(p => !p.HasDefaultValue) != false) continue;
+		                Value = (T)ctor.Invoke(new object[0]);
+		                return;
 	                }
 	                Value = Activator.CreateInstance<T>();
 				}

@@ -25,6 +25,8 @@ using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
+// ReSharper disable UnassignedGetOnlyAutoProperty
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore.Net.RPC.Client.Transports.Default
 {
@@ -34,7 +36,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// </summary>
     public class DefaultTransportClient : ITransportClient
     {
-        private readonly ConcurrentDictionary<Guid, RPCMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RPCMessageHandler>();
+        private readonly ConcurrentDictionary<Guid, RpcMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RpcMessageHandler>();
         private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(100);
         private readonly AsyncLock _connectionLocker = new AsyncLock();
         private CancellationTokenSource _connectionCancellationTokenSource;
@@ -45,7 +47,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private RpcClient[] _clients;
 
         #region Nested Types
-        private sealed class RPCMessageHandler
+        private sealed class RpcMessageHandler
         {
             public readonly AsyncManualResetEvent Event = new AsyncManualResetEvent();
             public RPCResponseMessage Message;
@@ -270,39 +272,39 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <param name="messageRq">RPC request message to send to the server</param>
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
+        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRq)
         {
             if (!_shouldBeConnected)
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
-            var handler = new RPCMessageHandler();
-            _messageResponsesHandlers.TryAdd(messageRQ.MessageId, handler);
+            var handler = new RpcMessageHandler();
+            _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
             Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
             var client = _clients[Interlocked.Increment(ref _currentIndex)];
-            await client.SendRpcMessageAsync(messageRQ).ConfigureAwait(false);
+            await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
             await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
             if (handler.Event.IsSet)
             {
-                _messageResponsesHandlers.TryRemove(messageRQ.MessageId, out var _);
+                _messageResponsesHandlers.TryRemove(messageRq.MessageId, out var _);
                 return handler.Message;
             }
             if (_connectionCancellationToken.IsCancellationRequested) 
                 return null;
-            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRQ.MessageId));
+            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
         }
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
         /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <param name="messageRq">RPC request message to send to the server</param>
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-            => InvokeMethodAsync(messageRQ).WaitAndResults();
+        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRq)
+            => InvokeMethodAsync(messageRq).WaitAndResults();
         #endregion
 
         /// <inheritdoc />

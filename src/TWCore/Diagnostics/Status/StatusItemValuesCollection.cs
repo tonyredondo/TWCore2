@@ -17,6 +17,7 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedMember.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 
 namespace TWCore.Diagnostics.Status
 {

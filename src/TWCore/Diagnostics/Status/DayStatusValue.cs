@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Local
+// ReSharper disable AccessToModifiedClosure
 
 namespace TWCore.Diagnostics.Status
 {

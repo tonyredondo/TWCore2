@@ -236,9 +236,8 @@ namespace TWCore
 
                 Core.RebindSettings();
 
-                if (fSettings.Core != null)
-                    if (fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
-                        Core.LoadInjector(fSettings.Core.InjectorFile);
+                if (fSettings.Core != null && fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
+                    Core.LoadInjector(fSettings.Core.InjectorFile);
 
                 return true;
             }

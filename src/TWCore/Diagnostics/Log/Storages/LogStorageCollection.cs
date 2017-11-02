@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using TWCore.Diagnostics.Status;
 
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable IntroduceOptionalParameters.Global

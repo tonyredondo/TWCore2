@@ -32,7 +32,7 @@ namespace TWCore.Diagnostics.Log.Storages
     public class MessagingLogStorage : ILogStorage
     {
         private readonly object _locker = new object();
-        private readonly IMQueueClient _queueClient;
+        private readonly string _queueName;
         private readonly Timer _timer;
         private readonly List<LogItem> _logItems;
         private readonly LogLevel _logLevels;
@@ -46,7 +46,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="logLevels">Log levels to register</param>
         public MessagingLogStorage(string queueName, int periodInSeconds, LogLevel logLevels)
         {
-            _queueClient = Core.Services.GetQueueClient(queueName);
+            _queueName = queueName;
             _logItems = new List<LogItem>();
             _logLevels = logLevels;
             var period = TimeSpan.FromSeconds(periodInSeconds);
@@ -82,10 +82,8 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         public void Dispose()
         {
-            Core.Log.LibDebug("Disposing...");
             _timer.Dispose();
             TimerCallback(this);
-            _queueClient.Dispose();
         }
         #endregion
         
@@ -103,7 +101,9 @@ namespace TWCore.Diagnostics.Log.Storages
                     mStatus._logItems.Clear();
                 }
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
-                mStatus._queueClient.Send(itemsToSend);
+                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
+                queueClient.Send(itemsToSend);
+                queueClient.Dispose();
             }
             catch (Exception ex)
             {

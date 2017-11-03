@@ -31,7 +31,7 @@ namespace TWCore.Diagnostics.Status.Transports
     /// </summary>
     public class MessagingStatusTransport : IStatusTransport
     {
-        private readonly IMQueueClient _queueClient;
+        private readonly string _queueName;
         private readonly Timer _timer;
         
         #region Events
@@ -50,7 +50,7 @@ namespace TWCore.Diagnostics.Status.Transports
         /// <param name="periodInSeconds">Fetch period in seconds</param>
         public MessagingStatusTransport(string queueName, int periodInSeconds)
         {
-            _queueClient = Core.Services.GetQueueClient(queueName);
+            _queueName = queueName;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
@@ -65,7 +65,9 @@ namespace TWCore.Diagnostics.Status.Transports
                 var statusData = mStatus.OnFetchStatus?.Invoke();
                 if (statusData == null) return;
                 Core.Log.LibDebug("Sending {0} status data to the diagnostic queue.");
-                mStatus._queueClient.Send(statusData);
+                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
+                queueClient.Send(statusData);
+                queueClient.Dispose();
             }
             catch (Exception ex)
             {
@@ -82,7 +84,6 @@ namespace TWCore.Diagnostics.Status.Transports
         public void Dispose()
         {
             _timer.Dispose();
-            _queueClient.Dispose();
         }
         #endregion
     }

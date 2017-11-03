@@ -34,7 +34,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     public class MessagingTraceStorage : ITraceStorage
     {
         private readonly object _locker = new object();
-        private readonly IMQueueClient _queueClient;
+        private readonly string _queueName;
         private readonly Timer _timer;
         private readonly bool _sendCompleteTrace;
         private readonly List<TraceItem> _traceItems;
@@ -48,7 +48,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="sendCompleteTrace">Sends the complete trace</param>
         public MessagingTraceStorage(string queueName, int periodInSeconds, bool sendCompleteTrace)
         {
-            _queueClient = Core.Services.GetQueueClient(queueName);
+            _queueName = queueName;
             _traceItems = new List<TraceItem>();
             _sendCompleteTrace = sendCompleteTrace;
             var period = TimeSpan.FromSeconds(periodInSeconds);
@@ -77,7 +77,6 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             _timer.Dispose();
             TimerCallback(this);
-            _queueClient.Dispose();
         }
         #endregion
         
@@ -105,7 +104,9 @@ namespace TWCore.Diagnostics.Trace.Storages
                     mStatus._traceItems.Clear();
                 }
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
-                mStatus._queueClient.Send(itemsToSend);
+                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
+                queueClient.Send(itemsToSend);
+                queueClient.Dispose();
             }
             catch (Exception ex)
             {

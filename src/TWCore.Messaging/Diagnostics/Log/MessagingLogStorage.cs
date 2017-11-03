@@ -35,7 +35,6 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly string _queueName;
         private readonly Timer _timer;
         private readonly List<LogItem> _logItems;
-        private readonly LogLevel _logLevels;
 
         #region .ctor
         /// <summary>
@@ -43,12 +42,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="queueName">Queue pair config name</param>
         /// <param name="periodInSeconds">Fetch period in seconds</param>
-        /// <param name="logLevels">Log levels to register</param>
-        public MessagingLogStorage(string queueName, int periodInSeconds, LogLevel logLevels)
+        public MessagingLogStorage(string queueName, int periodInSeconds)
         {
             _queueName = queueName;
             _logItems = new List<LogItem>();
-            _logLevels = logLevels;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
@@ -62,7 +59,6 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="item">Log Item</param>
         public void Write(ILogItem item)
         {
-            if (!_logLevels.HasFlag(item.Level)) return;
             lock (_locker)
             {
                 if (item is LogItem logItem) 

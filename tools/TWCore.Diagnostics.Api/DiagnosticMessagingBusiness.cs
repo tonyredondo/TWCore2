@@ -20,6 +20,8 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
+using TWCore.Messaging;
+using TWCore.Services;
 using TWCore.Services.Messaging;
 
 namespace TWCore.Diagnostics.Api
@@ -28,17 +30,20 @@ namespace TWCore.Diagnostics.Api
     {
         protected override Task<object> OnProcessAsync(List<LogItem> message)
         {
-            throw new NotImplementedException();
+            Core.Log.Warning("Log Items Received.");
+            return Task.FromResult(ResponseMessage.NoResponse);
         }
 
         protected override Task<object> OnProcessAsync(List<MessagingTraceItem> message)
         {
-            throw new NotImplementedException();
+            Core.Log.Warning("Trace Items Received.");
+            return Task.FromResult(ResponseMessage.NoResponse);
         }
 
         protected override Task<object> OnProcessAsync(StatusItemCollection message)
         {
-            throw new NotImplementedException();
+            Core.Log.Warning("Status Received.");
+            return Task.FromResult(ResponseMessage.NoResponse);
         }
     }
 }

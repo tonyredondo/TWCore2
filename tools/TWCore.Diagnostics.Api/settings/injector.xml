@@ -27,6 +27,11 @@
         <Class Name="File" Type="TWCore.Diagnostics.Trace.Storages.SimpleFileTraceStorage, TWCore">
           <Parameter Name="basePath" Type="Settings" Value="Core.Trace.BasePath" />
         </Class>
+          <Class Name="Messages" Type="TWCore.Diagnostics.Trace.Storages.MessagingTraceStorage, TWCore.Messaging">
+              <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+              <Parameter Name="periodInSeconds" Type="Raw" Value="10" />
+              <Parameter Name="sendCompleteTrace" Type="Raw" Value="false" />
+          </Class>
       </Interface>
       
       <!--Status Transports-->
@@ -34,6 +39,10 @@
         <Class Name="Http" Type="TWCore.Diagnostics.Status.Transports.HttpStatusTransport, TWCore.Net.HttpServer">
           <Parameter Name="port" Type="Settings" Value="Core.Status.Transport.Http.Port" />
         </Class>
+          <Class Name="Messages" Type="TWCore.Diagnostics.Status.Transports.MessagingStatusTransport, TWCore.Messaging">
+              <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+              <Parameter Name="periodInSeconds" Type="Raw" Value="10" />
+          </Class>
       </Interface>
       
     </Interfaces>

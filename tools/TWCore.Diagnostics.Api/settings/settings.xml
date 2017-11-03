@@ -16,9 +16,11 @@
       <Item Key="Core.Trace.Serializer" Value="TWCore.Serialization.WSerializer.WBinarySerializer, TWCore.Serialization.WSerializer" />
       <Item Key="Core.Trace.Compressor" Value="TWCore.Compression.GZipCompressor, TWCore" />
       <Item Key="Core.Trace.Storage.File.Enabled" Value="true" />
+      <Item Key="Core.Trace.Storage.Messages.Enabled" Value="true" />
 
       <!--Status Settings-->
       <Item Key="Core.Status.Transport.Http.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.Messages.Enabled" Value="true" />
       <Item Key="Core.Status.Transport.File.Enabled" Value="true" />
       <Item Key="Core.Status.Transport.File.Triggers.Periodic.Enabled" Value="true" />
       <Item Key="Core.Status.Transport.File.Triggers.Periodic.TimeInMinutes" Value="60" />

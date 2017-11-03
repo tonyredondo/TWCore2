@@ -1,11 +1,15 @@
 ﻿{
   "appSettings": {
     "Core.DebugMode": true,
-    "WebService.Urls": "http://*:50999"
+    "WebService.Urls": "http://*:55999",
+    "Core.Services.Queue.ConfigFile": "./settings/queues.xml",
+    "Core.Services.Queue.ServerName": "TWCore.Diagnostics.Api"
   },
   "Core": {
     "environmentName": "DEV",
     "applicationName": "TWCore.Diagnostics.Api",
-    "applicationDisplayName": "TWCore Diagnostics Tools"
+    "applicationDisplayName": "TWCore Diagnostics Tools",
+    "settingsFile": "./settings/settings.xml",
+    "injectorFile": "./settings/injector.xml"
   }
 }

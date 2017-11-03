@@ -62,10 +62,7 @@ namespace TWCore.Diagnostics.Log.Storages
             lock (_locker)
             {
                 if (item is LogItem logItem) 
-                {
-                    Core.Log.LibDebug("LogItem with level: {0} added. {1}", logItem.Level, logItem.Message);
                     _logItems.Add(logItem);
-                }
             }
         }
         /// <inheritdoc />

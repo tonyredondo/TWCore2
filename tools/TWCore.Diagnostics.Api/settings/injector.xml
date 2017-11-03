@@ -1,0 +1,42 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<InjectorGlobalSettings>
+  <Global>
+    <Interfaces>
+      <!--Log Storages-->
+      <Interface Type="TWCore.Diagnostics.Log.Storages.ILogStorage, TWCore">
+        <Class Name="File" Type="TWCore.Diagnostics.Log.Storages.SimpleFileLogStorage, TWCore">
+          <Parameter Name="fileName" Type="Settings" Value="Core.Log.Storage.File.Path" />
+          <Parameter Name="createByDay" Type="Raw" Value="true" />
+        </Class>
+        <Class Name="Html" Type="TWCore.Diagnostics.Log.Storages.HtmlFileLogStorage, TWCore">
+          <Parameter Name="fileName" Type="Settings" Value="Core.Log.Storage.Html.Path" />
+          <Parameter Name="createByDay" Type="Raw" Value="true" />
+          <Parameter Name="useMaxLength" Type="Raw" Value="true" />
+          <Parameter Name="maxLength" Type="Raw" Value="5242880" />
+        </Class>
+        <Class Name="Console" Type="TWCore.Diagnostics.Log.Storages.ConsoleLogStorage, TWCore" />
+      </Interface>
+
+      <!--Trace Storage-->
+      <Interface Type="TWCore.Diagnostics.Trace.Storages.ITraceStorage, TWCore">
+        <Class Name="File" Type="TWCore.Diagnostics.Trace.Storages.SimpleFileTraceStorage, TWCore">
+          <Parameter Name="basePath" Type="Settings" Value="Core.Trace.BasePath" />
+        </Class>
+      </Interface>
+      
+      <!--Status Transports-->
+      <Interface Type="TWCore.Diagnostics.Status.IStatusTransport, TWCore">
+        <Class Name="Http" Type="TWCore.Diagnostics.Status.Transports.HttpStatusTransport, TWCore.Net.HttpServer">
+          <Parameter Name="port" Type="Settings" Value="Core.Status.Transport.Http.Port" />
+        </Class>
+      </Interface>
+      
+    </Interfaces>
+  </Global>
+  <InjectorSettings EnvironmentName="" ApplicationName="TWCore.Diagnostics.Api">
+    <Interfaces>
+      
+      
+    </Interfaces>
+  </InjectorSettings>
+</InjectorGlobalSettings>

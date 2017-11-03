@@ -1,0 +1,39 @@
+﻿<?xml version="1.0" encoding="utf-8" ?> 
+<Settings>
+  <Global>
+    <Items>
+      <!--Log Settings-->
+      <Item Key="Core.Log.Storage.File.Enabled" Value="true" />
+      <Item Key="Core.Log.Storage.File.LogLevel" Value="255" />
+      <Item Key="Core.Log.Storage.Html.Enabled" Value="true" />
+      <Item Key="Core.Log.Storage.Html.LogLevel" Value="255" />
+      <Item Key="Core.Log.Storage.Console.Enabled" Value="true" />
+      <Item Key="Core.Log.Storage.Console.LogLevel" Value="1023" />
+
+      <!--Trace Settings-->
+      <Item Key="Core.Trace.UseAbsolutePath" Value="false" />
+      <Item Key="Core.Trace.Serializer" Value="TWCore.Serialization.WSerializer.WBinarySerializer, TWCore.Serialization.WSerializer" />
+      <Item Key="Core.Trace.Compressor" Value="TWCore.Compression.GZipCompressor, TWCore" />
+      <Item Key="Core.Trace.Storage.File.Enabled" Value="true" />
+
+      <!--Status Settings-->
+      <Item Key="Core.Status.Transport.Http.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.File.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.File.Triggers.Periodic.Enabled" Value="true" />
+      <Item Key="Core.Status.Transport.File.Triggers.Periodic.TimeInMinutes" Value="60" />
+    </Items>
+  </Global>
+  
+  <AppSettings Name="TWCore.Diagnostics.Api">
+    <Items>
+      <Item Key="Core.Log.Storage.File.Path" Value="./logs/TWCore.Diagnostics.Api.txt" />
+      <Item Key="Core.Log.Storage.Html.Path" Value="./logs/TWCore.Diagnostics.Api.htm" />
+      <Item Key="Core.Trace.BasePath" Value="./traces" />
+      <Item Key="Core.Status.Transport.File.Path" Value="./status" />
+      <Item Key="Core.Status.Transport.File.Format" Value="TWCore.Diagnostics.Api [STATUS]-{yyyy}-{MM}-{dd}_{HH}-{mm}" />
+      <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
+      
+    </Items>
+  </AppSettings>
+
+</Settings>

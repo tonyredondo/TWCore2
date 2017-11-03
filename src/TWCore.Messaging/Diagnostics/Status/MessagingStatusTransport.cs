@@ -64,7 +64,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 var mStatus = (MessagingStatusTransport) state;
                 var statusData = mStatus.OnFetchStatus?.Invoke();
                 if (statusData == null) return;
-                Core.Log.LibDebug("Sending {0} status data to the diagnostic queue.");
+                Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
                 queueClient.Send(statusData);
                 queueClient.Dispose();

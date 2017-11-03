@@ -65,8 +65,11 @@ namespace TWCore.Diagnostics.Log.Storages
             if (!_logLevels.HasFlag(item.Level)) return;
             lock (_locker)
             {
-                if (item is LogItem logItem)
+                if (item is LogItem logItem) 
+                {
+                    Core.Log.LibDebug("LogItem with level: {0} added. {1}", logItem.Level, logItem.Message);
                     _logItems.Add(logItem);
+                }
             }
         }
         /// <inheritdoc />

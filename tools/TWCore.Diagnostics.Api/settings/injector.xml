@@ -15,6 +15,11 @@
           <Parameter Name="maxLength" Type="Raw" Value="5242880" />
         </Class>
         <Class Name="Console" Type="TWCore.Diagnostics.Log.Storages.ConsoleLogStorage, TWCore" />
+        <Class Name="Messages" Type="TWCore.Diagnostics.Log.Storages.MessagingLogStorage, TWCore.Messaging">
+            <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+            <Parameter Name="periodInSeconds" Type="Raw" Value="10" />
+            <Parameter Name="logLevels" Type="Raw" Value="1023" />
+        </Class>
       </Interface>
 
       <!--Trace Storage-->

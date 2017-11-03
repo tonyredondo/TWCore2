@@ -82,6 +82,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         public void Dispose()
         {
+            Core.Log.LibDebug("Disposing...");
             _timer.Dispose();
             TimerCallback(this);
             _queueClient.Dispose();

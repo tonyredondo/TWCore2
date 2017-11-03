@@ -9,6 +9,7 @@
       <Item Key="Core.Log.Storage.Html.LogLevel" Value="255" />
       <Item Key="Core.Log.Storage.Console.Enabled" Value="true" />
       <Item Key="Core.Log.Storage.Console.LogLevel" Value="1023" />
+      <Item Key="Core.Log.Storage.Messages.Enabled" Value="true" />
 
       <!--Trace Settings-->
       <Item Key="Core.Trace.UseAbsolutePath" Value="false" />

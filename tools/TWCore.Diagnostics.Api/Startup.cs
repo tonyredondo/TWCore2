@@ -21,15 +21,13 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Cors.Internal;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using TWCore.Net.Multicast;
-using TWCore.Serialization;
 using TWCore.Web;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable ArgumentsStyleStringLiteral
 
-namespace TWCore.Object.Api
+namespace TWCore.Diagnostics.Api
 {
     public class Startup
     {
@@ -52,7 +50,7 @@ namespace TWCore.Object.Api
             {
                 // Set a short timeout for easy testing.
                 options.IdleTimeout = TimeSpan.FromMinutes(60);
-                options.Cookie.Name = ".TWCore.Object.Api.Session";
+                options.Cookie.Name = ".TWCore.Diagnostics.Api";
                 options.Cookie.HttpOnly = true;
             });
             services.AddCors(options =>
@@ -66,8 +64,6 @@ namespace TWCore.Object.Api
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory("AllowAllOrigins"));
             });
-
-            DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "OBJECT.API", "TWCore Object Api", new SerializedObject(Core.Settings["WebService.Urls"]));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

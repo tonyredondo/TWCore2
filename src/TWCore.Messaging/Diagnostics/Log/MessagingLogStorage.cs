@@ -34,7 +34,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly object _locker = new object();
         private readonly IMQueueClient _queueClient;
         private readonly Timer _timer;
-        private readonly List<ILogItem> _logItems;
+        private readonly List<LogItem> _logItems;
         private readonly LogLevel _logLevels;
 
         #region .ctor
@@ -47,7 +47,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public MessagingLogStorage(string queueName, int periodInSeconds, LogLevel logLevels)
         {
             _queueClient = Core.Services.GetQueueClient(queueName);
-            _logItems = new List<ILogItem>();
+            _logItems = new List<LogItem>();
             _logLevels = logLevels;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
@@ -65,7 +65,8 @@ namespace TWCore.Diagnostics.Log.Storages
             if (!_logLevels.HasFlag(item.Level)) return;
             lock (_locker)
             {
-                _logItems.Add(item);
+                if (item is LogItem logItem)
+                    _logItems.Add(logItem);
             }
         }
         /// <inheritdoc />
@@ -93,11 +94,11 @@ namespace TWCore.Diagnostics.Log.Storages
             try
             {
                 var mStatus = (MessagingLogStorage) state;
-                List<ILogItem> itemsToSend;
+                List<LogItem> itemsToSend;
                 lock (mStatus._locker)
                 {
                     if (mStatus._logItems.Count == 0) return;
-                    itemsToSend = new List<ILogItem>(mStatus._logItems);
+                    itemsToSend = new List<LogItem>(mStatus._logItems);
                     mStatus._logItems.Clear();
                 }
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);

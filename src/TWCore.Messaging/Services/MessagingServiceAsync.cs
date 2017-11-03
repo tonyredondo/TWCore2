@@ -27,6 +27,7 @@ using TWCore.Services.Messaging;
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBeProtected.Global
 
 namespace TWCore.Services
 {
@@ -74,6 +75,11 @@ namespace TWCore.Services
         /// Messaging service counters
         /// </summary>
         public MessagingServiceCounters Counters { get; private set; }
+        /// <summary>
+        /// Gets a value indicating enable messages trace.
+        /// </summary>
+        /// <value><c>true</c> if enable messages trace; otherwise, <c>false</c>.</value>
+        public bool EnableMessagesTrace { get; set; }
         #endregion
 
         #region Public Methods
@@ -255,7 +261,37 @@ namespace TWCore.Services
         /// On Service Init
         /// </summary>
         /// <param name="args">Service arguments</param>
-        protected virtual void OnInit(string[] args) { }
+        protected virtual void OnInit(string[] args) 
+        {
+            MessageReceived += (sender, e) =>
+            {
+                if (!EnableMessagesTrace) return;
+
+                switch (e.Message)
+                {
+                    case RequestMessage reqMsg:
+                        Core.Trace.Write("QueueReceivedRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+                        break;
+                    case ResponseMessage resMsg:
+                        Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
+                        break;
+                }
+            };
+            MessageSent += (sender, e) =>
+            {
+                if (!EnableMessagesTrace) return;
+
+                switch (e.Message)
+                {
+                    case RequestMessage reqMsg:
+                        Core.Trace.Write("QueueSentRequestMessage - " + reqMsg.CorrelationId, reqMsg);
+                        break;
+                    case ResponseMessage resMsg:
+                        Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
+                        break;
+                }
+            };
+        }
         /// <summary>
         /// On Service Stop
         /// </summary>

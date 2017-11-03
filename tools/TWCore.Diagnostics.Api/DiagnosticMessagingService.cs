@@ -14,28 +14,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-namespace TWCore.Object.Api
-{
-    public class SessionData
-    {
-        public string FilePath { get; set; }
-        public object FileObject { get; set; }
-        public string SourceCode { get; set; } = @"using TWCore;
-using TWCore.Object.Compiler;
-using TWCore.Serialization;
-using System;
+using TWCore.Services;
+// ReSharper disable UnusedMember.Global
 
-namespace Runtime
+namespace TWCore.Diagnostics.Api
 {
-    public class RuntimeCode : IRuntimeCode
+    public class DiagnosticMessagingService : BusinessMessagesServiceAsync<DiagnosticMessagingBusiness>
     {
-        public object Execute(object value)
+        protected override void OnInit(string[] args)
         {
-            return value is SerializedObject obj ? obj.GetValue() : value;
+            EnableMessagesTrace = false;
+            base.OnInit(args);
         }
-    }
-}
-";
-        public object CompiledResult { get; set; }
     }
 }

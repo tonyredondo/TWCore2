@@ -215,7 +215,8 @@ namespace TWCore.Messaging.RabbitMQ
                 sender.EnsureExchange();
                 var props = sender.Channel.CreateBasicProperties();
                 props.CorrelationId = correlationId;
-                props.ReplyTo = replyTo;
+                if (replyTo != null)
+                    props.ReplyTo = replyTo;
                 props.Priority = priority;
                 props.Expiration = expiration;
                 props.AppId = Core.ApplicationName;

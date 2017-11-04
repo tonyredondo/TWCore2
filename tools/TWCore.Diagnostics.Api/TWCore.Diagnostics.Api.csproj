@@ -4,7 +4,6 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="LiteDB" Version="4.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.All" Version="2.0.0" />
   </ItemGroup>
   <ItemGroup>
@@ -22,6 +21,7 @@
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Web\TWCore.Web.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
+    <ProjectReference Include="..\TWCore.Diagnostics.Api.Models\TWCore.Diagnostics.Api.Models.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Content Update="TWCore.Diagnostics.Api.config.json">

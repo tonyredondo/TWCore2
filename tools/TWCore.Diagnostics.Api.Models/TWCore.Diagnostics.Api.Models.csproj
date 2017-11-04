@@ -6,7 +6,6 @@
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Log" />
     <Folder Include="Status" />
     <Folder Include="Trace" />
   </ItemGroup>

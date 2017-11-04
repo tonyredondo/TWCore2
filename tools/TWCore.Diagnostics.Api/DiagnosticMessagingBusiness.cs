@@ -80,8 +80,6 @@ namespace TWCore.Diagnostics.Api
                     session.SaveChanges();
                 }
             });
-            
-            Core.Log.Warning("Log Items Received.");
             return Task.FromResult(ResponseMessage.NoResponse);
         }
 

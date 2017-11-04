@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Log;
@@ -39,23 +40,17 @@ namespace TWCore.Diagnostics.Api
         {
             if (message == null || message.Count == 0) return Task.FromResult(ResponseMessage.NoResponse);
 
-            /*
-            using (var db = new LiteDatabase(ConnectionString))
+            RavenHelper.Execute(session =>
             {
-                var nodeCol = db.GetCollection<NodeInfo>(NodeInfoCollectionName);
-                nodeCol.EnsureIndex(i => i.Machine);
-                nodeCol.EnsureIndex(i => i.Application);
-                nodeCol.EnsureIndex(i => i.Environment);
-                nodeCol.EnsureIndex(i => i.Date);
-
                 foreach (var logItem in message)
                 {
-                    var nodeInfo = nodeCol.FindOne(i => 
-                        i.Date == logItem.Timestamp.Date && 
-                        i.Machine == logItem.MachineName &&
-                        i.Environment == logItem.EnvironmentName &&
-                        i.Application == logItem.ApplicationName);
-
+                    var nodeInfo = (from node in session.Query<NodeInfo>()
+                        where node.Date == logItem.Timestamp.Date &&
+                              node.Machine == logItem.MachineName &&
+                              node.Environment == logItem.EnvironmentName &&
+                              node.Application == logItem.ApplicationName
+                        select  node).FirstOrDefault();
+                   
                     if (nodeInfo == null)
                     {
                         nodeInfo = new NodeInfo
@@ -65,12 +60,11 @@ namespace TWCore.Diagnostics.Api
                             Machine = logItem.MachineName,
                             Date = logItem.Timestamp.Date
                         };
-                        nodeCol.Insert(nodeInfo);
+                        session.Store(nodeInfo);
+                        session.SaveChanges();
                     }
 
-                    var col = db.GetCollection<NodeLogItem>(LogCollectionName);
-                    col.EnsureIndex(i => i.NodeInfoId);
-                    col.Insert(new NodeLogItem
+                    var logInfo = new NodeLogItem
                     {
                         NodeInfoId = nodeInfo.Id,
                         Assembly = logItem.AssemblyName,
@@ -81,10 +75,11 @@ namespace TWCore.Diagnostics.Api
                         Type = logItem.TypeName,
                         Exception = logItem.Exception,
                         Timestamp = logItem.Timestamp
-                    });
+                    };
+                    session.Store(logInfo);
+                    session.SaveChanges();
                 }
-            }
-            */
+            });
             
             Core.Log.Warning("Log Items Received.");
             return Task.FromResult(ResponseMessage.NoResponse);

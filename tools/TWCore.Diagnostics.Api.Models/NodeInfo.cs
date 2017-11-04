@@ -8,7 +8,7 @@ namespace TWCore.Diagnostics.Api.Models
     public class NodeInfo
     {
         [XmlAttribute, DataMember]
-        public int Id { get; set; }
+        public string Id { get; set; }
         [XmlAttribute, DataMember]
         public string Machine { get; set; }
         [XmlAttribute, DataMember]

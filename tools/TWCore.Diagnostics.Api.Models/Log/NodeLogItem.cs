@@ -9,9 +9,9 @@ namespace TWCore.Diagnostics.Api.Models.Log
     public class NodeLogItem
     {
         [XmlAttribute, DataMember]
-        public int Id { get; set; }
+        public string Id { get; set; }
         [XmlAttribute, DataMember]
-        public int NodeInfoId { get; set; }
+        public string NodeInfoId { get; set; }
         [XmlAttribute, DataMember]
         public string Assembly { get; set; }
         [XmlAttribute, DataMember]

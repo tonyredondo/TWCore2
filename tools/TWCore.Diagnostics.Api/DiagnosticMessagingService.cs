@@ -19,7 +19,7 @@ using TWCore.Services;
 
 namespace TWCore.Diagnostics.Api
 {
-    public class DiagnosticMessagingService : BusinessMessagesServiceAsync<DiagnosticMessagingBusiness>
+    public class DiagnosticMessagingService : BusinessMessagesService<DiagnosticMessagingBusiness>
     {
         protected override void OnInit(string[] args)
         {

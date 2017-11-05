@@ -16,29 +16,21 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Messaging;
-using TWCore.Services;
 using TWCore.Services.Messaging;
 
 namespace TWCore.Diagnostics.Api
 {
-    public class DiagnosticMessagingBusiness : BusinessAsyncBase<List<LogItem>, List<MessagingTraceItem>, StatusItemCollection>
+    public class DiagnosticMessagingBusiness : BusinessBase<List<LogItem>, List<MessagingTraceItem>, StatusItemCollection>
     {
-        public const string ConnectionString = "Filename=mydb.db;Mode=Exclusive";
-        public const string NodeInfoCollectionName = "nodes";
-        public const string LogCollectionName = "logs";
-        
-        
-        protected override Task<object> OnProcessAsync(List<LogItem> message)
+        protected override object OnProcess(List<LogItem> message)
         {
-            if (message == null || message.Count == 0) return Task.FromResult(ResponseMessage.NoResponse);
+            if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
 
             RavenHelper.Execute(session =>
             {
@@ -80,19 +72,20 @@ namespace TWCore.Diagnostics.Api
                     session.SaveChanges();
                 }
             });
-            return Task.FromResult(ResponseMessage.NoResponse);
+            return ResponseMessage.NoResponse;
         }
 
-        protected override Task<object> OnProcessAsync(List<MessagingTraceItem> message)
+        protected override object OnProcess(List<MessagingTraceItem> message)
         {
-            Core.Log.Warning("Trace Items Received.");
-            return Task.FromResult(ResponseMessage.NoResponse);
+            if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
+
+            return ResponseMessage.NoResponse;
         }
 
-        protected override Task<object> OnProcessAsync(StatusItemCollection message)
+        protected override object OnProcess(StatusItemCollection message)
         {
             Core.Log.Warning("Status Received.");
-            return Task.FromResult(ResponseMessage.NoResponse);
+            return ResponseMessage.NoResponse;
         }
     }
 }

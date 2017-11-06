@@ -140,7 +140,6 @@ namespace TWCore.Diagnostics.Api
         {
             if (message == null) return ResponseMessage.NoResponse;
 
-            Core.Log.Warning("Status Received.");
             Core.Log.InfoBasic("Storing Status Info...");
             RavenHelper.Execute(session =>
             {

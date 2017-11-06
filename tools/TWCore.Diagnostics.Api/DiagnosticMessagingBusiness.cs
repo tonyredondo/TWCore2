@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Api
         protected override object OnProcess(List<LogItem> message)
         {
             if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
-
+            Core.Log.InfoBasic("Storing Log Info...");
             RavenHelper.Execute(session =>
             {
                 foreach (var logItem in message)
@@ -86,7 +86,7 @@ namespace TWCore.Diagnostics.Api
         protected override object OnProcess(List<MessagingTraceItem> message)
         {
             if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
-
+            Core.Log.InfoBasic("Storing Trace Info...");
             RavenHelper.Execute(session =>
             {
                 foreach (var traceItem in message)
@@ -134,6 +134,8 @@ namespace TWCore.Diagnostics.Api
         protected override object OnProcess(StatusItemCollection message)
         {
             Core.Log.Warning("Status Received.");
+            Core.Log.InfoBasic("Storing Status Info...");
+
             return ResponseMessage.NoResponse;
         }
     }

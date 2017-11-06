@@ -28,10 +28,6 @@ namespace TWCore.Diagnostics.Status
     public class StatusItemValuesCollection : List<StatusItemValue>
     {
         /// <summary>
-        /// Parent status Item
-        /// </summary>
-        public StatusItem Parent { get; set; }
-        /// <summary>
         /// Sort values
         /// </summary>
         public bool SortValues { get; set; } = true;

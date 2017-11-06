@@ -133,9 +133,39 @@ namespace TWCore.Diagnostics.Api
 
         protected override object OnProcess(StatusItemCollection message)
         {
+            if (message == null) return ResponseMessage.NoResponse;
+
             Core.Log.Warning("Status Received.");
             Core.Log.InfoBasic("Storing Status Info...");
+            RavenHelper.Execute(session =>
+            {
+                NodeInfo nodeInfo;
+                lock (_locker)
+                {
+                    nodeInfo = (from node in session.Query<NodeInfo>()
+                        where node.Date == message.Timestamp.Date &&
+                              node.Machine == message.MachineName &&
+                              node.Environment == message.EnvironmentName &&
+                              node.Application == message.ApplicationName
+                        select node).FirstOrDefault();
 
+                    if (nodeInfo == null)
+                    {
+                        nodeInfo = new NodeInfo
+                        {
+                            Application = message.ApplicationName,
+                            Environment = message.EnvironmentName,
+                            Machine = message.MachineName,
+                            Date = message.Timestamp.Date
+                        };
+                        session.Store(nodeInfo);
+                        session.SaveChanges();
+                    }
+                }
+
+                
+
+            });
             return ResponseMessage.NoResponse;
         }
     }

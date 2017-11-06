@@ -233,7 +233,8 @@ namespace TWCore.Diagnostics.Status
                 ApplicationDisplayName = Core.ApplicationDisplayName,
                 ApplicationName = Core.ApplicationName,
                 Items = items,
-                ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds
+                ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
+                StartTime = Process.GetCurrentProcess().StartTime
             };
         }
         #endregion

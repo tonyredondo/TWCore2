@@ -109,7 +109,7 @@ namespace TWCore.Serialization.PWSerializer
             scope.Init(plan, type, value);
             scopeStack.Push(scope);
 
-            var bw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
+            var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
             _bufferSer[0] = DataType.PWFileStart;
             _bufferSer[1] = (byte)Mode;
             bw.Write(_bufferSer, 0, 2);
@@ -460,19 +460,17 @@ namespace TWCore.Serialization.PWSerializer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Write(FastBinaryWriter bw, byte type, byte value)
+        private void Write(BinaryWriter bw, byte type, byte value)
         {
             _bufferSer[0] = type;
             _bufferSer[1] = value;
             bw.Write(_bufferSer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void Write(FastBinaryWriter bw, byte type, ushort value)
+        private void Write(BinaryWriter bw, byte type, ushort value)
         {
-            _bufferSer[0] = type;
-            fixed (byte* b = &_bufferSer[1])
-                *((ushort*)b) = value;
-            bw.Write(_bufferSer, 0, 3);
+            bw.Write(type);
+            bw.Write(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static SerializerPlan GetSerializerPlan(HashSet<Type> currentSerializerPlanTypes, SerializersTable serializerTable, Type type)
@@ -648,7 +646,7 @@ namespace TWCore.Serialization.PWSerializer
         {
             if (type == null)
                 return Deserialize(stream);
-            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
+            var br = new BinaryReader(stream, DefaultUtf8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];
@@ -925,7 +923,7 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
+            var br = new BinaryReader(stream, DefaultUtf8Encoding, true);
             if (br.Read(_bufferDes, 0, 2) != 2)
                 throw new EndOfStreamException("Error reading the PW header.");
             var fStart = _bufferDes[0];

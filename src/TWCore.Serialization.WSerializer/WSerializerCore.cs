@@ -23,7 +23,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TWCore.IO;
 using TWCore.Security;
 using TWCore.Serialization.WSerializer.Deserializer;
 using TWCore.Serialization.WSerializer.Serializer;
@@ -40,8 +39,8 @@ namespace TWCore.Serialization.WSerializer
     public class WSerializerCore
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
-        private static readonly ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>> CachePool = new ObjectPool<Tuple<SerializerCache<Type>, SerializerCache<object>>>(pool =>
-                Tuple.Create(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
+        private static readonly ObjectPool<(SerializerCache<Type>, SerializerCache<object>)> CachePool = new ObjectPool<(SerializerCache<Type>, SerializerCache<object>)>(pool =>
+                    (new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
                     i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
                     1,
                     PoolResetMode.AfterUse);
@@ -97,7 +96,7 @@ namespace TWCore.Serialization.WSerializer
             var scope = new SerializerScope(plan, value);
             scopeStack.Push(scope);
 
-            var bw = new FastBinaryWriter(stream, DefaultUtf8Encoding, true);
+            var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
             bw.Write(DataType.FileStart);
             bw.Write((byte)Mode);
             do
@@ -489,19 +488,17 @@ namespace TWCore.Serialization.WSerializer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Write(FastBinaryWriter bw, byte type, byte value)
+        private void Write(BinaryWriter bw, byte type, byte value)
         {
             _buffer[0] = type;
             _buffer[1] = value;
             bw.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private unsafe void Write(FastBinaryWriter bw, byte type, ushort value)
+        private void Write(BinaryWriter bw, byte type, ushort value)
         {
-            _buffer[0] = type;
-            fixed (byte* b = &_buffer[1])
-                *((ushort*)b) = value;
-            bw.Write(_buffer, 0, 3);
+            bw.Write(type);
+            bw.Write(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private SerializerPlan GetSerializerPlan(SerializersTable serializerTable, Type type)
@@ -699,13 +696,13 @@ namespace TWCore.Serialization.WSerializer
         #endregion
 
         #region Deserializer
-        private static readonly ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>> DCachePool = new ObjectPool<Tuple<SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>>>(pool =>
-                Tuple.Create(new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort, TypeDefinitionComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
+        private static readonly ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)> DCachePool = new ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)>(pool =>
+            (new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort, TypeDefinitionComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
             i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
             1,
             PoolResetMode.AfterUse);
         private static readonly ReferencePool<Stack<DeserializerTypeItem>> DTypeStackPool = new ReferencePool<Stack<DeserializerTypeItem>>(1, s => s.Clear());
-        private static readonly ConcurrentDictionary<ValueTuple<string, string, string>, Type> DeserializationTypes = new ConcurrentDictionary<ValueTuple<string, string, string>, Type>();
+        private static readonly ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new ConcurrentDictionary<(string, string, string), Type>();
         private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
 
         #region Public Methods
@@ -723,7 +720,7 @@ namespace TWCore.Serialization.WSerializer
             if (fStart != DataType.FileStart)
                 throw new FormatException(string.Format("The stream is not in WBinary format. Byte {0} was expected, received: {1}", DataType.FileStart, fStart));
             
-            var br = new FastBinaryReader(stream, DefaultUtf8Encoding, true);
+            var br = new BinaryReader(stream, DefaultUtf8Encoding, true);
             var bMode = br.ReadByte();
             var sMode = (SerializerMode)bMode;
             var serializersTable = DeserializersTable.GetTable(sMode);
@@ -751,7 +748,7 @@ namespace TWCore.Serialization.WSerializer
                         var typeNamespace = stringSerializer.ReadValue(br);
                         var typeName = stringSerializer.ReadValue(br);
                         var typeQuantity = numberSerializer.ReadValue(br);
-                        var typeType = GetDeserializationType(ValueTuple.Create(typeAssembly, typeNamespace, typeName));
+                        var typeType = GetDeserializationType((typeAssembly, typeNamespace, typeName));
                         if (typeQuantity > 0)
                         {
                             var gTypes = new Type[typeQuantity];
@@ -1135,7 +1132,7 @@ namespace TWCore.Serialization.WSerializer
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Type DeserializeType(FastBinaryReader br, StringSerializer stringSerializer, byte _byte)
+        private static Type DeserializeType(BinaryReader br, StringSerializer stringSerializer, byte _byte)
         {
             switch (_byte)
             {
@@ -1161,11 +1158,11 @@ namespace TWCore.Serialization.WSerializer
                     var tassembly = stringSerializer.ReadValue(br, _byte);
                     var tnamespace = stringSerializer.ReadValue(br, br.ReadByte());
                     var tname = stringSerializer.ReadValue(br, br.ReadByte());
-                    return GetDeserializationType(ValueTuple.Create(tassembly, tnamespace, tname));
+                    return GetDeserializationType((tassembly, tnamespace, tname));
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Type GetDeserializationType(ValueTuple<string, string, string> type)
+        private static Type GetDeserializationType((string, string, string) type)
         {
             return DeserializationTypes.GetOrAdd(type, mType =>
             {

@@ -16,8 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
-using TWCore.IO;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
@@ -81,7 +81,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(FastBinaryWriter writer, object value)
+        public override void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (TimeSpan)value);
         /// <inheritdoc />
         /// <summary>
@@ -90,7 +90,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(FastBinaryWriter writer, TimeSpan value)
+        public override void WriteValue(BinaryWriter writer, TimeSpan value)
         {
             if (value == default(TimeSpan))
             {
@@ -121,7 +121,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(FastBinaryReader reader, byte type)
+        public override object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
         /// <inheritdoc />
         /// <summary>
@@ -131,7 +131,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override TimeSpan ReadValue(FastBinaryReader reader, byte type)
+        public override TimeSpan ReadValue(BinaryReader reader, byte type)
         {
             if (type == DataType.TimeSpanDefault)
                 return default(TimeSpan);
@@ -162,7 +162,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override TimeSpan ReadValue(FastBinaryReader reader)
+        public override TimeSpan ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

@@ -77,11 +77,8 @@ namespace TWCore.Serialization.PWSerializer
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SerializerGet(T value)
-        {
-            if (_serializationCache.TryGetValue(value, out var cIdx))
-                return cIdx;
-            return -1;
-        }
+            => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(T value)
         {

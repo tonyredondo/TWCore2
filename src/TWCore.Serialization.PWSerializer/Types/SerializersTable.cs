@@ -16,8 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
-using TWCore.IO;
 using TWCore.Serialization.PWSerializer.Types.ValueTypes;
 
 namespace TWCore.Serialization.PWSerializer.Types
@@ -119,7 +119,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Type serializerType, FastBinaryWriter bw, object value) 
+        public void Write(Type serializerType, BinaryWriter bw, object value) 
         {
             if (serializerType == typeof(StringSerializer))
             {
@@ -319,7 +319,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object Read(FastBinaryReader br, byte currentByte)
+        public object Read(BinaryReader br, byte currentByte)
             => GetSerializerByValueByte(currentByte).Read(br, currentByte);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

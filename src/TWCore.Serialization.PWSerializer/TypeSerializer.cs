@@ -15,8 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
-using TWCore.IO;
 // ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Serialization.PWSerializer
@@ -26,7 +26,7 @@ namespace TWCore.Serialization.PWSerializer
     /// </summary>
     public abstract class TypeSerializer
     {
-        private readonly byte[] _buffer = new byte[9];
+        private readonly byte[] _buffer = new byte[2];
 
         /// <summary>
         /// Type serializer initialization
@@ -53,7 +53,7 @@ namespace TWCore.Serialization.PWSerializer
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract void Write(FastBinaryWriter writer, object value);
+        public abstract void Write(BinaryWriter writer, object value);
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -61,86 +61,68 @@ namespace TWCore.Serialization.PWSerializer
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract object Read(FastBinaryReader reader, byte type);
+        public abstract object Read(BinaryReader reader, byte type);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteByte(FastBinaryWriter bw, byte type, byte value)
+		protected void WriteByte(BinaryWriter bw, byte type, byte value)
 		{
 			_buffer[0] = type;
 			_buffer[1] = value;
 			bw.Write(_buffer, 0, 2);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteUshort(FastBinaryWriter bw, byte type, ushort value)
+		protected void WriteUshort(BinaryWriter bw, byte type, ushort value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((ushort*)b) = value;
-            bw.Write(_buffer, 0, 3);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteInt(FastBinaryWriter bw, byte type, int value)
+		protected void WriteInt(BinaryWriter bw, byte type, int value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((int*)b) = value;
-            bw.Write(_buffer, 0, 5);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteDouble(FastBinaryWriter bw, byte type, double value)
+		protected void WriteDouble(BinaryWriter bw, byte type, double value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((double*)b) = value;
-            bw.Write(_buffer, 0, 9);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteFloat(FastBinaryWriter bw, byte type, float value)
+		protected void WriteFloat(BinaryWriter bw, byte type, float value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((float*)b) = value;
-            bw.Write(_buffer, 0, 5);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteLong(FastBinaryWriter bw, byte type, long value)
+		protected void WriteLong(BinaryWriter bw, byte type, long value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((long*)b) = value;
-            bw.Write(_buffer, 0, 9);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteULong(FastBinaryWriter bw, byte type, ulong value)
+		protected void WriteULong(BinaryWriter bw, byte type, ulong value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((ulong*)b) = value;
-            bw.Write(_buffer, 0, 9);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteUInt(FastBinaryWriter bw, byte type, uint value)
+		protected void WriteUInt(BinaryWriter bw, byte type, uint value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((uint*)b) = value;
-            bw.Write(_buffer, 0, 5);
+			bw.Write(type);
+			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected unsafe void WriteShort(FastBinaryWriter bw, byte type, short value)
+		protected void WriteShort(BinaryWriter bw, byte type, short value)
 		{
-			_buffer[0] = type;
-			fixed (byte* b = &_buffer[1])
-				*((short*)b) = value;
-            bw.Write(_buffer, 0, 3);
+			bw.Write(type);
+			bw.Write(value);
 		}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteChar(FastBinaryWriter bw, byte type, char value)
+        protected void WriteChar(BinaryWriter bw, byte type, char value)
         {
-            _buffer[0] = type;
-            fixed (byte* b = &_buffer[1])
-                *((char*)b) = value;
-            bw.Write(_buffer, 0, 3);
+	        bw.Write(type);
+	        bw.Write(value);
         }
     }
 
@@ -156,7 +138,7 @@ namespace TWCore.Serialization.PWSerializer
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract void WriteValue(FastBinaryWriter writer, T value);
+        public abstract void WriteValue(BinaryWriter writer, T value);
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
@@ -164,13 +146,13 @@ namespace TWCore.Serialization.PWSerializer
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract T ReadValue(FastBinaryReader reader, byte type);
+        public abstract T ReadValue(BinaryReader reader, byte type);
         /// <summary>
         /// Reads a value from the serialized stream.
         /// </summary>
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public abstract T ReadValue(FastBinaryReader reader);
+        public abstract T ReadValue(BinaryReader reader);
     }
 }

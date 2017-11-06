@@ -16,8 +16,8 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.CompilerServices;
-using TWCore.IO;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
@@ -53,7 +53,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(FastBinaryWriter writer, object value)
+        public override void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (char)value);
         /// <inheritdoc />
         /// <summary>
@@ -62,7 +62,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(FastBinaryWriter writer, char value)
+        public override void WriteValue(BinaryWriter writer, char value)
         {
             if (value == default(char))
                 writer.Write(DataType.CharDefault);
@@ -77,7 +77,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(FastBinaryReader reader, byte type)
+        public override object Read(BinaryReader reader, byte type)
             => type == DataType.CharDefault ? default(char) : reader.ReadChar();
         /// <inheritdoc />
         /// <summary>
@@ -87,7 +87,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override char ReadValue(FastBinaryReader reader, byte type)
+        public override char ReadValue(BinaryReader reader, byte type)
             => type == DataType.CharDefault ? default(char) : reader.ReadChar();
 
         /// <inheritdoc />
@@ -97,7 +97,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override char ReadValue(FastBinaryReader reader)
+        public override char ReadValue(BinaryReader reader)
             => reader.ReadByte() == DataType.CharDefault ? default(char) : reader.ReadChar();
     }
 }

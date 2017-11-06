@@ -32,6 +32,7 @@ namespace TWCore.Services
         private readonly object _locker = new object();
         private readonly Queue<double> _processTimes = new Queue<double>();
         private readonly Queue<double> _lastMinuteProcessTimes = new Queue<double>();
+        private readonly DayStatus _dayStatus = new DayStatus("Day Statistics");
         private Timer _timer;
 
         #region Properties
@@ -175,6 +176,7 @@ namespace TWCore.Services
                     new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
                     new StatusItemValueItem("Exceptions", TotalExceptions, true));
             });
+            Core.Status.AttachChild(_dayStatus, this);
         }
         #endregion
 
@@ -186,6 +188,7 @@ namespace TWCore.Services
         {
             lock (_locker)
                 TotalExceptions++;
+            _dayStatus.Register("Exceptions");
         }
         /// <summary>
         /// Increments the total exceptions number
@@ -194,6 +197,7 @@ namespace TWCore.Services
         {
             lock (_locker)
                 TotalMessagesProccesed++;
+            _dayStatus.Register("Processed Messages");
         }
         /// <summary>
         /// Increments the messages being processed
@@ -244,7 +248,7 @@ namespace TWCore.Services
                 if (avgLmpt > PeakLastMinuteProcessAverageTime)
                 {
                     PeakLastMinuteProcessAverageTime = avgLmpt;
-                    PeakProcessAverageTimeLastDate = Core.Now;
+                    PeakLastMinuteProcessAverageTimeLastDate = Core.Now;
                 }
             }
         }

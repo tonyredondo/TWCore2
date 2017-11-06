@@ -39,10 +39,11 @@ namespace TWCore.Diagnostics.Api
         {
             if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
             Core.Log.InfoBasic("Storing Log Info...");
-            RavenHelper.Execute(session =>
+            foreach (var logItem in message)
             {
-                foreach (var logItem in message)
+                RavenHelper.Execute(session =>
                 {
+
                     NodeInfo nodeInfo;
                     lock (_locker)
                     {
@@ -81,8 +82,8 @@ namespace TWCore.Diagnostics.Api
                     };
                     session.Store(logInfo);
                     session.SaveChanges();
-                }
-            });
+                });
+            }
             return ResponseMessage.NoResponse;
         }
 
@@ -91,9 +92,9 @@ namespace TWCore.Diagnostics.Api
         {
             if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
             Core.Log.InfoBasic("Storing Trace Info...");
-            RavenHelper.Execute(session =>
+            foreach (var traceItem in message)
             {
-                foreach (var traceItem in message)
+                RavenHelper.Execute(session =>
                 {
                     NodeInfo nodeInfo;
                     lock (_locker)
@@ -130,8 +131,8 @@ namespace TWCore.Diagnostics.Api
                     };
                     session.Store(traceInfo);
                     session.SaveChanges();
-                }
-            });
+                });
+            }
             return ResponseMessage.NoResponse;
         }
 

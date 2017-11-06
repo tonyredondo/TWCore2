@@ -968,8 +968,8 @@ namespace TWCore.Serialization.WSerializer
                     case DataType.RefObjectByte14:
                     case DataType.RefObjectByte15:
                     case DataType.RefObjectByte16:
-                    case DataType.RefObjectUShort:
                     case DataType.RefObjectByte:
+                    case DataType.RefObjectUShort:
                         var objRef = -1;
                         #region Get Object Reference
                         switch (currentByte)
@@ -999,8 +999,16 @@ namespace TWCore.Serialization.WSerializer
                                 break;
                         }
                         #endregion
-                        var objValue = objectCache.DeserializerGet(objRef);
-                        ProcessTypeEnd(typeItem, objValue);
+
+                        try
+                        {
+                            var objValue = objectCache.DeserializerGet(objRef);
+                            ProcessTypeEnd(typeItem, objValue);
+                        }
+                        catch(Exception eit)
+                        {
+
+                        }
                         continue;
                     #endregion
 

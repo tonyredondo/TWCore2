@@ -5,7 +5,4 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Trace" />
-  </ItemGroup>
 </Project>

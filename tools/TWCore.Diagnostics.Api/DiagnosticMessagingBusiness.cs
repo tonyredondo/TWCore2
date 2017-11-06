@@ -174,16 +174,23 @@ namespace TWCore.Diagnostics.Api
                                         node.StartTime == message.StartTime
                                   select node).FirstOrDefault();
 
-                var newStatus = new NodeStatusItem
+                if (nodeStatus == null)
                 {
-                    Id = nodeStatus?.Id,
-                    NodeInfoId = nodeInfo.Id,
-                    Date = message.Timestamp.Date,
-                    StartTime = message.StartTime,
-                    Timestamp = message.Timestamp,
-                    Children = message.Items?.Select(GetNodeStatusChild).ToList()
-                };
-                session.Store(newStatus);
+                    var newStatus = new NodeStatusItem
+                    {
+                        NodeInfoId = nodeInfo.Id,
+                        Date = message.Timestamp.Date,
+                        StartTime = message.StartTime,
+                        Timestamp = message.Timestamp,
+                        Children = message.Items?.Select(GetNodeStatusChild).ToList()
+                    };
+                    session.Store(newStatus);
+                }
+                else
+                {
+                    nodeStatus.Timestamp = message.Timestamp;
+                    nodeStatus.Children = message.Items?.Select(GetNodeStatusChild).ToList();
+                }
                 session.SaveChanges();
             });
             return ResponseMessage.NoResponse;

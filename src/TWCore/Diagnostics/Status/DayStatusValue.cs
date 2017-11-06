@@ -109,11 +109,11 @@ namespace TWCore.Diagnostics.Status
 
 
                     if (typeof(T) == typeof(double))
-                        RenderDayHours<double>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<double>(dsItem, dayItem);
                     else if (typeof(T) == typeof(decimal))
-                        RenderDayHours<decimal>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<decimal>(dsItem, dayItem);
                     else if (typeof(T) == typeof(int))
-                        RenderDayHours<int>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<int>(dsItem, dayItem);
                     else if (typeof(T) == typeof(string))
                     {
                         for (var i = 0; i < dsItem.Value.Length; i++)
@@ -124,15 +124,15 @@ namespace TWCore.Diagnostics.Status
                         }
                     }
                     else if (typeof(T) == typeof(float))
-                        RenderDayHours<float>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<float>(dsItem, dayItem);
                     else if (typeof(T) == typeof(long))
-                        RenderDayHours<long>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<long>(dsItem, dayItem);
                     else if (typeof(T) == typeof(short))
-                        RenderDayHours<short>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<short>(dsItem, dayItem);
                     else if (typeof(T) == typeof(byte))
-                        RenderDayHours<byte>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<byte>(dsItem, dayItem);
                     else if (typeof(T) == typeof(ushort))
-                        RenderDayHours<ushort>(dsItem.Value, dayItem, dsItem.TotalCallsDay);
+                        RenderDayHours<ushort>(dsItem, dayItem);
 
                     baseItem.Children.Add(dayItem);
                 }
@@ -146,23 +146,26 @@ namespace TWCore.Diagnostics.Status
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void RenderDayHours<TValue>(List<T>[] dayArray, StatusItem dayItem, int totalCallsDay) where TValue : IConvertible
+        private static void RenderDayHours<TValue>(DaysSum sumItem, StatusItem dayItem) where TValue : IConvertible
         {
-            for (var i = 0; i < dayArray.Length; i++)
+            var now = Core.Now;
+            for (var i = 0; i < sumItem.Value.Length; i++)
             {
-                var values = dayArray[i].Cast<TValue>().ToArray();
+                var values = sumItem.Value[i].Cast<TValue>().ToArray();
                 var calls = values.Length;
-                var percentage = (double)calls * 100 / totalCallsDay;
+                var percentage = (double)calls * 100 / sumItem.TotalCallsDay;
                 var minValue = calls > 0 ? values.Min() : default(TValue);
                 var maxValue = calls > 0 ? values.Max() : default(TValue);
                 (var averageValue, var stdValue) = values.GetAverageAndStdDev(v => v.ToDouble(null));
 
-                var callStatus = new StatusItemValueItem("Total Calls", calls);
-                var percentageStatus = new StatusItemValueItem("Percentage", percentage);
-                var lowestStatus = new StatusItemValueItem("Lowest Value", minValue);
-                var highestStatus = new StatusItemValueItem("Highest Value", maxValue);
-                var averageStatus = new StatusItemValueItem("Average", averageValue);
-                var stdStatus = new StatusItemValueItem("Standard Deviation", stdValue);
+                var plot = sumItem.Key == now.Date && i == now.Hour;
+
+                var callStatus = new StatusItemValueItem("Total Calls", calls, plot);
+                var percentageStatus = new StatusItemValueItem("Percentage", percentage, plot);
+                var lowestStatus = new StatusItemValueItem("Lowest Value", minValue, plot);
+                var highestStatus = new StatusItemValueItem("Highest Value", maxValue, plot);
+                var averageStatus = new StatusItemValueItem("Average", averageValue, plot);
+                var stdStatus = new StatusItemValueItem("Standard Deviation", stdValue, plot);
 
                 dayItem.Values.Add($"At {i}H:", callStatus, percentageStatus, lowestStatus, highestStatus,
                     averageStatus, stdStatus);

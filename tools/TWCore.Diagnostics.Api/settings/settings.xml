@@ -35,8 +35,12 @@
       <Item Key="Core.Status.Transport.File.Path" Value="./status" />
       <Item Key="Core.Status.Transport.File.Format" Value="TWCore.Diagnostics.Api [STATUS]-{yyyy}-{MM}-{dd}_{HH}-{mm}" />
       <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
-      
+
+      <Item Key="RavenDb.Database" Value="Diagnostics" />
+      <Item Key="RavenDb.Urls" Value="http://10.10.1.50:8080" />
     </Items>
+    <EnvironmentOverwrite Name="DEV">
+    </EnvironmentOverwrite>
   </AppSettings>
 
 </Settings>

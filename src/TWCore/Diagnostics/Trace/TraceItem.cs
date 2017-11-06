@@ -40,7 +40,7 @@ namespace TWCore.Diagnostics.Trace
         /// <summary>
         /// Trace Name
         /// </summary>
-        [XmlAttribute]
+        [XmlAttribute, DataMember]
         public string TraceName { get; set; }
         /// <summary>
         /// Trace Object

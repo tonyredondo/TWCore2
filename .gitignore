@@ -114,3 +114,5 @@ cachedViews/
 cachedViews/*
 .vs/*
 /.vs
+/tools/TWCore.Diagnostics.Api/logs
+/tools/TWCore.Diagnostics.Api/traces

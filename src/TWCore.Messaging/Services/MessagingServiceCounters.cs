@@ -197,7 +197,6 @@ namespace TWCore.Services
         {
             lock (_locker)
                 TotalMessagesProccesed++;
-            _dayStatus.Register("Processed Messages");
         }
         /// <summary>
         /// Increments the messages being processed
@@ -229,6 +228,7 @@ namespace TWCore.Services
         {
             lock (_locker)
             {
+                _dayStatus.Register("Processed Messages", time);
                 _processTimes.Enqueue(time);
                 if (_processTimes.Count > 1000)
                     _processTimes.Dequeue();

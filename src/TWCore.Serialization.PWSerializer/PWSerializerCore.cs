@@ -23,7 +23,6 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TWCore.IO;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.PWSerializer.Serializer;
 using TWCore.Serialization.PWSerializer.Types;
@@ -82,7 +81,7 @@ namespace TWCore.Serialization.PWSerializer
         }, 1, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(1, scope => scope.Init(), null, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(1, p => p.Init(), null, PoolResetMode.AfterUse);
-        private readonly byte[] _bufferSer = new byte[4];
+        private readonly byte[] _bufferSer = new byte[2];
 
         #region Public Methods
         /// <summary>
@@ -467,7 +466,7 @@ namespace TWCore.Serialization.PWSerializer
             bw.Write(_bufferSer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Write(BinaryWriter bw, byte type, ushort value)
+        private static void Write(BinaryWriter bw, byte type, ushort value)
         {
             bw.Write(type);
             bw.Write(value);

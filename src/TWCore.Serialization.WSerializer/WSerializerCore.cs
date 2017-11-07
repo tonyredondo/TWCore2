@@ -67,7 +67,7 @@ namespace TWCore.Serialization.WSerializer
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(1, s => s.Clear());
         private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
-        private readonly byte[] _buffer = new byte[4];
+        private readonly byte[] _buffer = new byte[2];
 
         #region Public Methods
         /// <summary>
@@ -202,8 +202,9 @@ namespace TWCore.Serialization.WSerializer
                         }
                         else
                         {
-                            objectCache.SerializerSet(scope.Value);
                             var tStartItem = (SerializerPlanItem.TypeStart)item;
+                            if (!tStartItem.IsArray)
+                                objectCache.SerializerSet(scope.Value);
 
                             var typeIdx = typesCache.SerializerGet(tStartItem.Type);
                             if (typeIdx < 0)
@@ -480,7 +481,6 @@ namespace TWCore.Serialization.WSerializer
                 #endregion
 
             } while (scope != null);
-
             SerializersTable.ReturnTable(serializersTable);
             StackPool.Store(scopeStack);
         }
@@ -495,7 +495,7 @@ namespace TWCore.Serialization.WSerializer
             bw.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Write(BinaryWriter bw, byte type, ushort value)
+        private static void Write(BinaryWriter bw, byte type, ushort value)
         {
             bw.Write(type);
             bw.Write(value);
@@ -996,16 +996,8 @@ namespace TWCore.Serialization.WSerializer
                                 break;
                         }
                         #endregion
-
-                        try
-                        {
-                            var objValue = objectCache.DeserializerGet(objRef);
-                            ProcessTypeEnd(typeItem, objValue);
-                        }
-                        catch(Exception eit)
-                        {
-
-                        }
+                        var objValue = objectCache.DeserializerGet(objRef);
+                        ProcessTypeEnd(typeItem, objValue);
                         continue;
                     #endregion
 
@@ -1045,7 +1037,7 @@ namespace TWCore.Serialization.WSerializer
                                     }
                                 }
                                 else
-                                    Core.Log.Warning("Property {0} doesn't exist on Type {1}", propName, typeItem.Type);
+                                    Core.Log.Warning("Property '{0}' doesn't exist on Type '{1}'", propName, typeItem.Type);
                             }
                             else
                                 ProcessTypeEnd(typeItem, value);
@@ -1074,10 +1066,10 @@ namespace TWCore.Serialization.WSerializer
         private static DeserializerTypeItem CreateDeserializerNewTypeItem(SerializerCache<object> objectCache, DeserializerTypeDefinition typeDefinition)
         {
             var newTypeItem = new DeserializerTypeItem(typeDefinition);
-            if (newTypeItem.Type?.IsArray == false)
-                objectCache.DeserializerSet(newTypeItem.Value);
-            else if (newTypeItem.Type == null)
+            if (newTypeItem.Type == null)
                 objectCache.DeserializerSet(null);
+            else if (!newTypeItem.Type.IsArray)
+                objectCache.DeserializerSet(newTypeItem.Value);
             return newTypeItem;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1101,7 +1093,7 @@ namespace TWCore.Serialization.WSerializer
                                 fprop.SetValue(typeItem.Value, DataTypeHelper.Change(lastObject, fprop.PropertyType.GetUnderlyingType()));
                         }
                         else
-                            Core.Log.Warning("Property {0} doesn't exist on Type {1}", propName, typeItem.Type);
+                            Core.Log.Warning("Property '{0}' doesn't exist on Type '{1}'", propName, typeItem.Type);
 
 
                         typeItem.LastPropertyName = null;

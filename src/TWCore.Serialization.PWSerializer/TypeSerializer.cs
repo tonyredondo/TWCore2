@@ -71,55 +71,55 @@ namespace TWCore.Serialization.PWSerializer
 			bw.Write(_buffer, 0, 2);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteUshort(BinaryWriter bw, byte type, ushort value)
+		protected static void WriteUshort(BinaryWriter bw, byte type, ushort value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteInt(BinaryWriter bw, byte type, int value)
+		protected static void WriteInt(BinaryWriter bw, byte type, int value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteDouble(BinaryWriter bw, byte type, double value)
+		protected static void WriteDouble(BinaryWriter bw, byte type, double value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteFloat(BinaryWriter bw, byte type, float value)
+		protected static void WriteFloat(BinaryWriter bw, byte type, float value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteLong(BinaryWriter bw, byte type, long value)
+		protected static void WriteLong(BinaryWriter bw, byte type, long value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteULong(BinaryWriter bw, byte type, ulong value)
+		protected static void WriteULong(BinaryWriter bw, byte type, ulong value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteUInt(BinaryWriter bw, byte type, uint value)
+		protected static void WriteUInt(BinaryWriter bw, byte type, uint value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void WriteShort(BinaryWriter bw, byte type, short value)
+		protected static void WriteShort(BinaryWriter bw, byte type, short value)
 		{
 			bw.Write(type);
 			bw.Write(value);
 		}
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void WriteChar(BinaryWriter bw, byte type, char value)
+        protected static void WriteChar(BinaryWriter bw, byte type, char value)
         {
 	        bw.Write(type);
 	        bw.Write(value);

@@ -81,7 +81,7 @@ namespace TWCore.Cache.Storages.IO
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(BasePath), BasePath);
-                collection.Add("Count", Metas.Count(), StatusItemValueStatus.Ok);
+                collection.Add("Count", Metas?.Count(), StatusItemValueStatus.Ok);
                 collection.Add(nameof(Serializer), Serializer);
                 collection.Add(nameof(MetaSerializer), MetaSerializer);
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
@@ -137,7 +137,7 @@ namespace TWCore.Cache.Storages.IO
         protected override IEnumerable<StorageItemMeta> Metas
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _storages.SelectMany(s => s.Metas).ToArray();
+            get => _storages?.SelectMany(s => s.Metas).ToArray();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)

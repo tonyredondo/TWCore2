@@ -257,7 +257,14 @@ namespace TWCore.Diagnostics.Status
                     var sItem = EnsureTarget(target, parent);
                     sItem.AddStatusItemDelegate(func);
                 }
-                func();
+                try
+                {
+                    func();
+                }
+                catch
+                {
+                    // ignored
+                }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, Action<StatusItemValuesCollection> action, object parent)
@@ -269,7 +276,14 @@ namespace TWCore.Diagnostics.Status
                     sItem.AddStatusItemValuesCollection(action);
                 }
                 var sI = new StatusItem();
-                action(sI.Values);
+                try
+                {
+                    action(sI.Values);
+                }
+                catch
+                {
+                    // ignored
+                }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, object parent)
@@ -648,7 +662,18 @@ namespace TWCore.Diagnostics.Status
                     if (Object == null) return new List<StatusItem>();
 
                     var resultItems = _lstStatusItem
-                        .Select(s => s())
+                        .Select(s =>
+                        {
+                            try
+                            {
+                                return s();
+                            }
+                            catch(Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                                return (false, null);
+                            }
+                        })
                         .ToArray()
                         .Where(r => r.Ran)
                         .Select(s => s.Result)
@@ -657,7 +682,14 @@ namespace TWCore.Diagnostics.Status
                     var resultItems2 = _lstStatusValueCollection.Select(s =>
                     {
                         var item = new StatusItem();
-                        s(item.Values);
+                        try
+                        {
+                            s(item.Values);
+                        }
+                        catch(Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
                         return item;
                     }).ToArray();
 

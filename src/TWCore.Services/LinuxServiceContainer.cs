@@ -60,7 +60,7 @@ namespace TWCore.Services
             {
                 // Environment.GetCommandLineArgs() includes the current DLL from a "dotnet my.dll --register-service" call, which is not passed to Main()
                 var remainingArgs = Environment.GetCommandLineArgs()
-                    .Where(arg => arg != "/service-install")
+                    .Where(arg => arg != "/service-create")
                     .Select(EscapeCommandLineArgument)
                     .ToArray();
 

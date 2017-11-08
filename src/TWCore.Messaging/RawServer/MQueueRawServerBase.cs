@@ -95,16 +95,16 @@ namespace TWCore.Messaging.RawServer
         /// Events that fires when a response message is about to be sent
         /// </summary>
         public event EventHandler<RawResponseSentEventArgs> BeforeSendResponse;
-		#endregion
+        #endregion
 
-		#region Public Methods
-		/// <inheritdoc />
-		/// <summary>
-		/// Initialize client with the configuration
-		/// </summary>
-		/// <param name="config">Message queue client configuration</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Init(MQPairConfig config)
+        #region Public Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize client with the configuration
+        /// </summary>
+        /// <param name="config">Message queue client configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Init(MQPairConfig config)
         {
             if (config == null) return;
             StopListeners();
@@ -122,12 +122,12 @@ namespace TWCore.Messaging.RawServer
                     Core.Status.AttachChild(listener, this);
             });
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// Start the queue listener for request messages
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void StartListeners()
+        /// <inheritdoc />
+        /// <summary>
+        /// Start the queue listener for request messages
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StartListeners()
         {
             if (_tokenSource != null)
                 StopListeners();
@@ -142,8 +142,9 @@ namespace TWCore.Messaging.RawServer
                 SenderSerializer = null;
 
                 Core.Log.InfoBasic("Adding queue client listener for {0}, Environment: {1}", Name, Core.EnvironmentName);
-                _clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
+                _clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
+                    ?? Config.ClientQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
                 if (_clientQueues?.RecvQueue != null)
                 {
@@ -166,8 +167,9 @@ namespace TWCore.Messaging.RawServer
 
 
                 Core.Log.InfoBasic("Adding queue server listeners for {0}, Environment: {1}", Name, Core.EnvironmentName);
-                _serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) 
+                _serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
+                    ?? Config.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
                     ?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
                 if (_serverQueues?.RecvQueues?.Any() == true)
                 {
@@ -202,12 +204,12 @@ namespace TWCore.Messaging.RawServer
             else
                 Core.Log.Warning("There are not server listener to start.");
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// Stop the queue listener
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void StopListeners()
+        /// <inheritdoc />
+        /// <summary>
+        /// Stop the queue listener
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void StopListeners()
         {
             if (_tokenSource == null) return;
             Core.Log.InfoBasic("Stopping queue server listeners for {0}", Name);
@@ -219,22 +221,22 @@ namespace TWCore.Messaging.RawServer
             _tokenSource = null;
             Core.Log.InfoBasic("Queue server listeners for {0} stopped", Name);
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// Dispose all resources
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
         {
             StopListeners();
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-		#endregion
+        #endregion
 
-		#region Private Methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
         {
             using (var w = Watch.Create())
             {
@@ -252,10 +254,10 @@ namespace TWCore.Messaging.RawServer
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueRawServerEvents.FireBeforeSendResponse(this, rsea);
                     response = rsea.Message;
-	                var sentBytes = OnSend(response, e);
+                    var sentBytes = OnSend(response, e);
                     if (sentBytes > -1)
                     {
-	                    rsea.MessageLength = sentBytes;
+                        rsea.MessageLength = sentBytes;
                         ResponseSent?.Invoke(this, rsea);
                         MQueueRawServerEvents.FireResponseSent(this, rsea);
                     }
@@ -265,48 +267,48 @@ namespace TWCore.Messaging.RawServer
                 w.EndTap($"Message Processed with CorrelationId={e.CorrelationId}.");
             }
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
         {
             ResponseReceived?.Invoke(sender, e);
             MQueueRawServerEvents.FireResponseReceived(sender, e);
         }
-		#endregion
+        #endregion
 
-		#region Abstract Methods
-		/// <summary>
-		/// On Create all server listeners
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		/// <returns>IMQueueServerListener</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
-		/// <summary>
-		/// On client initialization
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnInit() { }
-	    /// <summary>
-	    /// Before send the request message
-	    /// </summary>
-	    /// <param name="message">Response message instance</param>
-	    /// <param name="metadata">Metadata</param>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnBeforeSend(ref SubArray<byte> message, KeyValueCollection metadata) { }
-		/// <summary>
-		/// On Send message data
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		/// <param name="e">Request event args</param>
-		/// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e);
-		/// <summary>
-		/// On Dispose
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnDispose() { }
+        #region Abstract Methods
+        /// <summary>
+        /// On Create all server listeners
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        /// <returns>IMQueueServerListener</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
+        /// <summary>
+        /// On client initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// Before send the request message
+        /// </summary>
+        /// <param name="message">Response message instance</param>
+        /// <param name="metadata">Metadata</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void OnBeforeSend(ref SubArray<byte> message, KeyValueCollection metadata) { }
+        /// <summary>
+        /// On Send message data
+        /// </summary>
+        /// <param name="message">Response message instance</param>
+        /// <param name="e">Request event args</param>
+        /// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e);
+        /// <summary>
+        /// On Dispose
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void OnDispose() { }
         #endregion
     }
 }

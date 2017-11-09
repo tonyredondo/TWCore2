@@ -39,8 +39,8 @@
       <Item Key="RavenDb.Database" Value="Diagnostics" />
       <Item Key="RavenDb.Urls" Value="http://10.10.1.50:8080" />
     </Items>
-    <EnvironmentOverwrite Name="DEV">
-    </EnvironmentOverwrite>
+    <Overwrite EnvironmentName="DEV" MachineName="">
+    </Overwrite>
   </AppSettings>
 
 </Settings>

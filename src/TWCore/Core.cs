@@ -526,22 +526,28 @@ namespace TWCore
         /// </summary>
         /// <param name="settings">Global settings object</param>
         /// <param name="environmentName">Environment name</param>
+        /// <param name="machineName">Machine name</param>
         /// <param name="applicationName">Application name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void LoadSettings(GlobalSettings settings, string environmentName = null, string applicationName = null)
-            => Settings = settings?.GetItems(environmentName ?? EnvironmentName, applicationName ?? ApplicationName);
+        public static void LoadSettings(GlobalSettings settings, string environmentName = null, string machineName = null, string applicationName = null)
+            => Settings = settings?.GetItems(environmentName ?? EnvironmentName, machineName ?? MachineName, applicationName ?? ApplicationName);
         /// <summary>
         /// Load application settings
         /// </summary>
         /// <param name="settingsFilePath">Global settings file path</param>
         /// <param name="environmentName">Environment name</param>
+        /// <param name="machineName">Machine name</param>
         /// <param name="applicationName">Application name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void LoadSettings(string settingsFilePath, string environmentName = null, string applicationName = null)
+        public static void LoadSettings(string settingsFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
-            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", EnvironmentName);
-            settingsFilePath = settingsFilePath?.Replace("{MachineName}", MachineName);
-            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", ApplicationName);
+            environmentName = environmentName ?? EnvironmentName;
+            machineName = machineName ?? MachineName;
+            applicationName = applicationName ?? ApplicationName;
+
+            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", environmentName);
+            settingsFilePath = settingsFilePath?.Replace("{MachineName}", machineName);
+            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", applicationName);
             Ensure.ExistFile(settingsFilePath);
             var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
@@ -556,7 +562,7 @@ namespace TWCore
             }
             try
             {
-                LoadSettings(globalSettings, environmentName, applicationName);
+                LoadSettings(globalSettings, environmentName, machineName, applicationName);
                 RebindSettings();
             }
             catch (Exception ex)
@@ -568,7 +574,7 @@ namespace TWCore
             {
                 Task.Delay(TimeSpan.FromMinutes(GlobalSettings.SettingsReloadTimeInMinutes)).ContinueWith(t =>
                 {
-                    LoadSettings(settingsFilePath, environmentName, applicationName);
+                    LoadSettings(settingsFilePath, environmentName, machineName, applicationName);
                 });
             }
         }
@@ -610,13 +616,18 @@ namespace TWCore
         /// </summary>
         /// <param name="settingsFilePath">Global injector settings file path</param>
         /// <param name="environmentName">Environment name</param>
+        /// <param name="machineName">Machine name</param>
         /// <param name="applicationName">Application name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void LoadInjector(string settingsFilePath, string environmentName = null, string applicationName = null)
+        public static void LoadInjector(string settingsFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
-            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", EnvironmentName);
-            settingsFilePath = settingsFilePath?.Replace("{MachineName}", MachineName);
-            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", ApplicationName);
+            environmentName = environmentName ?? EnvironmentName;
+            machineName = machineName ?? MachineName;
+            applicationName = applicationName ?? ApplicationName;
+
+            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", environmentName);
+            settingsFilePath = settingsFilePath?.Replace("{MachineName}", machineName);
+            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", applicationName);
             Ensure.ExistFile(settingsFilePath);
             var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
             Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
@@ -693,6 +704,7 @@ namespace TWCore
         /// <summary>
         /// One line if method
         /// </summary>
+        /// <typeparam name="T">Func return type</typeparam>
         /// <param name="conditionResult">Condition result</param>
         /// <param name="trueAction">Func to execute if the condition result is true</param>
         /// <param name="falseAction">Func to execute if the condition result is false</param>
@@ -703,6 +715,7 @@ namespace TWCore
         /// <summary>
         /// One line if method
         /// </summary>
+        /// <typeparam name="T">Func return type</typeparam>
         /// <param name="condition">Condition function</param>
         /// <param name="trueAction">Action to execute if the condition result is true</param>
         /// <param name="falseAction">Action to execute if the condition result is false</param>

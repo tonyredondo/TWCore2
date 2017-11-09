@@ -44,21 +44,22 @@ namespace TWCore.Settings
         /// Get all items by environment and application name
         /// </summary>
         /// <param name="environmentName">Environment name</param>
+        /// <param name="machineName">Machine name</param>
         /// <param name="applicationName">Application name</param>
         /// <returns>KeyValueCollection with all items for the environment and application</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyValueCollection GetItems(string environmentName, string applicationName)
+        public KeyValueCollection GetItems(string environmentName, string machineName, string applicationName)
         {
             KeyValueCollection baseItems = null;
             if (Applications != null)
             {
                 if (Applications.TryGetByPartialKey(applicationName, out var appSetting))
-                    baseItems = appSetting.GetItems(environmentName);
+                    baseItems = appSetting.GetItems(environmentName, machineName);
                 else
                     Core.Log.Warning("The Settings for ApplicationName = {0} cannot be found.", applicationName);
             }
             var results = new KeyValueCollection(baseItems);
-            var globals = Global?.GetItems(environmentName) ?? new KeyValueCollection();
+            var globals = Global?.GetItems(environmentName, machineName) ?? new KeyValueCollection();
             globals.ThrowExceptionOnDuplicateKeys = false;
             globals.Each(i => results.Add(i));
             return results;

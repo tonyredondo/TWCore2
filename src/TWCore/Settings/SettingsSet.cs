@@ -36,20 +36,30 @@ namespace TWCore.Settings
         [XmlArray("Items"), XmlArrayItem("Item"), DataMember]
         public KeyValueCollection Items { get; set; } = new KeyValueCollection();
         /// <summary>
-        /// Settings overwrites defined by environments
+        /// Settings overwrites defined by environments and machine names
         /// </summary>
-        [XmlElement("EnvironmentOverwrite"), DataMember]
-        public NameCollection<EnvironmentOverwrite> Overwrites { get; set; } = new NameCollection<EnvironmentOverwrite>();
+        [XmlElement("Overwrite"), DataMember]
+        public NameCollection<Overwrite> Overwrites { get; set; } = new NameCollection<Overwrite>();
 
         /// <summary>
         /// Get all items by environment
         /// </summary>
         /// <param name="environmentName">Environment name</param>
+        /// <param name="machineName">Machine name</param>
         /// <returns>KeyValueCollection with all items</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyValueCollection GetItems(string environmentName)
+        public KeyValueCollection GetItems(string environmentName, string machineName)
         {
-            var result = new KeyValueCollection(Overwrites.TryGetByPartialKey(environmentName, out var partial) ? partial.Items : null, false);
+            var combinedKey = environmentName + ">" + machineName;
+            if (!Overwrites.TryGetByPartialKey(combinedKey, out var partial))
+            {
+                if (!Overwrites.TryGetByPartialKey(environmentName, out partial))
+                {
+                    var machineKey = ">" + machineName;
+                    Overwrites.TryGetByPartialKey(machineKey, out partial);
+                }
+            }
+            var result = new KeyValueCollection(partial?.Items, false);
             Items?.Each(i => result.Add(i));
             return result;
         }

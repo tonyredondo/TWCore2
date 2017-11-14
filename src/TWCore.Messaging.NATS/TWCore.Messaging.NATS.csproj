@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TWCore.Messaging\TWCore.Messaging.csproj" />
+    <ProjectReference Include="..\TWCore\TWCore.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NATS.Client" Version="0.8.0" />
+  </ItemGroup>
+</Project>

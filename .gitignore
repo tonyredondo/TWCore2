@@ -116,3 +116,5 @@ cachedViews/*
 /.vs
 /tools/TWCore.Diagnostics.Api/logs
 /tools/TWCore.Diagnostics.Api/traces
+.idea/
+*.userprefs

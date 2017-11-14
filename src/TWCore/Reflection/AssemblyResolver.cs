@@ -194,17 +194,18 @@ namespace TWCore.Reflection
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsExcludedAssembly(string assemblyName)
         {
-            return
-                   assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
+            return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||
-                   assemblyName.StartsWith("NETStandard", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.Equals("NETStandard", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.Equals("System", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("SOS.NETCore", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("StackExchange.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.Equals("mscorlib", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
-                   assemblyName.Contains("mscor") ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         #endregion

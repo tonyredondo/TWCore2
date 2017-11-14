@@ -53,6 +53,10 @@ namespace TWCore.Messaging.RabbitMQ
         /// Exchange Type
         /// </summary>
         public string ExchangeType { get; }
+        /// <summary>
+        /// Durable queue
+        /// </summary>
+        public bool Durable { get; }
         #endregion
 
         #region .ctor
@@ -68,7 +72,8 @@ namespace TWCore.Messaging.RabbitMQ
             Parameters = queue.Parameters ?? new KeyValueCollection();
             ExchangeName = Parameters[nameof(ExchangeName)];
             ExchangeType = Parameters[nameof(ExchangeType)];
-            _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(3000);
+            Durable = Parameters[nameof(Durable)].ParseTo(true);
+            _autoCloseAction = ActionDelegate.Create(Close).CreateBufferedAction(60000);
         }
         ~RabbitMQueue()
         {
@@ -89,7 +94,11 @@ namespace TWCore.Messaging.RabbitMQ
                 {
                     Core.Log.LibVerbose("Creating channel for: {0}", Name);
                     if (Channel != null) return true;
-                    Factory = new ConnectionFactory { Uri = new Uri(Route) };
+                    Factory = new ConnectionFactory 
+                    { 
+                        Uri = new Uri(Route),
+                        UseBackgroundThreadsForIO = true
+                    };
                     Connection = Factory.CreateConnection();
                     Channel = Connection.CreateModel();
                     return true;
@@ -108,7 +117,7 @@ namespace TWCore.Messaging.RabbitMQ
         public void EnsureQueue()
         {
             if (!string.IsNullOrEmpty(Name))
-                Channel.QueueDeclare(Name, true, false, false, null);
+                Channel.QueueDeclare(Name, Durable, false, false, null);
         }
         /// <summary>
         /// Ensure Queue

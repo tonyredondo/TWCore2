@@ -93,7 +93,6 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         public NSQueueClient()
         {
-            System.Net.ServicePointManager.DefaultConnectionLimit = 200;
         }
         #endregion
 
@@ -286,6 +285,7 @@ namespace TWCore.Messaging.NSQ
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
+            ReceivedMessages.TryRemove(correlationId, out var _);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
             return rs;
@@ -310,6 +310,5 @@ namespace TWCore.Messaging.NSQ
             return (messageBody, correlationId);
         }
         #endregion
-
     }
 }

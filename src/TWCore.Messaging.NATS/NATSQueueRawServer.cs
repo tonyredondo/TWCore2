@@ -17,28 +17,31 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
-using NsqSharp;
+using System.Threading.Tasks;
+using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
-using System.Threading.Tasks;
 // ReSharper disable InconsistentNaming
 
-namespace TWCore.Messaging.NSQ
+
+namespace TWCore.Messaging.NATS
 {
     /// <inheritdoc />
     /// <summary>
-    /// NSQ Raw Server Implementation
+    /// NATS Raw Server Implementation
     /// </summary>
-    public class NSQueueRawServer : MQueueRawServerBase
+    public class NATSQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
+        private readonly ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new ConcurrentDictionary<string, ObjectPool<IConnection>>();
+        private readonly ConnectionFactory _factory;
 
         #region .ctor
         /// <summary>
-        /// NSQ Server Implementation
+        /// NATS Raw Server Implementation
         /// </summary>
-        public NSQueueRawServer()
+        public NATSQueueRawServer()
         {
+            _factory = new ConnectionFactory();
             System.Net.ServicePointManager.DefaultConnectionLimit = 500;
         }
         #endregion
@@ -51,7 +54,7 @@ namespace TWCore.Messaging.NSQ
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         /// <returns>IMQueueServerListener</returns>
         protected override IMQueueRawServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
-            => new NSQueueRawServerListener(connection, this, responseServer);
+            => new NATSQueueRawServerListener(connection, this, responseServer);
 
         /// <inheritdoc />
         /// <summary>
@@ -72,7 +75,7 @@ namespace TWCore.Messaging.NSQ
             if (senderOptions == null)
                 throw new ArgumentNullException("ServerSenderOptions");
 
-            var body = NSQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);
+            var body = NATSQueueRawClient.CreateRawMessageBody(message, e.CorrelationId, e.Metadata["ReplyTo"]);
             var replyTo = e.Metadata["ReplyTo"];
 
             var response = true;
@@ -80,33 +83,33 @@ namespace TWCore.Messaging.NSQ
             {
                 try
                 {
-                    var nsqProducerPool = _rQueue.GetOrAdd(queue.Route, q => new ObjectPool<Producer>(pool =>
+                    var producerPool = _rQueue.GetOrAdd(queue.Route, q => new ObjectPool<IConnection>(pool =>
                     {
                         Core.Log.LibVerbose("New Producer from RawQueueServer");
-                        return new Producer(q);
+                        return _factory.CreateConnection(queue.Route);
                     }, null, 1));
-                    var nsqProducer = nsqProducerPool.New();
+                    var producer = producerPool.New();
 
                     if (!string.IsNullOrEmpty(replyTo))
                     {
                         if (string.IsNullOrEmpty(queue.Name))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + replyTo, e.CorrelationId);
-                            nsqProducer.PublishAsync(replyTo, body).Wait();
+                            producer.Publish(replyTo, body);
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
-                            nsqProducer.PublishAsync(queue.Name + "_" + replyTo, body).Wait();
+                            producer.Publish(queue.Name + "_" + replyTo, body);
                         }
                     }
                     else
                     {
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
-                        nsqProducer.PublishAsync(queue.Name, body).Wait();
+                        producer.Publish(queue.Name, body);
                     }
 
-                    nsqProducerPool.Store(nsqProducer);
+                    producerPool.Store(producer);
                 }
                 catch (Exception ex)
                 {
@@ -124,7 +127,7 @@ namespace TWCore.Messaging.NSQ
         protected override void OnDispose()
         {
             var producers = _rQueue.SelectMany(i => i.Value.GetCurrentObjects()).ToArray();
-            Parallel.ForEach(producers, p => p.Stop());
+            Parallel.ForEach(producers, p => p.Close());
             foreach (var sender in _rQueue)
                 sender.Value.Clear();
             _rQueue.Clear();

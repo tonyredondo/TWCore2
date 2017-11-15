@@ -39,7 +39,7 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		public NSQueueServer()
 		{
-			System.Net.ServicePointManager.DefaultConnectionLimit = 200;
+			System.Net.ServicePointManager.DefaultConnectionLimit = 500;
 		}
 		#endregion
 

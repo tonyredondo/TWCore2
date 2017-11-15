@@ -185,8 +185,7 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<T> ReceiveAsync<T>(Guid correlationId)
         {
-            var tSource = new CancellationTokenSource();
-            return ReceiveAsync<T>(correlationId, tSource.Token);
+            return ReceiveAsync<T>(correlationId, CancellationToken.None);
         }
         /// <inheritdoc />
         /// <summary>

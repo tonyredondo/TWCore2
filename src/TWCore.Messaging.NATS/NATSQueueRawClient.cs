@@ -46,6 +46,7 @@ namespace TWCore.Messaging.NATS
         #region Fields
         private ConnectionFactory _factory;
         private List<(MQConnection, ObjectPool<IConnection>)> _senders;
+        private IConnection _receiverNASTConnection;
         private IAsyncSubscription _receiver;
         private MQConnection _receiverConnection;
         private MQClientQueues _clientQueues;
@@ -89,6 +90,7 @@ namespace TWCore.Messaging.NATS
         public NATSQueueRawClient()
         {
             _factory = new ConnectionFactory();
+            System.Net.ServicePointManager.DefaultConnectionLimit = 500;
         }
         #endregion
 
@@ -135,8 +137,8 @@ namespace TWCore.Messaging.NATS
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (UseSingleResponseQueue)
                     {
-                        var conn = _factory.CreateConnection(_receiverConnection.Route);
-                        _receiver = conn.SubscribeAsync(_receiverConnection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                        _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                        _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
                     }
                 }
             }
@@ -159,16 +161,22 @@ namespace TWCore.Messaging.NATS
         {
             if (_senders != null)
             {
-                var producers = _senders.SelectMany(i => i.Item2.GetCurrentObjects()).ToArray();
-                Parallel.ForEach(producers, p => p.Close());
                 foreach (var sender in _senders)
+                {
+                    var pool = sender.Item2;
+                    foreach (var conn in pool.GetCurrentObjects())
+                        conn.Dispose();
                     sender.Item2.Clear();
+                }
                 _senders.Clear();
                 _senders = null;
             }
             if (_receiver == null) return;
             if (UseSingleResponseQueue)
+            {
                 _receiver.Unsubscribe();
+                _receiverNASTConnection.Dispose();
+            }
             _receiver = null;
             _factory = null;
         }
@@ -219,7 +227,7 @@ namespace TWCore.Messaging.NATS
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override async Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
-            if (_receiver == null)
+            if (_receiver == null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
             if (_receiverOptions == null)
                 throw new ArgumentNullException("SenderOptions");
@@ -233,7 +241,7 @@ namespace TWCore.Messaging.NATS
                 message.Name = _receiverConnection.Name + "_" + correlationId;
                 message.Route = _receiverConnection.Route;
                 message.Connection = _factory.CreateConnection(message.Route);
-                message.Consumer = message.Connection.SubscribeAsync(_receiverConnection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                message.Consumer = message.Connection.SubscribeAsync(message.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
                 var waitResult = await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
                 message.Consumer.Unsubscribe();
                 message.Connection.Close();

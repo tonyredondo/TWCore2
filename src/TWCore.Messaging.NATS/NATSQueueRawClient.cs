@@ -20,12 +20,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using System.Threading;
 using NATS.Client;
-using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using System.Threading.Tasks;
+using TWCore.Messaging.RawClient;
 using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
@@ -35,11 +36,12 @@ namespace TWCore.Messaging.NATS
 {
     /// <inheritdoc />
     /// <summary>
-    /// NATS Queue Client
+    /// NATS Queue Raw Client
     /// </summary>
-    public class NATSQueueClient : MQueueClientBase
+    public class NATSQueueRawClient : MQueueRawClientBase
     {
         private static readonly ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NATSQueueMessage>();
+        private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields
         private ConnectionFactory _factory;
@@ -71,7 +73,7 @@ namespace TWCore.Messaging.NATS
         }
         private static void MessageHandler(object sender, MsgHandlerEventArgs e)
         {
-            (var body, var correlationId) = GetFromMessageBody(e.Message.Data);
+            (var body, var correlationId, var _) = GetFromRawMessageBody(e.Message.Data);
             var rMsg = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
             rMsg.CorrelationId = correlationId;
             rMsg.Body = body;
@@ -82,9 +84,9 @@ namespace TWCore.Messaging.NATS
         #region .ctor
         /// <inheritdoc />
         /// <summary>
-        /// NATS Queue Client
+        /// NATS Queue Raw Client
         /// </summary>
-        public NATSQueueClient()
+        public NATSQueueRawClient()
         {
             _factory = new ConnectionFactory();
         }
@@ -143,9 +145,7 @@ namespace TWCore.Messaging.NATS
             {
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
-                    {
                         collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Item1.Route);
-                    }
                 if (_clientQueues?.RecvQueue != null)
                     collection.Add(nameof(_receiver) + " Path", _clientQueues.RecvQueue.Route);
             });
@@ -180,8 +180,9 @@ namespace TWCore.Messaging.NATS
         /// On Send message data
         /// </summary>
         /// <param name="message">Request message instance</param>
+        /// <param name="correlationId">Message CorrelationId</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnSend(RequestMessage message)
+        protected override bool OnSend(byte[] message, Guid correlationId)
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
@@ -189,35 +190,20 @@ namespace TWCore.Messaging.NATS
                 throw new ArgumentNullException("SenderOptions");
 
             var recvQueue = _clientQueues.RecvQueue;
-            if (message.Header.ResponseQueue == null)
-            {
-                if (recvQueue != null)
-                {
-                    message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
-                    message.Header.ResponseExpected = true;
-                    message.Header.ResponseTimeoutInSeconds = _receiverOptions?.TimeoutInSec ?? -1;
-                    if (!UseSingleResponseQueue)
-                    {
-                        message.Header.ResponseQueue.Name += "_" + message.CorrelationId;
-                    }
-                }
-                else
-                {
-                    message.Header.ResponseExpected = false;
-                    message.Header.ResponseTimeoutInSeconds = -1;
-                }
-            }
-            var data = SenderSerializer.Serialize(message);
-            var body = CreateMessageBody(data, message.CorrelationId);
+            var name = recvQueue.Name;
+            if (!UseSingleResponseQueue)
+                name += "_" + correlationId;
+
+            var body = CreateRawMessageBody(message, correlationId, name);
 
             foreach ((var queue, var producerPool) in _senders)
             {
-                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
+                Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, correlationId);
                 var producer = producerPool.New();
                 producer.Publish(queue.Name, body);
                 producerPool.Store(producer);
             }
-            Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);
+            Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
             return true;
         }
         #endregion
@@ -231,7 +217,7 @@ namespace TWCore.Messaging.NATS
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
+        protected override async Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
@@ -256,47 +242,45 @@ namespace TWCore.Messaging.NATS
 
                 if (!waitResult) throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
 
-                if (message.Body == null)
-                    throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-                var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
                 sw.Stop();
-                return response;
+                return (byte[])message.Body;
             }
 
             if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
                 throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
 
-            if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
-
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
-            var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
             ReceivedMessages.TryRemove(correlationId, out var _);
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
-            return rs;
+            return (byte[])message.Body;
         }
         #endregion
 
         #region Static Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static byte[] CreateMessageBody(SubArray<byte> message, Guid correlationId)
+        internal static byte[] CreateRawMessageBody(SubArray<byte> message, Guid correlationId, string name)
         {
-            var body = new byte[16 + message.Count];
+            var nameBytes = Encoding.GetBytes(name);
+            var nameLength = nameBytes.Length;
+            var body = new byte[16 + 4 + nameLength + message.Count];
             Buffer.BlockCopy(correlationId.ToByteArray(), 0, body, 0, 16);
-            message.CopyTo(body, 16);
+            Buffer.BlockCopy(BitConverter.GetBytes(nameLength), 0, body, 16, 4);
+            nameBytes.CopyTo(body, 20);
+            message.CopyTo(body, 20 + nameLength);
             return body;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static (SubArray<byte>, Guid) GetFromMessageBody(byte[] message)
+        internal static (SubArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
         {
             var body = new SubArray<byte>(message);
             var correlationId = new Guid((byte[])body.Slice(0, 16));
-            var messageBody = body.Slice(16);
-            return (messageBody, correlationId);
+            var nameLength = BitConverter.ToInt32(message, 16);
+            var name = Encoding.GetString(message, 20, nameLength);
+            var messageBody = body.Slice(20 + nameLength);
+            return (messageBody, correlationId, name);
         }
         #endregion
     }

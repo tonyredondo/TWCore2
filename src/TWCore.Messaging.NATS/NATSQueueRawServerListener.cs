@@ -204,7 +204,7 @@ namespace TWCore.Messaging.NATS
             {
                 Counters.IncrementProcessingThreads();
                 if (!(obj is NATSQMessage message)) return;
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
                 Counters.IncrementTotalReceivingBytes(message.Body.Count);
 
                 if (ResponseServer)

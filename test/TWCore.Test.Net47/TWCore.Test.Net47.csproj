@@ -45,6 +45,9 @@
     <Reference Include="msgpack.light, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\msgpack.light.1.4.0\lib\net46\msgpack.light.dll</HintPath>
     </Reference>
+    <Reference Include="NATS.Client, Version=0.8.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NATS.Client.0.8.0\lib\net45\NATS.Client.DLL</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=10.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Newtonsoft.Json.10.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -131,6 +134,10 @@
       <Project>{8e07c9c2-2274-447d-bdc6-b66bdb597870}</Project>
       <Name>TWCore.Geo</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Messaging.NATS\TWCore.Messaging.NATS.csproj">
+      <Project>{34f217bf-01d9-4125-a639-6454305b5564}</Project>
+      <Name>TWCore.Messaging.NATS</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj">
       <Project>{75da5ffe-02e4-44a6-95fb-d2feecc4c38a}</Project>
       <Name>TWCore.Messaging.NSQ</Name>
@@ -154,6 +161,10 @@
     <ProjectReference Include="..\..\src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj">
       <Project>{b86e8d00-6d3d-416a-89f7-ae82302c17f4}</Project>
       <Name>TWCore.Net.Rpc.Http</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Net.Rpc.Messaging\TWCore.Net.Rpc.Messaging.csproj">
+      <Project>{3809ee42-6144-4b99-8a39-aee9df31bc0e}</Project>
+      <Name>TWCore.Net.Rpc.Messaging</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj">
       <Project>{89395e35-4675-480d-8c63-06b7f2fe899e}</Project>

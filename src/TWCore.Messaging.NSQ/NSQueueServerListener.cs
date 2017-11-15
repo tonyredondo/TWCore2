@@ -218,7 +218,7 @@ namespace TWCore.Messaging.NSQ
 			{
 				Counters.IncrementProcessingThreads();
 				if (!(obj is NSQMessage message)) return;
-				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Count, Connection.Route + "/" + Connection.Name);
+				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
 				var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
 				switch (messageBody)
 				{

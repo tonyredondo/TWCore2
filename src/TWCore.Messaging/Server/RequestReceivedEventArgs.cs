@@ -91,10 +91,14 @@ namespace TWCore.Messaging.Server
             SendResponse = request?.Header?.ResponseExpected ?? true;
             ProcessResponseTimeoutInSeconds = request?.Header?.ResponseTimeoutInSeconds ?? -1;
             Response = new ResponseMessage(request, null);
-            var cTokenSource = new CancellationTokenSource();
-            ProcessResponseTimeoutCancellationToken = cTokenSource.Token;
             if (ProcessResponseTimeoutInSeconds > 0)
+            {
+                var cTokenSource = new CancellationTokenSource();
+                ProcessResponseTimeoutCancellationToken = cTokenSource.Token;
                 cTokenSource.CancelAfter(TimeSpan.FromSeconds(ProcessResponseTimeoutInSeconds));
+            }
+            else
+                ProcessResponseTimeoutCancellationToken = CancellationToken.None;
         }
     }
 }

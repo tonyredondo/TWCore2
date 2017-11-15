@@ -78,10 +78,17 @@ namespace TWCore.Services
             get => _service;
             internal set
             {
-                if (value is ServiceWrapper sWrap)
-                    _service = sWrap;
-                else
-                    _service = new ServiceWrapper(value, ServiceName);
+                switch (value)
+                {
+                    case null:
+                        return;
+                    case ServiceWrapper sWrap:
+                        _service = sWrap;
+                        break;
+                    default:
+                        _service = new ServiceWrapper(value, ServiceName);
+                        break;
+                }
             }
         }
         /// <summary>

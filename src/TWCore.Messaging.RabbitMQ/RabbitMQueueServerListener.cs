@@ -198,7 +198,7 @@ namespace TWCore.Messaging.RabbitMQ
             {
                 Counters.IncrementProcessingThreads();
                 if (!(obj is RabbitMessage message)) return;
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}'", message.Body.Length, _receiver.Route + "/" + _receiver.Name);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
                 switch (messageBody)
                 {

@@ -19,7 +19,7 @@ using Microsoft.AspNetCore.Mvc.Formatters;
 using TWCore.Serialization;
 using Microsoft.Net.Http.Headers;
 using System;
-using TWCore.IO;
+using System.IO;
 
 namespace TWCore.Web.Formatters
 {
@@ -47,7 +47,7 @@ namespace TWCore.Web.Formatters
             try
             {
                 var origin = context.HttpContext.Request.Body;
-                using (var rms = new RecycleMemoryStream())
+                using (var rms = new MemoryStream())
                 {
                     await origin.CopyToAsync(rms).ConfigureAwait(false);
                     rms.Position = 0;

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -1311,6 +1312,18 @@ namespace TWCore
 				return keyedCollection[key];
 			return default(TItem);
 		}
-		#endregion
-	}
+        #endregion
+
+        #region ConcurrentDictionary
+	    /// <summary>Adds a key/value pair to the <see cref="T:System.Collections.Concurrent.ConcurrentDictionary`2"></see> by using the specified function if the key does not already exist, or returns the existing value if the key exists.</summary>
+	    /// <param name="dictionary">Source dictionary</param>
+	    /// <param name="key">The key of the element to add.</param>
+	    /// <param name="valueFactory">The function used to generate a value for the key.</param>
+	    /// <returns>The value for the key.</returns>
+	    /// <exception cref="T:System.ArgumentNullException"><paramref name="key">key</paramref> or <paramref name="valueFactory">valueFactory</paramref> is null.</exception>
+	    /// <exception cref="T:System.OverflowException">The dictionary already contains the maximum number of elements (<see cref="F:System.Int32.MaxValue"></see>).</exception>
+	    public static async Task<TValue> GetOrAddAsync<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, Task<TValue>> valueFactory)
+	        => dictionary.TryGetValue(key, out var resultingValue) ? resultingValue : dictionary.GetOrAdd(key, await valueFactory(key));
+        #endregion
+    }
 }

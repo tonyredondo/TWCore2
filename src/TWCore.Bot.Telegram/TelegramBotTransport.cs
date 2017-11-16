@@ -238,9 +238,8 @@ namespace TWCore.Bot.Telegram
             if (!_active) return;
             if (!File.Exists(fileName)) throw new FileNotFoundException("The filename doesn't exist", fileName);
 
-            using (var ms = new RecycleMemoryStream())
+            using (var ms = new MemoryStream())
             {
-                //var ms = new MemoryStream();
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     await fs.CopyToAsync(ms).ConfigureAwait(false);
                 ms.Position = 0;

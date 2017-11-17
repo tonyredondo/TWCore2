@@ -72,6 +72,10 @@ namespace TWCore
 		/// </summary>
 		/// <value><c>true</c> if enable wait timeout; otherwise, <c>false</c>.</value>
 		public bool EnableWaitTimeout { get; set; } = true;
+        /// <summary>
+        /// Cancellation Token
+        /// </summary>
+        public CancellationToken CancellationToken => _tokenSource.Token;
         #endregion
 
         #region .ctors

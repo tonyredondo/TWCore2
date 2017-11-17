@@ -47,7 +47,7 @@ namespace TWCore.Triggers
         /// <summary>
         /// Cancellation token
         /// </summary>
-        public CancellationToken CancellationToken => _tokenSource?.Token ?? CancellationToken.None;
+        public CancellationToken CancellationToken => _triggerWorker?.CancellationToken ?? CancellationToken.None;
 
         #region Events
         /// <summary>
@@ -70,8 +70,7 @@ namespace TWCore.Triggers
 
         #region Private Fields
         private readonly object _localSync = new object();
-        private Task _triggerTask;
-        private CancellationTokenSource _tokenSource;
+        private Worker<TriggerBase> _triggerWorker;
         private DateTime _lastUpdateTime;
         private Func<T> _instanceLoader;
         private readonly List<TriggerBase> _triggers;
@@ -88,6 +87,7 @@ namespace TWCore.Triggers
             if (useStaticLock)
                 _localSync = UpdatableObject.ParentSync;
             MinTimeOfInstance = TimeSpan.FromSeconds(1);
+            _triggerWorker = new Worker<TriggerBase>(InnerOnTriggerExecute);
 
             Core.Status.Attach(collection =>
             {
@@ -174,7 +174,7 @@ namespace TWCore.Triggers
         private void OnTriggerExecute(TriggerBase trigger)
         {
             if (_instanceLoader != null)
-                Task.Factory.StartNew(obj => InnerOnTriggerExecute((TriggerBase)obj), trigger, CancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _triggerWorker.Enqueue(trigger);
         }
         private void InnerOnTriggerExecute(TriggerBase trigger)
         {
@@ -239,10 +239,8 @@ namespace TWCore.Triggers
         public void Dispose()
         {
             Unload();
-            _tokenSource?.Cancel();
-            _triggerTask?.Wait(5000);
-            _tokenSource = null;
-            _triggerTask = null;
+            _triggerWorker?.Dispose();
+            _triggerWorker = null;
         }
     }
 }

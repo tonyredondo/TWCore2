@@ -327,7 +327,7 @@ namespace TWCore.Net.Multicast
                     if (_token.IsCancellationRequested)
                         return;
                 }
-                _token.WhenCanceledAsync().Wait(7000);
+                Factory.Thread.Sleep(7000, _token);
             }
         }
         #endregion

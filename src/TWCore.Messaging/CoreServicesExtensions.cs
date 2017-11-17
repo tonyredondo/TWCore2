@@ -74,12 +74,8 @@ namespace TWCore.Services
                 return;
             }
 
-            if (string.IsNullOrEmpty(queueSettings.ServerName)) return;
-
             if (_queues.Items?.Contains(queueSettings.ServerName) == true)
                 _queueServer = _queues.Items[queueSettings.ServerName];
-            else
-                throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found in the queue configuration file.");
         }
         #endregion
 
@@ -109,7 +105,10 @@ namespace TWCore.Services
         {
             Init();
             if (_queueServer == null)
-                throw new NullReferenceException("The Queue server instance couldn't be loaded, please check the configuration file.");
+            {
+                var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
+                throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found or loaded in the queue configuration file.");
+            }
             return _queueServer.GetServer(responseServer);
         }
         /// <summary>
@@ -142,7 +141,10 @@ namespace TWCore.Services
         {
             Init();
             if (_queueServer == null)
-                throw new NullReferenceException("The Queue server instance couldn't be loaded, please check the configuration file.");
+            {
+                var queueSettings = Core.GetSettings<QueueConfigurationSettings>();
+                throw new KeyNotFoundException($"The Queue server name: {queueSettings.ServerName} couldn't be found or loaded in the queue configuration file.");
+            }
             return _queueServer.GetRawServer(responseServer);
         }
         /// <summary>

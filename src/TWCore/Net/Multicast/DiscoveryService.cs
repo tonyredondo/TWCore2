@@ -315,17 +315,17 @@ namespace TWCore.Net.Multicast
         {
             while (!_token.IsCancellationRequested)
             {
-                RegisteredService[] rSrv;
                 lock (LocalServices)
-                    rSrv = LocalServices.ToArray();
-                foreach (var srv in rSrv)
                 {
-                    if (srv.GetDataFunc != null)
-                        srv.Data = srv.GetDataFunc();
-                    var srvValue = Serializer.Serialize(srv);
-                    PeerConnection.Send(srvValue);
-                    if (_token.IsCancellationRequested)
-                        return;
+                    foreach (var srv in LocalServices)
+                    {
+                        if (srv.GetDataFunc != null)
+                            srv.Data = srv.GetDataFunc();
+                        var srvValue = Serializer.Serialize(srv);
+                        PeerConnection.Send(srvValue);
+                        if (_token.IsCancellationRequested)
+                            return;
+                    }
                 }
                 Factory.Thread.Sleep(7000, _token);
             }

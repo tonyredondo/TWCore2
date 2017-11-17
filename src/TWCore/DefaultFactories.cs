@@ -260,67 +260,79 @@ namespace TWCore
         {
             Core.Status.Attach(() =>
             {
-                var process = Process.GetCurrentProcess();
+                using (var process = Process.GetCurrentProcess())
+                {
+                    var sItem = new StatusItem {Name = "Application Information"};
+                    sItem.Values.Add("Command Line", Environment.CommandLine);
+                    sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
 
-                var sItem = new StatusItem { Name = "Application Information" };
-                sItem.Values.Add("Command Line", Environment.CommandLine);
-                sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
+                    sItem.Values.Add("Operating System",
+                        new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
+                        new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
+                        new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
+                        new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture),
+                            RuntimeInformation.OSArchitecture),
+                        new StatusItemValueItem(nameof(RuntimeInformation.OSDescription),
+                            RuntimeInformation.OSDescription)
+                    );
+                    sItem.Values.Add("User",
+                        new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
+                        new StatusItemValueItem(nameof(Environment.UserDomainName), Environment.UserDomainName),
+                        new StatusItemValueItem(nameof(Environment.UserInteractive), Environment.UserInteractive),
+                        new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
+                    );
+                    sItem.Values.Add("Process Information",
+                        new StatusItemValueItem(nameof(process.Id), process.Id),
+                        new StatusItemValueItem(nameof(RuntimeInformation.ProcessArchitecture),
+                            RuntimeInformation.ProcessArchitecture),
+                        new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
+                        new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
+                        new StatusItemValueItem("Handles", process.HandleCount, true),
+                        new StatusItemValueItem(nameof(RuntimeInformation.FrameworkDescription),
+                            RuntimeInformation.FrameworkDescription)
+                    );
+                    sItem.Values.Add("Process Times",
+                        new StatusItemValueItem(nameof(process.StartTime), process.StartTime),
+                        new StatusItemValueItem("RunningTime", Core.Now - process.StartTime),
+                        new StatusItemValueItem(nameof(process.UserProcessorTime), process.UserProcessorTime),
+                        new StatusItemValueItem(nameof(process.PrivilegedProcessorTime),
+                            process.PrivilegedProcessorTime),
+                        new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime)
+                    );
+                    sItem.Values.Add("Process Memory",
+                        new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)",
+                            Environment.WorkingSet.ToMegabytes(), true),
+                        new StatusItemValueItem(nameof(process.PrivateMemorySize64) + " (MB)",
+                            process.PrivateMemorySize64.ToMegabytes(), true),
+                        new StatusItemValueItem(nameof(process.PagedMemorySize64) + " (MB)",
+                            process.PagedMemorySize64.ToMegabytes(), true),
+                        new StatusItemValueItem(nameof(process.NonpagedSystemMemorySize64) + " (MB)",
+                            process.NonpagedSystemMemorySize64.ToMegabytes(), true),
+                        new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)",
+                            process.VirtualMemorySize64.ToMegabytes(), true)
+                    );
 
-                sItem.Values.Add("Operating System",
-                    new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
-                    new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
-                    new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
-                    new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture),
-                    new StatusItemValueItem(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription)
-                );
-                sItem.Values.Add("User",
-                    new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
-                    new StatusItemValueItem(nameof(Environment.UserDomainName), Environment.UserDomainName),
-                    new StatusItemValueItem(nameof(Environment.UserInteractive), Environment.UserInteractive),
-                    new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
-                );
-                sItem.Values.Add("Process Information", 
-                    new StatusItemValueItem(nameof(process.Id), process.Id),
-                    new StatusItemValueItem(nameof(RuntimeInformation.ProcessArchitecture), RuntimeInformation.ProcessArchitecture),
-                    new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
-                    new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
-                    new StatusItemValueItem("Handles", process.HandleCount, true),
-                    new StatusItemValueItem(nameof(RuntimeInformation.FrameworkDescription), RuntimeInformation.FrameworkDescription)
-                );
-                sItem.Values.Add("Process Times",
-                    new StatusItemValueItem(nameof(process.StartTime), process.StartTime),
-                    new StatusItemValueItem("RunningTime", Core.Now - process.StartTime),
-                    new StatusItemValueItem(nameof(process.UserProcessorTime), process.UserProcessorTime),
-                    new StatusItemValueItem(nameof(process.PrivilegedProcessorTime), process.PrivilegedProcessorTime),
-                    new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime)
-                );
-                sItem.Values.Add("Process Memory",
-                    new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)", Environment.WorkingSet.ToMegabytes(), true),
-                    new StatusItemValueItem(nameof(process.PrivateMemorySize64) + " (MB)", process.PrivateMemorySize64.ToMegabytes(), true),
-                    new StatusItemValueItem(nameof(process.PagedMemorySize64) + " (MB)", process.PagedMemorySize64.ToMegabytes(), true),
-                    new StatusItemValueItem(nameof(process.NonpagedSystemMemorySize64) + " (MB)", process.NonpagedSystemMemorySize64.ToMegabytes(), true),
-                    new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)", process.VirtualMemorySize64.ToMegabytes(), true)
-                );
+                    var maxGen = GC.MaxGeneration;
+                    var lstGc = new List<StatusItemValueItem>();
+                    for (var i = 0; i <= maxGen; i++)
+                        lstGc.Add(new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true));
+                    lstGc.Add(new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(),
+                        true));
+                    lstGc.Add(new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC));
+                    lstGc.Add(new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode));
+                    sItem.Values.Add("Garbage Collector", lstGc.ToArray());
 
-                var maxGen = GC.MaxGeneration;
-                var lstGc = new List<StatusItemValueItem>();
-                for (var i = 0; i <= maxGen; i++)
-                    lstGc.Add(new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true));
-                lstGc.Add(new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(), true));
-                lstGc.Add(new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC));
-                lstGc.Add(new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode));
-                sItem.Values.Add("Garbage Collector", lstGc.ToArray());
+                    sItem.Values.Add("Core Framework",
+                        new StatusItemValueItem("Version", Core.FrameworkVersion),
+                        new StatusItemValueItem("Debug Mode", Core.DebugMode),
+                        new StatusItemValueItem("Environment", Core.EnvironmentName),
+                        new StatusItemValueItem("MachineName", Core.MachineName),
+                        new StatusItemValueItem("ApplicationName", Core.ApplicationName),
+                        new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
+                    );
+                    return sItem;
 
-                sItem.Values.Add("Core Framework",
-                    new StatusItemValueItem("Version", Core.FrameworkVersion),
-                    new StatusItemValueItem("Debug Mode", Core.DebugMode),
-                    new StatusItemValueItem("Environment", Core.EnvironmentName),
-                    new StatusItemValueItem("MachineName", Core.MachineName),
-                    new StatusItemValueItem("ApplicationName", Core.ApplicationName),
-                    new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
-                );
-
-                return sItem;
+                }
             });
         }
 

@@ -25,7 +25,7 @@ namespace TWCore.Diagnostics.Api
     {
         public static void Main(string[] args)
         {
-            Core.InitAspNet();
+            Core.InitDefaults(false);
             Core.RunService(() => new ServiceList(
                 WebService.Create<Startup>(),
                 new DiagnosticMessagingService()

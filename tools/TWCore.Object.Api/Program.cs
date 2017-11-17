@@ -24,7 +24,7 @@ namespace TWCore.Object.Api
     {
         public static void Main(string[] args)
         {
-            Core.InitAspNet();
+            Core.InitDefaults(false);
             Core.RunService(() => WebService.Create<Startup>(), args);
         }
     }

@@ -331,24 +331,15 @@ namespace TWCore
                 throw new Exception("Error initializing the application.");
             Log.LibDebug("Core has been initialized.");
         }
-
         /// <summary>
         /// Initialize with the default factories.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void InitDefaults()
-        {
-            Init(new DefaultFactories());
-        }
-        /// <summary>
-        /// Initialize with the default factories configured for AspNet.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void InitAspNet()
+        public static void InitDefaults(bool setDirectoryToBaseAssembly = true)
         {
             var factories = new DefaultFactories
             {
-                SetDirectoryToBaseAssembly = false
+                SetDirectoryToBaseAssembly = setDirectoryToBaseAssembly
             };
             Init(factories);
         }

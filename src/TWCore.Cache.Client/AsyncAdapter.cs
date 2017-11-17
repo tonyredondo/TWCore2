@@ -125,6 +125,8 @@ namespace TWCore.Cache.Client
 
             _isEnabledAsync = FuncDelegate.CreateAsync(_storage.IsEnabled);
             _isReadyAsync = FuncDelegate.CreateAsync(_storage.IsReady);
+
+            Core.Status.AttachChild(storage, this);
         }
 
         public void Dispose()

@@ -148,20 +148,18 @@ namespace TWCore
         /// <returns>Task of the invocation</returns>
         public static Task InvokeAsync(this Action action)
         {
-            var tcs = new TaskCompletionSource<bool>();
-            Task.Run(() =>
+            return Task.Run(() =>
             {
                 try
                 {
                     action();
-                    tcs.TrySetResult(true);
+                    return Task.CompletedTask;
                 }
                 catch (Exception ex)
                 {
-                    tcs.TrySetException(ex);
+                    return Task.FromException(ex);
                 }
             });
-            return tcs.Task;
         }
         /// <summary>
         /// Invoke an Action in Async Task

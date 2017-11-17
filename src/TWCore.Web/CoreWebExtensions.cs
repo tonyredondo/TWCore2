@@ -23,6 +23,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using System;
 using TWCore.Serialization;
+using TWCore.Settings;
 using TWCore.Web.Logger;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMethodReturnValue.Global
@@ -74,25 +75,36 @@ namespace TWCore.Web
         /// <summary>
         /// Sets the default TWCoreValues
         /// </summary>
-        public static void SetDefaultTWCoreValues(this IServiceCollection services)
+        public static void SetDefaultTWCoreValues(this IServiceCollection services, CoreWebSettings settings = null)
         {
+            settings = settings ?? new CoreWebSettings();
             services.AddMvc(options =>
             {
                 try
                 {
                     options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
-                    options.FormatterMappings.SetMediaTypeMappingForFormat
-                        ("xml", MediaTypeHeaderValue.Parse("application/xml"));
-                    options.FormatterMappings.SetMediaTypeMappingForFormat
-                        ("js", MediaTypeHeaderValue.Parse("application/json"));
 
-                    var serializers = SerializerManager.GetBinarySerializers();
-                    foreach (var serializer in serializers)
+                    if (settings.EnableFormatMapping)
                     {
-                        options.AddISerializerInputFormatter(serializer);
-                        options.AddISerializerOutputFormatter(serializer);
                         options.FormatterMappings.SetMediaTypeMappingForFormat
-                            (serializer.Extensions[0].Substring(1), MediaTypeHeaderValue.Parse(serializer.MimeTypes[0]));
+                            ("xml", MediaTypeHeaderValue.Parse("application/xml"));
+                        options.FormatterMappings.SetMediaTypeMappingForFormat
+                            ("js", MediaTypeHeaderValue.Parse("application/json"));
+                    }
+
+                    if (settings.EnableTWCoreSerializers)
+                    {
+                        var serializers = SerializerManager.GetBinarySerializers();
+                        foreach (var serializer in serializers)
+                        {
+                            options.AddISerializerInputFormatter(serializer);
+                            options.AddISerializerOutputFormatter(serializer);
+                            if (settings.EnableFormatMapping)
+                            {
+                                options.FormatterMappings.SetMediaTypeMappingForFormat(serializer.Extensions[0].Substring(1),
+                                    MediaTypeHeaderValue.Parse(serializer.MimeTypes[0]));
+                            }
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -102,14 +114,19 @@ namespace TWCore.Web
             })
             .AddJsonOptions(options =>
             {
-                options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                if (settings.EnableJsonStringEnum)
+                    options.SerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             });
             services.AddLogging(cfg =>
             {
-                cfg.AddTWCoreLogger();
+                if (settings.EnableTWCoreLogger)
+                    cfg.AddTWCoreLogger();
             });
-            services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Optimal);
-            services.AddResponseCompression();
+            if (settings.EnableGZipCompressor)
+            {
+                services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Optimal);
+                services.AddResponseCompression();
+            }
         }
     }
 }

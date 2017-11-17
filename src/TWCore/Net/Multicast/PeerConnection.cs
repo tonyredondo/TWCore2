@@ -109,6 +109,8 @@ namespace TWCore.Net.Multicast
                 foreach (var ipAddress in addresses)
                 {
                     var client = new UdpClient();
+                    client.Client.SendBufferSize = 8192;
+                    client.Client.ReceiveBufferSize = 8192;
                     client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(nicPropv4.Index));
@@ -134,6 +136,8 @@ namespace TWCore.Net.Multicast
                 try
                 {
                     var basicReceiver = new UdpClient();
+                    basicReceiver.Client.SendBufferSize = 8192;
+                    basicReceiver.Client.ReceiveBufferSize = 8192;
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress,
                         true);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive,
@@ -272,22 +276,14 @@ namespace TWCore.Net.Multicast
 
                     buffer = receivedDatagrams.GetMessage();
 
-                    ThreadPool.QueueUserWorkItem(obj =>
+                    try
                     {
-                        try
-                        {
-                            var objArray = (object[])obj;
-                            var pcnn = (PeerConnection)objArray[0];
-                            var pcbf = (byte[])objArray[1];
-                            var pcip = (IPEndPoint)objArray[2];
-                            pcnn.OnReceive?.Invoke(pcnn,
-                                new PeerConnectionMessageReceivedEventArgs(pcip.Address, pcbf));
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }, new object[] { this, buffer, rcvEndpoint });
+                        OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, buffer));
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
                 }
                 catch (Exception ex)
                 {

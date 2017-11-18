@@ -163,8 +163,13 @@ namespace TWCore
 		#endregion
 
 		#region Init
+		/// <summary>
+		/// Initialize core framework
+		/// </summary>
+		/// <returns>The init.</returns>
+		/// <param name="factories">Factories.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static void Init(Factories factories)
+		public static void Init(Factories factories)
         {
             if (_initialized) return;
             _initialized = true;

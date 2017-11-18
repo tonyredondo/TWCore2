@@ -1,6 +1,9 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
   <MonoDevelop.Ide.Workbench ActiveDocument="TWCore2 Status">
     <Files>
+      <File FileName="src/TWCore/DefaultFactories.cs" Line="189" Column="5" />
+      <File FileName="src/TWCore/Factories.cs" Line="69" Column="32" />
+      <File FileName="src/TWCore/Delegates.cs" Line="37" Column="32" />
       <File FileName="TWCore2 Status" />
     </Files>
   </MonoDevelop.Ide.Workbench>

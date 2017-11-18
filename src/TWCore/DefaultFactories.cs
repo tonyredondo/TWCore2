@@ -49,66 +49,29 @@ namespace TWCore
         [DllImport("rpcrt4.dll", SetLastError = true)]
         private static extern int UuidCreateSequential(out Guid guid);
 
-        /// <summary>
-        /// Sets the current directory to the base assembly location
-        /// </summary>
-        public bool SetDirectoryToBaseAssembly { get; set; } = true;
+		#region Properties
+		/// <summary>
+		/// Sets the current directory to the base assembly location
+		/// </summary>
+		public bool SetDirectoryToBaseAssembly { get; set; } = true;
         /// <summary>
         /// Bool indicating if all assemblies were loaded.
         /// </summary>
         private bool AllAssembliesLoaded { get; set; }
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		#region .ctor
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DefaultFactories()
         {
             Accessors = new CompleteAccessorsFactory();
-            GetAssemblies = () =>
-            {
-                if (_assemblies != null) return _assemblies;
-                _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
-                {
-                    if (d.IsDynamic) return false;
-                    var assemblyName = d.GetName();
-                    return !IsExcludedAssembly(assemblyName.Name);
-                }).DistinctBy(i => i.Location).ToArray();
-                return _assemblies;
-            };
-            GetAllAssemblies = () =>
-            {
-                var resolver = AssemblyResolverManager.GetAssemblyResolver();
-                if (!AllAssembliesLoaded || (!_usedResolver && resolver != null))
-                {
-                    if (resolver != null)
-                    {
-                        _usedResolver = true;
-                    }
-                    else
-                    {
-                        var loaded = AppDomain.CurrentDomain.GetAssemblies();
-                        foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
-                        {
-                            try
-                            {
-                                var name = AssemblyName.GetAssemblyName(file);
-                                if (IsExcludedAssembly(name.Name)) continue;
-                                if (loaded.All(l => l.FullName != name.FullName))
-                                    AppDomain.CurrentDomain.Load(name);
-                            }
-                            catch
-                            {
-                                // ignored
-                            }
-                        }
-                    }
-                    AllAssembliesLoaded = true;
-                    _assemblies = null;
-                    return GetAssemblies();
-                }
-                return _assemblies;
-            };
+			GetAssemblies = DefaultGetAssemblies;
+			GetAllAssemblies = DefaultGetAllAssemblies;
         }
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		#region Public Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {
             if (SetDirectoryToBaseAssembly)
@@ -173,8 +136,61 @@ namespace TWCore
             }
             SetLargeObjectHeapCompactTimeout();
         }
+		#endregion
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+
+		#region Private factory methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private Assembly[] DefaultGetAssemblies()
+		{
+			if (_assemblies != null) return _assemblies;
+			_assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+			{
+				if (d.IsDynamic) return false;
+				var assemblyName = d.GetName();
+				return !IsExcludedAssembly(assemblyName.Name);
+			}).DistinctBy(i => i.Location).ToArray();
+			return _assemblies;
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private Assembly[] DefaultGetAllAssemblies()
+		{
+			var resolver = AssemblyResolverManager.GetAssemblyResolver();
+			if (!AllAssembliesLoaded || (!_usedResolver && resolver != null))
+			{
+				if (resolver != null)
+				{
+					_usedResolver = true;
+				}
+				else
+				{
+					var loaded = AppDomain.CurrentDomain.GetAssemblies();
+					foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+					{
+						try
+						{
+							var name = AssemblyName.GetAssemblyName(file);
+							if (IsExcludedAssembly(name.Name)) continue;
+							if (loaded.All(l => l.FullName != name.FullName))
+								AppDomain.CurrentDomain.Load(name);
+						}
+						catch
+						{
+							// ignored
+						}
+					}
+				}
+				AllAssembliesLoaded = true;
+				_assemblies = null;
+				return DefaultGetAssemblies();
+			}
+			return _assemblies;
+		}
+		//private static Guid 
+		#endregion
+
+		#region Private Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsExcludedAssembly(string assemblyName)
         {
             return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
@@ -191,7 +207,7 @@ namespace TWCore
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
-
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool LoadConfigFile(string configFile)
         {
             if (!File.Exists(configFile)) return false;
@@ -251,11 +267,7 @@ namespace TWCore
                 return false;
             }
         }
-
-        /// <summary>
-        /// Attach to the status process
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()
         {
             Core.Status.Attach(() =>
@@ -335,10 +347,12 @@ namespace TWCore
                 }
             });
         }
+		#endregion
 
-        #region LargeObjectHeap Compact Timeout Method
 
-        private static int _lastValue;
+		#region LargeObjectHeap Compact Timeout Method
+
+		private static int _lastValue;
         private static Timer _largeObjectTimer;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

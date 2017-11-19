@@ -78,32 +78,7 @@ namespace TWCore
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
 
             if (Factory.PlatformType == PlatformType.Windows)
-            {
-                SequentialGuidGenerator = () =>
-                {
-                    //https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
-                    UuidCreateSequential(out var guid);
-                    var s = guid.ToByteArray();
-                    var t = new byte[16];
-                    t[3] = s[0];
-                    t[2] = s[1];
-                    t[1] = s[2];
-                    t[0] = s[3];
-                    t[5] = s[4];
-                    t[4] = s[5];
-                    t[7] = s[6];
-                    t[6] = s[7];
-                    t[8] = s[8];
-                    t[9] = s[9];
-                    t[10] = s[10];
-                    t[11] = s[11];
-                    t[12] = s[12];
-                    t[13] = s[13];
-                    t[14] = s[14];
-                    t[15] = s[15];
-                    return new Guid(t);
-                };
-            }
+				SequentialGuidGenerator = GetSequentialGuid;
 
             Core.Log.ItemFactory = Factory.CreateLogItem;
             Core.Trace.ItemFactory = Factory.CreateTraceItem;
@@ -114,13 +89,16 @@ namespace TWCore
 
             AttachStatus();
 
-            ServiceContainer.RegisterParametersHandler("configfile=[Path]", "Load the application using other configuration file.",
-                obj => { });
+            ServiceContainer.RegisterParametersHandler("configfile=[Path]", 
+			                                           "Load the application using other configuration file.",
+			                                           obj => { });
             
             var line = Environment.CommandLine;
             var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
-            var arguments = line.Replace(asmLocation, string.Empty).Split(new[] { '/' }, StringSplitOptions.None)
-                .Skip(1).ToArray();
+            var arguments = line.Replace(asmLocation, string.Empty)
+			                    .Split(new[] { '/' }, StringSplitOptions.None)
+			                    .Skip(1)
+			                    .ToArray();
             var argConfigFile = arguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
             
             if (!string.IsNullOrWhiteSpace(argConfigFile))
@@ -186,7 +164,32 @@ namespace TWCore
 			}
 			return _assemblies;
 		}
-		//private static Guid 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static Guid GetSequentialGuid()
+		{
+			//https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
+			UuidCreateSequential(out var guid);
+			var s = guid.ToByteArray();
+			var t = new byte[16];
+			t[3] = s[0];
+			t[2] = s[1];
+			t[1] = s[2];
+			t[0] = s[3];
+			t[5] = s[4];
+			t[4] = s[5];
+			t[7] = s[6];
+			t[6] = s[7];
+			t[8] = s[8];
+			t[9] = s[9];
+			t[10] = s[10];
+			t[11] = s[11];
+			t[12] = s[12];
+			t[13] = s[13];
+			t[14] = s[14];
+			t[15] = s[15];
+			return new Guid(t);
+		}
+
 		#endregion
 
 		#region Private Methods
@@ -349,9 +352,7 @@ namespace TWCore
         }
 		#endregion
 
-
 		#region LargeObjectHeap Compact Timeout Method
-
 		private static int _lastValue;
         private static Timer _largeObjectTimer;
         

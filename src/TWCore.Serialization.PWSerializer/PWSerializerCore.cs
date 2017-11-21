@@ -81,7 +81,7 @@ namespace TWCore.Serialization.PWSerializer
         }, 1, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(1, scope => scope.Init(), null, PoolResetMode.AfterUse);
         private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(1, p => p.Init(), null, PoolResetMode.AfterUse);
-        private readonly byte[] _bufferSer = new byte[2];
+        private readonly byte[] _bufferSer = new byte[3];
 
         #region Public Methods
         /// <summary>
@@ -466,10 +466,12 @@ namespace TWCore.Serialization.PWSerializer
             bw.Write(_bufferSer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Write(BinaryWriter bw, byte type, ushort value)
+        private void Write(BinaryWriter bw, byte type, ushort value)
         {
-            bw.Write(type);
-            bw.Write(value);
+            _bufferSer[0] = type;
+            _bufferSer[1] = (byte)value;
+            _bufferSer[2] = (byte)(value >> 8);
+            bw.Write(_bufferSer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static SerializerPlan GetSerializerPlan(HashSet<Type> currentSerializerPlanTypes, SerializersTable serializerTable, Type type)

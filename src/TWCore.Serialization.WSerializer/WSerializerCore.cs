@@ -67,7 +67,7 @@ namespace TWCore.Serialization.WSerializer
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(1, s => s.Clear());
         private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
-        private readonly byte[] _buffer = new byte[2];
+        private readonly byte[] _buffer = new byte[3];
 
         #region Public Methods
         /// <summary>
@@ -495,10 +495,12 @@ namespace TWCore.Serialization.WSerializer
             bw.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void Write(BinaryWriter bw, byte type, ushort value)
+        private void Write(BinaryWriter bw, byte type, ushort value)
         {
-            bw.Write(type);
-            bw.Write(value);
+            _buffer[0] = type;
+            _buffer[1] = (byte)value;
+            _buffer[2] = (byte)(value >> 8);
+            bw.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private SerializerPlan GetSerializerPlan(SerializersTable serializerTable, Type type)

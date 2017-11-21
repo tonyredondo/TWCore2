@@ -26,7 +26,7 @@ namespace TWCore.Serialization.PWSerializer
     /// </summary>
     public abstract class TypeSerializer
     {
-        private readonly byte[] _buffer = new byte[2];
+        private readonly byte[] _buffer = new byte[9];
 
         /// <summary>
         /// Type serializer initialization
@@ -71,53 +71,95 @@ namespace TWCore.Serialization.PWSerializer
 			bw.Write(_buffer, 0, 2);
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteUshort(BinaryWriter bw, byte type, ushort value)
+		protected void WriteUshort(BinaryWriter bw, byte type, ushort value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    bw.Write(_buffer, 0, 3);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteInt(BinaryWriter bw, byte type, int value)
+		protected void WriteInt(BinaryWriter bw, byte type, int value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    _buffer[3] = (byte)(value >> 16);
+		    _buffer[4] = (byte)(value >> 24);
+		    bw.Write(_buffer, 0, 5);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteDouble(BinaryWriter bw, byte type, double value)
+		protected unsafe void WriteDouble(BinaryWriter bw, byte type, double value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    var tmpValue = *(ulong*)&value;
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)tmpValue;
+		    _buffer[2] = (byte)(tmpValue >> 8);
+		    _buffer[3] = (byte)(tmpValue >> 16);
+		    _buffer[4] = (byte)(tmpValue >> 24);
+		    _buffer[5] = (byte)(tmpValue >> 32);
+		    _buffer[6] = (byte)(tmpValue >> 40);
+		    _buffer[7] = (byte)(tmpValue >> 48);
+		    _buffer[8] = (byte)(tmpValue >> 56);
+		    bw.Write(_buffer, 0, 9);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteFloat(BinaryWriter bw, byte type, float value)
+		protected unsafe void WriteFloat(BinaryWriter bw, byte type, float value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    var tmpValue = *(uint*)&value;
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)tmpValue;
+		    _buffer[2] = (byte)(tmpValue >> 8);
+		    _buffer[3] = (byte)(tmpValue >> 16);
+		    _buffer[4] = (byte)(tmpValue >> 24);
+		    bw.Write(_buffer, 0, 5);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteLong(BinaryWriter bw, byte type, long value)
+		protected void WriteLong(BinaryWriter bw, byte type, long value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    _buffer[3] = (byte)(value >> 16);
+		    _buffer[4] = (byte)(value >> 24);
+		    _buffer[5] = (byte)(value >> 32);
+		    _buffer[6] = (byte)(value >> 40);
+		    _buffer[7] = (byte)(value >> 48);
+		    _buffer[8] = (byte)(value >> 56);
+		    bw.Write(_buffer, 0, 9);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteULong(BinaryWriter bw, byte type, ulong value)
+		protected void WriteULong(BinaryWriter bw, byte type, ulong value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    _buffer[3] = (byte)(value >> 16);
+		    _buffer[4] = (byte)(value >> 24);
+		    _buffer[5] = (byte)(value >> 32);
+		    _buffer[6] = (byte)(value >> 40);
+		    _buffer[7] = (byte)(value >> 48);
+		    _buffer[8] = (byte)(value >> 56);
+		    bw.Write(_buffer, 0, 9);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteUInt(BinaryWriter bw, byte type, uint value)
+		protected void WriteUInt(BinaryWriter bw, byte type, uint value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    _buffer[3] = (byte)(value >> 16);
+		    _buffer[4] = (byte)(value >> 24);
+		    bw.Write(_buffer, 0, 5);
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected static void WriteShort(BinaryWriter bw, byte type, short value)
+		protected void WriteShort(BinaryWriter bw, byte type, short value)
 		{
-			bw.Write(type);
-			bw.Write(value);
-		}
+		    _buffer[0] = type;
+		    _buffer[1] = (byte)value;
+		    _buffer[2] = (byte)(value >> 8);
+		    bw.Write(_buffer, 0, 3);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected static void WriteChar(BinaryWriter bw, byte type, char value)
         {

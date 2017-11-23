@@ -67,13 +67,13 @@ namespace TWCore.Services
         /// On Pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnPause() => this.Each(i => i.OnPause());
+        public void OnPause() => this.Reverse().Each(i => i.OnPause());
         /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnShutdown() => this.Each(i => i.OnShutdown());
+        public void OnShutdown() => this.Reverse().Each(i => i.OnShutdown());
         /// <inheritdoc />
         /// <summary>
         /// On Service Start method
@@ -86,7 +86,7 @@ namespace TWCore.Services
         /// On Service Stops method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnStop() => this.Each(i => i.OnStop());
+        public void OnStop() => this.Reverse().Each(i => i.OnStop());
         #endregion
     }
 }

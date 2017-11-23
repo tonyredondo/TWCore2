@@ -71,11 +71,9 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
-                    Try.Do(message.Finish, false);
-
-
-                    _listener.Counters.IncrementMessages();
                     var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    Try.Do(message.Finish, false);
+                    _listener.Counters.IncrementMessages();
                     _listener._processingTasks.TryAdd(tsk, null);
                     tsk.ContinueWith(mTsk =>
                     {

@@ -67,8 +67,8 @@ namespace TWCore.Messaging.NATS
                     CorrelationId = correlationId,
                     Body = body
                 };
-                Counters.IncrementMessages();
                 var tsk = Task.Factory.StartNew(ProcessingTask, rMsg, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                Counters.IncrementMessages();
                 _processingTasks.TryAdd(tsk, null);
                 tsk.ContinueWith(mTsk =>
                 {

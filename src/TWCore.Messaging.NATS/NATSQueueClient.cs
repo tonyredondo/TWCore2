@@ -50,6 +50,7 @@ namespace TWCore.Messaging.NATS
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
+        private TimeSpan _receiverOptionsTimeout;
         #endregion
 
         #region Properties
@@ -117,6 +118,7 @@ namespace TWCore.Messaging.NATS
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
@@ -196,9 +198,9 @@ namespace TWCore.Messaging.NATS
             if (_senderOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
-            var recvQueue = _clientQueues.RecvQueue;
             if (message.Header.ResponseQueue == null)
             {
+                var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
                 {
                     message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
@@ -243,10 +245,7 @@ namespace TWCore.Messaging.NATS
         {
             if (_receiver == null && UseSingleResponseQueue)
                 throw new NullReferenceException("There is not receiver queue.");
-            if (_receiverOptions == null)
-                throw new ArgumentNullException("SenderOptions");
 
-            var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NATSQueueMessage());
 
@@ -256,13 +255,13 @@ namespace TWCore.Messaging.NATS
                 message.Route = _receiverConnection.Route;
                 message.Connection = _factory.CreateConnection(message.Route);
                 message.Consumer = message.Connection.SubscribeAsync(message.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
-                var waitResult = await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
+                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
                 message.Consumer.Unsubscribe();
                 message.Connection.Close();
                 message.Consumer = null;
                 message.Consumer = null;
 
-                if (!waitResult) throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
                 if (message.Body == null)
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
@@ -274,8 +273,8 @@ namespace TWCore.Messaging.NATS
                 return response;
             }
 
-            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
             if (message.Body == null)
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);

@@ -54,6 +54,7 @@ namespace TWCore.Messaging.RabbitMQ
         private MQClientReceiverOptions _receiverOptions;
         private long _receiverThreads;
         private Action _receiverStopBuffered;
+        private TimeSpan _receiverOptionsTimeout;
         #endregion
 
         #region Properties
@@ -97,6 +98,7 @@ namespace TWCore.Messaging.RabbitMQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues != null)
@@ -230,13 +232,9 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
-            if (_receiverOptions == null)
-                throw new ArgumentNullException("SenderOptions");
 
-            Interlocked.Increment(ref _receiverThreads);
-
-            var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
             var sw = Stopwatch.StartNew();
+            Interlocked.Increment(ref _receiverThreads);
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
 
             if (UseSingleResponseQueue)
@@ -269,8 +267,8 @@ namespace TWCore.Messaging.RabbitMQ
                 _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
             }
 
-            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
             if (message.Body == null)
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 

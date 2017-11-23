@@ -52,6 +52,7 @@ namespace TWCore.Messaging.NSQ
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
+        private TimeSpan _receiverOptionsTimeout;
         #endregion
 
         #region Properties
@@ -125,6 +126,7 @@ namespace TWCore.Messaging.NSQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
@@ -229,10 +231,6 @@ namespace TWCore.Messaging.NSQ
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
-            if (_receiverOptions == null)
-                throw new ArgumentNullException("SenderOptions");
-
-            var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
 
@@ -244,7 +242,7 @@ namespace TWCore.Messaging.NSQ
                 message.Consumer.AddHandler(MessageHandler);
                 message.Consumer.ConnectToNsqd(message.Route);
 
-                var waitResult = await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
+                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
 
                 message.Consumer.Stop();
                 message.Consumer.DisconnectFromNsqd(message.Route);
@@ -253,7 +251,7 @@ namespace TWCore.Messaging.NSQ
                 pro.DeleteChannel(message.Name, message.Name);
                 pro.DeleteTopic(message.Name);
 
-                if (!waitResult) throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
                 
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
                 Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
@@ -261,8 +259,8 @@ namespace TWCore.Messaging.NSQ
                 return (byte[])message.Body;
             }
 
-            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
             ReceivedMessages.TryRemove(correlationId, out var _);
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);

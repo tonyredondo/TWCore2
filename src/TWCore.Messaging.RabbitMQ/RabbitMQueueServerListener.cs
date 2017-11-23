@@ -100,8 +100,8 @@ namespace TWCore.Messaging.RabbitMQ
                     Properties = ea.BasicProperties,
                     Body = ea.Body
                 };
-                Counters.IncrementMessages();
                 var tsk = Task.Factory.StartNew(ProcessingTask, message, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                Counters.IncrementMessages();
                 _processingTasks.TryAdd(tsk, null);
                 tsk.ContinueWith(mTsk =>
                 {

@@ -50,6 +50,7 @@ namespace TWCore.Messaging.NSQ
         private MQClientQueues _clientQueues;
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
+        private TimeSpan _receiverOptionsTimeout;
         #endregion
 
         #region Properties
@@ -121,6 +122,7 @@ namespace TWCore.Messaging.NSQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues?.SendQueues?.Any() == true)
@@ -168,7 +170,7 @@ namespace TWCore.Messaging.NSQ
             {
                 var producers = _senders.SelectMany(i => i.Item2.GetCurrentObjects()).ToArray();
                 Parallel.ForEach(producers, p => p.Stop());
-                foreach(var sender in _senders)
+                foreach (var sender in _senders)
                     sender.Item2.Clear();
                 _senders.Clear();
                 _senders = null;
@@ -194,9 +196,9 @@ namespace TWCore.Messaging.NSQ
             if (_senderOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
-            var recvQueue = _clientQueues.RecvQueue;
             if (message.Header.ResponseQueue == null)
             {
+                var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
                 {
                     message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
@@ -241,10 +243,7 @@ namespace TWCore.Messaging.NSQ
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
-            if (_receiverOptions == null)
-                throw new ArgumentNullException("SenderOptions");
 
-            var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
             var sw = Stopwatch.StartNew();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new NSQueueMessage());
 
@@ -256,7 +255,7 @@ namespace TWCore.Messaging.NSQ
                 message.Consumer.AddHandler(MessageHandler);
                 message.Consumer.ConnectToNsqd(message.Route);
 
-                var waitResult = await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false);
+                var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
 
                 message.Consumer.Stop();
                 message.Consumer.DisconnectFromNsqd(message.Route);
@@ -265,8 +264,8 @@ namespace TWCore.Messaging.NSQ
                 pro.DeleteChannel(message.Name, message.Name);
                 pro.DeleteTopic(message.Name);
 
-                if (!waitResult) throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
-                
+                if (!waitResult) throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
+
                 if (message.Body == null)
                     throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
@@ -277,8 +276,8 @@ namespace TWCore.Messaging.NSQ
                 return response;
             }
 
-            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
             if (message.Body == null)
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);

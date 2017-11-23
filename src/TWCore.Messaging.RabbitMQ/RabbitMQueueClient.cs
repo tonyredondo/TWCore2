@@ -54,6 +54,7 @@ namespace TWCore.Messaging.RabbitMQ
         private MQClientReceiverOptions _receiverOptions;
         private long _receiverThreads;
         private Action _receiverStopBuffered;
+        private TimeSpan _receiverOptionsTimeout;
         #endregion
 
         #region Properties
@@ -84,7 +85,7 @@ namespace TWCore.Messaging.RabbitMQ
             OnDispose();
             _senders = new List<RabbitMQueue>();
             _receiver = null;
-            _receiverStopBuffered = ActionDelegate.Create(RemoveReceiverConsumer).CreateBufferedAction(2000);
+            _receiverStopBuffered = ActionDelegate.Create(RemoveReceiverConsumer).CreateBufferedAction(15000);
             
             if (Config != null)
             {
@@ -97,6 +98,7 @@ namespace TWCore.Messaging.RabbitMQ
                 }
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
+                _receiverOptionsTimeout = TimeSpan.FromSeconds(_receiverOptions?.TimeoutInSec ?? 20);
                 UseSingleResponseQueue = _receiverOptions?.Parameters?[ParameterKeys.SingleResponseQueue].ParseTo(false) ?? false;
 
                 if (_clientQueues != null)
@@ -177,9 +179,9 @@ namespace TWCore.Messaging.RabbitMQ
             if (_senderOptions == null)
                 throw new ArgumentNullException("SenderOptions");
 
-            var recvQueue = _clientQueues.RecvQueue;
             if (message.Header.ResponseQueue == null)
             {
+                var recvQueue = _clientQueues.RecvQueue;
                 if (recvQueue != null)
                 {
                     message.Header.ResponseQueue = new MQConnection(recvQueue.Route, recvQueue.Name) { Parameters = recvQueue.Parameters };
@@ -245,13 +247,11 @@ namespace TWCore.Messaging.RabbitMQ
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
-            if (_receiverOptions == null)
-                throw new ArgumentNullException("SenderOptions");
+
+            var sw = Stopwatch.StartNew();
 
             Interlocked.Increment(ref _receiverThreads);
-
-            var timeout = TimeSpan.FromSeconds(_receiverOptions.TimeoutInSec);
-            var sw = Stopwatch.StartNew();
+            var strCorrelationId = correlationId.ToString();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
 
             if (UseSingleResponseQueue)
@@ -260,7 +260,7 @@ namespace TWCore.Messaging.RabbitMQ
             }
             else
             {
-                var recName = _receiver.Name + "_" + correlationId;
+                var recName = _receiver.Name + "_" + strCorrelationId;
                 var pool = _routeConnection.GetOrAdd(_receiver.Route, r => new ObjectPool<RabbitMQueue>(p => new RabbitMQueue(_receiver)));
                 var cReceiver = pool.New();
                 cReceiver.EnsureConnection();
@@ -275,7 +275,7 @@ namespace TWCore.Messaging.RabbitMQ
                     rMessage.Properties = ea.BasicProperties;
                     rMessage.WaitHandler.Set();
                     cReceiver.Channel.BasicAck(ea.DeliveryTag, false);
-                    if (_correlationIdConsumers.TryGetValue(crId, out var consumerTag))
+                    if (_correlationIdConsumers.TryRemove(crId, out var consumerTag))
                         cReceiver.Channel.BasicCancel(consumerTag);
                     cReceiver.Channel.QueueDeleteNoWait(recName);
                     cReceiver.AutoClose();
@@ -284,15 +284,15 @@ namespace TWCore.Messaging.RabbitMQ
                 _correlationIdConsumers.TryAdd(correlationId, cReceiver.Channel.BasicConsume(recName, false, tmpConsumer));
             }
 
-            if (!await message.WaitHandler.WaitAsync(timeout, cancellationToken).ConfigureAwait(false))
-                throw new MessageQueueTimeoutException(timeout, correlationId.ToString());
+            if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+                throw new MessageQueueTimeoutException(_receiverOptionsTimeout, strCorrelationId);
             if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
 
-            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, correlationId);
+            Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, strCorrelationId);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
             ReceivedMessages.TryRemove(correlationId, out var _);
-            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", correlationId, sw.Elapsed.TotalMilliseconds);
+            Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", strCorrelationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
 
             if (Interlocked.Decrement(ref _receiverThreads) <= 0)

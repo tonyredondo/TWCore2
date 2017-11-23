@@ -143,6 +143,7 @@ namespace TWCore.Object.Api.Controllers
                             Type = PathEntryType.File,
                             IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
                         }))
+                        .OrderBy(d => d.Name)
                     .ToArray();
                 return new ObjectResult(new PathEntryCollection { Current = virtualPath, Entries = pathEntries });
             }

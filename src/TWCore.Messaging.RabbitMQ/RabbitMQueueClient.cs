@@ -85,7 +85,7 @@ namespace TWCore.Messaging.RabbitMQ
             OnDispose();
             _senders = new List<RabbitMQueue>();
             _receiver = null;
-            _receiverStopBuffered = ActionDelegate.Create(RemoveReceiverConsumer).CreateBufferedAction(15000);
+            _receiverStopBuffered = ActionDelegate.Create(RemoveReceiverConsumer).CreateBufferedAction(60000);
             
             if (Config != null)
             {
@@ -203,9 +203,9 @@ namespace TWCore.Messaging.RabbitMQ
                     message.Header.ResponseTimeoutInSeconds = -1;
                 }
             }
+            var data = SenderSerializer.Serialize(message);
 
             var correlationId = message.CorrelationId.ToString();
-            var data = SenderSerializer.Serialize(message);
             var replyTo = message.Header.ResponseQueue?.Name;
             var priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
                 _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
@@ -228,7 +228,6 @@ namespace TWCore.Messaging.RabbitMQ
                 props.Type = _senderOptions.Label;
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);
-                sender.AutoClose();
             }
             return true;
         }
@@ -249,10 +248,9 @@ namespace TWCore.Messaging.RabbitMQ
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-
             Interlocked.Increment(ref _receiverThreads);
-            var strCorrelationId = correlationId.ToString();
             var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
+            var strCorrelationId = correlationId.ToString();
 
             if (UseSingleResponseQueue)
             {
@@ -303,6 +301,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void CreateReceiverConsumer()
         {
             if (_receiverConsumer != null) return;
@@ -328,6 +327,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.LibVerbose("The Receiver for the queue \"{0}\" has been created.", _receiver.Name);
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RemoveReceiverConsumer()
         {
             if (Interlocked.Read(ref _receiverThreads) > 0) return;

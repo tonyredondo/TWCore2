@@ -692,38 +692,38 @@ namespace TWCore
 		/// <param name="handle">Handle.</param>
 		/// <param name="millisecondsTimeout">Milliseconds timeout.</param>
 		/// <param name="cancellationToken">Cancellation token.</param>
-		public static async Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
+		public static Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
 		{
-			RegisteredWaitHandle registeredHandle = null;
-			var tokenRegistration = default(CancellationTokenRegistration);
-			try
-			{
-				var tcs = new TaskCompletionSource<bool>();
-				registeredHandle = ThreadPool.RegisterWaitForSingleObject(
-					handle,
-					(state, timedOut) => ((TaskCompletionSource<bool>)state).TrySetResult(!timedOut),
-					tcs,
-					millisecondsTimeout,
-					true);
-				tokenRegistration = cancellationToken.Register(
-					state => ((TaskCompletionSource<bool>)state).TrySetCanceled(),
-					tcs);
-				return await tcs.Task;
-			}
-			finally
-			{
-				registeredHandle?.Unregister(null);
-				tokenRegistration.Dispose();
-			}
-		}
-		/// <summary>
-		/// WaitOne Async
-		/// </summary>
-		/// <returns>The async Task with the result.</returns>
-		/// <param name="handle">Handle.</param>
-		/// <param name="timeout">Timeout.</param>
-		/// <param name="cancellationToken">Cancellation token.</param>
-		public static Task<bool> WaitOneAsync(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
+		    if (handle == null)
+		        throw new ArgumentNullException("waitHandle");
+
+            var tcs = new TaskCompletionSource<bool>();
+		    var registeredHandle = ThreadPool.RegisterWaitForSingleObject(
+		        handle,
+		        (state, timedOut) => ((TaskCompletionSource<bool>)state).TrySetResult(!timedOut),
+		        tcs,
+		        millisecondsTimeout,
+		        true);
+		    var tokenRegistration = cancellationToken.Register(
+		        state => ((TaskCompletionSource<bool>)state).TrySetCanceled(),
+		        tcs);
+
+		    var t = tcs.Task;
+		    t.ContinueWith((antecedent) =>
+		    {
+		        registeredHandle.Unregister(null);
+		        tokenRegistration.Dispose();
+		    });
+		    return t;
+        }
+        /// <summary>
+        /// WaitOne Async
+        /// </summary>
+        /// <returns>The async Task with the result.</returns>
+        /// <param name="handle">Handle.</param>
+        /// <param name="timeout">Timeout.</param>
+        /// <param name="cancellationToken">Cancellation token.</param>
+        public static Task<bool> WaitOneAsync(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
 			=> handle.WaitOneAsync((int)timeout.TotalMilliseconds, cancellationToken);
 		/// <summary>
 		/// WaitOne Async
@@ -733,6 +733,41 @@ namespace TWCore
 		/// <param name="cancellationToken">Cancellation token.</param>
 		public static Task<bool> WaitOneAsync(this WaitHandle handle, CancellationToken cancellationToken)
 			=> handle.WaitOneAsync(Timeout.Infinite, cancellationToken);
-		#endregion
-	}
+        /// <summary>
+        /// WaitOne Async
+        /// </summary>
+        /// <returns>The async Task with the result.</returns>
+        /// <param name="waitHandle">Handle.</param>
+        public static Task WaitOneAsync(this WaitHandle waitHandle)
+        {
+            if (waitHandle == null)
+                throw new ArgumentNullException("waitHandle");
+
+            var tcs = new TaskCompletionSource<bool>();
+            var rwh = ThreadPool.RegisterWaitForSingleObject(waitHandle,
+                delegate { tcs.TrySetResult(true); }, null, -1, true);
+            var t = tcs.Task;
+            t.ContinueWith((antecedent) => rwh.Unregister(null));
+            return t;
+        }
+        /// <summary>
+        /// WaitOne Async
+        /// </summary>
+        /// <returns>The async Task with the result.</returns>
+        /// <param name="waitHandle">Handle.</param>
+        /// <param name="millisecondsTimeout">Milliseconds timeout.</param>
+	    public static Task WaitOneAsync(this WaitHandle waitHandle, int millisecondsTimeout)
+	    {
+	        if (waitHandle == null)
+	            throw new ArgumentNullException("waitHandle");
+
+	        var tcs = new TaskCompletionSource<bool>();
+	        var rwh = ThreadPool.RegisterWaitForSingleObject(waitHandle,
+	            delegate { tcs.TrySetResult(true); }, null, millisecondsTimeout, true);
+	        var t = tcs.Task;
+	        t.ContinueWith((antecedent) => rwh.Unregister(null));
+	        return t;
+	    }
+        #endregion
+    }
 }

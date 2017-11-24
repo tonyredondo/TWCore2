@@ -63,8 +63,12 @@ namespace TWCore.Threading
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task WaitAsync(CancellationToken cancellationToken)
-            => _mTcs?.Task.HandleCancellationAsync(cancellationToken) ?? Task.FromException(new Exception("The instance has been disposed."));
+        public async Task WaitAsync(CancellationToken cancellationToken)
+        {
+            if (_mTcs == null) throw new Exception("The instance has been disposed.");
+            await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync()).ConfigureAwait(false);
+        }
+
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
@@ -101,9 +105,8 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
             if (_mTcs == null) return false;
-            var delayTask = Task.Delay(milliseconds);
-            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
-            return finalTask != delayTask;
+            var finalTask = await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync(milliseconds)).ConfigureAwait(false);
+            return finalTask == _mTcs.Task;
         }
         /// <summary>
         /// Wait Async for the set event
@@ -115,9 +118,8 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (_mTcs == null) return false;
-            var delayTask = Task.Delay(timeout);
-            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task.HandleCancellationAsync(cancellationToken)).ConfigureAwait(false);
-            return finalTask != delayTask;
+            var finalTask = await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
+            return finalTask == _mTcs.Task;
         }
 
         /// <summary>

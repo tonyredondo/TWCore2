@@ -37,7 +37,6 @@ namespace TWCore.Messaging.NSQ
 	public class NSQueueServerListener : MQueueServerListenerBase
 	{
 		#region Fields
-		private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
 		private readonly object _lock = new object();
 		private readonly Type _messageType;
 		private readonly string _name;
@@ -71,15 +70,8 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
-                    var tsk = Task.Factory.StartNew(_listener.ProcessingTask, rMsg, _listener._token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                    _listener.EnqueueMessageToProcess(_listener.ProcessingTask, rMsg);
                     Try.Do(message.Finish, false);
-                    _listener.Counters.IncrementMessages();
-                    _listener._processingTasks.TryAdd(tsk, null);
-                    tsk.ContinueWith(mTsk =>
-                    {
-                        _listener._processingTasks.TryRemove(tsk, out var _);
-                        _listener.Counters.DecrementMessages();
-                    });
                 }
                 catch (Exception ex)
                 {
@@ -129,11 +121,8 @@ namespace TWCore.Messaging.NSQ
             _monitorTask = Task.Run(MonitorProcess, _token);
 			await token.WhenCanceledAsync().ConfigureAwait(false);
 			OnDispose();
-			Task[] tasksToWait;
-			lock (_lock)
-				tasksToWait = _processingTasks.Keys.Concat(_monitorTask).ToArray();
-			if (tasksToWait.Length > 0)
-				Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+		    WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+		    await _monitorTask.ConfigureAwait(false);
 		}
 		/// <inheritdoc />
 		/// <summary>
@@ -205,17 +194,16 @@ namespace TWCore.Messaging.NSQ
 				}
 			}
 		}
-		/// <summary>
-		/// Process a received message from the queue
-		/// </summary>
-		/// <param name="obj">Object message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ProcessingTask(object obj)
+        /// <summary>
+        /// Process a received message from the queue
+        /// </summary>
+        /// <param name="message">Message instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private void ProcessingTask(NSQMessage message)
 		{
 			try
 			{
 				Counters.IncrementProcessingThreads();
-				if (!(obj is NSQMessage message)) return;
 				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
 				var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
 				switch (messageBody)

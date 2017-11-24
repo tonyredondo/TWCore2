@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 
 namespace TWCore.Messaging
 {
@@ -28,11 +29,14 @@ namespace TWCore.Messaging
     public class MemoryQueue
     {
         #region Fields
-        private readonly ConcurrentDictionary<int, Message> _messages = new ConcurrentDictionary<int, Message>();
-        private readonly ConcurrentDictionary<Guid, int> _correlationMessages = new ConcurrentDictionary<Guid, int>();
+        private readonly object _locker = new object();
+        private readonly Dictionary<int, Message> _messages = new Dictionary<int, Message>();
+        private readonly Dictionary<Guid, int> _correlationMessages = new Dictionary<Guid, int>();
+        private readonly Dictionary<Guid, ManualResetEventSlim> _correlationEvents = new Dictionary<Guid, ManualResetEventSlim>();
         private readonly ManualResetEventSlim _enqueueEvent = new ManualResetEventSlim(false);
         private int _enqueueIndex;
         private int _dequeueIndex;
+        private Guid _lastGuid;
         #endregion
 
         public class Message
@@ -51,9 +55,18 @@ namespace TWCore.Messaging
         public bool Enqueue(Guid correlationId, object value)
         {
             var message = new Message { CorrelationId = correlationId, Value = value };
-            if (_messages.TryAdd(_enqueueIndex, message))
-                _correlationMessages.TryAdd(correlationId, _enqueueIndex);
-            Interlocked.Increment(ref _enqueueIndex);
+            lock(_locker)
+            {
+                _messages.Add(_enqueueIndex, message);
+                _correlationMessages.Add(correlationId, _enqueueIndex);
+                if (!_correlationEvents.TryGetValue(correlationId, out var cEvent))
+                {
+                    cEvent = new ManualResetEventSlim();
+                    _correlationEvents.Add(correlationId, cEvent);
+                }
+                Interlocked.Increment(ref _enqueueIndex);
+                cEvent.Set();
+            }
             _enqueueEvent.Set();
             return true;
         }
@@ -68,19 +81,23 @@ namespace TWCore.Messaging
             {
                 while (_enqueueIndex > _dequeueIndex || _enqueueEvent.Wait(Timeout.Infinite, cancellationToken))
                 {
-                    if (_messages.TryRemove(_dequeueIndex, out var mResult))
+                    lock(_locker)
                     {
-                        if (mResult == null)
+                        if (_messages.TryGetValue(_dequeueIndex, out var mResult))
+                        {
+                            _messages.Remove(_dequeueIndex);
+                            _correlationMessages.Remove(mResult.CorrelationId);
+                            _correlationEvents.Remove(mResult.CorrelationId);
+                            Interlocked.Increment(ref _dequeueIndex);
+                            _lastGuid = mResult.CorrelationId;
+                            return mResult;
+                        }
+                        if (_enqueueIndex > _dequeueIndex)
                         {
                             Interlocked.Increment(ref _dequeueIndex);
-                            continue;
                         }
-                        _correlationMessages.TryRemove(mResult.CorrelationId, out var _);
-                        Interlocked.Increment(ref _dequeueIndex);
-                        return mResult;
                     }
                     _enqueueEvent.Reset();
-
                 }
             }
             catch
@@ -100,19 +117,25 @@ namespace TWCore.Messaging
         {
             try
             {
-                while (_enqueueIndex > _dequeueIndex || _enqueueEvent.Wait(waitTime, cancellationToken))
+                ManualResetEventSlim cEvent;
+                lock(_locker)
                 {
-                    if (_correlationMessages.TryGetValue(correlationId, out var cResult))
+                    if (!_correlationEvents.TryGetValue(correlationId, out cEvent))
                     {
-                        if (_messages.TryGetValue(cResult, out var mResult))
-                        {
-                            _correlationMessages.TryRemove(correlationId, out var _);
-                            _messages.TryUpdate(cResult, null, mResult);
-                            return mResult;
-                        }
-                        continue;
+                        cEvent = new ManualResetEventSlim();
+                        _correlationEvents.Add(correlationId, cEvent);
                     }
-                    _enqueueEvent.Reset();
+                }
+                if (!cEvent.Wait(waitTime, cancellationToken)) return null;
+                lock (_locker)
+                {
+                    if (_correlationMessages.TryGetValue(correlationId, out var cResult) && _messages.TryGetValue(cResult, out var mResult))
+                    {
+                        _correlationMessages.Remove(correlationId);
+                        _correlationEvents.Remove(correlationId);
+                        _messages[cResult] = null;
+                        return mResult;
+                    }
                 }
             }
             catch

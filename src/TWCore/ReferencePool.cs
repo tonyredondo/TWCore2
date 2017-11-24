@@ -84,12 +84,18 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
+            var tAlloc = new T[number];
             for (var i = 0; i < number; i++)
             {
                 var t = new T();
                 _onetimeInitAction?.Invoke(t);
-                lock (_padLock)
-                    _objectStack.Push(t);
+                tAlloc[i] = t;
+            }
+
+            lock (_padLock)
+            {
+                for (var i = 0; i < number; i++)
+                    _objectStack.Push(tAlloc[i]);
             }
         }
         /// <summary>
@@ -100,23 +106,25 @@ namespace TWCore
         public T New()
         {
             T value = null;
+            int count;
+
             lock(_padLock)
             {
-                var count = _objectStack.Count;
+                count = _objectStack.Count;
                 if (count > 0)
-                {
                     value = _objectStack.Pop();
-                    if (count - 1 < _preallocationThreshold && !_allocating)
-                    {
-                        Task.Run(() =>
-                        {
-                            _allocating = true;
-                            Preallocate(_preallocationThreshold * 2);
-                            _allocating = false;
-                        });
-                    }
-                }
             }
+
+            if (count - 1 < _preallocationThreshold && !_allocating)
+            {
+                Task.Run(() =>
+                {
+                    _allocating = true;
+                    Preallocate(_preallocationThreshold * 2);
+                    _allocating = false;
+                });
+            }
+
             if (value == null)
             {
                 value = new T();

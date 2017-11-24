@@ -36,7 +36,7 @@ namespace TWCore.Messaging.RabbitMQ
 	public class RabbitMQueueServerListener : MQueueServerListenerBase
     {
         #region Fields
-        private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+        //private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
         private readonly object _lock = new object();
         private readonly Type _messageType;
         private readonly string _name;
@@ -100,14 +100,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Properties = ea.BasicProperties,
                     Body = ea.Body
                 };
-                var tsk = Task.Factory.StartNew(ProcessingTask, message, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                Counters.IncrementMessages();
-                _processingTasks.TryAdd(tsk, null);
-                tsk.ContinueWith(mTsk =>
-                {
-                    _processingTasks.TryRemove(tsk, out var _);
-                    Counters.DecrementMessages();
-                });
+                EnqueueMessageToProcess(ProcessingTask, message);
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
@@ -118,11 +111,8 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiver.Channel.BasicCancel(_receiverConsumerTag);
             _receiver.Close();
 
-            Task[] tasksToWait;
-            lock (_lock)
-                tasksToWait = _processingTasks.Keys.Concat(_monitorTask).ToArray();
-            if (tasksToWait.Length > 0)
-                Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            await _monitorTask.ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -190,14 +180,13 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="obj">Object message instance</param>
+        /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessingTask(object obj)
+        private void ProcessingTask(RabbitMessage message)
         {
             try
             {
                 Counters.IncrementProcessingThreads();
-                if (!(obj is RabbitMessage message)) return;
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
                 switch (messageBody)

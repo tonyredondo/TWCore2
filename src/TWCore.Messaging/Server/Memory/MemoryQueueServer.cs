@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
 
 namespace TWCore.Messaging
 {
@@ -67,7 +68,7 @@ namespace TWCore.Messaging
                     Core.Log.Write(ex);
                 }
             }
-            return response ? 0 : -1;
+            return response ? 1 : -1;
         }
 
         /// <inheritdoc />
@@ -82,7 +83,6 @@ namespace TWCore.Messaging
         #region Nested Classes
         private class MemoryQueueServerListener : MQueueServerListenerBase
         {
-            private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
             private readonly Type _messageType;
             private readonly string _name;
             private MemoryQueue _receiver;
@@ -128,21 +128,11 @@ namespace TWCore.Messaging
                     {
                         var message = _receiver.Dequeue(_token);
                         if (_token.IsCancellationRequested) break;
-                        Core.Log.LibVerbose("Received message by consumer.");
-                        var tsk = Task.Factory.StartNew(ProcessingTask, message, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                        Counters.IncrementMessages();
-                        _processingTasks.TryAdd(tsk, null);
-                        tsk.ContinueWith(mTsk =>
-                        {
-                            _processingTasks.TryRemove(tsk, out var _);
-                            Counters.DecrementMessages();
-                        });
+                        EnqueueMessageToProcess(ProcessingTask, message);
                     }
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
 
-                var tasksToWait = _processingTasks.Keys.ToArray();
-                if (tasksToWait.Length > 0)
-                    Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+                WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
             }
 
             /// <inheritdoc />
@@ -155,15 +145,12 @@ namespace TWCore.Messaging
             }
 
 
-            private void ProcessingTask(object obj)
+            private void ProcessingTask(MemoryQueue.Message message)
             {
                 try
                 {
                     Counters.IncrementProcessingThreads();
-                    if (!(obj is MemoryQueue.Message message)) return;
-
                     Core.Log.LibVerbose("Received message from the memory queue '{0}/{1}'", Connection.Route, Connection.Name);
-
                     var messageBody = message.Value;
                     switch (messageBody)
                     {
@@ -190,6 +177,7 @@ namespace TWCore.Messaging
                                 break;
                             }
                     }
+
                     Counters.IncrementTotalMessagesProccesed();
                 }
                 catch (Exception ex)

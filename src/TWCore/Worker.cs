@@ -121,9 +121,11 @@ namespace TWCore
             _tokenSource = new CancellationTokenSource();
             _processThread = Task.Factory.StartNew(obj =>
             {
-                Thread.CurrentThread.Name = "Core.Worker";
-                OneLoopDequeueThread((CancellationToken)obj);
-            }, _tokenSource.Token, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                if (obj != null)
+                    OneLoopDequeueThreadWithPrecondition();
+                else
+                    OneLoopDequeueThread();
+            }, _precondition, _tokenSource.Token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
         }
         #endregion
 
@@ -208,12 +210,15 @@ namespace TWCore
         private readonly object _locker = new object();
         [IgnoreStackFrameLog]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void OneLoopDequeueThread(CancellationToken token)
+        private void OneLoopDequeueThreadWithPrecondition()
         {
+            Thread.CurrentThread.Name = "Core.Worker (Precondition)";
+
+            var token = _tokenSource.Token;
             var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                _processHandler.Wait(token);
+                var bRes = _processHandler.Wait(1000, token);
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
@@ -233,16 +238,80 @@ namespace TWCore
                             Exceptions.Add((ex, item));
                     }
                 }
-                if (workDone)
-                    Try.Do(() => OnWorkDone?.Invoke(this, new EventArgs()));
-                if (token.IsCancellationRequested) continue;
-                try
+                if (workDone && OnWorkDone != null)
                 {
-                    _processHandler.Reset();
+                    try
+                    {
+                        OnWorkDone.Invoke(this, new EventArgs());
+                    }
+                    catch
+                    {
+                        //
+                    }
                 }
-                catch
+                if (token.IsCancellationRequested) break;
+                if (bRes)
                 {
-                    // ignored
+                    try
+                    {
+                        _processHandler.Reset();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
+                }
+            }
+        }
+        [IgnoreStackFrameLog]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OneLoopDequeueThread()
+        {
+            Thread.CurrentThread.Name = "Core.Worker";
+
+            var token = _tokenSource.Token;
+            var workDone = false;
+            while (!token.IsCancellationRequested)
+            {
+                var bRes = _processHandler.Wait(1000, token);
+
+                while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
+                {
+                    try
+                    {
+                        _action(item);
+                        workDone = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        OnException?.Invoke(this, (ex, item));
+                        lock (_locker)
+                            Exceptions.Add((ex, item));
+                    }
+                }
+
+                if (workDone && OnWorkDone != null)
+                {
+                    try
+                    {
+                        OnWorkDone.Invoke(this, new EventArgs());
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
+                if (token.IsCancellationRequested) break;
+                if (bRes)
+                {
+                    try
+                    {
+                        _processHandler.Reset();
+                    }
+                    catch
+                    {
+                        // ignored
+                    }
                 }
             }
         }

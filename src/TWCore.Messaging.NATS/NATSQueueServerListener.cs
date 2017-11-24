@@ -38,7 +38,6 @@ namespace TWCore.Messaging.NATS
     {
         #region Fields
         private readonly ConnectionFactory _factory;
-        private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
         private readonly object _lock = new object();
         private readonly Type _messageType;
         private readonly string _name;
@@ -67,14 +66,7 @@ namespace TWCore.Messaging.NATS
                     CorrelationId = correlationId,
                     Body = body
                 };
-                var tsk = Task.Factory.StartNew(ProcessingTask, rMsg, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
-                Counters.IncrementMessages();
-                _processingTasks.TryAdd(tsk, null);
-                tsk.ContinueWith(mTsk =>
-                {
-                    _processingTasks.TryRemove(tsk, out var _);
-                    Counters.DecrementMessages();
-                });
+                EnqueueMessageToProcess(ProcessingTask, rMsg);
             }
             catch (Exception ex)
             {
@@ -119,11 +111,8 @@ namespace TWCore.Messaging.NATS
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
-            Task[] tasksToWait;
-            lock (_lock)
-                tasksToWait = _processingTasks.Keys.Concat(_monitorTask).ToArray();
-            if (tasksToWait.Length > 0)
-                Task.WaitAll(tasksToWait, TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            await _monitorTask.ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -201,14 +190,13 @@ namespace TWCore.Messaging.NATS
         /// <summary>
         /// Process a received message from the queue
         /// </summary>
-        /// <param name="obj">Object message instance</param>
+        /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessingTask(object obj)
+        private void ProcessingTask(NATSQMessage message)
         {
             try
             {
                 Counters.IncrementProcessingThreads();
-                if (!(obj is NATSQMessage message)) return;
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
                 switch (messageBody)

@@ -66,8 +66,13 @@ namespace TWCore.Messaging
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = _receiverOptions?.TimeoutInSec ?? 20;
 
-                if (_clientQueues?.RecvQueue != null)
-                    _receiver = MemoryQueueManager.GetQueue(_clientQueues.RecvQueue.Route, _clientQueues.RecvQueue.Name);
+                if (_clientQueues != null)
+                {
+                    if (_clientQueues.RecvQueue != null)
+                        _receiver = MemoryQueueManager.GetQueue(_clientQueues.RecvQueue.Route, _clientQueues.RecvQueue.Name);
+                    foreach (var sender in _clientQueues.SendQueues)
+                        MemoryQueueManager.GetQueue(sender.Route, sender.Name);
+                }
             }
             Core.Status.AttachObject(this);
         }
@@ -138,7 +143,6 @@ namespace TWCore.Messaging
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
-
             var message = _receiver.Dequeue(correlationId, _receiverOptionsTimeout * 1000, cancellationToken);
             if (message == null)
                 throw new MessageQueueTimeoutException(TimeSpan.FromSeconds(_receiverOptionsTimeout), correlationId.ToString());
@@ -147,7 +151,6 @@ namespace TWCore.Messaging
 
             var response = message.Value as ResponseMessage;
             Core.Log.LibVerbose("Received message from the memory Queue '{0}' with CorrelationId={1} received at: {2}ms", _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
-            sw.Stop();
             return Task.FromResult(response);
         }
         #endregion

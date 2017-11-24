@@ -30,6 +30,10 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
+        protected readonly ReferencePool<ActionWorker> WorkerPool;
+        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim();
+        protected int ActiveWorkers;
+
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -84,7 +88,7 @@ namespace TWCore.Messaging.Server
             Counters = new MQServerCounters();
             ReceiverSerializer = server.ReceiverSerializer;
             ResponseServer = responseServer;
-
+            WorkerPool = new ReferencePool<ActionWorker>(Environment.ProcessorCount);
             Core.Status.Attach(collection =>
             {
                 collection.Add("Connection Route:", Connection?.Route);
@@ -149,6 +153,27 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected void OnResponseReceived(ResponseReceivedEventArgs responseReceived)
             => ResponseReceived?.Invoke(this, responseReceived);
+        /// <summary>
+        /// Enqueue Message To Process
+        /// </summary>
+        /// <param name="processingAction">Processing Action</param>
+        /// <param name="message">Message</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void EnqueueMessageToProcess<T>(Action<T> processingAction, T message)
+        {
+            Interlocked.Increment(ref ActiveWorkers);
+            var worker = WorkerPool.New();
+            WorkerEvent.Reset();
+            worker.Enqueue(arg =>
+            {
+                processingAction(arg.Message);
+                Counters.DecrementMessages();
+                WorkerPool.Store(arg.Worker);
+                if (Interlocked.Decrement(ref ActiveWorkers) == 0)
+                    WorkerEvent.Set();
+            }, (Worker: worker, Message: message));
+            Counters.IncrementMessages();
+        }
         #endregion
     }
 }

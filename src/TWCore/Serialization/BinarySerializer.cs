@@ -102,7 +102,7 @@ namespace TWCore.Serialization
                 OnSerialize(stream, item, itemType);
                 return;
             }
-            using (var ms = new MemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 OnSerialize(ms, item, itemType);
                 ms.Position = 0;
@@ -121,7 +121,7 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
                 return OnDeserialize(stream, itemType);
-            using (var ms = new MemoryStream())
+			using (var ms = new RecycleMemoryStream())
             {
                 Compressor.Decompress(stream, ms);
                 ms.Position = 0;

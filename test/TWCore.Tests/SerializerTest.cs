@@ -121,6 +121,14 @@ namespace TWCore.Tests
                 for (var i = 0; i < 100000; i++)
                     wBytes.DeserializeFromWBinary<List<STest>>();
 
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			Factory.Thread.Sleep(1000);
+			using (Watch.Create("Object Cloner"))
+				for (var i = 0; i < 100000; i++)
+					lt.DeepClone();
+
+
             jsonBytes = Encoding.UTF8.GetBytes(jsonText);
 
             Core.Log.InfoBasic("Json length: {0}", jsonBytes.Count);

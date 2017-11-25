@@ -19,6 +19,7 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting MEMORY STREAMS TEST");
 
+
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("Press Enter to Start RecycleMemoryStream Test.");
             Console.ReadLine();
@@ -107,6 +108,7 @@ namespace TWCore.Tests
                 Console.ReadLine();
                 cts.Cancel();
             }
+
 
 
             Core.Log.WriteEmptyLine();

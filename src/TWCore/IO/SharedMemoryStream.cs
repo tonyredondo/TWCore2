@@ -75,7 +75,8 @@ namespace TWCore.IO
         public SharedMemoryStream(string name, int bufferSize = 262144)
         {
             _length = bufferSize;
-            var mmfBuffer = MemoryMappedFile.CreateOrOpen(name, _length + Start);
+			var mmfBuffer = MemoryMappedFile.CreateOrOpen(name, _length + Start);
+			//var mmfBuffer = MemoryMappedFile.CreateFromFile(name, FileMode.OpenOrCreate, null, _length + Start, MemoryMappedFileAccess.ReadWrite);
             _view = mmfBuffer.CreateViewAccessor();
             var readEventName = "Global\\CoreStream." + name + ".Read";
             var writeEventName = "Global\\CoreStream." + name + ".Write";

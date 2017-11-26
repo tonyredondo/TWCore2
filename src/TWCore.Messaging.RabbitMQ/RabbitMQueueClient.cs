@@ -55,6 +55,9 @@ namespace TWCore.Messaging.RabbitMQ
         private long _receiverThreads;
         private Action _receiverStopBuffered;
         private TimeSpan _receiverOptionsTimeout;
+		private byte _priority;
+		private byte _deliveryMode;
+		private string _expiration;
         #endregion
 
         #region Properties
@@ -117,6 +120,11 @@ namespace TWCore.Messaging.RabbitMQ
                     if (_clientQueues.RecvQueue != null)
                         _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
+
+				_priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
+				                   _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
+				_expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
+				_deliveryMode = (byte)(_senderOptions.Recoverable ? 2 : 1);
             }
 
             Core.Status.Attach(collection =>
@@ -204,13 +212,8 @@ namespace TWCore.Messaging.RabbitMQ
                 }
             }
             var data = SenderSerializer.Serialize(message);
-
             var correlationId = message.CorrelationId.ToString();
             var replyTo = message.Header.ResponseQueue?.Name;
-            var priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
-                _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
-            var expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
-            var deliveryMode = (byte)(_senderOptions.Recoverable ? 2 : 1);
 
             foreach (var sender in _senders)
             {
@@ -220,11 +223,11 @@ namespace TWCore.Messaging.RabbitMQ
                 props.CorrelationId = correlationId;
                 if (replyTo != null)
                     props.ReplyTo = replyTo;
-                props.Priority = priority;
-                props.Expiration = expiration;
+                props.Priority = _priority;
+                props.Expiration = _expiration;
                 props.AppId = Core.ApplicationName;
                 props.ContentType = SenderSerializer.MimeTypes[0];
-                props.DeliveryMode = deliveryMode;
+                props.DeliveryMode = _deliveryMode;
                 props.Type = _senderOptions.Label;
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);

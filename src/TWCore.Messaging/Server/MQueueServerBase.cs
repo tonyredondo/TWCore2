@@ -260,7 +260,6 @@ namespace TWCore.Messaging.Server
                     e.Response.Header.Response.ApplicationSentDate = Core.Now;
                     var rsea = new ResponseSentEventArgs(Name, e.Response);
 
-                    OnBeforeSend(e.Response, e.Request, e.Metadata);
                     BeforeSendResponse?.Invoke(this, rsea);
                     MQueueServerEvents.FireBeforeSendResponse(this, rsea);
                     var sentBytes = OnSend(e.Response, e);
@@ -298,14 +297,6 @@ namespace TWCore.Messaging.Server
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected virtual void OnInit() { }
-        /// <summary>
-        /// Before send the request message
-        /// </summary>
-        /// <param name="message">Response message instance</param>
-        /// <param name="request">Request message instance</param>
-        /// <param name="metadata">Request metadata</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnBeforeSend(ResponseMessage message, RequestMessage request, KeyValueCollection metadata) { }
         /// <summary>
         /// On Send message data
         /// </summary>

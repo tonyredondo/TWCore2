@@ -1,8 +1,6 @@
 ﻿<Properties StartupConfiguration="{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}|Default">
-  <MonoDevelop.Ide.Workbench ActiveDocument="src/TWCore.Messaging/Server/MQueueServerBase.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="TWCore2 Status">
     <Files>
-      <File FileName="src/TWCore.Messaging/Server/MQueueServerBase.cs" Line="279" Column="26" />
-      <File FileName="src/TWCore.Messaging/Server/MQServerCounters.cs" Line="135" Column="1" />
       <File FileName="TWCore2 Status" />
     </Files>
   </MonoDevelop.Ide.Workbench>

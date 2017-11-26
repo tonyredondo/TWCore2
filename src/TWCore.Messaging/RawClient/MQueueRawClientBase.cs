@@ -156,7 +156,6 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid SendBytes(byte[] obj, Guid correlationId)
         {
-            OnBeforeSend(ref obj);
             var rmea = new RawMessageEventArgs(Name, obj);
             OnBeforeSendRequest?.Invoke(this, rmea);
             MQueueRawClientEvents.FireOnBeforeSendRequest(this, rmea);
@@ -218,7 +217,6 @@ namespace TWCore.Messaging.RawClient
             var bytes = await OnReceiveAsync(correlationId, cancellationToken).ConfigureAwait(false);
             if (bytes == null) return null;
 
-            OnAfterReceive(ref bytes);
             Counters.IncrementMessagesReceived();
             Counters.IncrementTotalBytesReceived(bytes.Length);
             var rrea = new RawMessageEventArgs(Name, bytes);
@@ -374,12 +372,6 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract void OnInit();
 		/// <summary>
-		/// Before send the request message
-		/// </summary>
-		/// <param name="message">Request message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnBeforeSend(ref byte[] message) { }
-		/// <summary>
 		/// On Send message data
 		/// </summary>
 		/// <param name="message">Request message instance</param>
@@ -395,12 +387,6 @@ namespace TWCore.Messaging.RawClient
 		/// <returns>Response message instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken);
-		/// <summary>
-		/// After a response message has been received
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnAfterReceive(ref byte[] message) { }
 		/// <summary>
 		/// On Dispose
 		/// </summary>

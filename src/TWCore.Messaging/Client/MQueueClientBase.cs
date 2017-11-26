@@ -142,12 +142,8 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid Send<T>(T obj, Guid correlationId)
         {
-            RequestMessage rqMsg;
-            if (obj is RequestMessage)
-            {
-                rqMsg = obj as RequestMessage;
-            }
-            else
+			var rqMsg = obj as RequestMessage;
+			if (rqMsg == null)
             {
                 rqMsg = new RequestMessage(obj)
                 {
@@ -162,7 +158,6 @@ namespace TWCore.Messaging.Client
                 };
             }
             var rsea = new RequestSentEventArgs(Name, rqMsg);
-            OnBeforeSend(rqMsg);
             OnBeforeSendRequest?.Invoke(this, rsea);
             MQueueClientEvents.FireOnBeforeSendRequest(this, rsea);
             if (!OnSend(rqMsg)) return Guid.Empty;
@@ -171,9 +166,6 @@ namespace TWCore.Messaging.Client
             MQueueClientEvents.FireOnRequestSent(this, rsea);
             return rqMsg.CorrelationId;
         }
-
-
-
 
         /// <inheritdoc />
         /// <summary>
@@ -202,7 +194,6 @@ namespace TWCore.Messaging.Client
             if (rsMsg == null) return default(T);
 
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
-            OnAfterReceive(rsMsg);
             Counters.IncrementMessagesReceived();
             Counters.IncrementReceivingTime(rsMsg.Header.Response.TotalTime);
             var rrea = new ResponseReceivedEventArgs(Name, rsMsg);
@@ -378,12 +369,6 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract void OnInit();
 		/// <summary>
-		/// Before send the request message
-		/// </summary>
-		/// <param name="message">Request message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnBeforeSend(RequestMessage message) { }
-		/// <summary>
 		/// On Send message data
 		/// </summary>
 		/// <param name="message">Request message instance</param>
@@ -398,12 +383,6 @@ namespace TWCore.Messaging.Client
 		/// <returns>Response message instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken);
-		/// <summary>
-		/// After a response message has been received
-		/// </summary>
-		/// <param name="message">Response message instance</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected virtual void OnAfterReceive(ResponseMessage message) { }
 		/// <summary>
 		/// On Dispose
 		/// </summary>

@@ -37,7 +37,7 @@ namespace TWCore.Net.RPC.Server
     public class RPCServer : IRPCServer
     {
         private readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
-        private readonly Dictionary<Guid, (ServiceItem, MethodDescriptor)> _methods = new Dictionary<Guid, (ServiceItem, MethodDescriptor)>(100);
+        private readonly Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)> _methods = new Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)>(100);
         private ITransportServer _transport;
 
         #region Properties
@@ -175,7 +175,7 @@ namespace TWCore.Net.RPC.Server
         {
 			if (_methods.TryGetValue(e.Request.MethodId, out var desc)) 
 			{
-				e.Response = desc.Item1.ProcessRequest(e.Request, e.ClientId, desc.Item2);
+				e.Response = desc.Service.ProcessRequest(e.Request, e.ClientId, desc.Method);
 				return;
 			}
 			e.Response = new RPCResponseMessage(e.Request)
@@ -299,7 +299,7 @@ namespace TWCore.Net.RPC.Server
 					var tId = Environment.CurrentManagedThreadId;
 					lock (_threadClientId) _threadClientId[tId] = clientId;
 					response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
-					lock (_threadClientId) _threadClientId.Remove(tId);
+					//lock (_threadClientId) _threadClientId.Remove(tId);
                 }
                 catch (TargetInvocationException ex)
                 {

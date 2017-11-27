@@ -31,7 +31,7 @@ namespace TWCore.Messaging.Server
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
         protected readonly ReferencePool<ActionWorker> WorkerPool;
-        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim();
+        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
         protected int ActiveWorkers;
 
         #region Properties

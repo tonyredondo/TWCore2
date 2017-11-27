@@ -31,7 +31,7 @@ namespace TWCore.Messaging.RawServer
     public abstract class MQueueRawServerListenerBase : IMQueueRawServerListener
     {
         protected readonly ReferencePool<ActionWorker> WorkerPool;
-        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim();
+        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
         protected int ActiveWorkers;
 
         #region Properties

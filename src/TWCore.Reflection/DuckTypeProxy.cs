@@ -9,8 +9,6 @@ using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Microsoft.CSharp.RuntimeBinder;
-using TWCore;
-using TWCore.Reflection;
 
 namespace TWCore.Reflection
 {

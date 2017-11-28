@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -233,6 +234,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
             
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -240,11 +242,11 @@ namespace TWCore
             {
                 double gTime;
                 double cTime;
-                var indent = EnableIndent ? new string(' ', (item.Id - 1) * 2) : string.Empty;
+                var indent = EnableIndent ? IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 2)) : string.Empty;
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Write(item.Level, indent + string.Format("[{0:00}-START] {1}", item.Id, item.Message));
+                        Core.Log.Write(item.Level, indent + "[" + item.Id.ToString("00") + "-START] " + item.Message);
                         break;
                     case 1:
                         cTime = (item.LastTapTicks / _frequency) * 1000;

@@ -235,7 +235,8 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
-            
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly long FrequencyTime = 1000 / Stopwatch.Frequency;
+
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void WorkerMethod(LogStatItem item)
@@ -249,10 +250,10 @@ namespace TWCore
                         Core.Log.Write(item.Level, indent + "[" + item.Id.ToString("00") + "-START] " + item.Message);
                         break;
                     case 1:
-                        cTime = (item.LastTapTicks / _frequency) * 1000;
+                        cTime = item.LastTapTicks * FrequencyTime;
                         if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.0000001)
                         {
-                            gTime = (item.GlobalTicks / _frequency) * 1000;
+                            gTime = item.GlobalTicks * FrequencyTime;
                             Core.Log.Write(item.Level, indent + string.Format("  [{0:00}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));
                         }
                         else
@@ -261,8 +262,8 @@ namespace TWCore
                         }
                         break;
                     case 2:
-                        cTime = (item.LastTapTicks / _frequency) * 1000;
-                        gTime = (item.GlobalTicks / _frequency) * 1000;
+                        cTime = item.LastTapTicks * FrequencyTime;
+                        gTime = item.GlobalTicks * FrequencyTime;
 
                         if (Math.Abs(cTime - gTime) > 0.0000001)
                             Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));

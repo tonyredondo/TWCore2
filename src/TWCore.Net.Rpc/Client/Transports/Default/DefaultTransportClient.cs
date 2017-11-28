@@ -36,13 +36,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// </summary>
     public class DefaultTransportClient : ITransportClient
     {
+        private const int ResetIndex = 500000;
         private readonly ConcurrentDictionary<Guid, RpcMessageHandler> _messageResponsesHandlers = new ConcurrentDictionary<Guid, RpcMessageHandler>();
         private readonly LRU2QCollection<Guid, object> _previousMessages = new LRU2QCollection<Guid, object>(100);
         private readonly AsyncLock _connectionLocker = new AsyncLock();
         private CancellationTokenSource _connectionCancellationTokenSource;
         private CancellationToken _connectionCancellationToken;
         private bool _shouldBeConnected;
-        private readonly int _maxIndex = 3;
+        private readonly int _socketsPerClient = 4;
         private int _currentIndex = -1;
         private RpcClient[] _clients;
 
@@ -147,7 +148,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             Port = port;
             Serializer = serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             if (socketsPerClient > 0)
-                _maxIndex = socketsPerClient - 1;
+                _socketsPerClient = socketsPerClient;
             if (Serializer != null)
             {
                 if (!Serializer.KnownTypes.Contains(typeof(RPCEventMessage)))
@@ -206,7 +207,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     _connectionCancellationToken = _connectionCancellationTokenSource.Token;
                     if (_clients == null)
                     {
-                        _clients = new RpcClient[_maxIndex + 1];
+                        _clients = new RpcClient[_socketsPerClient];
                         for (var i = 0; i < _clients.Length; i++)
                         {
                             var client = new RpcClient(Host, Port, (BinarySerializer) Serializer);
@@ -282,8 +283,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
             _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
-            Interlocked.CompareExchange(ref _currentIndex, -1, _maxIndex);
-            var client = _clients[Interlocked.Increment(ref _currentIndex)];
+            if (_currentIndex > ResetIndex) _currentIndex = 0;
+            var client = _clients[_currentIndex % _socketsPerClient];
             await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
             await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);

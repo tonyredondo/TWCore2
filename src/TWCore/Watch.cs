@@ -235,7 +235,7 @@ namespace TWCore
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly long FrequencyTime = 1000 / Stopwatch.Frequency;
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly double FrequencyTime = 1000d / Stopwatch.Frequency;
 
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -251,6 +251,7 @@ namespace TWCore
                         break;
                     case 1:
                         cTime = item.LastTapTicks * FrequencyTime;
+                        item.Counter?.Register(item.Message, cTime);
                         if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.0000001)
                         {
                             gTime = item.GlobalTicks * FrequencyTime;
@@ -264,7 +265,7 @@ namespace TWCore
                     case 2:
                         cTime = item.LastTapTicks * FrequencyTime;
                         gTime = item.GlobalTicks * FrequencyTime;
-
+                        item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, cTime);
                         if (Math.Abs(cTime - gTime) > 0.0000001)
                             Core.Log.Write(item.Level, indent + string.Format("[{0:00}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", item.Id, cTime, gTime, item.Message));
                         else
@@ -311,15 +312,17 @@ namespace TWCore
                 public readonly string Message;
                 public readonly int Type;
                 public readonly LogLevel Level;
+                public readonly StatusCounter Counter;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, int type)
+                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, StatusCounter counter, int type)
                 {
                     Id = id;
                     Level = level;
                     GlobalTicks = globalTicks;
                     LastTapTicks = lastTapTicks;
                     Message = message;
+                    Counter = counter;
                     Type = type;
                 }
             }
@@ -408,12 +411,8 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
-                {
-                    var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 1));
-                    _counter?.Register(message, (_lastTapTicks / _frequency) * 1000);
-                }
+                if (Core.Log.MaxLogLevel.HasFlag(_level))
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _counter, 1));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -425,11 +424,8 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
-                {
-                    var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 0));
-                }
+                if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _counter, 0));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -441,13 +437,8 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (message != null && Core.Log.MaxLogLevel.HasFlag(LogLevel.Stats))
-                {
-                    var globalTicks = currentTicks - _initTicks;
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, globalTicks, _lastTapTicks, message, 2));
-                    _counter?.Register(_counter.Name == CounterPreffix + message ? "Total" : message,
-                        (_lastTapTicks / _frequency) * 1000);
-                }
+                if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _counter, 2));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>

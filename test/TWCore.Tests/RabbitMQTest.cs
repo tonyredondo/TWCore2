@@ -115,7 +115,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 10000;
+                    var totalQ = 20000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");

@@ -99,15 +99,17 @@ namespace TWCore.Messaging
 			/// <param name="server">Message queue server instance</param>
 			/// <param name="responseServer">true if the server is going to act as a response server</param>
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public MemoryQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(
+			internal MemoryQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(
 				connection, server, responseServer)
 			{
 				_messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
 				_name = server.Name;
 				_cloneObject = false;
-				if (connection.Parameters.Contains("CloneObjects"))
-					_cloneObject = connection.Parameters["CloneObjects"].ParseTo(false);
-				Core.Status.Attach(collection =>
+
+                if (server.Config?.RequestOptions?.ServerReceiverOptions?.Parameters?.Contains("Clone") == true)
+                    _cloneObject = server.Config.RequestOptions.ServerReceiverOptions.Parameters["Clone"].ParseTo(false);
+
+                Core.Status.Attach(collection =>
 				{
 					collection.Add("Message Type", _messageType);
 				});

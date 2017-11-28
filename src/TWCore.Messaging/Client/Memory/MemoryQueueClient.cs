@@ -41,6 +41,7 @@ namespace TWCore.Messaging
         private MQClientSenderOptions _senderOptions;
         private MQClientReceiverOptions _receiverOptions;
         private int _receiverOptionsTimeout;
+        private bool _cloneObject;
         #endregion
 
         #region Init and Dispose Methods
@@ -65,6 +66,9 @@ namespace TWCore.Messaging
                 _senderOptions = Config.RequestOptions?.ClientSenderOptions;
                 _receiverOptions = Config.ResponseOptions?.ClientReceiverOptions;
                 _receiverOptionsTimeout = _receiverOptions?.TimeoutInSec ?? 20;
+
+                if (_receiverOptions?.Parameters?.Contains("Clone") == true)
+                    _cloneObject = _receiverOptions.Parameters["Clone"].ParseTo(false);
 
                 if (_clientQueues != null)
                 {
@@ -150,6 +154,10 @@ namespace TWCore.Messaging
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             var response = message.Value as ResponseMessage;
+
+            if (response?.Body != null && _cloneObject)
+                response.Body = response.Body.DeepClone();
+
             Core.Log.LibVerbose("Received message from the memory Queue '{0}' with CorrelationId={1} received at: {2}ms", _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
             return Task.FromResult(response);
         }

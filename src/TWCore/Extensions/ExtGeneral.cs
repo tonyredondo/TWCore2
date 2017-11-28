@@ -605,7 +605,6 @@ namespace TWCore
 		/// <returns>A string value with the result of the encoding</returns>
 		public static string GetString(this Encoding encoding, SubArray<byte> subArray)
 			=> encoding.GetString(subArray.Array, subArray.Offset, subArray.Count);
-
 		/// <summary>
 		/// Gets the Timespan format of the DateTime object.
 		/// </summary>
@@ -613,31 +612,44 @@ namespace TWCore
 		/// <returns>Formatted Datetime string</returns>
 		public static string GetTimeSpanFormat(this DateTime time)
 		{
+		    var day = time.Day;
+		    var month = time.Month;
+		    var year = time.Year;
+		    var hour = time.Hour;
+		    var minute = time.Minute;
+		    var second = time.Second;
+		    var millisecond = time.Millisecond;
 			var dateData = new char[21];
-			dateData[0] = (char)(time.Day / 10 + '0');
-			dateData[1] = (char)(time.Day % 10 + '0');
+			dateData[0] = (char)(day / 10 + '0');
+			dateData[1] = (char)(day % 10 + '0');
 			dateData[2] = '/';
-			dateData[3] = (char)(time.Month / 10 + '0');
-			dateData[4] = (char)(time.Month % 10 + '0');
+			dateData[3] = (char)(month / 10 + '0');
+			dateData[4] = (char)(month % 10 + '0');
 			dateData[5] = '/';
-			dateData[6] = (char)(time.Year / 10 % 10 + '0');
-			dateData[7] = (char)(time.Year % 10 + '0');
+			dateData[6] = (char)(year / 10 % 10 + '0');
+			dateData[7] = (char)(year % 10 + '0');
 			dateData[8] = ' ';
-			dateData[9] = (char)(time.Hour / 10 + '0');
-			dateData[10] = (char)(time.Hour % 10 + '0');
+			dateData[9] = (char)(hour / 10 + '0');
+			dateData[10] = (char)(hour % 10 + '0');
 			dateData[11] = ':';
-			dateData[12] = (char)(time.Minute / 10 + '0');
-			dateData[13] = (char)(time.Minute % 10 + '0');
+			dateData[12] = (char)(minute / 10 + '0');
+			dateData[13] = (char)(minute % 10 + '0');
 			dateData[14] = ':';
-			dateData[15] = (char)(time.Second / 10 + '0');
-			dateData[16] = (char)(time.Second % 10 + '0');
+			dateData[15] = (char)(second / 10 + '0');
+			dateData[16] = (char)(second % 10 + '0');
 			dateData[17] = '.';
-			dateData[18] = (char)(time.Millisecond / 100 + '0');
-			dateData[19] = (char)(time.Millisecond / 10 % 10 + '0');
-			dateData[20] = (char)(time.Millisecond % 10 + '0');
+			dateData[18] = (char)(millisecond / 100 + '0');
+			dateData[19] = (char)(millisecond / 10 % 10 + '0');
+			dateData[20] = (char)(millisecond % 10 + '0');
 			return new string(dateData);
 		}
-
+        /// <summary>
+        /// Connect Host Async
+        /// </summary>
+        /// <param name="client">Tcp Client</param>
+        /// <param name="host">Host</param>
+        /// <param name="port">Port</param>
+        /// <returns></returns>
 		public static async Task ConnectHostAsync(this TcpClient client, string host, int port)
 		{
 			var ipAddress = await IpHelper.GetIpFromHostAsync(host).ConfigureAwait(false);

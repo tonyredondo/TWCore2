@@ -77,7 +77,7 @@ namespace TWCore
 		{
 			if (enumerable == null || action == null) return enumerable;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var obj in eachObject) action(obj);
+		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i]);
 			return eachObject;
 		}
 		/// <summary>
@@ -91,12 +91,12 @@ namespace TWCore
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var obj in eachObject)
-			{
+		    for (var i = 0; i < eachObject.Length; i++)
+            {
 				if (token.IsCancellationRequested)
 					break;
-				action(obj);
-			}
+                action(eachObject[i]);
+            }
 			return eachObject;
 		}
 		/// <summary>
@@ -108,10 +108,9 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var idx = 0;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var obj in eachObject) action(obj, idx++);
-			return eachObject;
+		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i], i);
+            return eachObject;
 		}
 		/// <summary>
 		/// Performs the specified action on each element of the IEnumerable
@@ -123,13 +122,12 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var idx = 0;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var obj in eachObject)
-			{
+		    for (var i = 0; i < eachObject.Length; i++)
+            {
 				if (token.IsCancellationRequested)
 					break;
-				action(obj, idx++);
+				action(eachObject[i], i);
 			}
 			return eachObject;
 		}
@@ -143,9 +141,8 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var idx = 0;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var innerObj in eachObject) action(innerObj, idx++, state);
+		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i], i, state);
 			return eachObject;
 		}
 		/// <summary>
@@ -159,13 +156,12 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var idx = 0;
 			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-			foreach (var innerObj in eachObject)
+		    for (var i = 0; i < eachObject.Length; i++)
 			{
 				if (token.IsCancellationRequested)
 					break;
-				action(innerObj, idx++, state);
+				action(eachObject[i], i, state);
 			}
 			return eachObject;
 		}
@@ -182,7 +178,8 @@ namespace TWCore
 		{
 			if (enumerable == null || action == null) return enumerable;
 			var objs = enumerable as T[] ?? enumerable.ToArray();
-			foreach (var obj in objs) action(obj);
+		    for (var i = 0; i < objs.Length; i++)
+		        action(objs[i]);
 			return objs;
 		}
 		/// <summary>

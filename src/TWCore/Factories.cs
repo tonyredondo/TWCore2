@@ -38,13 +38,13 @@ namespace TWCore
     /// </summary>
     public abstract class Factories
     {
-		private PlatformType _platformType = PlatformType.Unknown;
+        private PlatformType _platformType = PlatformType.Unknown;
 
-		#region Properties
-		/// <summary>
-		/// Activation helper
-		/// </summary>
-		public virtual IAccessorsFactory Accessors { get; protected set; } = new DefaultAccessorsFactory();
+        #region Properties
+        /// <summary>
+        /// Activation helper
+        /// </summary>
+        public virtual IAccessorsFactory Accessors { get; protected set; } = new DefaultAccessorsFactory();
         /// <summary>
         /// Log Item Factory
         /// </summary>
@@ -114,12 +114,12 @@ namespace TWCore
         /// Converter factory
         /// </summary>
         public virtual IConverterFactory Converter { get; protected set; } = new DefaultConverterFactory();
-		#endregion
+        #endregion
 
-		/// <summary>
-		/// Initialization Method
-		/// </summary>
-		public abstract void Init();
+        /// <summary>
+        /// Initialization Method
+        /// </summary>
+        public abstract void Init();
 
         #region IO
         /// <summary>
@@ -133,18 +133,18 @@ namespace TWCore
         {
             if (relativePath == null)
                 return null;
-            
+
             basePath = basePath == null ? Path.GetFullPath(".") : GetAbsolutePath(basePath);
 
-			if (relativePath.StartsWith("~", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
+            if (relativePath.StartsWith("~", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
             if (Factory.PlatformType == PlatformType.Windows)
             {
-				if (relativePath.StartsWith("/", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
+                if (relativePath.StartsWith("/", StringComparison.Ordinal)) relativePath = relativePath.Substring(1);
             }
             if (!Path.IsPathRooted(relativePath) || "\\".Equals(Path.GetPathRoot(relativePath)))
             {
-                return Path.GetFullPath(relativePath.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) ? 
-                    Path.Combine(Path.GetPathRoot(basePath), relativePath.TrimStart(Path.DirectorySeparatorChar)) : 
+                return Path.GetFullPath(relativePath.StartsWith(Path.DirectorySeparatorChar.ToString(), StringComparison.Ordinal) ?
+                    Path.Combine(Path.GetPathRoot(basePath), relativePath.TrimStart(Path.DirectorySeparatorChar)) :
                     Path.Combine(basePath, relativePath));
             }
             return Path.GetFullPath(relativePath);
@@ -176,7 +176,7 @@ namespace TWCore
             if (PlatformType != PlatformType.Windows) return;
             try
             {
-				socket.IOControl((-1744830448), BitConverter.GetBytes(1), null);
+                socket.IOControl((-1744830448), BitConverter.GetBytes(1), null);
             }
             catch (Exception)
             {
@@ -184,7 +184,7 @@ namespace TWCore
             }
         }
         #endregion
-        
+
         #region Default delegates implementation
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
         {
@@ -195,108 +195,113 @@ namespace TWCore
                 foreach (var frame in frames)
                 {
                     var method = frame.GetMethod();
+                    if (method == null) continue;
 
-					#region Name Attr
-					var attrs = method.GetCustomAttributes(false);
-					StackFrameLogAttribute nameAttr = null;
-					int attrsCases = 0;
-					for (var i = 0; i < attrs.Length; i++)
-					{
-						if (attrs[i] is IgnoreStackFrameLogAttribute)
-						{
-							attrsCases = 1;
-							break;
-						}
-						if (attrs[i] is StackFrameLogAttribute nA)
-						{
-							nameAttr = nA;
-							attrsCases = 2;
-							break;
-						}
-					}
-					if (attrsCases == 1) continue;
-					if (attrsCases == 2)
-					{
-						assemblyName = method.DeclaringType.Assembly.FullName;
-						typeName = nameAttr.ClassName;
-						break;
-					}
-					#endregion
+                    #region Name Attr
+                    var attrs = method.GetCustomAttributes(false);
+                    StackFrameLogAttribute nameAttr = null;
+                    int attrsCases = 0;
+                    for (var i = 0; i < attrs.Length; i++)
+                    {
+                        if (attrs[i] is IgnoreStackFrameLogAttribute)
+                        {
+                            attrsCases = 1;
+                            break;
+                        }
+                        if (attrs[i] is StackFrameLogAttribute nA)
+                        {
+                            nameAttr = nA;
+                            attrsCases = 2;
+                            break;
+                        }
+                    }
+                    if (attrsCases == 1) continue;
+                    if (attrsCases == 2)
+                    {
+                        assemblyName = method.DeclaringType.Assembly.FullName;
+                        typeName = nameAttr.ClassName;
+                        break;
+                    }
+                    #endregion
 
-					#region Name Type Attr
-					var typeAttrs = method.DeclaringType.GetCustomAttributes(false);
-					StackFrameLogAttribute nameTypeAttr = null;
-					int typeAttrsCases = 0;
-					for (var i = 0; i < typeAttrs.Length; i++)
-					{
-						if (typeAttrs[i] is IgnoreStackFrameLogAttribute)
-						{
-							typeAttrsCases = 1;
-							break;
-						}
-						if (typeAttrs[i] is StackFrameLogAttribute nA)
-						{
-							nameTypeAttr = nA;
-							typeAttrsCases = 2;
-							break;
-						}
-					}
-					if (typeAttrsCases == 1) continue;
-					if (typeAttrsCases == 2)
-					{
-						assemblyName = method.DeclaringType.Assembly.FullName;
-						typeName = nameTypeAttr.ClassName;
-						break;
-					}
-					#endregion
+                    var declarationType = method.DeclaringType;
+                    if (declarationType == null) continue;
+
+                    #region Name Type Attr
+                    var typeAttrs = declarationType.GetCustomAttributes(false);
+                    StackFrameLogAttribute nameTypeAttr = null;
+                    var typeAttrsCases = 0;
+                    for (var i = 0; i < typeAttrs.Length; i++)
+                    {
+                        if (typeAttrs[i] is IgnoreStackFrameLogAttribute)
+                        {
+                            typeAttrsCases = 1;
+                            break;
+                        }
+                        if (typeAttrs[i] is StackFrameLogAttribute nA)
+                        {
+                            nameTypeAttr = nA;
+                            typeAttrsCases = 2;
+                            break;
+                        }
+                    }
+                    if (typeAttrsCases == 1) continue;
+                    if (typeAttrsCases == 2)
+                    {
+                        assemblyName = declarationType.Assembly.FullName;
+                        typeName = nameTypeAttr.ClassName;
+                        break;
+                    }
+
+                    #endregion
 
                     if (method.Name.Contains("MoveNext"))
                     {
-                        var asyncType = method.DeclaringType;
-                        var actualType = asyncType.DeclaringType;
+                        var actualType = declarationType.DeclaringType;
 
-						#region Actual type attrs
-						var actualTypeAttrs = actualType.GetCustomAttributes(false);
-						StackFrameLogAttribute actualTypeNameTypeAttr = null;
-						int actualTypeCases = 0;
-						for (var i = 0; i < actualTypeAttrs.Length; i++)
-						{
-							if (actualTypeAttrs[i] is IgnoreStackFrameLogAttribute)
-							{
-								actualTypeCases = 1;
-								break;
-							}
-							if (actualTypeAttrs[i] is StackFrameLogAttribute nA)
-							{
-								actualTypeNameTypeAttr = nA;
-								actualTypeCases = 2;
-								break;
-							}
-						}
-						if (actualTypeCases == 1) continue;
-						if (actualTypeCases == 2)
-						{
-							assemblyName = actualType.Assembly.FullName;
-							typeName = actualTypeNameTypeAttr.ClassName;
-							break;
-						}
-						#endregion
+                        #region Actual type attrs
+                        var actualTypeAttrs = actualType.GetCustomAttributes(false);
+                        StackFrameLogAttribute actualTypeNameTypeAttr = null;
+                        int actualTypeCases = 0;
+                        for (var i = 0; i < actualTypeAttrs.Length; i++)
+                        {
+                            if (actualTypeAttrs[i] is IgnoreStackFrameLogAttribute)
+                            {
+                                actualTypeCases = 1;
+                                break;
+                            }
+                            if (actualTypeAttrs[i] is StackFrameLogAttribute nA)
+                            {
+                                actualTypeNameTypeAttr = nA;
+                                actualTypeCases = 2;
+                                break;
+                            }
+                        }
+                        if (actualTypeCases == 1) continue;
+                        if (actualTypeCases == 2)
+                        {
+                            assemblyName = actualType.Assembly.FullName;
+                            typeName = actualTypeNameTypeAttr.ClassName;
+                            break;
+                        }
+                        #endregion
 
-						assemblyName = actualType.Assembly.FullName;
+                        assemblyName = actualType.Assembly.FullName;
                         typeName = actualType.Name;
                         break;
                     }
-                    if (!method.Name.Contains("<") && 
-                        !method.DeclaringType.Name.Contains("<") && 
-                        !method.DeclaringType.AssemblyQualifiedName.Contains("System.Private") && 
-                        !method.DeclaringType.AssemblyQualifiedName.Contains("mscorlib"))
+
+                    if (!method.Name.Contains("<") &&
+                        !declarationType.Name.Contains("<") &&
+                        !declarationType.AssemblyQualifiedName.Contains("System.Private") &&
+                        !declarationType.AssemblyQualifiedName.Contains("mscorlib"))
                     {
-                        if (method.DeclaringType.Name.Contains("ConcurrentDictionary"))
+                        if (declarationType.Name.Contains("ConcurrentDictionary"))
                             continue;
-                        if (method.DeclaringType.Name.Contains("CacheCollectionBase`3"))
+                        if (declarationType.Name.Contains("CacheCollectionBase`3"))
                             continue;
-                        assemblyName = method.DeclaringType.Assembly.FullName;
-                        typeName = method.DeclaringType.Name;
+                        assemblyName = declarationType.Assembly.FullName;
+                        typeName = declarationType.Name;
                         break;
                     }
                 }

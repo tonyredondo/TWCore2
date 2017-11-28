@@ -283,8 +283,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
             _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
-            if (_currentIndex > ResetIndex) _currentIndex = 0;
-            var client = _clients[_currentIndex % _socketsPerClient];
+            if (_currentIndex > ResetIndex) _currentIndex = -1;
+            var client = _clients[++_currentIndex % _socketsPerClient];
             await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
             await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);

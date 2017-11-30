@@ -365,7 +365,7 @@ namespace TWCore.Net.RPC.Client
                 if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
                 var iArgs = args ?? _emptyArgs;
 
-                var methods = descriptor.Methods.Values.Where(m => m.Name == key.Method && m.Parameters?.Length == iArgs.Length).ToArray();
+                var methods = descriptor.Methods.Values.Where(m => m.Name == key.Method && (m.Parameters?.Length ?? 0) == iArgs.Length).ToArray();
                 switch (methods.Length)
                 {
                     case 0:

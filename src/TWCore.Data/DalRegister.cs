@@ -32,13 +32,13 @@ namespace TWCore.Data
     {
         private readonly object _locker = new object();
         private bool _loaded = false;
-        private readonly List<(Type Interface, Type Implementation)> _registeredTypes = new List<(Type Interface, Type Implementation)>();
+        private List<(Type Interface, Type Implementation)> _typesToRegister = null;
 
         /// <inheritdoc />
         /// <summary>
-        /// Registered types
+        /// Types in the registration
         /// </summary>
-        public IEnumerable<(Type Interface, Type Implementation)> RegisteredTypes => _registeredTypes;
+        public IEnumerable<(Type Interface, Type Implementation)> Types => _typesToRegister ?? (_typesToRegister = GetInterfacesToRegister());
 
         /// <inheritdoc />
         /// <summary>
@@ -47,47 +47,54 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register()
         {
-            if (_loaded) return;
-            var assembly = this.GetAssembly();
-            if (Register(assembly) == 0)
-                Core.Log.Warning("No IEntityDal found on the assembly, DAL weren't registered.");
+            lock(_locker)
+            {
+                if (_loaded) return;
+                var res = 0;
+                foreach(var typePair in Types)
+                {
+                    try
+                    {
+                        res++;
+                        Core.Injector.Register(typePair.Interface, typePair.Implementation, true, typePair.Implementation.Name);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+                _loaded = true;
+                if (res == 0)
+                    Core.Log.Warning("No IEntityDal found on the assembly, DAL weren't registered.");
+            }
         }
 
-        /// <summary>
-        /// Register the dal on the injector
-        /// </summary>
-        /// <param name="dalAssembly">Data access layer assembly</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Register(Assembly dalAssembly)
+        private List<(Type Interface, Type Implementation)> GetInterfacesToRegister()
         {
-            lock (_locker)
+            var response = new List<(Type Interface, Type Implementation)>();
+
+            var types = this.GetAssembly().DefinedTypes.Where(t =>
+                !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType &&
+                t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal)));
+
+            foreach(var t in types)
             {
-                if (_loaded) return _registeredTypes.Count;
-                var res = 0;
-                dalAssembly?.DefinedTypes.Where(t =>
-                    !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType &&
-                    t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal)))
-                .Each(t =>
+                var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
+                foreach (var iface in ifaces)
                 {
-                    var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
-                    foreach (var iface in ifaces)
+                    try
                     {
-                        try
-                        {
-                            var tType = t.AsType();
-                            res++;
-                            Core.Injector.Register(iface, tType, true, t.Name);
-                            _registeredTypes.Add((iface, tType));
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
+                        response.Add((iface, t.AsType()));
                     }
-                });
-                _loaded = true;
-                return res;
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
             }
+
+            return response;
         }
     }
 }

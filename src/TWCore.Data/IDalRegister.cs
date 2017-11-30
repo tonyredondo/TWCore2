@@ -26,9 +26,9 @@ namespace TWCore.Data
     public interface IDalRegister
     {
         /// <summary>
-        /// Registered types
+        /// Types in the registration
         /// </summary>
-        IEnumerable<(Type Interface, Type Implementation)> RegisteredTypes { get; }
+        IEnumerable<(Type Interface, Type Implementation)> Types { get; }
         /// <summary>
         /// Register the dal on the injector
         /// </summary>

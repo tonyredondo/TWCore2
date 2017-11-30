@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -29,6 +30,16 @@ namespace TWCore.Data
     /// </summary>
     public class DalRegister : IDalRegister
     {
+        private readonly object _locker = new object();
+        private bool _loaded = false;
+        private readonly List<(Type Interface, Type Implementation)> _registeredTypes = new List<(Type Interface, Type Implementation)>();
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Registered types
+        /// </summary>
+        public IEnumerable<(Type Interface, Type Implementation)> RegisteredTypes => _registeredTypes;
+
         /// <inheritdoc />
         /// <summary>
         /// Register the dal on the injector
@@ -36,6 +47,7 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register()
         {
+            if (_loaded) return;
             var assembly = this.GetAssembly();
             if (Register(assembly) == 0)
                 Core.Log.Warning("No IEntityDal found on the assembly, DAL weren't registered.");
@@ -48,47 +60,34 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Register(Assembly dalAssembly)
         {
-            var res = 0;
-            dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal))).Each(t =>
+            lock (_locker)
             {
-                var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
-                foreach (var iface in ifaces)
+                if (_loaded) return _registeredTypes.Count;
+                var res = 0;
+                dalAssembly?.DefinedTypes.Where(t =>
+                    !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType &&
+                    t.ImplementedInterfaces.Any(i => i == typeof(IEntityDal)))
+                .Each(t =>
                 {
-                    try
+                    var ifaces = t.ImplementedInterfaces.Where(i => i != typeof(IEntityDal));
+                    foreach (var iface in ifaces)
                     {
-                        res++;
-                        Core.Injector.Register(iface, t.AsType(), true, t.Name);
+                        try
+                        {
+                            var tType = t.AsType();
+                            res++;
+                            Core.Injector.Register(iface, tType, true, t.Name);
+                            _registeredTypes.Add((iface, tType));
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
                     }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                }
-            });
-            return res;
+                });
+                _loaded = true;
+                return res;
+            }
         }
-        ///// <summary>
-        ///// Register the dal on the injector
-        ///// </summary>
-        ///// <param name="dalAssembly">Data access layer assembly</param>
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //public int RegisterUnsafe(Assembly dalAssembly)
-        //{
-        //    int res = 0;
-        //    dalAssembly?.DefinedTypes.Where(t => !t.IsAbstract && !t.IsAutoClass && !t.IsInterface && t.IsClass && !t.IsGenericType && t.ImplementedInterfaces.Any()).Each(t =>
-        //    {
-        //        var iface = t.ImplementedInterfaces.First();
-        //        try
-        //        {
-        //            res++;
-        //            Core.Injector.Register(iface, t.AsType(), t.Name);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            Core.Log.Write(ex);
-        //        }
-        //    });
-        //    return res;
-        //}
     }
 }

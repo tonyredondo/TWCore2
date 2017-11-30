@@ -15,6 +15,9 @@ limitations under the License.
  */
 
 
+using System;
+using System.Collections.Generic;
+
 namespace TWCore.Data
 {
     /// <summary>
@@ -22,6 +25,10 @@ namespace TWCore.Data
     /// </summary>
     public interface IDalRegister
     {
+        /// <summary>
+        /// Registered types
+        /// </summary>
+        IEnumerable<(Type Interface, Type Implementation)> RegisteredTypes { get; }
         /// <summary>
         /// Register the dal on the injector
         /// </summary>

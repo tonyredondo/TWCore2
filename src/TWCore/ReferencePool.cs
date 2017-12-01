@@ -115,7 +115,7 @@ namespace TWCore
                     value = _objectStack.Pop();
             }
 
-            if (count - 1 < _preallocationThreshold && !_allocating)
+            if (count <= _preallocationThreshold && !_allocating)
             {
                 Task.Run(() =>
                 {

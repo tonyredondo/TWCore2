@@ -52,7 +52,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
         {
-            _objectStack = new Stack<T>(12);
+            _objectStack = new Stack<T>(25);
             _createFunc = createFunc;
             _resetAction = resetAction;
             _resetMode = resetMode;
@@ -85,24 +85,27 @@ namespace TWCore
         {
             var cNew = true;
             var value = default(T);
+            int count;
+
             lock (_padLock)
             {
-                var count = _objectStack.Count;
+                count = _objectStack.Count;
                 if (count > 0)
                 {
                     value = _objectStack.Pop();
                     cNew = false;
-                    if (count - 1 < _preallocationThreshold && !_allocating)
-                    {
-                        Task.Run(() =>
-                        {
-                            _allocating = true;
-                            Preallocate(_preallocationThreshold * 2);
-                            _allocating = false;
-                        });
-                    }
                 }
             }
+            if (count - 1 < _preallocationThreshold && !_allocating)
+            {
+                Task.Run(() =>
+                {
+                    _allocating = true;
+                    Preallocate(_preallocationThreshold * 2);
+                    _allocating = false;
+                });
+            }
+            
             if (cNew)
                 return _createFunc(this);
             if (_resetMode == PoolResetMode.BeforeUse)

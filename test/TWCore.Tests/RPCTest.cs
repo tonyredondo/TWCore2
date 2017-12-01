@@ -50,13 +50,9 @@ namespace TWCore.Tests
             dynamic hClient = await rpcClient.CreateDynamicProxyAsync<IHello>().ConfigureAwait(false);
             var rtest = (string)hClient.SayHi("MyName");
 
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < 2000; i++)
             {
-                using (var w = Watch.Create())
-                {
-                    var rHClient = (string)hClient.SayHi("MyName");
-                    w.Tap("Say Hi: {0}".ApplyFormat(rHClient));
-                }
+                var rHClient = (string)hClient.SayHi("MyName");
             }
 
             //IMyService test
@@ -64,11 +60,7 @@ namespace TWCore.Tests
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
             for (var i = 0; i < 1000; i++)
             {
-                using (var w = Watch.Create())
-                {
-                    var aLst = dClient.GetAll();
-                    w.Tap("GetAll, Items: {0}".ApplyFormat(((List<SimplePerson>)aLst).Count));
-                }
+                var aLst = dClient.GetAll();
             }
 
             //Proxy class test
@@ -76,11 +68,7 @@ namespace TWCore.Tests
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
             for (var i = 0; i < 1000; i++)
             {
-                using (var w = Watch.Create())
-                {
-                    var resp = client.GetAll();
-                    w.Tap("GetAll, Items: {0}".ApplyFormat(resp.Count));
-                }
+                var resp = client.GetAll();
             }
 
             //Event test
@@ -88,10 +76,7 @@ namespace TWCore.Tests
             client.OnAddSimplePersona += (s, e) => Core.Log.Warning("On Add SimplePersona was fired!!!");
             for (var i = 0; i < 1000; i++)
             {
-                using (var w = Watch.Create("Add Persona"))
-                {
-                    client.AddSimplePersona(new SimplePerson { Lastname = "Test", Firstname = "Test" });
-                }
+                client.AddSimplePersona(new SimplePerson { Lastname = "Test", Firstname = "Test" });
             }
 
             Core.Log.InfoBasic("Test End.");

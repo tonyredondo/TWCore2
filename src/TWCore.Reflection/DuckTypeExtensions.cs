@@ -20,7 +20,18 @@ namespace TWCore
 				return obj as T;
 			return DuckTypeProxy.Create<T>(obj);
 		}
-
+		/// <summary>
+		/// Creates a new proxy object arround the current object using an interface type for duck typing
+		/// </summary>
+		/// <typeparam name="T">Interface type to proxy</typeparam>
+		/// <param name="obj">Real object instance</param>
+		/// <returns>Proxy object instance</returns>
+		public static DuckTypeProxy GetDuckTypeProxy(this object obj, Type interfaceType)
+		{
+			if (obj is DuckTypeProxy)
+				return obj as DuckTypeProxy;
+			return DuckTypeProxy.Create(interfaceType, obj);
+		}
 		/// <summary>
 		/// Gets the original object from the proxy instance
 		/// </summary>

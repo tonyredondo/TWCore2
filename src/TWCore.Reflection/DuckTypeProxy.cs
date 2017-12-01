@@ -77,7 +77,7 @@ namespace TWCore.Reflection
 		/// <param name="args">Method parameters</param>
 		/// <returns>Method return value</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected object CallMethod(string methodName, params object[] args)
+		public object CallMethod(string methodName, params object[] args)
 		{
 			args = args ?? new object[0];
 
@@ -100,9 +100,11 @@ namespace TWCore.Reflection
 
 			var callSite = _dynMethodDelegates.GetOrAdd((methodName, typesKey), _mName =>
 			{
-				var cSiteBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None, _mName.Method, types, this.GetType(),
-					(new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null) }).Concat(args.Select(a => CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null)))
-					);
+				var csArgs = Enumerable.Range(0, args.Length + 1)
+									   .Select(i => CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null));
+
+				var cSiteBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None, _mName.Method, types, this.GetType(), csArgs);
+					
 				switch (args.Length)
 				{
 					case 0:
@@ -192,7 +194,8 @@ namespace TWCore.Reflection
 		/// <param name="realObject">Object to be proxied</param>
 		/// <returns>Proxy instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static T Create<T>(object realObject) => (T)Create(typeof(T), realObject);
+		public static T Create<T>(object realObject)
+			=> (T)(object)Create(typeof(T), realObject);
 		/// <summary>
 		/// Create a new Proxy object using an interface for ducktyping.
 		/// </summary>
@@ -200,7 +203,7 @@ namespace TWCore.Reflection
 		/// <param name="realObject">Object to be proxied</param>
 		/// <returns>Proxy instance</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static object Create(Type interfaceType, object realObject)
+		public static DuckTypeProxy Create(Type interfaceType, object realObject)
 		{
 			if (interfaceType == null)
 				throw new ArgumentNullException(nameof(interfaceType), "The Interface type can't be null");

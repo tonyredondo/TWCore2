@@ -95,15 +95,14 @@ namespace TWCore
             
             var line = Environment.CommandLine;
             var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
-            var arguments = line.Replace(asmLocation, string.Empty)
-			                    .Split(new[] { '/' }, StringSplitOptions.None)
-			                    .Skip(1)
-			                    .ToArray();
-            var argConfigFile = arguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
+            var argumentLine = line.Replace(asmLocation, string.Empty);
+
+            var cleanArguments = GetArguments(argumentLine);
+            var argConfigFile = cleanArguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
             
             if (!string.IsNullOrWhiteSpace(argConfigFile))
             {
-                argConfigFile = argConfigFile.Substring(11).Trim();
+                argConfigFile = argConfigFile.Substring(11)?.Replace("'", string.Empty).Trim();
                 if (!LoadConfigFile(argConfigFile))
                     throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.", argConfigFile));
             }
@@ -114,7 +113,7 @@ namespace TWCore
             }
             SetLargeObjectHeapCompactTimeout();
         }
-		#endregion
+        #endregion
 
 
 		#region Private factory methods
@@ -190,10 +189,29 @@ namespace TWCore
 			return new Guid(t);
 		}
 
-		#endregion
+        #endregion
 
-		#region Private Methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static List<string> GetArguments(string argumentLine)
+        {
+            var originalArguments = argumentLine.Split(new[] { '/' }, StringSplitOptions.None).Skip(1);
+            var cleanArguments = new List<string>();
+            var keepIdx = false;
+            foreach (var arg in originalArguments)
+            {
+                if (keepIdx)
+                    cleanArguments[cleanArguments.Count - 1] += "/" + arg;
+                else
+                    cleanArguments.Add(arg);
+
+                if (arg.IndexOf("'", StringComparison.Ordinal) > -1)
+                    keepIdx = !keepIdx;
+            }
+
+            return cleanArguments;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsExcludedAssembly(string assemblyName)
         {
             return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||

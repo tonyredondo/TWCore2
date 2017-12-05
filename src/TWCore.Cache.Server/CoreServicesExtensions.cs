@@ -76,6 +76,7 @@ namespace TWCore.Services
             _serverOptions =
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
+                    _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                     _cacheConfiguration?.ServerOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
         }
         #endregion

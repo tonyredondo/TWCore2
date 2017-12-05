@@ -103,13 +103,13 @@ namespace TWCore
             if (!string.IsNullOrWhiteSpace(argConfigFile))
             {
                 argConfigFile = argConfigFile.Substring(11)?.Replace("'", string.Empty).Trim();
-                if (!LoadConfigFile(argConfigFile))
+                if (!LoadConfigFile(argConfigFile, cleanArguments))
                     throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.", argConfigFile));
             }
             else
             {
-                if (!LoadConfigFile($"{Core.ApplicationName}.config.json"))
-                    LoadConfigFile($"{Core.ApplicationName}.json");
+                if (!LoadConfigFile($"{Core.ApplicationName}.config.json", cleanArguments))
+                    LoadConfigFile($"{Core.ApplicationName}.json", cleanArguments);
             }
             SetLargeObjectHeapCompactTimeout();
         }
@@ -229,9 +229,30 @@ namespace TWCore
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool LoadConfigFile(string configFile)
+        private static bool LoadConfigFile(string configFile, List<string> args)
         {
-            if (!File.Exists(configFile)) return false;
+            ServiceContainer.RegisterParametersHandler("environment=[Environment]",
+                "Force an environment to run the application.",
+                obj => { });
+            ServiceContainer.RegisterParametersHandler("machinename=[MachineName]",
+                "Force a machine name to run the application.",
+                obj => { });
+
+            var envConfigFile = args?.FirstOrDefault(a => a.StartsWith("environment=", StringComparison.OrdinalIgnoreCase));
+            envConfigFile = envConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
+
+            var mnameConfigFile = args?.FirstOrDefault(a => a.StartsWith("machinename=", StringComparison.OrdinalIgnoreCase));
+            mnameConfigFile = mnameConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
+
+            if (envConfigFile.IsNotNullOrWhitespace())
+                Core.EnvironmentName = envConfigFile;
+            if (mnameConfigFile.IsNotNullOrWhitespace())
+                Core.MachineName = mnameConfigFile;
+
+            if (!File.Exists(configFile))
+            {
+                return false;
+            }
             try
             {
                 var jser = JsonSerializer.CreateDefault();
@@ -240,9 +261,9 @@ namespace TWCore
 
                 if (fSettings.Core != null)
                 {
-                    if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace())
+                    if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace() && envConfigFile.IsNullOrWhitespace())
                         Core.EnvironmentName = fSettings.Core.EnvironmentName;
-                    if (fSettings.Core.MachineName.IsNotNullOrWhitespace())
+                    if (fSettings.Core.MachineName.IsNotNullOrWhitespace() && mnameConfigFile.IsNullOrWhitespace())
                         Core.MachineName = fSettings.Core.MachineName;
                     if (fSettings.Core.ApplicationName.IsNotNullOrWhitespace())
                         Core.ApplicationName = fSettings.Core.ApplicationName;

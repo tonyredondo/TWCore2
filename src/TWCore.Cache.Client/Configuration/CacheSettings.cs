@@ -50,6 +50,7 @@ namespace TWCore.Cache.Client.Configuration
             var cacheConfig = Caches[name];
             var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                           cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
+                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
                           cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
 
             if (cConfig?.Pool == null) return null;

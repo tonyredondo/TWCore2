@@ -104,7 +104,8 @@ namespace TWCore
             {
                 argConfigFile = argConfigFile.Substring(11)?.Replace("'", string.Empty).Trim();
                 if (!LoadConfigFile(argConfigFile, cleanArguments))
-                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.", argConfigFile));
+                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded. CommandLine: {1}", 
+                        argConfigFile, argumentLine));
             }
             else
             {

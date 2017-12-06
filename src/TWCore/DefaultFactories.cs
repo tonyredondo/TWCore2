@@ -210,6 +210,9 @@ namespace TWCore
                     keepIdx = !keepIdx;
             }
 
+            for (var i = 0; i < cleanArguments.Count; i++)
+                cleanArguments[i] = cleanArguments[i]?.Trim();
+            
             return cleanArguments;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -234,17 +237,23 @@ namespace TWCore
         {
             ServiceContainer.RegisterParametersHandler("environment=[Environment]",
                 "Force an environment to run the application.",
-                obj => { });
+                obj => { obj.ShouldEndExecution = false; });
             ServiceContainer.RegisterParametersHandler("machinename=[MachineName]",
                 "Force a machine name to run the application.",
-                obj => { });
-
+                obj => { obj.ShouldEndExecution = false; });
+            ServiceContainer.RegisterParametersHandler("noconsole",
+                "Remove the console output/input.",
+                obj => { obj.ShouldEndExecution = false; });
+            
             var envConfigFile = args?.FirstOrDefault(a => a.StartsWith("environment=", StringComparison.OrdinalIgnoreCase));
             envConfigFile = envConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
 
             var mnameConfigFile = args?.FirstOrDefault(a => a.StartsWith("machinename=", StringComparison.OrdinalIgnoreCase));
             mnameConfigFile = mnameConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
 
+            if (args?.Any(a => string.Equals(a, "noconsole", StringComparison.Ordinal)) == true)
+                ServiceContainer.HasConsole = false;
+            
             if (envConfigFile.IsNotNullOrWhitespace())
                 Core.EnvironmentName = envConfigFile;
             if (mnameConfigFile.IsNotNullOrWhitespace())

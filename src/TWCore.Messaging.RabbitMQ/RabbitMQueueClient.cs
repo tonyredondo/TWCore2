@@ -251,8 +251,10 @@ namespace TWCore.Messaging.RabbitMQ
                 throw new NullReferenceException("There is not receiver queue.");
 
             var sw = Stopwatch.StartNew();
+            var message = new RabbitResponseMessage();
+            ReceivedMessages.TryAdd(correlationId, message);
+
             Interlocked.Increment(ref _receiverThreads);
-            var message = ReceivedMessages.GetOrAdd(correlationId, cId => new RabbitResponseMessage());
             var strCorrelationId = correlationId.ToString();
 
             if (UseSingleResponseQueue)
@@ -270,7 +272,13 @@ namespace TWCore.Messaging.RabbitMQ
                 tmpConsumer.Received += (ch, ea) =>
                 {
                     var crId = Guid.Parse(ea.BasicProperties.CorrelationId);
-                    var rMessage = ReceivedMessages.GetOrAdd(crId, cId => new RabbitResponseMessage());
+
+                    if (!ReceivedMessages.TryRemove(crId, out var rMessage))
+                    {
+                        _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
+                        return;
+                    }
+
                     rMessage.CorrelationId = crId;
                     rMessage.Body = ea.Body;
                     rMessage.Properties = ea.BasicProperties;
@@ -292,7 +300,6 @@ namespace TWCore.Messaging.RabbitMQ
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, strCorrelationId);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);
-            ReceivedMessages.TryRemove(correlationId, out var _);
             Core.Log.LibVerbose("Correlation Message ({0}) received at: {1}ms", strCorrelationId, sw.Elapsed.TotalMilliseconds);
             sw.Stop();
 
@@ -311,14 +318,21 @@ namespace TWCore.Messaging.RabbitMQ
             if (_receiver == null) return;
             lock (_receiver)
             {
+                if (_receiverConsumer != null) return;
+                if (_receiver == null) return;
                 _receiver.EnsureConnection();
                 _receiver.EnsureQueue();
                 _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
                 _receiverConsumer.Received += (ch, ea) =>
                 {
                     var correlationId = Guid.Parse(ea.BasicProperties.CorrelationId);
-                    var message = ReceivedMessages.GetOrAdd(correlationId,
-                        cId => new RabbitResponseMessage());
+
+                    if (!ReceivedMessages.TryRemove(correlationId, out var message))
+                    {
+                        _receiver.Channel.BasicNack(ea.DeliveryTag, false, true);
+                        return;
+                    }
+
                     message.CorrelationId = correlationId;
                     message.Body = ea.Body;
                     message.Properties = ea.BasicProperties;

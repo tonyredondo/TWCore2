@@ -124,7 +124,7 @@ namespace TWCore.Web
             });
             if (settings.EnableGZipCompressor)
             {
-                services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Optimal);
+                services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Fastest);
                 services.AddResponseCompression();
             }
         }

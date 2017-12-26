@@ -1,7 +1,7 @@
 # TWCore 2
 A multipurpose framework library for netstandard 2, used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
 
-#Advantages
+# Advantages
 
 - Easy development of microservices: With very little code you can suscribe to a message broker and start to process messages as pub/sub or RPC architecture.
 - Completely agnostic and loosely coupled: All subsystems of the framework are registered with a dependency injector engine, so using only the configurations files you can switch between Messages brokers, Serialization formats, Rpc transports, Stream compressors, and many more.

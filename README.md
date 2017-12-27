@@ -8,6 +8,7 @@ A multipurpose framework library for netstandard 2, used to create microservices
 - Integrated Log, Trace, and Status engines: you can log on different storage (currently: Console, File, HtmlFile), on different trace storages and you have an integrated status library to check your service health.
 - A bot subsystem to create bot services on Telegram and Slack (comming soon) 
 - Extensions methods for objects, strings, and IEnumerables.
+- Aspnet Core object viewer and compiler developer tool.
 - Fast and little allocations.
 
 

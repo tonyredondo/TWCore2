@@ -32,14 +32,37 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base(item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker() : base(DoAction) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker(Func<bool> precondition) : base(precondition, item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker(Func<bool> precondition) : base(precondition, DoAction) { }
+        #endregion
+
+        #region Static Methods
+        /// <summary>
+        /// Perform worker item action
+        /// </summary>
+        /// <param name="item">WorkerItem instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DoAction(WorkerItem item)
+        {
+            try
+            {
+                item.Action(item.State);
+            }
+            catch(Exception ex)
+            {
+                if (item.OnExceptionCallback != null)
+                    item.OnExceptionCallback(ex);
+                else
+                    Core.Log.Write(ex);
+                throw;
+            }
+        }
         #endregion
 
         #region Methods
@@ -64,7 +87,7 @@ namespace TWCore
         /// <summary>
         /// Action Worker queue item where is stored the action to be executed and the action when an exception occurs
         /// </summary>
-        public class WorkerItem
+        public struct WorkerItem
         {
             /// <summary>
             /// Action to be executed
@@ -102,14 +125,37 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base(item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker() : base(DoAction) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker(Func<bool> precondition) : base(precondition, item => Try.Do(() => item.Action(item.State), item.OnExceptionCallback, true)) { }
+        public ActionWorker(Func<bool> precondition) : base(precondition, DoAction) { }
+        #endregion
+
+        #region Static Methods
+        /// <summary>
+        /// Perform worker item action
+        /// </summary>
+        /// <param name="item">WorkerItem instance</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void DoAction(WorkerItem item)
+        {
+            try
+            {
+                item.Action(item.State);
+            }
+            catch (Exception ex)
+            {
+                if (item.OnExceptionCallback != null)
+                    item.OnExceptionCallback(ex);
+                else
+                    Core.Log.Write(ex);
+                throw;
+            }
+        }
         #endregion
 
         #region Methods
@@ -127,7 +173,7 @@ namespace TWCore
         /// <summary>
         /// Action Worker queue item where is stored the action to be executed and the action when an exception occurs
         /// </summary>
-        public class WorkerItem
+        public struct WorkerItem
         {
             /// <summary>
             /// Action to be executed

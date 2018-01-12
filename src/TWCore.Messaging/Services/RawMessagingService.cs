@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging.RawServer;
 using TWCore.Services.Messaging;
 // ReSharper disable CheckNamespace
@@ -91,6 +92,7 @@ namespace TWCore.Services
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
                         Processor.Process(e, _cTokenSource.Token);
+                        return Task.CompletedTask;
                     };
                 }
                 else
@@ -101,14 +103,17 @@ namespace TWCore.Services
                         var result = Processor.Process(e, _cTokenSource.Token);
                         if (result != null)
                             e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
+                        return Task.CompletedTask;
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {
                         BeforeSendMessage?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
+                        return Task.CompletedTask;
                     };
                     QueueServer.ResponseSent += (s, e) =>
                     {
                         MessageSent?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
+                        return Task.CompletedTask;
                     };
                 }
 

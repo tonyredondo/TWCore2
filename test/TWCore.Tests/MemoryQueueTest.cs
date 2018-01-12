@@ -106,6 +106,7 @@ namespace TWCore.Tests
                 mqServer.RequestReceived += (s, e) =>
                 {
                     e.Response.Body = "Bienvenido!!!";
+                    return Task.CompletedTask;
                 };
                 mqServer.StartListeners();
 

@@ -66,7 +66,7 @@ namespace TWCore.Messaging.NATS
                     CorrelationId = correlationId,
                     Body = body
                 };
-                EnqueueMessageToProcess(ProcessingTask, rMsg);
+                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
             }
             catch (Exception ex)
             {
@@ -107,7 +107,7 @@ namespace TWCore.Messaging.NATS
         {
             _token = token;
             _connection = _factory.CreateConnection(Connection.Route);
-            _receiver = _connection.SubscribeAsync(Connection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+            _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
@@ -192,7 +192,7 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessingTask(NATSQMessage message)
+        private async Task ProcessingTaskAsync(NATSQMessage message)
         {
             try
             {
@@ -210,7 +210,7 @@ namespace TWCore.Messaging.NATS
                             var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
                             if (request.Header.ResponseQueue != null)
                                 evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                            OnRequestReceived(evArgs);
+                            await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
                             break;
                         }
                     case ResponseMessage response when response.Header != null:
@@ -218,7 +218,7 @@ namespace TWCore.Messaging.NATS
                             response.Header.Response.ApplicationReceivedTime = Core.Now;
                             Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
                             var evArgs = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
-                            OnResponseReceived(evArgs);
+                            await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
                             break;
                         }
                 }

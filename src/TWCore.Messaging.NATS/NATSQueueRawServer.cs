@@ -62,7 +62,7 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
+        protected override Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
             queues.Add(new MQConnection
@@ -117,7 +117,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return response ? message.Count : -1;
+            return Task.FromResult(response ? message.Count : -1);
         }
 
         /// <inheritdoc />

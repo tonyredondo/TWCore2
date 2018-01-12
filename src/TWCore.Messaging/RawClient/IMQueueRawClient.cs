@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Messaging.Client;
+using TWCore.Threading;
 
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable EventNeverSubscribedTo.Global
@@ -42,45 +44,47 @@ namespace TWCore.Messaging.RawClient
         /// <summary>
         /// Events that fires when a request message is sent
         /// </summary>
-        event EventHandler<RawMessageEventArgs> OnRequestSent;
+        //event AsyncEventHandler<RawMessageEventArgs> OnRequestSent;
+        AsyncEvent<RawMessageEventArgs> OnRequestSent { get; set; }
         /// <summary>
         /// Events that fires when a request message is about to be sent
         /// </summary>
-        event EventHandler<RawMessageEventArgs> OnBeforeSendRequest;
+        //event AsyncEventHandler<RawMessageEventArgs> OnBeforeSendRequest;
+        AsyncEvent<RawMessageEventArgs> OnBeforeSendRequest { get; set; }
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        event EventHandler<RawMessageEventArgs> OnResponseReceived;
+        //event AsyncEventHandler<RawMessageEventArgs> OnResponseReceived;
+        AsyncEvent<RawMessageEventArgs> OnResponseReceived { get; set; }
         #endregion
 
         #region Methods
-
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Message correlation Id</returns>
-        Guid Send(object obj);
-        /// <summary>
-        /// Sends a message and returns the correlation Id
-        /// </summary>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="correlationId">Manual defined correlationId</param>
-        /// <returns>Message correlation Id</returns>
-        Guid Send(object obj, Guid correlationId);
-        /// <summary>
-        /// Sends a message and returns the correlation Id
-        /// </summary>
-        /// <param name="obj">Object to be sent</param>
-        /// <returns>Message correlation Id</returns>
-        Guid SendBytes(byte[] obj);
+        Task<Guid> SendAsync(object obj);
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Message correlation Id</returns>
-        Guid SendBytes(byte[] obj, Guid correlationId);
+        Task<Guid> SendAsync(object obj, Guid correlationId);
+        /// <summary>
+        /// Sends a message and returns the correlation Id
+        /// </summary>
+        /// <param name="obj">Object to be sent</param>
+        /// <returns>Message correlation Id</returns>
+        Task<Guid> SendBytesAsync(byte[] obj);
+        /// <summary>
+        /// Sends a message and returns the correlation Id
+        /// </summary>
+        /// <param name="obj">Object to be sent</param>
+        /// <param name="correlationId">Manual defined correlationId</param>
+        /// <returns>Message correlation Id</returns>
+        Task<Guid> SendBytesAsync(byte[] obj, Guid correlationId);
 
 
         /// <summary>
@@ -111,7 +115,6 @@ namespace TWCore.Messaging.RawClient
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Object instance received from the queue</returns>
         Task<byte[]> ReceiveBytesAsync(Guid correlationId, CancellationToken cancellationToken);
-
         #endregion
 
         #region SendAndReceive

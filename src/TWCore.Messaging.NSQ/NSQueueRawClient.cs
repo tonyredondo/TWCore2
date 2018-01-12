@@ -192,7 +192,7 @@ namespace TWCore.Messaging.NSQ
         /// <param name="message">Request message instance</param>
         /// <param name="correlationId">Message CorrelationId</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnSend(byte[] message, Guid correlationId)
+        protected override Task<bool> OnSendAsync(byte[] message, Guid correlationId)
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
@@ -214,7 +214,7 @@ namespace TWCore.Messaging.NSQ
                 nsqProducerPool.Store(nsqProducer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
-            return true;
+            return Task.FromResult(true);
         }
         #endregion
 

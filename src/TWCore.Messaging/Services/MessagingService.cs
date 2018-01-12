@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
@@ -107,7 +108,7 @@ namespace TWCore.Services
                     QueueServer.ResponseReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Message));
-                        if (e.Message?.Body == null) return;
+                        if (e.Message?.Body == null) return Task.CompletedTask;
 
                         ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
                         Counters.IncrementCurrentMessagesBeingProcessed();
@@ -126,6 +127,7 @@ namespace TWCore.Services
                         Counters.DecrementCurrentMessagesBeingProcessed();
                         Counters.IncrementTotalMessagesProccesed();
                         ReceivedMessagesCache.TryRemove(e.Message.Body, out object _);
+                        return Task.CompletedTask;
                     };
                 }
                 else
@@ -133,7 +135,7 @@ namespace TWCore.Services
                     QueueServer.RequestReceived += (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Request));
-                        if (e.Request?.Body == null) return;
+                        if (e.Request?.Body == null) return Task.CompletedTask;
 
                         ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
                         object result = null;
@@ -154,14 +156,17 @@ namespace TWCore.Services
                         Counters.IncrementTotalMessagesProccesed();
                         e.Response.Body = result;
                         ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
+                        return Task.CompletedTask;
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {
                         BeforeSendMessage?.Invoke(this, new MessageEventArgs(e.Message));
+                        return Task.CompletedTask;
                     };
                     QueueServer.ResponseSent += (s, e) =>
                     {
                         MessageSent?.Invoke(this, new MessageEventArgs(e.Message));
+                        return Task.CompletedTask;
                     };
                 }
 

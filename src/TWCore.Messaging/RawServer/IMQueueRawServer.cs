@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using TWCore.Threading;
 // ReSharper disable UnusedMemberInSuper.Global
 
 namespace TWCore.Messaging.RawServer
@@ -41,19 +42,23 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        event EventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        //event AsyncEventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        AsyncEvent<RawRequestReceivedEventArgs> RequestReceived { get; set; }
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        event EventHandler<RawResponseReceivedEventArgs> ResponseReceived;
+        //event AsyncEventHandler<RawResponseReceivedEventArgs> ResponseReceived;
+        AsyncEvent<RawResponseReceivedEventArgs> ResponseReceived { get; set; }
         /// <summary>
         /// Events that fires when a response message is sent
         /// </summary>
-        event EventHandler<RawResponseSentEventArgs> ResponseSent;
+        //event AsyncEventHandler<RawResponseSentEventArgs> ResponseSent;
+        AsyncEvent<RawResponseSentEventArgs> ResponseSent { get; set; }
         /// <summary>
         /// Events that fires when a response message is about to be sent
         /// </summary>
-        event EventHandler<RawResponseSentEventArgs> BeforeSendResponse;
+        //event AsyncEventHandler<RawResponseSentEventArgs> BeforeSendResponse;
+        AsyncEvent<RawResponseSentEventArgs> BeforeSendResponse { get; set; }
         #endregion
 
         #region Methods

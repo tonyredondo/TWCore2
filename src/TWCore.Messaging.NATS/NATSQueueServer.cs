@@ -61,10 +61,10 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override int OnSend(ResponseMessage message, RequestReceivedEventArgs e)
+        protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return -1;
+                return Task.FromResult(-1);
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
             if (senderOptions == null)
@@ -94,7 +94,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return response ? data.Count : -1;
+            return Task.FromResult(response ? data.Count : -1);
         }
 
         /// <inheritdoc />

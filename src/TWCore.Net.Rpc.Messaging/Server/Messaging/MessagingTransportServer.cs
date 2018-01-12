@@ -145,7 +145,7 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
         
         #region Private Methods
-        private void QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
+        private Task QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
         {
             var body = requestReceivedEventArgs.Request.Body;
             Counters.IncrementBytesReceived(requestReceivedEventArgs.MessageLength);
@@ -171,6 +171,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     }
                     break;
             }
+            return Task.CompletedTask;
         }
         #endregion
     }

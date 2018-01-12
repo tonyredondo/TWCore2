@@ -49,10 +49,10 @@ namespace TWCore.Messaging
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">Event Args</param>
-		protected override int OnSend(ResponseMessage message, RequestReceivedEventArgs e)
+		protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
 		{
 			if (e.ResponseQueues?.Any() != true)
-				return -1;
+				return Task.FromResult(-1);
 			var response = true;
 			foreach (var queue in e.ResponseQueues)
 			{
@@ -68,7 +68,7 @@ namespace TWCore.Messaging
 					Core.Log.Write(ex);
 				}
 			}
-			return response ? 1 : -1;
+			return Task.FromResult(response ? 1 : -1);
 		}
 
 		/// <inheritdoc />
@@ -134,9 +134,11 @@ namespace TWCore.Messaging
 					{
 						var message = _receiver.Dequeue(_token);
 						if (_token.IsCancellationRequested) break;
-						EnqueueMessageToProcess(ProcessingTask, message);
-					}
-				}, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
+                        #pragma warning disable 4014
+                        EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
+                        #pragma warning restore 4014
+                    }
+                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
 
 				WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
 			}
@@ -151,7 +153,7 @@ namespace TWCore.Messaging
 			}
 
 
-			private void ProcessingTask(MemoryQueue.Message message)
+			private async Task ProcessingTaskAsync(MemoryQueue.Message message)
 			{
 				try
 				{
@@ -172,7 +174,7 @@ namespace TWCore.Messaging
 									new RequestReceivedEventArgs(_name, Connection, request, 1);
 								if (request.Header.ResponseQueue != null)
 									evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-								OnRequestReceived(evArgs);
+							    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
 								break;
 							}
 						case ResponseMessage response when response.Header != null:
@@ -183,7 +185,7 @@ namespace TWCore.Messaging
 								Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
 								var evArgs =
 									new ResponseReceivedEventArgs(_name, response, 1);
-								OnResponseReceived(evArgs);
+								await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
 								break;
 							}
 					}

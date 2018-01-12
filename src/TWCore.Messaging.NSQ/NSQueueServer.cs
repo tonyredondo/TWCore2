@@ -59,7 +59,7 @@ namespace TWCore.Messaging.NSQ
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">Event Args</param>
-		protected override int OnSend(ResponseMessage message, RequestReceivedEventArgs e)
+		protected override async Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
 		{
 			if (e.ResponseQueues?.Any() != true)
 				return -1;
@@ -83,7 +83,7 @@ namespace TWCore.Messaging.NSQ
                     }, null, 1));
 					Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, queue.Route + "/" + queue.Name, message.CorrelationId);
                     var nsqProducer = nsqProducerPool.New();
-                    nsqProducer.PublishAsync(queue.Name, body).Wait();
+				    await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     nsqProducerPool.Store(nsqProducer);
 				}
 				catch (Exception ex)

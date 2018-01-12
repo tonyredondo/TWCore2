@@ -38,6 +38,7 @@ namespace TWCore.Messaging.Client
     public abstract class MQueueClientBase : IMQueueClient
     {
         private readonly WeakDictionary<object, object> _receivedMessagesCache = new WeakDictionary<object, object>();
+        protected static Task<bool> TaskTrue = Task.FromResult(true);
 
         #region Properties
         /// <inheritdoc />

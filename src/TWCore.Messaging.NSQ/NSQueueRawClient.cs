@@ -214,7 +214,7 @@ namespace TWCore.Messaging.NSQ
                 nsqProducerPool.Store(nsqProducer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
-            return Task.FromResult(true);
+            return TaskUtil.CompleteTrue;
         }
         #endregion
 

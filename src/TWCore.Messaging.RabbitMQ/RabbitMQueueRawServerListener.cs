@@ -85,7 +85,6 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {
-                Core.Log.LibVerbose("Received message by consumer.");
                 var message = new RabbitMessage
                 {
                     CorrelationId = Guid.Parse(ea.BasicProperties.CorrelationId),

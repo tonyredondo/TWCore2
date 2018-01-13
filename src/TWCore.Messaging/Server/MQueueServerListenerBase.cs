@@ -32,7 +32,6 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
-        protected readonly ReferencePool<ActionWorker> WorkerPool;
         protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
         protected int ActiveWorkers;
 
@@ -94,7 +93,6 @@ namespace TWCore.Messaging.Server
             Counters = new MQServerCounters();
             ReceiverSerializer = server.ReceiverSerializer;
             ResponseServer = responseServer;
-            WorkerPool = new ReferencePool<ActionWorker>(Environment.ProcessorCount);
             Core.Status.Attach(collection =>
             {
                 collection.Add("Connection Route:", Connection?.Route);

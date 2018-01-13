@@ -201,15 +201,7 @@ namespace TWCore.Messaging.RawServer
 				_listenerTasks.Clear();
 
 				foreach (var listener in QueueServerListeners)
-				{
-					var tsk = Task.Run(async () =>
-					{
-						Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-						await listener.TaskStartAsync(_tokenSource.Token).ConfigureAwait(false);
-						Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-					}, _tokenSource.Token);
-					_listenerTasks.Add(tsk);
-				}
+					_listenerTasks.Add(InitListener(listener));
 			}
 			else
 				Core.Log.Warning("There are not server listener to start.");
@@ -245,6 +237,13 @@ namespace TWCore.Messaging.RawServer
 		#endregion
 
 		#region Private Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private async Task InitListener(IMQueueRawServerListener listener)
+		{
+			Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
+			await listener.TaskStartAsync(_tokenSource.Token).ConfigureAwait(false);
+			Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
+		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
 		{

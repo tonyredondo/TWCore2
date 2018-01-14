@@ -281,7 +281,8 @@ namespace TWCore.Messaging.Server
 				var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
-					rsea.MessageLength = sentBytes;
+					if (rsea != null)
+						rsea.MessageLength = sentBytes;
                     if (ResponseSent != null)
 					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
 					if (MQueueServerEvents.ResponseSent != null)

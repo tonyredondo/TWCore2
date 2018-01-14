@@ -54,6 +54,7 @@ namespace TWCore.Messaging.RawServer
 
 
         //
+		/*
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Task FireRequestReceivedAsync(object sender, RawRequestReceivedEventArgs e) 
             => RequestReceived?.InvokeAsync(sender, e) ?? Task.CompletedTask;
@@ -66,5 +67,6 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		internal static Task FireBeforeSendResponseAsync(object sender, RawResponseSentEventArgs e)
             => BeforeSendResponse?.InvokeAsync(sender, e) ?? Task.CompletedTask;
+        */
     }
 }

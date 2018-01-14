@@ -252,23 +252,32 @@ namespace TWCore.Messaging.RawServer
 
             if (RequestReceived != null)
 			    await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			await MQueueRawServerEvents.FireRequestReceivedAsync(sender, e).ConfigureAwait(false);
+			if (MQueueRawServerEvents.RequestReceived != null)
+				await MQueueRawServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
 			if (e.SendResponse && e.Response != null)
 			{
 				var response = e.Response;
-				var rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
+
+				RawResponseSentEventArgs rsea = null;
+				if (BeforeSendResponse != null || MQueueRawServerEvents.BeforeSendResponse != null ||
+				    ResponseSent != null || MQueueRawServerEvents.ResponseSent != null)
+					rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
+				
                 if (BeforeSendResponse != null)
 			        await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-				await MQueueRawServerEvents.FireBeforeSendResponseAsync(this, rsea).ConfigureAwait(false);
-				response = rsea.Message;
+				if (MQueueRawServerEvents.BeforeSendResponse != null)
+					await MQueueRawServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+
+				response = rsea != null ? rsea.Message : e.Response;
 				var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
 					rsea.MessageLength = sentBytes;
                     if (ResponseSent != null)
 					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-					await MQueueRawServerEvents.FireResponseSentAsync(this, rsea).ConfigureAwait(false);
+					if (MQueueRawServerEvents.ResponseSent != null)
+						await MQueueRawServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
 				}
 				else
 					Core.Log.Warning("The message couldn't be sent.");
@@ -279,7 +288,8 @@ namespace TWCore.Messaging.RawServer
 		{
             if (ResponseReceived != null)
 			    await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			await MQueueRawServerEvents.FireResponseReceivedAsync(sender, e).ConfigureAwait(false);
+			if (MQueueRawServerEvents.ResponseReceived != null)
+				await MQueueRawServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 		}
 		#endregion
 

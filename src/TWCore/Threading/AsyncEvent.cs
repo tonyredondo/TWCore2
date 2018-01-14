@@ -51,12 +51,15 @@ namespace TWCore.Threading
         /// <returns>Task instance</returns>
         public async Task InvokeAsync(object sender, TEventArgs eventArgs)
         {
-			lock (_locker)
+			if (_dirty || _callArray == null)
 			{
-				if (_dirty || _callArray == null)
+				lock (_locker)
 				{
-					_callArray = _invocationList.ToArray();
-					_dirty = false;
+					if (_dirty || _callArray == null)
+					{
+						_callArray = _invocationList.ToArray();
+						_dirty = false;
+					}
 				}
 			}
 			foreach (var callback in _callArray)

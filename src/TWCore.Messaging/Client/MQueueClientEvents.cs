@@ -48,6 +48,7 @@ namespace TWCore.Messaging.Client
 
 
         //
+		/*
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static Task FireOnRequestSentAsync(object sender, RequestSentEventArgs e)
             => OnRequestSent?.InvokeAsync(sender, e) ?? Task.CompletedTask;
@@ -57,5 +58,6 @@ namespace TWCore.Messaging.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static Task FireOnResponseReceivedAsync(object sender, ResponseReceivedEventArgs e)
             => OnResponseReceived?.InvokeAsync(sender, e) ?? Task.CompletedTask;
+        */
     }
 }

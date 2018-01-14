@@ -28,6 +28,8 @@ namespace TWCore.Threading
     {
         private readonly List<Func<object, TEventArgs, Task>> _invocationList;
         private readonly object _locker;
+		private bool _dirty;
+		private Func<object, TEventArgs, Task>[] _callArray;
 
         #region .ctor
         /// <summary>
@@ -49,11 +51,15 @@ namespace TWCore.Threading
         /// <returns>Task instance</returns>
         public async Task InvokeAsync(object sender, TEventArgs eventArgs)
         {
-            List<Func<object, TEventArgs, Task>> tmpInvocationList;
-            lock (_locker)
-                tmpInvocationList = new List<Func<object, TEventArgs, Task>>(_invocationList);
-
-            foreach (var callback in tmpInvocationList)
+			lock (_locker)
+			{
+				if (_dirty || _callArray == null)
+				{
+					_callArray = _invocationList.ToArray();
+					_dirty = false;
+				}
+			}
+			foreach (var callback in _callArray)
                 await callback(sender, eventArgs);
         }
         #endregion
@@ -69,8 +75,11 @@ namespace TWCore.Threading
         {
             if (callback == null) throw new NullReferenceException("callback is null");
             if (e == null) e = new AsyncEvent<TEventArgs>();
-            lock (e._locker)
-                e._invocationList.Add(callback);
+			lock (e._locker)
+			{
+				e._invocationList.Add(callback);
+				e._dirty = true;
+			}
             return e;
         }
         /// <summary>
@@ -83,8 +92,11 @@ namespace TWCore.Threading
         {
             if (callback == null) throw new NullReferenceException("callback is null");
             if (e == null) return null;
-            lock (e._locker)
-                e._invocationList.Remove(callback);
+			lock (e._locker)
+			{
+				e._invocationList.Remove(callback);
+				e._dirty = true;
+			}
             return e;
         }
         #endregion

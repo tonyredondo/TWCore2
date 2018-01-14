@@ -38,7 +38,6 @@ namespace TWCore.Messaging.Client
     public abstract class MQueueClientBase : IMQueueClient
     {
         private readonly WeakDictionary<object, object> _receivedMessagesCache = new WeakDictionary<object, object>();
-        protected static Task<bool> TaskTrue = Task.FromResult(true);
 
         #region Properties
         /// <inheritdoc />
@@ -162,16 +161,25 @@ namespace TWCore.Messaging.Client
 			        ClientName = Config?.Name
 			    }
 			};
-            var rsea = new RequestSentEventArgs(Name, rqMsg);
-            if (OnBeforeSendRequest != null)
-                await OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
-            await MQueueClientEvents.FireOnBeforeSendRequestAsync(this, rsea).ConfigureAwait(false);
+			RequestSentEventArgs rsea = null;
+			if (OnBeforeSendRequest != null || MQueueClientEvents.OnBeforeSendRequest != null || 
+			    OnRequestSent != null || MQueueClientEvents.OnRequestSent != null)
+				rsea = new RequestSentEventArgs(Name, rqMsg);
+				
+			if (OnBeforeSendRequest != null)
+				await OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
+			if (MQueueClientEvents.OnBeforeSendRequest != null)
+				await MQueueClientEvents.OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
+			
             if (!await OnSendAsync(rqMsg).ConfigureAwait(false))
                 return Guid.Empty;
             Counters.IncrementMessagesSent();
+
             if (OnRequestSent != null)
                 await OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-            await MQueueClientEvents.FireOnRequestSentAsync(this, rsea).ConfigureAwait(false);
+			if (MQueueClientEvents.OnRequestSent != null)
+            	await MQueueClientEvents.OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+			
             return rqMsg.CorrelationId;
         }
 
@@ -202,10 +210,15 @@ namespace TWCore.Messaging.Client
             rsMsg.Header.Response.ApplicationReceivedTime = Core.Now;
             Counters.IncrementMessagesReceived();
             Counters.IncrementReceivingTime(rsMsg.Header.Response.TotalTime);
-            var rrea = new ResponseReceivedEventArgs(Name, rsMsg);
+
+			ResponseReceivedEventArgs rrea = null;
+			if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
+            	rrea = new ResponseReceivedEventArgs(Name, rsMsg);
             if (OnResponseReceived != null)
                 await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-            await MQueueClientEvents.FireOnResponseReceivedAsync(this, rrea).ConfigureAwait(false);
+			if (MQueueClientEvents.OnResponseReceived != null)
+				await MQueueClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+			
             if (rsMsg.Body == null) return default(T);
 
             var res = default(T);
@@ -281,66 +294,66 @@ namespace TWCore.Messaging.Client
             correlationId = await SendAsync(obj, correlationId).ConfigureAwait(false);
             return await ReceiveAsync<TR>(correlationId, cancellationToken).ConfigureAwait(false);
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="T">Type of the object to be sent</typeparam>
-        /// <typeparam name="TR">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> SendAndReceiveAsync<TR>(object obj)
-        {
-            var correlationId = await SendAsync(obj).ConfigureAwait(false);
-            return await ReceiveAsync<TR>(correlationId).ConfigureAwait(false);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="TR">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> SendAndReceiveAsync<TR>(object obj, CancellationToken cancellationToken)
-        {
-            var correlationId = await SendAsync(obj).ConfigureAwait(false);
-            return await ReceiveAsync<TR>(correlationId, cancellationToken).ConfigureAwait(false);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="TR">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="correlationId">Manual defined correlationId</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId)
-        {
-            correlationId = await SendAsync(obj, correlationId).ConfigureAwait(false);
-            return await ReceiveAsync<TR>(correlationId).ConfigureAwait(false);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Sends and waits for receive response from the queue (like RPC)
-        /// </summary>
-        /// <typeparam name="TR">Type of the object to be received</typeparam>
-        /// <param name="obj">Object to be sent</param>
-        /// <param name="correlationId">Manual defined correlationId</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Object instance received from the queue</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId, CancellationToken cancellationToken)
-        {
-            correlationId = await SendAsync(obj, correlationId).ConfigureAwait(false);
-            return await ReceiveAsync<TR>(correlationId, cancellationToken).ConfigureAwait(false);
-        }
-
-
-
+		/// <inheritdoc />
+		/// <summary>
+		/// Sends and waits for receive response from the queue (like RPC)
+		/// </summary>
+		/// <typeparam name="T">Type of the object to be sent</typeparam>
+		/// <typeparam name="TR">Type of the object to be received</typeparam>
+		/// <param name="obj">Object to be sent</param>
+		/// <returns>Object instance received from the queue</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TR> SendAndReceiveAsync<TR>(object obj)
+		{
+			var correlationId = await SendAsync(obj).ConfigureAwait(false);
+			return await ReceiveAsync<TR>(correlationId).ConfigureAwait(false);
+		}
+		/// <inheritdoc />
+		/// <summary>
+		/// Sends and waits for receive response from the queue (like RPC)
+		/// </summary>
+		/// <typeparam name="T">Type of the object to be sent</typeparam>
+		/// <typeparam name="TR">Type of the object to be received</typeparam>
+		/// <param name="obj">Object to be sent</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Object instance received from the queue</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TR> SendAndReceiveAsync<TR>(object obj, CancellationToken cancellationToken)
+		{
+			var correlationId = await SendAsync(obj).ConfigureAwait(false);
+			return await ReceiveAsync<TR>(correlationId, cancellationToken).ConfigureAwait(false);
+		}
+		/// <inheritdoc />
+		/// <summary>
+		/// Sends and waits for receive response from the queue (like RPC)
+		/// </summary>
+		/// <typeparam name="T">Type of the object to be sent</typeparam>
+		/// <typeparam name="TR">Type of the object to be received</typeparam>
+		/// <param name="obj">Object to be sent</param>
+		/// <param name="correlationId">Manual defined correlationId</param>
+		/// <returns>Object instance received from the queue</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId)
+		{
+			correlationId = await SendAsync(obj, correlationId).ConfigureAwait(false);
+			return await ReceiveAsync<TR>(correlationId).ConfigureAwait(false);
+		}
+		/// <inheritdoc />
+		/// <summary>
+		/// Sends and waits for receive response from the queue (like RPC)
+		/// </summary>
+		/// <typeparam name="T">Type of the object to be sent</typeparam>
+		/// <typeparam name="TR">Type of the object to be received</typeparam>
+		/// <param name="obj">Object to be sent</param>
+		/// <param name="correlationId">Manual defined correlationId</param>
+		/// <param name="cancellationToken">Cancellation token</param>
+		/// <returns>Object instance received from the queue</returns>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public async Task<TR> SendAndReceiveAsync<TR>(object obj, Guid correlationId, CancellationToken cancellationToken)
+		{
+			correlationId = await SendAsync(obj, correlationId).ConfigureAwait(false);
+			return await ReceiveAsync<TR>(correlationId, cancellationToken).ConfigureAwait(false);
+		}
 
         /// <inheritdoc />
         /// <summary>

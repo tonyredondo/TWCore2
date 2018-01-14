@@ -164,18 +164,25 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Guid> SendBytesAsync(byte[] obj, Guid correlationId)
         {
-            var rmea = new RawMessageEventArgs(Name, obj);
+			RawMessageEventArgs rmea = null;
+			if (OnBeforeSendRequest != null || MQueueRawClientEvents.OnBeforeSendRequest != null ||
+				OnRequestSent != null || MQueueRawClientEvents.OnRequestSent != null)
+				rmea = new RawMessageEventArgs(Name, obj);
+			
             if (OnBeforeSendRequest != null)
                 await OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
-            await MQueueRawClientEvents.FireOnBeforeSendRequestAsync(this, rmea).ConfigureAwait(false);
-            obj = rmea.Message;
+			if (MQueueRawClientEvents.OnBeforeSendRequest != null)
+				await MQueueRawClientEvents.OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
+
+			obj = rmea != null ? rmea.Message : obj;
             if (!await OnSendAsync(obj, correlationId).ConfigureAwait(false)) return Guid.Empty;
             Counters.IncrementMessagesSent();
             Counters.IncrementTotalBytesSent(obj.Length);
-            rmea = new RawMessageEventArgs(Name, obj);
+
             if (OnRequestSent != null)
                 await OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
-            await MQueueRawClientEvents.FireOnRequestSentAsync(this, rmea).ConfigureAwait(false);
+			if (MQueueRawClientEvents.OnRequestSent != null)
+				await MQueueRawClientEvents.OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
             return correlationId;
         }
         /// <inheritdoc />
@@ -229,10 +236,15 @@ namespace TWCore.Messaging.RawClient
 
             Counters.IncrementMessagesReceived();
             Counters.IncrementTotalBytesReceived(bytes.Length);
-            var rrea = new RawMessageEventArgs(Name, bytes);
+
+			RawMessageEventArgs rrea = null;
+			if (OnResponseReceived != null || MQueueRawClientEvents.OnResponseReceived != null)
+            	rrea = new RawMessageEventArgs(Name, bytes);
             if (OnResponseReceived != null)
                 await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-            await MQueueRawClientEvents.FireOnResponseReceivedAsync(this, rrea).ConfigureAwait(false);
+			if (MQueueRawClientEvents.OnResponseReceived != null)
+				await MQueueRawClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+			
             return bytes;
         }
         /// <inheritdoc />

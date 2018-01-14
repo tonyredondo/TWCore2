@@ -151,7 +151,7 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
-            => _queueClient.SendAndReceiveAsync<RPCResponseMessage>(messageRQ);
+            => _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ);
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results

@@ -273,7 +273,8 @@ namespace TWCore.Messaging.RawServer
 				var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
-					rsea.MessageLength = sentBytes;
+					if (rsea != null)
+						rsea.MessageLength = sentBytes;
                     if (ResponseSent != null)
 					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
 					if (MQueueRawServerEvents.ResponseSent != null)

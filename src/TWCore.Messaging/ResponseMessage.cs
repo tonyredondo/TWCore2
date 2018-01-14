@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Serialization;
 // ReSharper disable ValueParameterNotUsed
@@ -36,6 +37,10 @@ namespace TWCore.Messaging
         /// Define a no response message
         /// </summary>
         public static object NoResponse { get; } = "Message[NoResponse]";
+		/// <summary>
+		/// Define a no response message task
+		/// </summary>
+		public static Task<object> NoResponseTask { get; } = Task.FromResult(NoResponse);
 
         /// <inheritdoc />
         /// <summary>

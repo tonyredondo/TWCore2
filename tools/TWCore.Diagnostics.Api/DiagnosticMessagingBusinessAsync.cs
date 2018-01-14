@@ -17,6 +17,7 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
@@ -30,14 +31,14 @@ using TWCore.Services.Messaging;
 
 namespace TWCore.Diagnostics.Api
 {
-    public class DiagnosticMessagingBusiness : BusinessBase<List<LogItem>, List<MessagingTraceItem>, StatusItemCollection>
+	public class DiagnosticMessagingBusinessAsync : BusinessAsyncBase<List<LogItem>, List<MessagingTraceItem>, StatusItemCollection>
     {
         private readonly object _locker = new object();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override object OnProcess(List<LogItem> message)
+        protected override Task<object> OnProcessAsync(List<LogItem> message)
         {
-            if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
+			if (message == null || message.Count == 0) return ResponseMessage.NoResponseTask;
             Core.Log.InfoBasic("Storing Log Info...");
             foreach (var logItem in message)
             {
@@ -84,13 +85,13 @@ namespace TWCore.Diagnostics.Api
                     session.SaveChanges();
                 });
             }
-            return ResponseMessage.NoResponse;
+			return ResponseMessage.NoResponseTask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override object OnProcess(List<MessagingTraceItem> message)
+        protected override Task<object> OnProcessAsync(List<MessagingTraceItem> message)
         {
-            if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
+            if (message == null || message.Count == 0) return ResponseMessage.NoResponseTask;
             Core.Log.InfoBasic("Storing Trace Info...");
             foreach (var traceItem in message)
             {
@@ -133,13 +134,13 @@ namespace TWCore.Diagnostics.Api
                     session.SaveChanges();
                 });
             }
-            return ResponseMessage.NoResponse;
+            return ResponseMessage.NoResponseTask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override object OnProcess(StatusItemCollection message)
+        protected override Task<object> OnProcessAsync(StatusItemCollection message)
         {
-            if (message == null) return ResponseMessage.NoResponse;
+			if (message == null) return ResponseMessage.NoResponseTask;
 
             Core.Log.InfoBasic("Storing Status Info...");
             RavenHelper.Execute(session =>
@@ -193,7 +194,7 @@ namespace TWCore.Diagnostics.Api
                 }
                 session.SaveChanges();
             });
-            return ResponseMessage.NoResponse;
+            return ResponseMessage.NoResponseTask;
         }
 
 

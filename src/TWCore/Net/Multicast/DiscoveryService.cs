@@ -327,7 +327,7 @@ namespace TWCore.Net.Multicast
                             return;
                     }
                 }
-                Factory.Thread.Sleep(7000, _token);
+                Factory.Thread.Sleep(5000, _token);
             }
         }
         #endregion

@@ -88,22 +88,20 @@ namespace TWCore.Services
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {
-                    QueueServer.ResponseReceived += (s, e) =>
+                    QueueServer.ResponseReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
-                        Processor.Process(e, _cTokenSource.Token);
-                        return Task.CompletedTask;
+						await Task.Run( () => Processor.Process(e, _cTokenSource.Token)).ConfigureAwait(false);
                     };
                 }
                 else
                 {
-                    QueueServer.RequestReceived += (s, e) =>
+                    QueueServer.RequestReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Request, e.CorrelationId));
-                        var result = Processor.Process(e, _cTokenSource.Token);
+						var result = await Task.Run(() => Processor.Process(e, _cTokenSource.Token)).ConfigureAwait(false);
                         if (result != null)
                             e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
-                        return Task.CompletedTask;
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {

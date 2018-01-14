@@ -105,17 +105,17 @@ namespace TWCore.Services
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {
-                    QueueServer.ResponseReceived += (s, e) =>
+                    QueueServer.ResponseReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Message));
-                        if (e.Message?.Body == null) return Task.CompletedTask;
+                        if (e.Message?.Body == null) return;
 
                         ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
                         Counters.IncrementCurrentMessagesBeingProcessed();
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            Processor.Process(e.Message.Body, _cTokenSource.Token);
+							await Task.Run(() => Processor.Process(e.Message.Body, _cTokenSource.Token)).ConfigureAwait(false);
                         }
                         catch(Exception ex)
                         {
@@ -127,15 +127,15 @@ namespace TWCore.Services
                         Counters.DecrementCurrentMessagesBeingProcessed();
                         Counters.IncrementTotalMessagesProccesed();
                         ReceivedMessagesCache.TryRemove(e.Message.Body, out object _);
-                        return Task.CompletedTask;
+                        return;
                     };
                 }
                 else
                 {
-                    QueueServer.RequestReceived += (s, e) =>
+                    QueueServer.RequestReceived += async (s, e) =>
                     {
                         MessageReceived?.Invoke(this, new MessageEventArgs(e.Request));
-                        if (e.Request?.Body == null) return Task.CompletedTask;
+                        if (e.Request?.Body == null) return;
 
                         ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
                         object result = null;
@@ -143,7 +143,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            result = Processor.Process(e.Request.Body, e.ProcessResponseTimeoutCancellationToken);
+							result = await Task.Run(() => Processor.Process(e.Request.Body, e.ProcessResponseTimeoutCancellationToken)).ConfigureAwait(false);
                         }
                         catch(Exception ex)
                         {
@@ -156,7 +156,7 @@ namespace TWCore.Services
                         Counters.IncrementTotalMessagesProccesed();
                         e.Response.Body = result;
                         ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
-                        return Task.CompletedTask;
+                        return;
                     };
                     QueueServer.BeforeSendResponse += (s, e) =>
                     {

@@ -32,7 +32,7 @@ namespace TWCore.Tests
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);
 
-			using (var cachePool = new CacheClientPool { Serializer = GlobalSerializer })
+			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
@@ -40,22 +40,22 @@ namespace TWCore.Tests
 	            try
 	            {
 	                for (var i = 0; i < 15; i++)
-			            cachePool.GetKeys();
+			            await cachePool.GetKeysAsync().ConfigureAwait(false);
 
 		            Console.ReadLine();
 
 	                for (var i = 0; i < 100; i++)
 		            {
 			            var key = "test-" + i;
-			            cachePool.Get(key);
-			            cachePool.Set(key, "bla bla bla bla bla");
+			            await cachePool.GetAsync(key).ConfigureAwait(false);
+			            await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
 		            }
 		            Console.ReadLine();
 		            for (var i = 0; i < 100; i++)
 		            {
 			            var key = "test-" + i;
-			            cachePool.Get(key);
-			            cachePool.Set(key, "bla bla bla bla bla");
+			            await cachePool.GetAsync(key).ConfigureAwait(false);
+			            await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
 		            }
 	            }
 	            catch (Exception ex)

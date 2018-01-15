@@ -103,6 +103,16 @@ namespace TWCore.Cache.Client
         /// Adds a cache storage to the pool
         /// </summary>
         /// <param name="name">Pool item name</param>
+        /// <param name="clientProxy">ClientProxy instance</param>
+        /// <param name="mode">Storage mode inside the pool</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Add(string name, CacheClientProxy clientProxy, StorageItemMode mode = StorageItemMode.ReadAndWrite)
+            => Add(name, (IStorageAsync) clientProxy, mode);
+
+        /// <summary>
+        /// Adds a cache storage to the pool
+        /// </summary>
+        /// <param name="name">Pool item name</param>
         /// <param name="storage">Storage instance</param>
         /// <param name="mode">Storage mode inside the pool</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -144,7 +154,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-                var poolEnabled = _pool.WaitAndGetEnabled(StorageItemMode.Read);
+                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
                 var tasks = new Task<string[]>[poolEnabled.Length];
                 for (var i = 0; i < tasks.Length; i++)
                     tasks[i] = poolEnabled[i].Storage.GetKeysAsync();
@@ -289,7 +299,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = await _pool.ReadAsync(key, (item, a1) => item.Storage.GetAsync(a1), r => r != null);
+				var (sto, usedItem) = await _pool.ReadAsync(key, (item, a1) => item.Storage.GetAsync(a1), r => r != null).ConfigureAwait(false);
 				if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
 				_counters.IncrementGet(w.ElapsedMilliseconds);
@@ -308,7 +318,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = await _pool.ReadAsync(key, lastTime, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null);
+				var (sto, usedItem) = await _pool.ReadAsync(key, lastTime, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
 				if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
 				_counters.IncrementGet(w.ElapsedMilliseconds);
@@ -327,7 +337,7 @@ namespace TWCore.Cache.Client
         {
             using (var w = Watch.Create())
             {
-				var (sto, usedItem) = await _pool.ReadAsync(key, comparer, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null);
+				var (sto, usedItem) = await _pool.ReadAsync(key, comparer, (item, a1, a2) => item.Storage.GetAsync(a1, a2), r => r != null).ConfigureAwait(false);
 				if (_pool.HasMemoryStorage && sto?.Meta != null && usedItem?.Storage.Type != StorageType.Memory)
 					await _pool.WriteAsync(sto, (item, arg1) => item.Storage.SetAsync(arg1), true).ConfigureAwait(false);
 				_counters.IncrementGet(w.ElapsedMilliseconds);

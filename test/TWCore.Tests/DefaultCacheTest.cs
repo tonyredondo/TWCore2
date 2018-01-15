@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using TWCore.Cache.Client.Configuration;
 using TWCore.Serialization;
 using TWCore.Services;
@@ -5,18 +6,18 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    public class DefaultCacheTest : ContainerParameterService
+    public class DefaultCacheTest : ContainerParameterServiceAsync
     {
         public DefaultCacheTest() : base("defaultcachetest", "Default Cache Test") { }
 
-        protected override void OnHandler(ParameterHandlerInfo info)
+        protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             var settings = Config.DeserializeFromXml<CacheSettings>();
             Core.Services.SetDefaultCacheClientSettings(settings);
 
-            var cacheClient = Core.Services.GetCacheClient("Agsw.Services.Cache");
+            var cacheClient = await Core.Services.GetCacheClientAsync("Agsw.Services.Cache").ConfigureAwait(false);
 
-            var keys = cacheClient.GetKeys();
+            var keys = await cacheClient.GetKeysAsync().ConfigureAwait(false);
 
             Core.Log.InfoBasic("Keys: {0}", keys.Length);
         }

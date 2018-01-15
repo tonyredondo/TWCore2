@@ -10,6 +10,7 @@ using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Net.RPC.Server.Transports.TW;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable ArrangeTypeMemberModifiers

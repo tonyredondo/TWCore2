@@ -219,18 +219,23 @@ namespace TWCore
         public static Task<TResult> InvokeAsync<TResult>(this Func<TResult> func)
         {
             var tcs = new TaskCompletionSource<TResult>();
-            Task.Run(() =>
-            {
-                try
-                {
-                    tcs.TrySetResult(func());
-                }
-                catch (Exception ex)
-                {
-                    tcs.TrySetException(ex);
-                }
-            });
+            ThreadPool.QueueUserWorkItem(InternalInvokeAsync<TResult>, new object[] {tcs, func});
             return tcs.Task;
+        }
+        private static void InternalInvokeAsync<TResult>(object state)
+        {
+            var objArray = (object[])state;
+            var mTcs = (TaskCompletionSource<TResult>)objArray[0];
+            var mFunc = (Func<TResult>)objArray[1];
+
+            try
+            {
+                mTcs.TrySetResult(mFunc());
+            }
+            catch (Exception ex)
+            {
+                mTcs.TrySetException(ex);
+            }
         }
         /// <summary>
         /// Invoke a Func in Async Task

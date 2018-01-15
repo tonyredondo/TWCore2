@@ -61,7 +61,7 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
+        public KeyValueCollection Metadata { get; } = new KeyValueCollection(false);
 	    /// <summary>
 	    /// Message Length
 	    /// </summary>

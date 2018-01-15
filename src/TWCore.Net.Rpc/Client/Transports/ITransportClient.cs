@@ -67,22 +67,5 @@ namespace TWCore.Net.RPC.Client.Transports
         /// </summary>
         /// <returns>Task of the method execution</returns>
         Task InitAsync();
-
-        /// <summary>
-        /// Gets the descriptors for the RPC server
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        ServiceDescriptorCollection GetDescriptors();
-        /// <summary>
-        /// Invokes a RPC method on the RPC server and gets the results
-        /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
-        /// <returns>RPC response message from the server</returns>
-        RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ);
-        /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        void Init();
     }
 }

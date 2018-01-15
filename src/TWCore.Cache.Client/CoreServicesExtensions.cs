@@ -86,16 +86,6 @@ namespace TWCore.Services
 		/// Gets a cache client instance
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static CacheClientPool GetCacheClient(this CoreServices services, string name)
-		{
-			Init();
-			Ensure.ReferenceNotNull(_settings, "The client configuration settings is null, check if the cache configuration file is setted or is previously setted with the SetDefaultCacheClientSettings method.");
-			return _settings.GetCacheClient(name);
-		}
-		/// <summary>
-		/// Gets a cache client instance
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static async Task<CacheClientPoolAsync> GetCacheClientAsync(this CoreServices services, string name)
 		{
 			Init();

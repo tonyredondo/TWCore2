@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Grid;
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable ClassNeverInstantiated.Global
@@ -54,5 +55,25 @@ namespace TWCore.Net.RPC.Client.Grid
         /// <param name="args">Arguments</param>
         /// <returns>Response object</returns>
 		public object Process(params object[] args) => Invoke(args);
+
+
+        /// <summary>
+        /// Gets if node is available to process.
+        /// </summary>
+        /// <returns>true if the node is ready; otherwise, false.</returns>
+        public Task<bool> GetIsReadyAsync() => InvokeAsync<bool>();
+        /// <summary>
+        /// Node Init Method
+        /// </summary>
+        /// <param name="args">Arguments</param>
+        /// <returns>Output object</returns>
+		public Task<object> InitAsync(params object[] args) => InvokeAsync(args);
+        /// <summary>
+        /// Start the process execution
+        /// </summary>
+        /// <param name="args">Arguments</param>
+        /// <returns>Response object</returns>
+		public Task<object> ProcessAsync(params object[] args) => InvokeAsync(args);
+
     }
 }

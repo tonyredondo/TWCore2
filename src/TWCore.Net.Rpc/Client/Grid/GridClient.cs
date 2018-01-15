@@ -77,7 +77,7 @@ namespace TWCore.Net.RPC.Client.Grid
             Core.Log.LibVerbose("Adding Node and initializing");
             var client = new RPCClient(transport);
             var node = await client.CreateProxyAsync<NodeProxy>().ConfigureAwait(false);
-            var response = node.Init(args);
+            var response = await node.InitAsync(args).ConfigureAwait(false);
             Items.Add(new NodeClient(node));
             Core.Log.LibVerbose("Node was initializated and added to the collection.");
             return response;
@@ -88,7 +88,7 @@ namespace TWCore.Net.RPC.Client.Grid
         /// <param name="args">Arguments to be processed by the node</param>
         /// <returns>Process results</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NodeClientResult Process(params object[] args)
+        public async Task<NodeClientResult> ProcessAsync(params object[] args)
         {
             if (Items.Count <= 0) return null;
             NodeClient item;
@@ -99,7 +99,7 @@ namespace TWCore.Net.RPC.Client.Grid
                 item.Lock();
             }
             Core.Log.LibDebug("Calling process on Node '{0}'", item.NodeInfo.Id);
-            var response = item.Process(args);
+            var response = await item.ProcessAsync(args).ConfigureAwait(false);
             Core.Log.LibDebug("Received response from Node '{0}'", item.NodeInfo.Id);
             OnNodeResults?.Invoke(this, new EventArgs<NodeClientResult>(response));
             return response;
@@ -111,14 +111,14 @@ namespace TWCore.Net.RPC.Client.Grid
         /// <param name="argsCollection">The arguments batch collection.</param>
         /// <returns>The IEnumerable results from the nodes</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public IEnumerable<NodeClientResult> ProcessBatch(IEnumerable<object[]> argsCollection)
+        public async Task<IEnumerable<NodeClientResult>> ProcessBatchAsync(IEnumerable<object[]> argsCollection)
         {
             Ensure.ArgumentNotNull(argsCollection);
             var collection = argsCollection as object[][] ?? argsCollection.ToArray();
             Core.Log.Debug("Processing batch of {0} elements", collection.Length);
-            var cbag = new ConcurrentBag<NodeClientResult>();
-            Parallel.ForEach(collection, new ParallelOptions { MaxDegreeOfParallelism = collection.Length }, args => cbag.Add(Process(args)));
-            return cbag;
+            var cTask = collection.Select(ProcessAsync).ToArray();
+            await Task.WhenAll(cTask).ConfigureAwait(false);
+            return cTask.Select(i => i.Result);
         }
         #endregion
     }

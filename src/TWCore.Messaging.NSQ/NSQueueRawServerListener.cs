@@ -72,7 +72,9 @@ namespace TWCore.Messaging.NSQ
                         Body = body,
                         Name = name
                     };
-                    _listener.EnqueueMessageToProcess(_listener.ProcessingTask, rMsg);
+                    #pragma warning disable 4014
+                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
+                    #pragma warning restore 4014
                     Try.Do(message.Finish, false);
                 }
                 catch (Exception ex)
@@ -196,7 +198,7 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ProcessingTask(NSQMessage message)
+		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
 			try
 			{
@@ -214,7 +216,7 @@ namespace TWCore.Messaging.NSQ
 					            ["ReplyTo"] = message.Name
 				            }
 				        };
-				    OnResponseReceived(evArgs);
+				    await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
 				}
 				else
 				{
@@ -226,7 +228,7 @@ namespace TWCore.Messaging.NSQ
 					            ["ReplyTo"] = message.Name
 				            }
 				        };
-				    OnRequestReceived(evArgs);
+				    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
 				}
 				Counters.IncrementTotalMessagesProccesed();
 			}

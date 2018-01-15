@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMemberInSuper.Global
 
@@ -39,25 +40,36 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Events that fires when a request message is sent
         /// </summary>
-        event EventHandler<RequestSentEventArgs> OnRequestSent;
+        //event AsyncEventHandler<RequestSentEventArgs> OnRequestSent;
+        AsyncEvent<RequestSentEventArgs> OnRequestSent { get; set; }
+
         /// <summary>
         /// Events that fires when a request message is about to be sent
         /// </summary>
-        event EventHandler<RequestSentEventArgs> OnBeforeSendRequest;
+        //event AsyncEventHandler<RequestSentEventArgs> OnBeforeSendRequest;
+        AsyncEvent<RequestSentEventArgs> OnBeforeSendRequest { get; set; }
+
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        event EventHandler<ResponseReceivedEventArgs> OnResponseReceived;
+        //event AsyncEventHandler<ResponseReceivedEventArgs> OnResponseReceived;
+        AsyncEvent<ResponseReceivedEventArgs> OnResponseReceived { get; set; }
         #endregion
 
-        #region Methods
+        #region Async Methods
+        /// <summary>
+        /// Gets the complete response message with headers from a body
+        /// </summary>
+        /// <param name="messageBody">Message body</param>
+        /// <returns>Complete Response message instance</returns>
+        ResponseMessage GetCompleteMessage(object messageBody);
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
         /// <typeparam name="T">Type of the object to be sent</typeparam>
         /// <param name="obj">Object to be sent</param>
         /// <returns>Message correlation Id</returns>
-        Guid Send<T>(T obj);
+        Task<Guid> SendAsync<T>(T obj);
         /// <summary>
         /// Sends a message and returns the correlation Id
         /// </summary>
@@ -65,17 +77,7 @@ namespace TWCore.Messaging.Client
         /// <param name="obj">Object to be sent</param>
         /// <param name="correlationId">Manual defined correlationId</param>
         /// <returns>Message correlation Id</returns>
-        Guid Send<T>(T obj, Guid correlationId);
-
-        /// <summary>
-        /// Gets the complete response message with headers from a body
-        /// </summary>
-        /// <param name="messageBody">Message body</param>
-        /// <returns>Complete Response message instance</returns>
-        ResponseMessage GetCompleteMessage(object messageBody);
-        #endregion
-
-        #region Async Methods
+        Task<Guid> SendAsync<T>(T obj, Guid correlationId);
         /// <summary>
         /// Receive a message from the queue
         /// </summary>

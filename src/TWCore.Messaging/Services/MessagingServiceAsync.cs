@@ -18,9 +18,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
 using TWCore.Services.Messaging;
+using TWCore.Threading;
 // ReSharper disable CheckNamespace
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedParameter.Global
@@ -44,15 +46,18 @@ namespace TWCore.Services
         /// <summary>
         /// Events that fires when a message has been received
         /// </summary>
-        public event EventHandler<MessageEventArgs> MessageReceived;
+        //public event AsyncEventHandler<MessageEventArgs> MessageReceived;
+        public AsyncEvent<MessageEventArgs> MessageReceived { get; set; }
         /// <summary>
         /// Events that fires before sending a message
         /// </summary>
-        public event EventHandler<MessageEventArgs> BeforeSendMessage;
+        //public event AsyncEventHandler<MessageEventArgs> BeforeSendMessage;
+        public AsyncEvent<MessageEventArgs> BeforeSendMessage { get; set; }
         /// <summary>
         /// Events that fires when a message has been sent
         /// </summary>
-        public event EventHandler<MessageEventArgs> MessageSent;
+        //public event AsyncEventHandler<MessageEventArgs> MessageSent;
+        public AsyncEvent<MessageEventArgs> MessageSent { get; set; }
         #endregion
 
         #region Properties
@@ -104,9 +109,10 @@ namespace TWCore.Services
                     throw new Exception("The message processor is null, please check your GetMessageProcessor method implementation.");
                 if (QueueServer.ResponseServer)
                 {
-                    QueueServer.ResponseReceived += (s, e) =>
+                    QueueServer.ResponseReceived += async (s, e) =>
                     {
-                        MessageReceived?.Invoke(this, new MessageEventArgs(e.Message));
+                        if (MessageReceived != null)
+                            await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
                         if (e.Message?.Body == null) return;
 
                         ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
@@ -114,7 +120,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).WaitAndResults(_cTokenSource.Token);
+                            await Processor.ProcessAsync(e.Message.Body, _cTokenSource.Token).ConfigureAwait(false);
                         }
                         catch(Exception ex)
                         {
@@ -130,9 +136,10 @@ namespace TWCore.Services
                 }
                 else
                 {
-                    QueueServer.RequestReceived += (s, e) =>
+                    QueueServer.RequestReceived += async (s, e) =>
                     {
-                        MessageReceived?.Invoke(this, new MessageEventArgs(e.Request));
+                        if (MessageReceived != null)
+                            await MessageReceived.InvokeAsync(this, new MessageEventArgs(e.Request)).ConfigureAwait(false);
                         if (e.Request?.Body == null) return;
 
                         ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
@@ -141,8 +148,7 @@ namespace TWCore.Services
                         var sw = Stopwatch.StartNew();
                         try
                         {
-                            result = Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken)
-                                .WaitAndResults(e.ProcessResponseTimeoutCancellationToken);
+                            result = await Processor.ProcessAsync(e.Request.Body, e.ProcessResponseTimeoutCancellationToken).ConfigureAwait(false);
                         }
                         catch(Exception ex)
                         {
@@ -156,13 +162,15 @@ namespace TWCore.Services
                         e.Response.Body = result;
                         ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
                     };
-                    QueueServer.BeforeSendResponse += (s, e) =>
+                    QueueServer.BeforeSendResponse += async (s, e) =>
                     {
-                        BeforeSendMessage?.Invoke(this, new MessageEventArgs(e.Message));
+                        if (BeforeSendMessage != null)
+                            await BeforeSendMessage.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
                     };
-                    QueueServer.ResponseSent += (s, e) =>
+                    QueueServer.ResponseSent += async (s, e) =>
                     {
-                        MessageSent?.Invoke(this, new MessageEventArgs(e.Message));
+                        if (MessageSent != null)
+                            await MessageSent.InvokeAsync(this, new MessageEventArgs(e.Message)).ConfigureAwait(false);
                     };
                 }
 
@@ -265,7 +273,7 @@ namespace TWCore.Services
         {
             MessageReceived += (sender, e) =>
             {
-                if (!EnableMessagesTrace) return;
+                if (!EnableMessagesTrace) return Task.CompletedTask;
 
                 switch (e.Message)
                 {
@@ -276,10 +284,11 @@ namespace TWCore.Services
                         Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
                         break;
                 }
+                return Task.CompletedTask;
             };
             MessageSent += (sender, e) =>
             {
-                if (!EnableMessagesTrace) return;
+                if (!EnableMessagesTrace) return Task.CompletedTask;
 
                 switch (e.Message)
                 {
@@ -290,6 +299,7 @@ namespace TWCore.Services
                         Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
                         break;
                 }
+                return Task.CompletedTask;
             };
         }
         /// <summary>

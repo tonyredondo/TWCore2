@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Messaging.Configuration;
-using TWCore.Messaging.NATS;
+using TWCore.Messaging.RabbitMQ;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable ConvertToConstant.Local
 // ReSharper disable UnusedMember.Global
-
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedVariable
 // ReSharper disable AccessToDisposedClosure
@@ -17,27 +17,27 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
-    public class NATSTest : ContainerParameterService
+    public class RabbitMQTest2 : ContainerParameterService
     {
-        public NATSTest() : base("natstest", "NATS Test") { }
+        public RabbitMQTest2() : base("rabbitmqtest2", "RabbitMQ Test 2") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
-            Core.Log.Warning("Starting NATS Test");
+            Core.Log.Warning("Starting RabbitMQ Test");
 
             #region Set Config
             var mqConfig = new MQPairConfig
             {
                 Name = "QueueTest",
-                Types = new MQObjectTypes { ClientType = typeof(NATSQueueClient), ServerType = typeof(NATSQueueServer) },
-                RawTypes = new MQObjectTypes { ClientType = typeof(NATSQueueRawClient), ServerType = typeof(NATSQueueRawServer) },
+                Types = new MQObjectTypes { ClientType = typeof(RabbitMQueueClient), ServerType = typeof(RabbitMQueueServer), AdminType = typeof(RabbitMQueueAdmin) },
+                RawTypes = new MQObjectTypes { ClientType = typeof(RabbitMQueueRawClient), ServerType = typeof(RabbitMQueueRawServer), AdminType = typeof(RabbitMQueueAdmin) },
                 ClientQueues = new List<MQClientQueues>
                 {
                     new MQClientQueues
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						SendQueues = new List<MQConnection> { new MQConnection("localhost:4222", "TEST_RQ", null) },
-						RecvQueue = new MQConnection("localhost:4222", "TEST_RS", null)
+                        SendQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) },
+                        RecvQueue = new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -46,7 +46,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-						RecvQueues = new List<MQConnection> { new MQConnection("localhost:4222", "TEST_RQ", null) }
+                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions
@@ -85,71 +85,11 @@ namespace TWCore.Tests
             };
             #endregion
 
-            JsonTextSerializerExtensions.Serializer.Indent = true;
-
-            mqConfig.SerializeToXmlFile("natsConfig.xml");
-            mqConfig.SerializeToJsonFile("natsConfig.json");
-
             var manager = mqConfig.GetQueueManager();
             manager.CreateClientQueues();
 
-            //Core.DebugMode = true;
-            //Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
-
-            Core.Log.Warning("Starting with Normal Listener and Client");
-            NormalTest(mqConfig);
-            mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "true";
             Core.Log.Warning("Starting with RAW Listener and Client");
             RawTest(mqConfig);
-        }
-
-        private static void NormalTest(MQPairConfig mqConfig)
-        {
-            using (var mqServer = mqConfig.GetServer())
-            {
-                mqServer.RequestReceived += (s, e) =>
-                {
-                    e.Response.Body = "Bienvenido!!!";
-                    return Task.CompletedTask;
-                };
-                mqServer.StartListeners();
-                
-                using (var mqClient = mqConfig.GetClient())
-                {
-                    var totalQ = 5000;
-
-                    #region Sync Mode
-                    Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
-                    using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
-                    {
-                        for (var i = 0; i < totalQ; i++)
-                        {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
-                        }
-                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
-                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
-                    }
-                    Console.ReadLine();
-                    #endregion
-
-                    #region Parallel Mode
-                    Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
-                    using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
-                    {
-                        Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
-                        );
-                        //Parallel.For(0, totalQ, i =>
-                        //{
-                        //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
-                        //});
-                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
-                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
-                    }
-                    Console.ReadLine();
-                    #endregion
-                }
-            }
         }
 
         private static void RawTest(MQPairConfig mqConfig)
@@ -167,21 +107,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetRawClient())
                 {
-                    var totalQ = 5000;
-
-                    #region Sync Mode
-                    Core.Log.Warning("RAW Sync Mode Test, using Unique Response Queue");
-                    using (var w = Watch.Create($"Hello World Example in Sync Mode for {totalQ} times"))
-                    {
-                        for (var i = 0; i < totalQ; i++)
-                        {
-                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
-                        }
-                        Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
-                        Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
-                    }
-                    Console.ReadLine();
-                    #endregion
+                    var totalQ = 150000;
 
                     #region Parallel Mode
                     Core.Log.Warning("RAW Parallel Mode Test, using Unique Response Queue");
@@ -192,7 +118,7 @@ namespace TWCore.Tests
                         );
                         //Parallel.For(0, totalQ, i =>
                         //{
-                        //    var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                        //    var response = mqClient.SendAndReceive(byteRequest);
                         //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -202,6 +128,5 @@ namespace TWCore.Tests
                 }
             }
         }
-
     }
 }

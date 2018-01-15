@@ -140,13 +140,6 @@ namespace TWCore.Net.RPC.Client.Transports
         public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() {}
-        /// <inheritdoc />
-        /// <summary>
         /// Gets the descriptor for the RPC service
         /// </summary>
         /// <returns>Task of the method execution</returns>
@@ -155,18 +148,6 @@ namespace TWCore.Net.RPC.Client.Transports
         {
             var result = await _httpClient.GetAsync(Url).ConfigureAwait(false);
             var data = await result.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-            return Serializer.Deserialize<ServiceDescriptorCollection>(data);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the descriptor for the RPC service
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceDescriptorCollection GetDescriptors()
-        {
-            var result = _httpClient.GetAsync(Url).WaitAsync();
-            var data = result.Content.ReadAsByteArrayAsync().WaitAsync();
             return Serializer.Deserialize<ServiceDescriptorCollection>(data);
         }
         /// <inheritdoc />
@@ -196,15 +177,6 @@ namespace TWCore.Net.RPC.Client.Transports
             var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);
             return res;
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Invokes a RPC method on the RPC server and gets the results
-        /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
-        /// <returns>RPC response message from the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-			=> InvokeMethodAsync(messageRQ).WaitAndResults();
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

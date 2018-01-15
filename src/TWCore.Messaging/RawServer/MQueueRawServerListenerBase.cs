@@ -20,6 +20,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable SuggestBaseTypeForParameter
 
 namespace TWCore.Messaging.RawServer
@@ -30,7 +32,6 @@ namespace TWCore.Messaging.RawServer
     /// </summary>
     public abstract class MQueueRawServerListenerBase : IMQueueRawServerListener
     {
-        protected readonly ReferencePool<ActionWorker> WorkerPool;
         protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
         protected int ActiveWorkers;
 
@@ -63,24 +64,28 @@ namespace TWCore.Messaging.RawServer
         #endregion
 
         #region Events
+        /// <inheritdoc />
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        public event EventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        //public event AsyncEventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        public AsyncEvent<RawRequestReceivedEventArgs> RequestReceived { get; set; }
+        /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        public event EventHandler<RawResponseReceivedEventArgs> ResponseReceived;
-		#endregion
+        //public event AsyncEventHandler<RawResponseReceivedEventArgs> ResponseReceived;
+        public AsyncEvent<RawResponseReceivedEventArgs> ResponseReceived { get; set; }
+        #endregion
 
-		#region .ctor
-		/// <summary>
-		/// Message queue server listener base
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="server">Message queue server instance</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region .ctor
+        /// <summary>
+        /// Message queue server listener base
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="server">Message queue server instance</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected MQueueRawServerListenerBase(MQConnection connection, IMQueueRawServer server, bool responseServer)
         {
             Connection = connection;
@@ -88,7 +93,6 @@ namespace TWCore.Messaging.RawServer
             Counters = new MQRawServerCounters();
             ReceiverSerializer = server.ReceiverSerializer;
             ResponseServer = responseServer;
-            WorkerPool = new ReferencePool<ActionWorker>(Environment.ProcessorCount);
             Core.Status.Attach(collection =>
             {
                 collection.Add("Connection Route:", Connection?.Route);
@@ -108,14 +112,12 @@ namespace TWCore.Messaging.RawServer
 		/// <returns>Task of the method execution</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public Task TaskStartAsync(CancellationToken token)
-        {
-            return OnListenerTaskStartAsync(token);
-        }
-		/// <inheritdoc />
-		/// <summary>
-		/// Dispose all resources
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            => OnListenerTaskStartAsync(token);
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void Dispose()
         {
             OnDispose();
@@ -144,35 +146,37 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		/// <param name="requestReceived">Request received event args</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void OnRequestReceived(RawRequestReceivedEventArgs requestReceived)
-            => RequestReceived?.Invoke(this, requestReceived);
+		protected Task OnRequestReceivedAsync(RawRequestReceivedEventArgs requestReceived)
+            => RequestReceived?.InvokeAsync(this, requestReceived) ?? Task.CompletedTask;
 		/// <summary>
 		/// Fires the ResponseReceived event
 		/// </summary>
 		/// <param name="responseReceived">Response received event args</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected void OnResponseReceived(RawResponseReceivedEventArgs responseReceived)
-            => ResponseReceived?.Invoke(this, responseReceived);
+		protected Task OnResponseReceivedAsync(RawResponseReceivedEventArgs responseReceived)
+            => ResponseReceived?.InvokeAsync(this, responseReceived) ?? Task.CompletedTask;
         /// <summary>
         /// Enqueue Message To Process
         /// </summary>
-        /// <param name="processingAction">Processing Action</param>
+        /// <param name="processingFunc">Processing Func</param>
         /// <param name="message">Message</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected void EnqueueMessageToProcess<T>(Action<T> processingAction, T message)
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
             Interlocked.Increment(ref ActiveWorkers);
-            var worker = WorkerPool.New();
             WorkerEvent.Reset();
-            worker.Enqueue(arg =>
-            {
-                processingAction(arg.Message);
-                Counters.DecrementMessages();
-                WorkerPool.Store(arg.Worker);
-                if (Interlocked.Decrement(ref ActiveWorkers) == 0)
-                    WorkerEvent.Set();
-            }, (Worker: worker, Message: message));
             Counters.IncrementMessages();
+            try
+            {
+                await processingFunc(message).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            Counters.DecrementMessages();
+            if (Interlocked.Decrement(ref ActiveWorkers) == 0)
+                WorkerEvent.Set();
         }
         #endregion
     }

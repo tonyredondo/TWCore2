@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+using TWCore.Threading;
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedMember.Global
 
@@ -57,11 +58,14 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        event EventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        //event AsyncEventHandler<RawRequestReceivedEventArgs> RequestReceived;
+        AsyncEvent<RawRequestReceivedEventArgs> RequestReceived { get; set; }
+
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        event EventHandler<RawResponseReceivedEventArgs> ResponseReceived;
+        //event AsyncEventHandler<RawResponseReceivedEventArgs> ResponseReceived;
+        AsyncEvent<RawResponseReceivedEventArgs> ResponseReceived { get; set; }
         #endregion
 
         #region Methods

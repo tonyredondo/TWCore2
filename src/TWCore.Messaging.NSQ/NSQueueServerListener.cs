@@ -70,7 +70,11 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
-                    _listener.EnqueueMessageToProcess(_listener.ProcessingTask, rMsg);
+
+                    #pragma warning disable 4014
+                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
+                    #pragma warning restore 4014
+
                     Try.Do(message.Finish, false);
                 }
                 catch (Exception ex)
@@ -199,7 +203,7 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void ProcessingTask(NSQMessage message)
+		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
 			try
 			{
@@ -217,7 +221,7 @@ namespace TWCore.Messaging.NSQ
 						var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
 						if (request.Header.ResponseQueue != null)
 							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-						OnRequestReceived(evArgs);
+						await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
 						break;
 					}
 					case ResponseMessage response when response.Header != null:
@@ -225,7 +229,7 @@ namespace TWCore.Messaging.NSQ
 						response.Header.Response.ApplicationReceivedTime = Core.Now;
 						Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
 						var evArgs = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
-						OnResponseReceived(evArgs);
+						await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
 						break;
 					}
 				}

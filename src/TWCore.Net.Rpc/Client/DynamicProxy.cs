@@ -62,7 +62,7 @@ namespace TWCore.Net.RPC.Client
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args);
             }
             else
-                result = _client.ServerInvoke(_descriptor.Name, binderName, args);
+                result = _client.ServerInvokeAsync(_descriptor.Name, binderName, args).WaitAndResults();
             return true;
         }
     }

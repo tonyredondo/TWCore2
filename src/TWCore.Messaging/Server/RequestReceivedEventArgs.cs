@@ -66,11 +66,11 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; } = new KeyValueCollection();
-	    /// <summary>
-	    /// Message Length
-	    /// </summary>
-	    public int MessageLength { get; }
+        public IDictionary<string, string> Metadata { get; } = new Dictionary<string, string>();
+        /// <summary>
+        /// Message Length
+        /// </summary>
+        public int MessageLength { get; }
 
 
 		/// <inheritdoc />

@@ -235,13 +235,6 @@ namespace TWCore.Net.RPC.Client.Transports.TW
         public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() { }
-        /// <inheritdoc />
-        /// <summary>
         /// Gets the descriptors for the RPC service
         /// </summary>
         /// <returns>Task of the method execution</returns>
@@ -250,18 +243,6 @@ namespace TWCore.Net.RPC.Client.Transports.TW
         {
             var request = new RPCRequestMessage { MethodId = Guid.Empty };
             var response = await InvokeMethodAsync(request).ConfigureAwait(false);
-            return (ServiceDescriptorCollection)response.ReturnValue;
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the descriptors for the RPC service
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceDescriptorCollection GetDescriptors()
-        {
-			var request = new RPCRequestMessage { MethodId = Guid.Empty };
-            var response = InvokeMethod(request);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
         /// <inheritdoc />
@@ -303,45 +284,6 @@ namespace TWCore.Net.RPC.Client.Transports.TW
             _messageRetries.Add(messageId);
             _messageResponsesHandlers.TryRemove(messageId, out var _);
             return await InvokeMethodAsync(messageRQ).ConfigureAwait(false);
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Invokes a RPC method on the RPC server and gets the results
-        /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
-        /// <returns>RPC response message from the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-        {
-            while (true)
-            {
-                if (Status != ConnectionStatus.Connected)
-                {
-                    ConnectAsync().WaitAsync();
-                    if (Status != ConnectionStatus.Connected)
-                        throw new Exception("Couldn't connect to the remote server {0}:{1} [Status: {2}, Target: {3}]".ApplyFormat(Host, Port, Status, TargetStatus));
-                }
-                if (_token.IsCancellationRequested) return null;
-                var messageId = messageRQ.MessageId;
-                var wh = _messageResponsesHandlers.GetOrAdd(messageId, id => new RPCResponseHandler());
-                var socketConnection = GetSocketConnection();
-                socketConnection.SendRequestMessage(messageRQ);
-                if (wh.Event.WaitAsync(InvokeMethodTimeout, _token).WaitAndResults())
-                {
-                    return wh.Message;
-                }
-                if (_messageRetries.Contains(messageId))
-                {
-                    _messageRetries.Remove(messageId);
-                    throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
-                }
-
-                Core.Log.Warning("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}, Retrying one more time...".ApplyFormat(InvokeMethodTimeout / 1000, messageId));
-                socketConnection.ResetConnection();
-                _messageRetries.Add(messageId);
-                _messageResponsesHandlers.TryRemove(messageId, out var _);
-            }
         }
 
         /// <summary>
@@ -747,31 +689,6 @@ namespace TWCore.Net.RPC.Client.Transports.TW
                     }
                     else
                         await ConnectAsync().ConfigureAwait(false);
-
-                    if (_connectionStatus != ConnectionStatus.Connected)
-                        throw new Exception("Couldn't connect to the remote server {0}:{1} [Status: {2}, Target: {3}]".ApplyFormat(Host, Port, _connectionStatus, _targetStatus));
-                }
-                if (_connectionToken.IsCancellationRequested) return;
-                WriteRPCMessageData(messageRQ, RPCMessageType.RequestMessage);
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void SendRequestMessage(RPCRequestMessage messageRQ)
-            {
-                if (_connectionStatus != ConnectionStatus.Connected)
-                {
-                    if (_targetStatus == TargetConnectionStatus.Connected)
-                    {
-                        try
-                        {
-                            _connectionEvent.WaitAsync(5000, _connectionToken).WaitAndResults();
-                        }
-                        catch
-                        {
-                            // ignored
-                        }
-                    }
-                    else
-                        ConnectAsync().WaitAsync();
 
                     if (_connectionStatus != ConnectionStatus.Connected)
                         throw new Exception("Couldn't connect to the remote server {0}:{1} [Status: {2}, Target: {3}]".ApplyFormat(Host, Port, _connectionStatus, _targetStatus));

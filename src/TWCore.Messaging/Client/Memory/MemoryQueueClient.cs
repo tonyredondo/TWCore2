@@ -99,7 +99,7 @@ namespace TWCore.Messaging
         /// </summary>
         /// <param name="message">Request message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnSend(RequestMessage message)
+        protected override Task<bool> OnSendAsync(RequestMessage message)
         {
             if (_clientQueues.SendQueues?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
@@ -128,7 +128,8 @@ namespace TWCore.Messaging
                 Core.Log.LibVerbose("Sending message to the memory Queue '{0}' with CorrelationId={1}", sender.Route + "/" + sender.Name, message.CorrelationId);
                 sQueue.Enqueue(message.CorrelationId, message);
             }
-            return true;
+
+            return Task.FromResult(true);
         }
         #endregion
 

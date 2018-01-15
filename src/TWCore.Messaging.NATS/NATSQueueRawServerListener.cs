@@ -67,7 +67,7 @@ namespace TWCore.Messaging.NATS
                     Body = body,
                     Name = name
                 };
-                EnqueueMessageToProcess(ProcessingTask, rMsg);
+                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
             }
             catch (Exception ex)
             {
@@ -103,7 +103,7 @@ namespace TWCore.Messaging.NATS
         {
             _token = token;
             _connection = _factory.CreateConnection(Connection.Route);
-            _receiver = _connection.SubscribeAsync(Connection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+            _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
@@ -188,7 +188,7 @@ namespace TWCore.Messaging.NATS
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessingTask(NATSQMessage message)
+        private async Task ProcessingTaskAsync(NATSQMessage message)
         {
             try
             {
@@ -206,7 +206,7 @@ namespace TWCore.Messaging.NATS
                                 ["ReplyTo"] = message.Name
                             }
                         };
-                    OnResponseReceived(evArgs);
+                    await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
                 }
                 else
                 {
@@ -218,7 +218,7 @@ namespace TWCore.Messaging.NATS
                                 ["ReplyTo"] = message.Name
                             }
                         };
-                    OnRequestReceived(evArgs);
+                    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
                 }
                 Counters.IncrementTotalMessagesProccesed();
             }

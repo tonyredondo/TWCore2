@@ -41,7 +41,7 @@ namespace TWCore.Tests
             {
                 var cacheClient = await CacheClientProxy
                     .GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
-                cachePool.Add("localhost:20051", (IStorageAsync)cacheClient, StorageItemMode.ReadAndWrite);
+                cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
                 try
                 {

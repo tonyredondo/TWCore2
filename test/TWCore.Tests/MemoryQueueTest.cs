@@ -106,12 +106,13 @@ namespace TWCore.Tests
                 mqServer.RequestReceived += (s, e) =>
                 {
                     e.Response.Body = "Bienvenido!!!";
+                    return Task.CompletedTask;
                 };
                 mqServer.StartListeners();
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 10000;
+                    var totalQ = 500000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");

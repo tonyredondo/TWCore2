@@ -59,7 +59,7 @@ namespace TWCore.Messaging.NSQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
+        protected override async Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e)
         {
             var queues = e.ResponseQueues;
             queues.Add(new MQConnection
@@ -92,18 +92,18 @@ namespace TWCore.Messaging.NSQ
                         if (string.IsNullOrEmpty(queue.Name))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + replyTo, e.CorrelationId);
-                            nsqProducer.PublishAsync(replyTo, body).Wait();
+                            await nsqProducer.PublishAsync(replyTo, body).ConfigureAwait(false);
                         }
                         else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
                         {
                             Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
-                            nsqProducer.PublishAsync(queue.Name + "_" + replyTo, body).Wait();
+                            await nsqProducer.PublishAsync(queue.Name + "_" + replyTo, body).ConfigureAwait(false);
                         }
                     }
                     else
                     {
                         Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, e.CorrelationId);
-                        nsqProducer.PublishAsync(queue.Name, body).Wait();
+                        await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
                     }
 
                     nsqProducerPool.Store(nsqProducer);

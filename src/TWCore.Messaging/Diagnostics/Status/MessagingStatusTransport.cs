@@ -66,7 +66,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 if (statusData == null) return;
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
-                queueClient.Send(statusData);
+                queueClient.SendAsync(statusData).WaitAndResults();
                 queueClient.Dispose();
             }
             catch (Exception ex)

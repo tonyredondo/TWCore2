@@ -180,7 +180,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Request message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnSend(RequestMessage message)
+        protected override Task<bool> OnSendAsync(RequestMessage message)
         {
             if (_senders?.Any() != true)
                 throw new NullReferenceException("There aren't any senders queues.");
@@ -232,7 +232,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);
             }
-            return true;
+            return TaskUtil.CompleteTrue;
         }
         #endregion
 

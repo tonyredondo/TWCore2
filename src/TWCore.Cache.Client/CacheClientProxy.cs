@@ -593,14 +593,6 @@ namespace TWCore.Cache.Client
             Core.Status.AttachChild(rpcClient, proxy);
             return proxy;
         }
-        /// <summary>
-        /// Get cache proxy client from a rpc transport client
-        /// </summary>
-        /// <param name="transport">Transport client object</param>
-        /// <returns>Cache client proxy</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static CacheClientProxy GetClient(ITransportClient transport)
-            => GetClientAsync(transport).WaitAndResults();
         #endregion
     }
 }

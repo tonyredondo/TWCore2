@@ -16,6 +16,9 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using TWCore.Threading;
+
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Messaging.Client
@@ -28,24 +31,33 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Events that fires when a request message is sent
         /// </summary>
-        public static event EventHandler<RequestSentEventArgs> OnRequestSent;
+        //public static event AsyncEventHandler<RequestSentEventArgs> OnRequestSent;
+        public static AsyncEvent<RequestSentEventArgs> OnRequestSent { get; set; }
+
         /// <summary>
         /// Events that fires when a request message is about to be sent
         /// </summary>
-        public static event EventHandler<RequestSentEventArgs> OnBeforeSendRequest;
+        //public static event AsyncEventHandler<RequestSentEventArgs> OnBeforeSendRequest;
+        public static AsyncEvent<RequestSentEventArgs> OnBeforeSendRequest { get; set; }
+
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        public static event EventHandler<ResponseReceivedEventArgs> OnResponseReceived;
+        //public static event AsyncEventHandler<ResponseReceivedEventArgs> OnResponseReceived;
+        public static AsyncEvent<ResponseReceivedEventArgs> OnResponseReceived { get; set; }
 
+
+        //
+		/*
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void FireOnRequestSent(object sender, RequestSentEventArgs e) 
-            => OnRequestSent?.Invoke(sender, e);
+        internal static Task FireOnRequestSentAsync(object sender, RequestSentEventArgs e)
+            => OnRequestSent?.InvokeAsync(sender, e) ?? Task.CompletedTask;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void FireOnBeforeSendRequest(object sender, RequestSentEventArgs e)
-            => OnBeforeSendRequest?.Invoke(sender, e);
+        internal static Task FireOnBeforeSendRequestAsync(object sender, RequestSentEventArgs e)
+            => OnBeforeSendRequest?.InvokeAsync(sender, e) ?? Task.CompletedTask;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static void FireOnResponseReceived(object sender, ResponseReceivedEventArgs e)
-            => OnResponseReceived?.Invoke(sender, e);
+        internal static Task FireOnResponseReceivedAsync(object sender, ResponseReceivedEventArgs e)
+            => OnResponseReceived?.InvokeAsync(sender, e) ?? Task.CompletedTask;
+        */
     }
 }

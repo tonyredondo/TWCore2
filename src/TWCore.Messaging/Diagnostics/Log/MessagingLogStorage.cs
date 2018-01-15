@@ -98,7 +98,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
                 var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
-                queueClient.Send(itemsToSend);
+                queueClient.SendAsync(itemsToSend).WaitAndResults();
                 queueClient.Dispose();
             }
             catch (Exception ex)

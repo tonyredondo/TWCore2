@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
@@ -68,10 +69,10 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Response message instance</param>
         /// <param name="e">Event Args</param>
-        protected override int OnSend(ResponseMessage message, RequestReceivedEventArgs e)
+        protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return -1;
+                return Task.FromResult(-1);
 
             var correlationId = message.CorrelationId.ToString();
             var data = SenderSerializer.Serialize(message);
@@ -106,7 +107,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Core.Log.Write(ex);
                 }
             }
-            return response ? data.Count : -1;
+            return Task.FromResult(response ? data.Count : -1);
         }
 
         /// <inheritdoc />

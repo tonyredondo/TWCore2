@@ -64,6 +64,10 @@ namespace TWCore.Cache.Client
 	/// Storage func async delegate.
 	/// </summary>
 	public delegate Task<T> StorageFuncAsyncDelegate<T, in TA1, in TA2, in TA3, in TA4>(PoolAsyncItem item, TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4);
+    /// <summary>
+    /// Response Condition Delegate
+    /// </summary>
+    public delegate bool ResponseConditionDelegate<in T>(T response);
 
     /// <inheritdoc />
     /// <summary>
@@ -209,7 +213,7 @@ namespace TWCore.Cache.Client
 		/// <param name="onlyMemoryStorages">Only on memory storages</param>
 		/// <returns>List of Enabled Pool items</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public PoolAsyncItem[] WaitAndGetEnabled(StorageItemMode mode, bool onlyMemoryStorages = false)
+		public async Task<PoolAsyncItem[]> WaitAndGetEnabledAsync(StorageItemMode mode, bool onlyMemoryStorages = false)
 		{
 			var sw = Stopwatch.StartNew();
 
@@ -251,7 +255,7 @@ namespace TWCore.Cache.Client
 				if (onlyMemoryStorages)
 					return poolAsyncItems;
 
-				Factory.Thread.Sleep(250);
+			    await Task.Delay(250).ConfigureAwait(false);
 			}
 
 			Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);
@@ -296,7 +300,7 @@ namespace TWCore.Cache.Client
 		public async Task<(T, PoolAsyncItem)> ReadAsync<T, TA1, TA2>(TA1 arg1, TA2 arg2, StorageFuncAsyncDelegate<T, TA1, TA2> function, ResponseConditionDelegate<T> responseCondition)
 		{
 			Core.Log.LibVerbose("Queue Pool Get - ReadMode: {0}", ReadMode);
-			var items = WaitAndGetEnabled(StorageItemMode.Read);
+			var items = await WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
 			if (ReadMode != PoolReadMode.NormalRead && ReadMode != PoolReadMode.FastestOnlyRead) 
 				return (default(T), null);
 			var iCount = items.Length;
@@ -369,7 +373,7 @@ namespace TWCore.Cache.Client
 		public async Task WriteAsync<TA1, TA2, TA3, TA4>(TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4, StorageActionAsyncDelegate<TA1, TA2, TA3, TA4> action, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+			var arrEnabled = await WaitAndGetEnabledAsync(StorageItemMode.Write, onlyMemoryStorages).ConfigureAwait(false);
 
 			switch (WriteMode)
 			{
@@ -475,7 +479,7 @@ namespace TWCore.Cache.Client
 		public async Task<T> WriteAsync<T, TA1, TA2, TA3, TA4>(TA1 arg1, TA2 arg2, TA3 arg3, TA4 arg4, StorageFuncAsyncDelegate<T, TA1, TA2, TA3, TA4> function, bool onlyMemoryStorages = false)
 		{
 			Core.Log.LibVerbose("Queue Pool Action - WriteMode: {0}", WriteMode);
-			var arrEnabled = WaitAndGetEnabled(StorageItemMode.Write, onlyMemoryStorages);
+			var arrEnabled = await WaitAndGetEnabledAsync(StorageItemMode.Write, onlyMemoryStorages).ConfigureAwait(false);
 
 			var response = default(T);
 

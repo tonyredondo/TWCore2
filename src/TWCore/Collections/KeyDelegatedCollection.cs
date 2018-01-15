@@ -38,7 +38,7 @@ namespace TWCore.Collections
     /// <typeparam name="TKey">Key type</typeparam>
     /// <typeparam name="TItem">Item type</typeparam>
     [DataContract]
-	[Serializable]
+    [Serializable]
     public class KeyDelegatedCollection<TKey, TItem> : KeyedCollection<TKey, TItem>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -133,7 +133,7 @@ namespace TWCore.Collections
         /// <param name="keySelector">Key selector</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection(Func<TItem, TKey> keySelector, bool throwExceptionOnDuplicateKeys) 
+        public KeyDelegatedCollection(Func<TItem, TKey> keySelector, bool throwExceptionOnDuplicateKeys)
         {
             ThrowExceptionOnDuplicateKeys = throwExceptionOnDuplicateKeys;
             KeySelector = keySelector;
@@ -203,8 +203,22 @@ namespace TWCore.Collections
         public void AddRange(IEnumerable<TItem> enumerable)
         {
             if (enumerable == null) return;
-            foreach (var item in enumerable)
-                Add(item);
+            if (ThrowExceptionOnDuplicateKeys)
+            {
+                foreach (var item in enumerable)
+                    base.Add(item);
+            }
+            else
+            {
+                lock (Ilocker)
+                {
+                    foreach (var item in enumerable)
+                    {
+                        if (!Contains(KeySelector(item)))
+                            base.Add(item);
+                    }
+                }
+            }
         }
         /// <summary>
         /// Add an item to the collection and if there is an item with the same key, combine it.

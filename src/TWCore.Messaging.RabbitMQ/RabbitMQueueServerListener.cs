@@ -93,14 +93,15 @@ namespace TWCore.Messaging.RabbitMQ
             _receiverConsumer = new EventingBasicConsumer(_receiver.Channel);
             _receiverConsumer.Received += (ch, ea) =>
             {
-                Core.Log.LibVerbose("Received message by consumer.");
                 var message = new RabbitMessage
                 {
                     CorrelationId = Guid.Parse(ea.BasicProperties.CorrelationId),
                     Properties = ea.BasicProperties,
                     Body = ea.Body
                 };
-                EnqueueMessageToProcess(ProcessingTask, message);
+                #pragma warning disable 4014
+                EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
+                #pragma warning restore 4014
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
@@ -182,7 +183,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// </summary>
         /// <param name="message">Message instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ProcessingTask(RabbitMessage message)
+        private async Task ProcessingTaskAsync(RabbitMessage message)
         {
             try
             {
@@ -208,7 +209,7 @@ namespace TWCore.Messaging.RabbitMQ
                             };
                         if (request.Header.ResponseQueue != null)
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                        OnRequestReceived(evArgs);
+                        await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
                         break;
                     }
                     case ResponseMessage response when response.Header != null:
@@ -224,7 +225,7 @@ namespace TWCore.Messaging.RabbitMQ
                                     ["MessageId"] = message.Properties.MessageId
                                 }
                             };
-                        OnResponseReceived(evArgs);
+                        await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
                         break;
                     }
                 }

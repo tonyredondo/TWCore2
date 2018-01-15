@@ -14,29 +14,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
-using System.Threading;
+using System.Threading.Tasks;
 
-// ReSharper disable CheckNamespace
-
-namespace TWCore.Services.Messaging
+namespace TWCore.Threading
 {
-    /// <inheritdoc />
     /// <summary>
-    /// Defines a message processor
+    /// Task utilities
     /// </summary>
-    public interface IMessageProcessor : IDisposable
+    public static class TaskUtil
     {
         /// <summary>
-        /// Initialize message processor
+        /// Complete Task True
         /// </summary>
-        void Init();
+        public static readonly Task<bool> CompleteTrue = Task.FromResult(true);
         /// <summary>
-        /// Invokes the processing a message
+        /// Complete Task False
         /// </summary>
-        /// <param name="message">Message to process</param>
-        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
-        /// <returns>Process response</returns>
-        object Process(object message, CancellationToken cancellationToken);
+        public static readonly Task<bool> CompleteFalse = Task.FromResult(false);
+        /// <summary>
+        /// Complete String Empty
+        /// </summary>
+        public static readonly Task<string> CompleteEmpty = Task.FromResult(string.Empty);
     }
 }

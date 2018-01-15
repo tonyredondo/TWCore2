@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -37,7 +38,7 @@ namespace TWCore.Net.RPC.Client
     /// <summary>
     /// RPC standard client
     /// </summary>
-    public class RPCClient : IRPCClient, IRPCClientAsync, IDisposable
+    public class RPCClient : IRPCClient, IDisposable
     {
         private static readonly object[] _emptyArgs = new object[0];
         private static readonly object[] _nullItemArgs = { null };
@@ -51,7 +52,7 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Service descriptor collection
         /// </summary>
-        public ServiceDescriptorCollection Descriptors => GetDescriptors();
+        public ServiceDescriptorCollection Descriptors => GetDescriptorsAsync().WaitAndResults();
         /// <summary>
         /// Transport client object
         /// </summary>
@@ -95,14 +96,15 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
-        #region Create Proxy Async
+        #region Create Proxy
         /// <summary>
         /// Creates a dynamic object to act as client proxy
         /// </summary>
         /// <typeparam name="T">Type of the service to create the proxy</typeparam>
         /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<DynamicProxy> CreateDynamicProxyAsync<T>() => CreateDynamicProxyAsync(typeof(T));
+        public Task<DynamicProxy> CreateDynamicProxyAsync<T>()
+            => CreateDynamicProxyAsync(typeof(T));
         /// <summary>
         /// Creates a dynamic object to act as client proxy
         /// </summary>
@@ -154,66 +156,6 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
-        #region Create Proxy
-        /// <summary>
-        /// Creates a dynamic object to act as client proxy
-        /// </summary>
-        /// <typeparam name="T">Type of the service to create the proxy</typeparam>
-        /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DynamicProxy CreateDynamicProxy<T>()
-            => CreateDynamicProxy(typeof(T));
-        /// <summary>
-        /// Creates a dynamic object to act as client proxy
-        /// </summary>
-        /// <param name="interfaceType">Type of the service to create the proxy</param>
-        /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DynamicProxy CreateDynamicProxy(Type interfaceType)
-        {
-            if (!interfaceType.GetTypeInfo().IsInterface)
-                throw new ArgumentException("The type of the dynamic proxy should be an interface.");
-            InitTransport();
-            if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))
-                return new DynamicProxy(this, descriptor);
-            if (!UseServerDescriptor)
-            {
-                descriptor = ServiceDescriptor.GetDescriptor(interfaceType);
-                Descriptors.Add(descriptor);
-            }
-            else
-                throw new NotImplementedException("The server doesn't have an implementation for this Type.");
-            return new DynamicProxy(this, descriptor);
-        }
-        /// <summary>
-        /// Creates a client proxy using this client.
-        /// </summary>
-        /// <typeparam name="T">Type of proxy</typeparam>
-        /// <returns>Client proxy object instance to invoke methods to the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T CreateProxy<T>() where T : RPCProxy
-        {
-            var typeInterfaces = typeof(T).GetInterfaces();
-            var typeInterface = typeInterfaces.FirstOrDefault(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
-            if (typeInterface == null)
-                throw new ArgumentException("The type of the proxy should implement a service interface.");
-            var rpcClient = Activator.CreateInstance<T>();
-            InitTransport();
-            if (!Descriptors.Items.TryGetValue(typeInterface.FullName, out var descriptor))
-            {
-                if (!UseServerDescriptor)
-                {
-                    descriptor = ServiceDescriptor.GetDescriptor(typeInterface);
-                    Descriptors.Add(descriptor);
-                }
-                else
-                    throw new NotImplementedException("The server doesn't have an implementation for this Type.");
-            }
-            rpcClient.SetClient(this, descriptor.Name);
-            return rpcClient;
-        }
-        #endregion
-
         #region ServerInvoke Async
         /// <summary>
         /// Invokes a Server RPC method
@@ -236,7 +178,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
-            using (Watch.Create($"RPC Invoke: {serviceName}.{method}"))
+            using (Watch.Create($"RPC Call: {serviceName}.{method}"))
             {
                 var request = CreateRequest(serviceName, method, args);
                 if (Transport.Descriptors == null)
@@ -252,60 +194,12 @@ namespace TWCore.Net.RPC.Client
         }
         #endregion
 
-        #region ServerInvoke
-        /// <summary>
-        /// Invokes a Server RPC method
-        /// </summary>
-        /// <typeparam name="T">Response object type</typeparam>
-        /// <param name="serviceName">Service name</param>
-        /// <param name="method">Server method name</param>
-        /// <param name="args">Server method arguments</param>
-        /// <returns>Server method return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T ServerInvoke<T>(string serviceName, string method, params object[] args)
-            => (T)ServerInvoke(serviceName, method, args);
-        /// <summary>
-        /// Invokes a Server RPC method
-        /// </summary>
-        /// <param name="serviceName">Service name</param>
-        /// <param name="method">Server method name</param>
-        /// <param name="args">Server method arguments</param>
-        /// <returns>Server method return value</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object ServerInvoke(string serviceName, string method, params object[] args)
-        {
-            using (Watch.Create($"RPC Invoke: {serviceName}.{method}"))
-            {
-                var request = CreateRequest(serviceName, method, args);
-                if (Transport.Descriptors == null)
-                    Transport.Descriptors = GetDescriptors();
-                var response = Transport.InvokeMethod(request);
-                ReferencePool<RPCRequestMessage>.Shared.Store(request);
-                if (response == null)
-                    throw new Exception("RPC Response is null.");
-                if (response.Exception != null)
-                    throw response.Exception.GetException();
-                return response.ReturnValue;
-            }
-        }
-        #endregion
-
-
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task InitTransportAsync()
         {
-            if (!_transportInit)
-            {
-                await Transport.InitAsync().ConfigureAwait(false);
-                _transportInit = true;
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InitTransport()
-        {
             if (_transportInit) return;
-            Transport.Init();
+            await Transport.InitAsync().ConfigureAwait(false);
             _transportInit = true;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -314,20 +208,6 @@ namespace TWCore.Net.RPC.Client
             if (_descriptors != null) return _descriptors;
             if (_serverDescriptors == null && UseServerDescriptor)
                 _serverDescriptors = await Transport.GetDescriptorsAsync().ConfigureAwait(false);
-            lock (this)
-            {
-                _descriptors = new ServiceDescriptorCollection();
-                if (UseServerDescriptor)
-                    _descriptors.Combine(_serverDescriptors);
-                return _descriptors;
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private ServiceDescriptorCollection GetDescriptors()
-        {
-            if (_descriptors != null) return _descriptors;
-            if (_serverDescriptors == null && UseServerDescriptor)
-                _serverDescriptors = Transport.GetDescriptors();
             lock (this)
             {
                 _descriptors = new ServiceDescriptorCollection();

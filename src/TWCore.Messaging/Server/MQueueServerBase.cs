@@ -25,6 +25,8 @@ using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
+using TWCore.Threading;
+
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable VirtualMemberNeverOverridden.Global
 
@@ -76,29 +78,37 @@ namespace TWCore.Messaging.Server
 		/// </summary>
 		[StatusProperty]
 		public bool ResponseServer { get; set; } = false;
-		#endregion
+        #endregion
 
-		#region Events
-		/// <summary>
-		/// Events that fires when a request message is received
-		/// </summary>
-		public event EventHandler<RequestReceivedEventArgs> RequestReceived;
-		/// <summary>
-		/// Events that fires when a response message is received
-		/// </summary>
-		public event EventHandler<ResponseReceivedEventArgs> ResponseReceived;
-		/// <summary>
-		/// Events that fires when a response message is sent
-		/// </summary>
-		public event EventHandler<ResponseSentEventArgs> ResponseSent;
-		/// <summary>
-		/// Events that fires when a response message is about to be sent
-		/// </summary>
-		public event EventHandler<ResponseSentEventArgs> BeforeSendResponse;
-		#endregion
+        #region Events
+        /// <inheritdoc />
+        /// <summary>
+        /// Events that fires when a request message is received
+        /// </summary>
+        //public event AsyncEventHandler<RequestReceivedEventArgs> RequestReceived;
+        public AsyncEvent<RequestReceivedEventArgs> RequestReceived { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Events that fires when a response message is received
+        /// </summary>
+        //public event AsyncEventHandler<ResponseReceivedEventArgs> ResponseReceived;
+        public AsyncEvent<ResponseReceivedEventArgs> ResponseReceived { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Events that fires when a response message is sent
+        /// </summary>
+        //public event AsyncEventHandler<ResponseSentEventArgs> ResponseSent;
+        public AsyncEvent<ResponseSentEventArgs> ResponseSent { get; set; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Events that fires when a response message is about to be sent
+        /// </summary>
+        //public event EventHandler<ResponseSentEventArgs> BeforeSendResponse;
+        public AsyncEvent<ResponseSentEventArgs> BeforeSendResponse { get; set; }
+        #endregion
 
-		#region .ctor
-		~MQueueServerBase()
+        #region .ctor
+        ~MQueueServerBase()
 		{
 			Dispose();
 		}
@@ -199,15 +209,7 @@ namespace TWCore.Messaging.Server
 				_listenerTasks.Clear();
 
 				foreach (var listener in QueueServerListeners)
-				{
-					var tsk = Task.Run(async () =>
-					{
-						Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-						await listener.TaskStartAsync(_tokenSource.Token).ConfigureAwait(false);
-						Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
-					}, _tokenSource.Token);
-					_listenerTasks.Add(tsk);
-				}
+					_listenerTasks.Add(InitListener(listener));
 			}
 			else
 				Core.Log.Warning("There are not server listener to start.");
@@ -244,38 +246,59 @@ namespace TWCore.Messaging.Server
 
 		#region Private Methods
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
+		private async Task InitListener(IMQueueServerListener listener)
+		{
+			Core.Log.InfoBasic("Starting queue server listener. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
+			await listener.TaskStartAsync(_tokenSource.Token).ConfigureAwait(false);
+			Core.Log.InfoBasic("Queue server listener stopped. Route: {0}, Name: {1}", listener.Connection.Route, listener.Connection.Name);
+		}
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private async Task QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
 		{
 			if (_serverQueues?.AdditionalSendQueues?.Any() == true)
 				e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
 			e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
-			RequestReceived?.Invoke(sender, e);
+
+            if (RequestReceived != null)
+		        await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 			e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
-			MQueueServerEvents.FireRequestReceived(sender, e);
+			if (MQueueServerEvents.RequestReceived != null)
+				await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
 			if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
 			{
 				e.Response.Header.Response.ApplicationSentDate = Core.Now;
-				var rsea = new ResponseSentEventArgs(Name, e.Response);
 
-				BeforeSendResponse?.Invoke(this, rsea);
-				MQueueServerEvents.FireBeforeSendResponse(this, rsea);
-				var sentBytes = OnSend(e.Response, e);
+				ResponseSentEventArgs rsea = null;
+				if (BeforeSendResponse != null || MQueueServerEvents.BeforeSendResponse != null ||
+				    ResponseSent != null || MQueueServerEvents.ResponseSent != null)
+					rsea = new ResponseSentEventArgs(Name, e.Response);
+				if (BeforeSendResponse != null)
+				    await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+				if (MQueueServerEvents.BeforeSendResponse != null)
+					await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+				
+				var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
-					rsea.MessageLength = sentBytes;
-					ResponseSent?.Invoke(this, rsea);
-					MQueueServerEvents.FireResponseSent(this, rsea);
+					if (rsea != null)
+						rsea.MessageLength = sentBytes;
+                    if (ResponseSent != null)
+					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+					if (MQueueServerEvents.ResponseSent != null)
+						await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
 				}
 				else
 					Core.Log.Warning("The message couldn't be sent.");
 			}
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private void QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
+		private async Task QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
 		{
-			ResponseReceived?.Invoke(sender, e);
-			MQueueServerEvents.FireResponseReceived(sender, e);
+		    if (ResponseReceived != null)
+		        await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+			if (MQueueServerEvents.ResponseReceived != null)
+				await MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 		}
 		#endregion
 
@@ -300,7 +323,7 @@ namespace TWCore.Messaging.Server
 		/// <param name="e">Request received event args</param>
 		/// <returns>Number of bytes sent to the queue, -1 if no message was sent.</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract int OnSend(ResponseMessage message, RequestReceivedEventArgs e);
+		protected abstract Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e);
 		/// <summary>
 		/// On Dispose
 		/// </summary>

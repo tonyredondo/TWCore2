@@ -36,7 +36,7 @@ namespace TWCore.Messaging
         /// <summary>
         /// Client name
         /// </summary>
-        [DataMember]
+        [XmlAttribute, DataMember]
         public string ClientName { get; set; }
         /// <summary>
         /// Response queue

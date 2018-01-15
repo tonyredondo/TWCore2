@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
+using System.Threading.Tasks;
 using RabbitMQ.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
@@ -66,7 +67,7 @@ namespace TWCore.Messaging.RabbitMQ
 		/// </summary>
 		/// <param name="message">Response message instance</param>
 		/// <param name="e">RawRequest received event args</param>
-		protected override int OnSend(SubArray<byte> message, RawRequestReceivedEventArgs e)
+		protected override Task<int> OnSendAsync(SubArray<byte> message, RawRequestReceivedEventArgs e)
 		{
 			var queues = e.ResponseQueues;
 			queues.Add(new MQConnection
@@ -124,7 +125,7 @@ namespace TWCore.Messaging.RabbitMQ
 					Core.Log.Write(ex);
 				}
 			}
-			return response ? message.Count : -1;
+			return Task.FromResult(response ? message.Count : -1);
 		}
 
 		/// <inheritdoc />

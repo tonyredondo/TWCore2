@@ -19,6 +19,7 @@ using System.Threading;
 using TWCore.Messaging;
 using TWCore.Messaging.RawServer;
 using TWCore.Services.Messaging;
+using TWCore.Threading;
 // ReSharper disable CheckNamespace
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMember.Global
@@ -38,15 +39,20 @@ namespace TWCore.Services
         /// <summary>
         /// Events that fires when a message has been received
         /// </summary>
-        public event EventHandler<RawMessageEventArgs> MessageReceived;
+        //public event AsyncEventHandler<RawMessageEventArgs> MessageReceived;
+        public AsyncEvent<RawMessageEventArgs> MessageReceived { get; set; }
+
         /// <summary>
         /// Events that fires before sending a message
         /// </summary>
-        public event EventHandler<RawMessageEventArgs> BeforeSendMessage;
+        //public event AsyncEventHandler<RawMessageEventArgs> BeforeSendMessage;
+        public AsyncEvent<RawMessageEventArgs> BeforeSendMessage { get; set; }
+
         /// <summary>
         /// Events that fires when a message has been sent
         /// </summary>
-        public event EventHandler<RawMessageEventArgs> MessageSent;
+        //public event AsyncEventHandler<RawMessageEventArgs> MessageSent;
+        public AsyncEvent<RawMessageEventArgs> MessageSent { get; set; }
         #endregion
 
         #region Properties
@@ -90,7 +96,8 @@ namespace TWCore.Services
                 {
                     QueueServer.ResponseReceived += async (s, e) =>
                     {
-                        MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
+                        if (MessageReceived != null)
+                            await MessageReceived.InvokeAsync(this, new RawMessageEventArgs(e.Message, e.CorrelationId)).ConfigureAwait(false);
                         await Processor.ProcessAsync(e, _cTokenSource.Token).ConfigureAwait(false);
                     };
                 }
@@ -98,18 +105,21 @@ namespace TWCore.Services
                 {
                     QueueServer.RequestReceived += async (s, e) =>
                     {
-                        MessageReceived?.Invoke(this, new RawMessageEventArgs(e.Request, e.CorrelationId));
+                        if (MessageReceived != null)
+                            await MessageReceived.InvokeAsync(this, new RawMessageEventArgs(e.Request, e.CorrelationId)).ConfigureAwait(false);
                         var result = await Processor.ProcessAsync(e, _cTokenSource.Token).ConfigureAwait(false);
                         if (result != ResponseMessage.NoResponse && result != null)
                             e.Response = result as byte[] ?? (byte[])QueueServer.SenderSerializer.Serialize(result);
                     };
-                    QueueServer.BeforeSendResponse += (s, e) =>
+                    QueueServer.BeforeSendResponse += async (s, e) =>
                     {
-                        BeforeSendMessage?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
+                        if (BeforeSendMessage != null)
+                            await BeforeSendMessage.InvokeAsync(this, new RawMessageEventArgs(e.Message, e.CorrelationId)).ConfigureAwait(false);
                     };
-                    QueueServer.ResponseSent += (s, e) =>
+                    QueueServer.ResponseSent += async (s, e) =>
                     {
-                        MessageSent?.Invoke(this, new RawMessageEventArgs(e.Message, e.CorrelationId));
+                        if (MessageSent != null)
+                            await MessageSent.InvokeAsync(this, new RawMessageEventArgs(e.Message, e.CorrelationId)).ConfigureAwait(false);
                     };
                 }
 

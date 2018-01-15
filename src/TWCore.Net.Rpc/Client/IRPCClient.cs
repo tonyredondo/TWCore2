@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Client.Transports;
 using TWCore.Net.RPC.Descriptors;
 // ReSharper disable InconsistentNaming
@@ -46,19 +47,19 @@ namespace TWCore.Net.RPC.Client
         /// </summary>
         /// <typeparam name="T">Type of the service to create the proxy</typeparam>
         /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
-        DynamicProxy CreateDynamicProxy<T>();
+        Task<DynamicProxy> CreateDynamicProxyAsync<T>();
         /// <summary>
         /// Creates a dynamic object to act as client proxy
         /// </summary>
         /// <param name="interfaceType">Type of the service to create the proxy</param>
         /// <returns>Dynamic proxy instance, use dynamic keyword to dynamically invoke methods to the server</returns>
-        DynamicProxy CreateDynamicProxy(Type interfaceType);
+        Task<DynamicProxy> CreateDynamicProxyAsync(Type interfaceType);
         /// <summary>
         /// Creates a client proxy using this client.
         /// </summary>
         /// <typeparam name="T">Type of proxy</typeparam>
         /// <returns>Client proxy object instance to invoke methods to the server</returns>
-        T CreateProxy<T>() where T : RPCProxy;
+        Task<T> CreateProxyAsync<T>() where T : RPCProxy;
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -67,7 +68,7 @@ namespace TWCore.Net.RPC.Client
         /// <param name="method">Server method name</param>
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
-        T ServerInvoke<T>(string serviceName, string method, params object[] args);
+        Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -75,6 +76,6 @@ namespace TWCore.Net.RPC.Client
         /// <param name="method">Server method name</param>
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
-        object ServerInvoke(string serviceName, string method, params object[] args);
+        Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args);
     }
 }

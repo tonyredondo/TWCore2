@@ -55,21 +55,29 @@ namespace TWCore.Tests
                 var rHClient = (string)hClient.SayHi("MyName");
             }
 
+            for (var i = 0; i < 2000; i++)
+            {
+                var rHClient = await ((Task<object>)hClient.TestAsync()).ConfigureAwait(false);
+            }
+
+
             //IMyService test
             Core.Log.InfoBasic("IMyService test");
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
             for (var i = 0; i < 1000; i++)
             {
-                var aLst = dClient.GetAll();
+                var aLst = await ((Task<object>)dClient.GetAllAsync()).ConfigureAwait(false);
             }
 
             //Proxy class test
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
-            for (var i = 0; i < 1000; i++)
+            for (var i = 0; i < 500; i++)
             {
-                var resp = client.GetAll();
+                var resp = await client.GetAllAsync().ConfigureAwait(false);
             }
+
+            await Task.WhenAll(Enumerable.Range(0, 100).Select(i => client.GetAllAsync()).ToArray()).ConfigureAwait(false);
 
             //Event test
             Core.Log.InfoBasic("Event test");
@@ -107,10 +115,13 @@ namespace TWCore.Tests
     public interface IHello
     {
         string SayHi(string name);
+        string Test();
     }
 
     public class MyService : IMyService, IHello
     {
+        List<SimplePerson> _tmpSPerson = null;
+
         [RPCEvent(RPCMessageScope.Global)]
         public event EventHandler OnAddSimplePersona;
 
@@ -153,7 +164,7 @@ namespace TWCore.Tests
         #endregion
 
         public List<SimplePerson> GetAll()
-            => SimplePersonas.Concat(SimplePersonas).Concat(SimplePersonas).Concat(SimplePersonas).ToList();
+            => _tmpSPerson ?? (_tmpSPerson = SimplePersonas.Concat(SimplePersonas).Concat(SimplePersonas).Concat(SimplePersonas).ToList());
 
         public SimplePerson GetSimplePersona(Guid simplePersonaId)
             => SimplePersonas.FirstOrDefault(p => p.PersonId == simplePersonaId);
@@ -163,6 +174,8 @@ namespace TWCore.Tests
 
         public string SayHi(string name)
             => $"Hi {name}!";
+
+        public string Test() => string.Empty;
 
         public bool AddSimplePersona(SimplePerson simplePersona)
         {
@@ -179,6 +192,8 @@ namespace TWCore.Tests
         public List<SimplePerson> GetAll() => Invoke<List<SimplePerson>>();
         public SimplePerson GetSimplePersona(Guid simplePersonaId) => Invoke<SimplePerson>(simplePersonaId);
         public SimplePerson GetSimplePersona(string name, string apellido) => Invoke<SimplePerson>(name, (object)apellido);
+
+        public Task<List<SimplePerson>> GetAllAsync() => InvokeAsync<List<SimplePerson>>();
     }
     #endregion
 

@@ -122,27 +122,12 @@ namespace TWCore.Net.RPC.Client.Transports
         public Task InitAsync() => Task.CompletedTask;
         /// <inheritdoc />
         /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() { }
-        /// <inheritdoc />
-        /// <summary>
         /// Gets the descriptor for the RPC service
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<ServiceDescriptorCollection> GetDescriptorsAsync()
             => _queueClient.SendAndReceiveAsync<ServiceDescriptorCollection>("GetDescription");
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the descriptor for the RPC service
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceDescriptorCollection GetDescriptors()
-            => GetDescriptorsAsync().WaitAndResults();
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -152,15 +137,6 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
             => _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ);
-        /// <inheritdoc />
-        /// <summary>
-        /// Invokes a RPC method on the RPC server and gets the results
-        /// </summary>
-        /// <param name="messageRQ">RPC request message to send to the server</param>
-        /// <returns>RPC response message from the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRQ)
-            => InvokeMethodAsync(messageRQ).WaitAndResults();
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

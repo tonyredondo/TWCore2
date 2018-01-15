@@ -172,23 +172,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         }
         #endregion
 
-        #region Init
-        /// <inheritdoc />
-        /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() => ConnectAsync();
-        /// <inheritdoc />
-        /// <summary>
-        /// Initialize the Transport client
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init() => ConnectAsync().WaitAsync();
-        #endregion
-
         #region Connection
         /// <summary>
         /// Connect to the transport server
@@ -241,7 +224,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         }
         #endregion
 
-        #region GetDescriptors
+        #region Interface Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize the Transport client
+        /// </summary>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task InitAsync() => ConnectAsync();
         /// <inheritdoc />
         /// <summary>
         /// Gets the descriptors for the RPC service
@@ -254,21 +244,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             var response = await InvokeMethodAsync(request).ConfigureAwait(false);
             return (ServiceDescriptorCollection)response.ReturnValue;
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Gets the descriptors for the RPC service
-        /// </summary>
-        /// <returns>Task of the method execution</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ServiceDescriptorCollection GetDescriptors()
-        {
-            var request = new RPCRequestMessage { MethodId = Guid.Empty };
-            var response = InvokeMethod(request);
-            return (ServiceDescriptorCollection)response.ReturnValue;
-        }
-        #endregion
-
-        #region InvokeMethods
         /// <inheritdoc />
         /// <summary>
         /// Invokes a RPC method on the RPC server and gets the results
@@ -294,15 +269,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 return null;
             throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
         }
-        /// <inheritdoc />
-        /// <summary>
-        /// Invokes a RPC method on the RPC server and gets the results
-        /// </summary>
-        /// <param name="messageRq">RPC request message to send to the server</param>
-        /// <returns>RPC response message from the server</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public RPCResponseMessage InvokeMethod(RPCRequestMessage messageRq)
-            => InvokeMethodAsync(messageRq).WaitAndResults();
         #endregion
 
         /// <inheritdoc />

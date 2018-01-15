@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Grid;
 
 namespace TWCore.Net.RPC.Client.Grid
@@ -81,6 +82,19 @@ namespace TWCore.Net.RPC.Client.Grid
         {
             AvailableEvent.Reset();
             var response = _nodeProxy.Process(args);
+            AvailableEvent.Set();
+            return new NodeClientResult(NodeInfo, response);
+        }
+        /// <summary>
+        /// Process the arguments in the node
+        /// </summary>
+        /// <param name="args">Argmuents to be processed</param>
+        /// <returns>Grid node client result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<NodeClientResult> ProcessAsync(params object[] args)
+        {
+            AvailableEvent.Reset();
+            var response = await _nodeProxy.ProcessAsync(args).ConfigureAwait(false);
             AvailableEvent.Set();
             return new NodeClientResult(NodeInfo, response);
         }

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using TWCore.Collections;
 // ReSharper disable CollectionNeverQueried.Global
@@ -40,7 +41,7 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Listener Metadata
         /// </summary>
-        public KeyValueCollection Metadata { get; } = new KeyValueCollection(false);
+        public IDictionary<string, string> Metadata { get; } = new Dictionary<string, string>();
 	    /// <summary>
 	    /// Message Length
 	    /// </summary>

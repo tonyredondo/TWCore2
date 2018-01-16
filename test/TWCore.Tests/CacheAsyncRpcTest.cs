@@ -32,10 +32,11 @@ namespace TWCore.Tests
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);
 
-			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
+			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer, ForceAtLeastOneNetworkItemEnabled = false, WriteNetworkItemsToMemoryOnGet = true })
             {
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
 				cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
+                //cachePool.Add("memory", new LRU2QStorage(2000), StorageItemMode.ReadAndWrite);
 
                 for (var i = 0; i < 10; i++)
 					await cachePool.GetKeysAsync().ConfigureAwait(false);

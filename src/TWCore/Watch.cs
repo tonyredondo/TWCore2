@@ -422,7 +422,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
-                item.StartedTap(startMessage);
+                item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -434,7 +434,7 @@ namespace TWCore
                 item._groupValue = null;
                 item._level = level;
                 item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
-                item.StartedTap(startMessage);
+                item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -457,7 +457,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = groupValue;
                 item._counter = Counters.GetOrAdd(startMessage, msg => new StatusCounter(CounterPreffix + msg));
-                item.StartedTap(startMessage);
+                item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -469,7 +469,7 @@ namespace TWCore
                 item._groupValue = groupValue;
                 item._level = level;
                 item._counter = Counters.GetOrAdd(startMessage, msg => new StatusCounter(CounterPreffix + msg));
-                item.StartedTap(startMessage);
+                item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
             #endregion

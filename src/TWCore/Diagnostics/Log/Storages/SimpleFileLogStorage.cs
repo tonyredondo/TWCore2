@@ -249,7 +249,6 @@ namespace TWCore.Diagnostics.Log.Storages
             }
             var sbuilder = new StringBuilder(128);
             sbuilder.Append(item.Timestamp.GetTimeSpanFormat());
-            sbuilder.AppendFormat(" ({0:000}) ", item.ThreadId);
             sbuilder.AppendFormat("{0, 10}: ", item.Level);
 
             if (!string.IsNullOrEmpty(item.GroupName))

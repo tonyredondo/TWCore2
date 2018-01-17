@@ -83,7 +83,6 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
 
                 Console.Write(item.Timestamp.GetTimeSpanFormat());
-                Console.Write(" ({0:000}) ", item.ThreadId);
                 Console.Write("{0, 10}: ",item.Level);
 
                 if (!string.IsNullOrEmpty(item.GroupName))

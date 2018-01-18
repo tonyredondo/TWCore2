@@ -155,7 +155,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     _connectionCancellationToken = _connectionCancellationTokenSource.Token;
                 }
                 BindBackgroundTasks();
-                _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _networkStream);
+                _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
                 await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
                 OnConnect?.Invoke(this, EventArgs.Empty);
             }

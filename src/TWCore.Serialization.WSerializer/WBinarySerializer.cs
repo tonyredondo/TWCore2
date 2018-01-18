@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using TWCore.IO;
+
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 
@@ -82,7 +84,12 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             foreach (var type in KnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
-            ser.Serialize(stream, item, itemType);
+            using (var ms = new MemoryStream())
+            {
+                ser.Serialize(ms, item, itemType);
+                ms.Position = 0;
+                ms.CopyTo(stream);
+            }
             ser.ClearKnownTypes();
             Pool.Store(ser);
         }

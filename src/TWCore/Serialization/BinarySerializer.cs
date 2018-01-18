@@ -105,27 +105,31 @@ namespace TWCore.Serialization
                     if (Compressor == null)
                     {
                         OnSerialize(bstream, item, itemType);
-                        return;
                     }
-                    using (var ms = new RecycleMemoryStream())
+                    else
                     {
-                        OnSerialize(ms, item, itemType);
-                        ms.Position = 0;
-                        Compressor.Compress(ms, bstream);
-                        return;
+                        using (var ms = new RecycleMemoryStream())
+                        {
+                            OnSerialize(ms, item, itemType);
+                            ms.Position = 0;
+                            Compressor.Compress(ms, bstream);
+                        }
                     }
                 }
             }
-            if (Compressor == null)
+            else
             {
-                OnSerialize(stream, item, itemType);
-                return;
-            }
-            using (var ms = new RecycleMemoryStream())
-            {
-                OnSerialize(ms, item, itemType);
-                ms.Position = 0;
-                Compressor.Compress(ms, stream);
+                if (Compressor == null)
+                {
+                    OnSerialize(stream, item, itemType);
+                    return;
+                }
+                using (var ms = new RecycleMemoryStream())
+                {
+                    OnSerialize(ms, item, itemType);
+                    ms.Position = 0;
+                    Compressor.Compress(ms, stream);
+                }
             }
         }
         /// <inheritdoc />

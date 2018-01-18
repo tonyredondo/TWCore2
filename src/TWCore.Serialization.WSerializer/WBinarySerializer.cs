@@ -84,12 +84,7 @@ namespace TWCore.Serialization.WSerializer
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
             foreach (var type in KnownTypes)
                 ser.AddKnownType(type, IncludeInnerKnownTypes);
-            using (var ms = new MemoryStream())
-            {
-                ser.Serialize(ms, item, itemType);
-                ms.Position = 0;
-                ms.CopyTo(stream);
-            }
+            ser.Serialize(stream, item, itemType);
             ser.ClearKnownTypes();
             Pool.Store(ser);
         }

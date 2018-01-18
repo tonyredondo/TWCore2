@@ -195,6 +195,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task SendRpcMessageAsync(RPCMessage message)
         {
+            if (_connectionCancellationToken.IsCancellationRequested)
+                return;
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
                 if (_connectionCancellationToken.IsCancellationRequested)
@@ -219,7 +221,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _receiveTask = Task.Factory.StartNew(ReceiveThread, TaskCreationOptions.LongRunning);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void ReceiveThread()
+        private async Task ReceiveThread()
         {
             Thread.CurrentThread.Name = "RPC.DefaultTransportClient.ReceiveThread";
             while (_shouldBeConnected && !_connectionCancellationToken.IsCancellationRequested)
@@ -229,10 +231,30 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (_client == null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
-                        ConnectAsync().WaitAsync();
+                        await ConnectAsync();
                     }
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    ThreadPool.QueueUserWorkItem(MessageReceivedHandler, message);
+                    switch (message)
+                    {
+                        case RPCSessionResponseMessage sessionMessage:
+                            if (sessionMessage.Succeed)
+                            {
+                                _sessionId = sessionMessage.SessionId;
+                                _onSession = true;
+                                _sessionEvent.Set();
+                            }
+                            else
+                                await DisconnectAsync();
+                            break;
+                        default:
+                            ThreadPool.QueueUserWorkItem(state =>
+                            {
+                                var sArray = (object[]) state;
+                                var client = (RpcClient) sArray[0];
+                                client.OnMessageReceived?.Invoke(client, (RPCMessage)sArray[1]);                                
+                            }, new object[] { this, message });
+                            break;
+                    }
                 }
                 catch (IOException)
                 {
@@ -244,26 +266,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 }
             }
             Dispose();
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void MessageReceivedHandler(object rawMessage)
-        {
-            switch (rawMessage)
-            {
-                case RPCSessionResponseMessage sessionMessage:
-                    if (sessionMessage.Succeed)
-                    {
-                        _sessionId = sessionMessage.SessionId;
-                        _onSession = true;
-                        _sessionEvent.Set();
-                    }
-                    else
-                        DisconnectAsync().WaitAsync();
-                    break;
-                case RPCMessage message:
-                    OnMessageReceived?.Invoke(this, message);
-                    break;
-            }
         }
         #endregion
 

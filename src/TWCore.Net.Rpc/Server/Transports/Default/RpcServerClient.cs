@@ -151,7 +151,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 try
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    ThreadPool.QueueUserWorkItem(MessageReceivedHandler, message);
+                    Task.Factory.StartNew(MessageReceivedHandler, message);
                 }
                 catch (Exception ex)
                 {
@@ -162,7 +162,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Dispose();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void MessageReceivedHandler(object rawMessage)
+        private async Task MessageReceivedHandler(object rawMessage)
         {
             switch (rawMessage)
             {
@@ -174,12 +174,12 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             ? Guid.NewGuid()
                             : sessionMessage.SessionId;
                         _onSession = true;
-                        SendRpcMessageAsync(new RPCSessionResponseMessage
+                        await SendRpcMessageAsync(new RPCSessionResponseMessage
                         {
                             RequestMessageId = sessionMessage.MessageId,
                             SessionId = _sessionId,
                             Succeed = true
-                        }).WaitAsync();
+                        }).ConfigureAwait(false);
                         OnConnect?.Invoke(this, EventArgs.Empty);
                     }
                     else

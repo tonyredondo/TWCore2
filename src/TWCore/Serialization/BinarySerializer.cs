@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.Compression;
 using TWCore.IO;
@@ -97,6 +98,24 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(object item, Type itemType, Stream stream)
         {
+            if (stream is NetworkStream nStream)
+            {
+                using (var bstream = new BufferedStream(nStream))
+                {
+                    if (Compressor == null)
+                    {
+                        OnSerialize(bstream, item, itemType);
+                        return;
+                    }
+                    using (var ms = new RecycleMemoryStream())
+                    {
+                        OnSerialize(ms, item, itemType);
+                        ms.Position = 0;
+                        Compressor.Compress(ms, bstream);
+                        return;
+                    }
+                }
+            }
             if (Compressor == null)
             {
                 OnSerialize(stream, item, itemType);

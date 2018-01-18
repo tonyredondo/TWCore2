@@ -54,6 +54,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         private readonly BinarySerializer _serializer;
         private TcpClient _client;
         private Stream _networkStream;
+        private BufferedStream _writeStream;
+        private BufferedStream _readStream;
         private bool _shouldBeConnected;
         private CancellationTokenSource _connectionCancellationTokenSource;
         private CancellationToken _connectionCancellationToken;
@@ -145,6 +147,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 Factory.SetSocketLoopbackFastPath(_client.Client);
                 await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
                 _networkStream = _client.GetStream();
+                _readStream = new BufferedStream(_networkStream);
+                _writeStream = new BufferedStream(_networkStream);
                 if (_connectionCancellationTokenSource == null || _connectionCancellationTokenSource.IsCancellationRequested)
                 {
                     _connectionCancellationTokenSource = new CancellationTokenSource();
@@ -172,7 +176,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _onSession = false;
                 _client.Close();
                 _client = null;
+                _readStream.Dispose();
+                _writeStream.Dispose();
                 _networkStream = null;
+                _readStream = null;
+                _writeStream = null;
             }
         }
         #endregion
@@ -196,7 +204,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     await ConnectAsync().ConfigureAwait(false);
                 }
                 if (!_onSession) return;
-                _serializer.Serialize(message, _networkStream);
+                _serializer.Serialize(message, _writeStream);
+                await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
             }
         }
         #endregion
@@ -221,7 +230,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
                         ConnectAsync().WaitAsync();
                     }
-                    var message = _serializer.Deserialize<RPCMessage>(_networkStream);
+                    var message = _serializer.Deserialize<RPCMessage>(_readStream);
                     ThreadPool.QueueUserWorkItem(MessageReceivedHandler, message);
                 }
                 catch (IOException)
@@ -266,10 +275,14 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         {
             _shouldBeConnected = false;
             _client?.Dispose();
+            _readStream?.Dispose();
+            _writeStream?.Dispose();
             _networkStream?.Dispose();
             _connectionCancellationTokenSource?.Dispose();
             _sessionEvent.Reset();
             _client = null;
+            _readStream = null;
+            _writeStream = null;
             _networkStream = null;
             _onSession = false;
         }

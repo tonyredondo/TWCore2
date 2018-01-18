@@ -98,38 +98,16 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(object item, Type itemType, Stream stream)
         {
-            if (stream is NetworkStream nStream)
+            if (Compressor == null)
             {
-                using (var bstream = new BufferedStream(nStream))
-                {
-                    if (Compressor == null)
-                    {
-                        OnSerialize(bstream, item, itemType);
-                    }
-                    else
-                    {
-                        using (var ms = new RecycleMemoryStream())
-                        {
-                            OnSerialize(ms, item, itemType);
-                            ms.Position = 0;
-                            Compressor.Compress(ms, bstream);
-                        }
-                    }
-                }
+                OnSerialize(stream, item, itemType);
+                return;
             }
-            else
+            using (var ms = new RecycleMemoryStream())
             {
-                if (Compressor == null)
-                {
-                    OnSerialize(stream, item, itemType);
-                    return;
-                }
-                using (var ms = new RecycleMemoryStream())
-                {
-                    OnSerialize(ms, item, itemType);
-                    ms.Position = 0;
-                    Compressor.Compress(ms, stream);
-                }
+                OnSerialize(ms, item, itemType);
+                ms.Position = 0;
+                Compressor.Compress(ms, stream);
             }
         }
         /// <inheritdoc />

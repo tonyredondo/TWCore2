@@ -57,6 +57,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private readonly BinarySerializer _serializer;
         private TcpClient _client;
         private Stream _networkStream;
+        private BufferedStream _readStream;
+        private BufferedStream _writeStream;
         private Task _receiveTask;
         private bool _onSession;
         private string _hub;
@@ -109,6 +111,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _client = client;
             _serializer = serializer;
             _networkStream = _client.GetStream();
+            _readStream = new BufferedStream(_networkStream);
+            _writeStream = new BufferedStream(_networkStream);
             BindBackgroundTasks();
         }
         #endregion
@@ -125,7 +129,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
                 if (_client == null || !_client.Connected) return;
-                _serializer.Serialize(message, _networkStream);
+                _serializer.Serialize(message, _writeStream);
+                await _writeStream.FlushAsync().ConfigureAwait(false);
             }
         }
         #endregion
@@ -145,7 +150,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             {
                 try
                 {
-                    var message = _serializer.Deserialize<RPCMessage>(_networkStream);
+                    var message = _serializer.Deserialize<RPCMessage>(_readStream);
                     ThreadPool.QueueUserWorkItem(MessageReceivedHandler, message);
                 }
                 catch (Exception ex)
@@ -196,9 +201,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         public void Dispose()
         {
             _client?.Dispose();
+            _readStream?.Dispose();
+            _writeStream?.Dispose();
             _networkStream?.Dispose();
 
             _client = null;
+            _readStream = null;
+            _writeStream = null;
             _networkStream = null;
 
             OnDisconnect?.Invoke(this, EventArgs.Empty);

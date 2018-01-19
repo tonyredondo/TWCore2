@@ -112,9 +112,6 @@ namespace TWCore.Diagnostics.Log.Storages
                     Console.WriteLine("Exceptions:\r\n");
                     Console.WriteLine(GetExceptionDescription(item.Exception));
                 }
-
-                if (UseColor)
-                    Console.ResetColor();
             }
         }
 
@@ -143,6 +140,8 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
+            if (ServiceContainer.HasConsole && UseColor)
+                Console.ForegroundColor = DefaultColor;
         }
     }
 }

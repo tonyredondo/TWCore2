@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
@@ -37,7 +38,7 @@ namespace TWCore.Net.Multicast
         private static readonly List<RegisteredService> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
         private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(15);
-        private static Thread _sendThread;
+        private static Task _sendThread;
         private static CancellationTokenSource _tokenSource;
         private static CancellationToken _token;
         private static bool _connected;
@@ -121,13 +122,7 @@ namespace TWCore.Net.Multicast
             MulticastIp = multicastIp;
             Port = port;
             PeerConnection.Connect(multicastIp, port);
-            _sendThread = new Thread(SendThread)
-            {
-                Name = "DiscoveryServiceSendThread",
-                IsBackground = true
-            };
-            _sendThread.Start();
-
+            _sendThread = SendThreadAsync();
         }
         /// <summary>
         /// Disconnect from the multicast group
@@ -311,23 +306,24 @@ namespace TWCore.Net.Multicast
                 OnNewServiceReceived?.Invoke(sender, eArgs);
             OnServiceReceived?.Invoke(sender, eArgs);
         }
-        private static void SendThread()
+        private static async Task SendThreadAsync()
         {
             while (!_token.IsCancellationRequested)
             {
+                List<RegisteredService> tmpList;
                 lock (LocalServices)
+                    tmpList = new List<RegisteredService>(LocalServices);
+
+                foreach (var srv in tmpList)
                 {
-                    foreach (var srv in LocalServices)
-                    {
-                        if (srv.GetDataFunc != null)
-                            srv.Data = srv.GetDataFunc();
-                        var srvValue = Serializer.Serialize(srv);
-                        PeerConnection.Send(srvValue);
-                        if (_token.IsCancellationRequested)
-                            return;
-                    }
+                    if (srv.GetDataFunc != null)
+                        srv.Data = srv.GetDataFunc();
+                    var srvValue = Serializer.Serialize(srv);
+                    await PeerConnection.SendAsync(srvValue).ConfigureAwait(false);
+                    if (_token.IsCancellationRequested)
+                        return;
                 }
-                Factory.Thread.Sleep(5000, _token);
+                await Task.Delay(5000, _token);
             }
         }
         #endregion

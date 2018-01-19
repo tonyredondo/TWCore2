@@ -31,7 +31,7 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
-
+        
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>

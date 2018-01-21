@@ -16,11 +16,11 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
-    public class MemoryQueueTest : ContainerParameterService
+    public class MemoryQueueTest : ContainerParameterServiceAsync
     {
         public MemoryQueueTest() : base("memoryqueuetest", "MemoryQueue Test") { }
 
-        protected override void OnHandler(ParameterHandlerInfo info)
+        protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting MemoryQueue Test");
 
@@ -96,10 +96,10 @@ namespace TWCore.Tests
             //Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
             Core.Log.Warning("Starting with Normal Listener and Client");
-            NormalTest(mqConfig);
+            await NormalTest(mqConfig).ConfigureAwait(false);
         }
 
-        private static void NormalTest(MQPairConfig mqConfig)
+        private static async Task NormalTest(MQPairConfig mqConfig)
         {
             using (var mqServer = mqConfig.GetServer())
             {
@@ -120,7 +120,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                            var response = await mqClient.SendAndReceiveAsync<string>("Hola mundo").ConfigureAwait(false);
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -132,9 +132,9 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Task.WaitAll(
+                        await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
-                        );
+                        ).ConfigureAwait(false);
 
                         //Parallel.For(0, totalQ, i =>
                         //{

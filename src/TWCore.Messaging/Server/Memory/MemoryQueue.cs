@@ -32,7 +32,7 @@ namespace TWCore.Messaging
     {
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
         private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
-        private readonly ManualResetEventSlim _messageQueueEvent = new ManualResetEventSlim();
+        private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>();
         
         public class Message
         {
@@ -53,7 +53,7 @@ namespace TWCore.Messaging
             message.Value = value;
             message.TaskSource.TrySetResult(true);
             _messageQueue.Enqueue(correlationId);
-            _messageQueueEvent.Set();
+            _queueTask.TrySetResult(true);
             return true;
         }
         /// <summary>
@@ -61,7 +61,7 @@ namespace TWCore.Messaging
         /// </summary>
         /// <param name="cancellationToken">CancellationToken value</param>
         /// <returns>Object value</returns>
-        public Message Dequeue(CancellationToken cancellationToken)
+        public async Task<Message> DequeueAsync(CancellationToken cancellationToken)
         {
             try
             {
@@ -70,10 +70,10 @@ namespace TWCore.Messaging
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        _messageQueueEvent.Reset();
+                        Interlocked.Exchange(ref _queueTask, new TaskCompletionSource<bool>());
                         return message;
                     }
-                    _messageQueueEvent.Wait(10, cancellationToken);
+                    await _queueTask.Task.HandleCancellationAsync(cancellationToken).ConfigureAwait(false);
                 }
             }
             catch

@@ -31,13 +31,12 @@ namespace TWCore.Messaging
     {
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
         private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
-        private readonly ConcurrentDictionary<Guid, ManualResetEventSlim> _messageEvents = new ConcurrentDictionary<Guid, ManualResetEventSlim>();
         private readonly ManualResetEventSlim _messageQueueEvent = new ManualResetEventSlim();
         
         public class Message
         {
-            public Guid CorrelationId;
             public object Value;
+            public readonly ManualResetEventSlim Event = new ManualResetEventSlim();
         }
 
         #region Queue Methods
@@ -49,12 +48,11 @@ namespace TWCore.Messaging
         /// <returns>true if the item was enqueued; otherwise false.</returns>
         public bool Enqueue(Guid correlationId, object value)
         {
-            var message = new Message {CorrelationId = correlationId, Value = value};
-            if (!_messageStorage.TryAdd(correlationId, message)) return false;
+            var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
+            message.Value = value;
+            message.Event.Set();
             _messageQueue.Enqueue(correlationId);
             _messageQueueEvent.Set();
-            var mEvent = _messageEvents.GetOrAdd(correlationId, id => new ManualResetEventSlim());
-            mEvent.Set();
             return true;
         }
         /// <summary>
@@ -71,10 +69,10 @@ namespace TWCore.Messaging
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        _messageEvents.TryRemove(correlationId, out var _);
-                        _messageQueueEvent.Reset();
                         return message;
                     }
+                    if (_messageQueueEvent.IsSet)
+                        _messageQueueEvent.Reset();
                     _messageQueueEvent.Wait(250, cancellationToken);
                 }
             }
@@ -95,10 +93,9 @@ namespace TWCore.Messaging
         {
             try
             {
-                var mEvent = _messageEvents.GetOrAdd(correlationId, id => new ManualResetEventSlim());
-                if (!mEvent.Wait(waitTime, cancellationToken)) return null;
-                if (!_messageStorage.TryRemove(correlationId, out var message)) return null;
-                _messageEvents.TryRemove(correlationId, out var _);
+                var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
+                if (!message.Event.Wait(waitTime, cancellationToken)) return null;
+                _messageStorage.TryRemove(correlationId, out var _);
                 return message;
             }
             catch

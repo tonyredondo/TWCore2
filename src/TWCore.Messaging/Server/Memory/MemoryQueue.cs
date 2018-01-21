@@ -70,7 +70,7 @@ namespace TWCore.Messaging
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        _messageQueueEvent.Reset();
+                        //_messageQueueEvent.Reset();
                         return message;
                     }
                     Thread.Yield();

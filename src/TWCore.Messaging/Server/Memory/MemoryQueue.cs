@@ -21,6 +21,7 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Threading;
+using Thread = System.Threading.Thread;
 
 namespace TWCore.Messaging
 {
@@ -36,7 +37,7 @@ namespace TWCore.Messaging
         public class Message
         {
             public object Value;
-            public readonly ManualResetEventSlim Event = new ManualResetEventSlim();
+            public readonly TaskCompletionSource<bool> TaskSource = new TaskCompletionSource<bool>();
         }
 
         #region Queue Methods
@@ -50,9 +51,9 @@ namespace TWCore.Messaging
         {
             var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
             message.Value = value;
-            message.Event.Set();
+            message.TaskSource.TrySetResult(true);
             _messageQueue.Enqueue(correlationId);
-            _messageQueueEvent.Set();
+            //_messageQueueEvent.Set();
             return true;
         }
         /// <summary>
@@ -69,11 +70,11 @@ namespace TWCore.Messaging
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
+                        _messageQueueEvent.Reset();
                         return message;
                     }
-                    if (_messageQueueEvent.IsSet)
-                        _messageQueueEvent.Reset();
-                    _messageQueueEvent.Wait(250, cancellationToken);
+                    Thread.Yield();
+                    //_messageQueueEvent.Wait(100, cancellationToken);
                 }
             }
             catch
@@ -89,12 +90,14 @@ namespace TWCore.Messaging
         /// <param name="waitTime">Time to wait for the value</param>
         /// <param name="cancellationToken">CancellationToken value</param>
         /// <returns>Object value</returns>
-        public Message Dequeue(Guid correlationId, int waitTime, CancellationToken cancellationToken)
+        public async Task<Message> DequeueAsync(Guid correlationId, int waitTime, CancellationToken cancellationToken)
         {
             try
             {
                 var message = _messageStorage.GetOrAdd(correlationId, id => new Message());
-                if (!message.Event.Wait(waitTime, cancellationToken)) return null;
+                var wTask = message.TaskSource.Task;
+                var rTask = await Task.WhenAny(wTask, Task.Delay(waitTime, cancellationToken)).ConfigureAwait(false);
+                if (rTask != wTask) return null;
                 _messageStorage.TryRemove(correlationId, out var _);
                 return message;
             }

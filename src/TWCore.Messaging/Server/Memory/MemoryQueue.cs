@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Threading;
@@ -28,17 +29,11 @@ namespace TWCore.Messaging
     /// </summary>
     public class MemoryQueue
     {
-        #region Fields
-        private readonly object _locker = new object();
-        private readonly Dictionary<int, Message> _messages = new Dictionary<int, Message>();
-        private readonly Dictionary<Guid, int> _correlationMessages = new Dictionary<Guid, int>();
-        private readonly Dictionary<Guid, ManualResetEventSlim> _correlationEvents = new Dictionary<Guid, ManualResetEventSlim>();
-        private readonly ManualResetEventSlim _enqueueEvent = new ManualResetEventSlim(false);
-        private int _enqueueIndex;
-        private int _dequeueIndex;
-        private Guid _lastGuid;
-        #endregion
-
+        private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
+        private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
+        private readonly ConcurrentDictionary<Guid, ManualResetEventSlim> _messageEvents = new ConcurrentDictionary<Guid, ManualResetEventSlim>();
+        private readonly ManualResetEventSlim _messageQueueEvent = new ManualResetEventSlim();
+        
         public class Message
         {
             public Guid CorrelationId;
@@ -54,20 +49,12 @@ namespace TWCore.Messaging
         /// <returns>true if the item was enqueued; otherwise false.</returns>
         public bool Enqueue(Guid correlationId, object value)
         {
-            var message = new Message { CorrelationId = correlationId, Value = value };
-            lock(_locker)
-            {
-                _messages.Add(_enqueueIndex, message);
-                _correlationMessages.Add(correlationId, _enqueueIndex);
-                if (!_correlationEvents.TryGetValue(correlationId, out var cEvent))
-                {
-                    cEvent = new ManualResetEventSlim();
-                    _correlationEvents.Add(correlationId, cEvent);
-                }
-                Interlocked.Increment(ref _enqueueIndex);
-                cEvent.Set();
-            }
-            _enqueueEvent.Set();
+            var message = new Message {CorrelationId = correlationId, Value = value};
+            if (!_messageStorage.TryAdd(correlationId, message)) return false;
+            _messageQueue.Enqueue(correlationId);
+            _messageQueueEvent.Set();
+            var mEvent = _messageEvents.GetOrAdd(correlationId, id => new ManualResetEventSlim());
+            mEvent.Set();
             return true;
         }
         /// <summary>
@@ -79,25 +66,16 @@ namespace TWCore.Messaging
         {
             try
             {
-                while (_enqueueIndex > _dequeueIndex || _enqueueEvent.Wait(Timeout.Infinite, cancellationToken))
+                while (!cancellationToken.IsCancellationRequested)
                 {
-                    lock(_locker)
+                    if (_messageQueue.TryDequeue(out var correlationId))
                     {
-                        if (_messages.TryGetValue(_dequeueIndex, out var mResult))
-                        {
-                            _messages.Remove(_dequeueIndex);
-                            _correlationMessages.Remove(mResult.CorrelationId);
-                            _correlationEvents.Remove(mResult.CorrelationId);
-                            Interlocked.Increment(ref _dequeueIndex);
-                            _lastGuid = mResult.CorrelationId;
-                            return mResult;
-                        }
-                        if (_enqueueIndex > _dequeueIndex)
-                        {
-                            Interlocked.Increment(ref _dequeueIndex);
-                        }
+                        if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
+                        _messageEvents.TryRemove(correlationId, out var _);
+                        _messageQueueEvent.Reset();
+                        return message;
                     }
-                    _enqueueEvent.Reset();
+                    _messageQueueEvent.Wait(250, cancellationToken);
                 }
             }
             catch
@@ -117,26 +95,11 @@ namespace TWCore.Messaging
         {
             try
             {
-                ManualResetEventSlim cEvent;
-                lock(_locker)
-                {
-                    if (!_correlationEvents.TryGetValue(correlationId, out cEvent))
-                    {
-                        cEvent = new ManualResetEventSlim();
-                        _correlationEvents.Add(correlationId, cEvent);
-                    }
-                }
-                if (!cEvent.Wait(waitTime, cancellationToken)) return null;
-                lock (_locker)
-                {
-                    if (_correlationMessages.TryGetValue(correlationId, out var cResult) && _messages.TryGetValue(cResult, out var mResult))
-                    {
-                        _correlationMessages.Remove(correlationId);
-                        _correlationEvents.Remove(correlationId);
-                        _messages[cResult] = null;
-                        return mResult;
-                    }
-                }
+                var mEvent = _messageEvents.GetOrAdd(correlationId, id => new ManualResetEventSlim());
+                if (!mEvent.Wait(waitTime, cancellationToken)) return null;
+                if (!_messageStorage.TryRemove(correlationId, out var message)) return null;
+                _messageEvents.TryRemove(correlationId, out var _);
+                return message;
             }
             catch
             {

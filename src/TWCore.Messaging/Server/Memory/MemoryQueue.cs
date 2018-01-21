@@ -74,6 +74,7 @@ namespace TWCore.Messaging
                         return message;
                     }
                     Thread.Yield();
+                    Thread.Sleep(1);
                     //_messageQueueEvent.Wait(100, cancellationToken);
                 }
             }

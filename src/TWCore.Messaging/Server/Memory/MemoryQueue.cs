@@ -53,7 +53,7 @@ namespace TWCore.Messaging
             message.Value = value;
             message.TaskSource.TrySetResult(true);
             _messageQueue.Enqueue(correlationId);
-            //_messageQueueEvent.Set();
+            _messageQueueEvent.Set();
             return true;
         }
         /// <summary>
@@ -70,12 +70,10 @@ namespace TWCore.Messaging
                     if (_messageQueue.TryDequeue(out var correlationId))
                     {
                         if (!_messageStorage.TryRemove(correlationId, out var message)) continue;
-                        //_messageQueueEvent.Reset();
+                        _messageQueueEvent.Reset();
                         return message;
                     }
-                    Thread.Yield();
-                    Thread.Sleep(1);
-                    //_messageQueueEvent.Wait(100, cancellationToken);
+                    _messageQueueEvent.Wait(10, cancellationToken);
                 }
             }
             catch

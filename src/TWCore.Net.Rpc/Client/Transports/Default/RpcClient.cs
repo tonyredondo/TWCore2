@@ -39,6 +39,11 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// <param name="e">Event args</param>
     public delegate void RpcClientEvent<in TEventArgs>(RpcClient rpcClient, TEventArgs e);
 
+    internal class RPCError : RPCMessage
+    {
+        public SerializableException Exception { get; set; }
+    }
+
     /// <inheritdoc />
     /// <summary>
     /// Rpc client
@@ -141,8 +146,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _client = new TcpClient
                 {
                     NoDelay = true,
-                    ReceiveBufferSize = 32768,
-                    SendBufferSize = 32768
+                    ReceiveBufferSize = 16384,
+                    SendBufferSize = 16384
                 };
                 Factory.SetSocketLoopbackFastPath(_client.Client);
                 await _client.ConnectAsync(_host, _port).ConfigureAwait(false);
@@ -233,36 +238,50 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
                         await ConnectAsync();
                     }
-                    var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    switch (message)
+
+                    try
                     {
-                        case RPCSessionResponseMessage sessionMessage:
-                            if (sessionMessage.Succeed)
-                            {
-                                _sessionId = sessionMessage.SessionId;
-                                _onSession = true;
-                                _sessionEvent.Set();
-                            }
-                            else
-                                await DisconnectAsync();
-                            break;
-                        default:
-                            ThreadPool.UnsafeQueueUserWorkItem(state =>
-                            {
-                                var sArray = (object[]) state;
-                                var client = (RpcClient) sArray[0];
-                                client.OnMessageReceived?.Invoke(client, (RPCMessage)sArray[1]);                                
-                            }, new object[] { this, message });
-                            break;
+                        var message = _serializer.Deserialize<RPCMessage>(_readStream);
+                        switch (message)
+                        {
+                            case RPCSessionResponseMessage sessionMessage:
+                                if (sessionMessage.Succeed)
+                                {
+                                    _sessionId = sessionMessage.SessionId;
+                                    _onSession = true;
+                                    _sessionEvent.Set();
+                                }
+                                else
+                                    await DisconnectAsync();
+
+                                break;
+                            default:
+                                ThreadPool.UnsafeQueueUserWorkItem(state =>
+                                {
+                                    var sArray = (object[]) state;
+                                    var client = (RpcClient) sArray[0];
+                                    client.OnMessageReceived?.Invoke(client, (RPCMessage) sArray[1]);
+                                }, new object[] {this, message});
+                                break;
+                        }
+                    }
+                    catch (IOException ex)
+                    {
+                        OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (!(ex is FormatException))
+                            Core.Log.Write(ex);
+                        _client.Close();
                     }
                 }
-                catch (IOException)
-                {
-                    break;
-                }
-                catch (Exception ex)
+                catch(Exception ex)
                 {
                     Core.Log.Write(ex);
+                    OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                    break;
                 }
             }
             Dispose();

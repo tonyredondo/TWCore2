@@ -130,7 +130,14 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             {
                 if (_client == null || !_client.Connected) return;
                 _serializer.Serialize(message, _writeStream);
-                await _writeStream.FlushAsync().ConfigureAwait(false);
+                try
+                {
+                    await _writeStream.FlushAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    //
+                }
             }
         }
         #endregion
@@ -152,6 +159,14 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
                     Task.Factory.StartNew(MessageReceivedHandler, message);
+                }
+                catch (IOException)
+                {
+                    break;
+                }
+                catch (FormatException)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -200,15 +215,22 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            _client?.Dispose();
-            _readStream?.Dispose();
-            _writeStream?.Dispose();
-            _networkStream?.Dispose();
+            try
+            {
+                _client?.Dispose();
+                _readStream?.Dispose();
+                _writeStream?.Dispose();
+                _networkStream?.Dispose();
 
-            _client = null;
-            _readStream = null;
-            _writeStream = null;
-            _networkStream = null;
+                _client = null;
+                _readStream = null;
+                _writeStream = null;
+                _networkStream = null;
+            }
+            catch
+            {
+                //
+            }
 
             OnDisconnect?.Invoke(this, EventArgs.Empty);
         }

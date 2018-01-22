@@ -166,7 +166,8 @@ namespace TWCore.Messaging.Server
         protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
             Interlocked.Increment(ref ActiveWorkers);
-            WorkerEvent.Reset();
+            if (WorkerEvent.IsSet)
+                WorkerEvent.Reset();
             Counters.IncrementMessages();
             try
             {

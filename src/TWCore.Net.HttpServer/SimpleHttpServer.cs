@@ -153,7 +153,7 @@ namespace TWCore.Net.HttpServer
             _tskListener = Task.Factory.StartNew(async () =>
             {
                 while (!_token.IsCancellationRequested)
-                    ThreadPool.QueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
+                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             _active = true;
             Core.Log.LibVerbose("HttpServer Started on {0}.", port);

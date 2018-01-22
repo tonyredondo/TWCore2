@@ -163,10 +163,10 @@ namespace TWCore.Net.RPC.Server.Transports.TW
                             Interlocked.Increment(ref _socketErrors);
                             break;
                         case RPCMessageType.RequestMessage:
-                            ThreadPool.QueueUserWorkItem(ProcessRequestMessage, message);
+                            ThreadPool.UnsafeQueueUserWorkItem(ProcessRequestMessage, message);
                             break;
                         case RPCMessageType.SessionRequest:
-                            ThreadPool.QueueUserWorkItem(ProcessSessionRequestMessage, message);
+                            ThreadPool.UnsafeQueueUserWorkItem(ProcessSessionRequestMessage, message);
                             break;
                     }
                     _server.Counters.IncrementBytesReceived(readCounterStream.BytesRead);

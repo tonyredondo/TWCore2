@@ -247,7 +247,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                                 await DisconnectAsync();
                             break;
                         default:
-                            ThreadPool.QueueUserWorkItem(state =>
+                            ThreadPool.UnsafeQueueUserWorkItem(state =>
                             {
                                 var sArray = (object[]) state;
                                 var client = (RpcClient) sArray[0];

@@ -272,21 +272,25 @@ namespace TWCore.Messaging.Server
 				ResponseSentEventArgs rsea = null;
 				if (BeforeSendResponse != null || MQueueServerEvents.BeforeSendResponse != null ||
 				    ResponseSent != null || MQueueServerEvents.ResponseSent != null)
+			    {
 					rsea = new ResponseSentEventArgs(Name, e.Response);
-				if (BeforeSendResponse != null)
-				    await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-				if (MQueueServerEvents.BeforeSendResponse != null)
-					await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-				
-				var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
+			        if (BeforeSendResponse != null)
+			            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+			        if (MQueueServerEvents.BeforeSendResponse != null)
+			            await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+			    }
+
+			    var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
-					if (rsea != null)
-						rsea.MessageLength = sentBytes;
-                    if (ResponseSent != null)
-					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-					if (MQueueServerEvents.ResponseSent != null)
-						await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				    if (rsea != null)
+				    {
+				        rsea.MessageLength = sentBytes;
+				        if (ResponseSent != null)
+				            await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				        if (MQueueServerEvents.ResponseSent != null)
+				            await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				    }
 				}
 				else
 					Core.Log.Warning("The message couldn't be sent.");

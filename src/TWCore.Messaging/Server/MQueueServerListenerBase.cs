@@ -86,7 +86,7 @@ namespace TWCore.Messaging.Server
         /// <param name="server">Message queue server instance</param>
         /// <param name="responseServer">true if the server is going to act as a response server</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected MQueueServerListenerBase(MQConnection connection, IMQueueServer server, bool responseServer)
+        protected MQueueServerListenerBase(MQConnection connection, IMQueueServer server, bool responseServer)
         {
             Connection = connection;
             Config = server.Config;
@@ -101,45 +101,45 @@ namespace TWCore.Messaging.Server
                 Core.Status.AttachChild(Counters, this);
             });
         }
-		#endregion
+        #endregion
 
-		#region Public Methods
-		/// <inheritdoc />
-		/// <summary>
-		/// Start the queue listener for request messages
-		/// </summary>
-		/// <param name="token">Cancellation token</param>
-		/// <returns>Task of the method execution</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task TaskStartAsync(CancellationToken token)
+        #region Public Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Start the queue listener for request messages
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task TaskStartAsync(CancellationToken token)
         {
             return OnListenerTaskStartAsync(token);
         }
-		/// <inheritdoc />
-		/// <summary>
-		/// Dispose all resources
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void Dispose()
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Dispose()
         {
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-		#endregion
+        #endregion
 
-		#region Abstract Methods
-		/// <summary>
-		/// Start the queue listener for request messages
-		/// </summary>
-		/// <param name="token">Cancellation token</param>
-		/// <returns>Task of the method execution</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract Task OnListenerTaskStartAsync(CancellationToken token);
-		/// <summary>
-		/// On Dispose
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract void OnDispose();
+        #region Abstract Methods
+        /// <summary>
+        /// Start the queue listener for request messages
+        /// </summary>
+        /// <param name="token">Cancellation token</param>
+        /// <returns>Task of the method execution</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract Task OnListenerTaskStartAsync(CancellationToken token);
+        /// <summary>
+        /// On Dispose
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract void OnDispose();
         #endregion
 
         #region Protected Methods
@@ -150,12 +150,12 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task OnRequestReceivedAsync(RequestReceivedEventArgs requestReceived)
             => RequestReceived?.InvokeAsync(this, requestReceived) ?? Task.CompletedTask;
-		/// <summary>
-		/// Fires the ResponseReceived event
-		/// </summary>
-		/// <param name="responseReceived">Response received event args</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected Task OnResponseReceivedAsync(ResponseReceivedEventArgs responseReceived)
+        /// <summary>
+        /// Fires the ResponseReceived event
+        /// </summary>
+        /// <param name="responseReceived">Response received event args</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task OnResponseReceivedAsync(ResponseReceivedEventArgs responseReceived)
             => ResponseReceived?.InvokeAsync(this, responseReceived) ?? Task.CompletedTask;
         /// <summary>
         /// Enqueue Message To Process
@@ -166,14 +166,13 @@ namespace TWCore.Messaging.Server
         protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
             Interlocked.Increment(ref ActiveWorkers);
-            if (WorkerEvent.IsSet)
-                WorkerEvent.Reset();
+            WorkerEvent.Reset();
             Counters.IncrementMessages();
             try
             {
                 await processingFunc(message).ConfigureAwait(false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }

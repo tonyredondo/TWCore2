@@ -164,25 +164,27 @@ namespace TWCore.Messaging.RawClient
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<Guid> SendBytesAsync(byte[] obj, Guid correlationId)
         {
-			RawMessageEventArgs rmea = null;
-			if (OnBeforeSendRequest != null || MQueueRawClientEvents.OnBeforeSendRequest != null ||
-				OnRequestSent != null || MQueueRawClientEvents.OnRequestSent != null)
-				rmea = new RawMessageEventArgs(Name, obj);
-			
-            if (OnBeforeSendRequest != null)
-                await OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
-			if (MQueueRawClientEvents.OnBeforeSendRequest != null)
-				await MQueueRawClientEvents.OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
-
-			obj = rmea != null ? rmea.Message : obj;
+            RawMessageEventArgs rmea = null;
+            if (OnBeforeSendRequest != null || MQueueRawClientEvents.OnBeforeSendRequest != null ||
+                OnRequestSent != null || MQueueRawClientEvents.OnRequestSent != null)
+            {
+                rmea = new RawMessageEventArgs(Name, obj);
+                if (OnBeforeSendRequest != null)
+                    await OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
+                if (MQueueRawClientEvents.OnBeforeSendRequest != null)
+                    await MQueueRawClientEvents.OnBeforeSendRequest.InvokeAsync(this, rmea).ConfigureAwait(false);
+                obj = rmea.Message;
+            }
             if (!await OnSendAsync(obj, correlationId).ConfigureAwait(false)) return Guid.Empty;
             Counters.IncrementMessagesSent();
             Counters.IncrementTotalBytesSent(obj.Length);
-
-            if (OnRequestSent != null)
-                await OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
-			if (MQueueRawClientEvents.OnRequestSent != null)
-				await MQueueRawClientEvents.OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
+            if (rmea != null)
+            {
+                if (OnRequestSent != null)
+                    await OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
+                if (MQueueRawClientEvents.OnRequestSent != null)
+                    await MQueueRawClientEvents.OnRequestSent.InvokeAsync(this, rmea).ConfigureAwait(false);
+            }
             return correlationId;
         }
         /// <inheritdoc />
@@ -237,14 +239,15 @@ namespace TWCore.Messaging.RawClient
             Counters.IncrementMessagesReceived();
             Counters.IncrementTotalBytesReceived(bytes.Length);
 
-			RawMessageEventArgs rrea = null;
-			if (OnResponseReceived != null || MQueueRawClientEvents.OnResponseReceived != null)
-            	rrea = new RawMessageEventArgs(Name, bytes);
-            if (OnResponseReceived != null)
-                await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-			if (MQueueRawClientEvents.OnResponseReceived != null)
-				await MQueueRawClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-			
+            if (OnResponseReceived != null || MQueueRawClientEvents.OnResponseReceived != null)
+            {
+                var rrea = new RawMessageEventArgs(Name, bytes);
+                if (OnResponseReceived != null)
+                    await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+                if (MQueueRawClientEvents.OnResponseReceived != null)
+                    await MQueueRawClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+            }
+
             return bytes;
         }
         /// <inheritdoc />
@@ -386,35 +389,35 @@ namespace TWCore.Messaging.RawClient
             OnDispose();
             Core.Status.DeAttachObject(this);
         }
-		#endregion
+        #endregion
 
-		#region Abstract Methods
-		/// <summary>
-		/// On client initialization
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract void OnInit();
-		/// <summary>
-		/// On Send message data
-		/// </summary>
-		/// <param name="message">Request message instance</param>
-		/// <param name="correlationId">Correlation Id</param>
-		/// <returns>true if message has been sent; otherwise, false.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract Task<bool> OnSendAsync(byte[] message, Guid correlationId);
-		/// <summary>
-		/// On Receive message data
-		/// </summary>
-		/// <param name="correlationId">Correlation Id</param>
-		/// <param name="cancellationToken">Cancellation Token</param>
-		/// <returns>Response message instance</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken);
-		/// <summary>
-		/// On Dispose
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		protected abstract void OnDispose();
+        #region Abstract Methods
+        /// <summary>
+        /// On client initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract void OnInit();
+        /// <summary>
+        /// On Send message data
+        /// </summary>
+        /// <param name="message">Request message instance</param>
+        /// <param name="correlationId">Correlation Id</param>
+        /// <returns>true if message has been sent; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract Task<bool> OnSendAsync(byte[] message, Guid correlationId);
+        /// <summary>
+        /// On Receive message data
+        /// </summary>
+        /// <param name="correlationId">Correlation Id</param>
+        /// <param name="cancellationToken">Cancellation Token</param>
+        /// <returns>Response message instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract Task<byte[]> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken);
+        /// <summary>
+        /// On Dispose
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected abstract void OnDispose();
         #endregion
     }
 }

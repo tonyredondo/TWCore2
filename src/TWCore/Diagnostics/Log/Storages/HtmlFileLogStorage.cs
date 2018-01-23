@@ -192,43 +192,49 @@ namespace TWCore.Diagnostics.Log.Storages
     <label class='text' style='width:55px;'><div>Empty<br/>Lines</div></label>
     <label class='switch'><input type='checkbox' id='chkEmptyLines' checked><span class='slider round'></span></label>
     <script>
+        var dvContainer = {};
+        var S = function(selector) {
+            if (dvContainer[selector] === undefined)
+                dvContainer[selector] = $(selector);
+            return dvContainer[selector];
+        };
         var starts = { 
             data : [],
-            goTo : function(index) { $('.displaywrap').scrollTop(this.data[index][1].offset().top - this.data[index][1].parent().position().top); },
-            goToEnd : function() {$('.displaywrap').scrollTop($('.display').height()); }
+            goTo : function(index) { S('.displaywrap').scrollTop(this.data[index][1].offset().top - this.data[index][1].parent().position().top); },
+            goToEnd : function() {S('.displaywrap').scrollTop(S('.display').height()); }
         };
         $(function() {
-            $('#dvError').html('Error<br/>' + $('.Error').length);
-            $('#dvWarning').html('Warning<br/>' + $('.Warning').length);
-            $('#dvInfoB').html('Info B<br/>' + $('.InfoBasic').length);
-            $('#dvInfoM').html('Info M<br/>' + $('.InfoMedium').length);
-            $('#dvInfoD').html('Info D<br/>' + $('.InfoDetail').length);
-            $('#dvDebug').html('Debug<br/>' + ($('.Debug').length + $('.LibDebug').length));
-            $('#dvStats').html('Stats<br/>' + $('.Stats').length);
-            $('#dvVerbose').html('Verbose<br/>' + ($('.Verbose').length + $('.LibVerbose').length));
+            S('#dvError').html('Error<br/>' + S('.Error').length);
+            S('#dvWarning').html('Warning<br/>' + S('.Warning').length);
+            S('#dvInfoB').html('Info B<br/>' + S('.InfoBasic').length);
+            S('#dvInfoM').html('Info M<br/>' + S('.InfoMedium').length);
+            S('#dvInfoD').html('Info D<br/>' + S('.InfoDetail').length);
+            S('#dvDebug').html('Debug<br/>' + (S('.Debug').length + S('.LibDebug').length));
+            S('#dvStats').html('Stats<br/>' + S('.Stats').length);
+            S('#dvVerbose').html('Verbose<br/>' + (S('.Verbose').length + S('.LibVerbose').length));
 
-            if ($('.Error').length == 0) $('#chkError').parent().remove();
-            if ($('.Warning').length == 0) $('#chkWarning').parent().remove();
-            if ($('.InfoBasic').length == 0) $('#chkInfoB').parent().remove();
-            if ($('.InfoMedium').length == 0) $('#chkInfoM').parent().remove();
-            if ($('.InfoDetail').length == 0) $('#chkInfoD').parent().remove();
-            if ($('.Debug').length + $('.LibDebug').length == 0) $('#chkDebug').parent().remove();
-            if ($('.Stats').length == 0) $('#chkStats').parent().remove();
-            if ($('.Verbose').length + $('.LibVerbose').length == 0) $('#chkVerbose').parent().remove();
+            if (S('.Error').length == 0) S('#chkError').parent().remove();
+            if (S('.Warning').length == 0) S('#chkWarning').parent().remove();
+            if (S('.InfoBasic').length == 0) S('#chkInfoB').parent().remove();
+            if (S('.InfoMedium').length == 0) S('#chkInfoM').parent().remove();
+            if (S('.InfoDetail').length == 0) S('#chkInfoD').parent().remove();
+            if (S('.Debug').length + S('.LibDebug').length == 0) S('#chkDebug').parent().remove();
+            if (S('.Stats').length == 0) S('#chkStats').parent().remove();
+            if (S('.Verbose').length + S('.LibVerbose').length == 0) S('#chkVerbose').parent().remove();
 
             starts.goToEnd();
 
-            $('.Start').each(function() { 
+            S('.Start').each(function() { 
                 var self = $(this); 
                 var time = self.data('time');
                 time = time.substr(0, time.length - 4);
                 starts.data.push([time, self]); 
-                $('#ulStarts').append($('<li onclick=\'starts.goTo(' + (starts.data.length - 1) + ')\'>' + time + '</li>'));
+                S('#ulStarts').append(S('<li onclick=\'starts.goTo(' + (starts.data.length - 1) + ')\'>' + time + '</li>'));
             });
-            $('#ulStarts').append($('<li onclick=\'starts.goToEnd()\'>EOF</li>'));
-            var lis = $('#ulStarts li');
-            $('.displaywrap').scroll(function() { 
-                var containerTop = -$('.display').position().top;
+            S('#ulStarts').append($('<li onclick=\'starts.goToEnd()\'>EOF</li>'));
+            var lis = S('#ulStarts li');
+            S('.displaywrap').scroll(function() { 
+                var containerTop = -S('.display').position().top;
                 lis.removeClass('liActive');
                 for(var i = starts.data.length - 1; i >= 0; i--)
                 {
@@ -242,17 +248,26 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
             });
         });
-        $('input[type=checkbox]').click(function() {
-            if (this.id == 'chkError') $('.Error').toggle();
-            if (this.id == 'chkWarning') $('.Warning').toggle();
-            if (this.id == 'chkInfoB') $('.InfoBasic').toggle();
-            if (this.id == 'chkInfoM') $('.InfoMedium').toggle();
-            if (this.id == 'chkInfoD') $('.InfoDetail').toggle();
-            if (this.id == 'chkDebug') { $('.Debug').toggle(); $('.LibDebug').toggle();}
-            if (this.id == 'chkStats') $('.Stats').toggle();
-            if (this.id == 'chkVerbose') { $('.Verbose').toggle(); $('.LibVerbose').toggle();}
-            if (this.id == 'chkEmptyLines') $('.EmptyLine').toggle();
+        S('input[type=checkbox]').click(function() {
+            Toggle('.displaywrap');
+            if (this.id == 'chkError') Toggle('.Error');
+            if (this.id == 'chkWarning') Toggle('.Warning');
+            if (this.id == 'chkInfoB') Toggle('.InfoBasic');
+            if (this.id == 'chkInfoM') Toggle('.InfoMedium');
+            if (this.id == 'chkInfoD') Toggle('.InfoDetail');
+            if (this.id == 'chkDebug') { Toggle('.Debug'); Toggle('.LibDebug');}
+            if (this.id == 'chkStats') Toggle('.Stats');
+            if (this.id == 'chkVerbose') { Toggle('.Verbose'); Toggle('.LibVerbose');}
+            if (this.id == 'chkEmptyLines') Toggle('.EmptyLine');
+            Toggle('.displaywrap');
         });
+        function Toggle(selector) {
+            var jitem = S(selector);
+            jitem.each(function() { 
+                var th = $(this)[0];
+                th.style.display = th.style.display == 'none' ? '' : 'none';
+            });
+        };
     </script>
 </div>
 <div class='displaywrap'><div class='display'><pre>";

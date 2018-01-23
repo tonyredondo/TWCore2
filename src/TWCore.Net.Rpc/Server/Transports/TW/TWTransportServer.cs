@@ -298,7 +298,7 @@ namespace TWCore.Net.RPC.Server.Transports.TW
                 };
                 return response;
             }
-            var mEventArgs = new MethodEventArgs(client.SessionId, request);
+            var mEventArgs = new MethodEventArgs(client.SessionId, request, CancellationToken.None);
             OnMethodCall?.Invoke(this, mEventArgs);
             return mEventArgs.Response;
         }

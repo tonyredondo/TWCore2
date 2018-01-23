@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
@@ -39,6 +40,9 @@ namespace TWCore.Net.RPC.Server
         private readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
         private readonly Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)> _methods = new Dictionary<Guid, (ServiceItem Service, MethodDescriptor Method)>(100);
         private ITransportServer _transport;
+
+        [ThreadStatic]
+        public static CancellationToken ConnectionCancellationToken;
 
         #region Properties
         /// <inheritdoc />
@@ -175,7 +179,7 @@ namespace TWCore.Net.RPC.Server
         {
 			if (_methods.TryGetValue(e.Request.MethodId, out var desc)) 
 			{
-				e.Response = desc.Service.ProcessRequest(e.Request, e.ClientId, desc.Method);
+				e.Response = desc.Service.ProcessRequest(e.Request, e.ClientId, desc.Method, e.CancellationToken);
 				return;
 			}
 			e.Response = new RPCResponseMessage(e.Request)
@@ -291,14 +295,15 @@ namespace TWCore.Net.RPC.Server
                 });
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-			public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc)
+			public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc, CancellationToken cancellationToken)
             {
                 var response = new RPCResponseMessage(request);
                 try
                 {
 					var tId = Environment.CurrentManagedThreadId;
 					lock (_threadClientId) _threadClientId[tId] = clientId;
-					response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
+                    ConnectionCancellationToken = cancellationToken;
+                    response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
 					//lock (_threadClientId) _threadClientId.Remove(tId);
                 }
                 catch (TargetInvocationException ex)

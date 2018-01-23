@@ -17,6 +17,8 @@ limitations under the License.
 using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Threading;
+
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
 namespace TWCore.Net.HttpServer
@@ -31,7 +33,8 @@ namespace TWCore.Net.HttpServer
     /// </summary>
     /// <param name="context"></param>
     /// <param name="handled"></param>
-    public delegate void OnRequestDelegate(HttpContext context, ref bool handled);
+    /// <param name="cancellationToken">Connection cancellation token</param>
+    public delegate void OnRequestDelegate(HttpContext context, ref bool handled, CancellationToken cancellationToken);
 
     /// <summary>
     /// Http context

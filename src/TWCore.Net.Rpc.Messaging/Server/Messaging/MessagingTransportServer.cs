@@ -163,7 +163,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     }
                     break;
                 case RPCRequestMessage rqMessage:
-                    var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage);
+                    var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
                     if (OnMethodCall != null)
                     {
                         OnMethodCall(this, mEvent);

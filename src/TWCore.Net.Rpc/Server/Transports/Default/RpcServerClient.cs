@@ -63,6 +63,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
+        private CancellationTokenSource _tokenSource;
         #endregion
 
         #region Properties
@@ -78,6 +79,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// Session Id
         /// </summary>
         public Guid SessionId => _sessionId;
+        /// <summary>
+        /// Connection cancellation token
+        /// </summary>
+        public CancellationToken ConnectionCancellationToken => _tokenSource.Token;
         #endregion
 
         #region Events
@@ -113,6 +118,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _networkStream = _client.GetStream();
             _readStream = new BufferedStream(_networkStream);
             _writeStream = new BufferedStream(_networkStream);
+            _tokenSource = new CancellationTokenSource();
             BindBackgroundTasks();
         }
         #endregion
@@ -221,11 +227,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 _readStream?.Dispose();
                 _writeStream?.Dispose();
                 _networkStream?.Dispose();
+                _tokenSource.Cancel();
 
                 _client = null;
                 _readStream = null;
                 _writeStream = null;
                 _networkStream = null;
+                _tokenSource = null;
             }
             catch
             {

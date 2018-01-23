@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace TWCore.Net.RPC.Server
 {
@@ -37,6 +38,10 @@ namespace TWCore.Net.RPC.Server
         /// RPC Response message
         /// </summary>
         public RPCResponseMessage Response { get; set; }
+        /// <summary>
+        /// Connection CancellationToken
+        /// </summary>
+        public CancellationToken CancellationToken { get; }
 
         /// <inheritdoc />
         /// <summary>
@@ -44,11 +49,13 @@ namespace TWCore.Net.RPC.Server
         /// </summary>
         /// <param name="clientId">Client identifier</param>
         /// <param name="request">RPC Request message</param>
+        /// <param name="cancellationToken">Cancellation token</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public MethodEventArgs(Guid clientId, RPCRequestMessage request)
+        public MethodEventArgs(Guid clientId, RPCRequestMessage request, CancellationToken cancellationToken)
         {
             ClientId = clientId;
             Request = request;
+            CancellationToken = cancellationToken;
         }
     }
 }

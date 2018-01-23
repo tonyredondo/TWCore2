@@ -291,7 +291,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
                     return;
                 }
-                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request);
+                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
                 OnMethodCall?.Invoke(this, mEventArgs);
                 await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
             }

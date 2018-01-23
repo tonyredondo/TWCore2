@@ -39,11 +39,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// <param name="e">Event args</param>
     public delegate void RpcClientEvent<in TEventArgs>(RpcClient rpcClient, TEventArgs e);
 
-    internal class RPCError : RPCMessage
-    {
-        public SerializableException Exception { get; set; }
-    }
-
     /// <inheritdoc />
     /// <summary>
     /// Rpc client

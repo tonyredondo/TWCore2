@@ -52,7 +52,7 @@ namespace TWCore.Diagnostics.Log.Storages
         body { background-color: #000 }
         .displaywrap::-webkit-scrollbar-track { border-radius: 0px; background-color: #181818; }
         .displaywrap::-webkit-scrollbar { width: 18px; height: 18px; background-color: #000; }
-        .displaywrap::-webkit-scrollbar-thumb { border-radius: 2px; -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3); background-color: #333; }
+        .displaywrap::-webkit-scrollbar-thumb { border-radius: 5px; -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3); background-color: #505050; }
         .displaywrap {
             position: absolute;
             overflow: overlay;
@@ -125,7 +125,7 @@ namespace TWCore.Diagnostics.Log.Storages
         .slider.round { border-radius: 34px; }
         .slider.round:before { border-radius: 50%; }
         .switch input {display:none;}
-        .display { padding: 5px; }
+        .display { padding: 7px; }
         #dvStarts {
             position: absolute;
             background-color: #222;
@@ -255,12 +255,11 @@ namespace TWCore.Diagnostics.Log.Storages
         });
     </script>
 </div>
-<div class='displaywrap'><div class='display'>
-";
+<div class='displaywrap'><div class='display'><pre>";
 
-        private const string PreFormat = "<pre class='{0}'>{1}</pre>";
-        private const string PreFormatWTime = "<pre class='{0}' data-time='{2}'>{1}</pre>";
-        private const string PreFormatWType = "<pre class='{0}' data-type='{2}'>{1}</pre>";
+        private const string PreFormat = "<span class='{0}'>{1}<br/></span>";
+        private const string PreFormatWTime = "<span class='{0}' data-time='{2}'>{1}<br/></span>";
+        private const string PreFormatWType = "<span class='{0}' data-type='{2}'>{1}<br/></span>";
         private const string HtmlEnd = "</pre></div></div></body></html>";
 
         #endregion
@@ -462,12 +461,12 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 lock (_sWriter)
                 {
-                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.WriteLine(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
+                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                    _sWriter.Write(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
                     _sWriter.Flush();
                 }
                 _firstWrite = false;
@@ -501,7 +500,7 @@ namespace TWCore.Diagnostics.Log.Storages
 
             lock (_sWriter)
             {
-                _sWriter.WriteLine(format, item.Level, line, item.TypeName);
+                _sWriter.Write(format, item.Level, line, item.TypeName);
                 _sWriter.Flush();
             }
         }
@@ -514,7 +513,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             lock (_sWriter)
             {
-				_sWriter.WriteLine(PreFormat, "EmptyLine", "<br/>");
+				_sWriter.Write(PreFormat, "EmptyLine", "<br/>");
                 _sWriter.Flush();
             }
         }
@@ -528,7 +527,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
-				_sWriter?.WriteLine(PreFormat, "End", "&#8613; END &#8613;");
+				_sWriter?.Write(PreFormat, "End", "&#8613; END &#8613;");
                 _sWriter?.Flush();
                 _sWriter?.Dispose();
                 _sWriter = null;

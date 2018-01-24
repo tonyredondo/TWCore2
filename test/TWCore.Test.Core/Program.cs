@@ -26,8 +26,8 @@ namespace TWCore.Test.Core
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("testlog.txt");
                 TWCore.Core.Log.AddHtmlFileStorage("testlog.htm");
-                DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
-                DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
+                //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
+                //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
             });
             TWCore.Core.RunService<TestService>(args);
@@ -71,7 +71,7 @@ namespace TWCore.Test.Core
                     return string.Empty;
                 });
                 //**
-                await Task.Delay(10000, token);
+                await Task.Delay(10000, token).ConfigureAwait(false);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }
         }

@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using TWCore.Net.RPC.Grid;
 using TWCore.Net.RPC.Server.Transports;
 
@@ -108,7 +109,7 @@ namespace TWCore.Net.RPC.Server.Grid
         public object Process(params object[] args)
         {
             Core.Log.LibDebug("Process call received.");
-            return OnProcess(args);
+            return OnProcess(RPCServer.ConnectionCancellationToken, args);
         }
         /// <inheritdoc />
         /// <summary>
@@ -132,9 +133,10 @@ namespace TWCore.Net.RPC.Server.Grid
         /// <summary>
         /// On process execution call
         /// </summary>
+        /// <param name="cancellationToken">CancellationToken</param>
         /// <param name="args">Arguments</param>
         /// <returns>Response object</returns>
-        protected abstract object OnProcess(params object[] args);
+        protected abstract object OnProcess(CancellationToken cancellationToken, params object[] args);
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>

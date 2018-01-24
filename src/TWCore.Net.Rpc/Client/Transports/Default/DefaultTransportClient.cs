@@ -307,6 +307,15 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         return null;
                     });
                     break;
+                case RPCError errorMessage:
+                    var respMsg = new RPCResponseMessage {Exception = errorMessage.Exception};
+                    foreach (var mHandler in _messageResponsesHandlers.ToArray())
+                    {
+                        mHandler.Value.Message = respMsg;
+                        mHandler.Value.Event.Set();
+                        _messageResponsesHandlers.TryRemove(mHandler.Key, out var _);
+                    }
+                    break;
             }
         }
         #endregion

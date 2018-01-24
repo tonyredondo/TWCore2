@@ -57,10 +57,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private readonly BinarySerializer _serializer;
         private TcpClient _client;
         private Stream _networkStream;
+        private BufferedStream _readStream;
+        private BufferedStream _writeStream;
         private Task _receiveTask;
         private bool _onSession;
         private string _hub;
         private Guid _sessionId;
+        private CancellationTokenSource _tokenSource;
         #endregion
 
         #region Properties
@@ -76,6 +79,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// Session Id
         /// </summary>
         public Guid SessionId => _sessionId;
+        /// <summary>
+        /// Connection cancellation token
+        /// </summary>
+        public CancellationToken ConnectionCancellationToken => _tokenSource.Token;
         #endregion
 
         #region Events
@@ -109,6 +116,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _client = client;
             _serializer = serializer;
             _networkStream = _client.GetStream();
+            _readStream = new BufferedStream(_networkStream);
+            _writeStream = new BufferedStream(_networkStream);
+            _tokenSource = new CancellationTokenSource();
             BindBackgroundTasks();
         }
         #endregion
@@ -125,7 +135,15 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
                 if (_client == null || !_client.Connected) return;
-                _serializer.Serialize(message, _networkStream);
+                _serializer.Serialize(message, _writeStream);
+                try
+                {
+                    await _writeStream.FlushAsync().ConfigureAwait(false);
+                }
+                catch
+                {
+                    //
+                }
             }
         }
         #endregion
@@ -145,8 +163,16 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             {
                 try
                 {
-                    var message = _serializer.Deserialize<RPCMessage>(_networkStream);
-                    ThreadPool.QueueUserWorkItem(MessageReceivedHandler, message);
+                    var message = _serializer.Deserialize<RPCMessage>(_readStream);
+                    Task.Factory.StartNew(MessageReceivedHandler, message);
+                }
+                catch (IOException)
+                {
+                    break;
+                }
+                catch (FormatException)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
@@ -157,7 +183,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Dispose();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void MessageReceivedHandler(object rawMessage)
+        private async Task MessageReceivedHandler(object rawMessage)
         {
             switch (rawMessage)
             {
@@ -169,12 +195,12 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             ? Guid.NewGuid()
                             : sessionMessage.SessionId;
                         _onSession = true;
-                        SendRpcMessageAsync(new RPCSessionResponseMessage
+                        await SendRpcMessageAsync(new RPCSessionResponseMessage
                         {
                             RequestMessageId = sessionMessage.MessageId,
                             SessionId = _sessionId,
                             Succeed = true
-                        }).WaitAsync();
+                        }).ConfigureAwait(false);
                         OnConnect?.Invoke(this, EventArgs.Empty);
                     }
                     else
@@ -195,11 +221,24 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            _client?.Dispose();
-            _networkStream?.Dispose();
+            try
+            {
+                _client?.Dispose();
+                _readStream?.Dispose();
+                _writeStream?.Dispose();
+                _networkStream?.Dispose();
+                _tokenSource.Cancel();
 
-            _client = null;
-            _networkStream = null;
+                _client = null;
+                _readStream = null;
+                _writeStream = null;
+                _networkStream = null;
+                _tokenSource = null;
+            }
+            catch
+            {
+                //
+            }
 
             OnDisconnect?.Invoke(this, EventArgs.Empty);
         }

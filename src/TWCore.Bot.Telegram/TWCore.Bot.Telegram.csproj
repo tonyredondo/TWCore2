@@ -8,7 +8,7 @@
     <Description>TWCore Framework.
 A multipurpose framework library for .net core</Description>
     <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
-    <Version>0.2.61</Version>
+    <Version>0.2.68</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
     <Copyright></Copyright>
@@ -26,7 +26,7 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Telegram.Bot" Version="13.2.1" />
+    <PackageReference Include="Telegram.Bot" Version="13.4.0" />
   </ItemGroup>
 
   <ItemGroup>

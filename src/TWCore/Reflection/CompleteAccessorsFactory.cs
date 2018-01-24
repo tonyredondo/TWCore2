@@ -29,7 +29,10 @@ namespace TWCore.Reflection
     /// </summary>
     public class CompleteAccessorsFactory : IAccessorsFactory
     {
-        private static MethodInfo _changeTypeMethodInfo;
+        private static MethodInfo _cTypeMInfo;
+        private static MethodInfo ChangeTypeMethodInfo 
+            => _cTypeMInfo ?? (_cTypeMInfo = typeof(CompleteAccessorsFactory).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType"));
+
 
         /// <inheritdoc />
         /// <summary>
@@ -42,8 +45,6 @@ namespace TWCore.Reflection
         {
             Ensure.ArgumentNotNull(ctor);
             var ctorParams = ctor.GetParameters();
-            if (_changeTypeMethodInfo == null)
-                _changeTypeMethodInfo = typeof(Convert).GetMethod("ChangeType", new[] { typeof(object), typeof(Type) });
 
             var paramExp = Expression.Parameter(typeof(object[]), "args");
             var expArr = new Expression[ctorParams.Length];
@@ -51,7 +52,7 @@ namespace TWCore.Reflection
             {
                 var ctorType = ctorParams[i].ParameterType;
                 var argExp = Expression.ArrayIndex(paramExp, Expression.Constant(i));
-                var argExpConverted = Expression.Convert(Expression.Call(_changeTypeMethodInfo, argExp, Expression.Constant(ctorType)), ctorType);
+                var argExpConverted = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(ctorType)), ctorType);
                 expArr[i] = argExpConverted;
             }
             var newExp = Expression.New(ctor, expArr);
@@ -112,9 +113,6 @@ namespace TWCore.Reflection
         {
             var obj = Expression.Parameter(typeof(object), "o");
             var castedObject = Expression.Convert(obj, method.DeclaringType);
-            if (_changeTypeMethodInfo == null)
-                _changeTypeMethodInfo = typeof(CompleteAccessorsFactory)
-                    .GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType");
 
             var parameters = method.GetParameters();
             var paramExp = Expression.Parameter(typeof(object[]), "args");
@@ -130,7 +128,7 @@ namespace TWCore.Reflection
                         Expression.Constant(p.RawDefaultValue, pType), Expression.Convert(argExp, pType));
                 else if (pType != typeof(object))
                 {
-                    argExp = Expression.Convert(Expression.Call(_changeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
+                    argExp = Expression.Convert(Expression.Call(ChangeTypeMethodInfo, argExp, Expression.Constant(pType)), pType);
                 }
                 else
                 {
@@ -143,7 +141,7 @@ namespace TWCore.Reflection
                 callExpression = Expression.Convert(callExpression, typeof(object));
             else
                 callExpression = Expression.Block(callExpression, Expression.Constant(null, typeof(object)));
-            return Expression.Lambda<MethodAccessorDelegate>(callExpression, obj, paramExp).Compile();
+            return Expression.Lambda<MethodAccessorDelegate>(callExpression, "Dynamic+" + method.Name, new[] { obj, paramExp }).Compile();
         }
 
         private static object ChangeType(object value, Type conversionType)

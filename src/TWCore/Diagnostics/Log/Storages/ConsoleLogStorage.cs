@@ -30,12 +30,21 @@ namespace TWCore.Diagnostics.Log.Storages
     public class ConsoleLogStorage : ILogStorage
     {
         private static readonly object PadLock = new object();
-
+        private static readonly ConsoleColor DefaultColor;
+        
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>
         public static bool UseColor { get; set; } = true;
 
+        #region .ctor Static
+        static ConsoleLogStorage()
+        {
+            DefaultColor = ServiceContainer.HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
+        }
+        #endregion
+        
+        
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item to the storage
@@ -47,8 +56,6 @@ namespace TWCore.Diagnostics.Log.Storages
             if (!ServiceContainer.HasConsole) return;
             lock(PadLock) 
             {
-                Console.ResetColor();
-
                 if (UseColor)
                 {
                     switch (item.Level)
@@ -79,11 +86,13 @@ namespace TWCore.Diagnostics.Log.Storages
                         case LogLevel.LibVerbose:
                             Console.ForegroundColor = ConsoleColor.DarkGray;
                             break;
+                        default:
+                            Console.ForegroundColor = DefaultColor;
+                            break;
                     }
                 }
 
                 Console.Write(item.Timestamp.GetTimeSpanFormat());
-                Console.Write(" ({0:000}) ", item.ThreadId);
                 Console.Write("{0, 10}: ",item.Level);
 
                 if (!string.IsNullOrEmpty(item.GroupName))
@@ -103,9 +112,6 @@ namespace TWCore.Diagnostics.Log.Storages
                     Console.WriteLine("Exceptions:\r\n");
                     Console.WriteLine(GetExceptionDescription(item.Exception));
                 }
-
-                if (UseColor)
-                    Console.ResetColor();
             }
         }
 
@@ -134,6 +140,8 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
+            if (ServiceContainer.HasConsole && UseColor)
+                Console.ForegroundColor = DefaultColor;
         }
     }
 }

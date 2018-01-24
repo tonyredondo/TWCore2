@@ -1558,7 +1558,7 @@ namespace TWCore.Data
             {
                 Core.Log.LibVerbose("Select an element from the data source using: {0}", nameOrQuery);
                 if (CacheTimeout == TimeSpan.MinValue || Math.Abs(CacheTimeout.TotalMilliseconds) < 0.1)
-                    return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod);
+                    return await OnSelectElementAsync(nameOrQuery, parameters, fillMethod).ConfigureAwait(false);
 
                 var key = GetCacheKey(nameOrQuery, parameters, fillMethod);
                 if (Caches.TryGetValue(key, out var cacheValue))

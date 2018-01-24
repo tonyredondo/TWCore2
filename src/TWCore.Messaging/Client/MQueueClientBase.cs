@@ -164,22 +164,26 @@ namespace TWCore.Messaging.Client
 			RequestSentEventArgs rsea = null;
 			if (OnBeforeSendRequest != null || MQueueClientEvents.OnBeforeSendRequest != null || 
 			    OnRequestSent != null || MQueueClientEvents.OnRequestSent != null)
+            {
 				rsea = new RequestSentEventArgs(Name, rqMsg);
-				
-			if (OnBeforeSendRequest != null)
-				await OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
-			if (MQueueClientEvents.OnBeforeSendRequest != null)
-				await MQueueClientEvents.OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
+                if (OnBeforeSendRequest != null)
+                    await OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
+                if (MQueueClientEvents.OnBeforeSendRequest != null)
+                    await MQueueClientEvents.OnBeforeSendRequest.InvokeAsync(this, rsea).ConfigureAwait(false);
+            }
 			
             if (!await OnSendAsync(rqMsg).ConfigureAwait(false))
                 return Guid.Empty;
             Counters.IncrementMessagesSent();
 
-            if (OnRequestSent != null)
-                await OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-			if (MQueueClientEvents.OnRequestSent != null)
-            	await MQueueClientEvents.OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-			
+            if (rsea != null)
+            {
+                if (OnRequestSent != null)
+                    await OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                if (MQueueClientEvents.OnRequestSent != null)
+                    await MQueueClientEvents.OnRequestSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+            }
+
             return rqMsg.CorrelationId;
         }
 
@@ -211,14 +215,15 @@ namespace TWCore.Messaging.Client
             Counters.IncrementMessagesReceived();
             Counters.IncrementReceivingTime(rsMsg.Header.Response.TotalTime);
 
-			ResponseReceivedEventArgs rrea = null;
-			if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
-            	rrea = new ResponseReceivedEventArgs(Name, rsMsg);
-            if (OnResponseReceived != null)
-                await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-			if (MQueueClientEvents.OnResponseReceived != null)
-				await MQueueClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
-			
+            if (OnResponseReceived != null || MQueueClientEvents.OnResponseReceived != null)
+            {
+                var rrea = new ResponseReceivedEventArgs(Name, rsMsg);
+                if (OnResponseReceived != null)
+                    await OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+                if (MQueueClientEvents.OnResponseReceived != null)
+                    await MQueueClientEvents.OnResponseReceived.InvokeAsync(this, rrea).ConfigureAwait(false);
+            }
+
             if (rsMsg.Body == null) return default(T);
 
             var res = default(T);

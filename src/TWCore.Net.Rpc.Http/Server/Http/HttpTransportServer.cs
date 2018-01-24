@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Net.RPC.Attributes;
@@ -161,8 +162,9 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         /// <param name="context">Http context</param>
         /// <param name="handled">Get if the request was handled</param>
+        /// <param name="cancellationToken">Connection CancellationToken</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void HttpServer_OnBeginRequest(HttpContext context, ref bool handled)
+        private void HttpServer_OnBeginRequest(HttpContext context, ref bool handled, CancellationToken cancellationToken)
         {
             var request = context.Request;
             var response = context.Response;
@@ -184,7 +186,7 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
-                var eArgs = new MethodEventArgs(clientId, messageRq);
+                var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
                 OnMethodCall(this, eArgs);
                 if (eArgs.Response != null)
                     responseBuffer = Serializer.Serialize(eArgs.Response);

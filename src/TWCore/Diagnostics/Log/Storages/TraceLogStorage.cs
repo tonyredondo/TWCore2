@@ -36,7 +36,6 @@ namespace TWCore.Diagnostics.Log.Storages
             lock(Console.Out) 
             {
                 System.Diagnostics.Trace.Write(item.Timestamp.GetTimeSpanFormat());
-                System.Diagnostics.Trace.Write(string.Format(" ({0:000}) ", item.ThreadId));
                 System.Diagnostics.Trace.Write(string.Format( "{0, 10}: ", item.Level));
 
                 if (!string.IsNullOrEmpty(item.GroupName))

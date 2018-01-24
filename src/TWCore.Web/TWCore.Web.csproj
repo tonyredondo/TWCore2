@@ -8,7 +8,7 @@
     <Description>TWCore Framework.
 A multipurpose framework library for .net core</Description>
     <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
-    <Version>0.2.61</Version>
+    <Version>0.2.68</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
     <Copyright></Copyright>
@@ -28,8 +28,8 @@ A multipurpose framework library for .net core</Description>
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Microsoft.AspNetCore" Version="2.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Xml" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Formatters.Xml" Version="2.0.2" />
     <PackageReference Include="Microsoft.AspNetCore.ResponseCompression" Version="2.0.1" />
   </ItemGroup>
 

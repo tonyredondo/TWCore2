@@ -95,9 +95,14 @@ namespace TWCore.Cache.Storages.IO
         #endregion
 
         #region Private Methods
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int GetFolderNumber(string key)
-            => (int?)(key?.GetJenkinsHash() % NumberOfSubFolders) ?? 0;
+        {
+            if (string.IsNullOrEmpty(key)) return 0;
+            return (int)(key.GetJenkinsHash() % NumberOfSubFolders);
+        }
+
         #endregion
 
         #region Overrides
@@ -265,6 +270,7 @@ namespace TWCore.Cache.Storages.IO
                 _loadTask = Task.Run(() =>
                 {
                     lock (_metasLock)
+                    {
                         lock (_pendingLock)
                         {
                             try
@@ -272,13 +278,15 @@ namespace TWCore.Cache.Storages.IO
                                 if (token.IsCancellationRequested) return;
 
                                 #region Loading index file
+
                                 var indexLoaded = false;
                                 if (File.Exists(_indexFilePath))
                                 {
                                     try
                                     {
                                         Core.Log.InfoBasic("Loading Index File: {0}", _indexFilePath);
-                                        var index = IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(_indexFilePath);
+                                        var index =
+                                            IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(_indexFilePath);
                                         if (index != null)
                                         {
                                             _metas = index.ToDictionary(k => k.Key, v => v);
@@ -297,8 +305,11 @@ namespace TWCore.Cache.Storages.IO
                                     {
                                         if (File.Exists(oldindexFilePath))
                                         {
-                                            Core.Log.Warning("Trying to load old copy of the index file: {0}", oldindexFilePath);
-                                            var index = IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(oldindexFilePath);
+                                            Core.Log.Warning("Trying to load old copy of the index file: {0}",
+                                                oldindexFilePath);
+                                            var index =
+                                                IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(
+                                                    oldindexFilePath);
                                             if (index != null)
                                             {
                                                 _metas = index.ToDictionary(k => k.Key, v => v);
@@ -314,7 +325,8 @@ namespace TWCore.Cache.Storages.IO
 
                                 if (!indexLoaded)
                                 {
-                                    Core.Log.Warning("The index doesn't exist or couldn't be loaded. Generating new index file.");
+                                    Core.Log.Warning(
+                                        "The index doesn't exist or couldn't be loaded. Generating new index file.");
                                     var dateNow = Core.Now;
                                     var eTime = dateNow.AddDays(5);
                                     if (storage.MaximumItemDuration.HasValue)
@@ -326,31 +338,43 @@ namespace TWCore.Cache.Storages.IO
 
                                     if (_metas == null) _metas = new Dictionary<string, StorageItemMeta>();
 
-                                    var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension, SearchOption.AllDirectories);
+                                    var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension,
+                                        SearchOption.AllDirectories);
                                     var idx = 0;
                                     foreach (var file in allFiles)
                                     {
                                         var cTime = File.GetCreationTime(file);
                                         var key = Path.GetFileNameWithoutExtension(file);
-                                        _metas.Add(key, new StorageItemMeta { Key = key, CreationDate = cTime, ExpirationDate = eTime });
+                                        _metas.Add(key,
+                                            new StorageItemMeta
+                                            {
+                                                Key = key,
+                                                CreationDate = cTime,
+                                                ExpirationDate = eTime
+                                            });
                                         if (idx % 100 == 0)
                                             Core.Log.InfoBasic("Number of files loaded: {0}", idx);
                                         idx++;
                                     }
+
                                     Core.Log.InfoBasic("Index generated...");
                                     SaveMetadata();
                                 }
+
                                 #endregion
 
                                 #region Loading transaction log file
+
                                 var transactionLogLoaded = false;
                                 if (File.Exists(_transactionLogFilePath))
                                 {
                                     try
                                     {
-                                        Core.Log.InfoBasic("Loading Transaction Log File: {0}", _transactionLogFilePath);
+                                        Core.Log.InfoBasic("Loading Transaction Log File: {0}",
+                                            _transactionLogFilePath);
                                         var lstTransactions = new List<FileStorageMetaLog>();
-                                        using (var fStream = File.Open(_transactionLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                        using (var fStream = File.Open(_transactionLogFilePath, FileMode.Open,
+                                            FileAccess.Read, FileShare.ReadWrite))
                                         {
                                             while (fStream.Position != fStream.Length)
                                             {
@@ -359,6 +383,7 @@ namespace TWCore.Cache.Storages.IO
                                                     lstTransactions.Add(item);
                                             }
                                         }
+
                                         transactionLog = lstTransactions;
                                         transactionLogLoaded = true;
                                         File.Copy(_transactionLogFilePath, oldTransactionLogFilePath, true);
@@ -375,9 +400,11 @@ namespace TWCore.Cache.Storages.IO
                                     {
                                         if (File.Exists(oldTransactionLogFilePath))
                                         {
-                                            Core.Log.Warning("Trying to load old copy of the transaction log file: {0}", oldTransactionLogFilePath);
+                                            Core.Log.Warning("Trying to load old copy of the transaction log file: {0}",
+                                                oldTransactionLogFilePath);
                                             var lstTransactions = new List<FileStorageMetaLog>();
-                                            using (var fStream = File.Open(oldTransactionLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                            using (var fStream = File.Open(oldTransactionLogFilePath, FileMode.Open,
+                                                FileAccess.Read, FileShare.ReadWrite))
                                             {
                                                 while (fStream.Position != fStream.Length)
                                                 {
@@ -386,6 +413,7 @@ namespace TWCore.Cache.Storages.IO
                                                         lstTransactions.Add(item);
                                                 }
                                             }
+
                                             transactionLog = lstTransactions;
                                         }
                                     }
@@ -394,9 +422,11 @@ namespace TWCore.Cache.Storages.IO
                                         Core.Log.Write(ex);
                                     }
                                 }
+
                                 #endregion
 
                                 #region Applying pending transactions
+
                                 if (transactionLog?.Count > 0)
                                 {
                                     Core.Log.InfoBasic("Applying {0} pending transactions", transactionLog.Count);
@@ -414,14 +444,17 @@ namespace TWCore.Cache.Storages.IO
                                                 break;
                                         }
                                     }
+
                                     SaveMetadata();
                                 }
+
                                 #endregion
 
                                 RemoveExpiredItems();
                                 _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
 
-                                _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+                                _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create,
+                                    FileAccess.ReadWrite, FileShare.ReadWrite);
 
                                 Core.Log.InfoBasic("Total item loaded: {0}", _metas.Count);
                                 Core.Log.LibVerbose("All metadata loaded.");
@@ -433,6 +466,7 @@ namespace TWCore.Cache.Storages.IO
                                 LoadingFailed = true;
                             }
                         }
+                    }
                 }, token);
 
                 Core.Status.Attach(collection =>

@@ -142,13 +142,12 @@ namespace TWCore.Messaging
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Response message instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
+        protected override async Task<ResponseMessage> OnReceiveAsync(Guid correlationId, CancellationToken cancellationToken)
         {
             if (_receiver == null)
                 throw new NullReferenceException("There is not receiver queue.");
 
-            var sw = Stopwatch.StartNew();
-            var message = _receiver.Dequeue(correlationId, _receiverOptionsTimeout * 1000, cancellationToken);
+            var message = await _receiver.DequeueAsync(correlationId, _receiverOptionsTimeout * 1000, cancellationToken).ConfigureAwait(false);
             if (message == null)
                 throw new MessageQueueTimeoutException(TimeSpan.FromSeconds(_receiverOptionsTimeout), correlationId.ToString());
             if (message.Value == null)
@@ -159,8 +158,7 @@ namespace TWCore.Messaging
             if (response?.Body != null && _cloneObject)
                 response.Body = response.Body.DeepClone();
 
-            Core.Log.LibVerbose("Received message from the memory Queue '{0}' with CorrelationId={1} received at: {2}ms", _clientQueues.RecvQueue.Name, correlationId, sw.Elapsed.TotalMilliseconds);
-            return Task.FromResult(response);
+            return response;
         }
         #endregion
     }

@@ -52,7 +52,7 @@ namespace TWCore.Services
             {
                 try
                 {
-                    return _hasConsole ?? Console.WindowHeight > 0;
+                    return _hasConsole ?? (_hasConsole = Console.WindowHeight > 0) ?? false;
                 }
                 catch
                 {

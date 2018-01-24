@@ -260,25 +260,29 @@ namespace TWCore.Messaging.RawServer
 				var response = e.Response;
 
 				RawResponseSentEventArgs rsea = null;
-				if (BeforeSendResponse != null || MQueueRawServerEvents.BeforeSendResponse != null ||
-				    ResponseSent != null || MQueueRawServerEvents.ResponseSent != null)
-					rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
-				
-                if (BeforeSendResponse != null)
-			        await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-				if (MQueueRawServerEvents.BeforeSendResponse != null)
-					await MQueueRawServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+			    if (BeforeSendResponse != null || MQueueRawServerEvents.BeforeSendResponse != null ||
+			        ResponseSent != null || MQueueRawServerEvents.ResponseSent != null)
+			    {
+			        rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
+			        if (BeforeSendResponse != null)
+			            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+			        if (MQueueRawServerEvents.BeforeSendResponse != null)
+			            await MQueueRawServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+			    }
 
-				response = rsea != null ? rsea.Message : e.Response;
+
+			    response = rsea != null ? rsea.Message : e.Response;
 				var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
 				if (sentBytes > -1)
 				{
-					if (rsea != null)
-						rsea.MessageLength = sentBytes;
-                    if (ResponseSent != null)
-					    await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-					if (MQueueRawServerEvents.ResponseSent != null)
-						await MQueueRawServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				    if (rsea != null)
+				    {
+				        rsea.MessageLength = sentBytes;
+				        if (ResponseSent != null)
+				            await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				        if (MQueueRawServerEvents.ResponseSent != null)
+				            await MQueueRawServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+				    }
 				}
 				else
 					Core.Log.Warning("The message couldn't be sent.");

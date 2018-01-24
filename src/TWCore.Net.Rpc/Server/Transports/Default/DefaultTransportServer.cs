@@ -154,7 +154,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 while (!_token.IsCancellationRequested)
                 {
                     var tcpClient = await _listener.AcceptTcpClientAsync().HandleCancellationAsync(_token).ConfigureAwait(false);
-                    ThreadPool.QueueUserWorkItem(ConnectionReceived, tcpClient);
+                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, tcpClient);
                 }
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             Core.Log.LibVerbose("Transport Listener Started");
@@ -291,7 +291,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
                     return;
                 }
-                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request);
+                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
                 OnMethodCall?.Invoke(this, mEventArgs);
                 await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
             }

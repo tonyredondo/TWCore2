@@ -904,26 +904,16 @@ namespace TWCore
 			if (singCol == null) yield break;
 			foreach (var item in singCol)
 			{
-				var innerCol = enumerableArray.Skip(1).ToList();
-				if (innerCol.Any())
+				var innerCol = enumerableArray.Skip(1).ToArray();
+				if (innerCol.Length > 0)
 				{
 					var innerCombination = innerCol.GetCombination();
 					if (innerCombination == null) continue;
 					foreach (var combination in innerCombination)
-					{
-						var tComb = new List<T>(combination);
-						tComb.Insert(0, item);
-						yield return tComb;
-					}
+					    yield return new[] {item}.Concat(combination).ToArray();
 				}
 				else
-				{
-					var tComb = new List<T>
-					{
-						item
-					};
-					yield return tComb;
-				}
+					yield return new[] { item };
 			}
 		}
 		/// <summary>

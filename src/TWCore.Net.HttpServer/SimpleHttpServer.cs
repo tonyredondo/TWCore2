@@ -153,7 +153,7 @@ namespace TWCore.Net.HttpServer
             _tskListener = Task.Factory.StartNew(async () =>
             {
                 while (!_token.IsCancellationRequested)
-                    ThreadPool.QueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
+                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
             }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
             _active = true;
             Core.Log.LibVerbose("HttpServer Started on {0}.", port);
@@ -418,6 +418,7 @@ namespace TWCore.Net.HttpServer
         private void ConnectionReceived(object objClient)
         {
             var client = (TcpClient)objClient;
+            var cts = new CancellationTokenSource();
             var reqNumber = Interlocked.Increment(ref _requestCount);
             //using (var watch = Watch.Create($"HTTP REQUEST START: {reqNumber}", $"HTTP REQUEST END: {reqNumber}"))
             {
@@ -443,7 +444,7 @@ namespace TWCore.Net.HttpServer
                     if (OnBeginRequest != null)
                     {
                         Core.Log.LibVerbose($"{reqNumber} - On Begin Request Method");
-                        OnBeginRequest(context, ref handled);
+                        OnBeginRequest(context, ref handled, cts.Token);
                     }
                     #endregion
 
@@ -464,7 +465,7 @@ namespace TWCore.Net.HttpServer
                     if (OnEndRequest != null)
                     {
                         Core.Log.LibVerbose($"{reqNumber} - On End Request Method");
-                        OnEndRequest(context, ref handled);
+                        OnEndRequest(context, ref handled, cts.Token);
                     }
                     #endregion
 
@@ -496,10 +497,12 @@ namespace TWCore.Net.HttpServer
                             context.Response.Write("404 Not Found");
                         }
                     }
+                    cts.Cancel();
                     context.CloseContext();
                 }
                 catch (Exception ex)
                 {
+                    cts.Cancel();
                     Core.Log.Write(ex);
                     if (context != null)
                     {

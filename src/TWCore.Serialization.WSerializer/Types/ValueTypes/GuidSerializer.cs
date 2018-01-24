@@ -32,6 +32,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             DataType.Guid, DataType.GuidDefault, DataType.RefGuidByte, DataType.RefGuidUShort
         });
 
+        private readonly byte[] _buffer = new byte[16];
         private SerializerMode _mode;
         private SerializerCache<Guid> _cache;
         private SerializerCache<Guid> Cache
@@ -150,8 +151,8 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
             if (objIdx > -1)
                 return Cache.DeserializerGet(objIdx);
 
-            var bytes = reader.ReadBytes(16);
-            var guidValue = new Guid(bytes);
+            reader.Read(_buffer, 0, 16);
+            var guidValue = new Guid(_buffer);
             Cache.DeserializerSet(guidValue);
             return guidValue;
         }

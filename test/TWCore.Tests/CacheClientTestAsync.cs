@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 using TWCore.Cache.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
-using TWCore.Net.RPC.Client.Transports.TW;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -39,16 +38,15 @@ namespace TWCore.Tests
         {
             using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
             {
-                var cacheClient = await CacheClientProxy
-                    .GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
-                cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
-
                 try
                 {
+                    var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 1, GlobalSerializer)).ConfigureAwait(false);
+                    cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
+
                     for (var i = 0; i < 15; i++)
                         await cachePool.GetKeysAsync().ConfigureAwait(false);
 
-                    for (var i = 0; i < 100; i++)
+                    for (var i = 0; i < 500; i++)
                     {
                         var key = "test-" + i;
                         await cachePool.GetAsync(key).ConfigureAwait(false);

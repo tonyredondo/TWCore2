@@ -128,11 +128,11 @@ namespace TWCore.Messaging
 				_token = token;
 				_receiver = MemoryQueueManager.GetQueue(Connection.Route, Connection.Name);
 
-				await Task.Factory.StartNew(() =>
+				await Task.Factory.StartNew(async () =>
 				{
 					while (!_token.IsCancellationRequested)
 					{
-						var message = _receiver.Dequeue(_token);
+						var message = await _receiver.DequeueAsync(_token).ConfigureAwait(false);
 						if (_token.IsCancellationRequested) break;
                         #pragma warning disable 4014
                         EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);

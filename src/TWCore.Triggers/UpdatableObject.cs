@@ -87,7 +87,7 @@ namespace TWCore.Triggers
             if (useStaticLock)
                 _localSync = UpdatableObject.ParentSync;
             MinTimeOfInstance = TimeSpan.FromSeconds(1);
-            _triggerWorker = new Worker<TriggerBase>(InnerOnTriggerExecute);
+            _triggerWorker = new Worker<TriggerBase>(action: InnerOnTriggerExecute);
 
             Core.Status.Attach(collection =>
             {

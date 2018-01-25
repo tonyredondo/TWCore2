@@ -248,7 +248,7 @@ namespace TWCore.Cache.Storages.IO
                 _pendingItems = new Dictionary<string, SerializedObject>();
                 var tokenSource = new CancellationTokenSource();
                 var token = tokenSource.Token;
-                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(WorkerProcess)
+                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(action: WorkerProcess)
                 {
                     EnableWaitTimeout = false
                 };

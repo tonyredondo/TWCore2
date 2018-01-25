@@ -16,6 +16,8 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore
@@ -32,14 +34,14 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base(DoAction) { }
+        public ActionWorker() : base(DoActionAsync) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker(Func<bool> precondition) : base(precondition, DoAction) { }
+        public ActionWorker(Func<bool> precondition) : base(precondition, DoActionAsync) { }
         #endregion
 
         #region Static Methods
@@ -48,11 +50,11 @@ namespace TWCore
         /// </summary>
         /// <param name="item">WorkerItem instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void DoAction(WorkerItem item)
+        private static async Task DoActionAsync(WorkerItem item)
         {
             try
             {
-                item.Action(item.State);
+                await item.Function(item.State).ConfigureAwait(false);
             }
             catch(Exception ex)
             {
@@ -72,7 +74,7 @@ namespace TWCore
         /// <param name="action">Action to be executed</param>
         /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Enqueue(Action action, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => action(), null, onExceptionCallback));
+        public void Enqueue(Action action, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => { action(); return Task.CompletedTask; }, null, onExceptionCallback));
         /// <summary>
         /// Enqueue a new Action on the queue
         /// </summary>
@@ -80,7 +82,23 @@ namespace TWCore
         /// <param name="state">State object to pass to the action</param>
         /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Enqueue<T>(Action<T> action, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => action((T)o), state, onExceptionCallback));
+        public void Enqueue<T>(Action<T> action, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => { action((T)o); return Task.CompletedTask; }, state, onExceptionCallback));
+
+        /// <summary>
+        /// Enqueue a new Action on the queue
+        /// </summary>
+        /// <param name="function">Function to be executed</param>
+        /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Enqueue(Func<Task> function, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => function(), null, onExceptionCallback));
+        /// <summary>
+        /// Enqueue a new Action on the queue
+        /// </summary>
+        /// <param name="function">Function to be executed</param>
+        /// <param name="state">State object to pass to the action</param>
+        /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Enqueue<T>(Func<T, Task> function, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(o => function((T)o), state, onExceptionCallback));
         #endregion
 
         #region Nested classes
@@ -90,9 +108,9 @@ namespace TWCore
         public struct WorkerItem
         {
             /// <summary>
-            /// Action to be executed
+            /// Function to be executed
             /// </summary>
-            public Action<object> Action { get; }
+            public Func<object, Task> Function { get; }
             /// <summary>
             /// Saves the state to be used by the action
             /// </summary>
@@ -103,9 +121,9 @@ namespace TWCore
             public Action<Exception> OnExceptionCallback { get; }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal WorkerItem(Action<object> action, object state, Action<Exception> onExceptionCallback)
+            internal WorkerItem(Func<object, Task> function, object state, Action<Exception> onExceptionCallback)
             {
-                Action = action;
+                Function = function;
                 State = state;
                 OnExceptionCallback = onExceptionCallback;
             }
@@ -125,14 +143,14 @@ namespace TWCore
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker() : base(DoAction) { }
+        public ActionWorker() : base(DoActionAsync) { }
         /// <inheritdoc />
         /// <summary>
         /// Worker where all elements are actions to be executed in order
         /// </summary>
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ActionWorker(Func<bool> precondition) : base(precondition, DoAction) { }
+        public ActionWorker(Func<bool> precondition) : base(precondition, DoActionAsync) { }
         #endregion
 
         #region Static Methods
@@ -141,11 +159,11 @@ namespace TWCore
         /// </summary>
         /// <param name="item">WorkerItem instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void DoAction(WorkerItem item)
+        private static async Task DoActionAsync(WorkerItem item)
         {
             try
             {
-                item.Action(item.State);
+                await item.Function(item.State).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -166,7 +184,16 @@ namespace TWCore
         /// <param name="state">State object to pass to the action</param>
         /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Enqueue(Action<T> action, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(action, state, onExceptionCallback));
+        public void Enqueue(Action<T> action, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(arg => { action(arg); return Task.CompletedTask; }, state, onExceptionCallback));
+        /// <summary>
+        /// Enqueue a new Function on the queue
+        /// </summary>
+        /// <param name="function">Function to be executed</param>
+        /// <param name="state">State object to pass to the action</param>
+        /// <param name="onExceptionCallback">Action executed in case of an Exception</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Enqueue(Func<T, Task> function, T state, Action<Exception> onExceptionCallback = null) => Enqueue(new WorkerItem(function, state, onExceptionCallback));
+
         #endregion
 
         #region Nested classes
@@ -176,9 +203,9 @@ namespace TWCore
         public struct WorkerItem
         {
             /// <summary>
-            /// Action to be executed
+            /// Function to be executed
             /// </summary>
-            public Action<T> Action { get; }
+            public Func<T, Task> Function { get; }
             /// <summary>
             /// Saves the state to be used by the action
             /// </summary>
@@ -189,9 +216,9 @@ namespace TWCore
             public Action<Exception> OnExceptionCallback { get; }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal WorkerItem(Action<T> action, T state, Action<Exception> onExceptionCallback)
+            internal WorkerItem(Func<T, Task> function, T state, Action<Exception> onExceptionCallback)
             {
-                Action = action;
+                Function = function;
                 State = state;
                 OnExceptionCallback = onExceptionCallback;
             }

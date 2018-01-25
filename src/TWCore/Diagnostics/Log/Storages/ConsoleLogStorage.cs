@@ -33,6 +33,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
         private static readonly StringBuilder StringBuffer = new StringBuilder();
+        private static LogLevel _lastLogLevel;
 
         /// <summary>
         /// Use Color Schema on Console
@@ -78,9 +79,10 @@ namespace TWCore.Diagnostics.Log.Storages
                     StringBuffer.AppendLine("Exceptions:\r\n");
                     GetExceptionDescription(item.Exception, StringBuffer);
                 }
+                var buffer = StringBuffer.ToString();
+                StringBuffer.Clear();
 
-
-                if (UseColor)
+                if (item.Level != _lastLogLevel && UseColor)
                 {
                     switch (item.Level)
                     {
@@ -115,9 +117,8 @@ namespace TWCore.Diagnostics.Log.Storages
                             break;
                     }
                 }
-                var buffer = StringBuffer.ToString();
-                StringBuffer.Clear();
                 Console.Write(buffer);
+                _lastLogLevel = item.Level;
             }
         }
 

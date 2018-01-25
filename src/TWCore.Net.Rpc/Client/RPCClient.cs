@@ -42,7 +42,8 @@ namespace TWCore.Net.RPC.Client
     {
         private static readonly object[] _emptyArgs = new object[0];
         private static readonly object[] _nullItemArgs = { null };
-        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>();
+        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache 
+            = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
         private ITransportClient _transport;
         private bool _transportInit;
         private ServiceDescriptorCollection _serverDescriptors;
@@ -81,6 +82,34 @@ namespace TWCore.Net.RPC.Client
         /// </summary>
         [StatusProperty]
         public bool UseServerDescriptor { get; set; } = false;
+        #endregion
+
+        #region Nested Types
+        class MethodDescriptionEqualityComparer : IEqualityComparer<(string ServiceName, string Method, Type[] Types)>
+        {
+            public bool Equals((string ServiceName, string Method, Type[] Types) x, (string ServiceName, string Method, Type[] Types) y)
+            {
+                if (x.ServiceName != y.ServiceName) return false;
+                if (x.Method != y.Method) return false;
+                if (x.Types == y.Types) return true;
+                if (x.Types == null && y.Types == null) return true;
+                if (x.Types == null) return false;
+                if (y.Types == null) return false;
+                if (x.Types.Length != y.Types.Length) return false;
+                for (var i = 0; i < x.Types.Length; i++)
+                    if (x.Types[i] != y.Types[i]) return false;
+                return true;
+            }
+
+            public int GetHashCode((string ServiceName, string Method, Type[] Types) obj)
+            {
+                var ghc = (obj.ServiceName?.GetHashCode() ?? 1) + (obj.Method?.GetHashCode() ?? 2);
+                if (obj.Types == null) return ghc;
+                foreach (var type in obj.Types)
+                    ghc += type?.GetHashCode() ?? 3;
+                return ghc;
+            }
+        }
         #endregion
 
         #region .ctor

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging.Client;
 using TWCore.Services;
 
@@ -62,12 +63,13 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// Writes a trace item to the storage
         /// </summary>
         /// <param name="item">Trace item</param>
-        public void Write(TraceItem item)
+        public Task WriteAsync(TraceItem item)
         {
             lock (_locker)
             {
                 _traceItems.Add(item);
             }
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>

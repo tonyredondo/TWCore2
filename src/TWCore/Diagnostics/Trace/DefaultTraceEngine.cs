@@ -65,12 +65,12 @@ namespace TWCore.Diagnostics.Trace
             if (itemFactory != null)
                 ItemFactory = itemFactory;
 
-            _itemsWorker = new Worker<TraceItem>(() => Storage?.Count > 0, item =>
+            _itemsWorker = new Worker<TraceItem>(() => Storage?.Count > 0, async item =>
             {
                 if (item == null) return;
                 try
                 {
-                    Storage.Write(item);
+                    await Storage.WriteAsync(item).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {

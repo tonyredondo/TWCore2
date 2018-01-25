@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
@@ -28,6 +29,6 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// Writes a trace item to the storage
         /// </summary>
         /// <param name="item">Trace item</param>
-        void Write(TraceItem item);
+        Task WriteAsync(TraceItem item);
     }
 }

@@ -16,7 +16,9 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
@@ -86,7 +88,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         /// <param name="item">Trace item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(TraceItem item)
+        public async Task WriteAsync(TraceItem item)
         {
             if (_items == null) return;
             lock(_locker)
@@ -94,17 +96,18 @@ namespace TWCore.Diagnostics.Trace.Storages
                 if (_isDirty || _cItems == null)
                     _cItems = new List<ITraceStorage>(_items);
             }
-            foreach(var i in _cItems)
+            var tsk = _cItems.Select(async i =>
             {
                 try
                 {
-                    i.Write(item);
+                    await i.WriteAsync(item).ConfigureAwait(false);
                 }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                 }
-            }
+            });
+            await Task.WhenAll(tsk).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>

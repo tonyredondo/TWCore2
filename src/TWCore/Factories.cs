@@ -15,10 +15,12 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using TWCore.Diagnostics.Log;
@@ -186,6 +188,10 @@ namespace TWCore
         #endregion
 
         #region Default delegates implementation
+
+        private static readonly ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new ConcurrentDictionary<MethodBase, object[]>();
+        private static readonly ConcurrentDictionary<Type, object[]> TypeAttributes = new ConcurrentDictionary<Type, object[]>();
+
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
         {
             if (assemblyName == null || typeName == null)
@@ -198,7 +204,7 @@ namespace TWCore
                     if (method == null) continue;
 
                     #region Name Attr
-                    var attrs = method.GetCustomAttributes(false);
+                    var attrs = MethodAttributes.GetOrAdd(method, i => i.GetCustomAttributes(false));// method.GetCustomAttributes(false);
                     StackFrameLogAttribute nameAttr = null;
                     int attrsCases = 0;
                     for (var i = 0; i < attrs.Length; i++)
@@ -228,7 +234,7 @@ namespace TWCore
                     if (declarationType == null) continue;
 
                     #region Name Type Attr
-                    var typeAttrs = declarationType.GetCustomAttributes(false);
+                    var typeAttrs = TypeAttributes.GetOrAdd(declarationType, i => i.GetCustomAttributes(false)); //declarationType.GetCustomAttributes(false);
                     StackFrameLogAttribute nameTypeAttr = null;
                     var typeAttrsCases = 0;
                     for (var i = 0; i < typeAttrs.Length; i++)
@@ -262,7 +268,7 @@ namespace TWCore
                         if (actualType.Assembly == typeof(Core).Assembly) continue;
 
                         #region Actual type attrs
-                        var actualTypeAttrs = actualType.GetCustomAttributes(false);
+                        var actualTypeAttrs = TypeAttributes.GetOrAdd(actualType, i => i.GetCustomAttributes(false)); //actualType.GetCustomAttributes(false);
                         StackFrameLogAttribute actualTypeNameTypeAttr = null;
                         int actualTypeCases = 0;
                         for (var i = 0; i < actualTypeAttrs.Length; i++)

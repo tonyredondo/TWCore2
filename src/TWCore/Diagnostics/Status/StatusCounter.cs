@@ -128,8 +128,8 @@ namespace TWCore.Diagnostics.Status
             public StatusItem GetStatusItem(string name)
             {
                 var cStatus = new StatusItem { Name = name };
-                cStatus.Values.Add("Lastest Value", _lastestValue?.Value, true);
-                cStatus.Values.Add("Lastest Value Date", _lastestValue?.ValueDate);
+                cStatus.Values.Add("Lastest Value", _lastestValue.Value, true);
+                cStatus.Values.Add("Lastest Value Date", _lastestValue.ValueDate);
                 cStatus.Children.Add(GetStatusItem(_last10MinutesValues, "Last 10 Minutes"));
                 cStatus.Children.Add(GetStatusItem(_last30MinutesValues, "Last 30 Minutes"));
                 cStatus.Children.Add(GetStatusItem(_oneHourValues, "Last Hour"));
@@ -144,10 +144,10 @@ namespace TWCore.Diagnostics.Status
                 var item = new StatusItem { Name = name };
                 item.Values.Add("Calls", interval.CallsQuantity, true);
                 item.Values.Add("Value",
-                    new StatusItemValueItem("Lowest", interval.LowestValue?.Value, StatusItemValueStatus.Ok, true),
-                    new StatusItemValueItem("Lowest Date", interval.LowestValue?.ValueDate),
-                    new StatusItemValueItem("Highest", interval.HighestValue?.Value, StatusItemValueStatus.Ok, true),
-                    new StatusItemValueItem("Highest Date", interval.HighestValue?.ValueDate),
+                    new StatusItemValueItem("Lowest", interval.LowestValue.Value, StatusItemValueStatus.Ok, true),
+                    new StatusItemValueItem("Lowest Date", interval.LowestValue.ValueDate),
+                    new StatusItemValueItem("Highest", interval.HighestValue.Value, StatusItemValueStatus.Ok, true),
+                    new StatusItemValueItem("Highest Date", interval.HighestValue.ValueDate),
                     new StatusItemValueItem("Average", interval.AverageValue, true),
                     new StatusItemValueItem("Standard Deviation", interval.StandardDeviation, true)
                 );
@@ -246,7 +246,7 @@ namespace TWCore.Diagnostics.Status
             }
 
         }
-        private class ItemValue<T>
+        private struct ItemValue<T>
         {
             public readonly T Value;
             public readonly DateTime ValueDate;

@@ -39,6 +39,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// All file log storage writers
         /// </summary>
         private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private readonly StringBuilder _stringBuffer = new StringBuilder(128);
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
@@ -154,7 +155,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     maxLengthReached = true;
             }
             if (!dayHasChange && !maxLengthReached) return;
-            
+
             string oldFileName;
             if (dayHasChange && CreateByDay)
             {
@@ -213,13 +214,16 @@ namespace TWCore.Diagnostics.Log.Storages
                 FileDate = File.GetCreationTime(_currentFileName);
             #endregion
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetExceptionDescription(SerializableException itemEx)
+        private static void GetExceptionDescription(SerializableException itemEx, StringBuilder sbuilder)
         {
-            var desc = string.Format("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-            if (itemEx.InnerException != null)
-                desc += GetExceptionDescription(itemEx.InnerException);
-            return desc;
+            while (true)
+            {
+                sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                if (itemEx.InnerException == null) break;
+                itemEx = itemEx.InnerException;
+            }
         }
         #endregion
 
@@ -233,47 +237,43 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             EnsureLogFile(FileName);
             if (_sWriter == null) return;
-            if (_firstWrite)
-            {
-                lock (_sWriter)
-                {
-                    _sWriter.WriteLine();
-                    _sWriter.WriteLine();
-                    _sWriter.WriteLine();
-                    _sWriter.WriteLine();
-                    _sWriter.WriteLine();
-                    _sWriter.WriteLine("-.");
-                    _sWriter.Flush();
-                }
-                _firstWrite = false;
-            }
-            var sbuilder = new StringBuilder(128);
-            sbuilder.Append(item.Timestamp.GetTimeSpanFormat());
-            sbuilder.AppendFormat("{0, 10}: ", item.Level);
-
-            if (!string.IsNullOrEmpty(item.GroupName))
-                sbuilder.Append(item.GroupName + " - ");
-
-            if (item.LineNumber > 0)
-                sbuilder.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-            else if (!string.IsNullOrEmpty(item.TypeName))
-                sbuilder.Append("<" + item.TypeName + "> ");
-
-            if (!string.IsNullOrEmpty(item.Code))
-                sbuilder.Append("[" + item.Code + "] ");
-
-            sbuilder.Append(item.Message);
-
-            if (item.Exception != null)
-            {
-                sbuilder.Append("\r\nExceptions:\r\n");
-                sbuilder.Append(GetExceptionDescription(item.Exception));
-            }
-            var line = sbuilder.ToString();
-
             lock (_sWriter)
             {
-                _sWriter.WriteLine(line);
+                if (_firstWrite)
+                {
+                    _stringBuffer.AppendLine();
+                    _stringBuffer.AppendLine();
+                    _stringBuffer.AppendLine();
+                    _stringBuffer.AppendLine();
+                    _stringBuffer.AppendLine();
+                    _stringBuffer.AppendLine("-.");
+                    _firstWrite = false;
+                }
+                _stringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+                _stringBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+                if (!string.IsNullOrEmpty(item.GroupName))
+                    _stringBuffer.Append(item.GroupName + " - ");
+
+                if (item.LineNumber > 0)
+                    _stringBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+                else if (!string.IsNullOrEmpty(item.TypeName))
+                    _stringBuffer.Append("<" + item.TypeName + "> ");
+
+                if (!string.IsNullOrEmpty(item.Code))
+                    _stringBuffer.Append("[" + item.Code + "] ");
+
+                _stringBuffer.Append(item.Message);
+
+                if (item.Exception != null)
+                {
+                    _stringBuffer.Append("\r\nExceptions:\r\n");
+                    GetExceptionDescription(item.Exception, _stringBuffer);
+                }
+                var buffer = _stringBuffer.ToString();
+                _stringBuffer.Clear();
+
+                _sWriter.WriteLine(buffer);
                 _sWriter.Flush();
             }
         }

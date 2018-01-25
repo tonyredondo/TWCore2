@@ -35,13 +35,14 @@ namespace TWCore.Diagnostics.Log.Storages
 	public class HtmlFileLogStorage : ILogStorage
     {
         private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private readonly StringBuilder _stringBuffer = new StringBuilder(128);
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
         private int _numbersOfFiles;
         private volatile bool _firstWrite = true;
 
-		#region Html format
+        #region Html format
         private const string Html = @"
 <html>
 <head>
@@ -309,7 +310,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="fileName">File name with path</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HtmlFileLogStorage(string fileName) :
+        public HtmlFileLogStorage(string fileName) :
             this(fileName, true)
         { }
         /// <inheritdoc />
@@ -319,7 +320,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="fileName">File name with path</param>
         /// <param name="createByDay">True if a new log file is created each day; otherwise, false</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HtmlFileLogStorage(string fileName, bool createByDay) :
+        public HtmlFileLogStorage(string fileName, bool createByDay) :
             this(fileName, createByDay, false)
         { }
         /// <inheritdoc />
@@ -330,7 +331,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="createByDay">True if a new log file is created each day; otherwise, false</param>
         /// <param name="useMaxLength">True if a new log file is created when a maximum length is reached; otherwise, false.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HtmlFileLogStorage(string fileName, bool createByDay, bool useMaxLength) :
+        public HtmlFileLogStorage(string fileName, bool createByDay, bool useMaxLength) :
             this(fileName, createByDay, useMaxLength, 4194304L)
         { }
         /// <summary>
@@ -341,7 +342,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="useMaxLength">True if a new log file is created when a maximum length is reached; otherwise, false.</param>
         /// <param name="maxLength">Maximun length in bytes for a single file. Default value is 4Mb</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public HtmlFileLogStorage(string fileName, bool createByDay, bool useMaxLength, long maxLength)
+        public HtmlFileLogStorage(string fileName, bool createByDay, bool useMaxLength, long maxLength)
         {
             FileName = fileName;
             CreateByDay = createByDay;
@@ -367,7 +368,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Destructor
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		~HtmlFileLogStorage()
+        ~HtmlFileLogStorage()
         {
             DiscoveryService.UnregisterService(_discoveryServiceId);
             Core.Status.DeAttachObject(this);
@@ -450,14 +451,19 @@ namespace TWCore.Diagnostics.Log.Storages
                 FileDate = File.GetCreationTime(_currentFileName);
             #endregion
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetExceptionDescription(SerializableException itemEx)
+        private static void GetExceptionDescription(SerializableException itemEx, StringBuilder sbuilder)
         {
-            var desc = string.Format("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-            if (itemEx.InnerException != null)
-                desc += GetExceptionDescription(itemEx.InnerException);
-            return desc;
+            while (true)
+            {
+                sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, System.Security.SecurityElement.Escape(itemEx.Message).Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                if (itemEx.InnerException == null) break;
+                itemEx = itemEx.InnerException;
+
+            }
         }
+
         #endregion
 
         /// <inheritdoc />
@@ -472,50 +478,46 @@ namespace TWCore.Diagnostics.Log.Storages
             if (_sWriter == null) return;
             var time = item.Timestamp.GetTimeSpanFormat();
             var format = PreFormat;
-            if (_firstWrite)
-            {
-                lock (_sWriter)
-                {
-                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                    _sWriter.Write(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
-                    _sWriter.Flush();
-                }
-                _firstWrite = false;
-            }
-            var sbuilder = new StringBuilder(128);
-            sbuilder.Append(time);
-            sbuilder.AppendFormat("{0, 10}: ", item.Level);
-
-            if (!string.IsNullOrEmpty(item.GroupName))
-                sbuilder.Append(item.GroupName + " | ");
-
-            if (item.LineNumber > 0)
-                sbuilder.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-            else if (!string.IsNullOrEmpty(item.TypeName))
-            {
-                sbuilder.Append("&lt;" + item.TypeName + "&gt; ");
-                format = PreFormatWType;
-            }
-
-            if (!string.IsNullOrEmpty(item.Code))
-                sbuilder.Append("[" + item.Code + "] ");
-                
-            sbuilder.Append(System.Security.SecurityElement.Escape(item.Message));
-
-            if (item.Exception != null)
-            {
-                sbuilder.Append("\r\nExceptions:\r\n");
-                sbuilder.Append(GetExceptionDescription(item.Exception));
-            }
-            var line = sbuilder.ToString();
-
             lock (_sWriter)
             {
-                _sWriter.Write(format, item.Level, line, item.TypeName);
+                if (_firstWrite)
+                {
+                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                    _stringBuffer.AppendFormat(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
+                    _firstWrite = false;
+                }
+                _stringBuffer.Append(time);
+                _stringBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+                if (!string.IsNullOrEmpty(item.GroupName))
+                    _stringBuffer.Append(item.GroupName + " | ");
+
+                if (item.LineNumber > 0)
+                    _stringBuffer.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+                else if (!string.IsNullOrEmpty(item.TypeName))
+                {
+                    _stringBuffer.Append("&lt;" + item.TypeName + "&gt; ");
+                    format = PreFormatWType;
+                }
+
+                if (!string.IsNullOrEmpty(item.Code))
+                    _stringBuffer.Append("[" + item.Code + "] ");
+
+                _stringBuffer.Append(System.Security.SecurityElement.Escape(item.Message));
+
+                if (item.Exception != null)
+                {
+                    _stringBuffer.Append("\r\nExceptions:\r\n");
+                    GetExceptionDescription(item.Exception, _stringBuffer);
+                }
+                var buffer = _stringBuffer.ToString();
+                _stringBuffer.Clear();
+
+                _sWriter.Write(format, item.Level, buffer, item.TypeName);
                 _sWriter.Flush();
             }
         }
@@ -528,7 +530,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             lock (_sWriter)
             {
-				_sWriter.Write(PreFormat, "EmptyLine", "<br/>");
+                _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
                 _sWriter.Flush();
             }
         }
@@ -542,7 +544,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
-				_sWriter?.Write(PreFormat, "End", "&#8613; END &#8613;");
+                _sWriter?.Write(PreFormat, "End", "&#8613; END &#8613;");
                 _sWriter?.Flush();
                 _sWriter?.Dispose();
                 _sWriter = null;

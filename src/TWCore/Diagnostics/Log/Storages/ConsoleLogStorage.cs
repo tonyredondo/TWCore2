@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Runtime.CompilerServices;
+using System.Text;
 using TWCore.Services;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -31,7 +32,8 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
-        
+        private static readonly StringBuilder StringBuffer = new StringBuilder();
+
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>
@@ -54,8 +56,30 @@ namespace TWCore.Diagnostics.Log.Storages
         public void Write(ILogItem item)
         {
             if (!ServiceContainer.HasConsole) return;
-            lock(PadLock) 
+            lock(PadLock)
             {
+                StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+                StringBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+                if (!string.IsNullOrEmpty(item.GroupName))
+                    StringBuffer.Append(item.GroupName + " | ");
+
+                if (item.LineNumber > 0)
+                    StringBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+                else if (!string.IsNullOrEmpty(item.TypeName))
+                    StringBuffer.AppendFormat("<{0}> ", item.TypeName);
+
+                if (!string.IsNullOrEmpty(item.Code))
+                    StringBuffer.Append("[" + item.Code + "] ");
+
+                StringBuffer.AppendLine(item.Message);
+                if (item.Exception != null)
+                {
+                    StringBuffer.AppendLine("Exceptions:\r\n");
+                    GetExceptionDescription(item.Exception, StringBuffer);
+                }
+
+
                 if (UseColor)
                 {
                     switch (item.Level)
@@ -91,38 +115,24 @@ namespace TWCore.Diagnostics.Log.Storages
                             break;
                     }
                 }
-
-                Console.Write(item.Timestamp.GetTimeSpanFormat());
-                Console.Write("{0, 10}: ",item.Level);
-
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    Console.Write(item.GroupName + " | ");
-
-                if (item.LineNumber > 0)
-                    Console.Write("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                    Console.Write("<{0}> ", item.TypeName);
-
-                if (!string.IsNullOrEmpty(item.Code))
-                    Console.Write("[" + item.Code + "] ");
-
-                Console.WriteLine(item.Message);
-                if (item.Exception != null)
-                {
-                    Console.WriteLine("Exceptions:\r\n");
-                    Console.WriteLine(GetExceptionDescription(item.Exception));
-                }
+                var buffer = StringBuffer.ToString();
+                StringBuffer.Clear();
+                Console.Write(buffer);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetExceptionDescription(SerializableException itemEx)
+        private static void GetExceptionDescription(SerializableException itemEx, StringBuilder sbuilder)
         {
-            var desc = string.Format("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
-            if (itemEx.InnerException != null)
-                desc += GetExceptionDescription(itemEx.InnerException);
-            return desc;
+            while (true)
+            {
+                sbuilder.AppendFormat("\tType: {0}\r\n\tMessage: {1}\r\n\tStack: {2}\r\n\r\n", itemEx.ExceptionType, itemEx.Message.Replace("\r", "\\r").Replace("\n", "\\n"), itemEx.StackTrace);
+                if (itemEx.InnerException == null)
+                    break;
+                itemEx = itemEx.InnerException;
+            }
         }
+
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line

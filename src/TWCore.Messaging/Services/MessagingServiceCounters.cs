@@ -30,8 +30,8 @@ namespace TWCore.Services
     public class MessagingServiceCounters
     {
         private readonly object _locker = new object();
-        private readonly Queue<double> _processTimes = new Queue<double>();
-        private readonly Queue<double> _lastMinuteProcessTimes = new Queue<double>();
+        private double? _processTimes;
+        private double? _lastMinuteProcessTimes;
         private readonly DayStatus _dayStatus = new DayStatus("Day Statistics");
         private Timer _timer;
 
@@ -39,14 +39,7 @@ namespace TWCore.Services
         /// <summary>
         /// Process average time
         /// </summary>
-        public double ProcessAverageTime
-        {
-            get
-            {
-                lock (_locker)
-                    return _processTimes.Count > 0 ? _processTimes.Average() : 0;
-            }
-        }
+        public double ProcessAverageTime => _processTimes ?? 0;
         /// <summary>
         /// Peak value of process average time
         /// </summary>
@@ -59,14 +52,7 @@ namespace TWCore.Services
         /// <summary>
         /// Process average time on the last minute
         /// </summary>
-        public double LastMinuteProcessAverageTime
-        {
-            get
-            {
-                lock (_locker)
-                    return _lastMinuteProcessTimes.Count > 0 ? _lastMinuteProcessTimes.Average() : 0;
-            }
-        }
+        public double LastMinuteProcessAverageTime => _lastMinuteProcessTimes ?? 0;
         /// <summary>
         /// Peak value of process average time on the last minute
         /// </summary>
@@ -135,7 +121,7 @@ namespace TWCore.Services
             {
                 lock (_locker)
                 {
-                    _lastMinuteProcessTimes.Clear();
+                    _lastMinuteProcessTimes = null;
                     PeakLastMinuteProcessAverageTime = 0;
                     PeakLastMinuteProcessAverageTimeLastDate = DateTime.MinValue;
 
@@ -229,13 +215,8 @@ namespace TWCore.Services
             lock (_locker)
             {
                 _dayStatus.Register("Processed Messages", time);
-                _processTimes.Enqueue(time);
-                if (_processTimes.Count > 1000)
-                    _processTimes.Dequeue();
-
-                _lastMinuteProcessTimes.Enqueue(time);
-                if (_lastMinuteProcessTimes.Count > 1000)
-                    _lastMinuteProcessTimes.Dequeue();
+                _processTimes = _processTimes.HasValue ? (_processTimes.Value * 0.7) + (time * 0.3) : time;
+                _lastMinuteProcessTimes = _lastMinuteProcessTimes.HasValue ? (_lastMinuteProcessTimes.Value * 0.7) + (time * 0.3) : time;
 
                 var avgPt = ProcessAverageTime;
                 if (avgPt > PeakProcessAverageTime)

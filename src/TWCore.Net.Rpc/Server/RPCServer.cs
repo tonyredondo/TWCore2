@@ -269,6 +269,7 @@ namespace TWCore.Net.RPC.Server
                     Core.Log.LibDebug("Unbinding Event: {0} on service {1}", ev.Key.Name, Descriptor.Name);
                     ev.Key.RemoveEventHandler(ServiceInstance, ev.Value);
                 }
+                ServiceEventHandlers.Clear();
                 #endregion
             }
 

@@ -29,7 +29,7 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientPoolCounters
     {
-        private readonly Queue<double>[] _times = new Queue<double>[13];
+        private readonly double?[] _times = new double?[13];
 
         #region Calls methods
         /// <summary>
@@ -90,55 +90,55 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Average time on milliseconds of ExistKey execution
         /// </summary>
-        public double ExistKeyAverageTime => GetAverage(0);
+        public double ExistKeyAverageTime => _times[0] ?? 0;
         /// <summary>
         /// Average time on milliseconds of Get execution
         /// </summary>
-        public double GetAverageTime => GetAverage(1);
+        public double GetAverageTime => _times[1] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetByTag execution
         /// </summary>
-        public double GetByTagAverageTime => GetAverage(2);
+        public double GetByTagAverageTime => _times[2] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetCreationDate execution
         /// </summary>
-        public double GetCreationDateAverageTime => GetAverage(3);
+        public double GetCreationDateAverageTime => _times[3] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetExpirationDate execution
         /// </summary>
-        public double GetExpirationDateAverageTime => GetAverage(4);
+        public double GetExpirationDateAverageTime => _times[4] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetKeys execution
         /// </summary>
-        public double GetKeysAverageTime => GetAverage(5);
+        public double GetKeysAverageTime => _times[5] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetMeta execution
         /// </summary>
-        public double GetMetaAverageTime => GetAverage(6);
+        public double GetMetaAverageTime => _times[6] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetMetaByTag execution
         /// </summary>
-        public double GetMetaByTagAverageTime => GetAverage(7);
+        public double GetMetaByTagAverageTime => _times[7] ?? 0;
         /// <summary>
         /// Average time on milliseconds of GetOrSet execution
         /// </summary>
-        public double GetOrSetAverageTime => GetAverage(8);
+        public double GetOrSetAverageTime => _times[8] ?? 0;
         /// <summary>
         /// Average time on milliseconds of Remove execution
         /// </summary>
-        public double RemoveAverageTime => GetAverage(9);
+        public double RemoveAverageTime => _times[9] ?? 0;
         /// <summary>
         /// Average time on milliseconds of RemoveByTag execution
         /// </summary>
-        public double RemoveByTagAverageTime => GetAverage(10);
+        public double RemoveByTagAverageTime => _times[10] ?? 0;
         /// <summary>
         /// Average time on milliseconds of Set execution
         /// </summary>
-        public double SetAverageTime => GetAverage(11);
+        public double SetAverageTime => _times[11] ?? 0;
         /// <summary>
         /// Average time on milliseconds of UpdateData execution
         /// </summary>
-        public double UpdateDataAverageTime => GetAverage(12);
+        public double UpdateDataAverageTime => _times[12] ?? 0;
         #endregion
 
         #region .ctor
@@ -148,9 +148,6 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public CacheClientPoolCounters()
         {
-			for(var i = 0; i < _times.Length; i++)
-				_times[i] = new Queue<double>();
-			
             Core.Status.Attach(collection =>
             {
                 collection.SortValues = false;
@@ -181,7 +178,7 @@ namespace TWCore.Cache.Client
         public void IncrementExistKey(double executionTime)
         {
             Interlocked.Increment(ref ExistKeyCalls);
-            IncrementQueue(0, ref executionTime);
+            IncrementQueue(0, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -191,7 +188,7 @@ namespace TWCore.Cache.Client
         public void IncrementGet(double executionTime)
         {
             Interlocked.Increment(ref GetCalls);
-            IncrementQueue(1, ref executionTime);
+            IncrementQueue(1, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -201,7 +198,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetByTag(double executionTime)
         {
             Interlocked.Increment(ref GetByTagCalls);
-            IncrementQueue(2, ref executionTime);
+            IncrementQueue(2, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -211,7 +208,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetCreationDate(double executionTime)
         {
             Interlocked.Increment(ref GetCreationDateCalls);
-            IncrementQueue(3, ref executionTime);
+            IncrementQueue(3, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -221,7 +218,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetExpirationDate(double executionTime)
         {
             Interlocked.Increment(ref GetExpirationDateCalls);
-            IncrementQueue(4, ref executionTime);
+            IncrementQueue(4, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -231,7 +228,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetKeys(double executionTime)
         {
             Interlocked.Increment(ref GetKeysCalls);
-            IncrementQueue(5, ref executionTime);
+            IncrementQueue(5, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -241,7 +238,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetMeta(double executionTime)
         {
             Interlocked.Increment(ref GetMetaCalls);
-            IncrementQueue(6, ref executionTime);
+            IncrementQueue(6, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -251,7 +248,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetMetaByTag(double executionTime)
         {
             Interlocked.Increment(ref GetMetaByTagCalls);
-            IncrementQueue(7, ref executionTime);
+            IncrementQueue(7, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -261,7 +258,7 @@ namespace TWCore.Cache.Client
         public void IncrementGetOrSet(double executionTime)
         {
             Interlocked.Increment(ref GetOrSetCalls);
-            IncrementQueue(8, ref executionTime);
+            IncrementQueue(8, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -271,7 +268,7 @@ namespace TWCore.Cache.Client
         public void IncrementRemove(double executionTime)
         {
             Interlocked.Increment(ref RemoveCalls);
-            IncrementQueue(9, ref executionTime);
+            IncrementQueue(9, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -281,7 +278,7 @@ namespace TWCore.Cache.Client
         public void IncrementRemoveByTag(double executionTime)
         {
             Interlocked.Increment(ref RemoveByTagCalls);
-            IncrementQueue(10, ref executionTime);
+            IncrementQueue(10, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -291,7 +288,7 @@ namespace TWCore.Cache.Client
         public void IncrementSet(double executionTime)
         {
             Interlocked.Increment(ref SetCalls);
-            IncrementQueue(11, ref executionTime);
+            IncrementQueue(11, executionTime);
         }
         /// <summary>
         /// Increment the value
@@ -301,27 +298,14 @@ namespace TWCore.Cache.Client
         public void IncrementUpdateData(double executionTime)
         {
             Interlocked.Increment(ref UpdateDataCalls);
-            IncrementQueue(12, ref executionTime);
+            IncrementQueue(12, executionTime);
         }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void IncrementQueue(int idx, ref double executionTime)
+        private void IncrementQueue(int idx, double executionTime)
         {
-			var queue = _times[idx];
-			lock(queue) 
-			{
-				queue.Enqueue(executionTime);
-				while (queue.Count > 100)
-					queue.Dequeue();
-			}
+            _times[idx] = _times[idx].HasValue ? (_times[idx] * 0.7) + (executionTime * 0.3) : executionTime;
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private double GetAverage(int idx)
-        {
-			var queue = _times[idx];
-			lock(queue)
-				return queue.Count > 0 ? queue.Average() : 0;
-		}
     }
 }

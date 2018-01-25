@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
@@ -472,12 +473,13 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
             EnsureLogFile(FileName);
             if (_sWriter == null) return;
             var time = item.Timestamp.GetTimeSpanFormat();
             var format = PreFormat;
+            string buffer = null;
             lock (_sWriter)
             {
                 if (_firstWrite)
@@ -514,25 +516,21 @@ namespace TWCore.Diagnostics.Log.Storages
                     _stringBuffer.Append("\r\nExceptions:\r\n");
                     GetExceptionDescription(item.Exception, _stringBuffer);
                 }
-                var buffer = _stringBuffer.ToString();
+                buffer = _stringBuffer.ToString();
                 _stringBuffer.Clear();
-
-                _sWriter.Write(format, item.Level, buffer, item.TypeName);
-                _sWriter.Flush();
             }
+            await _sWriter.WriteAsync(string.Format(format, item.Level, buffer, item.TypeName)).ConfigureAwait(false);
+            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public async Task WriteEmptyLineAsync()
         {
-            lock (_sWriter)
-            {
-                _sWriter.Write(PreFormat, "EmptyLine", "<br/>");
-                _sWriter.Flush();
-            }
+            await _sWriter.WriteAsync(string.Format(PreFormat, "EmptyLine", "<br/>")).ConfigureAwait(false);
+            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc />

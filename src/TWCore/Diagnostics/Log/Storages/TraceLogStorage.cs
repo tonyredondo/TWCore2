@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
@@ -34,7 +35,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
             lock(Console.Out)
             {
@@ -63,6 +64,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 System.Diagnostics.Trace.WriteLine(_stringBuffer.ToString());
                 _stringBuffer.Clear();
             }
+            return Task.CompletedTask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -81,9 +83,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
             System.Diagnostics.Trace.WriteLine(string.Empty);
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>

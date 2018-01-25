@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Messaging.Client;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
@@ -57,20 +58,22 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item to the storage
         /// </summary>
         /// <param name="item">Log Item</param>
-        public void Write(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
             lock (_locker)
             {
                 if (item is LogItem logItem) 
                     _logItems.Add(logItem);
             }
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>

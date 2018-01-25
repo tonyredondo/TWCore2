@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Services;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -54,9 +55,9 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
-            if (!ServiceContainer.HasConsole) return;
+            if (!ServiceContainer.HasConsole) return Task.CompletedTask;
             lock(PadLock)
             {
                 StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
@@ -120,6 +121,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 Console.Write(buffer);
                 _lastLogLevel = item.Level;
             }
+            return Task.CompletedTask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,10 +141,11 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
             lock (PadLock)
                 Console.WriteLine();
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>

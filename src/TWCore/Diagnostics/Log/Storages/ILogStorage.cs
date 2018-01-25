@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading.Tasks;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
@@ -28,10 +29,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item to the storage
         /// </summary>
         /// <param name="item">Log Item</param>
-        void Write(ILogItem item);
+        Task WriteAsync(ILogItem item);
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
-        void WriteEmptyLine();
+        Task WriteEmptyLineAsync();
     }
 }

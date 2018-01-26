@@ -127,19 +127,16 @@ namespace TWCore.Messaging
 			{
 				_token = token;
 				_receiver = MemoryQueueManager.GetQueue(Connection.Route, Connection.Name);
-
-				await Task.Factory.StartNew(async () =>
+				var tokenTask = token.WhenCanceledAsync();
+				while (!_token.IsCancellationRequested)
 				{
-					while (!_token.IsCancellationRequested)
-					{
-						var message = await _receiver.DequeueAsync(_token).ConfigureAwait(false);
-						if (_token.IsCancellationRequested) break;
-                        #pragma warning disable 4014
-                        EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
-                        #pragma warning restore 4014
-                    }
-                }, token, TaskCreationOptions.LongRunning, TaskScheduler.Default).ConfigureAwait(false);
-
+					var rcvTask = _receiver.DequeueAsync(_token);
+					var rTask = await Task.WhenAny(rcvTask, tokenTask).ConfigureAwait(false);
+					if (rTask == tokenTask) break;
+					#pragma warning disable 4014
+					EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result);
+					#pragma warning restore 4014
+				}
 				WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
 			}
 

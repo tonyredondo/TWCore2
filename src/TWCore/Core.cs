@@ -97,7 +97,7 @@ namespace TWCore
         /// <summary>
         /// App global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ObjectData => _objectData ?? (_objectData = new Dictionary<string, object>());
+        public static Dictionary<object, object> ObjectData => _objectData ?? (_objectData = new Dictionary<object, object>());
         /// <summary>
         /// App Settings
         /// </summary>

@@ -173,9 +173,9 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task WriteAsync(ILogItem item)
         {
-            if (_items == null) return;
             if (_isDirty || _cItems == null)
             {
+                if (_items == null) return;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);
@@ -205,6 +205,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             if (_isDirty || _cItems == null)
             {
+                if (_items == null) return;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);

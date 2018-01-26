@@ -131,6 +131,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             if (Serializer != null)
             {
                 Serializer.KnownTypes.Add(typeof(RPCError));
+                Serializer.KnownTypes.Add(typeof(RPCCancelMessage));
                 Serializer.KnownTypes.Add(typeof(RPCEventMessage));
                 Serializer.KnownTypes.Add(typeof(RPCPushMessage));
                 Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
@@ -144,14 +145,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _listener.Server.NoDelay = true;
             Factory.SetSocketLoopbackFastPath(_listener.Server);
             _listener.Start();
-            _tskListener = Task.Factory.StartNew(async () =>
-            {
-                while (!_token.IsCancellationRequested)
-                {
-                    var tcpClient = await _listener.AcceptTcpClientAsync().HandleCancellationAsync(_token).ConfigureAwait(false);
-                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, tcpClient);
-                }
-            }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _tskListener = ConnectionListenerAsync();
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;
         }
@@ -244,6 +238,20 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #endregion
 
         #region Private Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task ConnectionListenerAsync()
+        {
+            var tokenTask = _token.WhenCanceledAsync();
+            while (!_token.IsCancellationRequested)
+            {
+                var listenerTask = _listener.AcceptTcpClientAsync();
+                var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
+                if (rTask == tokenTask) break;
+                ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, listenerTask.Result);
+            }
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ConnectionReceived(object objTcpClient)
         {

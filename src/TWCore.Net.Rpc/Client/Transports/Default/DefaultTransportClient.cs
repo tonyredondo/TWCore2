@@ -147,6 +147,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (Serializer != null)
             {
                 Serializer.KnownTypes.Add(typeof(RPCError));
+                Serializer.KnownTypes.Add(typeof(RPCCancelMessage));
                 Serializer.KnownTypes.Add(typeof(RPCEventMessage));
                 Serializer.KnownTypes.Add(typeof(RPCPushMessage));
                 Serializer.KnownTypes.Add(typeof(RPCRequestMessage));

@@ -150,11 +150,7 @@ namespace TWCore.Net.HttpServer
             _listener.Server.NoDelay = true;
             Factory.SetSocketLoopbackFastPath(_listener.Server);
             _listener.Start();
-            _tskListener = Task.Factory.StartNew(async () =>
-            {
-                while (!_token.IsCancellationRequested)
-                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, await _listener.AcceptTcpClientAsync().ConfigureAwait(false));
-            }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _tskListener = TcpListenerAsync();
             _active = true;
             Core.Log.LibVerbose("HttpServer Started on {0}.", port);
             return Task.CompletedTask;
@@ -414,6 +410,18 @@ namespace TWCore.Net.HttpServer
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task TcpListenerAsync()
+        {
+            var tokenTask = _token.WhenCanceledAsync();
+            while (!_token.IsCancellationRequested)
+            {
+                var listenerTask = _listener.AcceptTcpClientAsync();
+                var result = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
+                if (result == tokenTask) break;
+                ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, listenerTask.Result);
+            }
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ConnectionReceived(object objClient)
         {

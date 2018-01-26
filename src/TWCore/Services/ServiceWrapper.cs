@@ -54,6 +54,7 @@ namespace TWCore.Services
         {
             Service = service;
             ServiceName = serviceName;
+            Core.Data[nameof(ServiceWrapper)] = this;
         }
         ~ServiceWrapper()
         {

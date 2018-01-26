@@ -209,6 +209,7 @@ namespace TWCore.Services
                             exec = true;
                             if (paramHandlerInfo.ShouldEndExecution)
                             {
+                                UnregisterDiscovery();
                                 Core.Dispose();
                                 return;
                             }
@@ -220,6 +221,7 @@ namespace TWCore.Services
             {
                 RegisterDiscovery();
                 InternalRun(args);
+                UnregisterDiscovery();
             }
             else if (!exec)
             {
@@ -446,6 +448,7 @@ namespace TWCore.Services
 
         #region Protected Methods
         private bool _discovery;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void RegisterDiscovery()
         {
             if (_discovery) return;
@@ -466,6 +469,15 @@ namespace TWCore.Services
             }
             DiscoveryService.Serializer = serializer;
             DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected virtual void UnregisterDiscovery()
+        {
+            if (!_discovery) return;
+            if (!Core.GlobalSettings.EnableDiscovery) return;
+            Core.Log.LibDebug("Unregistering Discovery services.");
+            _discovery = false;
+            DiscoveryService.Disconnect();
         }
         #endregion
     }

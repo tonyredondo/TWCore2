@@ -15,20 +15,15 @@ limitations under the License.
  */
 
 using System;
-using System.Threading.Tasks;
+using System.Runtime.Serialization;
 
-namespace TWCore.Diagnostics.Trace.Storages
+namespace TWCore.Net.RPC
 {
-    /// <inheritdoc />
     /// <summary>
-    /// Trace storage interface
+    /// RPC Cancel Message
     /// </summary>
-    public interface ITraceStorage : IDisposable
+    [Serializable, DataContract]
+    public class RPCCancelMessage : RPCMessage
     {
-        /// <summary>
-        /// Writes a trace item to the storage
-        /// </summary>
-        /// <param name="item">Trace item</param>
-        Task WriteAsync(TraceItem item);
     }
 }

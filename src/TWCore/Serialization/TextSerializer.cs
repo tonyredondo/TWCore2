@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.IO;
 // ReSharper disable MemberCanBeProtected.Global
@@ -59,7 +60,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Known types to add to the serializer
         /// </summary>
-        public virtual List<Type> KnownTypes { get; } = new List<Type>();
+        public virtual HashSet<Type> KnownTypes { get; } = new HashSet<Type>();
         /// <inheritdoc />
         /// <summary>
         /// Compresor used on Serialization and Deserialization of byte arrays, streams and files
@@ -232,6 +233,46 @@ namespace TWCore.Serialization
         }
         /// <inheritdoc />
         /// <summary>
+        /// Serialize an object to a filepath
+        /// </summary>
+        /// <param name="item">Object to serialize</param>
+        /// <param name="itemType">Object type</param>
+        /// <param name="filePath">File path to write the results of the serialization</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual async Task SerializeToFileAsync(object item, Type itemType, string filePath)
+        {
+            filePath = Factory.GetAbsolutePath(filePath);
+            string[] fPath = { filePath };
+            if (UseFileExtensions)
+            {
+                if (Compressor != null)
+                {
+                    var compExt = Compressor.FileExtension;
+                    if (!Extensions.Any(ext => fPath[0].EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    {
+                        if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                            fPath[0] = filePath + Extensions.FirstOrDefault() + compExt;
+                        else
+                            fPath[0] = filePath + compExt;
+                    }
+                }
+                else if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                {
+                    fPath[0] = filePath + Extensions.FirstOrDefault();
+                }
+            }
+            if (!string.Equals(fPath[0], filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
+                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath[0]);
+            using (var stream = new RecycleMemoryStream())
+            {
+                Serialize(item, itemType, stream);
+                stream.Position = 0;
+                using (var fstream = File.Open(fPath[0], FileMode.Create, FileAccess.Write))
+                    await stream.CopyToAsync(fstream).ConfigureAwait(false);
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
         /// Deserialize a file to an object instance
         /// </summary>
         /// <param name="itemType">Object type</param>
@@ -347,6 +388,15 @@ namespace TWCore.Serialization
         /// <param name="filePath">File path to write the results of the serialization</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializeToFile<T>(T item, string filePath) => SerializeToFile(item, item?.GetType() ?? typeof(T), filePath);
+        /// <inheritdoc />
+        /// <summary>
+        /// Serialize an object to a filepath
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="item">Object to serialize</param>
+        /// <param name="filePath">File path to write the results of the serialization</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task SerializeToFileAsync<T>(T item, string filePath) => SerializeToFileAsync(item, item?.GetType() ?? typeof(T), filePath);
         /// <inheritdoc />
         /// <summary>
         /// Deserialize a file to an object instance

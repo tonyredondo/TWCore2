@@ -156,7 +156,7 @@ namespace TWCore.Serialization
                 UseCamelCase = UseCamelCase,
 				EnumsAsStrings = EnumsAsStrings
             };
-            nSerializer.KnownTypes.AddRange(KnownTypes);
+            nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;
         }
     }

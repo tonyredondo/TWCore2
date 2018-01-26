@@ -86,7 +86,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Default value to indicate the known types
         /// </summary>
-        public static readonly List<Type> DefaultKnownTypes = new List<Type>();
+        public static readonly HashSet<Type> DefaultKnownTypes = new HashSet<Type>();
         /// <summary>
         /// Supress the file extension warning from the log
         /// </summary>

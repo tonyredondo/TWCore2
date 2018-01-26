@@ -130,18 +130,14 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Core.Log.LibVerbose("Starting Transport Listener");
             if (Serializer != null)
             {
-                if (!Serializer.KnownTypes.Contains(typeof(RPCEventMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCEventMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCPushMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCPushMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCRequestMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCResponseMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionRequestMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionResponseMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
+                Serializer.KnownTypes.Add(typeof(RPCError));
+                Serializer.KnownTypes.Add(typeof(RPCCancelMessage));
+                Serializer.KnownTypes.Add(typeof(RPCEventMessage));
+                Serializer.KnownTypes.Add(typeof(RPCPushMessage));
+                Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
+                Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
+                Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
+                Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
             }
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
@@ -149,14 +145,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _listener.Server.NoDelay = true;
             Factory.SetSocketLoopbackFastPath(_listener.Server);
             _listener.Start();
-            _tskListener = Task.Factory.StartNew(async () =>
-            {
-                while (!_token.IsCancellationRequested)
-                {
-                    var tcpClient = await _listener.AcceptTcpClientAsync().HandleCancellationAsync(_token).ConfigureAwait(false);
-                    ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, tcpClient);
-                }
-            }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+            _tskListener = ConnectionListenerAsync();
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;
         }
@@ -249,6 +238,20 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #endregion
 
         #region Private Methods
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task ConnectionListenerAsync()
+        {
+            var tokenTask = _token.WhenCanceledAsync();
+            while (!_token.IsCancellationRequested)
+            {
+                var listenerTask = _listener.AcceptTcpClientAsync();
+                var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
+                if (rTask == tokenTask) break;
+                ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, listenerTask.Result);
+            }
+        }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ConnectionReceived(object objTcpClient)
         {

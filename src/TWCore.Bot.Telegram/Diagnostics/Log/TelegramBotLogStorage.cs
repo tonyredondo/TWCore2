@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Bot;
 using TWCore.Bot.Telegram;
 using TWCore.Serialization;
@@ -132,7 +133,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async void Write(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
             if (!LevelAllowed.HasFlag(item.Level)) return;
             var msg = string.Format("{0}\r\nMachine Name: {1} [{2}]\r\nAplicationName: {3}\r\nMessage: {4}", item.Timestamp.ToString("dd/MM/yyyy HH:mm:ss"), item.MachineName, item.EnvironmentName, item.ApplicationName, item.Message);
@@ -152,8 +153,9 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />

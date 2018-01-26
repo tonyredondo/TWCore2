@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable IntroduceOptionalParameters.Global
@@ -170,39 +171,41 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
-            if (_items == null) return;
             if (_isDirty || _cItems == null)
             {
+                if (_items == null) return;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);
                     _isDirty = false;
                 }
             }
-            foreach (var sto in _cItems)
+            var tsk = _cItems.Select(async sto =>
             {
                 try
                 {
                     if (sto.Item2.HasFlag(item.Level))
-                        sto.Item1.Write(item);
+                        await sto.Item1.WriteAsync(item).ConfigureAwait(false);
                 }
                 catch
                 {
                     // ignored
                 }
-            }
+            });
+            await Task.WhenAll(tsk).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public async Task WriteEmptyLineAsync()
         {
             if (_isDirty || _cItems == null)
             {
+                if (_items == null) return;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);
@@ -213,7 +216,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 try
                 {
-                    sto.Item1.WriteEmptyLine();
+                    await sto.Item1.WriteEmptyLineAsync().ConfigureAwait(false);
                 }
                 catch
                 {

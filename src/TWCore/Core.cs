@@ -54,6 +54,8 @@ namespace TWCore
         private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
         private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
         private static CoreSettings _globalSettings;
+        private static Dictionary<string, object> _data;
+        private static Dictionary<object, object> _objectData;
         [ThreadStatic] private static Dictionary<string, object> _threadData;
         [ThreadStatic] private static Dictionary<object, object> _threadObjectData;
         private static volatile bool _initialized;
@@ -91,11 +93,11 @@ namespace TWCore
         /// <summary>
         /// App global data dictionary
         /// </summary>
-        public static Dictionary<string, object> Data { get; } = new Dictionary<string, object>();
+        public static Dictionary<string, object> Data => _data ?? (_data = new Dictionary<string, object>());
         /// <summary>
         /// App global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ObjectData { get; } = new Dictionary<object, object>();
+        public static Dictionary<object, object> ObjectData => _objectData ?? (_objectData = new Dictionary<object, object>());
         /// <summary>
         /// App Settings
         /// </summary>

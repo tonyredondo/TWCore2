@@ -104,7 +104,7 @@ namespace TWCore.Serialization.WSerializer
                 SerializerMode = SerializerMode,
                 IncludeInnerKnownTypes = IncludeInnerKnownTypes
             };
-            nSerializer.KnownTypes.AddRange(KnownTypes);
+            nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;
         }
     }

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 using TWCore.Compression;
 // ReSharper disable UnusedMemberInSuper.Global
 // ReSharper disable UnusedMember.Global
@@ -44,7 +45,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Known types to add to the serializer
         /// </summary>
-        List<Type> KnownTypes { get; }
+        HashSet<Type> KnownTypes { get; }
         /// <summary>
         /// true if the serializer extension and/or compressor extension would be appended to the filePath; otherwise, false.
         /// </summary>
@@ -78,7 +79,14 @@ namespace TWCore.Serialization
         /// <param name="itemType">Object type</param>
         /// <param name="filePath">File path to write the results of the serialization</param>
         void SerializeToFile(object item, Type itemType, string filePath);
-
+        /// <summary>
+        /// Serialize an object to a filepath
+        /// </summary>
+        /// <param name="item">Object to serialize</param>
+        /// <param name="itemType">Object type</param>
+        /// <param name="filePath">File path to write the results of the serialization</param>
+        Task SerializeToFileAsync(object item, Type itemType, string filePath);
+        
         //+++
         /// <summary>
         /// Get the Serialized Object from the instance
@@ -116,7 +124,13 @@ namespace TWCore.Serialization
         /// <param name="item">Object to serialize</param>
         /// <param name="filePath">File path to write the results of the serialization</param>
         void SerializeToFile<T>(T item, string filePath);
-
+        /// <summary>
+        /// Serialize an object to a filepath
+        /// </summary>
+        /// <typeparam name="T">Object type</typeparam>
+        /// <param name="item">Object to serialize</param>
+        /// <param name="filePath">File path to write the results of the serialization</param>
+        Task SerializeToFileAsync<T>(T item, string filePath);
         //+++
 
         /// <summary>
@@ -140,8 +154,6 @@ namespace TWCore.Serialization
         /// <param name="filePath">File path to read the content to deserialize</param>
         /// <returns>Deserialized object</returns>
         object DeserializeFromFile(Type itemType, string filePath);
-
-
         //+++
 
         /// <summary>

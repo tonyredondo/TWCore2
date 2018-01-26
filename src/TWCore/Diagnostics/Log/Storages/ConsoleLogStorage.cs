@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading.Tasks;
 using TWCore.Services;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -54,9 +55,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
             if (!ServiceContainer.HasConsole) return;
+            string buffer;
             lock(PadLock)
             {
                 StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
@@ -79,7 +81,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     StringBuffer.AppendLine("Exceptions:\r\n");
                     GetExceptionDescription(item.Exception, StringBuffer);
                 }
-                var buffer = StringBuffer.ToString();
+                buffer = StringBuffer.ToString();
                 StringBuffer.Clear();
 
                 if (item.Level != _lastLogLevel && UseColor)
@@ -117,9 +119,9 @@ namespace TWCore.Diagnostics.Log.Storages
                             break;
                     }
                 }
-                Console.Write(buffer);
-                _lastLogLevel = item.Level;
             }
+            await Console.Out.WriteAsync(buffer).ConfigureAwait(false);
+            _lastLogLevel = item.Level;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -139,10 +141,11 @@ namespace TWCore.Diagnostics.Log.Storages
         /// Writes a log item empty line
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
             lock (PadLock)
                 Console.WriteLine();
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>

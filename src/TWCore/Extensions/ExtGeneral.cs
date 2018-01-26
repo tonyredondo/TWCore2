@@ -340,6 +340,8 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
         {
+            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
@@ -356,7 +358,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                return await readyTask;
+                return await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>
@@ -368,6 +370,9 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
         {
+            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
+            if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
             // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
@@ -385,7 +390,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                return await readyTask;
+                return await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>
@@ -398,6 +403,10 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
         {
+            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
+            if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
+            if (cancellationToken3.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken3).ConfigureAwait(false);
             // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
@@ -416,7 +425,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                return await readyTask;
+                return await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>
@@ -427,6 +436,8 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken)
         {
+            if (asyncTask.IsCompleted) return;
+            if (cancellationToken.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
             {
@@ -442,7 +453,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                await readyTask;
+                await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>
@@ -454,6 +465,9 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
         {
+            if (asyncTask.IsCompleted) return;
+            if (cancellationToken.IsCancellationRequested) return;
+            if (cancellationToken2.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
             using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
@@ -470,7 +484,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                await readyTask;
+                await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>
@@ -483,6 +497,10 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task HandleCancellationAsync(this Task asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
         {
+            if (asyncTask.IsCompleted) return;
+            if (cancellationToken.IsCancellationRequested) return;
+            if (cancellationToken2.IsCancellationRequested) return;
+            if (cancellationToken3.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
             using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
@@ -500,7 +518,7 @@ namespace TWCore
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
 
-                await readyTask;
+                await readyTask.ConfigureAwait(false);
             }
         }
         /// <summary>

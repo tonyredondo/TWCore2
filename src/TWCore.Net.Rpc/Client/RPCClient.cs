@@ -42,8 +42,7 @@ namespace TWCore.Net.RPC.Client
     {
         private static readonly object[] _emptyArgs = new object[0];
         private static readonly object[] _nullItemArgs = { null };
-        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache 
-            = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
+        private readonly ConcurrentDictionary<(string ServiceName, string Method, Type[] Types), MethodDescriptor> _methodDescriptorCache = new ConcurrentDictionary<(string, string, Type[]), MethodDescriptor>(new MethodDescriptionEqualityComparer());
         private ITransportClient _transport;
         private bool _transportInit;
         private ServiceDescriptorCollection _serverDescriptors;
@@ -96,7 +95,7 @@ namespace TWCore.Net.RPC.Client
                 if (x.Types == null) return false;
                 if (y.Types == null) return false;
                 if (x.Types.Length != y.Types.Length) return false;
-                for (var i = 0; i < x.Types.Length; i++)
+                for(var i = 0; i < x.Types.Length; i++)
                     if (x.Types[i] != y.Types[i]) return false;
                 return true;
             }

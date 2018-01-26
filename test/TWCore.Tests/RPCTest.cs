@@ -48,12 +48,12 @@ namespace TWCore.Tests
             dynamic hClient = await rpcClient.CreateDynamicProxyAsync<IHello>().ConfigureAwait(false);
             var rtest = (string)hClient.SayHi("MyName");
 
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 5000; i++)
             {
                 var rHClient = (string)hClient.SayHi("MyName");
             }
 
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 5000; i++)
             {
                 var rHClient = await ((Task<object>)hClient.TestAsync()).ConfigureAwait(false);
             }
@@ -62,7 +62,7 @@ namespace TWCore.Tests
             //IMyService test
             Core.Log.InfoBasic("IMyService test");
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 5000; i++)
             {
                 var aLst = await ((Task<object>)dClient.GetAllAsync()).ConfigureAwait(false);
             }
@@ -70,7 +70,7 @@ namespace TWCore.Tests
             //Proxy class test
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 5000; i++)
             {
                 var resp = await client.GetAllAsync().ConfigureAwait(false);
             }
@@ -80,7 +80,7 @@ namespace TWCore.Tests
             //Event test
             Core.Log.InfoBasic("Event test");
             client.OnAddSimplePersona += (s, e) => Core.Log.Warning("On Add SimplePersona was fired!!!");
-            for (var i = 0; i < 10000; i++)
+            for (var i = 0; i < 5000; i++)
             {
                 client.AddSimplePersona(new SimplePerson { Lastname = "Test", Firstname = "Test" });
             }

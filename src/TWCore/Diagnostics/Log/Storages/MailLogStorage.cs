@@ -181,8 +181,9 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// Writes a log item empty line
         /// </summary>
-        public void WriteEmptyLine()
+        public Task WriteEmptyLineAsync()
         {
+            return Task.CompletedTask;
         }
         /// <inheritdoc />
         /// <summary>
@@ -190,18 +191,19 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
-            if (!LevelAllowed.HasFlag(item.Level) || item.Message.Contains("SMTPERROR")) return;
+            if (!LevelAllowed.HasFlag(item.Level) || item.Message.Contains("SMTPERROR")) return Task.CompletedTask;
 
             lock (_buffer)
                 _buffer.Add(item);
-            if (_waiting) return;
+            if (_waiting) return Task.CompletedTask;
             _waiting = true;
             Task.Delay(TimeSpan.FromSeconds(BufferTimeoutInSeconds)).ContinueWith(t =>
             {
                 SendEmail();
             });
+            return Task.CompletedTask;
         }
 
         /// <inheritdoc />

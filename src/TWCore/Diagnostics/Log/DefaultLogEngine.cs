@@ -107,7 +107,7 @@ namespace TWCore.Diagnostics.Log
             Storage = new LogStorageCollection();
             if (itemFactory != null)
                 ItemFactory = itemFactory;
-            _itemsWorker = new Worker<ILogItem>(() => Storage?.Count > 0, item =>
+            _itemsWorker = new Worker<ILogItem>(() => Storage?.Count > 0, async item =>
             {
                 try
                 {
@@ -116,10 +116,10 @@ namespace TWCore.Diagnostics.Log
                         case null:
                             return;
                         case NewLineLogItem _:
-                            Storage.WriteEmptyLine();
+                            await Storage.WriteEmptyLineAsync().ConfigureAwait(false);
                             break;
                         default:
-                            Storage.Write(item);
+                            await Storage.WriteAsync(item).ConfigureAwait(false);
                             break;
                     }
                 }

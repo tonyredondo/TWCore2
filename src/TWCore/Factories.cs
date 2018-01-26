@@ -265,6 +265,8 @@ namespace TWCore
                     {
                         var actualType = declarationType.DeclaringType;
 
+                        if (actualType.Assembly == typeof(Core).Assembly) continue;
+
                         #region Actual type attrs
                         var actualTypeAttrs = TypeAttributes.GetOrAdd(actualType, i => i.GetCustomAttributes(false)); //actualType.GetCustomAttributes(false);
                         StackFrameLogAttribute actualTypeNameTypeAttr = null;
@@ -312,7 +314,7 @@ namespace TWCore
                     }
                 }
             }
-            if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.InfoDetail)
+            if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)
                 return null;
 
             var lItem = new LogItem

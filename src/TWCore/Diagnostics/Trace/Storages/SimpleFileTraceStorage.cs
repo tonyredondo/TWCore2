@@ -18,6 +18,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
@@ -228,7 +229,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         /// <param name="item">Trace item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(TraceItem item)
+        public async Task WriteAsync(TraceItem item)
         {
             EnsureTraceFile(FileName);
             if (_sWriter == null) return;
@@ -238,7 +239,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                 try
                 {
                     var serializer = Serializer ?? SerializerManager.Serializers[0];
-                    serializer.SerializeToFile(item.TraceObject, traceFilePath);
+                    await serializer.SerializeToFileAsync(item.TraceObject, traceFilePath).ConfigureAwait(false);
                 }
                 catch(Exception ex)
                 {
@@ -248,16 +249,13 @@ namespace TWCore.Diagnostics.Trace.Storages
             else
                 File.WriteAllText(traceFilePath + ".txt", "Object is Null");
 
-            lock (_sWriter)
-            {
-                var line = string.Format("{0} ({1, 15}) {2}: {3}", 
-                    item.Timestamp.GetTimeSpanFormat(), 
-                    string.IsNullOrEmpty(item.GroupName) ? "NO GROUP" : item.GroupName, 
-                    item.TraceName, 
-                    traceFilePath);
-                _sWriter.WriteLine(line);
-                _sWriter.Flush();
-            }
+            var line = string.Format("{0} ({1, 15}) {2}: {3}", 
+                item.Timestamp.GetTimeSpanFormat(), 
+                string.IsNullOrEmpty(item.GroupName) ? "NO GROUP" : item.GroupName, 
+                item.TraceName, 
+                traceFilePath);
+            await _sWriter.WriteLineAsync(line).ConfigureAwait(false);
+            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc />

@@ -231,7 +231,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     if (_client == null || !_client.Connected)
                     {
                         OnDisconnect?.Invoke(this, EventArgs.Empty);
-                        await ConnectAsync();
+                        await ConnectAsync().ConfigureAwait(false);
                     }
 
                     try
@@ -247,7 +247,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                                     _sessionEvent.Set();
                                 }
                                 else
-                                    await DisconnectAsync();
+                                    await DisconnectAsync().ConfigureAwait(false);
 
                                 break;
                             default:

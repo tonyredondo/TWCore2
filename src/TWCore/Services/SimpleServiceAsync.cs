@@ -62,6 +62,23 @@ namespace TWCore.Services
         protected abstract Task OnActionAsync(CancellationToken token);
         #endregion
 
+        #region Private Methods
+        private async Task ActionTask(CancellationToken token)
+        {
+            try
+            {
+                await OnActionAsync(_token).ConfigureAwait(false);
+                if (EndAfterTaskFinish)
+                    ServiceContainer.ServiceExit();
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
+                ServiceContainer.ServiceExit();
+            }
+        }
+        #endregion
+        
         #region IService Methods
         /// <inheritdoc />
         /// <summary>
@@ -77,20 +94,7 @@ namespace TWCore.Services
                 StartArguments = args;
                 _tokenSource = new CancellationTokenSource();
                 _token = _tokenSource.Token;
-                _task = Task.Factory.StartNew(async () =>
-                {
-                    try
-                    {
-                        await OnActionAsync(_token).ConfigureAwait(false);
-                        if (EndAfterTaskFinish)
-                            ServiceContainer.ServiceExit();
-                    }
-                    catch(Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                        ServiceContainer.ServiceExit();
-                    }
-                }, _token, TaskCreationOptions.LongRunning, TaskScheduler.Default);
+                _task = ActionTask(_token);
                 Core.Log.InfoBasic("Service started");
                 if (EndAfterTaskFinish)
                     _task.WaitAsync();

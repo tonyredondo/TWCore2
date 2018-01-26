@@ -55,9 +55,10 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task WriteAsync(ILogItem item)
+        public async Task WriteAsync(ILogItem item)
         {
-            if (!ServiceContainer.HasConsole) return Task.CompletedTask;
+            if (!ServiceContainer.HasConsole) return;
+            string buffer;
             lock(PadLock)
             {
                 StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
@@ -80,7 +81,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     StringBuffer.AppendLine("Exceptions:\r\n");
                     GetExceptionDescription(item.Exception, StringBuffer);
                 }
-                var buffer = StringBuffer.ToString();
+                buffer = StringBuffer.ToString();
                 StringBuffer.Clear();
 
                 if (item.Level != _lastLogLevel && UseColor)
@@ -118,10 +119,9 @@ namespace TWCore.Diagnostics.Log.Storages
                             break;
                     }
                 }
-                Console.Write(buffer);
-                _lastLogLevel = item.Level;
             }
-            return Task.CompletedTask;
+            await Console.Out.WriteAsync(buffer).ConfigureAwait(false);
+            _lastLogLevel = item.Level;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

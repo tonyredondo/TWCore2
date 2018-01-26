@@ -89,7 +89,7 @@ namespace TWCore.Serialization
                 Binder = Binder,
                 UseFileExtensions = UseFileExtensions
             };
-            nSerializer.KnownTypes.AddRange(KnownTypes);
+            nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;
         }
     }

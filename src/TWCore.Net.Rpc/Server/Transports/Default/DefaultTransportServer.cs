@@ -130,18 +130,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Core.Log.LibVerbose("Starting Transport Listener");
             if (Serializer != null)
             {
-                if (!Serializer.KnownTypes.Contains(typeof(RPCEventMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCEventMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCPushMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCPushMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCRequestMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCResponseMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionRequestMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
-                if (!Serializer.KnownTypes.Contains(typeof(RPCSessionResponseMessage)))
-                    Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
+                Serializer.KnownTypes.Add(typeof(RPCError));
+                Serializer.KnownTypes.Add(typeof(RPCEventMessage));
+                Serializer.KnownTypes.Add(typeof(RPCPushMessage));
+                Serializer.KnownTypes.Add(typeof(RPCRequestMessage));
+                Serializer.KnownTypes.Add(typeof(RPCResponseMessage));
+                Serializer.KnownTypes.Add(typeof(RPCSessionRequestMessage));
+                Serializer.KnownTypes.Add(typeof(RPCSessionResponseMessage));
             }
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;

@@ -176,7 +176,7 @@ namespace TWCore.Serialization
                 OmitXmlDeclaration = OmitXmlDeclaration,
                 RemoveNamespaces = RemoveNamespaces
             };
-            nSerializer.KnownTypes.AddRange(KnownTypes);
+            nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;
         }
     }

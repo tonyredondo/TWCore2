@@ -45,7 +45,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Known types to add to the serializer
         /// </summary>
-        List<Type> KnownTypes { get; }
+        HashSet<Type> KnownTypes { get; }
         /// <summary>
         /// true if the serializer extension and/or compressor extension would be appended to the filePath; otherwise, false.
         /// </summary>

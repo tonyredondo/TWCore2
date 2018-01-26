@@ -44,6 +44,7 @@ namespace TWCore
         private CancellationTokenSource _tokenSource;
         private volatile bool _startActive;
         private volatile WorkerStatus _status = WorkerStatus.Stopped;
+        private int _queueCount;
         #endregion
 
         #region Events
@@ -79,6 +80,10 @@ namespace TWCore
         /// Cancellation Token
         /// </summary>
         public CancellationToken CancellationToken => _tokenSource.Token;
+        /// <summary>
+        /// Gets the number of elements in the queue
+        /// </summary>
+        public int Count => _queueCount;
         #endregion
 
         #region .ctors
@@ -171,6 +176,7 @@ namespace TWCore
         {
             if (Status == WorkerStatus.Disposed || Status == WorkerStatus.Stopping) return false;
             _queue.Enqueue(item);
+            Interlocked.Increment(ref _queueCount);
             if (_startActive && Status == WorkerStatus.Stopped)
                 Start();
             else
@@ -185,15 +191,13 @@ namespace TWCore
         {
             var prevStatus = _status;
             Stop();
+            Interlocked.Exchange(ref _queueCount, 0);
             lock (this)
                 _queue = new ConcurrentQueue<T>();
             if (prevStatus == WorkerStatus.Started)
                 Start();
         }
-        /// <summary>
-        /// Gets the number of elements in the queue
-        /// </summary>
-        public int Count => _queue.Count;
+
         #endregion
 
         #region Thread
@@ -252,6 +256,7 @@ namespace TWCore
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
+                    Interlocked.Decrement(ref _queueCount);
                     if (_precondition?.Invoke() == false)
                         Factory.Thread.SleepUntil(_precondition, token);
                     if (token.IsCancellationRequested)
@@ -305,6 +310,7 @@ namespace TWCore
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
+                    Interlocked.Decrement(ref _queueCount);
                     try
                     {
                         await _func(item).ConfigureAwait(false);
@@ -365,6 +371,7 @@ namespace TWCore
                 // ignored
             }
             _processHandler.Reset();
+            Interlocked.Exchange(ref _queueCount, 0);
             Core.Status.DeAttachObject(this);
         }
     }

@@ -181,7 +181,7 @@ namespace TWCore.Cache.Client
         Task<bool> SetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags);
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -208,6 +208,13 @@ namespace TWCore.Cache.Client
         /// <param name="containingAll">true if the results items needs to have all tags, false if the items needs to have at least one of the tags.</param>
         /// <returns>String array with the keys of the items removed.</returns>
         Task<string[]> RemoveByTagAsync(string[] tags, bool containingAll);
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        Task<bool> CopyAsync(string key, string newKey);
         #endregion
 
         #region GetOrSet

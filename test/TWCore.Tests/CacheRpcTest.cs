@@ -36,19 +36,23 @@ namespace TWCore.Tests
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
-	            var guid = Guid.NewGuid();
 	            var asto = await cachePool.GetAsync("test").ConfigureAwait(false);
 	            if (asto == null)
 	            {
 		            await cachePool.SetAsync("test", "value").ConfigureAwait(false);
 		            asto = await cachePool.GetAsync("test").ConfigureAwait(false);
 	            }
-	            if (asto.Meta.Tags == null)
-		            asto.Meta.Tags = new List<string>();
-	            asto.Meta.Tags.Add(guid.ToString("N"));
-	            await cachePool.SetAsync(asto).ConfigureAwait(false);
-	            var asto2 = await cachePool.GetByTagAsync(new[] {guid.ToString("N")}).ConfigureAwait(false);
-	            
+	            var guid = Guid.NewGuid();
+	            await cachePool.CopyAsync("test", guid.ToString("N")).ConfigureAwait(false);
+	            var asto2 = await cachePool.GetAsync(guid.ToString("N")).ConfigureAwait(false);
+
+	            var guid2 = Guid.NewGuid();
+	            await cachePool.CopyAsync("test", guid2.ToString("N")).ConfigureAwait(false);
+	            var asto3 = await cachePool.GetAsync(guid2.ToString("N")).ConfigureAwait(false);
+
+	            var guid3 = Guid.NewGuid();
+	            await cachePool.CopyAsync("test", guid3.ToString("N")).ConfigureAwait(false);
+	            var asto4 = await cachePool.GetAsync(guid3.ToString("N")).ConfigureAwait(false);
 
 	            try
 	            {

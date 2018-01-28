@@ -214,7 +214,7 @@ namespace TWCore.Cache.Client
         public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => Invoke<bool>(key, data, expirationDate, tags);
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -245,6 +245,15 @@ namespace TWCore.Cache.Client
         /// <returns>String array with the keys of the items removed.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] RemoveByTag(string[] tags, bool containingAll) => Invoke<string[]>(tags, containingAll);
+        /// <inheritdoc />
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Copy(string key, string newKey) => Invoke<bool>(key, (object) newKey);
         #endregion
 
         #region GetOrSet
@@ -483,7 +492,7 @@ namespace TWCore.Cache.Client
         public Task<bool> SetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => InvokeAsync<bool>(key, data, expirationDate, tags);
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <summary>
         /// Updates the data of an existing storage item.
         /// </summary>
@@ -514,6 +523,15 @@ namespace TWCore.Cache.Client
         /// <returns>String array with the keys of the items removed.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<string[]> RemoveByTagAsync(string[] tags, bool containingAll) => InvokeAsync<string[]>(tags, containingAll);
+        /// <inheritdoc />
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> CopyAsync(string key, string newKey) => InvokeAsync<bool>(key, (object) newKey);
         #endregion
 
         #region GetOrSet

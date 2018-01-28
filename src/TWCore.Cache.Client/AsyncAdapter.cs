@@ -327,7 +327,7 @@ namespace TWCore.Cache.Client
         }
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
@@ -376,6 +376,19 @@ namespace TWCore.Cache.Client
         public Task<string[]> RemoveByTagAsync(string[] tags, bool containingAll)
         {
             var res = _storage.RemoveByTag(tags, containingAll);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> CopyAsync(string key, string newKey)
+        {
+            var res = _storage.Copy(key, newKey);
             return Task.FromResult(res);
         }
         #endregion

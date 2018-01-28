@@ -29,7 +29,7 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientPoolCounters
     {
-        private readonly double?[] _times = new double?[13];
+        private readonly double?[] _times = new double?[14];
 
         #region Calls methods
         /// <summary>
@@ -84,6 +84,10 @@ namespace TWCore.Cache.Client
         /// Calls to update data method
         /// </summary>
         public long UpdateDataCalls;
+        /// <summary>
+        /// Calls to copy method
+        /// </summary>
+        public long CopyCalls;
         #endregion
 
         #region Average time methods
@@ -139,6 +143,10 @@ namespace TWCore.Cache.Client
         /// Average time on milliseconds of UpdateData execution
         /// </summary>
         public double UpdateDataAverageTime => _times[12] ?? 0;
+        /// <summary>
+        /// Average time on milliseconds of Copy execution
+        /// </summary>
+        public double CopyAverageTime => _times[13] ?? 0;
         #endregion
 
         #region .ctor
@@ -165,6 +173,7 @@ namespace TWCore.Cache.Client
                 collection.Add("RemoveByTag Method", new StatusItemValueItem("Calls", RemoveByTagCalls, true), new StatusItemValueItem("Average time (ms)", RemoveByTagAverageTime, true));
                 collection.Add("Set Method", new StatusItemValueItem("Calls", SetCalls, true), new StatusItemValueItem("Average time (ms)", SetAverageTime, true));
                 collection.Add("Update Method", new StatusItemValueItem("Calls", UpdateDataCalls, true), new StatusItemValueItem("Average time (ms)", UpdateDataAverageTime, true));
+                collection.Add("Copy Method", new StatusItemValueItem("Calls", CopyCalls, true), new StatusItemValueItem("Average time (ms)", CopyAverageTime, true));
             });
         }
         #endregion
@@ -299,6 +308,16 @@ namespace TWCore.Cache.Client
         {
             Interlocked.Increment(ref UpdateDataCalls);
             IncrementQueue(12, executionTime);
+        }
+        /// <summary>
+        /// Increment the value
+        /// </summary>
+        /// <param name="executionTime">Execution Time</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void IncrementCopy(double executionTime)
+        {
+            Interlocked.Increment(ref CopyCalls);
+            IncrementQueue(13, executionTime);
         }
         #endregion
 

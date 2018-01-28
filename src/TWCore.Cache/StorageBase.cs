@@ -590,7 +590,7 @@ namespace TWCore.Cache
         }
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
@@ -653,6 +653,27 @@ namespace TWCore.Cache
                 meta?.Dispose();
                 return s.Key;
             }).RemoveNulls().ToArray();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Copy(string key, string newKey)
+        {
+            if (!Ready || string.IsNullOrEmpty(key) || string.IsNullOrEmpty(newKey)) return false;
+            if (!OnTryGet(key, out var value)) return false;
+            var sItem = new StorageItem(new StorageItemMeta
+            {
+                CreationDate = value.Meta.CreationDate,
+                ExpirationDate = value.Meta.ExpirationDate,
+                Key = newKey,
+                Tags = value.Meta.Tags
+            }, value.Data);
+            return Set(sItem);
         }
         #endregion
 

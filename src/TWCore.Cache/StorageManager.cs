@@ -548,7 +548,7 @@ namespace TWCore.Cache
 			=> ExecuteInAllStack(key, data, expirationDate, tags, (sto, arg1, arg2, arg3, arg4) => sto.Set(arg1, arg2, arg3, arg4));
         #endregion
 
-        #region Update/Remove Data
+        #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>
         /// Updates the data of an existing storage item.
@@ -593,6 +593,16 @@ namespace TWCore.Cache
 				.ToArray();
 			return res;
         }
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Copies an item to a new key.
+	    /// </summary>
+	    /// <param name="key">Key of an existing item</param>
+	    /// <param name="newKey">New key value</param>
+	    /// <returns>true if the copy was successful; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Copy(string key, string newKey)
+	    	=> ExecuteInAllStack(key, newKey, (sto, arg1, arg2) => sto.Copy(arg1, arg2));
         #endregion
 
         #region GetOrSet

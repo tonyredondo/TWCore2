@@ -26,6 +26,7 @@ namespace TWCore.Tests
         public CacheRpcTest() : base("cacherpcTest", "Cache Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
+	        Core.DebugMode = true;
             Core.Log.Warning("Starting CACHE TEST");
 
             var cacheService = new TestCacheService();
@@ -36,7 +37,7 @@ namespace TWCore.Tests
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
-				await cachePool.SetAsync("expTest", "testData", TimeSpan.FromMinutes(1)).ConfigureAwait(false);
+				await cachePool.SetAsync("expTest", "testData", TimeSpan.FromSeconds(20)).ConfigureAwait(false);
 
 				Console.ReadLine();
 

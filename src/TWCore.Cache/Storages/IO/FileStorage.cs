@@ -193,6 +193,8 @@ namespace TWCore.Cache.Storages.IO
             private readonly string _transactionLogFilePath;
             private readonly string _indexFilePath;
             private readonly FileStorageMetaLog _currentTransaction;
+            private readonly ManualResetEventSlim _storageWorkerEvent = new ManualResetEventSlim();
+            private readonly Action saveMetadataBuffered;
             #endregion
 
             #region Properties
@@ -231,7 +233,7 @@ namespace TWCore.Cache.Storages.IO
             #region .ctor
             public FolderStorage(string basePath, FileStorage storage)
             {
-                var saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
+                saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
                 BasePath = basePath;
                 Serializer = storage.Serializer;
                 IndexSerializer = storage.MetaSerializer;
@@ -490,8 +492,11 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
             {
+                if (_storageWorker != null && _storageWorker.Count < SlowDownWriteThreshold)
+                    _storageWorkerEvent.Set();
                 var meta = workerItem.Item1;
                 var transaction = workerItem.Item2;
+                if (meta == null) return;
                 if (transaction == FileStorageMetaLog.TransactionType.Add && meta.IsExpired) return;
                 if (_currentTransactionLogLength >= TransactionLogThreshold) _currentTransactionLogLength = 0;
 
@@ -544,7 +549,7 @@ namespace TWCore.Cache.Storages.IO
 
                 #region Save Metadata
                 if (_currentTransactionLogLength == 0)
-                    SaveMetadata();
+                    saveMetadataBuffered();
                 #endregion
 
                 _currentTransactionLogLength++;
@@ -552,7 +557,7 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void SaveMetadata()
             {
-                Core.Log.LibVerbose("Writing Index.");
+                Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
                 try
                 {
                     lock (_metasLock)
@@ -593,7 +598,7 @@ namespace TWCore.Cache.Storages.IO
                     OnRemove(item.Key, out var _);
                 }
                 Core.Log.InfoMedium("All expired items where removed.");
-                SaveMetadata();
+                saveMetadataBuffered();
             }
             #endregion
 
@@ -638,11 +643,14 @@ namespace TWCore.Cache.Storages.IO
                         response = _metas.Remove(key);
                         meta.Dispose();
                     }
+                    else
+                        return false;
                 }
                 while (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
-                    Thread.Sleep(100);
-                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    _storageWorkerEvent.Reset();
+                    if (!_storageWorkerEvent.Wait(100))
+                        Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Remove));
                 return response;
@@ -670,8 +678,9 @@ namespace TWCore.Cache.Storages.IO
                 }
                 while (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
-                    Thread.Sleep(100);
-                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    _storageWorkerEvent.Reset();
+                    if (!_storageWorkerEvent.Wait(100))
+                        Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Add));
                 return true;

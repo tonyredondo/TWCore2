@@ -277,6 +277,7 @@ namespace TWCore
                 {
                     try
                     {
+                        workDone = false;
                         OnWorkDone.Invoke(this, new EventArgs());
                     }
                     catch
@@ -328,6 +329,7 @@ namespace TWCore
                 {
                     try
                     {
+                        workDone = false;
                         OnWorkDone.Invoke(this, new EventArgs());
                     }
                     catch

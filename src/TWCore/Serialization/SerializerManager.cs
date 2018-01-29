@@ -128,6 +128,16 @@ namespace TWCore.Serialization
                                 }
                             }
                         }
+                        catch (ReflectionTypeLoadException rtlEx)
+                        {
+                            if (rtlEx.LoaderExceptions != null)
+                            {
+                                Core.Log.Warning($"An error occurs when loading the types for '{assembly.FullName}', the following errors occurs:");
+
+                                foreach (var ex in rtlEx.LoaderExceptions)
+                                    Core.Log.Write(LogLevel.Warning, "\t" + ex.Message);
+                            }
+                        }
                         catch (Exception ex)
                         {
                             Core.Log.Write(LogLevel.Warning, $"An error occurs when loading the types for '{assembly.FullName}' assembly, the assembly was ignored.", ex);

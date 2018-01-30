@@ -58,7 +58,7 @@ namespace TWCore.Services
         }
         ~ServiceWrapper()
         {
-            Console.WriteLine("SERVICE WRAPPER HAS BEEN DISPOSED!!!");
+            //Console.WriteLine("SERVICE WRAPPER HAS BEEN DISPOSED!!!");
         }
         #endregion
 

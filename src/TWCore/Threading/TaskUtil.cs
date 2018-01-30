@@ -14,7 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace TWCore.Threading
 {
@@ -35,5 +39,72 @@ namespace TWCore.Threading
         /// Complete String Empty
         /// </summary>
         public static readonly Task<string> CompleteEmpty = Task.FromResult(string.Empty);
+        
+        
+        /// <summary>
+        /// Sleeps the thread until a condition is true
+        /// </summary>
+        /// <param name="condition">Condition that sleeps the thread</param>
+        /// <param name="token">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task SleepUntil(Func<bool> condition, CancellationToken token)
+        {
+            while (!token.IsCancellationRequested && !condition())
+                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck, token).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Sleeps the thread until a condition is true
+        /// </summary>
+        /// <param name="condition">Condition that sleeps the thread</param>
+        /// <param name="time">Maximum waiting time for the condition to be true.</param>
+        /// <param name="token">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task SleepUntil(Func<bool> condition, TimeSpan time, CancellationToken token)
+            => SleepUntil(condition, (int)time.TotalMilliseconds, token);
+        /// <summary>
+        /// Sleeps the thread until a condition is true
+        /// </summary>
+        /// <param name="condition">Condition that sleeps the thread</param>
+        /// <param name="milliseconds">Maximum waiting time for the condition to be true</param>
+        /// <param name="token">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task SleepUntil(Func<bool> condition, int milliseconds, CancellationToken token)
+        {
+            if (token.IsCancellationRequested) return;
+            var time = Factory.Thread.SleepTimeBetweenConditionCheck < milliseconds ? Factory.Thread.SleepTimeBetweenConditionCheck : milliseconds;
+            var sw = Stopwatch.StartNew();
+            while (!token.IsCancellationRequested && !condition() && sw.ElapsedMilliseconds < milliseconds)
+                await Task.Delay(time, token).ConfigureAwait(false);
+        }
+        /// <summary>
+        /// Sleeps the thread until a condition is true
+        /// </summary>
+        /// <param name="condition">Condition that sleeps the thread</param>
+        /// <param name="time">Maximum waiting time for the condition to be true.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task SleepUntil(Func<bool> condition, TimeSpan time)
+            => SleepUntil(condition, (int)time.TotalMilliseconds);
+        /// <summary>
+        /// Sleeps the thread until a condition is true
+        /// </summary>
+        /// <param name="condition">Condition that sleeps the thread</param>
+        /// <param name="milliseconds">Maximum waiting time for the condition to be true</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task SleepUntil(Func<bool> condition, int? milliseconds = null)
+        {
+            if (condition()) return;
+            if (milliseconds.HasValue)
+            {
+                var ms = milliseconds.Value;
+                var time = Factory.Thread.SleepTimeBetweenConditionCheck < ms
+                    ? Factory.Thread.SleepTimeBetweenConditionCheck : ms;
+                var sw = Stopwatch.StartNew();
+                while (!condition() && sw.ElapsedMilliseconds < ms)
+                    await Task.Delay(time).ConfigureAwait(false);
+                return;
+            }
+            while (!condition())
+                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
+        }
     }
 }

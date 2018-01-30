@@ -33,7 +33,7 @@ namespace TWCore.Threading
         /// <summary>
         /// Sleep time between condition checks
         /// </summary>
-        public int SleepTimeBetweenConditionCheck { get; set; } = 10;
+        public int SleepTimeBetweenConditionCheck { get; set; } = 25;
 
         /// <inheritdoc />
         /// <summary>

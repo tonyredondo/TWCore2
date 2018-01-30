@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Client;
@@ -52,6 +53,14 @@ namespace TWCore.Cache.Client
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key) => Invoke<bool>((object)key);
+        /// <inheritdoc />
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, bool> ExistKey(string[] keys) => Invoke<Dictionary<string, bool>>(keys);
         /// <summary>
         /// Get all storage keys.
         /// </summary>
@@ -157,6 +166,32 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem[] GetByTag(string[] tags, bool containingAll) => Invoke<StorageItem[]>(tags, containingAll);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys) => Invoke<Dictionary<string, StorageItem>>(keys);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime) => Invoke<Dictionary<string, StorageItem>>(keys, lastTime);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer) => Invoke<Dictionary<string, StorageItem>>(keys, comparer);
         #endregion
 
         #region Set Data
@@ -322,6 +357,7 @@ namespace TWCore.Cache.Client
         #region IStorageAsync 
 
         #region Exist Key / Get Keys
+        /// <inheritdoc />
         /// <summary>
         /// Checks if a key exist on the storage.
         /// </summary>
@@ -329,6 +365,15 @@ namespace TWCore.Cache.Client
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> ExistKeyAsync(string key) => InvokeAsync<bool>((object)key);
+        /// <inheritdoc />
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, bool>> ExistKeyAsync(string[] keys) => InvokeAsync<Dictionary<string, bool>>(keys);
+        /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -434,6 +479,32 @@ namespace TWCore.Cache.Client
         /// <returns>Storage item array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<StorageItem[]> GetByTagAsync(string[] tags, bool containingAll) => InvokeAsync<StorageItem[]>(tags, containingAll);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys) => InvokeAsync<Dictionary<string, StorageItem>>(keys);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, TimeSpan lastTime) => InvokeAsync<Dictionary<string, StorageItem>>(keys, lastTime);
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, DateTime comparer) => InvokeAsync<Dictionary<string, StorageItem>>(keys, comparer);
         #endregion
 
         #region Set Data

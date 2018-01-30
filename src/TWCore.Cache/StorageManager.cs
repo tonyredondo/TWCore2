@@ -253,7 +253,27 @@ namespace TWCore.Cache
 			return ret;
 		}
 
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private List<TR> ExecuteInAllStackAndReturn<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionPushData)
+        {
+            var responses = new List<TR>();
+            foreach (var storage in _storages)
+            {
+                if (!storage.IsEnabled() || !storage.IsReady()) continue;
+                var result = default(TR);
+                try
+                {
+                    result = functionPushData(storage, arg1);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                responses.Add(result);
+            }
+            return responses;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
 		{
 			var responses = new List<TR>();
@@ -318,6 +338,21 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key)
             => ReturnFromStack(key, (sto, arg1) => sto.ExistKey(arg1));
+        /// <inheritdoc />
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, bool> ExistKey(string[] keys)
+        {
+            if (keys == null) return null;
+            var dictionary = new Dictionary<string, bool>();
+            foreach (var key in keys)
+                dictionary[key] = ReturnFromStack(key, (sto, arg1) => sto.ExistKey(arg1));
+            return dictionary;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Gets the keys of all items stored in the Storage
@@ -478,16 +513,63 @@ namespace TWCore.Cache
                 .ToArray();
             return res;
         }
-		#endregion
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys)
+        {
+            if (keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = ReturnFromStack(key, (sto, arg1) => sto.Get(arg1), (pSto, arg1, stoVal) => pSto.Set(stoVal));
+            return dictionary;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime)
+        {
+            if (keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = ReturnFromStack(key, lastTime, (sto, arg1, arg2) => sto.Get(arg1, arg2), (pSto, arg1, arg2, stoVal) => pSto.Set(stoVal));
+            return dictionary;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer)
+        {
+            if (keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = ReturnFromStack(key, comparer, (sto, arg1, arg2) => sto.Get(arg1, arg2), (pSto, arg1, arg2, stoVal) => pSto.Set(stoVal));
+            return dictionary;
+        }
+        #endregion
 
-		#region Set Data
-		/// <inheritdoc />
-		/// <summary>
-		/// Sets a new StorageItem with the given data
-		/// </summary>
-		/// <param name="item">Item</param>
-		/// <returns>true if the data could be save; otherwise, false.</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Set Data
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="item">Item</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Set(StorageItem item)
 			=> ExecuteInAllStack(item, (sto, arg1) => sto.Set(arg1));
         /// <inheritdoc />

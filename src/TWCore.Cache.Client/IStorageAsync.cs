@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TWCore.Serialization;
 
@@ -37,6 +38,12 @@ namespace TWCore.Cache.Client
         /// <param name="key">Key to look on the storage</param>
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         Task<bool> ExistKeyAsync(string key);
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        Task<Dictionary<string, bool>> ExistKeyAsync(string[] keys);
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -129,6 +136,26 @@ namespace TWCore.Cache.Client
         /// <param name="containingAll">true if the results items needs to have all tags, false if the items needs to have at least one of the tags.</param>
         /// <returns>Storage item array.</returns>
         Task<StorageItem[]> GetByTagAsync(string[] tags, bool containingAll);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        Task<Dictionary<string, StorageItem>> GetAsync(string[] keys);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, TimeSpan lastTime);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, DateTime comparer);
         #endregion
 
         #region Set Data

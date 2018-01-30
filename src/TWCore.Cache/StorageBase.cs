@@ -302,6 +302,21 @@ namespace TWCore.Cache
         }
         /// <inheritdoc />
         /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, bool> ExistKey(string[] keys)
+        {
+            if (!Ready || keys == null) return null;
+            var dictionary = new Dictionary<string, bool>();
+            foreach (var key in keys)
+                dictionary[key] = OnExistKey(key);
+            return dictionary;
+        }
+        /// <inheritdoc />
+        /// <summary>
         /// Get all storage keys.
         /// </summary>
         /// <returns>String array with the keys</returns>
@@ -474,6 +489,53 @@ namespace TWCore.Cache
                 var iLst = item.Tags.Intersect(tags).ToArray();
                 return containingAll ? iLst.Length == tags.Length : iLst.Length > 0;
             }).Select(s => OnTryGet(s.Key, out var item) ? item : null).RemoveNulls().ToArray();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys)
+        {
+            if (!Ready || keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = OnTryGet(key, out var item) ? item : null;
+            return dictionary;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime)
+        {
+            if (!Ready || keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = OnTryGet(key, out var item, i => (Core.Now - i.CreationDate) <= lastTime) ? item : null;
+            return dictionary;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer)
+        {
+            if (!Ready || keys == null) return null;
+            var dictionary = new Dictionary<string, StorageItem>();
+            foreach (var key in keys)
+                dictionary[key] = OnTryGet(key, out var item, i => i.CreationDate >= comparer) ? item : null;
+            return dictionary;
         }
         #endregion
 

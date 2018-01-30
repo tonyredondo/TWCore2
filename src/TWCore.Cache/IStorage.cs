@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using TWCore.Serialization;
 
 namespace TWCore.Cache
@@ -45,6 +46,12 @@ namespace TWCore.Cache
         /// <param name="key">Key to look on the storage</param>
         /// <returns>true if the key exist on the storage; otherwise, false.</returns>
         bool ExistKey(string key);
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        Dictionary<string, bool> ExistKey(string[] keys);
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -137,6 +144,26 @@ namespace TWCore.Cache
         /// <param name="containingAll">true if the results items needs to have all tags, false if the items needs to have at least one of the tags.</param>
         /// <returns>Storage item array.</returns>
         StorageItem[] GetByTag(string[] tags, bool containingAll);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        Dictionary<string, StorageItem> Get(string[] keys);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        Dictionary<string, StorageItem> Get(string[] keys, TimeSpan lastTime);
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        Dictionary<string, StorageItem> Get(string[] keys, DateTime comparer);
         #endregion
 
         #region Set Data

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Serialization;
@@ -67,6 +68,18 @@ namespace TWCore.Cache.Client
         public Task<bool> ExistKeyAsync(string key)
         {
             var res = _storage.ExistKey(key);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, bool>> ExistKeyAsync(string[] keys)
+        {
+            var res = _storage.ExistKey(keys);
             return Task.FromResult(res);
         }
         /// <inheritdoc />
@@ -237,6 +250,44 @@ namespace TWCore.Cache.Client
         public Task<StorageItem[]> GetByTagAsync(string[] tags, bool containingAll)
         {
             var res = _storage.GetByTag(tags, containingAll);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys)
+        {
+            var res = _storage.Get(keys);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, TimeSpan lastTime)
+        {
+            var res = _storage.Get(keys, lastTime);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, DateTime comparer)
+        {
+            var res = _storage.Get(keys, comparer);
             return Task.FromResult(res);
         }
         #endregion

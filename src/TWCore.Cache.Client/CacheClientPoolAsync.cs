@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -142,6 +143,37 @@ namespace TWCore.Cache.Client
 				var res = await _pool.ReadAsync(key, (item, arg1) => item.Storage.ExistKeyAsync(arg1), r => r).ConfigureAwait(false);
 				_counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
                 return res.Item1;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Checks if a key exist on the storage.
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Dictionary true if the key exist on the storage; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<Dictionary<string, bool>> ExistKeyAsync(string[] keys)
+        {
+            using (var w = Watch.Create())
+            {
+                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+                var tasks = new Task<Dictionary<string, bool>>[poolEnabled.Length];
+                for (var i = 0; i < tasks.Length; i++)
+                    tasks[i] = poolEnabled[i].Storage.ExistKeyAsync(keys);
+                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+                var dictionary = new Dictionary<string, bool>();
+                foreach(var innerDictio in tasksResults)
+                {
+                    if (innerDictio == null) continue;
+                    foreach(var item in innerDictio)
+                    {
+                        dictionary.TryGetValue(item.Key, out var value);
+                        if (item.Value || !value)
+                            dictionary[item.Key] = item.Value;
+                    }
+                }
+                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
+                return dictionary;
             }
         }
         /// <inheritdoc />
@@ -375,6 +407,101 @@ namespace TWCore.Cache.Client
 				var res = await _pool.ReadAsync(tags, containingAll, (item, arg1, arg2) => item.Storage.GetByTagAsync(arg1, arg2), r => r?.Any() == true).ConfigureAwait(false);
 				_counters.IncrementGetByTag(w.GlobalElapsedMilliseconds);
 				return res.Item1;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys)
+        {
+            using (var w = Watch.Create())
+            {
+                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+                for (var i = 0; i < tasks.Length; i++)
+                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys);
+                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+                var dictionary = new Dictionary<string, StorageItem>();
+                foreach (var innerDictio in tasksResults)
+                {
+                    if (innerDictio == null) continue;
+                    foreach (var item in innerDictio)
+                    {
+                        dictionary.TryGetValue(item.Key, out var value);
+                        if (value == null)
+                            dictionary[item.Key] = item.Value;
+                    }
+                }
+                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
+                return dictionary;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="lastTime">Defines a time period before DateTime.Now to look for the data</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, TimeSpan lastTime)
+        {
+            using (var w = Watch.Create())
+            {
+                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+                for (var i = 0; i < tasks.Length; i++)
+                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys, lastTime);
+                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+                var dictionary = new Dictionary<string, StorageItem>();
+                foreach (var innerDictio in tasksResults)
+                {
+                    if (innerDictio == null) continue;
+                    foreach (var item in innerDictio)
+                    {
+                        dictionary.TryGetValue(item.Key, out var value);
+                        if (value == null)
+                            dictionary[item.Key] = item.Value;
+                    }
+                }
+                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
+                return dictionary;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the StorageItem of a key in the storage
+        /// </summary>
+        /// <param name="keys">Keys to look on the storage</param>
+        /// <param name="comparer">Defines a time to compare the storage item</param>
+        /// <returns>Storage items Dictionary</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<Dictionary<string, StorageItem>> GetAsync(string[] keys, DateTime comparer)
+        {
+            using (var w = Watch.Create())
+            {
+                var poolEnabled = await _pool.WaitAndGetEnabledAsync(StorageItemMode.Read).ConfigureAwait(false);
+                var tasks = new Task<Dictionary<string, StorageItem>>[poolEnabled.Length];
+                for (var i = 0; i < tasks.Length; i++)
+                    tasks[i] = poolEnabled[i].Storage.GetAsync(keys, comparer);
+                var tasksResults = await Task.WhenAll(tasks).ConfigureAwait(false);
+                var dictionary = new Dictionary<string, StorageItem>();
+                foreach (var innerDictio in tasksResults)
+                {
+                    if (innerDictio == null) continue;
+                    foreach (var item in innerDictio)
+                    {
+                        dictionary.TryGetValue(item.Key, out var value);
+                        if (value == null)
+                            dictionary[item.Key] = item.Value;
+                    }
+                }
+                _counters.IncrementExistKey(w.GlobalElapsedMilliseconds);
+                return dictionary;
             }
         }
         #endregion

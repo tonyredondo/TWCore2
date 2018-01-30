@@ -563,9 +563,11 @@ namespace TWCore.Cache.Storages.IO
                     lock (_metasLock)
                     {
                         if (_disposedValue) return;
+                        if (_transactionStream == null) return;
+                        lock(_transactionStream)
+                            if (!_transactionStream.CanWrite) return;
                         Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message));
                         IndexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
-                        if (_transactionStream == null) return;
                         lock (_transactionStream)
                         {
                             _transactionStream.Position = 0;
@@ -735,25 +737,31 @@ namespace TWCore.Cache.Storages.IO
 
             private void Dispose(bool disposing)
             {
-                if (_disposedValue) return;
-                if (disposing)
-                {
-                    
-                }
-                _storageWorker.Stop(int.MaxValue);
-                SaveMetadata();
-                lock (_transactionStream)
-                {
-                    _transactionStream.Flush();
-                    _transactionStream.Dispose();
-                    _transactionStream = null;
-                }
                 lock (_metasLock)
-                    _metas.Clear();
-                lock (_pendingLock)
-                    _pendingItems.Clear();
+                {
+                    if (_disposedValue) return;
+                    _disposedValue = true;
+                    if (disposing)
+                    {
 
-                _disposedValue = true;
+                    }
+
+                    _storageWorker.Stop(int.MaxValue);
+                    SaveMetadata();
+                    lock (_transactionStream)
+                    {
+                        if (_transactionStream.CanWrite)
+                        {
+                            _transactionStream.Flush();
+                            _transactionStream.Dispose();
+                            _transactionStream = null;
+                        }
+                    }
+
+                    _metas.Clear();
+                    lock (_pendingLock)
+                        _pendingItems.Clear();
+                }
             }
 
             ~FolderStorage()

@@ -740,7 +740,6 @@ namespace TWCore.Cache.Storages.IO
                 lock (_metasLock)
                 {
                     if (_disposedValue) return;
-                    _disposedValue = true;
                     if (disposing)
                     {
 
@@ -748,6 +747,8 @@ namespace TWCore.Cache.Storages.IO
 
                     _storageWorker.Stop(int.MaxValue);
                     SaveMetadata();
+                    _disposedValue = true;
+
                     lock (_transactionStream)
                     {
                         if (_transactionStream.CanWrite)
@@ -757,7 +758,6 @@ namespace TWCore.Cache.Storages.IO
                             _transactionStream = null;
                         }
                     }
-
                     _metas.Clear();
                     lock (_pendingLock)
                         _pendingItems.Clear();

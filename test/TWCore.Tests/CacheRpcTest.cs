@@ -85,6 +85,8 @@ namespace TWCore.Tests
 		            Core.Log.Write(ex);
 	            }
             }
+
+            cacheService.OnStop();
         }
 
         /// <inheritdoc />

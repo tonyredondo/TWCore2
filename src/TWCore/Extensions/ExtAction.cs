@@ -147,6 +147,43 @@ namespace TWCore
         }
         #endregion
 
+        #region Throttled Task
+        /// <summary>
+        /// Creates a Throttled task wrapper form an action base.
+        /// </summary>
+        /// <param name="task">Original task</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Throttled task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<Task> CreateThrottledTaskAsync(this Task task, int milliseconds)
+        {
+            var date = DateTime.MinValue;
+            return async () =>
+            {
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
+                await task.ConfigureAwait(false);
+                date = DateTime.UtcNow;
+            };
+        }
+        /// <summary>
+        /// Creates a Throttled task wrapper form an Task base.
+        /// </summary>
+        /// <param name="task">Original task</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Throttled task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<T, Task> CreateThrottledAction<T>(this Func<T, Task> task, int milliseconds)
+        {
+            var date = DateTime.MinValue;
+            return async (obj) =>
+            {
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
+                await task(obj).ConfigureAwait(false);
+                date = DateTime.UtcNow;
+            };
+        }
+        #endregion
+
         #region InvokeAsync
         /// <summary>
         /// Invoke an Action in Async Task

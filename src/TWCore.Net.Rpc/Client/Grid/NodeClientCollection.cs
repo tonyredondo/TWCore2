@@ -18,6 +18,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
+using TWCore.Threading;
 
 namespace TWCore.Net.RPC.Client.Grid
 {
@@ -33,7 +35,7 @@ namespace TWCore.Net.RPC.Client.Grid
         /// <param name="timeoutInMilliseconds">Time in milleseconds to wait for a node to be available</param>
         /// <returns>Grid node client to process data</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public NodeClient WaitForAvailable(int timeoutInMilliseconds = -1)
+        public async Task<NodeClient> WaitForAvailableAsync(int timeoutInMilliseconds = -1)
         {
             NodeClient item = null;
             var waitHandles = this.Select(i => i.AvailableEvent.WaitHandle).ToArray();
@@ -44,11 +46,11 @@ namespace TWCore.Net.RPC.Client.Grid
                 if (item.Available)
                     return item;
             }
-            Factory.Thread.SleepUntil(() =>
+            await TaskUtil.SleepUntil(() =>
             {
                 item = this.FirstOrDefault(i => i.Available);
                 return (item != null);
-            }, timeoutInMilliseconds);
+            }, timeoutInMilliseconds).ConfigureAwait(false);
             return item;
         }
     }

@@ -330,7 +330,8 @@ namespace TWCore
             }
             Log.Start();
 
-            factories.Thread.Sleep(25);
+            Task.Delay(25).WaitAsync();
+
             var dlog = (Log as DefaultLogEngine);
             dlog?.LogDoneTask.WaitAsync();
 

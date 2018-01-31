@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using Nito.AsyncEx;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -32,7 +33,7 @@ namespace TWCore.Net.RPC.Client.Grid
     /// </summary>
     public class GridClient
     {
-        private readonly object _waitLock = new object();
+        private readonly AsyncLock _asyncWaitLock = new AsyncLock();
 
         #region Properties
         /// <summary>
@@ -93,9 +94,9 @@ namespace TWCore.Net.RPC.Client.Grid
             if (Items.Count <= 0) return null;
             NodeClient item;
             Core.Log.LibDebug("Selecting an available node...");
-            lock (_waitLock)
+            using (await _asyncWaitLock.LockAsync().ConfigureAwait(false))
             {
-                item = Items.WaitForAvailable();
+                item = await Items.WaitForAvailableAsync().ConfigureAwait(false);
                 item.Lock();
             }
             Core.Log.LibDebug("Calling process on Node '{0}'", item.NodeInfo.Id);

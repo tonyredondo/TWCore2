@@ -20,6 +20,7 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
+
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>
             {

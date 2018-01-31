@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports;
@@ -49,7 +50,7 @@ namespace TWCore.Services
         /// </summary>
         /// <returns>RPCServer instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override RPCServer GetRPCServer()
+        protected override async Task<RPCServer> GetRPCServerAsync()
         {
             Transports = GetTransports();
             Manager = GetManager();
@@ -59,7 +60,7 @@ namespace TWCore.Services
             {
                 Core.Log.InfoBasic("Waiting for StorageManager Ready state...");
                 loopCount++;
-                Factory.Thread.Sleep(2000);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
             if (!Manager.IsReady())
                 Core.Log.Warning("The StorageManager is not on Ready state, some data couldn't be found during this state.");

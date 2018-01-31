@@ -18,6 +18,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Server;
 // ReSharper disable InconsistentNaming
 // ReSharper disable CheckNamespace
@@ -127,7 +128,7 @@ namespace TWCore.Services
                 _cts = new CancellationTokenSource();
                 ServiceToken = _cts.Token;
                 OnInit(args);
-                Server = GetRPCServer();
+                Server = await GetRPCServerAsync().ConfigureAwait(false);
                 if (Server == null)
                     throw new NullReferenceException("The RPCServer can't be null, nothing to start. Check your GetRPCServer method implementation.");
                 await Server.StartAsync().ConfigureAwait(false);
@@ -180,7 +181,7 @@ namespace TWCore.Services
         /// Gets the RPCServer 
         /// </summary>
         /// <returns>RPCServer instance</returns>
-        protected abstract RPCServer GetRPCServer();
+        protected abstract Task<RPCServer> GetRPCServerAsync();
         #endregion
     }
 }

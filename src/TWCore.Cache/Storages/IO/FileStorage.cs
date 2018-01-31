@@ -745,7 +745,7 @@ namespace TWCore.Cache.Storages.IO
 
                     }
 
-                    _storageWorker.Stop(int.MaxValue);
+                    _storageWorker.StopAsync(int.MaxValue).WaitAsync();
                     SaveMetadata();
                     _disposedValue = true;
 

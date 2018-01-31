@@ -216,7 +216,7 @@ namespace TWCore
         /// </summary>
         /// <param name="afterNumItemsInQueue">Number of element to process before stopping the worker.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Stop(int afterNumItemsInQueue)
+        public async Task StopAsync(int afterNumItemsInQueue)
         {
             if (_status != WorkerStatus.Started) return;
             _status = WorkerStatus.Stopping;
@@ -225,9 +225,9 @@ namespace TWCore
                 var numItems = _queue.Count;
                 var remain = numItems > afterNumItemsInQueue ? numItems - afterNumItemsInQueue : 0;
                 if (EnableWaitTimeout)
-                    Factory.Thread.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout);
+                    await TaskUtil.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout).ConfigureAwait(false);
                 else
-                    Factory.Thread.SleepUntil(() => _queue.Count <= remain);
+                    await TaskUtil.SleepUntil(() => _queue.Count <= remain).ConfigureAwait(false);
             }
             _status = WorkerStatus.Stopped;
             _processHandler.Reset();
@@ -258,7 +258,7 @@ namespace TWCore
                 {
                     Interlocked.Decrement(ref _queueCount);
                     if (_precondition?.Invoke() == false)
-                        Factory.Thread.SleepUntil(_precondition, token);
+                        await TaskUtil.SleepUntil(_precondition, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested)
                         break;
                     try
@@ -360,7 +360,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            Stop(int.MaxValue);
+            StopAsync(int.MaxValue).WaitAsync();
             _processHandler.Set();
             _tokenSource.Cancel();
             try

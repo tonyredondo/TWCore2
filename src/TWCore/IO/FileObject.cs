@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Serialization;
 // ReSharper disable EventNeverSubscribedTo.Global
 
@@ -201,31 +202,38 @@ namespace TWCore.IO
         /// <param name="sender">Sender object</param>
         /// <param name="e">Error event args</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Watcher_Error(object sender, ErrorEventArgs e)
+        private async void Watcher_Error(object sender, ErrorEventArgs e)
         {
-            var watchException = e.GetException();
-            OnException?.Invoke(this, new EventArgs<Exception>(watchException));
-            FileObjectEvents.FireException(this, watchException);
-            Try.Do(() =>
+            try
             {
-                if (_fwatcher == null) return;
-                _fwatcher.EnableRaisingEvents = false;
-                _fwatcher.Dispose();
-            });
-            _fwatcher = null;
-            var nWatcher = CreateWatcher();
-            while (!nWatcher.EnableRaisingEvents)
-            {
-                try
+                var watchException = e.GetException();
+                OnException?.Invoke(this, new EventArgs<Exception>(watchException));
+                FileObjectEvents.FireException(this, watchException);
+                Try.Do(() =>
                 {
-                    nWatcher = CreateWatcher();
-                }
-                catch
+                    if (_fwatcher == null) return;
+                    _fwatcher.EnableRaisingEvents = false;
+                    _fwatcher.Dispose();
+                });
+                _fwatcher = null;
+                var nWatcher = CreateWatcher();
+                while (!nWatcher.EnableRaisingEvents)
                 {
-                    System.Threading.Thread.Sleep(500);
+                    try
+                    {
+                        nWatcher = CreateWatcher();
+                    }
+                    catch
+                    {
+                        await Task.Delay(500).ConfigureAwait(false);
+                    }
                 }
+                _fwatcher = nWatcher;
             }
-            _fwatcher = nWatcher;
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
         /// <summary>
         /// On File Watcher Changed method

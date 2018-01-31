@@ -189,9 +189,9 @@ namespace TWCore.Diagnostics.Log
             if (_disposedValue) return;
             if (disposing)
             {
-                _itemsWorker?.Stop(int.MaxValue);
+                _itemsWorker?.StopAsync(int.MaxValue).WaitAsync();
                 _itemsWorker?.Clear();
-                _lastLogItemsWorker?.Stop(50);
+                _lastLogItemsWorker?.StopAsync(50).WaitAsync();
                 _lastLogItemsWorker?.Clear();
                 Storage?.Dispose();
             }

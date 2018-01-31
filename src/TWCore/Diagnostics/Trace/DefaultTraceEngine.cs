@@ -137,7 +137,7 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
-            _itemsWorker?.Stop(50);
+            _itemsWorker?.StopAsync(50).WaitAsync();
             _itemsWorker?.Clear();
             Storage?.Clear();
         }

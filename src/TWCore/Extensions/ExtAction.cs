@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,6 +37,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time in milliseconds</param>
         /// <returns>Delayed action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateDelay(this Action action, int milliseconds)
         {
             return () => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
@@ -48,6 +50,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time in milliseconds</param>
         /// <returns>Delayed action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateDelay<T>(this Action<T> action, int milliseconds)
         {
             return obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
@@ -63,6 +66,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateBufferedAction(this Action action, int milliseconds)
         {
             Timer timer = null;
@@ -86,6 +90,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateBufferedAction<T>(this Action<T> action, int milliseconds)
         {
             Timer timer = null;
@@ -112,6 +117,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Throttled action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateThrottledAction(this Action action, int milliseconds)
         {
             var date = DateTime.MinValue;
@@ -128,6 +134,7 @@ namespace TWCore
         /// <param name="action">Original action</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Throttled action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateThrottledAction<T>(this Action<T> action, int milliseconds)
         {
             var date = DateTime.MinValue;
@@ -146,6 +153,7 @@ namespace TWCore
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync(this Action action)
         {
             return Task.Run(() =>
@@ -167,6 +175,7 @@ namespace TWCore
         /// <param name="action">Action to invoke</param>
         /// <param name="value">Argument value</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync<T>(this Action<T> action, T value)
             => InvokeAsync(() => action(value));
         /// <summary>
@@ -176,6 +185,7 @@ namespace TWCore
         /// <param name="value1">Argument 1 value</param>
         /// <param name="value2">Argument 2 value</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync<T1, T2>(this Action<T1, T2> action, T1 value1, T2 value2)
             => InvokeAsync(() => action(value1, value2));
         /// <summary>
@@ -186,6 +196,7 @@ namespace TWCore
         /// <param name="value2">Argument 2 value</param>
         /// <param name="value3">Argument 3 value</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync<T1, T2, T3>(this Action<T1, T2, T3> action, T1 value1, T2 value2, T3 value3)
             => InvokeAsync(() => action(value1, value2, value3));
         /// <summary>
@@ -197,6 +208,7 @@ namespace TWCore
         /// <param name="value3">Argument 3 value</param>
         /// <param name="value4">Argument 4 value</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action, T1 value1, T2 value2, T3 value3, T4 value4)
             => InvokeAsync(() => action(value1, value2, value3, value4));
         /// <summary>
@@ -209,6 +221,7 @@ namespace TWCore
         /// <param name="value4">Argument 4 value</param>
         /// <param name="value5">Argument 5 value</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task InvokeAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action, T1 value1, T2 value2, T3 value3, T4 value4, T5 value5)
             => InvokeAsync(() => action(value1, value2, value3, value4, value5));
         /// <summary>
@@ -216,12 +229,14 @@ namespace TWCore
         /// </summary>
         /// <param name="func">Func to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<TResult> InvokeAsync<TResult>(this Func<TResult> func)
         {
             var tcs = new TaskCompletionSource<TResult>();
             ThreadPool.UnsafeQueueUserWorkItem(InternalInvokeAsync<TResult>, new object[] {tcs, func});
             return tcs.Task;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void InternalInvokeAsync<TResult>(object state)
         {
             var objArray = (object[])state;
@@ -314,71 +329,84 @@ namespace TWCore
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task> CreateAsync(this Action action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T, Task> CreateAsync<T>(this Action<T> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, Task> CreateAsync<T1, T2>(this Action<T1, T2> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, Task> CreateAsync<T1, T2, T3>(this Action<T1, T2, T3> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, T4, Task> CreateAsync<T1, T2, T3, T4>(this Action<T1, T2, T3, T4> action) => action.InvokeAsync;
         /// <summary>
         /// Create an Action in Async Task
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, T4, T5, Task> CreateAsync<T1, T2, T3, T4, T5>(this Action<T1, T2, T3, T4, T5> action) => action.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<Task<TResult>> CreateAsync<TResult>(this Func<TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, Task<TResult>> CreateAsync<T1, TResult>(this Func<T1, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create an Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, Task<TResult>> CreateAsync<T1, T2, TResult>(this Func<T1, T2, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, Task<TResult>> CreateAsync<T1, T2, T3, TResult>(this Func<T1, T2, T3, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, T4, Task<TResult>> CreateAsync<T1, T2, T3, T4, TResult>(this Func<T1, T2, T3, T4, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T1, T2, T3, T4, T5, Task<TResult>> CreateAsync<T1, T2, T3, T4, T5, TResult>(this Func<T1, T2, T3, T4, T5, TResult> func) => func.InvokeAsync;
         /// <summary>
         /// Create a Func in Async Task
         /// </summary>
         /// <returns>Task of the invocation</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<object[], Task<object>> CreateAsync(this Delegate @delegate) => @delegate.InvokeAsync;
         #endregion
 
@@ -389,6 +417,7 @@ namespace TWCore
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateTry(this Action action, Action<Exception> onException = null) => () => Try.Do(action, onException);
         /// <summary>
         /// Creates an action wrapper around the action to handles the execution inside a try/catch sentence
@@ -396,6 +425,7 @@ namespace TWCore
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(() => action(obj), onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
@@ -403,6 +433,7 @@ namespace TWCore
         /// <param name="action">Action to be executed inside a try/catch sentence</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>true if the execution finished sucessfully, otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryInvoke(this Action action, Action<Exception> onException = null) => Try.Do(action, onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
@@ -411,6 +442,7 @@ namespace TWCore
         /// <param name="obj">Parameter of the action</param>
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>true if the execution finished sucessfully, otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool TryInvoke<T>(this Action<T> action, T obj, Action<Exception> onException = null) => Try.Do(() => action(obj), onException);
         #endregion
 
@@ -422,6 +454,7 @@ namespace TWCore
         /// <param name="onMethodEnds">Action to be executed at the end of the invoked method with the execution time data</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateWatch(this Action action, Action<Stopwatch> onMethodEnds, bool asyncRun = false) => () => Watch.Invoke(action, onMethodEnds, asyncRun);
         /// <summary>
         /// Creates an action wrapper around the action to messure the execution time for that action.
@@ -430,6 +463,7 @@ namespace TWCore
         /// <param name="statsMessage">Stats message to write in the log instance</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateWatch(this Action action, string statsMessage, bool asyncRun = false) => () => Watch.Invoke(action, statsMessage, asyncRun);
         /// <summary>
         /// Invokes the action and calls the onMethodEnds function at the end of the function with the execution time.
@@ -438,6 +472,7 @@ namespace TWCore
         /// <param name="onMethodEnds">Action to be executed at the end of the invoked method with the execution time data</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>Function return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke(this Action action, Action<Stopwatch> onMethodEnds, bool asyncRun = false) => Watch.Invoke(action, onMethodEnds, asyncRun);
         /// <summary>
         /// Invokes the action and save the stats message on the log instance.
@@ -446,6 +481,7 @@ namespace TWCore
         /// <param name="statsMessage">Stats message to write in the log instance</param>
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>Function return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void Invoke(this Action action, string statsMessage, bool asyncRun = false) => Watch.Invoke(action, statsMessage, asyncRun);
         #endregion
 
@@ -456,12 +492,14 @@ namespace TWCore
         /// <param name="action">Action to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateLock(this Action action, object @lock) => () => InvokeWithLock(action, @lock);
         /// <summary>
         /// Invokes the action with a lock over an object reference
         /// </summary>
         /// <param name="action">Action to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void InvokeWithLock(this Action action, object @lock)
         {
             lock (@lock)
@@ -474,6 +512,7 @@ namespace TWCore
         /// <param name="function">Function to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T> CreateLock<T>(this Func<T> function, object @lock) => () => InvokeWithLock(function, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
@@ -481,6 +520,7 @@ namespace TWCore
         /// <param name="function">Function to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>Function invoke return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T InvokeWithLock<T>(this Func<T> function, object @lock)
         {
             lock (@lock)
@@ -492,6 +532,7 @@ namespace TWCore
         /// <param name="function">Function to invoke</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>A new action wrapper</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Func<T, TR> CreateLock<T, TR>(this Func<T, TR> function, object @lock) => t => InvokeWithLock(function, t, @lock);
         /// <summary>
         /// Invokes the func with a lock over an object reference
@@ -500,6 +541,7 @@ namespace TWCore
         /// <param name="state">State object parameter for function</param>
         /// <param name="lock">Object reference to create the lock sentence</param>
         /// <returns>Function invoke return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TR InvokeWithLock<T, TR>(this Func<T, TR> function, T state, object @lock)
         {
             lock (@lock)
@@ -515,7 +557,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static bool InvokeWithRetry(this Func<bool> function, TimeSpan? retryInterval, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<bool> InvokeWithRetry(this Func<Task<bool>> function, TimeSpan? retryInterval, int retryCount = 3)
             => InvokeWithRetry(function, ret => !ret , (int?)retryInterval?.TotalMilliseconds ?? 1000, retryCount);
         /// <summary>
         /// Tries to run the function maximum times until no error and it returns true with a time interval
@@ -524,7 +567,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static bool InvokeWithRetry(this Func<bool> function, int retryInterval = 1000, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<bool> InvokeWithRetry(this Func<Task<bool>> function, int retryInterval = 1000, int retryCount = 3)
             => InvokeWithRetry(function, ret => !ret , retryInterval, retryCount);
         /// <summary>
         /// Tries to run the function maximum times until no error and it returns true with a time interval
@@ -534,7 +578,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static TResult InvokeWithRetry<TResult>(this Func<TResult> function, Predicate<TResult> shouldRetry, TimeSpan? retryInterval, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task<TResult> InvokeWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, TimeSpan? retryInterval, int retryCount = 3)
             => InvokeWithRetry(function, shouldRetry, (int?)retryInterval?.TotalMilliseconds ?? 1000, retryCount);
         /// <summary>
         /// Tries to run the function maximum times until no error and it returns true with a time interval
@@ -544,14 +589,15 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static TResult InvokeWithRetry<TResult>(this Func<TResult> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<TResult> InvokeWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
         {
             var exceptions = new List<Exception>();
             for (var retry = 0; retry < retryCount; retry++)
             {
                 try
                 {
-                    var result = function();
+                    var result = await function().ConfigureAwait(false);
                     if (!shouldRetry(result))
                         return result;
                 }
@@ -559,7 +605,7 @@ namespace TWCore
                 {
                     exceptions.Add(ex);
                 }
-                Thread.Sleep(retryInterval);
+                await Task.Delay(retryInterval).ConfigureAwait(false);
             }
             throw new AggregateException("The function couldn't be executed successfully", exceptions);
         }
@@ -570,7 +616,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static Func<bool> CreateWithRetry(this Func<bool> function, TimeSpan? retryInterval, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<Task<bool>> CreateWithRetry(this Func<Task<bool>> function, TimeSpan? retryInterval, int retryCount = 3)
             =>  () => function.InvokeWithRetry(retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
@@ -579,7 +626,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static Func<bool> CreateWithRetry(this Func<bool> function, int retryInterval = 1000, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<Task<bool>> CreateWithRetry(this Func<Task<bool>> function, int retryInterval = 1000, int retryCount = 3)
             =>  () => function.InvokeWithRetry(retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
@@ -589,7 +637,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static Func<TResult> CreateWithRetry<TResult>(this Func<TResult> function, Predicate<TResult> shouldRetry, TimeSpan? retryInterval, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<Task<TResult>> CreateWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, TimeSpan? retryInterval, int retryCount = 3)
             =>  () => function.InvokeWithRetry(shouldRetry, retryInterval, retryCount);
         /// <summary>
         /// Creates a Func With tries to run the function maximum times until no error and it returns true with a time interval
@@ -599,7 +648,8 @@ namespace TWCore
         /// <param name="retryInterval">Time between retries</param>
         /// <param name="retryCount">Number max of retries</param>
         /// <returns>Result of the function</returns>
-        public static Func<TResult> CreateWithRetry<TResult>(this Func<TResult> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Func<Task<TResult>> CreateWithRetry<TResult>(this Func<Task<TResult>> function, Predicate<TResult> shouldRetry, int retryInterval = 1000, int retryCount = 3)
             =>  () => function.InvokeWithRetry(shouldRetry, retryInterval, retryCount);
         #endregion
 
@@ -610,7 +660,8 @@ namespace TWCore
         /// <param name="action">Action to execute</param>
         /// <param name="milliseconds">Timeout in milliseconds</param>
         /// <returns>True if run successfully</returns>
-        public static bool WaitForAction(this Action action, int milliseconds)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool CallAndWaitFor(this Action action, int milliseconds)
         {
             var done = false;
             var task = Task.Run(() =>
@@ -628,6 +679,36 @@ namespace TWCore
             if (task.Wait(milliseconds))
                 done = task.Result;
             return done;
+        }
+        /// <summary>
+        /// Wait for action with timeout
+        /// </summary>
+        /// <param name="task">Task to execute</param>
+        /// <param name="milliseconds">Timeout in milliseconds</param>
+        /// <returns>True if run successfully</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds)
+        {
+            if (task.IsCompleted) return true;
+            var waitTask = Task.Delay(milliseconds);
+            var resTask = await Task.WhenAny(waitTask, task).ConfigureAwait(false);
+            return resTask == task;
+        }
+        /// <summary>
+        /// Wait for action with timeout
+        /// </summary>
+        /// <param name="task">Task to execute</param>
+        /// <param name="milliseconds">Timeout in milliseconds</param>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <returns>True if run successfully</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
+        {
+            if (task.IsCompleted) return true;
+            if (cancellationToken.IsCancellationRequested) return false;
+            var waitTask = Task.Delay(milliseconds, cancellationToken);
+            var resTask = await Task.WhenAny(waitTask, task).ConfigureAwait(false);
+            return resTask == task;
         }
         #endregion
     }

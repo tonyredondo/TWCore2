@@ -256,8 +256,41 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
             if (handler.Event.IsSet)
                 return handler.Message;
-            if (_connectionCancellationToken.IsCancellationRequested) 
-                return null;
+            _connectionCancellationToken.ThrowIfCancellationRequested();
+            throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRq">RPC request message to send to the server</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>RPC response message from the server</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRq, CancellationToken cancellationToken)
+        {
+            if (!_shouldBeConnected)
+                await ConnectAsync().ConfigureAwait(false);
+            if (_connectionCancellationToken.IsCancellationRequested) return null;
+            var handler = new RpcMessageHandler();
+            _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
+            if (_currentIndex > ResetIndex) _currentIndex = -1;
+            var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
+            using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_connectionCancellationToken, cancellationToken))
+            {
+                await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
+                await Task.WhenAny(
+                    handler.Event.WaitAsync(linkedTokenSource.Token),
+                    Task.Delay(InvokeMethodTimeout, linkedTokenSource.Token)).ConfigureAwait(false);
+            }
+            if (handler.Event.IsSet)
+                return handler.Message;
+            _connectionCancellationToken.ThrowIfCancellationRequested();
+            if (cancellationToken.IsCancellationRequested)
+            {
+                await client.SendRpcMessageAsync(new RPCCancelMessage { MessageId = messageRq.MessageId }).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+            }
             throw new TimeoutException("Timeout of {0} seconds has been reached waiting the response from the server with Id={1}.".ApplyFormat(InvokeMethodTimeout / 1000, messageRq.MessageId));
         }
         #endregion

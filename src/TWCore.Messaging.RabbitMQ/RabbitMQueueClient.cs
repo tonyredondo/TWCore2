@@ -294,7 +294,11 @@ namespace TWCore.Messaging.RabbitMQ
             }
 
             if (!await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false))
+            {
+                if (cancellationToken.IsCancellationRequested) cancellationToken.ThrowIfCancellationRequested();
                 throw new MessageQueueTimeoutException(_receiverOptionsTimeout, strCorrelationId);
+            }
+
             if (message.Body == null)
                 throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
 

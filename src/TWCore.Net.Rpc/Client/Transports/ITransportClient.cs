@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
@@ -62,6 +63,13 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <param name="messageRQ">RPC request message to send to the server</param>
         /// <returns>RPC response message from the server</returns>
         Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ);
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <param name="cancellationToken">Cancellation token instance</param>
+        /// <returns>RPC response message from the server</returns>
+        Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ, CancellationToken cancellationToken);
         /// <summary>
         /// Initialize the Transport client
         /// </summary>

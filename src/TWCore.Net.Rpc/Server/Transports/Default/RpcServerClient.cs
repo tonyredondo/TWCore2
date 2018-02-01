@@ -164,7 +164,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 try
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    Task.Factory.StartNew(MessageReceivedHandler, message);
+                    ThreadPool.UnsafeQueueUserWorkItem(MessageReceivedHandler, message);
                 }
                 catch (IOException)
                 {
@@ -183,33 +183,41 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Dispose();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task MessageReceivedHandler(object rawMessage)
+        private async void MessageReceivedHandler(object rawMessage)
         {
-            switch (rawMessage)
+            try
             {
-                case RPCSessionRequestMessage sessionMessage:
-                    if (OnSessionMessageReceived?.Invoke(this, sessionMessage) ?? true)
-                    {
-                        _hub = sessionMessage.Hub;
-                        _sessionId = sessionMessage.SessionId == Guid.Empty
-                            ? Guid.NewGuid()
-                            : sessionMessage.SessionId;
-                        _onSession = true;
-                        await SendRpcMessageAsync(new RPCSessionResponseMessage
+                switch (rawMessage)
+                {
+                    case RPCSessionRequestMessage sessionMessage:
+                        if (OnSessionMessageReceived?.Invoke(this, sessionMessage) ?? true)
                         {
-                            RequestMessageId = sessionMessage.MessageId,
-                            SessionId = _sessionId,
-                            Succeed = true
-                        }).ConfigureAwait(false);
-                        OnConnect?.Invoke(this, EventArgs.Empty);
-                    }
-                    else
-                        Dispose();
-                    break;
-                case RPCMessage message:
-                    if (!_onSession) return;
-                    OnMessageReceived?.Invoke(this, message);
-                    break;
+                            _hub = sessionMessage.Hub;
+                            _sessionId = sessionMessage.SessionId == Guid.Empty
+                                ? Guid.NewGuid()
+                                : sessionMessage.SessionId;
+                            _onSession = true;
+                            await SendRpcMessageAsync(new RPCSessionResponseMessage
+                            {
+                                RequestMessageId = sessionMessage.MessageId,
+                                SessionId = _sessionId,
+                                Succeed = true
+                            }).ConfigureAwait(false);
+                            OnConnect?.Invoke(this, EventArgs.Empty);
+                        }
+                        else
+                            Dispose();
+
+                        break;
+                    case RPCMessage message:
+                        if (!_onSession) return;
+                        OnMessageReceived?.Invoke(this, message);
+                        break;
+                }
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
             }
         }
         #endregion

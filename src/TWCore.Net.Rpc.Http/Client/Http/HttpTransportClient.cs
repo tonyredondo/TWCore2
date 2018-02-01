@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
@@ -172,6 +173,34 @@ namespace TWCore.Net.RPC.Client.Transports
             var sContent = new StreamContent(dataRQ.ToMemoryStream());
             var postResult = await _httpClient.PostAsync(Url, sContent).ConfigureAwait(false);
 			Counters.IncrementBytesSent(dataRQ.Count);
+            var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+            Counters.IncrementBytesReceived(dataRS.Length);
+            var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);
+            return res;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>RPC response message from the server</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ, CancellationToken cancellationToken)
+        {
+            if (_methods.TryGetValue(messageRQ.MethodId, out var descriptor))
+            {
+                foreach (var tDesc in descriptor.Types.Values)
+                {
+                    var type = Core.GetType(tDesc.FullName);
+                    if (type != null)
+                        Serializer.KnownTypes.Add(type);
+                }
+            }
+            var dataRQ = Serializer.Serialize(messageRQ);
+            var sContent = new StreamContent(dataRQ.ToMemoryStream());
+            var postResult = await _httpClient.PostAsync(Url, sContent, cancellationToken).ConfigureAwait(false);
+            Counters.IncrementBytesSent(dataRQ.Count);
             var dataRS = await postResult.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
             Counters.IncrementBytesReceived(dataRS.Length);
             var res = Serializer.Deserialize<RPCResponseMessage>(dataRS);

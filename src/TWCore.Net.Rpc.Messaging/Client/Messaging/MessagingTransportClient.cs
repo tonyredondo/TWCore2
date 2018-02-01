@@ -18,6 +18,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
@@ -137,6 +138,16 @@ namespace TWCore.Net.RPC.Client.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ)
             => _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ);
+        /// <inheritdoc />
+        /// <summary>
+        /// Invokes a RPC method on the RPC server and gets the results
+        /// </summary>
+        /// <param name="messageRQ">RPC request message to send to the server</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>RPC response message from the server</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ, CancellationToken cancellationToken)
+            => _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ, cancellationToken);
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

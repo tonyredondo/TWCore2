@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -38,6 +39,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
     {
         private readonly object _locker = new object();
         private readonly List<RpcServerClient> _sessions = new List<RpcServerClient>();
+        private readonly ConcurrentDictionary<Guid, CancellationTokenSource> _rpcMessagesCancellations = new ConcurrentDictionary<Guid, CancellationTokenSource>();
         private TcpListener _listener;
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
@@ -281,22 +283,35 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             try
             {
-                if (!(e is RPCRequestMessage request)) return;
-
-                if (request.MethodId == Guid.Empty)
+                switch(e)
                 {
-                    var dEventArgs = new ServerDescriptorsEventArgs();
-                    OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
-                    var response = new RPCResponseMessage(request)
-                    {
-                        ReturnValue = dEventArgs.Descriptors
-                    };
-                    await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                    return;
+                    case RPCCancelMessage cancelMessage:
+                        if (_rpcMessagesCancellations.TryRemove(cancelMessage.MessageId, out var tSource))
+                            tSource.Cancel();
+                        break;
+                    case RPCRequestMessage request:
+                        if (request.MethodId == Guid.Empty)
+                        {
+                            var dEventArgs = new ServerDescriptorsEventArgs();
+                            OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
+                            var response = new RPCResponseMessage(request)
+                            {
+                                ReturnValue = dEventArgs.Descriptors
+                            };
+                            await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
+                            break;
+                        }
+                        using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcServerClient.ConnectionCancellationToken))
+                        {
+                            _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
+                            var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
+                            OnMethodCall?.Invoke(this, mEventArgs);
+                            if (!tokenSource.Token.IsCancellationRequested)
+                                await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
+                            _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
+                        }
+                        break;
                 }
-                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
-                OnMethodCall?.Invoke(this, mEventArgs);
-                await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

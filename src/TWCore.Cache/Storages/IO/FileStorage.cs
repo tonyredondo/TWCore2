@@ -245,7 +245,6 @@ namespace TWCore.Cache.Storages.IO
                 var oldTransactionLogFilePath = _transactionLogFilePath + ".old";
                 _indexFilePath = Path.Combine(BasePath, IndexFileName + IndexSerializer.Extensions[0]);
                 var oldindexFilePath = _indexFilePath + ".old";
-                List<FileStorageMetaLog> transactionLog = null;
                 _metas = new Dictionary<string, StorageItemMeta>();
                 _pendingItems = new Dictionary<string, SerializedObject>();
                 var tokenSource = new CancellationTokenSource();
@@ -269,7 +268,7 @@ namespace TWCore.Cache.Storages.IO
                     IndexSerializer.SerializeToFile(new List<StorageItemMeta>(), _indexFilePath);
 
                 //Start...
-                _loadTask = Task.Run(() =>
+                _loadTask = Task.Run(async () =>
                 {
                     lock (_metasLock)
                     {
@@ -360,13 +359,13 @@ namespace TWCore.Cache.Storages.IO
                                     }
 
                                     Core.Log.InfoBasic("Index generated...");
-                                    SaveMetadata();
                                 }
 
                                 #endregion
 
-                                #region Loading transaction log file
+                                List<FileStorageMetaLog> transactionLog = null;
 
+                                #region Loading transaction log file
                                 var transactionLogLoaded = false;
                                 if (File.Exists(_transactionLogFilePath))
                                 {
@@ -427,6 +426,8 @@ namespace TWCore.Cache.Storages.IO
 
                                 #endregion
 
+                                _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
                                 #region Applying pending transactions
 
                                 if (transactionLog?.Count > 0)
@@ -446,21 +447,13 @@ namespace TWCore.Cache.Storages.IO
                                                 break;
                                         }
                                     }
-
-                                    SaveMetadata();
                                 }
 
                                 #endregion
 
+                                SaveMetadata();
                                 RemoveExpiredItems();
                                 _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
-
-                                _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create,
-                                    FileAccess.ReadWrite, FileShare.ReadWrite);
-
-                                Core.Log.InfoBasic("Total item loaded: {0}", _metas.Count);
-                                Core.Log.LibVerbose("All metadata loaded.");
-                                Loaded = true;
                             }
                             catch (Exception ex)
                             {
@@ -468,6 +461,14 @@ namespace TWCore.Cache.Storages.IO
                                 LoadingFailed = true;
                             }
                         }
+                    }
+                    if (!LoadingFailed)
+                    {
+                        Core.Log.InfoBasic("Waiting index to be written...");
+                        await Task.Delay(1200).ConfigureAwait(false); //Waiting to saveMetadataBuffered to be called
+                        Core.Log.InfoBasic("Total item loaded: {0}", _metas.Count);
+                        Core.Log.LibVerbose("All metadata loaded.");
+                        Loaded = true;
                     }
                 }, token);
 

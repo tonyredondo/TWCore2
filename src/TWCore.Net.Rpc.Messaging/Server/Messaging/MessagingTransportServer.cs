@@ -163,12 +163,14 @@ namespace TWCore.Net.RPC.Server.Transports
                     }
                     break;
                 case RPCRequestMessage rqMessage:
-                    var mEvent = new MethodEventArgs(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
+                    var mEvent = MethodEventArgs.Retrieve(requestReceivedEventArgs.Request.CorrelationId, rqMessage, requestReceivedEventArgs.ProcessResponseTimeoutCancellationToken);
                     if (OnMethodCall != null)
                     {
                         OnMethodCall(this, mEvent);
                         requestReceivedEventArgs.Response.Body = mEvent.Response;
                     }
+                    RPCResponseMessage.Store(mEvent.Response);
+                    MethodEventArgs.Store(mEvent);
                     break;
             }
             return Task.CompletedTask;

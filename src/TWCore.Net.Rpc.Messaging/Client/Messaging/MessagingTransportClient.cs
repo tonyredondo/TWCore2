@@ -147,7 +147,10 @@ namespace TWCore.Net.RPC.Client.Transports
         /// <returns>RPC response message from the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<RPCResponseMessage> InvokeMethodAsync(RPCRequestMessage messageRQ, CancellationToken cancellationToken)
-            => _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ, cancellationToken);
+        {
+            messageRQ.CancellationToken = true;
+            return _queueClient.SendAndReceiveAsync<RPCResponseMessage, RPCRequestMessage>(messageRQ, cancellationToken);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources

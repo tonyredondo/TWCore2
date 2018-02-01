@@ -46,22 +46,30 @@ namespace TWCore.Net.RPC
         [DataMember]
         public SerializableException Exception { get; set; }
 
-        #region .ctors
-        /// <inheritdoc />
+        #region Static Methods
         /// <summary>
-        /// RPC Response Message
+        /// Retrieve a Response Message instance
         /// </summary>
-        public RPCResponseMessage()
+        /// <param name="request">Request Message instance</param>
+        /// <returns>Response Message instance</returns>
+        public static RPCResponseMessage Retrieve(RPCRequestMessage request)
         {
+            var response = ReferencePool<RPCResponseMessage>.Shared.New();
+            response.MessageId = Guid.NewGuid();
+            response.RequestMessageId = request.MessageId;
+            return response;
         }
-        /// <inheritdoc />
         /// <summary>
-        /// RPC Response Message
+        /// Store a Response Message instance
         /// </summary>
-        /// <param name="request">RPC request message from this response</param>
-        public RPCResponseMessage(RPCRequestMessage request)
+        /// <param name="response">Response Message instance</param>
+        public static void Store(RPCResponseMessage response)
         {
-			RequestMessageId = request.MessageId;
+            response.MessageId = Guid.Empty;
+            response.RequestMessageId = Guid.Empty;
+            response.ReturnValue = null;
+            response.Exception = null;
+            ReferencePool<RPCResponseMessage>.Shared.Store(response);
         }
         #endregion
     }

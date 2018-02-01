@@ -37,5 +37,10 @@ namespace TWCore.Net.RPC
         /// </summary>
         [DataMember]
 		public object[] Parameters { get; set; }
+        /// <summary>
+        /// The client has a cancellation token
+        /// </summary>
+        [DataMember]
+        public bool CancellationToken { get; set; }
     }
 }

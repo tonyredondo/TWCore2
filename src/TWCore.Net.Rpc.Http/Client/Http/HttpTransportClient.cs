@@ -197,6 +197,7 @@ namespace TWCore.Net.RPC.Client.Transports
                         Serializer.KnownTypes.Add(type);
                 }
             }
+            messageRQ.CancellationToken = true;
             var dataRQ = Serializer.Serialize(messageRQ);
             var sContent = new StreamContent(dataRQ.ToMemoryStream());
             var postResult = await _httpClient.PostAsync(Url, sContent, cancellationToken).ConfigureAwait(false);

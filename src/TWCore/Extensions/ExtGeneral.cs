@@ -342,22 +342,14 @@ namespace TWCore
         {
             if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
-            // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 return await readyTask.ConfigureAwait(false);
             }
         }
@@ -373,23 +365,15 @@ namespace TWCore
             if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
-            // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
+            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 return await readyTask.ConfigureAwait(false);
             }
         }
@@ -407,24 +391,15 @@ namespace TWCore
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
             if (cancellationToken3.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken3).ConfigureAwait(false);
-            // Create another task that completes as soon as cancellation is requested.
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken3.Register(() => tcs.TrySetCanceled(), false))
+            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
+            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 return await readyTask.ConfigureAwait(false);
             }
         }
@@ -442,17 +417,10 @@ namespace TWCore
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 await readyTask.ConfigureAwait(false);
             }
         }
@@ -469,21 +437,14 @@ namespace TWCore
             if (cancellationToken.IsCancellationRequested) return;
             if (cancellationToken2.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
+            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
+            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 await readyTask.ConfigureAwait(false);
             }
         }
@@ -502,22 +463,14 @@ namespace TWCore
             if (cancellationToken2.IsCancellationRequested) return;
             if (cancellationToken3.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken2.Register(() => tcs.TrySetCanceled(), false))
-            using (cancellationToken3.Register(() => tcs.TrySetCanceled(), false))
+            using (var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
+            using (linkedCancellation.Token.Register(() => tcs.TrySetCanceled(), false))
             {
                 var cancellationTask = tcs.Task;
-                // Create a task that completes when either the async operation completes,
-                // or cancellation is requested.
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
-
-                // In case of cancellation, register a continuation to observe any unhandled 
-                // exceptions from the asynchronous operation (once it completes).
-                // In .NET 4.0, unobserved task exceptions would terminate the process.
                 if (readyTask == cancellationTask)
                     await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
-
                 await readyTask.ConfigureAwait(false);
             }
         }
@@ -544,8 +497,8 @@ namespace TWCore
             if (cancellationToken.IsCancellationRequested) return;
             if (cancellationToken2.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>();
-            using (cancellationToken.Register(() => tcs.TrySetResult(null), false))
-            using (cancellationToken2.Register(() => tcs.TrySetResult(null), false))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2))
+            using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
                 await tcs.Task.ConfigureAwait(false);
         }
         /// <summary>
@@ -561,9 +514,8 @@ namespace TWCore
             if (cancellationToken2.IsCancellationRequested) return;
             if (cancellationToken3.IsCancellationRequested) return;
             var tcs = new TaskCompletionSource<object>();
-            using (cancellationToken.Register(() => tcs.TrySetResult(null), false))
-            using (cancellationToken2.Register(() => tcs.TrySetResult(null), false))
-            using (cancellationToken3.Register(() => tcs.TrySetResult(null), false))
+            using (var linkedToken = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, cancellationToken2, cancellationToken3))
+            using (linkedToken.Token.Register(() => tcs.TrySetResult(null), false))
                 await tcs.Task.ConfigureAwait(false);
         }
 

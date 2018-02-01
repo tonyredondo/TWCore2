@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Client.Transports;
@@ -212,6 +213,43 @@ namespace TWCore.Net.RPC.Client
                 if (Transport.Descriptors == null)
                     Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
                 var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+                ReferencePool<RPCRequestMessage>.Shared.Store(request);
+                if (response == null)
+                    throw new Exception("RPC Response is null.");
+                if (response.Exception != null)
+                    throw response.Exception.GetException();
+                return response.ReturnValue;
+            }
+        }
+        /// <summary>
+        /// Invokes a Server RPC method
+        /// </summary>
+        /// <typeparam name="T">Response object type</typeparam>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Server method name</param>
+        /// <param name="args">Server method arguments</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>Server method return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
+            => (T)await ServerInvokeAsync(serviceName, method, args, cancellationToken).ConfigureAwait(false);
+        /// <summary>
+        /// Invokes a Server RPC method
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Server method name</param>
+        /// <param name="args">Server method arguments</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>Server method return value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<object> ServerInvokeAsync(string serviceName, string method, object[] args, CancellationToken cancellationToken)
+        {
+            using (Watch.Create($"RPC Call: {serviceName}.{method}"))
+            {
+                var request = CreateRequest(serviceName, method, args);
+                if (Transport.Descriptors == null)
+                    Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+                var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
                 ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");

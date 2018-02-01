@@ -249,6 +249,62 @@ namespace TWCore.Cache.Client
         public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => Invoke<bool>(key, data, expirationDate, tags);
         #endregion
 
+        #region Set Multi-Key Data
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(StorageItem[] items) => Invoke<bool>(items);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data) => Invoke<bool>(keys, data);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate) => Invoke<bool>(keys, data, expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags) => Invoke<bool>(keys, data, expirationDate, tags);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate) => Invoke<bool>(keys, data, expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags) => Invoke<bool>(keys, data, expirationDate, tags);
+        #endregion
+
         #region Update/Remove Data/Copy
         /// <summary>
         /// Updates the data of an existing storage item.
@@ -561,6 +617,62 @@ namespace TWCore.Cache.Client
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> SetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => InvokeAsync<bool>(key, data, expirationDate, tags);
+        #endregion
+
+        #region Set Multi-Key Data
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(StorageItem[] items) => InvokeAsync<bool>(items);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data) => InvokeAsync<bool>(keys, data);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan expirationDate) => InvokeAsync<bool>(keys, data, expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags) => InvokeAsync<bool>(keys, data, expirationDate, tags);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime expirationDate) => InvokeAsync<bool>(keys, data, expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags) => InvokeAsync<bool>(keys, data, expirationDate, tags);
         #endregion
 
         #region Update/Remove Data/Copy

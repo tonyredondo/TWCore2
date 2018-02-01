@@ -208,6 +208,56 @@ namespace TWCore.Cache.Client
         Task<bool> SetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags);
         #endregion
 
+        #region Set Multi-Key Data
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(StorageItem[] items);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(string[] keys, SerializedObject data);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime expirationDate);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags);
+        #endregion
+
         #region Update/Remove Data/Copy
         /// <summary>
         /// Updates the data of an existing storage item.

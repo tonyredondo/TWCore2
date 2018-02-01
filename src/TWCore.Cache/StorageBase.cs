@@ -652,6 +652,104 @@ namespace TWCore.Cache
         }
         #endregion
 
+        #region Set Multi-Key Data
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(StorageItem[] items)
+        {
+            if (!Ready || items == null) return false;
+            foreach (var item in items)
+                Set(item);
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data)
+        {
+            if (!Ready || keys == null) return false;
+            foreach (var key in keys)
+                Set(key, data);
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
+        {
+            if (!Ready || keys == null) return false;
+            foreach (var key in keys)
+                Set(key, data, expirationDate);
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+        {
+            if (!Ready || keys == null) return false;
+            foreach (var key in keys)
+                Set(key, data, expirationDate, tags);
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
+        {
+            if (!Ready || keys == null) return false;
+            foreach (var key in keys)
+                Set(key, data, expirationDate);
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+        {
+            if (!Ready || keys == null) return false;
+            foreach (var key in keys)
+                Set(key, data, expirationDate, tags);
+            return true;
+        }
+        #endregion
+
         #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>

@@ -59,8 +59,15 @@ namespace TWCore.Tests
 	            await cachePool.CopyAsync("test", guid3.ToString("N")).ConfigureAwait(false);
 	            var asto4 = await cachePool.GetAsync(guid3.ToString("N")).ConfigureAwait(false);
 
-	            try
-	            {
+                Console.ReadLine();
+
+                await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+                await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+
+                Console.ReadLine();
+
+                try
+                {
 	                for (var i = 0; i < 15; i++)
 			            await cachePool.GetKeysAsync().ConfigureAwait(false);
 

@@ -616,6 +616,116 @@ namespace TWCore.Cache.Client
         }
         #endregion
 
+        #region Set Multi-Key Data
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(StorageItem[] items)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(items, (p, arg1) => p.Storage.SetMultiAsync(arg1)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(keys, data, (item, arg1, arg2) => item.Storage.SetMultiAsync(arg1, arg2)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan expirationDate)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime expirationDate)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(keys, data, expirationDate, (item, arg1, arg2, arg3) => item.Storage.SetMultiAsync(arg1, arg2, arg3)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+        {
+            using (var w = Watch.Create())
+            {
+                var res = await _pool.WriteAsync(keys, data, expirationDate, tags, (item, arg1, arg2, arg3, arg4) => item.Storage.SetMultiAsync(arg1, arg2, arg3, arg4)).ConfigureAwait(false);
+                _counters.IncrementSetMulti(w.GlobalElapsedMilliseconds);
+                return res;
+            }
+        }
+        #endregion
+
         #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>

@@ -378,6 +378,92 @@ namespace TWCore.Cache.Client
         }
         #endregion
 
+        #region Set Multi-Key Data
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(StorageItem[] items)
+        {
+            var res = _storage.SetMulti(items);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data)
+        {
+            var res = _storage.SetMulti(keys, data);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan expirationDate)
+        {
+            var res = _storage.SetMulti(keys, data, expirationDate);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+        {
+            var res = _storage.SetMulti(keys, data, expirationDate, tags);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime expirationDate)
+        {
+            var res = _storage.SetMulti(keys, data, expirationDate);
+            return Task.FromResult(res);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Task<bool> SetMultiAsync(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+        {
+            var res = _storage.SetMulti(keys, data, expirationDate, tags);
+            return Task.FromResult(res);
+        }
+        #endregion
+
         #region Update/Remove Data/Copy
         /// <inheritdoc />
         /// <summary>

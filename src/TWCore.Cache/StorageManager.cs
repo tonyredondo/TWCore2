@@ -256,41 +256,43 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private List<TR> ExecuteInAllStackAndReturn<TR, TA1>(TA1 arg1, Func<IStorage, TA1, TR> functionPushData)
         {
-            var responses = new List<TR>();
-            foreach (var storage in _storages)
-            {
-                if (!storage.IsEnabled() || !storage.IsReady()) continue;
-                var result = default(TR);
-                try
+            var responses = _storages
+                .Where(sto => sto.IsEnabled() && sto.IsReady())
+                .AsParallel()
+                .Select(sto =>
                 {
-                    result = functionPushData(storage, arg1);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-                responses.Add(result);
-            }
+                    try
+                    {
+                        return functionPushData(sto, arg1);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                        return default(TR);
+                    }
+                })
+                .ToList();
             return responses;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private List<TR> ExecuteInAllStackAndReturn<TR, TA1, TA2>(TA1 arg1, TA2 arg2, Func<IStorage, TA1, TA2, TR> functionPushData)
 		{
-			var responses = new List<TR>();
-			foreach (var storage in _storages)
-			{
-				if (!storage.IsEnabled() || !storage.IsReady()) continue;
-				var result = default(TR);
-				try
-				{
-					result = functionPushData(storage, arg1, arg2);
-				}
-				catch (Exception ex)
-				{
-					Core.Log.Write(ex);
-				}
-				responses.Add(result);
-			}
+		    var responses = _storages
+		        .Where(sto => sto.IsEnabled() && sto.IsReady())
+		        .AsParallel()
+		        .Select(sto => 
+		        {
+		            try
+		            {
+		                return functionPushData(sto, arg1, arg2);
+		            }
+		            catch (Exception ex)
+		            {
+		                Core.Log.Write(ex);
+		                return default(TR);
+		            }
+                })
+		        .ToList();
 			return responses;
 		}
         #endregion
@@ -628,6 +630,74 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
 			=> ExecuteInAllStack(key, data, expirationDate, tags, (sto, arg1, arg2, arg3, arg4) => sto.Set(arg1, arg2, arg3, arg4));
+        #endregion
+
+        #region Set Multi-Key Data
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="items">StorageItem array</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(StorageItem[] items)
+            => ExecuteInAllStack(items, (sto, arg1) => sto.SetMulti(arg1));
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data)
+            => ExecuteInAllStack(keys, data, (sto, arg1, arg2) => sto.SetMulti(arg1, arg2));
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
+            => ExecuteInAllStack(keys, data, expirationDate, (sto, arg1, arg2, arg3) => sto.SetMulti(arg1, arg2, arg3));
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+            => ExecuteInAllStack(keys, data, expirationDate, tags, (sto, arg1, arg2, arg3, arg4) => sto.SetMulti(arg1, arg2, arg3, arg4));
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
+            => ExecuteInAllStack(keys, data, expirationDate, (sto, arg1, arg2, arg3) => sto.SetMulti(arg1, arg2, arg3));
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="keys">Items Keys</param>
+        /// <param name="data">Item Data</param>
+        /// <param name="expirationDate">Item expiration date</param>
+        /// <param name="tags">Items meta tags</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+            => ExecuteInAllStack(keys, data, expirationDate, tags, (sto, arg1, arg2, arg3, arg4) => sto.SetMulti(arg1, arg2, arg3, arg4));
         #endregion
 
         #region Update/Remove Data/Copy

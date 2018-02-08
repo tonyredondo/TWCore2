@@ -26,6 +26,7 @@ using TWCore.Threading;
 using TWCore.Diagnostics.Status;
 using TWCore.IO;
 using TWCore.Serialization;
+using Nito.AsyncEx;
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
@@ -65,12 +66,12 @@ namespace TWCore.Cache.Storages.IO
         /// Maximún number of elements waiting for write before starting to slow down the storage to free the queue
         /// </summary>
         public int SlowDownWriteThreshold { get; set; } = 1000;
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the Storage Type
-		/// </summary>
-		/// <value>The type.</value>
-		public override StorageType Type => StorageType.File;
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets the Storage Type
+        /// </summary>
+        /// <value>The type.</value>
+        public override StorageType Type => StorageType.File;
         #endregion
 
         #region .ctor
@@ -209,6 +210,9 @@ namespace TWCore.Cache.Storages.IO
             private readonly FileStorageMetaLog _currentTransaction;
             private readonly ManualResetEventSlim _storageWorkerEvent = new ManualResetEventSlim();
             private readonly Action _saveMetadataBuffered;
+            private readonly AsyncLock _asyncLock = new AsyncLock();
+            private string _dataPathPattern;
+
             #endregion
 
             #region Properties
@@ -247,7 +251,7 @@ namespace TWCore.Cache.Storages.IO
             #region .ctor
             public FolderStorage(string basePath, FileStorage storage)
             {
-                _saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
+                _saveMetadataBuffered = ActionDelegate.Create(() => SaveMetadataAsync().WaitAsync()).CreateBufferedAction(1000);
                 BasePath = basePath;
                 Serializer = storage.Serializer;
                 IndexSerializer = storage.MetaSerializer;
@@ -256,6 +260,7 @@ namespace TWCore.Cache.Storages.IO
                 Loaded = false;
                 LoadingFailed = false;
                 _transactionLogFilePath = Path.Combine(BasePath, TransactionLogFileName + IndexSerializer.Extensions[0]);
+                _dataPathPattern = Path.Combine(BasePath, "$FILE$" + DataExtension + Serializer.Extensions[0]);
                 var oldTransactionLogFilePath = _transactionLogFilePath + ".old";
                 _indexFilePath = Path.Combine(BasePath, IndexFileName + IndexSerializer.Extensions[0]);
                 var oldindexFilePath = _indexFilePath + ".old";
@@ -346,7 +351,7 @@ namespace TWCore.Cache.Storages.IO
 
                             if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
 
-                            var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension,SearchOption.AllDirectories);
+                            var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension, SearchOption.AllDirectories);
                             var idx = 0;
                             foreach (var file in allFiles)
                             {
@@ -372,7 +377,7 @@ namespace TWCore.Cache.Storages.IO
                         List<FileStorageMetaLog> transactionLog = null;
 
                         #region Loading transaction log file
-                        
+
                         var transactionLogLoaded = false;
                         if (File.Exists(_transactionLogFilePath))
                         {
@@ -451,7 +456,7 @@ namespace TWCore.Cache.Storages.IO
 
                         #endregion
 
-                        SaveMetadata();
+                        await SaveMetadataAsync().ConfigureAwait(false);
                         await RemoveExpiredItemsAsync(false).ConfigureAwait(false);
                         _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
                     }
@@ -485,7 +490,7 @@ namespace TWCore.Cache.Storages.IO
 
             #region Private Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private string GetDataPath(string key) => Path.Combine(BasePath, key + DataExtension + Serializer.Extensions[0]);
+            private string GetDataPath(string key) => _dataPathPattern.Replace("$FILE$", key);  //Path.Combine(BasePath, key + DataExtension + Serializer.Extensions[0]);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private async Task WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
             {
@@ -498,21 +503,30 @@ namespace TWCore.Cache.Storages.IO
                 if (_currentTransactionLogLength >= TransactionLogThreshold) _currentTransactionLogLength = 0;
 
                 #region Save Transaction Log
-                try
+                using (await _asyncLock.LockAsync().ConfigureAwait(false))
                 {
-                    lock (_transactionStream)
+
+                    try
                     {
-                        Try.Do(() => File.Copy(_transactionLogFilePath, _transactionLogFilePath + ".old", true), ex => Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message));
+                        await FileHelper.CopyFileAsync(_transactionLogFilePath, _transactionLogFilePath + ".old", true).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message);
+                    }
+
+                    try
+                    {
                         _currentTransaction.Meta = meta;
                         _currentTransaction.Type = transaction;
                         IndexSerializer.Serialize(_currentTransaction, _transactionStream);
-                        _transactionStream.Flush();
+                        await _transactionStream.FlushAsync().ConfigureAwait(false);
                         _currentTransaction.Meta = null;
                     }
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
                 }
                 #endregion
 
@@ -550,27 +564,33 @@ namespace TWCore.Cache.Storages.IO
                 _currentTransactionLogLength++;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SaveMetadata()
+            private async Task SaveMetadataAsync()
             {
-                Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
-                try
+                using (await _asyncLock.LockAsync().ConfigureAwait(false))
                 {
                     if (_disposedValue) return;
                     if (_transactionStream == null) return;
-                    lock(_transactionStream)
-                        if (!_transactionStream.CanWrite) return;
-                    Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message));
-                    IndexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
-                    lock (_transactionStream)
+                    if (!_transactionStream.CanWrite) return;
+                    Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
+                    try
                     {
+                        await FileHelper.CopyFileAsync(_indexFilePath, _indexFilePath + ".old", true).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Warning("The Index copy can't be created: {0}", ex.Message);
+                    }
+                    try
+                    {
+                        await IndexSerializer.SerializeToFileAsync(_metas.Values.ToList(), _indexFilePath).ConfigureAwait(false);
                         _transactionStream.Position = 0;
                         _transactionStream.SetLength(0);
                         _transactionStream.Flush();
                     }
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -602,7 +622,7 @@ namespace TWCore.Cache.Storages.IO
                     if (saveBuffered)
                         _saveMetadataBuffered();
                     else
-                        SaveMetadata();
+                        await SaveMetadataAsync().ConfigureAwait(false);
                 }
             }
             #endregion
@@ -692,16 +712,20 @@ namespace TWCore.Cache.Storages.IO
 
             private void Dispose(bool disposing)
             {
+                DisposeAsync(disposing).WaitAsync();
+            }
+
+            private async Task DisposeAsync(bool disposing)
+            {
                 if (_disposedValue) return;
                 if (disposing)
                 {
 
                 }
-                _storageWorker.StopAsync(int.MaxValue).WaitAsync();
-                SaveMetadata();
+                await _storageWorker.StopAsync(int.MaxValue).ConfigureAwait(false);
+                await SaveMetadataAsync().ConfigureAwait(false);
                 _disposedValue = true;
-
-                lock (_transactionStream)
+                using (await _asyncLock.LockAsync().ConfigureAwait(false))
                 {
                     if (_transactionStream.CanWrite)
                     {
@@ -711,7 +735,7 @@ namespace TWCore.Cache.Storages.IO
                     }
                 }
                 _metas.Clear();
-                    _pendingItems.Clear();
+                _pendingItems.Clear();
             }
 
             ~FolderStorage()

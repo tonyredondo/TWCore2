@@ -452,7 +452,22 @@ namespace TWCore.Cache.Storages.IO
                         #endregion
 
                         SaveMetadata();
-                        await RemoveExpiredItemsAsync().ConfigureAwait(false);
+
+                        #region Removing expired items
+                        var expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
+                        if (expiredItems.Length > 0)
+                        {
+                            Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
+                            foreach (var item in expiredItems)
+                            {
+                                Core.Log.InfoDetail("Removing: {0}", item.Key);
+                                await OnRemove(item.Key).ConfigureAwait(false);
+                            }
+                            Core.Log.InfoMedium("All expired items where removed.");
+                            SaveMetadata();
+                        }
+                        #endregion  
+
                         _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
                     }
                     catch (Exception ex)
@@ -462,8 +477,6 @@ namespace TWCore.Cache.Storages.IO
                     }
                     if (!LoadingFailed)
                     {
-                        Core.Log.InfoBasic("Waiting index to be written...");
-                        await Task.Delay(1200).ConfigureAwait(false); //Waiting to saveMetadataBuffered to be called
                         Core.Log.InfoBasic("Total item loaded: {0}", _metas.Count);
                         Core.Log.LibVerbose("All metadata loaded.");
                         Loaded = true;

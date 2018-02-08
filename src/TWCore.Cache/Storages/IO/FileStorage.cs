@@ -452,22 +452,7 @@ namespace TWCore.Cache.Storages.IO
                         #endregion
 
                         SaveMetadata();
-
-                        #region Removing expired items
-                        var expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
-                        if (expiredItems.Length > 0)
-                        {
-                            Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
-                            foreach (var item in expiredItems)
-                            {
-                                Core.Log.InfoDetail("Removing: {0}", item.Key);
-                                await OnRemove(item.Key).ConfigureAwait(false);
-                            }
-                            Core.Log.InfoMedium("All expired items where removed.");
-                            SaveMetadata();
-                        }
-                        #endregion  
-
+                        await RemoveExpiredItemsAsync(false).ConfigureAwait(false);
                         _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
                     }
                     catch (Exception ex)
@@ -602,17 +587,23 @@ namespace TWCore.Cache.Storages.IO
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private async Task RemoveExpiredItemsAsync()
+            private async Task RemoveExpiredItemsAsync(bool saveBuffered = true)
             {
                 var expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
-                Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
-                foreach (var item in expiredItems)
+                if (expiredItems.Length > 0)
                 {
-                    Core.Log.InfoDetail("Removing: {0}", item.Key);
-                    await OnRemove(item.Key).ConfigureAwait(false);
+                    Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
+                    foreach (var item in expiredItems)
+                    {
+                        Core.Log.InfoDetail("Removing: {0}", item.Key);
+                        await OnRemove(item.Key).ConfigureAwait(false);
+                    }
+                    Core.Log.InfoMedium("All expired items where removed.");
+                    if (saveBuffered)
+                        _saveMetadataBuffered();
+                    else
+                        SaveMetadata();
                 }
-                Core.Log.InfoMedium("All expired items where removed.");
-                _saveMetadataBuffered();
             }
             #endregion
 

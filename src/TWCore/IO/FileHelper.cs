@@ -67,7 +67,7 @@ namespace TWCore.IO
         public static async Task CopyFileAsync(string sourceFile, string destinationFile, bool overwrite, CancellationToken cancellationToken)
         {
             const FileOptions fileOptions = FileOptions.Asynchronous | FileOptions.SequentialScan;
-            const int bufferSize = 16384;
+            const int bufferSize = 8192;
             using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite, bufferSize, fileOptions))
             {
                 using (var destinationStream = new FileStream(destinationFile, overwrite ? FileMode.Create : FileMode.CreateNew, FileAccess.Write, FileShare.ReadWrite, bufferSize, fileOptions))

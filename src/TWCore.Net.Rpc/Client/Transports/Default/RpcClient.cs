@@ -269,7 +269,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     {
                         if (!(ex is FormatException))
                             Core.Log.Write(ex);
-                        _client.Close();
+                        _client?.Close();
                     }
                 }
                 catch(Exception ex)

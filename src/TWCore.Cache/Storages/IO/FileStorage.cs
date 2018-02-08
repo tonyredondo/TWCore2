@@ -15,13 +15,16 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 using TWCore.Diagnostics.Status;
+using TWCore.IO;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
@@ -135,7 +138,7 @@ namespace TWCore.Cache.Storages.IO
             }
             Core.Log.InfoBasic("Waiting the storages to be loaded.");
             while (_storages.Any(s => !s.Loaded))
-                Thread.Sleep(100);
+                Task.Delay(100).WaitAsync();
             Core.Log.InfoBasic("All folder storages are loaded, Index Count: {0}", Metas.Count());
             SetReady(true);
         }
@@ -152,16 +155,29 @@ namespace TWCore.Cache.Storages.IO
             => _storages.SelectMany(s => s.OnGetKeys()).ToArray();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
-            => _storages[GetFolderNumber(key)].OnRemove(key, out meta);
+        {
+            var res = _storages[GetFolderNumber(key)].OnRemove(key).WaitAndResults();
+            meta = res.Item2;
+            return res.Item1;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value);
+            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
-            => _storages[GetFolderNumber(key)].OnTryGet(key, out value, condition);
+        {
+            var res = _storages[GetFolderNumber(key)].OnTryGet(key, condition);
+            value = res;
+            return res != null;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
-            => _storages[GetFolderNumber(key)].OnTryGetMeta(key, out value, condition);
+        protected override bool OnTryGetMeta(string key, out StorageItemMeta value,
+            Predicate<StorageItemMeta> condition = null)
+        {
+            var res = _storages[GetFolderNumber(key)].OnTryGetMeta(key, condition);
+            value = res;
+            return res != null;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
@@ -183,18 +199,16 @@ namespace TWCore.Cache.Storages.IO
             #region Fields
             // ReSharper disable once NotAccessedField.Local
             private Task _loadTask;
-            private Dictionary<string, StorageItemMeta> _metas;
+            private ConcurrentDictionary<string, StorageItemMeta> _metas;
             private int _currentTransactionLogLength;
             private FileStream _transactionStream;
-            private readonly object _pendingLock = new object();
-            private readonly object _metasLock = new object();
-            private readonly Dictionary<string, SerializedObject> _pendingItems;
+            private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
             private readonly Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
             private readonly string _transactionLogFilePath;
             private readonly string _indexFilePath;
             private readonly FileStorageMetaLog _currentTransaction;
             private readonly ManualResetEventSlim _storageWorkerEvent = new ManualResetEventSlim();
-            private readonly Action saveMetadataBuffered;
+            private readonly Action _saveMetadataBuffered;
             #endregion
 
             #region Properties
@@ -233,7 +247,7 @@ namespace TWCore.Cache.Storages.IO
             #region .ctor
             public FolderStorage(string basePath, FileStorage storage)
             {
-                saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
+                _saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
                 BasePath = basePath;
                 Serializer = storage.Serializer;
                 IndexSerializer = storage.MetaSerializer;
@@ -245,15 +259,15 @@ namespace TWCore.Cache.Storages.IO
                 var oldTransactionLogFilePath = _transactionLogFilePath + ".old";
                 _indexFilePath = Path.Combine(BasePath, IndexFileName + IndexSerializer.Extensions[0]);
                 var oldindexFilePath = _indexFilePath + ".old";
-                _metas = new Dictionary<string, StorageItemMeta>();
-                _pendingItems = new Dictionary<string, SerializedObject>();
+                _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+                _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
                 var tokenSource = new CancellationTokenSource();
                 var token = tokenSource.Token;
-                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(action: WorkerProcess)
+                _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(function: WorkerProcess)
                 {
                     EnableWaitTimeout = false
                 };
-                _storageWorker.OnWorkDone += (sender, e) => saveMetadataBuffered();
+                _storageWorker.OnWorkDone += (sender, e) => _saveMetadataBuffered();
                 _currentTransaction = new FileStorageMetaLog();
 
                 if (!Directory.Exists(BasePath))
@@ -268,199 +282,183 @@ namespace TWCore.Cache.Storages.IO
                     IndexSerializer.SerializeToFile(new List<StorageItemMeta>(), _indexFilePath);
 
                 //Start...
-                _loadTask = Task.Run(async () =>
+                _loadTask = Task.Run<Task>(async () =>
                 {
-                    lock (_metasLock)
+                    try
                     {
-                        lock (_pendingLock)
+                        if (token.IsCancellationRequested) return;
+
+                        #region Loading index file
+
+                        var indexLoaded = false;
+                        if (File.Exists(_indexFilePath))
                         {
                             try
                             {
-                                if (token.IsCancellationRequested) return;
-
-                                #region Loading index file
-
-                                var indexLoaded = false;
-                                if (File.Exists(_indexFilePath))
+                                Core.Log.InfoBasic("Loading Index File: {0}", _indexFilePath);
+                                var index = IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(_indexFilePath);
+                                if (index != null)
                                 {
-                                    try
-                                    {
-                                        Core.Log.InfoBasic("Loading Index File: {0}", _indexFilePath);
-                                        var index =
-                                            IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(_indexFilePath);
-                                        if (index != null)
-                                        {
-                                            _metas = index.ToDictionary(k => k.Key, v => v);
-                                            indexLoaded = true;
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(ex);
-                                    }
+                                    var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
+                                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                    indexLoaded = true;
                                 }
-
-                                if (!indexLoaded)
-                                {
-                                    try
-                                    {
-                                        if (File.Exists(oldindexFilePath))
-                                        {
-                                            Core.Log.Warning("Trying to load old copy of the index file: {0}",
-                                                oldindexFilePath);
-                                            var index =
-                                                IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(
-                                                    oldindexFilePath);
-                                            if (index != null)
-                                            {
-                                                _metas = index.ToDictionary(k => k.Key, v => v);
-                                                indexLoaded = true;
-                                            }
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(ex);
-                                    }
-                                }
-
-                                if (!indexLoaded)
-                                {
-                                    Core.Log.Warning(
-                                        "The index doesn't exist or couldn't be loaded. Generating new index file.");
-                                    var dateNow = Core.Now;
-                                    var eTime = dateNow.AddDays(5);
-                                    if (storage.MaximumItemDuration.HasValue)
-                                        eTime = dateNow.Add(storage.MaximumItemDuration.Value);
-                                    if (storage.ItemsExpirationDateOverwrite.HasValue)
-                                        eTime = dateNow.Add(storage.ItemsExpirationDateOverwrite.Value);
-                                    if (storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
-                                        eTime = storage.ItemsExpirationAbsoluteDateOverwrite.Value;
-
-                                    if (_metas == null) _metas = new Dictionary<string, StorageItemMeta>();
-
-                                    var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension,
-                                        SearchOption.AllDirectories);
-                                    var idx = 0;
-                                    foreach (var file in allFiles)
-                                    {
-                                        var cTime = File.GetCreationTime(file);
-                                        var key = Path.GetFileNameWithoutExtension(file);
-                                        _metas.Add(key,
-                                            new StorageItemMeta
-                                            {
-                                                Key = key,
-                                                CreationDate = cTime,
-                                                ExpirationDate = eTime
-                                            });
-                                        if (idx % 100 == 0)
-                                            Core.Log.InfoBasic("Number of files loaded: {0}", idx);
-                                        idx++;
-                                    }
-
-                                    Core.Log.InfoBasic("Index generated...");
-                                }
-
-                                #endregion
-
-                                List<FileStorageMetaLog> transactionLog = null;
-
-                                #region Loading transaction log file
-                                var transactionLogLoaded = false;
-                                if (File.Exists(_transactionLogFilePath))
-                                {
-                                    try
-                                    {
-                                        Core.Log.InfoBasic("Loading Transaction Log File: {0}",
-                                            _transactionLogFilePath);
-                                        var lstTransactions = new List<FileStorageMetaLog>();
-                                        using (var fStream = File.Open(_transactionLogFilePath, FileMode.Open,
-                                            FileAccess.Read, FileShare.ReadWrite))
-                                        {
-                                            while (fStream.Position != fStream.Length)
-                                            {
-                                                var item = IndexSerializer.Deserialize<FileStorageMetaLog>(fStream);
-                                                if (item != null)
-                                                    lstTransactions.Add(item);
-                                            }
-                                        }
-
-                                        transactionLog = lstTransactions;
-                                        transactionLogLoaded = true;
-                                        File.Copy(_transactionLogFilePath, oldTransactionLogFilePath, true);
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(ex);
-                                    }
-                                }
-
-                                if (!transactionLogLoaded)
-                                {
-                                    try
-                                    {
-                                        if (File.Exists(oldTransactionLogFilePath))
-                                        {
-                                            Core.Log.Warning("Trying to load old copy of the transaction log file: {0}",
-                                                oldTransactionLogFilePath);
-                                            var lstTransactions = new List<FileStorageMetaLog>();
-                                            using (var fStream = File.Open(oldTransactionLogFilePath, FileMode.Open,
-                                                FileAccess.Read, FileShare.ReadWrite))
-                                            {
-                                                while (fStream.Position != fStream.Length)
-                                                {
-                                                    var item = IndexSerializer.Deserialize<FileStorageMetaLog>(fStream);
-                                                    if (item != null)
-                                                        lstTransactions.Add(item);
-                                                }
-                                            }
-
-                                            transactionLog = lstTransactions;
-                                        }
-                                    }
-                                    catch (Exception ex)
-                                    {
-                                        Core.Log.Write(ex);
-                                    }
-                                }
-
-                                #endregion
-
-                                _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
-
-                                #region Applying pending transactions
-
-                                if (transactionLog?.Count > 0)
-                                {
-                                    Core.Log.InfoBasic("Applying {0} pending transactions", transactionLog.Count);
-                                    foreach (var item in transactionLog)
-                                    {
-                                        switch (item.Type)
-                                        {
-                                            case FileStorageMetaLog.TransactionType.Add:
-                                                _metas[item.Meta.Key] = item.Meta;
-                                                break;
-                                            case FileStorageMetaLog.TransactionType.Remove:
-                                                if (!_metas.TryGetValue(item.Meta.Key, out var oldMeta)) continue;
-                                                _metas.Remove(item.Meta.Key);
-                                                oldMeta.Dispose();
-                                                break;
-                                        }
-                                    }
-                                }
-
-                                #endregion
-
-                                SaveMetadata();
-                                RemoveExpiredItems();
-                                _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
                             }
                             catch (Exception ex)
                             {
                                 Core.Log.Write(ex);
-                                LoadingFailed = true;
                             }
                         }
+
+                        if (!indexLoaded)
+                        {
+                            try
+                            {
+                                if (File.Exists(oldindexFilePath))
+                                {
+                                    Core.Log.Warning("Trying to load old copy of the index file: {0}", oldindexFilePath);
+                                    var index = IndexSerializer.DeserializeFromFile<List<StorageItemMeta>>(oldindexFilePath);
+                                    if (index != null)
+                                    {
+                                        var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
+                                        _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                        indexLoaded = true;
+                                    }
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }
+
+                        if (!indexLoaded)
+                        {
+                            Core.Log.Warning("The index doesn't exist or couldn't be loaded. Generating new index file.");
+                            var dateNow = Core.Now;
+                            var eTime = dateNow.AddDays(5);
+                            if (storage.MaximumItemDuration.HasValue)
+                                eTime = dateNow.Add(storage.MaximumItemDuration.Value);
+                            if (storage.ItemsExpirationDateOverwrite.HasValue)
+                                eTime = dateNow.Add(storage.ItemsExpirationDateOverwrite.Value);
+                            if (storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
+                                eTime = storage.ItemsExpirationAbsoluteDateOverwrite.Value;
+
+                            if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+
+                            var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension,SearchOption.AllDirectories);
+                            var idx = 0;
+                            foreach (var file in allFiles)
+                            {
+                                var cTime = File.GetCreationTime(file);
+                                var key = Path.GetFileNameWithoutExtension(file);
+                                _metas.TryAdd(key,
+                                    new StorageItemMeta
+                                    {
+                                        Key = key,
+                                        CreationDate = cTime,
+                                        ExpirationDate = eTime
+                                    });
+                                if (idx % 100 == 0)
+                                    Core.Log.InfoBasic("Number of files loaded: {0}", idx);
+                                idx++;
+                            }
+
+                            Core.Log.InfoBasic("Index generated...");
+                        }
+
+                        #endregion
+
+                        List<FileStorageMetaLog> transactionLog = null;
+
+                        #region Loading transaction log file
+                        
+                        var transactionLogLoaded = false;
+                        if (File.Exists(_transactionLogFilePath))
+                        {
+                            try
+                            {
+                                Core.Log.InfoBasic("Loading Transaction Log File: {0}", _transactionLogFilePath);
+                                var lstTransactions = new List<FileStorageMetaLog>();
+                                using (var fStream = File.Open(_transactionLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                {
+                                    while (fStream.Position != fStream.Length)
+                                    {
+                                        var item = IndexSerializer.Deserialize<FileStorageMetaLog>(fStream);
+                                        if (item != null)
+                                            lstTransactions.Add(item);
+                                    }
+                                }
+                                transactionLog = lstTransactions;
+                                transactionLogLoaded = true;
+                                await FileHelper.CopyFileAsync(_transactionLogFilePath, oldTransactionLogFilePath, true).ConfigureAwait(false);
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }
+
+                        if (!transactionLogLoaded)
+                        {
+                            try
+                            {
+                                if (File.Exists(oldTransactionLogFilePath))
+                                {
+                                    Core.Log.Warning("Trying to load old copy of the transaction log file: {0}", oldTransactionLogFilePath);
+                                    var lstTransactions = new List<FileStorageMetaLog>();
+                                    using (var fStream = File.Open(oldTransactionLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                                    {
+                                        while (fStream.Position != fStream.Length)
+                                        {
+                                            var item = IndexSerializer.Deserialize<FileStorageMetaLog>(fStream);
+                                            if (item != null)
+                                                lstTransactions.Add(item);
+                                        }
+                                    }
+                                    transactionLog = lstTransactions;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Core.Log.Write(ex);
+                            }
+                        }
+
+                        #endregion
+
+                        _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+
+                        #region Applying pending transactions
+
+                        if (transactionLog?.Count > 0)
+                        {
+                            Core.Log.InfoBasic("Applying {0} pending transactions", transactionLog.Count);
+                            foreach (var item in transactionLog)
+                            {
+                                switch (item.Type)
+                                {
+                                    case FileStorageMetaLog.TransactionType.Add:
+                                        _metas[item.Meta.Key] = item.Meta;
+                                        break;
+                                    case FileStorageMetaLog.TransactionType.Remove:
+                                        if (_metas.TryRemove(item.Meta.Key, out var oldMeta))
+                                            oldMeta?.Dispose();
+                                        break;
+                                }
+                            }
+                        }
+
+                        #endregion
+
+                        SaveMetadata();
+                        await RemoveExpiredItemsAsync().ConfigureAwait(false);
+                        _metas.Each(m => m.Value.OnExpire += Meta_OnExpire);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                        LoadingFailed = true;
                     }
                     if (!LoadingFailed)
                     {
@@ -491,7 +489,7 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private string GetDataPath(string key) => Path.Combine(BasePath, key + DataExtension + Serializer.Extensions[0]);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
+            private async Task WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
             {
                 if (_storageWorker != null && _storageWorker.Count < SlowDownWriteThreshold)
                     _storageWorkerEvent.Set();
@@ -532,13 +530,11 @@ namespace TWCore.Cache.Storages.IO
                             return;
                         case FileStorageMetaLog.TransactionType.Add:
                             Core.Log.LibVerbose("Writing element to filesystem '{0}'.", meta.Key);
-                            SerializedObject serObj;
-                            lock (_pendingLock)
-                                _pendingItems.TryGetValue(meta.Key, out serObj);
-                            if (serObj != null)
-                                Serializer.SerializeToFile(serObj, filePath);
-                            lock (_pendingLock)
-                                _pendingItems.Remove(meta.Key);
+                            if (_pendingItems.TryGetValue(meta.Key, out var serObj))
+                            {
+                                await Serializer.SerializeToFileAsync(serObj, filePath).ConfigureAwait(false);
+                                _pendingItems.TryRemove(meta.Key, out var _);
+                            }
                             return;
                     }
                 }
@@ -550,7 +546,7 @@ namespace TWCore.Cache.Storages.IO
 
                 #region Save Metadata
                 if (_currentTransactionLogLength == 0)
-                    saveMetadataBuffered();
+                    _saveMetadataBuffered();
                 #endregion
 
                 _currentTransactionLogLength++;
@@ -561,20 +557,17 @@ namespace TWCore.Cache.Storages.IO
                 Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
                 try
                 {
-                    lock (_metasLock)
+                    if (_disposedValue) return;
+                    if (_transactionStream == null) return;
+                    lock(_transactionStream)
+                        if (!_transactionStream.CanWrite) return;
+                    Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message));
+                    IndexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
+                    lock (_transactionStream)
                     {
-                        if (_disposedValue) return;
-                        if (_transactionStream == null) return;
-                        lock(_transactionStream)
-                            if (!_transactionStream.CanWrite) return;
-                        Try.Do(() => File.Copy(_indexFilePath, _indexFilePath + ".old", true), ex => Core.Log.Warning("The Index copy can't be created: {0}", ex.Message));
-                        IndexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
-                        lock (_transactionStream)
-                        {
-                            _transactionStream.Position = 0;
-                            _transactionStream.SetLength(0);
-                            _transactionStream.Flush();
-                        }
+                        _transactionStream.Position = 0;
+                        _transactionStream.SetLength(0);
+                        _transactionStream.Flush();
                     }
                 }
                 catch (Exception ex)
@@ -583,151 +576,108 @@ namespace TWCore.Cache.Storages.IO
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void Meta_OnExpire(object sender, EventArgs e)
+            private async void Meta_OnExpire(object sender, EventArgs e)
             {
-                if (!(sender is StorageItemMeta meta)) return;
-                OnRemove(meta.Key, out meta);
+                try
+                {
+                    if (!(sender is StorageItemMeta meta)) return;
+                    await OnRemove(meta.Key).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void RemoveExpiredItems()
+            private async Task RemoveExpiredItemsAsync()
             {
-                StorageItemMeta[] expiredItems;
-                lock (_metasLock)
-                    expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
+                var expiredItems = _metas.Where(m => m.Value.IsExpired).Select(m => m.Value).ToArray();
                 Core.Log.InfoMedium("Removing {0} expired items.", expiredItems.Length);
                 foreach (var item in expiredItems)
                 {
                     Core.Log.InfoDetail("Removing: {0}", item.Key);
-                    OnRemove(item.Key, out var _);
+                    await OnRemove(item.Key).ConfigureAwait(false);
                 }
                 Core.Log.InfoMedium("All expired items where removed.");
-                saveMetadataBuffered();
+                _saveMetadataBuffered();
             }
             #endregion
 
             #region Overrides
-            public IEnumerable<StorageItemMeta> Metas
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get
-                {
-                    lock (_metasLock)
-                        return _metas.Values.ToArray();
-                }
-            }
+            public IEnumerable<StorageItemMeta> Metas => _metas.Values;
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool OnExistKey(string key)
-            {
-                lock (_metasLock)
-                    return _metas.ContainsKey(key);
-            }
+            public bool OnExistKey(string key) => _metas.ContainsKey(key);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public string[] OnGetKeys()
-            {
-                lock (_metasLock)
-                    return _metas.Keys.ToArray();
-            }
+            public string[] OnGetKeys() => _metas.Keys.ToArray();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool OnRemove(string key, out StorageItemMeta meta)
+            public async Task<(bool, StorageItemMeta)> OnRemove(string key)
             {
                 if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
                 {
                     Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
-                    meta = null;
-                    return false;
+                    return (false, null);
                 }
-                var response = false;
-                lock (_pendingLock)
-                    _pendingItems.Remove(key);
-                lock (_metasLock)
+                _pendingItems.TryRemove(key, out var _);
+                if (!_metas.TryRemove(key, out var meta)) return (false, null);
+                meta.Dispose();
+                if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
-                    if (_metas.TryGetValue(key, out meta))
-                    {
-                        response = _metas.Remove(key);
-                        meta.Dispose();
-                    }
-                    else
-                        return false;
-                }
-                while (_storageWorker.Count >= SlowDownWriteThreshold)
-                {
-                    _storageWorkerEvent.Reset();
-                    if (!_storageWorkerEvent.Wait(100))
-                        Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    await TaskUtil.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
+                        .ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Remove));
-                return response;
+                return (true, meta);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool OnSet(StorageItemMeta meta, SerializedObject value)
+            public async Task<bool> OnSet(StorageItemMeta meta, SerializedObject value)
             {
                 if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
                 {
                     Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
                     return false;
                 }
-                lock (_pendingLock)
-                    _pendingItems[meta.Key] = value;
-                lock (_metasLock)
+                _pendingItems.AddOrUpdate(meta.Key, value, (k, v) => value);
+                if (_metas.TryRemove(meta.Key, out var oldMeta))
+                    oldMeta.Dispose();
+                if (meta.IsExpired) return false;
+                if (!_metas.TryAdd(meta.Key, meta)) return false;
+                meta.OnExpire += Meta_OnExpire;
+                if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
-                    if (_metas.TryGetValue(meta.Key, out var _))
-                    {
-                        _metas.Remove(meta.Key);
-                        meta.Dispose();
-                    }
-                    if (meta.IsExpired) return false;
-                    _metas[meta.Key] = meta;
-                    meta.OnExpire += Meta_OnExpire;
-                }
-                while (_storageWorker.Count >= SlowDownWriteThreshold)
-                {
-                    _storageWorkerEvent.Reset();
-                    if (!_storageWorkerEvent.Wait(100))
-                        Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    await TaskUtil.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
+                        .ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Add));
                 return true;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
+            public StorageItem OnTryGet(string key, Predicate<StorageItemMeta> condition = null)
             {
                 try
                 {
-                    StorageItemMeta metaValue;
-                    SerializedObject serObj;
-                    lock (_pendingLock)
-                        _pendingItems.TryGetValue(key, out serObj);
-                    lock (_metasLock)
-                        _metas.TryGetValue(key, out metaValue);
+                    _pendingItems.TryGetValue(key, out var serObj);
+                    _metas.TryGetValue(key, out var metaValue);
                     if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
                     {
                         serObj = serObj ?? Serializer.DeserializeFromFile<SerializedObject>(GetDataPath(key));
-                        value = new StorageItem(metaValue, serObj);
-                        return true;
+                        return new StorageItem(metaValue, serObj);
                     }
-                    value = null;
-                    return false;
                 }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                 }
-                value = null;
-                return false;
+                return null;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
+            public StorageItemMeta OnTryGetMeta(string key, Predicate<StorageItemMeta> condition = null)
             {
-                StorageItemMeta metaValue;
-                lock (_metasLock)
-                    _metas.TryGetValue(key, out metaValue);
+                if (!_metas.TryGetValue(key, out var metaValue)) return null;
                 if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
-                {
-                    value = metaValue;
-                    return true;
-                }
-                value = null;
-                return false;
+                    return metaValue;
+                return null;
             }
             #endregion
 
@@ -738,31 +688,26 @@ namespace TWCore.Cache.Storages.IO
 
             private void Dispose(bool disposing)
             {
-                lock (_metasLock)
+                if (_disposedValue) return;
+                if (disposing)
                 {
-                    if (_disposedValue) return;
-                    if (disposing)
-                    {
 
-                    }
-
-                    _storageWorker.StopAsync(int.MaxValue).WaitAsync();
-                    SaveMetadata();
-                    _disposedValue = true;
-
-                    lock (_transactionStream)
-                    {
-                        if (_transactionStream.CanWrite)
-                        {
-                            _transactionStream.Flush();
-                            _transactionStream.Dispose();
-                            _transactionStream = null;
-                        }
-                    }
-                    _metas.Clear();
-                    lock (_pendingLock)
-                        _pendingItems.Clear();
                 }
+                _storageWorker.StopAsync(int.MaxValue).WaitAsync();
+                SaveMetadata();
+                _disposedValue = true;
+
+                lock (_transactionStream)
+                {
+                    if (_transactionStream.CanWrite)
+                    {
+                        _transactionStream.Flush();
+                        _transactionStream.Dispose();
+                        _transactionStream = null;
+                    }
+                }
+                _metas.Clear();
+                    _pendingItems.Clear();
             }
 
             ~FolderStorage()

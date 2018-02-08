@@ -25,7 +25,7 @@ namespace TWCore.Tests
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
-            Core.DebugMode = true;
+            //Core.DebugMode = true;
             Core.Log.Warning("Starting CACHE Async TEST");
 
             var cacheService = new TestCacheService();
@@ -42,7 +42,7 @@ namespace TWCore.Tests
 
                 Console.ReadLine();
 
-                for (var i = 0; i < 1000; i++)
+                for (var i = 0; i < 5000; i++)
                 {
                     var key = "test-" + i;
 					await cachePool.GetAsync(key).ConfigureAwait(false);

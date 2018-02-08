@@ -138,8 +138,7 @@ namespace TWCore.Cache.Storages.IO
                 _storages[i] = new FolderStorage(folder, this);
             }
             Core.Log.InfoBasic("Waiting the storages to be loaded.");
-            while (_storages.Any(s => !s.Loaded))
-                Task.Delay(100).WaitAsync();
+            TaskUtil.SleepUntil(() => _storages.All(s => s.Loaded)).WaitAsync();
             Core.Log.InfoBasic("All folder storages are loaded, Index Count: {0}", Metas.Count());
             SetReady(true);
         }

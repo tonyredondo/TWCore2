@@ -343,7 +343,7 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IncrementQueue(int idx, double executionTime)
         {
-            _times[idx] = _times[idx].HasValue ? (_times[idx] * 0.7) + (executionTime * 0.3) : executionTime;
+            _times[idx] = _times[idx].HasValue ? (_times[idx] * 0.8) + (executionTime * 0.2) : executionTime;
         }
     }
 }

@@ -215,8 +215,8 @@ namespace TWCore.Services
             lock (_locker)
             {
                 _dayStatus.Register("Processed Messages", time);
-                _processTimes = _processTimes.HasValue ? (_processTimes.Value * 0.7) + (time * 0.3) : time;
-                _lastMinuteProcessTimes = _lastMinuteProcessTimes.HasValue ? (_lastMinuteProcessTimes.Value * 0.7) + (time * 0.3) : time;
+                _processTimes = _processTimes.HasValue ? (_processTimes.Value * 0.8) + (time * 0.2) : time;
+                _lastMinuteProcessTimes = _lastMinuteProcessTimes.HasValue ? (_lastMinuteProcessTimes.Value * 0.8) + (time * 0.2) : time;
 
                 var avgPt = ProcessAverageTime;
                 if (avgPt > PeakProcessAverageTime)

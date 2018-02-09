@@ -186,8 +186,7 @@ namespace TWCore.Diagnostics.Status
                 Percentiles = new List<ItemPercentile> {
                     new ItemPercentile(0.8),
                     new ItemPercentile(0.9),
-                    new ItemPercentile(0.95),
-                    new ItemPercentile(0.99)
+                    new ItemPercentile(0.98)
                 };
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

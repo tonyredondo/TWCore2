@@ -147,6 +147,7 @@
     padding-left: 22px;
     background-repeat: no-repeat;
     display: inline;
+    cursor: default;
 }
 
 .Field {
@@ -191,8 +192,10 @@
 
 .k-grid td {
     border-width: 0 0 1px 1px;
+    border-color: #222222;
     padding: .1em .4em;
     line-height: 1.5em;
+    white-space: nowrap;
 }
 
 .k-grid tr:hover {
@@ -252,4 +255,15 @@
 
 .CodeMirror {
     height: 100%;
+}
+.EnumerableItem {
+    padding-left: 5px;
+    text-shadow: 1px 1px #000;
+    letter-spacing: 0.5px;
+    cursor: default;
+}
+.k-i-expand, .k-i-collapse 
+{
+    cursor:pointer;
+    margin-top:-2px;
 }

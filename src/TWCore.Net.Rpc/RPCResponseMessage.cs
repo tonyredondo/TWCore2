@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Global
@@ -46,30 +47,25 @@ namespace TWCore.Net.RPC
         [DataMember]
         public SerializableException Exception { get; set; }
 
-        #region Static Methods
+        #region .ctor
+        /// <inheritdoc />
         /// <summary>
-        /// Retrieve a Response Message instance
+        /// RPC Response Message
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCResponseMessage()
+        {
+
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// RPC Response Message
         /// </summary>
         /// <param name="request">Request Message instance</param>
-        /// <returns>Response Message instance</returns>
-        public static RPCResponseMessage Retrieve(RPCRequestMessage request)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCResponseMessage(RPCRequestMessage request)
         {
-            var response = ReferencePool<RPCResponseMessage>.Shared.New();
-            response.MessageId = Guid.NewGuid();
-            response.RequestMessageId = request.MessageId;
-            return response;
-        }
-        /// <summary>
-        /// Store a Response Message instance
-        /// </summary>
-        /// <param name="response">Response Message instance</param>
-        public static void Store(RPCResponseMessage response)
-        {
-            response.MessageId = Guid.Empty;
-            response.RequestMessageId = Guid.Empty;
-            response.ReturnValue = null;
-            response.Exception = null;
-            ReferencePool<RPCResponseMessage>.Shared.Store(response);
+            RequestMessageId = request.MessageId;
         }
         #endregion
     }

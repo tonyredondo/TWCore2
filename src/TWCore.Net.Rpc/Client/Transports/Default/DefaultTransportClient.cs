@@ -278,7 +278,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
             using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_connectionCancellationToken, cancellationToken))
             {
-                messageRq.CancellationToken = true;
                 await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
                 await Task.WhenAny(
                     handler.Event.WaitAsync(linkedTokenSource.Token),

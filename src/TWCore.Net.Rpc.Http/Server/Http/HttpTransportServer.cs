@@ -186,12 +186,10 @@ namespace TWCore.Net.RPC.Server.Transports
             {
                 Counters.IncrementBytesReceived(context.Request.PostData.Length);
                 var messageRq = Serializer.Deserialize<RPCRequestMessage>(context.Request.PostData);
-                var eArgs = MethodEventArgs.Retrieve(clientId, messageRq, cancellationToken);
+                var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
                 OnMethodCall(this, eArgs);
                 if (eArgs.Response != null)
                     responseBuffer = Serializer.Serialize(eArgs.Response);
-                RPCResponseMessage.Store(eArgs.Response);
-                MethodEventArgs.Store(eArgs);
             }
             response.Write(responseBuffer.Array, responseBuffer.Offset, responseBuffer.Count);
             Counters.IncrementBytesSent(responseBuffer.Count);

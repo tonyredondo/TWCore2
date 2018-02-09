@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 // ReSharper disable InconsistentNaming
 
@@ -42,5 +43,27 @@ namespace TWCore.Net.RPC
         /// </summary>
         [DataMember]
         public bool CancellationToken { get; set; }
+
+        #region .ctor
+        /// <inheritdoc />
+        /// <summary>
+        /// RPC Request Message
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCRequestMessage()
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// RPC Request Message
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public RPCRequestMessage(Guid methodId, object[] parameters, bool cancellationToken)
+        {
+            MethodId = methodId;
+            Parameters = parameters;
+            CancellationToken = cancellationToken;
+        }
+        #endregion
     }
 }

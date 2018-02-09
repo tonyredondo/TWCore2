@@ -29,11 +29,11 @@ namespace TWCore.Net.RPC.Server
         /// <summary>
         /// Client identifier
         /// </summary>
-        public Guid ClientId { get; private set; }
+        public Guid ClientId { get; }
         /// <summary>
         /// RPC Request message
         /// </summary>
-        public RPCRequestMessage Request { get; private set; }
+        public RPCRequestMessage Request { get; }
         /// <summary>
         /// RPC Response message
         /// </summary>
@@ -41,37 +41,31 @@ namespace TWCore.Net.RPC.Server
         /// <summary>
         /// Connection CancellationToken
         /// </summary>
-        public CancellationToken CancellationToken { get; private set; }
+        public CancellationToken CancellationToken { get; }
 
+        #region .ctor
+        /// <inheritdoc />
         /// <summary>
-        /// Retrieve a MethodEventArgs from the Pool
+        /// Method event args. To use when the server received a RPC method call request.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public MethodEventArgs()
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Method event args. To use when the server received a RPC method call request.
         /// </summary>
         /// <param name="clientId">Client identifier</param>
         /// <param name="request">RPC Request message</param>
         /// <param name="cancellationToken">Connection CancellationToken</param>
-        /// <returns>Method event args. To use when the server received a RPC method call request.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static MethodEventArgs Retrieve(Guid clientId, RPCRequestMessage request, CancellationToken cancellationToken)
+        public MethodEventArgs(Guid clientId, RPCRequestMessage request, CancellationToken cancellationToken)
         {
-            var mEvent = ReferencePool<MethodEventArgs>.Shared.New();
-            mEvent.ClientId = clientId;
-            mEvent.Request = request;
-            mEvent.Response = null;
-            mEvent.CancellationToken = cancellationToken;
-            return mEvent;
+            ClientId = clientId;
+            Request = request;
+            CancellationToken = cancellationToken;
         }
-        /// <summary>
-        /// Stores the Method event args to the pool
-        /// </summary>
-        /// <param name="value">Method event args. To use when the server received a RPC method call request.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Store(MethodEventArgs value)
-        {
-            value.ClientId = Guid.Empty;
-            value.Request = null;
-            value.Response = null;
-            value.CancellationToken = CancellationToken.None;
-            ReferencePool<MethodEventArgs>.Shared.Store(value);
-        }
+        #endregion
     }
 }

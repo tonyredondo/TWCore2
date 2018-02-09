@@ -182,9 +182,10 @@ namespace TWCore.Net.RPC.Server
 				e.Response = desc.Service.ProcessRequest(e.Request, e.ClientId, desc.Method, e.CancellationToken);
 				return;
 			}
-            e.Response = RPCResponseMessage.Retrieve(e.Request);
-            e.Response.Exception = new SerializableException(
-                new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)));
+            e.Response = new RPCResponseMessage(e.Request)
+            {
+                Exception = new SerializableException(new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)))
+            };
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
@@ -297,7 +298,7 @@ namespace TWCore.Net.RPC.Server
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc, CancellationToken cancellationToken)
             {
-                var response = RPCResponseMessage.Retrieve(request);
+                var response = new RPCResponseMessage(request);
                 try
                 {
 					var tId = Environment.CurrentManagedThreadId;

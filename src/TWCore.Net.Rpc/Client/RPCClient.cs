@@ -209,11 +209,10 @@ namespace TWCore.Net.RPC.Client
         {
             using (Watch.Create($"RPC Call: {serviceName}.{method}"))
             {
-                var request = CreateRequest(serviceName, method, args);
+                var request = CreateRequest(serviceName, method, args, false);
                 if (Transport.Descriptors == null)
                     Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
                 var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
-                ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");
                 if (response.Exception != null)
@@ -246,11 +245,10 @@ namespace TWCore.Net.RPC.Client
         {
             using (Watch.Create($"RPC Call: {serviceName}.{method}"))
             {
-                var request = CreateRequest(serviceName, method, args);
+                var request = CreateRequest(serviceName, method, args, true);
                 if (Transport.Descriptors == null)
                     Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
                 var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
-                ReferencePool<RPCRequestMessage>.Shared.Store(request);
                 if (response == null)
                     throw new Exception("RPC Response is null.");
                 if (response.Exception != null)
@@ -299,9 +297,10 @@ namespace TWCore.Net.RPC.Client
         /// <param name="serviceName">Service name</param>
         /// <param name="method">Method name to call</param>
         /// <param name="args">Method arguments</param>
+        /// <param name="useCancellationToken">Use cancellation token</param>
         /// <returns>RPC Request message object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args)
+        private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, bool useCancellationToken)
         {
             var cArgs = args ?? _emptyArgs;
 
@@ -342,11 +341,7 @@ namespace TWCore.Net.RPC.Client
             if (cArgs.Length == 0 && mDesc.Parameters?.Length == 1)
                 cArgs = _nullItemArgs;
 
-            var rqMessage = ReferencePool<RPCRequestMessage>.Shared.New();
-            rqMessage.MessageId = Guid.NewGuid();
-            rqMessage.MethodId = mDesc.Id;
-            rqMessage.Parameters = cArgs;
-            return rqMessage;
+            return new RPCRequestMessage(mDesc.Id, cArgs, useCancellationToken);
         }
         #endregion
 

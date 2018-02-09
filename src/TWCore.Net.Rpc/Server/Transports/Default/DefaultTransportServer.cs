@@ -294,10 +294,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         {
                             var dEventArgs = new ServerDescriptorsEventArgs();
                             OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
-                            var response = RPCResponseMessage.Retrieve(request);
-                            response.ReturnValue = dEventArgs.Descriptors;
+                            var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
                             await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
-                            RPCResponseMessage.Store(response);
                             break;
                         }
                         if (request.CancellationToken)
@@ -305,22 +303,18 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             using (var tokenSource = CancellationTokenSource.CreateLinkedTokenSource(rpcServerClient.ConnectionCancellationToken))
                             {
                                 _rpcMessagesCancellations.TryAdd(request.MessageId, tokenSource);
-                                var mEventArgs = MethodEventArgs.Retrieve(rpcServerClient.SessionId, request, tokenSource.Token);
+                                var mEventArgs = new MethodEventArgs(rpcServerClient.SessionId, request, tokenSource.Token);
                                 OnMethodCall?.Invoke(this, mEventArgs);
                                 if (!tokenSource.Token.IsCancellationRequested)
                                     await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
-                                RPCResponseMessage.Store(mEventArgs.Response);
-                                MethodEventArgs.Store(mEventArgs);
                                 _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
                             }
                             break;
                         }
-                        var mEventArgs2 = MethodEventArgs.Retrieve(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
+                        var mEventArgs2 = new MethodEventArgs(rpcServerClient.SessionId, request, rpcServerClient.ConnectionCancellationToken);
                         OnMethodCall?.Invoke(this, mEventArgs2);
                         if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
                             await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
-                        RPCResponseMessage.Store(mEventArgs2.Response);
-                        MethodEventArgs.Store(mEventArgs2);
                         break;
                 }
             }

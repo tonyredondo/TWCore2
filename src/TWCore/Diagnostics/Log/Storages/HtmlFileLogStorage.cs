@@ -440,7 +440,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
                 var alreadyExist = File.Exists(fname);
-                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite))
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 2048, true))
                 {
                     AutoFlush = true
                 };

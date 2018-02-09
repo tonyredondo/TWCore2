@@ -156,13 +156,13 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {
-            var res = _storages[GetFolderNumber(key)].OnRemove(key).WaitAndResults();
+            var res = _storages[GetFolderNumber(key)].OnRemove(key).WaitAsync();
             meta = res.Item2;
             return res.Item1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAndResults();
+            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAsync();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
@@ -210,7 +210,7 @@ namespace TWCore.Cache.Storages.IO
             private readonly ManualResetEventSlim _storageWorkerEvent = new ManualResetEventSlim();
             private readonly Action _saveMetadataBuffered;
             private readonly AsyncLock _asyncLock = new AsyncLock();
-            private string _dataPathPattern;
+            private readonly string _dataPathPattern;
 
             #endregion
 
@@ -250,7 +250,7 @@ namespace TWCore.Cache.Storages.IO
             #region .ctor
             public FolderStorage(string basePath, FileStorage storage)
             {
-                _saveMetadataBuffered = ActionDelegate.Create(() => SaveMetadataAsync().WaitAsync()).CreateBufferedAction(1000);
+                _saveMetadataBuffered = ActionDelegate.Create(async () => await SaveMetadataAsync().ConfigureAwait(false)).CreateBufferedAction(1000);
                 BasePath = basePath;
                 Serializer = storage.Serializer;
                 IndexSerializer = storage.MetaSerializer;
@@ -584,7 +584,7 @@ namespace TWCore.Cache.Storages.IO
                         await IndexSerializer.SerializeToFileAsync(_metas.Values.ToList(), _indexFilePath).ConfigureAwait(false);
                         _transactionStream.Position = 0;
                         _transactionStream.SetLength(0);
-                        _transactionStream.Flush();
+                        await _transactionStream.FlushAsync().ConfigureAwait(false);
                     }
                     catch (Exception ex)
                     {
@@ -728,7 +728,7 @@ namespace TWCore.Cache.Storages.IO
                 {
                     if (_transactionStream.CanWrite)
                     {
-                        _transactionStream.Flush();
+                        await _transactionStream.FlushAsync().ConfigureAwait(false);
                         _transactionStream.Dispose();
                         _transactionStream = null;
                     }

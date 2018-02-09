@@ -45,8 +45,8 @@ namespace TWCore.Tests
                 for (var i = 0; i < 5000; i++)
                 {
                     var key = "test-" + i;
-					await cachePool.GetAsync(key).ConfigureAwait(false);
-					await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
+                    await cachePool.GetAsync(key).ConfigureAwait(false);
+                    await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
                 }
             }
 

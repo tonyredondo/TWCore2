@@ -581,9 +581,9 @@ namespace TWCore.Serialization.WSerializer
                     plan.Add(tStart);
                     var endBytes = new List<byte>();
 
-                    if (typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)))
+                    if (typeInfo.ImplementedInterfaces.Any(i => i == typeof(IList) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)))
                         isIList = true;
-                    if (typeInfo.ImplementedInterfaces.Any(i => i == typeof(IDictionary) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
+                    if (typeInfo.ImplementedInterfaces.Any(i => i == typeof(IDictionary) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)))
                         isIDictionary = true;
 
                     #region Properties
@@ -621,7 +621,7 @@ namespace TWCore.Serialization.WSerializer
                     if (isIList)
                     {
                         var ifaces = typeInfo.ImplementedInterfaces;
-                        var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                        var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                         if (ilist != null)
                         {
                             Type innerType = null;
@@ -636,7 +636,7 @@ namespace TWCore.Serialization.WSerializer
                                     innerType = gargs[0];
                                 else
                                 {
-                                    var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                                    var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
                                     if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                         innerType = iListType.GenericTypeArguments[0];
                                 }
@@ -653,7 +653,7 @@ namespace TWCore.Serialization.WSerializer
                     if (isIDictionary)
                     {
                         var ifaces = typeInfo.ImplementedInterfaces;
-                        var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                        var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
                         if (idictio != null)
                         {
                             //KeyValye Type

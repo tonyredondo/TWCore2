@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.ExceptionServices;
@@ -542,6 +543,19 @@ namespace TWCore
         {
             var nDelegate = new InvokeDelegate((mDel, mArgs) => mDel.DynamicInvoke(mArgs));
             return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
+        }
+        /// <summary>
+        /// Await for all IEnumerable Tasks and return a Task with all results
+        /// </summary>
+        /// <typeparam name="T">Type of task</typeparam>
+        /// <param name="tasks">IEnumerable instance</param>
+        /// <returns>Task with all results</returns>
+        public static async Task<IEnumerable<T>> AsAwaitable<T>(this IEnumerable<Task<T>> tasks)
+        {
+            if (tasks == null) return null;
+            var tskArray = tasks as Task<T>[] ?? tasks.ToArray();
+            await Task.WhenAll(tskArray).ConfigureAwait(false);
+            return tskArray.Select(t => t.Result);
         }
         #endregion
 

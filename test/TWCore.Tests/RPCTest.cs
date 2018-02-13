@@ -50,44 +50,70 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("IHello test");
             dynamic hClient = await rpcClient.CreateDynamicProxyAsync<IHello>().ConfigureAwait(false);
             var rtest = (string)hClient.SayHi("MyName");
-
-            for (var i = 0; i < 5000; i++)
+            using (var watch = Watch.Create("IHello Time"))
             {
-                var rHClient = (string)hClient.SayHi("MyName");
-            }
+                for (var i = 0; i < 5000; i++)
+                {
+                    var rHClient = (string) hClient.SayHi("MyName");
+                }
 
-            for (var i = 0; i < 5000; i++)
-            {
-                var rHClient = await ((Task<object>)hClient.TestAsync()).ConfigureAwait(false);
+                for (var i = 0; i < 5000; i++)
+                {
+                    var rHClient = await ((Task<object>) hClient.TestAsync()).ConfigureAwait(false);
+                }
+
+                Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 10000);
             }
 
 
             //IMyService test
             Core.Log.InfoBasic("IMyService test");
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
-            for (var i = 0; i < 5000; i++)
+            using (var watch = Watch.Create("IMyService Time"))
             {
-                var aLst = await ((Task<object>)dClient.GetAllAsync()).ConfigureAwait(false);
+                for (var i = 0; i < 5000; i++)
+                {
+                    var aLst = await ((Task<object>) dClient.GetAllAsync()).ConfigureAwait(false);
+                }
+                Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 5000);
             }
 
             //Proxy class test
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
-            for (var i = 0; i < 5000; i++)
+            using (var watch = Watch.Create("Proxy class Time"))
             {
-                var resp = await client.GetAllAsync().ConfigureAwait(false);
+                for (var i = 0; i < 5000; i++)
+                {
+                    var resp = await client.GetAllAsync().ConfigureAwait(false);
+                }
+                Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 5000);
             }
 
-            await Task.WhenAll(Enumerable.Range(0, 100).Select(i => client.GetAllAsync()).ToArray())
-                .ConfigureAwait(false);
+            using (var watch = Watch.Create("Parallel GetAllAsync Time"))
+            {
+                var rAwait = await Enumerable.Range(0, 100)
+                    .Select(i => client.GetAllAsync())
+                    .AsAwaitable()
+                    .ConfigureAwait(false);
+                Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 100);
+            }
 
             //Event test
             Core.Log.InfoBasic("Event test");
-            client.OnAddSimplePersona += (s, e) => Core.Log.Warning("On Add SimplePersona was fired!!!");
-            for (var i = 0; i < 5000; i++)
+            using (var watch = Watch.Create("Event Test"))
             {
-                client.AddSimplePersona(new SimplePerson { Lastname = "Test", Firstname = "Test" });
+                client.OnAddSimplePersona += (s, e) =>
+                {
+                    //Core.Log.Warning("On Add SimplePersona was fired!!!");
+                };
+                for (var i = 0; i < 5000; i++)
+                {
+                    client.AddSimplePersona(new SimplePerson {Lastname = "Test", Firstname = "Test"});
+                }
+                Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 5000);
             }
+
             var sTime = sw.Elapsed;
             Console.ReadLine();
             Core.Log.Warning("All Rpc Requests on: {0}", sTime);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using TWCore.Net.RPC;
@@ -32,7 +33,7 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting RPC TEST");
 
-			var serializer = new WBinarySerializer();
+            var serializer = new WBinarySerializer();
             var service = new MyService();
 
             Core.Log.InfoBasic("Setting RPC Server");
@@ -42,6 +43,8 @@ namespace TWCore.Tests
 
             Core.Log.InfoBasic("Setting RPC Client");
             var rpcClient = new RPCClient(new DefaultTransportClient("127.0.0.1", 20050, 3, serializer));
+
+            var sw = Stopwatch.StartNew();
 
             //IHello test
             Core.Log.InfoBasic("IHello test");
@@ -75,7 +78,8 @@ namespace TWCore.Tests
                 var resp = await client.GetAllAsync().ConfigureAwait(false);
             }
 
-            await Task.WhenAll(Enumerable.Range(0, 100).Select(i => client.GetAllAsync()).ToArray()).ConfigureAwait(false);
+            await Task.WhenAll(Enumerable.Range(0, 100).Select(i => client.GetAllAsync()).ToArray())
+                .ConfigureAwait(false);
 
             //Event test
             Core.Log.InfoBasic("Event test");
@@ -84,16 +88,16 @@ namespace TWCore.Tests
             {
                 client.AddSimplePersona(new SimplePerson { Lastname = "Test", Firstname = "Test" });
             }
-
-            Core.Log.InfoBasic("Test End.");
-
+            var sTime = sw.Elapsed;
             Console.ReadLine();
+            Core.Log.Warning("All Rpc Requests on: {0}", sTime);
+            Core.Log.InfoBasic("Test End.");
         }
     }
 
 
     #region RPC Server Test
-	[Serializable]
+    [Serializable]
     public class SimplePerson
     {
         public Guid PersonId { get; set; }

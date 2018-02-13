@@ -207,18 +207,15 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
-            using (Watch.Create($"RPC Call: {serviceName}.{method}"))
-            {
-                var request = CreateRequest(serviceName, method, args, false);
-                if (Transport.Descriptors == null)
-                    Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
-                var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
-                if (response == null)
-                    throw new Exception("RPC Response is null.");
-                if (response.Exception != null)
-                    throw response.Exception.GetException();
-                return response.ReturnValue;
-            }
+            var request = CreateRequest(serviceName, method, args, false);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return response.ReturnValue;
         }
         /// <summary>
         /// Invokes a Server RPC method
@@ -243,18 +240,15 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, object[] args, CancellationToken cancellationToken)
         {
-            using (Watch.Create($"RPC Call: {serviceName}.{method}"))
-            {
-                var request = CreateRequest(serviceName, method, args, true);
-                if (Transport.Descriptors == null)
-                    Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
-                var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
-                if (response == null)
-                    throw new Exception("RPC Response is null.");
-                if (response.Exception != null)
-                    throw response.Exception.GetException();
-                return response.ReturnValue;
-            }
+            var request = CreateRequest(serviceName, method, args, true);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return response.ReturnValue;
         }
         #endregion
 

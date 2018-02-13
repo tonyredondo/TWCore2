@@ -9,7 +9,6 @@ using TWCore.Net.RPC.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports.Default;
-using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable ArrangeTypeMemberModifiers
@@ -50,7 +49,7 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("IHello test");
             dynamic hClient = await rpcClient.CreateDynamicProxyAsync<IHello>().ConfigureAwait(false);
             var rtest = (string)hClient.SayHi("MyName");
-            using (var watch = Watch.Create("IHello Time"))
+            using (var watch = Watch.Create("IHello Time - SayHi | TestAsync"))
             {
                 for (var i = 0; i < 5000; i++)
                 {
@@ -69,7 +68,7 @@ namespace TWCore.Tests
             //IMyService test
             Core.Log.InfoBasic("IMyService test");
             dynamic dClient = await rpcClient.CreateDynamicProxyAsync<IMyService>().ConfigureAwait(false);
-            using (var watch = Watch.Create("IMyService Time"))
+            using (var watch = Watch.Create("IMyService Time - GetAllAsync"))
             {
                 for (var i = 0; i < 5000; i++)
                 {
@@ -81,7 +80,7 @@ namespace TWCore.Tests
             //Proxy class test
             Core.Log.InfoBasic("Proxy class test");
             var client = await rpcClient.CreateProxyAsync<MyServiceProxy>().ConfigureAwait(false);
-            using (var watch = Watch.Create("Proxy class Time"))
+            using (var watch = Watch.Create("Proxy class Time - GetAllAsync"))
             {
                 for (var i = 0; i < 5000; i++)
                 {
@@ -101,7 +100,7 @@ namespace TWCore.Tests
 
             //Event test
             Core.Log.InfoBasic("Event test");
-            using (var watch = Watch.Create("Event Test"))
+            using (var watch = Watch.Create("Event Test - AddSimplePersona"))
             {
                 client.OnAddSimplePersona += (s, e) =>
                 {
@@ -148,7 +147,7 @@ namespace TWCore.Tests
 
     public class MyService : IMyService, IHello
     {
-        List<SimplePerson> _tmpSPerson = null;
+        List<SimplePerson> _tmpSPerson;
 
         [RPCEvent(RPCMessageScope.Global)]
         public event EventHandler OnAddSimplePersona;

@@ -65,5 +65,34 @@ namespace TWCore.Net.RPC
             CancellationToken = cancellationToken;
         }
         #endregion
+        
+        #region Static Methods
+        /// <summary>
+        /// Retrieve a Request Message from the pool
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCRequestMessage Retrieve(Guid methodId, object[] parameters, bool cancellationToken)
+        {
+            var message = ReferencePool<RPCRequestMessage>.Shared.New();
+            message.MessageId = Guid.NewGuid();
+            message.MethodId = methodId;
+            message.Parameters = parameters;
+            message.CancellationToken = cancellationToken;
+            return message;
+        }
+        /// <summary>
+        /// Store the RPCRequestMessage to the pool
+        /// </summary>
+        /// <param name="message"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(RPCRequestMessage message)
+        {
+            message.MessageId = Guid.Empty;
+            message.MethodId = Guid.Empty;
+            message.Parameters = null;
+            message.CancellationToken = false;
+            ReferencePool<RPCRequestMessage>.Shared.Store(message);
+        }
+        #endregion
     }
 }

@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -87,11 +86,11 @@ namespace TWCore.Net.RPC.Client
         #region Nested Types
         class MethodDescriptionEqualityComparer : IEqualityComparer<(string ServiceName, string Method, Type[] Types)>
         {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public bool Equals((string ServiceName, string Method, Type[] Types) x, (string ServiceName, string Method, Type[] Types) y)
             {
                 if (x.ServiceName != y.ServiceName) return false;
                 if (x.Method != y.Method) return false;
-                if (x.Types == y.Types) return true;
                 if (x.Types == null && y.Types == null) return true;
                 if (x.Types == null) return false;
                 if (y.Types == null) return false;
@@ -100,15 +99,10 @@ namespace TWCore.Net.RPC.Client
                     if (x.Types[i] != y.Types[i]) return false;
                 return true;
             }
-
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int GetHashCode((string ServiceName, string Method, Type[] Types) obj)
-            {
-                var ghc = (obj.ServiceName?.GetHashCode() ?? 1) + (obj.Method?.GetHashCode() ?? 2);
-                if (obj.Types == null) return ghc;
-                foreach (var type in obj.Types)
-                    ghc += type?.GetHashCode() ?? 3;
-                return ghc;
-            }
+                => (obj.ServiceName?.GetHashCode() ?? 11) + (obj.Method?.GetHashCode() ?? 17);
         }
         #endregion
 
@@ -162,13 +156,13 @@ namespace TWCore.Net.RPC.Client
         /// <typeparam name="T">Type of proxy</typeparam>
         /// <returns>Client proxy object instance to invoke methods to the server</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> CreateProxyAsync<T>() where T : RPCProxy
+        public async Task<T> CreateProxyAsync<T>() where T : RPCProxy, new()
         {
             var typeInterfaces = typeof(T).GetInterfaces();
             var typeInterface = typeInterfaces.FirstOrDefault(i => i != typeof(IDisposable) && i != typeof(IEnumerable<>) && i != typeof(IDictionary<,>));
             if (typeInterface == null)
                 throw new ArgumentException("The type of the proxy should implement a service interface.");
-            var rpcClient = Activator.CreateInstance<T>();
+            var rpcClient = new T();
             await InitTransportAsync().ConfigureAwait(false);
             if (!Descriptors.Items.TryGetValue(typeInterface.FullName, out var descriptor))
             {
@@ -211,6 +205,7 @@ namespace TWCore.Net.RPC.Client
             if (Transport.Descriptors == null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
             if (response == null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
@@ -244,6 +239,7 @@ namespace TWCore.Net.RPC.Client
             if (Transport.Descriptors == null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
             if (response == null)
                 throw new Exception("RPC Response is null.");
             if (response.Exception != null)
@@ -296,9 +292,16 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, bool useCancellationToken)
         {
-            var cArgs = args ?? _emptyArgs;
-
-            var types = cArgs.Select(a => a?.GetType() ?? Type.Missing.GetType()).ToArray();
+            Type[] types = null;
+            if (args != null)
+            {
+                types = new Type[args.Length];
+                for (var i = 0; i < args.Length; i++)
+                {
+                    if (args[i] != null)
+                        types[i] = args[i].GetType();
+                }
+            }
             var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), key =>
             {
                 if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
@@ -332,10 +335,11 @@ namespace TWCore.Net.RPC.Client
             if (mDesc == null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
+            var cArgs = args ?? _emptyArgs;
             if (cArgs.Length == 0 && mDesc.Parameters?.Length == 1)
                 cArgs = _nullItemArgs;
 
-            return new RPCRequestMessage(mDesc.Id, cArgs, useCancellationToken);
+            return RPCRequestMessage.Retrieve(mDesc.Id, cArgs, useCancellationToken);
         }
         #endregion
 

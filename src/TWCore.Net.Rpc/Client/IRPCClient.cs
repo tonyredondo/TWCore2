@@ -59,7 +59,7 @@ namespace TWCore.Net.RPC.Client
         /// </summary>
         /// <typeparam name="T">Type of proxy</typeparam>
         /// <returns>Client proxy object instance to invoke methods to the server</returns>
-        Task<T> CreateProxyAsync<T>() where T : RPCProxy;
+        Task<T> CreateProxyAsync<T>() where T : RPCProxy, new();
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>

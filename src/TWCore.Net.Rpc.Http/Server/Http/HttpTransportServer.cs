@@ -72,6 +72,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
         /// <summary>
+        /// Event that fires when a Method response is sent
+        /// </summary>
+        public event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
@@ -189,7 +193,10 @@ namespace TWCore.Net.RPC.Server.Transports
                 var eArgs = new MethodEventArgs(clientId, messageRq, cancellationToken);
                 OnMethodCall(this, eArgs);
                 if (eArgs.Response != null)
+                {
                     responseBuffer = Serializer.Serialize(eArgs.Response);
+                    OnResponseSent?.Invoke(this, eArgs.Response);
+                }
             }
             response.Write(responseBuffer.Array, responseBuffer.Offset, responseBuffer.Count);
             Counters.IncrementBytesSent(responseBuffer.Count);

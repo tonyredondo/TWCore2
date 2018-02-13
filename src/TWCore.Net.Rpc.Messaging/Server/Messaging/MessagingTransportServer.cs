@@ -69,6 +69,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
         /// <summary>
+        /// Event that fires when a Method response is sent
+        /// </summary>
+        public event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
@@ -108,6 +112,7 @@ namespace TWCore.Net.RPC.Server.Transports
             Core.Log.LibVerbose("Starting Transport Listener");
             _queueServer.StartListeners();
             _queueServer.RequestReceived += QueueServerOnRequestReceived;
+            _queueServer.ResponseSent += QueueServerOnResponseSent;
             Core.Log.LibVerbose("Transport Listener Started");
             return Task.CompletedTask;
         }
@@ -124,6 +129,7 @@ namespace TWCore.Net.RPC.Server.Transports
             Core.Log.LibVerbose("Stopping Transport Listener");
             _queueServer.StopListeners();
             _queueServer.RequestReceived -= QueueServerOnRequestReceived;
+            _queueServer.ResponseSent -= QueueServerOnResponseSent;
             Core.Log.LibVerbose("Transport Listener Stopped");
             return Task.CompletedTask;
         }
@@ -171,6 +177,12 @@ namespace TWCore.Net.RPC.Server.Transports
                     }
                     break;
             }
+            return Task.CompletedTask;
+        }
+        private Task QueueServerOnResponseSent(object sender, ResponseSentEventArgs responseSentEventArgs)
+        {
+            if (responseSentEventArgs.Message?.Body is RPCResponseMessage responseMessage)
+                OnResponseSent?.Invoke(this, responseMessage);
             return Task.CompletedTask;
         }
         #endregion

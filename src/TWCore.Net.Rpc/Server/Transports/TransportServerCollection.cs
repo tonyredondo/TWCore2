@@ -76,6 +76,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
         /// <summary>
+        /// Event that fires when a Method response is sent
+        /// </summary>
+        public event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
@@ -107,6 +111,7 @@ namespace TWCore.Net.RPC.Server.Transports
                         item.OnClientConnect += Item_OnClientConnect;
                         item.OnGetDescriptorsRequest += Item_OnGetDescriptorsRequest;
                         item.OnMethodCall += Item_OnMethodCall;
+                        item.OnResponseSent += Item_OnResponseSent;
                     }
                 }
                 if ((e.Action == NotifyCollectionChangedAction.Remove || e.Action == NotifyCollectionChangedAction.Replace) && e.OldItems != null)
@@ -117,6 +122,7 @@ namespace TWCore.Net.RPC.Server.Transports
                         item.OnClientConnect -= Item_OnClientConnect;
                         item.OnGetDescriptorsRequest -= Item_OnGetDescriptorsRequest;
                         item.OnMethodCall -= Item_OnMethodCall;
+                        item.OnResponseSent -= Item_OnResponseSent;
                     }
                 }
             };
@@ -124,14 +130,21 @@ namespace TWCore.Net.RPC.Server.Transports
         #endregion
 
         #region Private Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnClientConnect(object sender, ClientConnectEventArgs e)
             => OnClientConnect?.Invoke(sender, e);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
             => OnGetDescriptorsRequest?.Invoke(sender, e);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void Item_OnMethodCall(object sender, MethodEventArgs e)
             => OnMethodCall?.Invoke(sender, e);
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Item_OnResponseSent(object sender, RPCResponseMessage message)
+            => OnResponseSent?.Invoke(sender, message);
         #endregion
 
         #region Public Methods

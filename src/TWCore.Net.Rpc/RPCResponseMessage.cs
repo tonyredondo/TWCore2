@@ -68,5 +68,32 @@ namespace TWCore.Net.RPC
             RequestMessageId = request.MessageId;
         }
         #endregion
+        
+        #region Static Methods
+        /// <summary>
+        /// Retrieve a Response Message from the pool
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static RPCResponseMessage Retrieve(RPCRequestMessage request)
+        {
+            var message = ReferencePool<RPCResponseMessage>.Shared.New();
+            message.MessageId = Guid.NewGuid();
+            message.RequestMessageId = request.MessageId;
+            return message;
+        }
+        /// <summary>
+        /// Store the RPCResponseMessage to the pool
+        /// </summary>
+        /// <param name="message"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Store(RPCResponseMessage message)
+        {
+            message.MessageId = Guid.Empty;
+            message.RequestMessageId = Guid.Empty;
+            message.ReturnValue = null;
+            message.Exception = null;
+            ReferencePool<RPCResponseMessage>.Shared.Store(message);
+        }
+        #endregion
     }
 }

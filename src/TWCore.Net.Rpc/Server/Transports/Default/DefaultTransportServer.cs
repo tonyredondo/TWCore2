@@ -87,6 +87,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
         /// <summary>
+        /// Event that fires when a Method response is sent
+        /// </summary>
+        public event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
         public event EventHandler<ClientConnectEventArgs> OnClientConnect;
@@ -296,6 +300,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                             OnGetDescriptorsRequest?.Invoke(this, dEventArgs);
                             var response = new RPCResponseMessage(request) { ReturnValue = dEventArgs.Descriptors };
                             await rpcServerClient.SendRpcMessageAsync(response).ConfigureAwait(false);
+                            OnResponseSent?.Invoke(this, response);
                             break;
                         }
                         if (request.CancellationToken)
@@ -308,6 +313,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                                 if (!tokenSource.Token.IsCancellationRequested)
                                     await rpcServerClient.SendRpcMessageAsync(mEventArgs.Response).ConfigureAwait(false);
                                 _rpcMessagesCancellations.TryRemove(request.MessageId, out _);
+                                OnResponseSent?.Invoke(this, mEventArgs.Response);
                             }
                             break;
                         }
@@ -315,6 +321,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         OnMethodCall?.Invoke(this, mEventArgs2);
                         if (!rpcServerClient.ConnectionCancellationToken.IsCancellationRequested)
                             await rpcServerClient.SendRpcMessageAsync(mEventArgs2.Response).ConfigureAwait(false);
+                        OnResponseSent?.Invoke(this, mEventArgs2.Response);
                         break;
                 }
             }

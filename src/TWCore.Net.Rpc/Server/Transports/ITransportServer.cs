@@ -55,6 +55,10 @@ namespace TWCore.Net.RPC.Server.Transports
         /// </summary>
         event EventHandler<MethodEventArgs> OnMethodCall;
         /// <summary>
+        /// Event that fires when a Method response is sent
+        /// </summary>
+        event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
         event EventHandler<ClientConnectEventArgs> OnClientConnect;

@@ -113,6 +113,7 @@ namespace TWCore.Net.RPC.Server
         {
             Core.Log.LibVerbose("Starting RPC Server for the following types: {0}", _serviceInstances.Select(i => i.Descriptor.Name).Join(","));
             Transport.OnMethodCall += OnMethodCall;
+            Transport.OnResponseSent += OnResponseSent;
             Transport.OnGetDescriptorsRequest += OnGetDescriptorsRequest;
             Transport.OnClientConnect += OnClientConnect;
             Descriptors = new ServiceDescriptorCollection();
@@ -137,6 +138,7 @@ namespace TWCore.Net.RPC.Server
             await Transport.StopListenerAsync().ConfigureAwait(false);
             _serviceInstances.Each(v => v.UnbindToServiceType());
             Transport.OnMethodCall -= OnMethodCall;
+            Transport.OnResponseSent -= OnResponseSent;
             Transport.OnGetDescriptorsRequest -= OnGetDescriptorsRequest;
             Transport.OnClientConnect -= OnClientConnect;
             Running = false;
@@ -182,10 +184,15 @@ namespace TWCore.Net.RPC.Server
 				e.Response = desc.Service.ProcessRequest(e.Request, e.ClientId, desc.Method, e.CancellationToken);
 				return;
 			}
-            e.Response = new RPCResponseMessage(e.Request)
-            {
-                Exception = new SerializableException(new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)))
-            };
+            var responseMessage = RPCResponseMessage.Retrieve(e.Request);
+            responseMessage.Exception = new SerializableException(new NotImplementedException("The MethodId = {0} was not found on the service.".ApplyFormat(e.Request.MethodId)));
+            e.Response = responseMessage;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OnResponseSent(object sender, RPCResponseMessage responseMessage)
+        {
+            if (responseMessage != null)
+                RPCResponseMessage.Store(responseMessage);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnGetDescriptorsRequest(object sender, ServerDescriptorsEventArgs e)
@@ -298,7 +305,7 @@ namespace TWCore.Net.RPC.Server
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public RPCResponseMessage ProcessRequest(RPCRequestMessage request, Guid clientId, MethodDescriptor mDesc, CancellationToken cancellationToken)
             {
-                var response = new RPCResponseMessage(request);
+                var response = RPCResponseMessage.Retrieve(request);
                 try
                 {
 					var tId = Environment.CurrentManagedThreadId;

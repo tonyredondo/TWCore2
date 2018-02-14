@@ -39,7 +39,7 @@ namespace TWCore.Cache.Storages.IO
     /// </summary>
     public class FileStorage : StorageBase
     {
-        private FolderStorage[] _storages;
+        private FolderHandler[] _handlers;
 
         #region Properties
         /// <summary>
@@ -91,8 +91,8 @@ namespace TWCore.Cache.Storages.IO
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
-                if (_storages == null) return;
-                foreach (var sto in _storages)
+                if (_handlers == null) return;
+                foreach (var sto in _handlers)
                     Core.Status.AttachChild(sto, this);
             });
         }
@@ -118,11 +118,11 @@ namespace TWCore.Cache.Storages.IO
         {
             Ensure.ReferenceNotNull(BasePath, "The FileStorage BasePath, is null.");
             Core.Log.InfoBasic("Initializing FileStorage...");
-            if (_storages?.Any() == true)
+            if (_handlers?.Any() == true)
             {
                 Core.Log.InfoBasic("Disposing previous instances...");
-                _storages.Each(fsto => fsto.Dispose());
-                _storages = null;
+                _handlers.Each(fsto => fsto.Dispose());
+                _handlers = null;
             }
             if (!Directory.Exists(BasePath))
             {
@@ -130,43 +130,43 @@ namespace TWCore.Cache.Storages.IO
                 Directory.CreateDirectory(BasePath);
             }
             Core.Log.InfoBasic("Configuring {0} Subfolders", NumberOfSubFolders);
-            _storages = new FolderStorage[NumberOfSubFolders];
+            _handlers = new FolderHandler[NumberOfSubFolders];
             for (var i = 0; i < NumberOfSubFolders; i++)
             {
                 var folder = Path.Combine(BasePath, i.ToString());
                 Core.Log.InfoBasic("Initializing Subfolder: {0} on {1}", i, folder);
-                _storages[i] = new FolderStorage(folder, this);
+                _handlers[i] = new FolderHandler(folder, this);
             }
-            Core.Log.InfoBasic("Waiting the storages to be loaded.");
-            TaskUtil.SleepUntil(() => _storages.All(s => s.Loaded)).WaitAsync();
-            Core.Log.InfoBasic("All folder storages are loaded, Index Count: {0}", Metas.Count());
+            Core.Log.InfoBasic("Waiting the folder handlers to be loaded.");
+            TaskUtil.SleepUntil(() => _handlers.All(s => s.Loaded)).WaitAsync();
+            Core.Log.InfoBasic("All folder handlers are loaded, Index Count: {0}", Metas.Count());
             SetReady(true);
         }
         protected override IEnumerable<StorageItemMeta> Metas
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _storages?.SelectMany(s => s.Metas).ToArray();
+            get => _handlers?.SelectMany(s => s.Metas).ToArray();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
-            => _storages[GetFolderNumber(key)].OnExistKey(key);
+            => _handlers[GetFolderNumber(key)].OnExistKey(key);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-            => _storages.SelectMany(s => s.OnGetKeys()).ToArray();
+            => _handlers.SelectMany(s => s.OnGetKeys()).ToArray();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {
-            var res = _storages[GetFolderNumber(key)].OnRemove(key).WaitAsync();
+            var res = _handlers[GetFolderNumber(key)].OnRemove(key).WaitAsync();
             meta = res.Item2;
             return res.Item1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => _storages[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAsync();
+            => _handlers[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAsync();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _storages[GetFolderNumber(key)].OnTryGet(key, condition);
+            var res = _handlers[GetFolderNumber(key)].OnTryGet(key, condition);
             value = res;
             return res != null;
         }
@@ -174,22 +174,22 @@ namespace TWCore.Cache.Storages.IO
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value,
             Predicate<StorageItemMeta> condition = null)
         {
-            var res = _storages[GetFolderNumber(key)].OnTryGetMeta(key, condition);
+            var res = _handlers[GetFolderNumber(key)].OnTryGetMeta(key, condition);
             value = res;
             return res != null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()
         {
-            if (_storages == null) return;
+            if (_handlers == null) return;
             Core.Log.InfoBasic("Disposing...");
-            _storages.ParallelEach(s => s.Dispose());
-            _storages = null;
+            _handlers.ParallelEach(s => s.Dispose());
+            _handlers = null;
         }
         #endregion
 
         #region Inner Types
-        private sealed class FolderStorage : IDisposable
+        private sealed class FolderHandler : IDisposable
         {
             private static readonly byte[] BytesEmpty = new byte[0];
             private const string IndexFileName = "Index";
@@ -248,7 +248,7 @@ namespace TWCore.Cache.Storages.IO
             #endregion
 
             #region .ctor
-            public FolderStorage(string basePath, FileStorage storage)
+            public FolderHandler(string basePath, FileStorage storage)
             {
                 _saveMetadataBuffered = ActionDelegate.Create(async () => await SaveMetadataAsync().ConfigureAwait(false)).CreateBufferedAction(1000);
                 BasePath = basePath;
@@ -737,7 +737,7 @@ namespace TWCore.Cache.Storages.IO
                 _pendingItems.Clear();
             }
 
-            ~FolderStorage()
+            ~FolderHandler()
             {
                 Dispose(false);
             }

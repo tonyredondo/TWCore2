@@ -296,6 +296,8 @@ namespace TWCore
 
                         assemblyName = actualType.Assembly.FullName;
                         typeName = actualType.Name;
+                        if (actualType.ReflectedType != null && typeName.Contains("<"))
+                            typeName = actualType.ReflectedType.Name;
                         break;
                     }
 

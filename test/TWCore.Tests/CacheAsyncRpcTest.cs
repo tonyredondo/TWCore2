@@ -25,7 +25,7 @@ namespace TWCore.Tests
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
-            //Core.DebugMode = true;
+            Core.DebugMode = false;
             Core.Log.Warning("Starting CACHE Async TEST");
 
             var cacheService = new TestCacheService();
@@ -36,17 +36,26 @@ namespace TWCore.Tests
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
 				cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
                 //cachePool.Add("memory", new LRU2QStorage(2000), StorageItemMode.ReadAndWrite);
+                await cachePool.GetKeysAsync().ConfigureAwait(false);
 
-                for (var i = 0; i < 10; i++)
-					await cachePool.GetKeysAsync().ConfigureAwait(false);
+                using (var watch = Watch.Create("GetKeysAsync"))
+                {
+                    for (var i = 0; i < 1000; i++)
+                        await cachePool.GetKeysAsync().ConfigureAwait(false);
+                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 1000);
+                }
 
                 Console.ReadLine();
 
-                for (var i = 0; i < 5000; i++)
+                using (var watch = Watch.Create("Get And Sets"))
                 {
-                    var key = "test-" + i;
-                    await cachePool.GetAsync(key).ConfigureAwait(false);
-                    await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
+                    for (var i = 0; i < 5000; i++)
+                    {
+                        var key = "test-" + i;
+                        await cachePool.GetAsync(key).ConfigureAwait(false);
+                        await cachePool.SetAsync(key, "bla bla bla bla bla").ConfigureAwait(false);
+                    }
+                    Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 5000);
                 }
             }
 

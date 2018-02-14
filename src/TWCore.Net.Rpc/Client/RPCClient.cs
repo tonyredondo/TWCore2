@@ -102,7 +102,7 @@ namespace TWCore.Net.RPC.Client
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public int GetHashCode((string ServiceName, string Method, Type[] Types) obj)
-                => (obj.ServiceName?.GetHashCode() ?? 11) + (obj.Method?.GetHashCode() ?? 17);
+                => (obj.ServiceName?.GetHashCode() ?? 11) + (obj.Method?.GetHashCode() ?? 17) + obj.Types?.Length * 19 ?? 19;
         }
         #endregion
 
@@ -201,7 +201,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, params object[] args)
         {
-            var request = CreateRequest(serviceName, method, args, false);
+            var request = CreateRequest(serviceName, method, args, null, false);
             if (Transport.Descriptors == null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
@@ -235,7 +235,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<object> ServerInvokeAsync(string serviceName, string method, object[] args, CancellationToken cancellationToken)
         {
-            var request = CreateRequest(serviceName, method, args, true);
+            var request = CreateRequest(serviceName, method, args, null, true);
             if (Transport.Descriptors == null)
                 Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
             var response = await Transport.InvokeMethodAsync(request, cancellationToken).ConfigureAwait(false);
@@ -245,6 +245,133 @@ namespace TWCore.Net.RPC.Client
             if (response.Exception != null)
                 throw response.Exception.GetException();
             return response.ReturnValue;
+        }
+        #endregion
+
+        #region Alternative ServerInvoke Async
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeNoArgumentsAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
+        {
+            var request = CreateRequest(serviceName, method, null, null, cancellationToken != null);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+
+        private static ObjectPool<(object[], Type[])> ServiceInvokeArgs1Pool = new ObjectPool<(object[], Type[])>(i => (new object[1], new Type[1]));
+        private static ObjectPool<(object[], Type[])> ServiceInvokeArgs2Pool = new ObjectPool<(object[], Type[])>(i => (new object[2], new Type[2]));
+        private static ObjectPool<(object[], Type[])> ServiceInvokeArgs3Pool = new ObjectPool<(object[], Type[])>(i => (new object[3], new Type[3]));
+        private static ObjectPool<(object[], Type[])> ServiceInvokeArgs4Pool = new ObjectPool<(object[], Type[])>(i => (new object[4], new Type[4]));
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeAsync<TArg1, TReturn>(string serviceName, string method, TArg1 arg1, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs1Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item2[0] = typeof(TArg1);
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            ServiceInvokeArgs1Pool.Store(arrayArgs);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs2Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item2[0] = typeof(TArg1);
+            arrayArgs.Item2[1] = typeof(TArg2);
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            ServiceInvokeArgs2Pool.Store(arrayArgs);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TArg3, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, TArg3 arg3, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs3Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            arrayArgs.Item2[0] = typeof(TArg1);
+            arrayArgs.Item2[1] = typeof(TArg2);
+            arrayArgs.Item2[2] = typeof(TArg3);
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            ServiceInvokeArgs3Pool.Store(arrayArgs);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<TReturn> ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TReturn>(string serviceName, string method, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, CancellationToken? cancellationToken = null)
+        {
+            var arrayArgs = ServiceInvokeArgs4Pool.New();
+            arrayArgs.Item1[0] = arg1;
+            arrayArgs.Item1[1] = arg2;
+            arrayArgs.Item1[2] = arg3;
+            arrayArgs.Item1[3] = arg4;
+            arrayArgs.Item2[0] = typeof(TArg1);
+            arrayArgs.Item2[1] = typeof(TArg2);
+            arrayArgs.Item2[2] = typeof(TArg3);
+            arrayArgs.Item2[3] = typeof(TArg4);
+            var request = CreateRequest(serviceName, method, arrayArgs.Item1, arrayArgs.Item2, cancellationToken != null);
+            if (Transport.Descriptors == null)
+                Transport.Descriptors = await GetDescriptorsAsync().ConfigureAwait(false);
+            var response = cancellationToken.HasValue ?
+                await Transport.InvokeMethodAsync(request, cancellationToken.Value).ConfigureAwait(false) :
+                await Transport.InvokeMethodAsync(request).ConfigureAwait(false);
+            RPCRequestMessage.Store(request);
+            arrayArgs.Item1[0] = null;
+            arrayArgs.Item1[1] = null;
+            arrayArgs.Item1[2] = null;
+            arrayArgs.Item1[3] = null;
+            ServiceInvokeArgs4Pool.Store(arrayArgs);
+            if (response == null)
+                throw new Exception("RPC Response is null.");
+            if (response.Exception != null)
+                throw response.Exception.GetException();
+            return (TReturn)response.ReturnValue;
         }
         #endregion
 
@@ -287,13 +414,13 @@ namespace TWCore.Net.RPC.Client
         /// <param name="serviceName">Service name</param>
         /// <param name="method">Method name to call</param>
         /// <param name="args">Method arguments</param>
+        /// <param name="types">Types array</param>
         /// <param name="useCancellationToken">Use cancellation token</param>
         /// <returns>RPC Request message object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, bool useCancellationToken)
+        private RPCRequestMessage CreateRequest(string serviceName, string method, object[] args, Type[] types, bool useCancellationToken)
         {
-            Type[] types = null;
-            if (args != null)
+            if (types == null && args != null)
             {
                 types = new Type[args.Length];
                 for (var i = 0; i < args.Length; i++)
@@ -335,11 +462,10 @@ namespace TWCore.Net.RPC.Client
             if (mDesc == null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
-            var cArgs = args ?? _emptyArgs;
-            if (cArgs.Length == 0 && mDesc.Parameters?.Length == 1)
-                cArgs = _nullItemArgs;
+            if (mDesc.Parameters?.Length == 1 && (args == null || args.Length == 0))
+                args = _nullItemArgs;
 
-            return RPCRequestMessage.Retrieve(mDesc.Id, cArgs, useCancellationToken);
+            return RPCRequestMessage.Retrieve(mDesc.Id, args, useCancellationToken);
         }
         #endregion
 

@@ -271,8 +271,18 @@ namespace TWCore
             {
                 double gTime;
                 double cTime;
-                var gValue = string.IsNullOrEmpty(item.Group) ? item.Id.ToString("00") : item.Group;
-                var indent = EnableIndent ? IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 2)) : string.Empty;
+                string indent = null;
+                string gValue;
+                if (string.IsNullOrEmpty(item.Group))
+                {
+                    gValue = item.Id.ToString("00");
+                    if (EnableIndent)
+                        indent = IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 2));
+                }
+                else
+                {
+                    gValue = item.Group;
+                }
                 switch (item.Type)
                 {
                     case 0:
@@ -281,7 +291,7 @@ namespace TWCore
                     case 1:
                         cTime = item.LastTapTicks * FrequencyTime;
                         item.Counter?.Register(item.Message, cTime);
-                        if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.0000001)
+                        if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.00001)
                         {
                             gTime = item.GlobalTicks * FrequencyTime;
                             Core.Log.Write(item.Level, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
@@ -295,7 +305,7 @@ namespace TWCore
                         cTime = item.LastTapTicks * FrequencyTime;
                         gTime = item.GlobalTicks * FrequencyTime;
                         item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, cTime);
-                        if (Math.Abs(cTime - gTime) > 0.0000001)
+                        if (Math.Abs(cTime - gTime) > 0.00001)
                             Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
                         else
                             Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message));

@@ -48,10 +48,6 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         int ProcessId { get; }
         /// <summary>
-        /// Thread Id
-        /// </summary>
-        int ThreadId { get; }
-        /// <summary>
         /// Assembly name
         /// </summary>
         string AssemblyName { get; }

@@ -321,11 +321,10 @@ namespace TWCore
 
             var lItem = new LogItem
             {
-                Id = Factory.NewGuid(),
+                Id = Guid.NewGuid(),
                 EnvironmentName = Core.EnvironmentName,
                 MachineName = Core.MachineName,
                 Timestamp = Core.Now,
-                ThreadId = Environment.CurrentManagedThreadId,
                 ApplicationName = Core.ApplicationName,
                 Level = level,
                 Code = code,

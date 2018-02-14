@@ -68,12 +68,6 @@ namespace TWCore.Diagnostics.Log
         public int ProcessId { get; set; } = -1;
         /// <inheritdoc />
         /// <summary>
-        /// Thread Id
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public int ThreadId { get; set; } = -1;
-        /// <inheritdoc />
-        /// <summary>
         /// Assembly name
         /// </summary>
         [XmlAttribute, DataMember]

@@ -422,7 +422,7 @@ namespace TWCore
 					if (!predicates[i](item)) continue;
 					if (i == 0)
 						return item;
-					if (comparer.Equals(item, default(T)))
+					if (comparer.Equals(foundArray[i - 1], default(T)))
 						foundArray[i - 1] = item;
 				}
 			}

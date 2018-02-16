@@ -557,6 +557,18 @@ namespace TWCore
             await Task.WhenAll(tskArray).ConfigureAwait(false);
             return tskArray.Select(t => t.Result);
         }
+        /// <summary>
+        /// Await for all IEnumerable Tasks and return a Task
+        /// </summary>
+        /// <typeparam name="T">Type of task</typeparam>
+        /// <param name="tasks">IEnumerable instance</param>
+        /// <returns>Task</returns>
+        public static async Task AsAwaitable<T>(this IEnumerable<Task> tasks)
+        {
+            if (tasks == null) return;
+            var tskArray = tasks as Task<T>[] ?? tasks.ToArray();
+            await Task.WhenAll(tskArray).ConfigureAwait(false);
+        }
         #endregion
 
         #region Others

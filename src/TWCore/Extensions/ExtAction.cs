@@ -358,6 +358,54 @@ namespace TWCore
             });
             return tcs.Task;
         }
+        /// <summary>
+        /// Invoke a EventHandler in Async Task
+        /// </summary>
+        /// <param name="event">EventHandler instance</param>
+        /// <param name="sender">Sender instance</param>
+        /// <param name="e">Event Args</param>
+        public static Task InvokeAsync<T>(this EventHandler<T> @event, object sender, T e)
+        {
+            if (@event == null) return Task.CompletedTask;
+            var tcs = new TaskCompletionSource<bool>();
+            Task.Run(() =>
+            {
+                try
+                {
+                    @event(sender, e);
+                    tcs.TrySetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
+        /// <summary>
+        /// Invoke a EventHandler in Async Task
+        /// </summary>
+        /// <param name="event">EventHandler instance</param>
+        /// <param name="sender">Sender instance</param>
+        /// <param name="e">Event Args</param>
+        public static Task InvokeAsync(this EventHandler @event, object sender, EventArgs e)
+        {
+            if (@event == null) return Task.CompletedTask;
+            var tcs = new TaskCompletionSource<bool>();
+            Task.Run(() =>
+            {
+                try
+                {
+                    @event(sender, e);
+                    tcs.TrySetResult(true);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetException(ex);
+                }
+            });
+            return tcs.Task;
+        }
         #endregion
 
         #region CreateAsync

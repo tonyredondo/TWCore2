@@ -77,12 +77,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// RPC Transport Server host
         /// </summary>
         [StatusProperty]
-        public string Host { get; private set; }
+        public string Host { get; }
         /// <summary>
         /// RPC Transport Server port
         /// </summary>
         [StatusProperty]
-        public int Port { get; private set; }
+        public int Port { get; }
         /// <inheritdoc />
         /// <summary>
         /// Transport Counters

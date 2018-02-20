@@ -141,8 +141,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _client = new TcpClient
                 {
                     NoDelay = true,
-                    ReceiveBufferSize = 16384,
-                    SendBufferSize = 16384
+                    ReceiveBufferSize = 4096,
+                    SendBufferSize = 4096
                 };
                 Factory.SetSocketLoopbackFastPath(_client.Client);
                 await _client.ConnectAsync(_host, _port).ConfigureAwait(false);

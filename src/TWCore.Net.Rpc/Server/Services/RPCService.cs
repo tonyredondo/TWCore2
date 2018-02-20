@@ -1,6 +1,6 @@
 ﻿#pragma warning disable IDE1006 // Estilos de nombres
 /*
-Copyright 2015-2017 Daniel Adrian Redondo Suarez
+Copyright 2015-2018 Daniel Adrian Redondo Suarez
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

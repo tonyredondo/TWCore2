@@ -78,18 +78,22 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         #endregion
 
         #region Events
+        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a Descriptors request is received.
         /// </summary>
         public event EventHandler<ServerDescriptorsEventArgs> OnGetDescriptorsRequest;
+        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a Method call is received
         /// </summary>
         public event EventHandler<MethodEventArgs> OnMethodCall;
+        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a Method response is sent
         /// </summary>
         public event EventHandler<RPCResponseMessage> OnResponseSent;
+        /// <inheritdoc />
         /// <summary>
         /// Event that fires when a client connects.
         /// </summary>
@@ -197,42 +201,40 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             try
             {
-                var eventMessage =
-                    new RPCEventMessage {ServiceName = serviceName, EventName = eventName, EventArgs = e};
+                var eventMessage = new RPCEventMessage {ServiceName = serviceName, EventName = eventName, EventArgs = e};
 
                 switch (eventAttribute.Scope)
                 {
                     case RPCMessageScope.Session:
                         RpcServerClient client;
-
                         lock (_locker)
-                            client = _sessions.Find(s => s.SessionId == clientId);
-
+                            client = _sessions.Find(s => s.OnSession && s.SessionId == clientId);
                         if (client != null)
                         {
                             await client.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
-                            Core.Log.LibVerbose(
-                                $"Sending event trigger to SessionId='{clientId}' on event '{eventName}'");
+                            Core.Log.LibVerbose($"Sending event trigger to SessionId='{clientId}' on event '{eventName}'");
                         }
                         break;
                     case RPCMessageScope.Hub:
                         var hubName = eventAttribute.HubName;
+                        RpcServerClient[] clients;
                         lock (_locker)
+                            clients = _sessions.Where(s => s.OnSession && s.Hub == hubName).ToArray();
+                        if (clients.Length > 0)
                         {
-                            _sessions.Where(s => s.OnSession && s.Hub == hubName)
-                                .Select(s => s.SendRpcMessageAsync(eventMessage))
-                                .ToArray();
+                            await Task.WhenAll(clients.Select(s => s.SendRpcMessageAsync(eventMessage))).ConfigureAwait(false);
+                            Core.Log.LibVerbose($"Sending event trigger to Hub='{hubName}' on event '{eventName}'");
                         }
-                        Core.Log.LibVerbose($"Sending event trigger to Hub='{hubName}' on event '{eventName}'");
                         break;
                     case RPCMessageScope.Global:
+                        RpcServerClient[] gClients;
                         lock (_locker)
+                            gClients = _sessions.Where(s => s.OnSession).ToArray();
+                        if (gClients.Length > 0)
                         {
-                            _sessions.Where(s => s.OnSession)
-                                .Select(s => s.SendRpcMessageAsync(eventMessage))
-                                .ToArray();
+                            await Task.WhenAll(gClients.Select(s => s.SendRpcMessageAsync(eventMessage))).ConfigureAwait(false);
+                            Core.Log.LibVerbose($"Sending event trigger to all sessions on event '{eventName}'");
                         }
-                        Core.Log.LibVerbose($"Sending event trigger to all sessions on event '{eventName}'");
                         break;
                 }
             }

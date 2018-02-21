@@ -193,7 +193,6 @@ namespace TWCore.Serialization
             {
                 using (var stream = File.Open(fPath[0], FileMode.Create, FileAccess.Write))
                     Serialize(item, itemType, stream);
-                FilePathLocker.RemoveLock(fPath[0]);
             }
         }
         /// <inheritdoc />
@@ -281,7 +280,6 @@ namespace TWCore.Serialization
                 object obj;
                 using (var stream = File.Open(fPath, FileMode.Open, FileAccess.Read, FileShare.Read))
                     obj = Deserialize(stream, itemType);
-                FilePathLocker.RemoveLock(fPath);
                 return obj;
             }
         }

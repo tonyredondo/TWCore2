@@ -228,7 +228,6 @@ namespace TWCore.Serialization
             {
                 using (var stream = File.Open(fPath[0], FileMode.Create, FileAccess.Write))
                     Serialize(item, itemType, stream);
-                FilePathLocker.RemoveLock(fPath[0]);
             }
         }
         /// <inheritdoc />

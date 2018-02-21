@@ -15,17 +15,36 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
     /// <summary>
-    /// Instance Lock helps to create locks object based on instance values using a ConcurrentDictionary internally
+    /// Instance Lock helps to create locks object based on instance values
     /// </summary>
     public class InstanceLocker<T>
     {
-        private readonly ConcurrentDictionary<T, object> _lockDict = new ConcurrentDictionary<T, object>();
+        private readonly object[] _lockers;
+
+        #region .ctor
+        /// <inheritdoc />
+        /// <summary>
+        /// Instance Lock helps to create locks object based on instance values
+        /// </summary>
+        public InstanceLocker() : this(Environment.ProcessorCount)
+        {
+        }
+        /// <summary>
+        /// Instance Lock helps to create locks object based on instance values
+        /// </summary>
+        /// <param name="concurrencyLevel">Number of locks for all instance values</param>
+        public InstanceLocker(int concurrencyLevel)
+        {
+            _lockers = new object[concurrencyLevel];
+            for (var i = 0; i < concurrencyLevel; i++)
+                _lockers[i] = new object();
+        }
+        #endregion
 
         /// <summary>
         /// Get a Lock for use with lock(){} block
@@ -33,8 +52,11 @@ namespace TWCore
         /// <param name="key">Key to make a lock</param>
         /// <returns>Object for lock use</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object GetLock(T key) 
-            => _lockDict.GetOrAdd(key, s => new object());
+        public object GetLock(T key)
+        {
+            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            return _lockers[idx];
+        }
 
         /// <summary>
         /// Run a short lock inline using a lambda
@@ -46,9 +68,9 @@ namespace TWCore
         public TResult RunWithLock<TResult>(T key, Func<TResult> body)
         {
             TResult res;
-            lock (_lockDict.GetOrAdd(key, s => new object()))
+            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            lock (_lockers[idx])
                 res = body();
-            _lockDict.TryRemove(key, out var _);
             return res;
         }
 
@@ -60,19 +82,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RunWithLock(T key, Action body)
         {
-            lock (_lockDict.GetOrAdd(key, s => new object()))
+            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            lock (_lockers[idx])
                 body();
-            _lockDict.TryRemove(key, out var _);
-        }
-
-        /// <summary>
-        /// Remove an old lock object that is no longer needed
-        /// </summary>
-        /// <param name="key">Key to make a lock</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void RemoveLock(T key)
-        {
-            _lockDict.TryRemove(key, out object _);
         }
     }
 }

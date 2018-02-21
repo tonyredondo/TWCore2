@@ -15,11 +15,13 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable MethodSupportsCancellation
 // ReSharper disable UnusedMember.Global
+#pragma warning disable 420
 
 namespace TWCore.Threading
 {
@@ -30,7 +32,16 @@ namespace TWCore.Threading
     public class AsyncManualResetEvent : IDisposable
     {
         private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
 
+        #region Properties
+        /// <summary>
+        /// Gets if the Event has been setted
+        /// </summary>
+        public bool IsSet => _mTcs.Task.Status == TaskStatus.RanToCompletion;
+        #endregion
+
+        #region .ctor
         /// <summary>
         /// Async Manual Reset Event
         /// </summary>
@@ -48,7 +59,9 @@ namespace TWCore.Threading
             if (initialState)
                 _mTcs.SetResult(true);
         }
+        #endregion
 
+        #region Wait Methods
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
@@ -56,31 +69,30 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WaitAsync()
             => _mTcs?.Task ?? Task.FromException(new Exception("The instance has been disposed."));
-
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WaitAsync(CancellationToken cancellationToken)
+        public Task WaitAsync(CancellationToken cancellationToken)
         {
             if (_mTcs == null) throw new Exception("The instance has been disposed.");
-            await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync()).ConfigureAwait(false);
+            var cTask = CTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
+            return Task.WhenAny(_mTcs.Task, cTask);
         }
-
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
         /// <param name="milliseconds">Milliseconds</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> WaitAsync(int milliseconds)
+        public Task<bool> WaitAsync(int milliseconds)
         {
-            if (_mTcs == null) return false;
+            if (_mTcs == null) return TaskUtil.CompleteFalse;
             var delayTask = Task.Delay(milliseconds);
-            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
-            return finalTask != delayTask;
+            return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
+                CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event
@@ -88,12 +100,12 @@ namespace TWCore.Threading
         /// <param name="timeout">TimeSpan timeout value</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<bool> WaitAsync(TimeSpan timeout)
+        public Task<bool> WaitAsync(TimeSpan timeout)
         {
-            if (_mTcs == null) return false;
+            if (_mTcs == null) return TaskUtil.CompleteFalse;
             var delayTask = Task.Delay(timeout);
-            var finalTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
-            return finalTask != delayTask;
+            return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
+                CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event
@@ -105,8 +117,9 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
             if (_mTcs == null) return false;
-            var finalTask = await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync(milliseconds)).ConfigureAwait(false);
-            return finalTask == _mTcs.Task;
+            var tcs = _mTcs;
+            var finalTask = await Task.WhenAny(tcs.Task, cancellationToken.WaitHandle.WaitOneAsync(milliseconds)).ConfigureAwait(false);
+            return finalTask == tcs.Task;
         }
         /// <summary>
         /// Wait Async for the set event
@@ -118,10 +131,13 @@ namespace TWCore.Threading
         public async Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (_mTcs == null) return false;
-            var finalTask = await Task.WhenAny(_mTcs.Task, cancellationToken.WaitHandle.WaitOneAsync((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
-            return finalTask == _mTcs.Task;
+            var tcs = _mTcs;
+            var finalTask = await Task.WhenAny(tcs.Task, cancellationToken.WaitHandle.WaitOneAsync((int)timeout.TotalMilliseconds)).ConfigureAwait(false);
+            return finalTask == tcs.Task;
         }
+        #endregion
 
+        #region Set Methods
         /// <summary>
         /// Sets the event
         /// </summary>
@@ -130,7 +146,8 @@ namespace TWCore.Threading
         {
             if (_mTcs == null) return;
             var tcs = _mTcs;
-            Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
+            if (tcs.Task.IsCompleted) return;
+            ThreadPool.UnsafeQueueUserWorkItem(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs);
             tcs.Task.Wait();
         }
         /// <summary>
@@ -141,10 +158,13 @@ namespace TWCore.Threading
         {
             if (_mTcs == null) return Task.CompletedTask;
             var tcs = _mTcs;
-            Task.Factory.StartNew(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs, CancellationToken.None, TaskCreationOptions.PreferFairness, TaskScheduler.Default);
+            if (tcs.Task.IsCompleted) return Task.CompletedTask;
+            ThreadPool.UnsafeQueueUserWorkItem(s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs);
             return tcs.Task;
         }
+        #endregion
 
+        #region Reset Method
         /// <summary>
         /// Reset the event
         /// </summary>
@@ -155,14 +175,11 @@ namespace TWCore.Threading
             while (true)
             {
                 var tcs = _mTcs;
-                if (!tcs.Task.IsCompleted)
-                    return;
-#pragma warning disable 420
-                if (Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously), tcs) == tcs)
-#pragma warning restore 420
+                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(), tcs) == tcs)
                     return;
             }
         }
+        #endregion
 
         public void Dispose()
         {

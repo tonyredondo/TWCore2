@@ -91,9 +91,8 @@ namespace TWCore.Tests
 
             using (var watch = Watch.Create("Parallel GetAllAsync Time"))
             {
-                var rAwait = await Enumerable.Range(0, 100)
+                var rAwait = await Enumerable.Range(0, 50)
                     .Select(i => client.GetAllAsync())
-                    .AsAwaitable()
                     .ConfigureAwait(false);
                 Core.Log.InfoBasic("Per Item: {0}", watch.GlobalElapsedMilliseconds / 100);
             }

@@ -20,8 +20,9 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Nito.AsyncEx;
 using TWCore.Serialization;
+using TWCore.Threading;
+using Thread = System.Threading.Thread;
 
 namespace TWCore.Net.RPC.Server.Transports.Default
 {

@@ -54,7 +54,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object GetLock(T key)
         {
-            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            var idx = Math.Abs(key?.GetHashCode() ?? 0) % _lockers.Length;
             return _lockers[idx];
         }
 
@@ -68,7 +68,7 @@ namespace TWCore
         public TResult RunWithLock<TResult>(T key, Func<TResult> body)
         {
             TResult res;
-            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            var idx = Math.Abs(key?.GetHashCode() ?? 0) % _lockers.Length;
             lock (_lockers[idx])
                 res = body();
             return res;
@@ -82,7 +82,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void RunWithLock(T key, Action body)
         {
-            var idx = (key?.GetHashCode() ?? 0) % _lockers.Length;
+            var idx = Math.Abs(key?.GetHashCode() ?? 0) % _lockers.Length;
             lock (_lockers[idx])
                 body();
         }

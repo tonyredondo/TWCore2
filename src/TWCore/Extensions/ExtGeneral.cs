@@ -19,11 +19,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Net;
+
 // ReSharper disable CheckNamespace
 
 namespace TWCore
@@ -341,7 +343,7 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken)
         {
-            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (asyncTask.IsCompleted) return asyncTask.Result;
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
             using (cancellationToken.Register(() => tcs.TrySetCanceled(), false))
@@ -363,7 +365,7 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2)
         {
-            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (asyncTask.IsCompleted) return asyncTask.Result;
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
             var tcs = new TaskCompletionSource<TResult>(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -388,7 +390,7 @@ namespace TWCore
         /// <returns>Task with cancellation token support</returns>
         public static async Task<TResult> HandleCancellationAsync<TResult>(this Task<TResult> asyncTask, CancellationToken cancellationToken, CancellationToken cancellationToken2, CancellationToken cancellationToken3)
         {
-            if (asyncTask.IsCompleted) return await asyncTask.ConfigureAwait(false);
+            if (asyncTask.IsCompleted) return asyncTask.Result;
             if (cancellationToken.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken).ConfigureAwait(false);
             if (cancellationToken2.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken2).ConfigureAwait(false);
             if (cancellationToken3.IsCancellationRequested) return await Task.FromCanceled<TResult>(cancellationToken3).ConfigureAwait(false);
@@ -545,28 +547,30 @@ namespace TWCore
             return Task.Factory.FromAsync(nDelegate.BeginInvoke(@delegate, args, null, null), nDelegate.EndInvoke);
         }
         /// <summary>
-        /// Await for all IEnumerable Tasks and return a Task with all results
+        /// Configure an awaiter for all IEnumerable Tasks and return a Task with all results
         /// </summary>
         /// <typeparam name="T">Type of task</typeparam>
         /// <param name="tasks">IEnumerable instance</param>
+        /// <param name="continueOnCapturedContext">Continue on captured context</param>
         /// <returns>Task with all results</returns>
-        public static async Task<IEnumerable<T>> AsAwaitable<T>(this IEnumerable<Task<T>> tasks)
+        public static ConfiguredTaskAwaitable<IEnumerable<T>> ConfigureAwait<T>(this IEnumerable<Task<T>> tasks, bool continueOnCapturedContext)
         {
-            if (tasks == null) return null;
-            var tskArray = tasks as Task<T>[] ?? tasks.ToArray();
-            await Task.WhenAll(tskArray).ConfigureAwait(false);
-            return tskArray.Select(t => t.Result);
+            var tskArray = tasks as Task<T>[] ?? tasks?.ToArray() ?? new Task<T>[0];
+            return Task.WhenAll(tskArray)
+                .ContinueWith((oldTask, state) => ((Task<T>[]) state).Select(t => t.Result), tskArray,
+                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default).ConfigureAwait(continueOnCapturedContext);
         }
         /// <summary>
-        /// Await for all IEnumerable Tasks and return a Task
+        /// Configure an awaiter for all IEnumerable Tasks and return a Task
         /// </summary>
         /// <param name="tasks">IEnumerable instance</param>
+        /// <param name="continueOnCapturedContext">Continue on captured context</param>
         /// <returns>Task</returns>
-        public static async Task AsAwaitable(this IEnumerable<Task> tasks)
+        public static ConfiguredTaskAwaitable ConfigureAwait(this IEnumerable<Task> tasks, bool continueOnCapturedContext)
         {
-            if (tasks == null) return;
-            var tskArray = tasks as Task[] ?? tasks.ToArray();
-            await Task.WhenAll(tskArray).ConfigureAwait(false);
+            var tskArray = tasks as Task[] ?? tasks.ToArray() ?? new Task[0];
+            return Task.WhenAll(tskArray).ConfigureAwait(continueOnCapturedContext);
         }
         #endregion
 
@@ -763,8 +767,7 @@ namespace TWCore
                 throw new ArgumentNullException("waitHandle");
 
             var tcs = new TaskCompletionSource<bool>();
-            var rwh = ThreadPool.RegisterWaitForSingleObject(waitHandle,
-                delegate { tcs.TrySetResult(true); }, null, millisecondsTimeout, true);
+            var rwh = ThreadPool.RegisterWaitForSingleObject(waitHandle, delegate { tcs.TrySetResult(true); }, null, millisecondsTimeout, true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));
             return t;

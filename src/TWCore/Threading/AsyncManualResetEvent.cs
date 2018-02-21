@@ -31,7 +31,7 @@ namespace TWCore.Threading
     /// </summary>
     public class AsyncManualResetEvent : IDisposable
     {
-        private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>();
         private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
 
         #region Properties
@@ -92,7 +92,7 @@ namespace TWCore.Threading
             if (_mTcs == null) return TaskUtil.CompleteFalse;
             var delayTask = Task.Delay(milliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
-                CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event
@@ -105,7 +105,7 @@ namespace TWCore.Threading
             if (_mTcs == null) return TaskUtil.CompleteFalse;
             var delayTask = Task.Delay(timeout);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
-                CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event

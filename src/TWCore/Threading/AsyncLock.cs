@@ -26,7 +26,7 @@ namespace TWCore.Threading
     public class AsyncLock
     {
         private readonly SemaphoreSlim _semaphore;
-        private readonly Task<IDisposable> _cachedReleaser;
+        private readonly IDisposable _cachedReleaser;
 
         /// <summary>
         /// Creates a new <see cref="AsyncLock"/> instance.
@@ -34,7 +34,7 @@ namespace TWCore.Threading
         public AsyncLock()
         {
             _semaphore = new SemaphoreSlim(1);
-            _cachedReleaser = Task.FromResult((IDisposable) new Releaser(this));
+            _cachedReleaser = new Releaser(this);
         }
 
         /// <summary>
@@ -45,8 +45,11 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
-        public Task<IDisposable> LockAsync() => LockAsync(CancellationToken.None);
-
+        public async Task<IDisposable> LockAsync()
+        {
+            await _semaphore.WaitAsync().ConfigureAwait(false);
+            return _cachedReleaser;
+        }
         /// <summary>
         /// Asynchronously locks the <see cref="AsyncLock"/>, while observing a
         /// <see cref="CancellationToken"/>.
@@ -59,12 +62,10 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
-        public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
+        public async Task<IDisposable> LockAsync(CancellationToken cancellationToken)
         {
-            var wait = _semaphore.WaitAsync(cancellationToken);
-            return wait.IsCompleted || wait.IsCompleted || wait.IsFaulted ?
-                _cachedReleaser :
-                wait.ContinueWith((_, state) => (IDisposable)state, _cachedReleaser.Result, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
+            return _cachedReleaser;
         }
 
         /// <summary>
@@ -83,7 +84,7 @@ namespace TWCore.Threading
             /// </summary>
             public void Dispose()
             {
-                _asyncLock?._semaphore.Release();
+                _asyncLock._semaphore.Release();
             }
         }
     }

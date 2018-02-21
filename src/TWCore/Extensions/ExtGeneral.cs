@@ -299,20 +299,17 @@ namespace TWCore
         public static T WaitAsync<T>(this Task<T> task)
         {
             var wait = new ManualResetEventSlim(false);
-            ExceptionDispatchInfo taskException = null;
-            var continuation = task.ContinueWith(_ =>
+            var continuation = task.ContinueWith((oldTask, state) =>
             {
-                if (_.Exception != null)
-                {
-                    var ex = _.Exception;
-                    taskException = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
-                }
-                wait.Set();
-                return _.Result;
-            }, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+                var ex = oldTask.Exception;
+                var result = (ex != null) ? (object) ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex) : oldTask.Result;
+                ((ManualResetEventSlim)state).Set();
+                return result;
+            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             wait.Wait();
-            taskException?.Throw();
-            return continuation.Result;
+            if (continuation.Result is ExceptionDispatchInfo edi)
+                edi.Throw();
+            return (T)continuation.Result;
         }
         /// <summary>
         /// Wait for task avoiding deadlocks
@@ -322,18 +319,17 @@ namespace TWCore
         public static void WaitAsync(this Task task)
         {
             var wait = new ManualResetEventSlim(false);
-            ExceptionDispatchInfo taskException = null;
-            task.ContinueWith(_ =>
+            var continuation = task.ContinueWith((oldTask, state) =>
             {
-                if (_.Exception != null)
-                {
-                    var ex = _.Exception;
-                    taskException = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
-                }
-                wait.Set();
-            }, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+                ExceptionDispatchInfo tEx = null;
+                var ex = oldTask.Exception;
+                if (ex != null)
+                    tEx = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
+                ((ManualResetEventSlim)state).Set();
+                return tEx;
+            }, wait, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             wait.Wait();
-            taskException?.Throw();
+            continuation.Result?.Throw();
         }
         /// <summary>
         /// Handles a cancellation Token for a task without support

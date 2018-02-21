@@ -35,6 +35,7 @@ namespace TWCore.Cache
     {
         #region Static Timer
         private static readonly HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
+        private static int _registeredCount;
         private static bool _expirationTimerSetted;
         private static Timer _globalExpirationTimer;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -56,13 +57,22 @@ namespace TWCore.Cache
             {
                 if (!_expirationTimerSetted) SetExpirationTimer();
                 AllMetas.Add(meta);
+                _registeredCount++;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void DeregisterMeta(StorageItemMeta meta)
         {
             lock (AllMetas)
+            {
                 AllMetas.Remove(meta);
+                var currentCount = AllMetas.Count;
+                if (_registeredCount > 0 && (double)currentCount / _registeredCount < 0.6)
+                {
+                    AllMetas.TrimExcess();
+                    _registeredCount = currentCount;
+                }
+            }
         }
         #endregion
         

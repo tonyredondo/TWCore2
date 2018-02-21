@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -144,6 +145,65 @@ namespace TWCore.Injector
                 throw new KeyNotFoundException($"The Abstract type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
             var className = name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
             return abstractType.ClassDefinitions.FirstOrDefault(i => i.Name == className);
+        }
+        /// <summary>
+        /// Preload all declared types
+        /// </summary>
+        /// <returns>Types tuples array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlyCollection<TypeLoadResult> PreloadAllTypes()
+        {
+            var lst = new List<TypeLoadResult>();
+            if (Interfaces != null)
+            {
+                foreach (var type in Interfaces)
+                {
+                    lst.Add(new TypeLoadResult(type.Type, Core.GetType(type.Type) != null));
+                    if (type.ClassDefinitions == null) continue;
+                    foreach (var cDef in type.ClassDefinitions)
+                        lst.Add(new TypeLoadResult(cDef.Type, Core.GetType(cDef.Type) != null));
+                }
+            }
+            if (Abstracts != null)
+            {
+                foreach (var type in Abstracts)
+                {
+                    lst.Add(new TypeLoadResult(type.Type, Core.GetType(type.Type) != null));
+                    if (type.ClassDefinitions == null) continue;
+                    foreach (var cDef in type.ClassDefinitions)
+                        lst.Add(new TypeLoadResult(cDef.Type, Core.GetType(cDef.Type) != null));
+                }
+            }
+            if (InstantiableClasses != null)
+            {
+                foreach (var type in InstantiableClasses)
+                    lst.Add(new TypeLoadResult(type.Type, Core.GetType(type.Type) != null));
+            }
+            return lst.AsReadOnly();
+        }
+        /// <summary>
+        /// Type Load Result
+        /// </summary>
+        public struct TypeLoadResult
+        {
+            /// <summary>
+            /// Type AssemblyQualifiedName
+            /// </summary>
+            public string Type { get; }
+            /// <summary>
+            /// Get if the Type is Loaded
+            /// </summary>
+            public bool Loaded { get; }
+            /// <summary>
+            /// Type Load Result
+            /// </summary>
+            /// <param name="type">Type AssemblyQualifiedName</param>
+            /// <param name="loaded">True if the type is loaded</param>
+            public TypeLoadResult(string type, bool loaded)
+            {
+                Type = type;
+                Loaded = loaded;
+            }
         }
         #endregion
     }

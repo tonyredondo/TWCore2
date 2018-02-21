@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -383,6 +384,20 @@ namespace TWCore.Injector
                 Singleton = singleton
             });
         }
+        /// <summary>
+        /// Preload all declared types
+        /// </summary>
+        /// <returns>Types tuples array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlyCollection<InjectorSettings.TypeLoadResult> PreloadAllTypes() 
+            => Settings.PreloadAllTypes();
+        /// <summary>
+        /// Get all missing types
+        /// </summary>
+        /// <returns>Type AssemblyQualifiedName array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string[] GetAllMissingTypes()
+            => Settings.PreloadAllTypes().Where(t => !t.Loaded).Select(t => t.Type).ToArray();
         #endregion
 
         #region Private Methods

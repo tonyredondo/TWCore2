@@ -309,7 +309,7 @@ namespace TWCore
                 }
                 wait.Set();
                 return _.Result;
-            });
+            }, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             wait.Wait();
             taskException?.Throw();
             return continuation.Result;
@@ -331,7 +331,7 @@ namespace TWCore
                     taskException = ExceptionDispatchInfo.Capture(ex.InnerExceptions.Count == 1 ? ex.InnerExceptions[0] : ex);
                 }
                 wait.Set();
-            });
+            }, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
             wait.Wait();
             taskException?.Throw();
         }

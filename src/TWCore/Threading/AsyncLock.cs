@@ -64,7 +64,7 @@ namespace TWCore.Threading
             var wait = _semaphore.WaitAsync(cancellationToken);
             return wait.IsCompleted || wait.IsCompleted || wait.IsFaulted ?
                 _cachedReleaser :
-                wait.ContinueWith((_, state) => (IDisposable)state, _cachedReleaser.Result, CancellationToken.None, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Default);
+                wait.ContinueWith((_, state) => (IDisposable)state, _cachedReleaser.Result, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         /// <summary>

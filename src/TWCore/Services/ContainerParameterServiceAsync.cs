@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable UnusedParameter.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
@@ -57,7 +58,8 @@ namespace TWCore.Services
         /// OnHandler Method 
         /// </summary>
         /// <param name="info">Parameter handler info</param>
-        private void OnHandler(ParameterHandlerInfo info) => OnHandlerAsync(info).WaitAsync();
+        private void OnHandler(ParameterHandlerInfo info) 
+            => OnHandlerAsync(info).WaitAsync();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void ICoreStart.CoreInit(Factories factories)

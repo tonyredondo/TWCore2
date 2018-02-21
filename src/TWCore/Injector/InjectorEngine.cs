@@ -83,6 +83,10 @@ namespace TWCore.Injector
                 _attributesRegistered = false;
             }
         }
+        /// <summary>
+        /// Throw exception on instance creation error
+        /// </summary>
+        public bool ThrowExceptionOnInstanceCreationError { get; set; } = true;
         #endregion
 
         #region .ctor
@@ -472,7 +476,7 @@ namespace TWCore.Injector
         {
             var activatorItem = _instantiableCache.GetOrAdd(instanceDefinition, definition =>
             {
-                var type = Core.GetType(definition.Type);
+                var type = Core.GetType(definition.Type, ThrowExceptionOnInstanceCreationError);
                 if (type == null) return null;
                 var typeInfo = type.GetTypeInfo();
                 if (definition.Parameters?.Any() == true)
@@ -504,6 +508,9 @@ namespace TWCore.Injector
 
                         return new ActivatorItem { Type = type, Arguments = argsLst.ToArray() };
                     }
+
+                    if (ThrowExceptionOnInstanceCreationError)
+                        throw new EntryPointNotFoundException("A valid constructor can't be found for the type: " + type.AssemblyQualifiedName);
                 }
                 else
                     return new ActivatorItem { Type = type };

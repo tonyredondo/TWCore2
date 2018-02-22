@@ -31,7 +31,7 @@ namespace TWCore.Threading
     /// </summary>
     public class AsyncManualResetEvent : IDisposable
     {
-        private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>();
+        private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
 
         #region Properties
@@ -147,8 +147,7 @@ namespace TWCore.Threading
             if (_mTcs == null) return;
             var tcs = _mTcs;
             if (tcs.Task.IsCompleted) return;
-            ThreadPool.UnsafeQueueUserWorkItem(s => ((TaskCompletionSource<bool>)s).TrySetResult(true), tcs);
-            tcs.Task.Wait();
+            tcs.TrySetResult(true);
         }
         /// <summary>
         /// Sets the event
@@ -175,7 +174,7 @@ namespace TWCore.Threading
             while (true)
             {
                 var tcs = _mTcs;
-                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(), tcs) == tcs)
+                if (!tcs.Task.IsCompleted || Interlocked.CompareExchange(ref _mTcs, new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously), tcs) == tcs)
                     return;
             }
         }

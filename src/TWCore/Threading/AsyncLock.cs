@@ -26,6 +26,7 @@ namespace TWCore.Threading
     public class AsyncLock
     {
         private readonly SemaphoreSlim _semaphore;
+        private readonly Task<IDisposable> _cachedTaskReleaser;
         private readonly IDisposable _cachedReleaser;
 
         /// <summary>
@@ -35,6 +36,7 @@ namespace TWCore.Threading
         {
             _semaphore = new SemaphoreSlim(1);
             _cachedReleaser = new Releaser(this);
+            _cachedTaskReleaser = Task.FromResult(_cachedReleaser);
         }
 
         /// <summary>
@@ -45,10 +47,12 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
-        public async Task<IDisposable> LockAsync()
+        public Task<IDisposable> LockAsync()
         {
-            await _semaphore.WaitAsync().ConfigureAwait(false);
-            return _cachedReleaser;
+            var waitTask = _semaphore.WaitAsync();
+            return waitTask.IsCompleted ? 
+                _cachedTaskReleaser : 
+                waitTask.ContinueWith((oldTask, state) => (IDisposable) state, _cachedReleaser, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Asynchronously locks the <see cref="AsyncLock"/>, while observing a
@@ -62,10 +66,12 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
-        public async Task<IDisposable> LockAsync(CancellationToken cancellationToken)
+        public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
         {
-            await _semaphore.WaitAsync(cancellationToken).ConfigureAwait(false);
-            return _cachedReleaser;
+            var waitTask = _semaphore.WaitAsync(cancellationToken);
+            return waitTask.IsCompleted || waitTask.IsCanceled
+                ? _cachedTaskReleaser
+                : waitTask.ContinueWith((oldTask, state) => (IDisposable) state, _cachedReleaser, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         /// <summary>

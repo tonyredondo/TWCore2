@@ -106,42 +106,26 @@ namespace TWCore.Diagnostics.Log
             Storage = new LogStorageCollection();
             if (itemFactory != null)
                 ItemFactory = itemFactory;
-            _itemsWorker = new Worker<ILogItem>(() => Storage?.Count > 0, async item =>
+            _itemsWorker = new Worker<ILogItem>(() => Storage?.Count > 0, item =>
             {
-                try
+                switch (item)
                 {
-                    switch (item)
-                    {
-                        case null:
-                            return;
-                        case NewLineLogItem _:
-                            await Storage.WriteEmptyLineAsync().ConfigureAwait(false);
-                            break;
-                        default:
-                            await Storage.WriteAsync(item).ConfigureAwait(false);
-                            break;
-                    }
+                    case null:
+                        return Task.CompletedTask;
+                    case NewLineLogItem _:
+                        return Storage.WriteEmptyLineAsync();
+                    default:
+                        return Storage.WriteAsync(item);
                 }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }, false);
+            }, false, true);
             _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
             _lastLogItemsWorker = new Worker<ILogItem>(item =>
             {
-                try
-                {
-                    if (_lastLogItems.Count > 10)
-                        _lastLogItems.TryDequeue(out var _);
-                    if (!(item is NewLineLogItem))
-                        _lastLogItems.Enqueue(item);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
-            }, false);
+                if (_lastLogItems.Count > 10)
+                    _lastLogItems.TryDequeue(out var _);
+                if (!(item is NewLineLogItem))
+                    _lastLogItems.Enqueue(item);
+            }, false, true);
             Core.Status.Attach(() =>
             {
                 var sItem = new StatusItem();

@@ -76,7 +76,7 @@ namespace TWCore.Diagnostics.Trace
                 {
                     Core.Log.Error(ex, "Error writing the Trace item to disk.");
                 }
-            });
+            }, true, true);
             Core.Status.AttachObject(this);
         }
         /// <summary>

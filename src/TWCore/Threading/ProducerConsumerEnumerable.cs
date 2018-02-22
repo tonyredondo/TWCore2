@@ -40,6 +40,7 @@ namespace TWCore.Threading
         private readonly CancellationTokenSource _tokenSource;
         private readonly AsyncManualResetEvent _producerAddEvent;
         private readonly AsyncManualResetEvent _producerEndEvent;
+        private readonly ObjectPool<ConsumerEnumerator> _consumerPool;
         private bool _started;
         private bool _disposed;
 
@@ -56,6 +57,7 @@ namespace TWCore.Threading
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
             _producerEndEvent = new AsyncManualResetEvent(false);
+            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset(), 0, PoolResetMode.AfterUse);
         }
         /// <summary>
         /// Producer / Consumer schema enumerable
@@ -69,6 +71,7 @@ namespace TWCore.Threading
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
             _producerEndEvent = new AsyncManualResetEvent(false);
+            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset(), 0, PoolResetMode.AfterUse);
         }
         ~ProducerConsumerEnumerable()
         {
@@ -86,6 +89,7 @@ namespace TWCore.Threading
             _tokenSource?.Dispose();
             _producerAddEvent?.Dispose();
             _producerEndEvent?.Dispose();
+            _consumerPool.Clear();
         }
         #endregion
 
@@ -109,7 +113,7 @@ namespace TWCore.Threading
                 {
                     Core.Log.Write(ex);
                 }
-                await _producerEndEvent.SetAsync().ConfigureAwait(false);
+                _producerEndEvent.Set();
             }, _tokenSource.Token);
         }
         /// <summary>
@@ -119,9 +123,10 @@ namespace TWCore.Threading
         /// <returns>ForEach Task</returns>
         public async Task ForEachAsync(Action<T> itemAction)
         {
-            var consumer = new ConsumerEnumerator(this);
+            var consumer = _consumerPool.New();
             while(await consumer.MoveNextAsync().ConfigureAwait(false))
                 itemAction(consumer.Current);
+            _consumerPool.Store(consumer);
         }
         /// <summary>
         /// Async version of ForEach
@@ -130,10 +135,11 @@ namespace TWCore.Threading
         /// <returns>ForEach Task</returns>
         public async Task ForEachAsync(Action<T, int> itemAction)
         {
-            var consumer = new ConsumerEnumerator(this);
+            var consumer = _consumerPool.New();
             var idx = 0;
             while (await consumer.MoveNextAsync().ConfigureAwait(false))
                 itemAction(consumer.Current, idx++);
+            _consumerPool.Store(consumer);
         }
         /// <summary>
         /// Async version of ForEach
@@ -142,9 +148,10 @@ namespace TWCore.Threading
         /// <returns>ForEach Task</returns>
         public async Task ForEachAsync(Func<T, Task> itemFunc)
         {
-            var consumer = new ConsumerEnumerator(this);
+            var consumer = _consumerPool.New();
             while (await consumer.MoveNextAsync().ConfigureAwait(false))
                 await itemFunc(consumer.Current).ConfigureAwait(false);
+            _consumerPool.Store(consumer);
         }
         /// <summary>
         /// Async version of ForEach
@@ -153,10 +160,11 @@ namespace TWCore.Threading
         /// <returns>ForEach Task</returns>
         public async Task ForEachAsync(Func<T, int, Task> itemFunc)
         {
-            var consumer = new ConsumerEnumerator(this);
+            var consumer = _consumerPool.New();
             var idx = 0;
             while (await consumer.MoveNextAsync().ConfigureAwait(false))
                 await itemFunc(consumer.Current, idx++).ConfigureAwait(false);
+            _consumerPool.Store(consumer);
         }
         /// <summary>
         /// Async version of ToArray
@@ -164,10 +172,11 @@ namespace TWCore.Threading
         /// <returns>Array tasks</returns>
         public async Task<T[]> ToArrayAsync()
         {
-            var consumer = new ConsumerEnumerator(this);
+            var consumer = _consumerPool.New();
             var lst = new List<T>();
             while (await consumer.MoveNextAsync().ConfigureAwait(false))
                 lst.Add(consumer.Current);
+            _consumerPool.Store(consumer);
             return lst.ToArray();
         }
         #endregion
@@ -186,7 +195,7 @@ namespace TWCore.Threading
         /// <summary>
         /// Methods to be called from the producer thread
         /// </summary>
-        public class ProducerMethods
+        public struct ProducerMethods
         {
             private readonly ProducerConsumerEnumerable<T> _data;
 
@@ -209,16 +218,6 @@ namespace TWCore.Threading
                 _data._producerAddEvent.Set();
             }
             /// <summary>
-            /// Adds an item to the enumerable
-            /// </summary>
-            /// <param name="item">Item instance</param>
-            public Task AddAsync(T item)
-            {
-                lock (_data._padlock)
-                    _data._collection.Add(item);
-                return _data._producerAddEvent.SetAsync();
-            }
-            /// <summary>
             /// Adds a IEnumerable to the internal enumerable
             /// </summary>
             /// <param name="enumerable">Enumerable of items</param>
@@ -227,16 +226,6 @@ namespace TWCore.Threading
                 lock (_data._padlock)
                     _data._collection.AddRange(enumerable);
                 _data._producerAddEvent.Set();
-            }
-            /// <summary>
-            /// Adds a IEnumerable to the internal enumerable
-            /// </summary>
-            /// <param name="enumerable">Enumerable of items</param>
-            public Task AddRangeAsync(IEnumerable<T> enumerable)
-            {
-                lock (_data._padlock)
-                    _data._collection.AddRange(enumerable);
-                return _data._producerAddEvent.SetAsync();
             }
             #endregion
         }

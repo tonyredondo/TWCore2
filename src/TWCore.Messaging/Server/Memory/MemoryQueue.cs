@@ -30,6 +30,7 @@ namespace TWCore.Messaging
     /// </summary>
     public class MemoryQueue
     {
+        private static readonly ConcurrentDictionary<CancellationToken, Task> CancellationTasks = new ConcurrentDictionary<CancellationToken, Task>();
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
         private readonly ConcurrentDictionary<Guid, Message> _messageStorage = new ConcurrentDictionary<Guid, Message>();
         private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>();
@@ -65,6 +66,7 @@ namespace TWCore.Messaging
         {
             try
             {
+                var tokenTask = CancellationTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
                 while (!cancellationToken.IsCancellationRequested)
                 {
                     if (_messageQueue.TryDequeue(out var correlationId))
@@ -73,7 +75,7 @@ namespace TWCore.Messaging
                         Interlocked.Exchange(ref _queueTask, new TaskCompletionSource<bool>());
                         return message;
                     }
-                    await _queueTask.Task.HandleCancellationAsync(cancellationToken).ConfigureAwait(false);
+                    await Task.WhenAny(_queueTask.Task, tokenTask).ConfigureAwait(false);
                 }
             }
             catch

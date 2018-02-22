@@ -1310,7 +1310,7 @@ namespace TWCore
 	    /// <exception cref="T:System.ArgumentNullException"><paramref name="key">key</paramref> or <paramref name="valueFactory">valueFactory</paramref> is null.</exception>
 	    /// <exception cref="T:System.OverflowException">The dictionary already contains the maximum number of elements (<see cref="F:System.Int32.MaxValue"></see>).</exception>
 	    public static async Task<TValue> GetOrAddAsync<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, Task<TValue>> valueFactory)
-	        => dictionary.TryGetValue(key, out var resultingValue) ? resultingValue : dictionary.GetOrAdd(key, await valueFactory(key));
+	        => dictionary.TryGetValue(key, out var resultingValue) ? resultingValue : dictionary.GetOrAdd(key, await valueFactory(key).ConfigureAwait(false));
         #endregion
     }
 }

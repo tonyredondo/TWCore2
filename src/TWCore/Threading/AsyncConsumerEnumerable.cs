@@ -16,6 +16,7 @@ limitations under the License.
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable once UnusedMember.Global
 // ReSharper disable InheritdocConsiderUsage
@@ -62,7 +63,7 @@ namespace TWCore.Threading
         public void Add(Task<T[]> task)
         {
             lock (_tskList)
-                _tskList.Add(Task.Run(async () => (IEnumerable<T>)await task.ConfigureAwait(false)));
+                _tskList.Add(task.ContinueWith(oTsk => (IEnumerable<T>)oTsk.Result, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default));
         }
         /// <summary>
         /// Adds a task to produce an IEnumerable of items
@@ -80,7 +81,7 @@ namespace TWCore.Threading
         public void Add(Task<T> task)
         {
             lock (_tskList)
-                _tskList.Add(Task.Run(async () => (IEnumerable<T>)new[] { await task.ConfigureAwait(false) }));
+                _tskList.Add(task.ContinueWith(oTsk => (IEnumerable<T>)new[] { oTsk.Result }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default));
         }
         /// <summary>
         /// Adds an IEnumerable instance

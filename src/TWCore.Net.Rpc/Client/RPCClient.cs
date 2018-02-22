@@ -189,8 +189,9 @@ namespace TWCore.Net.RPC.Client
         /// <param name="args">Server method arguments</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
-            => (T)await ServerInvokeAsync(serviceName, method, args).ConfigureAwait(false);
+        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, params object[] args)
+            => ServerInvokeAsync(serviceName, method, args).ContinueWith(tsk => (T)tsk.Result,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -212,6 +213,7 @@ namespace TWCore.Net.RPC.Client
                 throw response.Exception.GetException();
             return response.ReturnValue;
         }
+
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>
@@ -222,8 +224,9 @@ namespace TWCore.Net.RPC.Client
         /// <param name="cancellationToken">Cancellation Token instance</param>
         /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
-            => (T)await ServerInvokeAsync(serviceName, method, args, cancellationToken).ConfigureAwait(false);
+        public Task<T> ServerInvokeAsync<T>(string serviceName, string method, object[] args, CancellationToken cancellationToken)
+            => ServerInvokeAsync(serviceName, method, args, cancellationToken).ContinueWith(tsk => (T)tsk.Result,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         /// <summary>
         /// Invokes a Server RPC method
         /// </summary>

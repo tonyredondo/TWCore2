@@ -171,11 +171,11 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WriteAsync(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
             if (_isDirty || _cItems == null)
             {
-                if (_items == null) return;
+                if (_items == null) return Task.CompletedTask;
                 lock (_locker)
                 {
                     _cItems = new List<(ILogStorage, LogLevel)>(_items);
@@ -194,7 +194,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     // ignored
                 }
             });
-            await Task.WhenAll(tsk).ConfigureAwait(false);
+            return Task.WhenAll(tsk);
         }
         /// <inheritdoc />
         /// <summary>

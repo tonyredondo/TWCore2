@@ -84,6 +84,10 @@ namespace TWCore
         /// Gets the number of elements in the queue
         /// </summary>
         public int Count => _queueCount;
+        /// <summary>
+        /// Gets or Sets if the worker must ignore Exceptions
+        /// </summary>
+        public bool IgnoreExceptions { get; set; }
         #endregion
 
         #region .ctors
@@ -92,8 +96,9 @@ namespace TWCore
         /// </summary>
         /// <param name="action">Action to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Action<T> action, bool startActive = true)
+        public Worker(Action<T> action, bool startActive = true, bool ignoreExceptions = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = null;
@@ -102,6 +107,7 @@ namespace TWCore
             Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
+            IgnoreExceptions = ignoreExceptions;
             Init();
         }
         /// <summary>
@@ -110,8 +116,9 @@ namespace TWCore
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         /// <param name="action">Action to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<bool> precondition, Action<T> action, bool startActive = true)
+        public Worker(Func<bool> precondition, Action<T> action, bool startActive = true, bool ignoreExceptions = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = precondition;
@@ -120,6 +127,7 @@ namespace TWCore
             Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
+            IgnoreExceptions = ignoreExceptions;
             Init();
         }
         /// <summary>
@@ -127,8 +135,9 @@ namespace TWCore
         /// </summary>
         /// <param name="function">Func to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<T, Task> function, bool startActive = true)
+        public Worker(Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = null;
@@ -137,6 +146,7 @@ namespace TWCore
             Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
+            IgnoreExceptions = ignoreExceptions;
             Init();
         }
         /// <summary>
@@ -145,8 +155,9 @@ namespace TWCore
         /// <param name="precondition">Precondition to accomplish before dequeuing an element from the queue</param>
         /// <param name="function">Func to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
+        /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<bool> precondition, Func<T, Task> function, bool startActive = true)
+        public Worker(Func<bool> precondition, Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = precondition;
@@ -155,6 +166,7 @@ namespace TWCore
             Exceptions = new List<(Exception, T)>();
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
+            IgnoreExceptions = ignoreExceptions;
             Init();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -264,13 +276,17 @@ namespace TWCore
                     try
                     {
                         await _func(item).ConfigureAwait(false);
-                        workDone = true;
                     }
                     catch (Exception ex)
                     {
+                        if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
                             Exceptions.Add((ex, item));
+                    }
+                    finally
+                    {
+                        workDone = true;
                     }
                 }
                 if (workDone && OnWorkDone != null)
@@ -315,13 +331,17 @@ namespace TWCore
                     try
                     {
                         await _func(item).ConfigureAwait(false);
-                        workDone = true;
                     }
                     catch (Exception ex)
                     {
+                        if (IgnoreExceptions) continue;
                         OnException?.Invoke(this, (ex, item));
                         lock (_locker)
                             Exceptions.Add((ex, item));
+                    }
+                    finally
+                    {
+                        workDone = true;
                     }
                 }
 

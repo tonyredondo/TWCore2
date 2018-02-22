@@ -88,11 +88,11 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// </summary>
         /// <param name="item">Trace item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WriteAsync(TraceItem item)
+        public Task WriteAsync(TraceItem item)
         {
             if (_isDirty || _cItems == null)
             {
-                if (_items == null) return;
+                if (_items == null) return Task.CompletedTask;
                 lock (_locker)
                 {
                     _cItems = new List<ITraceStorage>(_items);
@@ -109,7 +109,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                     Core.Log.Write(ex);
                 }
             });
-            await Task.WhenAll(tsk).ConfigureAwait(false);
+            return Task.WhenAll(tsk);
         }
         /// <inheritdoc />
         /// <summary>

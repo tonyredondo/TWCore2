@@ -102,9 +102,9 @@ namespace TWCore
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>Function return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<T> InvokeAsync<T>(Func<Task<T>> task, string statsMessage, bool asyncRun = false)
+        public static Task<T> InvokeAsync<T>(Func<Task<T>> task, string statsMessage, bool asyncRun = false)
         {
-            return await InvokeAsync(task, sw => Core.Log.Stats($"Execution Time: {sw.Elapsed.TotalMilliseconds}ms, for: {statsMessage}"), asyncRun).ConfigureAwait(false);
+            return InvokeAsync(task, sw => Core.Log.Stats($"Execution Time: {sw.Elapsed.TotalMilliseconds}ms, for: {statsMessage}"), asyncRun);
         }
         #endregion
 
@@ -165,9 +165,9 @@ namespace TWCore
         /// <param name="asyncRun">Execute the onMethodsEnd action in a separated thread to avoid performance impact.</param>
         /// <returns>Function return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task InvokeAsync(Func<Task> task, string statsMessage, bool asyncRun = false)
+        public static Task InvokeAsync(Func<Task> task, string statsMessage, bool asyncRun = false)
         {
-            await InvokeAsync(task, sw => Core.Log.Stats($"Execution Time: {sw.Elapsed.TotalMilliseconds}ms, for: {statsMessage}"), asyncRun).ConfigureAwait(false);
+            return InvokeAsync(task, sw => Core.Log.Stats($"Execution Time: {sw.Elapsed.TotalMilliseconds}ms, for: {statsMessage}"), asyncRun);
         }
         #endregion
 

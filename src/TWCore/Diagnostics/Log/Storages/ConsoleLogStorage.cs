@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Services;
 
@@ -55,9 +56,9 @@ namespace TWCore.Diagnostics.Log.Storages
         /// </summary>
         /// <param name="item">Log Item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task WriteAsync(ILogItem item)
+        public Task WriteAsync(ILogItem item)
         {
-            if (!ServiceContainer.HasConsole) return;
+            if (!ServiceContainer.HasConsole) return Task.CompletedTask;
             string buffer;
             lock(PadLock)
             {
@@ -120,8 +121,9 @@ namespace TWCore.Diagnostics.Log.Storages
                     }
                 }
             }
-            await Console.Out.WriteAsync(buffer).ConfigureAwait(false);
-            _lastLogLevel = item.Level;
+
+            var cTask = Console.Out.WriteAsync(buffer);
+            return cTask.ContinueWith(_ => _lastLogLevel = item.Level, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

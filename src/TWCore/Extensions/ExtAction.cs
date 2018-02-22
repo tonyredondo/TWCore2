@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 
 // ReSharper disable CheckNamespace
 
@@ -158,11 +159,11 @@ namespace TWCore
         public static Func<Task> CreateThrottledTaskAsync(this Task task, int milliseconds)
         {
             var date = DateTime.MinValue;
-            return async () =>
+            return () =>
             {
-                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
-                await task.ConfigureAwait(false);
-                date = DateTime.UtcNow;
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return Task.CompletedTask;
+                return task.ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             };
         }
         /// <summary>
@@ -175,11 +176,11 @@ namespace TWCore
         public static Func<T, Task> CreateThrottledAction<T>(this Func<T, Task> task, int milliseconds)
         {
             var date = DateTime.MinValue;
-            return async (obj) =>
+            return obj =>
             {
-                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return;
-                await task(obj).ConfigureAwait(false);
-                date = DateTime.UtcNow;
+                if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return Task.CompletedTask;
+                return task(obj).ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             };
         }
         #endregion
@@ -772,12 +773,11 @@ namespace TWCore
         /// <param name="milliseconds">Timeout in milliseconds</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds)
+        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds)
         {
-            if (task.IsCompleted) return true;
-            var waitTask = Task.Delay(milliseconds);
-            var resTask = await Task.WhenAny(waitTask, task).ConfigureAwait(false);
-            return resTask == task;
+            if (task.IsCompleted) return TaskUtil.CompleteTrue;
+            return Task.WhenAny(Task.Delay(milliseconds), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait for action with timeout
@@ -787,13 +787,12 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token instance</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
+        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
         {
-            if (task.IsCompleted) return true;
-            if (cancellationToken.IsCancellationRequested) return false;
-            var waitTask = Task.Delay(milliseconds, cancellationToken);
-            var resTask = await Task.WhenAny(waitTask, task).ConfigureAwait(false);
-            return resTask == task;
+            if (task.IsCompleted) return TaskUtil.CompleteTrue;
+            if (cancellationToken.IsCancellationRequested) return TaskUtil.CompleteFalse;
+            return Task.WhenAny(Task.Delay(milliseconds, cancellationToken), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         #endregion
     }

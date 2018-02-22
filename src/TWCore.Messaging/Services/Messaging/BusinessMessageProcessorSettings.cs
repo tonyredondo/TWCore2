@@ -31,9 +31,5 @@ namespace TWCore.Services.Messaging
         /// Business item initial count in percent of the total maximum items.
         /// </summary>
         public float InitialBusinessesPercent { get; set; } = 0.3F;
-        /// <summary>
-        /// Business preallocation threshold in percent of the total maximum items.
-        /// </summary>
-        public float BusinessesPreallocationPercent { get; set; } = 0.1F;
     }
 }

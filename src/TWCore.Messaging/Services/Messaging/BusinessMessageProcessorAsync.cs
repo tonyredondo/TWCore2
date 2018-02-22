@@ -41,10 +41,6 @@ namespace TWCore.Services.Messaging
         /// Business item initial count in percent of the total maximum items.
         /// </summary>
         public static float InitialBusinessesPercent { get; set; } = Settings.InitialBusinessesPercent;
-        /// <summary>
-        /// Business preallocation threshold in percent of the total maximum items.
-        /// </summary>
-        public static float BusinessesPreallocationPercent { get; set; } = Settings.BusinessesPreallocationPercent;
         #endregion
 
         #region Properties
@@ -52,11 +48,6 @@ namespace TWCore.Services.Messaging
         /// Business item initial count
         /// </summary>
         public int BusinessInitialCount { get; private set; }
-        /// <summary>
-        /// Business preallocation threshold. 
-        /// Number of items limit to create new allocations in another Task. Use 0 to disable, if is greater than the initial buffer then the initial buffer is set twice at this value.
-        /// </summary>
-        public int BusinessPreallocationThreshold { get; private set; }
         #endregion
 
         #region .ctor
@@ -73,7 +64,6 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(pairConfig), "The MQPairConfig can't be null");
             var serverCount = pairConfig.ServerQueues.Count;
             BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
-            BusinessPreallocationThreshold = (int)((_maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
             AttachStatus();
         }
         /// <summary>
@@ -89,21 +79,18 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(server), "The IMQueueServer can't be null");
             var serverCount = server.Config.ServerQueues.Count;
             BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
-            BusinessPreallocationThreshold = (int)((_maxMessagesPerQueue * serverCount) * BusinessesPreallocationPercent) + 1; //The threshold to create new business is in 10%
             AttachStatus();
         }
         /// <summary>
         /// Business message processor
         /// </summary>
         /// <param name="businessInitialCount">Business item initial count</param>
-        /// <param name="businessPreallocationThreshold">Number of items limit to create new allocations in another Task. Use 0 to disable, if is greater than the initial buffer then the initial buffer is set twice at this value.</param>
         /// <param name="businessCreationFunction">Business item creation function</param>
-        public BusinessMessageProcessorAsync(int businessInitialCount, int businessPreallocationThreshold, Func<IBusinessAsync> businessCreationFunction)
+        public BusinessMessageProcessorAsync(int businessInitialCount, Func<IBusinessAsync> businessCreationFunction)
         {
             _creationFunction = businessCreationFunction ?? 
                 throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             BusinessInitialCount = businessInitialCount;
-            BusinessPreallocationThreshold = businessPreallocationThreshold;
             AttachStatus();
         }
         private void AttachStatus()
@@ -112,9 +99,7 @@ namespace TWCore.Services.Messaging
             {
                 collection.Add("Maximum businesses per queue", _maxMessagesPerQueue);
                 collection.Add("Business item initial count in percent of the total maximum items", InitialBusinessesPercent);
-                collection.Add("Business preallocation threshold in percent of the total maximum items", BusinessesPreallocationPercent);
                 collection.Add("Business initial count", BusinessInitialCount);
-                collection.Add("Business preallocation threshold", BusinessPreallocationThreshold);
                 collection.Add("Available business on the pool", _businessPool?.Count, true);
             });
         }
@@ -129,10 +114,8 @@ namespace TWCore.Services.Messaging
         {
             Core.Log.LibDebug("Initializing message processor...");
             Core.Log.LibDebug("Business item initial count in percent of the total maximum items = {0}", InitialBusinessesPercent);
-            Core.Log.LibDebug("Business preallocation threshold in percent of the total maximum items = {0}", BusinessesPreallocationPercent);
             Core.Log.LibDebug("Maximum businesses per queue = {0}", _maxMessagesPerQueue);
             Core.Log.LibDebug("Business Initial Count = {0}", BusinessInitialCount);
-            Core.Log.LibDebug("Business Preallocation Threshold = {0}", BusinessPreallocationThreshold);
             Dispose();
             _businessPool = new ObjectPool<IBusinessAsync>(pool =>
             {
@@ -141,7 +124,7 @@ namespace TWCore.Services.Messaging
                     throw new NullReferenceException("The business creation function returns a null IBusiness value. Please check the creation function.");
                 item.Init();
                 return item;
-            }, null, BusinessInitialCount, PoolResetMode.AfterUse, BusinessPreallocationThreshold);
+            }, null, BusinessInitialCount);
             Core.Log.LibDebug("Message processor initialized");
         }
         /// <inheritdoc />

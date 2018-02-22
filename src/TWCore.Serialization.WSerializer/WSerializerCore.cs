@@ -42,8 +42,7 @@ namespace TWCore.Serialization.WSerializer
         private static readonly ObjectPool<(SerializerCache<Type>, SerializerCache<object>)> CachePool = new ObjectPool<(SerializerCache<Type>, SerializerCache<object>)>(pool =>
                     (new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
                     i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
-                    1,
-                    PoolResetMode.AfterUse);
+                    Environment.ProcessorCount);
         private static readonly ByteArrayComparer ByteComparer = new ByteArrayComparer();
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
         private static readonly ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new ConcurrentDictionary<Type, byte[]>();
@@ -65,7 +64,7 @@ namespace TWCore.Serialization.WSerializer
         #region Serializer
         private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
-        private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(1, s => s.Clear());
+        private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(Environment.ProcessorCount, s => s.Clear());
         private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
         private readonly byte[] _buffer = new byte[3];
 
@@ -701,9 +700,8 @@ namespace TWCore.Serialization.WSerializer
         private static readonly ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)> DCachePool = new ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)>(pool =>
             (new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort, TypeDefinitionComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
             i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
-            1,
-            PoolResetMode.AfterUse);
-        private static readonly ReferencePool<Stack<DeserializerTypeItem>> DTypeStackPool = new ReferencePool<Stack<DeserializerTypeItem>>(1, s => s.Clear());
+            Environment.ProcessorCount);
+        private static readonly ReferencePool<Stack<DeserializerTypeItem>> DTypeStackPool = new ReferencePool<Stack<DeserializerTypeItem>>(Environment.ProcessorCount, s => s.Clear());
         private static readonly ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new ConcurrentDictionary<(string, string, string), Type>();
         private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
 

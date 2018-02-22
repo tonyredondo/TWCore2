@@ -15,9 +15,12 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace TWCore
@@ -28,18 +31,16 @@ namespace TWCore
     /// <typeparam name="T">Object type</typeparam>
     public sealed class ObjectPool<T>
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object _padLock = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Stack<T> _objectStack;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _allocating;
-        private readonly PoolResetMode _resetMode;
-        private readonly int _preallocationThreshold;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
 
         /// <summary>
         /// Get the number of objects in the queue
         /// </summary>
-        public int Count => _objectStack.Count;
+        public int Count => _count;
 
         /// <summary>
         /// Object pool
@@ -48,17 +49,13 @@ namespace TWCore
         /// <param name="resetAction">Reset action before storing back the item in the pool</param>
         /// <param name="initialBufferSize">Initial buffer size</param>
         /// <param name="resetMode">Pool reset mode</param>
-        /// <param name="preallocationThreshold">Number of items limit to create new allocations in another Task. Use 0 to disable, if is greater than the initial buffer then the initial buffer is set twice at this value.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.BeforeUse, int preallocationThreshold = 0)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse)
         {
-            _objectStack = new Stack<T>(25);
+            _objectStack = new ConcurrentStack<T>();
             _createFunc = createFunc;
             _resetAction = resetAction;
             _resetMode = resetMode;
-            _preallocationThreshold = preallocationThreshold;
-            if (_preallocationThreshold > initialBufferSize)
-                initialBufferSize = _preallocationThreshold * 2;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
         }
@@ -69,12 +66,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            for (var i = 0; i < number; i++)
-            {
-                var value = _createFunc(this);
-                lock (_padLock)
-                    _objectStack.Push(value);
-            }
+            _objectStack.PushRange(Enumerable.Range(0, number).Select(i => _createFunc(this)).ToArray());
+            Interlocked.Add(ref _count, number);
         }
         /// <summary>
         /// Get a new instance from the pool
@@ -83,34 +76,15 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            var cNew = true;
-            var value = default(T);
-            int count;
-
-            lock (_padLock)
+            if (_objectStack.TryPop(out var value))
             {
-                count = _objectStack.Count;
-                if (count > 0)
-                {
-                    value = _objectStack.Pop();
-                    cNew = false;
-                }
+                Interlocked.Decrement(ref _count);
+                if (_resetMode == PoolResetMode.BeforeUse)
+                    _resetAction?.Invoke(value);
+                return value;
             }
-            if (count <= _preallocationThreshold && !_allocating)
-            {
-                Task.Run(() =>
-                {
-                    _allocating = true;
-                    Preallocate(_preallocationThreshold * 2);
-                    _allocating = false;
-                });
-            }
-            
-            if (cNew)
-                return _createFunc(this);
-            if (_resetMode == PoolResetMode.BeforeUse)
-                _resetAction?.Invoke(value);
-            return value;
+            Interlocked.Exchange(ref _count, 0);
+            return _createFunc(this);
         }
         /// <summary>
         /// Store the instance back to the pool
@@ -121,8 +95,8 @@ namespace TWCore
         {
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
-            lock(_padLock)
-                _objectStack.Push(obj);
+            _objectStack.Push(obj);
+            Interlocked.Increment(ref _count);
         }
         /// <summary>
         /// Get current objects in the pool
@@ -131,8 +105,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<T> GetCurrentObjects()
         {
-            lock(_padLock)
-                return _objectStack.ToReadOnly();
+            return _objectStack.ToReadOnly();
         }
         /// <summary>
         /// Clear the current object stack
@@ -140,8 +113,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            lock(_padLock)
-                _objectStack.Clear();
+            Interlocked.Exchange(ref _count, 0);
+            _objectStack.Clear();
         }
     }
 }

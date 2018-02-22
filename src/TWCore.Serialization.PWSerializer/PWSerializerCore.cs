@@ -56,8 +56,7 @@ namespace TWCore.Serialization.PWSerializer
                 i.Item2.Clear(SerializerMode.CachedUShort);
                 i.Item3.Init(SerializerMode.CachedUShort);
             },
-            1,
-            PoolResetMode.AfterUse);
+            Environment.ProcessorCount);
 
 
         /// <summary>
@@ -78,9 +77,9 @@ namespace TWCore.Serialization.PWSerializer
         {
             item.Item1.Clear();
             item.Item2.Clear();
-        }, 1, PoolResetMode.AfterUse);
-        private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(1, scope => scope.Init(), null, PoolResetMode.AfterUse);
-        private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(1, p => p.Init(), null, PoolResetMode.AfterUse);
+        }, Environment.ProcessorCount);
+        private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(Environment.ProcessorCount, scope => scope.Init());
+        private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(Environment.ProcessorCount, p => p.Init());
         private readonly byte[] _bufferSer = new byte[3];
 
         #region Public Methods
@@ -631,9 +630,9 @@ namespace TWCore.Serialization.PWSerializer
          {
              item.Item1.Clear();
              item.Item2.Clear();
-         }, 1, PoolResetMode.AfterUse);
-        private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(1, d => d.Clear());
-        private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(1, s => s.Clear());
+         }, Environment.ProcessorCount);
+        private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(Environment.ProcessorCount, d => d.Clear());
+        private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(Environment.ProcessorCount, s => s.Clear());
         private readonly byte[] _bufferDes = new byte[8];
 
         /// <summary>

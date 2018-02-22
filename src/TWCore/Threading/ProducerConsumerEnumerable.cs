@@ -57,7 +57,7 @@ namespace TWCore.Threading
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
             _producerEndEvent = new AsyncManualResetEvent(false);
-            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset(), 0, PoolResetMode.AfterUse);
+            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset());
         }
         /// <summary>
         /// Producer / Consumer schema enumerable
@@ -71,7 +71,7 @@ namespace TWCore.Threading
             _tokenSource = new CancellationTokenSource();
             _producerAddEvent = new AsyncManualResetEvent(false);
             _producerEndEvent = new AsyncManualResetEvent(false);
-            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset(), 0, PoolResetMode.AfterUse);
+            _consumerPool = new ObjectPool<ConsumerEnumerator>(_ => new ConsumerEnumerator(this), item => item.Reset());
         }
         ~ProducerConsumerEnumerable()
         {

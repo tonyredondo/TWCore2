@@ -28,7 +28,7 @@ namespace TWCore
         {
             ms.Position = 0;
             ms.SetLength(0);
-        }, null, PoolResetMode.AfterUse);
+        });
 
         /// <summary>
         /// Get a new MemoryStream for Write

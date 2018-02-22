@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -32,6 +33,7 @@ namespace TWCore.Threading
         /// <summary>
         /// Creates a new <see cref="AsyncLock"/> instance.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public AsyncLock()
         {
             _semaphore = new SemaphoreSlim(1);
@@ -47,6 +49,7 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IDisposable> LockAsync()
         {
             var waitTask = _semaphore.WaitAsync();
@@ -66,6 +69,7 @@ namespace TWCore.Threading
         /// has been taken with a <see cref="Releaser"/> result.  Disposing of the <see cref="Releaser"/> 
         /// will release the <see cref="AsyncLock"/>.
         /// </returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<IDisposable> LockAsync(CancellationToken cancellationToken)
         {
             var waitTask = _semaphore.WaitAsync(cancellationToken);

@@ -38,7 +38,7 @@ namespace TWCore.Threading
         /// <summary>
         /// Gets if the Event has been setted
         /// </summary>
-        public bool IsSet => _mTcs.Task.Status == TaskStatus.RanToCompletion;
+        public bool IsSet => _mTcs.Task.IsCompleted;
         #endregion
 
         #region .ctor
@@ -180,6 +180,7 @@ namespace TWCore.Threading
         }
         #endregion
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
             _mTcs = null;

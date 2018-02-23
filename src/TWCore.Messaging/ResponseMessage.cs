@@ -36,11 +36,13 @@ namespace TWCore.Messaging
         /// <summary>
         /// Define a no response message
         /// </summary>
+        [NonSerialize]
         public static object NoResponse { get; } = "Message[NoResponse]";
-		/// <summary>
-		/// Define a no response message task
-		/// </summary>
-		public static Task<object> NoResponseTask { get; } = Task.FromResult(NoResponse);
+        /// <summary>
+        /// Define a no response message task
+        /// </summary>
+        [NonSerialize]
+        public static Task<object> NoResponseTask { get; } = Task.FromResult(NoResponse);
 
         /// <inheritdoc />
         /// <summary>

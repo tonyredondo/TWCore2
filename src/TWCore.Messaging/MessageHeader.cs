@@ -62,15 +62,16 @@ namespace TWCore.Messaging
         [XmlAttribute, DataMember]
         public DateTime ApplicationReceivedTime { get; set; }
         /// <summary>
-        /// Message Total Time
-        /// </summary>
-        [NonSerialize]
-        public TimeSpan TotalTime => ApplicationReceivedTime - ApplicationSentDate;
-        /// <summary>
         /// Aditional metadata
         /// </summary>
         [XmlArray("MetaData"), XmlArrayItem("Meta"), DataMember]
         public KeyValueCollection MetaData { get; set; } = new KeyValueCollection();
+        
+        /// <summary>
+        /// Message Total Time
+        /// </summary>
+        [NonSerialize]
+        public TimeSpan TotalTime => ApplicationReceivedTime - ApplicationSentDate;
         /// <summary>
         /// Message Total Time
         /// </summary>

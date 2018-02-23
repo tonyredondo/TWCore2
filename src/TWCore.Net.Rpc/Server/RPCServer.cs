@@ -286,7 +286,6 @@ namespace TWCore.Net.RPC.Server
                 Try.Do(() =>
                 {
                     if (OnClientConnectMethod == null) return;
-                    
                     var tId = Environment.CurrentManagedThreadId;
                     lock (_threadClientId) _threadClientId[tId] = clientId;
                     var pTers = OnClientConnectMethod.GetParameters();
@@ -308,8 +307,7 @@ namespace TWCore.Net.RPC.Server
                 var response = RPCResponseMessage.Retrieve(request);
                 try
                 {
-					var tId = Environment.CurrentManagedThreadId;
-					lock (_threadClientId) _threadClientId[tId] = clientId;
+					lock (_threadClientId) _threadClientId[Environment.CurrentManagedThreadId] = clientId;
                     ConnectionCancellationToken = cancellationToken;
                     response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
                 }

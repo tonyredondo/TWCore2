@@ -279,32 +279,40 @@ namespace TWCore.Net.Multicast
         #region Private Methods
         private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
-            var rService = Serializer.Deserialize<RegisteredService>(e.Data);
-            var received = new ReceivedService
+            try
             {
-                ServiceId = rService.ServiceId,
-                Category = rService.Category,
-                Name = rService.Name,
-                Description = rService.Description,
-                MachineName = rService.MachineName,
-                ApplicationName = rService.ApplicationName,
-                FrameworkVersion = rService.FrameworkVersion,
-                EnvironmentName = rService.EnvironmentName,
-                Data = rService.Data,
-                Addresses = new []{ e.Address }
-            };
-            bool exist;
-            lock (ReceivedServices)
-            {
-                exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
-                if (exist)
-                    received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
-                ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                var rService = Serializer.Deserialize<RegisteredService>(e.Data);
+                var received = new ReceivedService
+                {
+                    ServiceId = rService.ServiceId,
+                    Category = rService.Category,
+                    Name = rService.Name,
+                    Description = rService.Description,
+                    MachineName = rService.MachineName,
+                    ApplicationName = rService.ApplicationName,
+                    FrameworkVersion = rService.FrameworkVersion,
+                    EnvironmentName = rService.EnvironmentName,
+                    Data = rService.Data,
+                    Addresses = new[] {e.Address}
+                };
+                bool exist;
+                lock (ReceivedServices)
+                {
+                    exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
+                    if (exist)
+                        received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
+                    ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                }
+
+                var eArgs = new EventArgs<ReceivedService>(received);
+                if (!exist)
+                    OnNewServiceReceived?.Invoke(sender, eArgs);
+                OnServiceReceived?.Invoke(sender, eArgs);
             }
-            var eArgs = new EventArgs<ReceivedService>(received);
-            if (!exist)
-                OnNewServiceReceived?.Invoke(sender, eArgs);
-            OnServiceReceived?.Invoke(sender, eArgs);
+            catch(Exception)
+            {
+                //
+            }
         }
         private static async Task SendThreadAsync()
         {

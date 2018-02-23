@@ -17,7 +17,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class SerializerTest : ContainerParameterService
     {
-        public SerializerTest() : base("serializertest", "PWSerializer Test") { }
+        public SerializerTest() : base("serializertest", "Serializer Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting Serializer TEST");

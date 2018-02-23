@@ -104,7 +104,7 @@ namespace TWCore.Serialization.PWSerializer
             var plan = GetSerializerPlan(currentSerializerPlanTypes, serializersTable, type);
             var scopeStack = serPool.Item2;
             var scope = SerializerScopePool.New();
-            scope.Init(plan, type, value);
+            scope.Init(plan, typeof(object), value);
             scopeStack.Push(scope);
 
             var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
@@ -907,7 +907,7 @@ namespace TWCore.Serialization.PWSerializer
                         break;
                 }
             }
-            while (desStack.Count > 0);
+            while (desStack.Count > 0 || valueType != null);
 
             OPool.Store(tuple);
             DesPool.Store(desPool);
@@ -1192,7 +1192,7 @@ namespace TWCore.Serialization.PWSerializer
                         break;
                 }
             }
-            while (desStack.Count > 0);
+            while (desStack.Count > 0 || valueType != null);
 
             OPool.Store(tuple);
             GdStackPool.Store(desStack);

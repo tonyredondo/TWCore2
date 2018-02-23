@@ -80,7 +80,9 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             PropertiesLength = properties.Length;
             if (!propertiesTypes.TryGetValue(type, out PropertiesType))
             {
-                PropertiesType = properties.Select(p => TypeInfo.Properties[p].Property.PropertyType).ToArray();
+                PropertiesType = new Type[properties.Length];
+                for (var i = 0; i < properties.Length; i++)
+                    PropertiesType[i] = TypeInfo.Properties[properties[i]].Property.PropertyType;
                 propertiesTypes[type] = PropertiesType;
             }
             CurrentType = PropertiesType[0];

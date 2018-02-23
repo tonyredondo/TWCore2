@@ -10,6 +10,7 @@ using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization.WSerializer;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
 // ReSharper disable ArrangeTypeMemberModifiers
 // ReSharper disable InconsistentNaming
@@ -32,7 +33,7 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting RPC TEST");
 
-            var serializer = new WBinarySerializer();
+            var serializer = new PWBinarySerializer();
             var service = new MyService();
 
             Core.Log.InfoBasic("Setting RPC Server");
@@ -41,7 +42,7 @@ namespace TWCore.Tests
             await rpcServer.StartAsync().ConfigureAwait(false);
 
             Core.Log.InfoBasic("Setting RPC Client");
-            var rpcClient = new RPCClient(new DefaultTransportClient("127.0.0.1", 20050, 3, serializer));
+            var rpcClient = new RPCClient(new DefaultTransportClient("127.0.0.1", 20050, 1, serializer));
 
             var sw = Stopwatch.StartNew();
 

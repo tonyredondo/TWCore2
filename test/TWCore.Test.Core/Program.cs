@@ -8,6 +8,8 @@ using TWCore.Collections;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Injector;
 using TWCore.Net.Multicast;
+using TWCore.Serialization;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -20,6 +22,7 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
+            SerializerManager.DefaultBinarySerializer = new PWBinarySerializer();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>

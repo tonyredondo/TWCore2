@@ -383,7 +383,7 @@ namespace TWCore
 		/// <returns>IList with the result of the enumeration</returns>
 		public static IEnumerable Enumerate(this IEnumerable linqExpression)
 		{
-			if (linqExpression == null || linqExpression is IList || linqExpression is string) return linqExpression;
+			if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
 			var bType = linqExpression.GetType().GetTypeInfo().BaseType;
 			if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
 				return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
@@ -397,7 +397,7 @@ namespace TWCore
 		/// <returns>IEnumerable instance</returns>
 		public static IEnumerable<T> Enumerate<T>(this IEnumerable<T> linqExpression)
 		{
-			if (linqExpression == null || linqExpression is IList || linqExpression is string) return linqExpression;
+			if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
 			var bType = linqExpression.GetType().GetTypeInfo().BaseType;
 			if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
 				return (IList<T>)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);

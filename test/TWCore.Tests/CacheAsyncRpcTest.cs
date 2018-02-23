@@ -9,6 +9,7 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
@@ -20,7 +21,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class CacheAsyncRpcTest : ContainerParameterServiceAsync
     {
-        private static ISerializer GlobalSerializer = new WBinarySerializer();
+        private static ISerializer GlobalSerializer = new PWBinarySerializer();
 
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
@@ -60,6 +61,7 @@ namespace TWCore.Tests
             }
 
             cacheService.OnStop();
+            Console.ReadLine();
         }
 
         /// <inheritdoc />

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -124,6 +125,10 @@ namespace TWCore.Serialization.PWSerializer
             => (value >= 0) ? DataType.Byte : DataType.SByte;
 
 
+
+        private static readonly ConcurrentDictionary<Type, (Type UnderlyingType, TypeInfo TypeInfo)> TypeChangeCache =
+            new ConcurrentDictionary<Type, (Type UnderlyingType, TypeInfo TypeInfo)>();
+
         /// <summary>
         /// Change a object type
         /// </summary>
@@ -132,19 +137,17 @@ namespace TWCore.Serialization.PWSerializer
         /// <returns>Object value with new type</returns>
         public static object Change(object obj, Type typeTo)
         {
-            var u = Nullable.GetUnderlyingType(typeTo);
-            var typeInfo = typeTo.GetTypeInfo();
+            (var underlyingType, var typeInfo) = TypeChangeCache.GetOrAdd(typeTo, tTo => (Nullable.GetUnderlyingType(tTo), tTo.GetTypeInfo()));
 
             if (obj == null)
                 return typeInfo.IsValueType ? Activator.CreateInstance(typeTo) : null;
-            if (u != null)
-                return u == typeof(object) ? obj : Convert.ChangeType(obj, u);
+            if (underlyingType != null)
+                return underlyingType == typeof(object) ? obj : Convert.ChangeType(obj, underlyingType);
             if (typeTo == typeof(object))
                 return obj;
+
             var objType = obj.GetType();
-            if (typeTo == objType)
-                return obj;
-            if (typeInfo.IsAssignableFrom(objType.GetTypeInfo()))
+            if (typeTo == objType || typeInfo.IsAssignableFrom(objType.GetTypeInfo()))
                 return obj;
             if (typeInfo.IsEnum)
                 return Enum.ToObject(typeTo, obj);

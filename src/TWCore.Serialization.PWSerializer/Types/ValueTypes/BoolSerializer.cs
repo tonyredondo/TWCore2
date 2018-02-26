@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Boolean value type serializer
     /// </summary>
-	public class BoolSerializer : TypeSerializer<bool>
+	public struct BoolSerializer : ITypeSerializer<bool>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.BoolFalse, DataType.BoolTrue });
         /// <inheritdoc />
@@ -33,7 +33,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
         }
         /// <inheritdoc />
@@ -43,7 +43,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type) 
+        public bool CanWrite(Type type) 
             => type == typeof(bool);
         /// <inheritdoc />
         /// <summary>
@@ -52,7 +52,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => type == DataType.BoolFalse || type == DataType.BoolTrue;
         /// <inheritdoc />
         /// <summary>
@@ -61,7 +61,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => writer.Write((bool)value ? DataType.BoolTrue : DataType.BoolFalse);
         /// <inheritdoc />
         /// <summary>
@@ -70,7 +70,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, bool value)
+        public void WriteValue(BinaryWriter writer, bool value)
             => writer.Write(value ? DataType.BoolTrue : DataType.BoolFalse);
         /// <inheritdoc />
         /// <summary>
@@ -80,7 +80,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => type == DataType.BoolTrue;
 
         /// <inheritdoc />
@@ -91,7 +91,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ReadValue(BinaryReader reader, byte type)
+        public bool ReadValue(BinaryReader reader, byte type)
             => type == DataType.BoolTrue;
 
         /// <inheritdoc />
@@ -101,7 +101,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool ReadValue(BinaryReader reader)
+        public bool ReadValue(BinaryReader reader)
             => reader.ReadByte() == DataType.BoolTrue;
     }
 }

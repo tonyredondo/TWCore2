@@ -25,33 +25,28 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Guid value type serializer
     /// </summary>
-	public class GuidSerializer : TypeSerializer<Guid>
+	public struct GuidSerializer : ITypeSerializer<Guid>
     {
-        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
+        public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
             DataType.Guid, DataType.GuidDefault, DataType.RefGuidByte, DataType.RefGuidUShort
         });
 
         private SerializerMode _mode;
         private SerializerCache<Guid> _cache;
-        private SerializerCache<Guid> Cache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return _cache ?? (_cache = new SerializerCache<Guid>(_mode));
-            }
-        }
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
-            _cache?.Clear(mode);
+            if (_cache == null)
+                _cache = new SerializerCache<Guid>(mode);
+            else
+                _cache.Clear(mode);
         }
         /// <inheritdoc />
         /// <summary>
@@ -60,7 +55,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             => type == typeof(Guid);
         /// <inheritdoc />
         /// <summary>
@@ -69,7 +64,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
         {
             return
                 type == DataType.Guid ||
@@ -84,7 +79,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (Guid)value);
         /// <inheritdoc />
         /// <summary>
@@ -93,27 +88,27 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, Guid value)
+        public void WriteValue(BinaryWriter writer, Guid value)
         {
             if (value == default(Guid))
             {
                 writer.Write(DataType.GuidDefault);
                 return;
             }
-            var objIdx = Cache.SerializerGet(value);
+            var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
-				if (objIdx <= byte.MaxValue)
-					WriteByte(writer, DataType.RefGuidByte, (byte)objIdx);
-				else
-					WriteUshort(writer, DataType.RefGuidUShort, (ushort)objIdx);
+                if (objIdx <= byte.MaxValue)
+                    WriteHelper.WriteByte(writer, DataType.RefGuidByte, (byte)objIdx);
+                else
+                    WriteHelper.WriteUshort(writer, DataType.RefGuidUShort, (ushort)objIdx);
             }
             else
             {
                 writer.Write(DataType.Guid);
                 var bytes = value.ToByteArray();
                 writer.Write(bytes, 0, bytes.Length);
-                Cache.SerializerSet(value);
+                _cache.SerializerSet(value);
             }
         }
         /// <inheritdoc />
@@ -124,7 +119,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
         /// <inheritdoc />
         /// <summary>
@@ -134,7 +129,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Guid ReadValue(BinaryReader reader, byte type)
+        public Guid ReadValue(BinaryReader reader, byte type)
         {
             if (type == DataType.GuidDefault)
                 return default(Guid);
@@ -150,11 +145,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             }
 
             if (objIdx > -1)
-                return Cache.DeserializerGet(objIdx);
+                return _cache.DeserializerGet(objIdx);
 
             var bytes = reader.ReadBytes(16);
             var guidValue = new Guid(bytes);
-            Cache.DeserializerSet(guidValue);
+            _cache.DeserializerSet(guidValue);
             return guidValue;
         }
         /// <inheritdoc />
@@ -164,7 +159,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override Guid ReadValue(BinaryReader reader)
+        public Guid ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

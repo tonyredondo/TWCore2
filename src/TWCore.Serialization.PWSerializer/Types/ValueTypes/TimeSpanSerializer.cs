@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// TimeSpan value type serializer
     /// </summary>
-	public class TimeSpanSerializer : TypeSerializer<TimeSpan>
+	public struct TimeSpanSerializer : ITypeSerializer<TimeSpan>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
@@ -34,21 +34,19 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 
         private SerializerMode _mode;
         private SerializerCache<TimeSpan> _cache;
-        private SerializerCache<TimeSpan> Cache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _cache ?? (_cache = new SerializerCache<TimeSpan>(_mode)); }
-        }
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
-            _cache?.Clear(mode);
+            if (_cache == null)
+                _cache = new SerializerCache<TimeSpan>(_mode);
+            else
+                _cache.Clear(mode);
         }
         /// <inheritdoc />
         /// <summary>
@@ -57,7 +55,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             => type == typeof(TimeSpan);
         /// <inheritdoc />
         /// <summary>
@@ -66,7 +64,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
         {
             return
                 type == DataType.TimeSpan ||
@@ -81,7 +79,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (TimeSpan)value);
         /// <inheritdoc />
         /// <summary>
@@ -90,7 +88,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, TimeSpan value)
+        public void WriteValue(BinaryWriter writer, TimeSpan value)
         {
             if (value == default(TimeSpan))
             {
@@ -98,19 +96,19 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 return;
             }
 
-            var objIdx = Cache.SerializerGet(value);
+            var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
 				if (objIdx <= byte.MaxValue)
-					WriteByte(writer, DataType.RefTimeSpanByte, (byte)objIdx);
+				    WriteHelper.WriteByte(writer, DataType.RefTimeSpanByte, (byte)objIdx);
 				else
-					WriteUshort(writer, DataType.RefTimeSpanUShort, (ushort)objIdx);
+				    WriteHelper.WriteUshort(writer, DataType.RefTimeSpanUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.Ticks;
-				WriteLong(writer, DataType.TimeSpan, longBinary);
-                Cache.SerializerSet(value);
+                WriteHelper.WriteLong(writer, DataType.TimeSpan, longBinary);
+                _cache.SerializerSet(value);
             }
         }
         /// <inheritdoc />
@@ -121,7 +119,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
         /// <inheritdoc />
         /// <summary>
@@ -131,7 +129,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override TimeSpan ReadValue(BinaryReader reader, byte type)
+        public TimeSpan ReadValue(BinaryReader reader, byte type)
         {
             if (type == DataType.TimeSpanDefault)
                 return default(TimeSpan);
@@ -148,11 +146,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             }
 
             if (objIdx > -1)
-                return Cache.DeserializerGet(objIdx);
+                return _cache.DeserializerGet(objIdx);
 
             var longBinary = reader.ReadInt64();
             var cValue = TimeSpan.FromTicks(longBinary);
-            Cache.DeserializerSet(cValue);
+            _cache.DeserializerSet(cValue);
             return cValue;
         }
         /// <inheritdoc />
@@ -162,7 +160,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override TimeSpan ReadValue(BinaryReader reader)
+        public TimeSpan ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

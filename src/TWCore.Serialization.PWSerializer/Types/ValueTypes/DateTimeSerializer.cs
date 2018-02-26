@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// DateTime value type serializer
     /// </summary>
-	public class DateTimeSerializer : TypeSerializer<DateTime>
+	public struct DateTimeSerializer : ITypeSerializer<DateTime>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
@@ -34,24 +34,19 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 
         private SerializerMode _mode;
         private SerializerCache<DateTime> _cache;
-        private SerializerCache<DateTime> Cache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                return _cache ?? (_cache = new SerializerCache<DateTime>(_mode));
-            }
-        }
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
-            _cache?.Clear(mode);
+            if (_cache == null)
+                _cache = new SerializerCache<DateTime>(mode);
+            else
+                _cache.Clear(mode);
         }
         /// <inheritdoc />
         /// <summary>
@@ -60,7 +55,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             => type == typeof(DateTime);
         /// <inheritdoc />
         /// <summary>
@@ -69,7 +64,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
         {
             return
                 type == DataType.DateTime           ||
@@ -84,7 +79,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (DateTime)value);
         /// <inheritdoc />
         /// <summary>
@@ -93,26 +88,26 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, DateTime value)
+        public void WriteValue(BinaryWriter writer, DateTime value)
         {
             if (value == default(DateTime))
             {
                 writer.Write(DataType.DateTimeDefault);
                 return;
             }
-            var objIdx = Cache.SerializerGet(value);
+            var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
 				if (objIdx <= byte.MaxValue)
-					WriteByte(writer, DataType.RefDateTimeByte, (byte)objIdx);
+				    WriteHelper.WriteByte(writer, DataType.RefDateTimeByte, (byte)objIdx);
 				else
-					WriteUshort(writer, DataType.RefDateTimeUShort, (ushort)objIdx);
+				    WriteHelper.WriteUshort(writer, DataType.RefDateTimeUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.ToBinary();
-				WriteLong(writer, DataType.DateTime, longBinary);
-                Cache.SerializerSet(value);
+                WriteHelper.WriteLong(writer, DataType.DateTime, longBinary);
+                _cache.SerializerSet(value);
             }
         }
         /// <inheritdoc />
@@ -123,7 +118,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
         /// <inheritdoc />
         /// <summary>
@@ -133,7 +128,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override DateTime ReadValue(BinaryReader reader, byte type)
+        public DateTime ReadValue(BinaryReader reader, byte type)
         {
             if (type == DataType.DateTimeDefault)
                 return default(DateTime);
@@ -150,11 +145,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             }
 
             if (objIdx > -1)
-                return Cache.DeserializerGet(objIdx);
+                return _cache.DeserializerGet(objIdx);
 
             var longBinary = reader.ReadInt64();
             var cValue = DateTime.FromBinary(longBinary);
-            Cache.DeserializerSet(cValue);
+            _cache.DeserializerSet(cValue);
             return cValue;
         }
         /// <inheritdoc />
@@ -164,7 +159,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override DateTime ReadValue(BinaryReader reader)
+        public DateTime ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

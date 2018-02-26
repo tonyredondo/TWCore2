@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// <summary>
     /// Byte array optimized serializer
     /// </summary>
-    public class ByteArraySerializer : TypeSerializer<byte[]>
+    public struct ByteArraySerializer : ITypeSerializer<byte[]>
     {
         private const int MaxArrayLength = 84995;
         private static readonly byte[] EmptyBytes = new byte[0];
@@ -38,11 +38,6 @@ namespace TWCore.Serialization.PWSerializer.Types
         #region Field
         private SerializerMode _mode;
         private SerializerCache<byte[]> _refCache;
-        private SerializerCache<byte[]> RefCache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _refCache ?? (_refCache = new SerializerCache<byte[]>(_mode)); }
-        }
         #endregion
 
         /// <inheritdoc />
@@ -50,10 +45,13 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
-            _refCache?.Clear(mode);
+            if (_refCache == null)
+                _refCache = new SerializerCache<byte[]>(_mode);
+            else
+                _refCache.Clear(mode);
         }
         /// <inheritdoc />
         /// <summary>
@@ -62,7 +60,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             => type == typeof(byte[]);
         /// <inheritdoc />
         /// <summary>
@@ -71,7 +69,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => ReadTypes.Contains(type);
         /// <inheritdoc />
         /// <summary>
@@ -80,7 +78,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (byte[])value);
         /// <inheritdoc />
         /// <summary>
@@ -90,7 +88,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
 
         /// <inheritdoc />
@@ -100,7 +98,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, byte[] value)
+        public void WriteValue(BinaryWriter writer, byte[] value)
         {
 			if (value == null)
 			{
@@ -112,13 +110,13 @@ namespace TWCore.Serialization.PWSerializer.Types
 			else
 			{
 				#region Ref Cache Get
-				var objIdx = RefCache.SerializerGet(value);
+				var objIdx = _refCache.SerializerGet(value);
 				if (objIdx > -1)
 				{
 					if (objIdx <= byte.MaxValue)
-						WriteByte(writer, DataType.RefByteArrayByte, (byte)objIdx);
+						WriteHelper.WriteByte(writer, DataType.RefByteArrayByte, (byte)objIdx);
 					else
-						WriteUshort(writer, DataType.RefByteArrayUShort, (ushort)objIdx);
+					    WriteHelper.WriteUshort(writer, DataType.RefByteArrayUShort, (ushort)objIdx);
 					return;
 				}
 				#endregion
@@ -126,17 +124,17 @@ namespace TWCore.Serialization.PWSerializer.Types
 				#region Write Array
 				var length = value.Length;
 				if (length <= byte.MaxValue)
-					WriteByte(writer, DataType.ByteArrayLengthByte, (byte)length);
+				    WriteHelper.WriteByte(writer, DataType.ByteArrayLengthByte, (byte)length);
 				else if (length <= ushort.MaxValue)
-					WriteUshort(writer, DataType.ByteArrayLengthUShort, (ushort)length);
+				    WriteHelper.WriteUshort(writer, DataType.ByteArrayLengthUShort, (ushort)length);
 				else
-					WriteInt(writer, DataType.ByteArrayLengthInt, length);
+				    WriteHelper.WriteInt(writer, DataType.ByteArrayLengthInt, length);
 				writer.Write(value);
 				#endregion
 
 				#region Save to Cache
 				if (length <= MaxArrayLength)
-					RefCache.SerializerSet(value);
+				    _refCache.SerializerSet(value);
 				#endregion
 			}
 		}
@@ -148,7 +146,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] ReadValue(BinaryReader reader, byte type)
+        public byte[] ReadValue(BinaryReader reader, byte type)
         {
             var objIdx = -1;
             var length = 0;
@@ -175,11 +173,11 @@ namespace TWCore.Serialization.PWSerializer.Types
                     break;
             }
             if (objIdx > -1)
-                return RefCache.DeserializerGet(objIdx);
+                return _refCache.DeserializerGet(objIdx);
 
             var cValue = reader.ReadBytes(length);
             if (length <= MaxArrayLength)
-                RefCache.DeserializerSet(cValue);
+                _refCache.DeserializerSet(cValue);
             return cValue;
         }
         /// <inheritdoc />
@@ -189,7 +187,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override byte[] ReadValue(BinaryReader reader)
+        public byte[] ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

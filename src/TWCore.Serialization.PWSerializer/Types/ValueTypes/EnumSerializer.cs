@@ -26,7 +26,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Enum value type serializer
     /// </summary>
-	public class EnumSerializer : TypeSerializer<int>
+	public struct EnumSerializer : ITypeSerializer<int>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
@@ -39,7 +39,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
         }
         /// <inheritdoc />
@@ -49,8 +49,8 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
-            => type.GetTypeInfo().IsEnum;
+        public bool CanWrite(Type type)
+            => type.IsEnum;
         /// <inheritdoc />
         /// <summary>
         /// Gets if the type serializer can read the data type
@@ -58,7 +58,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => ReadTypes.Contains(type);
         /// <inheritdoc />
         /// <summary>
@@ -67,7 +67,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
         {
             var iValue = Factory.Converter.ToInt(value);
             switch (iValue)
@@ -128,11 +128,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 default:
                     if (iValue <= byte.MaxValue)
-                        WriteByte(writer, DataType.EnumByte, (byte)iValue);
+                        WriteHelper.WriteByte(writer, DataType.EnumByte, (byte)iValue);
                     else if (iValue <= ushort.MaxValue)
-                        WriteUshort(writer, DataType.EnumUShort, (ushort)iValue);
+                        WriteHelper.WriteUshort(writer, DataType.EnumUShort, (ushort)iValue);
                     else
-                        WriteInt(writer, DataType.EnumInt, iValue);
+                        WriteHelper.WriteInt(writer, DataType.EnumInt, iValue);
                     break;
             }
         }
@@ -143,7 +143,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, int value)
+        public void WriteValue(BinaryWriter writer, int value)
         {
             switch (value)
             {
@@ -203,11 +203,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 default:
                     if (value <= byte.MaxValue)
-                        WriteByte(writer, DataType.EnumByte, (byte)value);
+                        WriteHelper.WriteByte(writer, DataType.EnumByte, (byte)value);
                     else if (value <= ushort.MaxValue)
-                        WriteUshort(writer, DataType.EnumUShort, (ushort)value);
+                        WriteHelper.WriteUshort(writer, DataType.EnumUShort, (ushort)value);
                     else
-                        WriteInt(writer, DataType.EnumInt, value);
+                        WriteHelper.WriteInt(writer, DataType.EnumInt, value);
                     break;
             }
         }
@@ -220,7 +220,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
         {
             var intValue = 0;
             switch (type)
@@ -299,7 +299,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadValue(BinaryReader reader, byte type)
+        public int ReadValue(BinaryReader reader, byte type)
         {
             var intValue = 0;
             switch (type)
@@ -377,7 +377,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadValue(BinaryReader reader)
+        public int ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

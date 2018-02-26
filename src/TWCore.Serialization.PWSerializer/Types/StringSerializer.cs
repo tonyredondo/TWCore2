@@ -27,7 +27,7 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// <summary>
     /// String type serializer
     /// </summary>
-	public class StringSerializer : TypeSerializer<string>
+	public struct StringSerializer : ITypeSerializer<string>
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
 
@@ -56,44 +56,37 @@ namespace TWCore.Serialization.PWSerializer.Types
 
         private SerializerMode _mode;
         private SerializerCache<string> _cache;
-        private SerializerCache<string> Cache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _cache ?? (_cache = new SerializerCache<string>(_mode)); }
-        }
         private SerializerCache<string> _cache8;
-        private SerializerCache<string> Cache8
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _cache8 ?? (_cache8 = new SerializerCache<string>(_mode)); }
-        }
         private SerializerCache<string> _cache16;
-        private SerializerCache<string> Cache16
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _cache16 ?? (_cache16 = new SerializerCache<string>(_mode)); }
-        }
         private SerializerCache<string> _cache32;
-        private SerializerCache<string> Cache32
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _cache32 ?? (_cache32 = new SerializerCache<string>(_mode)); }
-        }
         private bool _useCache;
-        public Encoding Encoding { get; set; } = DefaultUTF8Encoding;
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
-            Cache?.Clear(mode);
-            Cache8?.Clear(mode);
-            Cache16?.Clear(mode);
-            Cache32?.Clear(mode);
+            if (_cache == null)
+                _cache = new SerializerCache<string>(_mode);
+            else
+                _cache.Clear(_mode);
+
+            if (_cache8 == null)
+                _cache8 = new SerializerCache<string>(_mode);
+            else
+                _cache8.Clear(_mode);
+
+            if (_cache16 == null)
+                _cache16 = new SerializerCache<string>(_mode);
+            else
+                _cache16.Clear(_mode);
+            if (_cache32 == null)
+                _cache32 = new SerializerCache<string>(_mode);
+            else
+                _cache32.Clear(_mode);
             _useCache = (mode != SerializerMode.NoCached);
         }
         /// <inheritdoc />
@@ -103,7 +96,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             => type == typeof(string);
         /// <inheritdoc />
         /// <summary>
@@ -112,7 +105,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => ReadTypes.Contains(type);
         /// <inheritdoc />
         /// <summary>
@@ -121,7 +114,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (string)value);
         /// <inheritdoc />
         /// <summary>
@@ -130,7 +123,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, string value)
+        public void WriteValue(BinaryWriter writer, string value)
         {
             switch (value)
             {
@@ -150,7 +143,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                 if (vLength <= 8)
                 {
                     cache8 = true;
-                    var objIdx = Cache8.SerializerGet(value);
+                    var objIdx = _cache8.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         #region Write Reference
@@ -206,9 +199,9 @@ namespace TWCore.Serialization.PWSerializer.Types
                                 return;
                             default:
                                 if (objIdx <= byte.MaxValue)
-                                    WriteByte(writer, DataType.RefString8Byte, (byte)objIdx);
+                                    WriteHelper.WriteByte(writer, DataType.RefString8Byte, (byte)objIdx);
                                 else
-                                    WriteUshort(writer, DataType.RefString8UShort, (ushort)objIdx);
+                                    WriteHelper.WriteUshort(writer, DataType.RefString8UShort, (ushort)objIdx);
                                 return;
                         }
                         #endregion
@@ -217,7 +210,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                 else if (vLength <= 16)
                 {
                     cache16 = true;
-                    var objIdx = Cache16.SerializerGet(value);
+                    var objIdx = _cache16.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         #region Write Reference
@@ -273,9 +266,9 @@ namespace TWCore.Serialization.PWSerializer.Types
                                 return;
                             default:
                                 if (objIdx <= byte.MaxValue)
-                                    WriteByte(writer, DataType.RefString16Byte, (byte)objIdx);
+                                    WriteHelper.WriteByte(writer, DataType.RefString16Byte, (byte)objIdx);
                                 else
-                                    WriteUshort(writer, DataType.RefString16UShort, (ushort)objIdx);
+                                    WriteHelper.WriteUshort(writer, DataType.RefString16UShort, (ushort)objIdx);
                                 return;
                         }
                         #endregion
@@ -284,7 +277,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                 else if (vLength <= 32)
                 {
                     cache32 = true;
-                    var objIdx = Cache32.SerializerGet(value);
+                    var objIdx = _cache32.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         #region Write Reference
@@ -340,9 +333,9 @@ namespace TWCore.Serialization.PWSerializer.Types
                                 return;
                             default:
                                 if (objIdx <= byte.MaxValue)
-                                    WriteByte(writer, DataType.RefString32Byte, (byte)objIdx);
+                                    WriteHelper.WriteByte(writer, DataType.RefString32Byte, (byte)objIdx);
                                 else
-                                    WriteUshort(writer, DataType.RefString32UShort, (ushort)objIdx);
+                                    WriteHelper.WriteUshort(writer, DataType.RefString32UShort, (ushort)objIdx);
                                 return;
                         }
                         #endregion
@@ -350,19 +343,19 @@ namespace TWCore.Serialization.PWSerializer.Types
                 }
                 else
                 {
-                    var objIdx = Cache.SerializerGet(value);
+                    var objIdx = _cache.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefStringByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefStringByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefStringUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefStringUShort, (ushort)objIdx);
                         return;
                     }
                 }
             }
 
-            var bytes = Encoding.GetBytes(value);
+            var bytes = DefaultUTF8Encoding.GetBytes(value);
             var length = bytes.Length;
 
             #region Write Length
@@ -430,11 +423,11 @@ namespace TWCore.Serialization.PWSerializer.Types
                     break;
                 default:
                     if (length <= byte.MaxValue)
-                        WriteByte(writer, DataType.StringLengthByte, (byte)length);
+                        WriteHelper.WriteByte(writer, DataType.StringLengthByte, (byte)length);
                     else if (length <= ushort.MaxValue)
-                        WriteUshort(writer, DataType.StringLengthUShort, (ushort)length);
+                        WriteHelper.WriteUshort(writer, DataType.StringLengthUShort, (ushort)length);
                     else
-                        WriteInt(writer, DataType.StringLengthUShort, length);
+                        WriteHelper.WriteInt(writer, DataType.StringLengthUShort, length);
                     break;
             }
             #endregion
@@ -443,13 +436,13 @@ namespace TWCore.Serialization.PWSerializer.Types
 
             if (!_useCache || length <= 2) return;
             if (cache8)
-                Cache8.SerializerSet(value);
+                _cache8.SerializerSet(value);
             else if (cache16)
-                Cache16.SerializerSet(value);
+                _cache16.SerializerSet(value);
             else if (cache32)
-                Cache32.SerializerSet(value);
+                _cache32.SerializerSet(value);
             else
-                Cache.SerializerSet(value);
+                _cache.SerializerSet(value);
         }
         /// <inheritdoc />
         /// <summary>
@@ -459,7 +452,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => ReadValue(reader, type);
         /// <inheritdoc />
         /// <summary>
@@ -469,7 +462,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ReadValue(BinaryReader reader, byte type)
+        public string ReadValue(BinaryReader reader, byte type)
         {
             switch (type)
             {
@@ -478,120 +471,120 @@ namespace TWCore.Serialization.PWSerializer.Types
                 case DataType.StringEmpty:
                     return string.Empty;
                 case DataType.RefStringByte:
-                    return Cache.DeserializerGet(reader.ReadByte());
+                    return _cache.DeserializerGet(reader.ReadByte());
                 case DataType.RefStringUShort:
-                    return Cache.DeserializerGet(reader.ReadUInt16());
+                    return _cache.DeserializerGet(reader.ReadUInt16());
 
                 case DataType.RefString32Byte:
-                    return Cache32.DeserializerGet(reader.ReadByte());
+                    return _cache32.DeserializerGet(reader.ReadByte());
                 case DataType.RefString32Byte0:
-                    return Cache32.DeserializerGet(0);
+                    return _cache32.DeserializerGet(0);
                 case DataType.RefString32Byte1:
-                    return Cache32.DeserializerGet(1);
+                    return _cache32.DeserializerGet(1);
                 case DataType.RefString32Byte2:
-                    return Cache32.DeserializerGet(2);
+                    return _cache32.DeserializerGet(2);
                 case DataType.RefString32Byte3:
-                    return Cache32.DeserializerGet(3);
+                    return _cache32.DeserializerGet(3);
                 case DataType.RefString32Byte4:
-                    return Cache32.DeserializerGet(4);
+                    return _cache32.DeserializerGet(4);
                 case DataType.RefString32Byte5:
-                    return Cache32.DeserializerGet(5);
+                    return _cache32.DeserializerGet(5);
                 case DataType.RefString32Byte6:
-                    return Cache32.DeserializerGet(6);
+                    return _cache32.DeserializerGet(6);
                 case DataType.RefString32Byte7:
-                    return Cache32.DeserializerGet(7);
+                    return _cache32.DeserializerGet(7);
                 case DataType.RefString32Byte8:
-                    return Cache32.DeserializerGet(8);
+                    return _cache32.DeserializerGet(8);
                 case DataType.RefString32Byte9:
-                    return Cache32.DeserializerGet(9);
+                    return _cache32.DeserializerGet(9);
                 case DataType.RefString32Byte10:
-                    return Cache32.DeserializerGet(10);
+                    return _cache32.DeserializerGet(10);
                 case DataType.RefString32Byte11:
-                    return Cache32.DeserializerGet(11);
+                    return _cache32.DeserializerGet(11);
                 case DataType.RefString32Byte12:
-                    return Cache32.DeserializerGet(12);
+                    return _cache32.DeserializerGet(12);
                 case DataType.RefString32Byte13:
-                    return Cache32.DeserializerGet(13);
+                    return _cache32.DeserializerGet(13);
                 case DataType.RefString32Byte14:
-                    return Cache32.DeserializerGet(14);
+                    return _cache32.DeserializerGet(14);
                 case DataType.RefString32Byte15:
-                    return Cache32.DeserializerGet(15);
+                    return _cache32.DeserializerGet(15);
                 case DataType.RefString32UShort:
-                    return Cache32.DeserializerGet(reader.ReadUInt16());
+                    return _cache32.DeserializerGet(reader.ReadUInt16());
 
                 case DataType.RefString16Byte:
-                    return Cache16.DeserializerGet(reader.ReadByte());
+                    return _cache16.DeserializerGet(reader.ReadByte());
                 case DataType.RefString16Byte0:
-                    return Cache16.DeserializerGet(0);
+                    return _cache16.DeserializerGet(0);
                 case DataType.RefString16Byte1:
-                    return Cache16.DeserializerGet(1);
+                    return _cache16.DeserializerGet(1);
                 case DataType.RefString16Byte2:
-                    return Cache16.DeserializerGet(2);
+                    return _cache16.DeserializerGet(2);
                 case DataType.RefString16Byte3:
-                    return Cache16.DeserializerGet(3);
+                    return _cache16.DeserializerGet(3);
                 case DataType.RefString16Byte4:
-                    return Cache16.DeserializerGet(4);
+                    return _cache16.DeserializerGet(4);
                 case DataType.RefString16Byte5:
-                    return Cache16.DeserializerGet(5);
+                    return _cache16.DeserializerGet(5);
                 case DataType.RefString16Byte6:
-                    return Cache16.DeserializerGet(6);
+                    return _cache16.DeserializerGet(6);
                 case DataType.RefString16Byte7:
-                    return Cache16.DeserializerGet(7);
+                    return _cache16.DeserializerGet(7);
                 case DataType.RefString16Byte8:
-                    return Cache16.DeserializerGet(8);
+                    return _cache16.DeserializerGet(8);
                 case DataType.RefString16Byte9:
-                    return Cache16.DeserializerGet(9);
+                    return _cache16.DeserializerGet(9);
                 case DataType.RefString16Byte10:
-                    return Cache16.DeserializerGet(10);
+                    return _cache16.DeserializerGet(10);
                 case DataType.RefString16Byte11:
-                    return Cache16.DeserializerGet(11);
+                    return _cache16.DeserializerGet(11);
                 case DataType.RefString16Byte12:
-                    return Cache16.DeserializerGet(12);
+                    return _cache16.DeserializerGet(12);
                 case DataType.RefString16Byte13:
-                    return Cache16.DeserializerGet(13);
+                    return _cache16.DeserializerGet(13);
                 case DataType.RefString16Byte14:
-                    return Cache16.DeserializerGet(14);
+                    return _cache16.DeserializerGet(14);
                 case DataType.RefString16Byte15:
-                    return Cache16.DeserializerGet(15);
+                    return _cache16.DeserializerGet(15);
                 case DataType.RefString16UShort:
-                    return Cache16.DeserializerGet(reader.ReadUInt16());
+                    return _cache16.DeserializerGet(reader.ReadUInt16());
 
                 case DataType.RefString8Byte:
-                    return Cache8.DeserializerGet(reader.ReadByte());
+                    return _cache8.DeserializerGet(reader.ReadByte());
                 case DataType.RefString8Byte0:
-                    return Cache8.DeserializerGet(0);
+                    return _cache8.DeserializerGet(0);
                 case DataType.RefString8Byte1:
-                    return Cache8.DeserializerGet(1);
+                    return _cache8.DeserializerGet(1);
                 case DataType.RefString8Byte2:
-                    return Cache8.DeserializerGet(2);
+                    return _cache8.DeserializerGet(2);
                 case DataType.RefString8Byte3:
-                    return Cache8.DeserializerGet(3);
+                    return _cache8.DeserializerGet(3);
                 case DataType.RefString8Byte4:
-                    return Cache8.DeserializerGet(4);
+                    return _cache8.DeserializerGet(4);
                 case DataType.RefString8Byte5:
-                    return Cache8.DeserializerGet(5);
+                    return _cache8.DeserializerGet(5);
                 case DataType.RefString8Byte6:
-                    return Cache8.DeserializerGet(6);
+                    return _cache8.DeserializerGet(6);
                 case DataType.RefString8Byte7:
-                    return Cache8.DeserializerGet(7);
+                    return _cache8.DeserializerGet(7);
                 case DataType.RefString8Byte8:
-                    return Cache8.DeserializerGet(8);
+                    return _cache8.DeserializerGet(8);
                 case DataType.RefString8Byte9:
-                    return Cache8.DeserializerGet(9);
+                    return _cache8.DeserializerGet(9);
                 case DataType.RefString8Byte10:
-                    return Cache8.DeserializerGet(10);
+                    return _cache8.DeserializerGet(10);
                 case DataType.RefString8Byte11:
-                    return Cache8.DeserializerGet(11);
+                    return _cache8.DeserializerGet(11);
                 case DataType.RefString8Byte12:
-                    return Cache8.DeserializerGet(12);
+                    return _cache8.DeserializerGet(12);
                 case DataType.RefString8Byte13:
-                    return Cache8.DeserializerGet(13);
+                    return _cache8.DeserializerGet(13);
                 case DataType.RefString8Byte14:
-                    return Cache8.DeserializerGet(14);
+                    return _cache8.DeserializerGet(14);
                 case DataType.RefString8Byte15:
-                    return Cache8.DeserializerGet(15);
+                    return _cache8.DeserializerGet(15);
                 case DataType.RefString8UShort:
-                    return Cache8.DeserializerGet(reader.ReadUInt16());
+                    return _cache8.DeserializerGet(reader.ReadUInt16());
             }
 
             var length = 0;
@@ -670,18 +663,18 @@ namespace TWCore.Serialization.PWSerializer.Types
             if (length == 0) return null;
 
             var bytes = reader.ReadBytes(length);
-            var strValue = Encoding.GetString(bytes);
+            var strValue = DefaultUTF8Encoding.GetString(bytes);
 
             if (!_useCache || length <= 2) return strValue;
             var sLength = strValue.Length;
             if (sLength <= 8)
-                Cache8.DeserializerSet(strValue);
+                _cache8.DeserializerSet(strValue);
             else if (sLength <= 16)
-                Cache16.DeserializerSet(strValue);
+                _cache16.DeserializerSet(strValue);
             else if (sLength <= 32)
-                Cache32.DeserializerSet(strValue);
+                _cache32.DeserializerSet(strValue);
             else
-                Cache.DeserializerSet(strValue);
+                _cache.DeserializerSet(strValue);
             return strValue;
         }
         /// <inheritdoc />
@@ -691,7 +684,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ReadValue(BinaryReader reader)
+        public string ReadValue(BinaryReader reader)
             => ReadValue(reader, reader.ReadByte());
     }
 }

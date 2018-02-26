@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Char value type serializer
     /// </summary>
-	public class CharSerializer : TypeSerializer<char>
+	public struct CharSerializer : ITypeSerializer<char>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.Char, DataType.CharDefault });
         /// <inheritdoc />
@@ -33,7 +33,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
         }
         /// <inheritdoc />
@@ -43,7 +43,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type) 
+        public bool CanWrite(Type type) 
             => type == typeof(char);
         /// <inheritdoc />
         /// <summary>
@@ -52,7 +52,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => type == DataType.Char || type == DataType.CharDefault;
         /// <inheritdoc />
         /// <summary>
@@ -61,7 +61,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
             => WriteValue(writer, (char)value);
         /// <inheritdoc />
         /// <summary>
@@ -70,12 +70,12 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, char value)
+        public void WriteValue(BinaryWriter writer, char value)
         {
             if (value == default(char))
                 writer.Write(DataType.CharDefault);
             else
-                WriteChar(writer, DataType.Char, value);
+                WriteHelper.WriteChar(writer, DataType.Char, value);
         }
         /// <inheritdoc />
         /// <summary>
@@ -85,7 +85,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
             => type == DataType.CharDefault ? default(char) : reader.ReadChar();
         /// <inheritdoc />
         /// <summary>
@@ -95,7 +95,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override char ReadValue(BinaryReader reader, byte type)
+        public char ReadValue(BinaryReader reader, byte type)
             => type == DataType.CharDefault ? default(char) : reader.ReadChar();
 
         /// <inheritdoc />
@@ -105,7 +105,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override char ReadValue(BinaryReader reader)
+        public char ReadValue(BinaryReader reader)
             => reader.ReadByte() == DataType.CharDefault ? default(char) : reader.ReadChar();
     }
 }

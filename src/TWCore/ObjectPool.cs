@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+#pragma warning disable 649
 
 namespace TWCore
 {
@@ -76,15 +77,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T New()
         {
-            if (_objectStack.TryPop(out var value))
-            {
-                Interlocked.Decrement(ref _count);
-                if (_resetMode == PoolResetMode.BeforeUse)
-                    _resetAction?.Invoke(value);
-                return value;
-            }
-            Interlocked.Exchange(ref _count, 0);
-            return _createFunc(this);
+            if (!_objectStack.TryPop(out var value))
+                return _createFunc(this);
+            Interlocked.Decrement(ref _count);
+            if (_resetMode == PoolResetMode.BeforeUse)
+                _resetAction?.Invoke(value);
+            return value;
         }
         /// <summary>
         /// Store the instance back to the pool
@@ -95,6 +93,101 @@ namespace TWCore
         {
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
+            _objectStack.Push(obj);
+            Interlocked.Increment(ref _count);
+        }
+        /// <summary>
+        /// Get current objects in the pool
+        /// </summary>
+        /// <returns>IEnumerable with the current objects</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public IEnumerable<T> GetCurrentObjects()
+        {
+            return _objectStack.ToReadOnly();
+        }
+        /// <summary>
+        /// Clear the current object stack
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            Interlocked.Exchange(ref _count, 0);
+            _objectStack.Clear();
+        }
+    }
+
+
+    /// <summary>
+    /// Pool Object Lifecycle
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    public interface IPoolObjectLifecycle<T>
+    {
+        /// <summary>
+        /// Pool initial size
+        /// </summary>
+        int InitialSize { get; }
+        /// <summary>
+        /// Pool reset mode
+        /// </summary>
+        PoolResetMode ResetMode { get; }
+        /// <summary>
+        /// Creates a new item in the pool
+        /// </summary>
+        /// <returns>New item instance</returns>
+        T New();
+        /// <summary>
+        /// Reset item
+        /// </summary>
+        /// <param name="value">Item instance</param>
+        void Reset(T value);
+    }
+
+    /// <summary>
+    /// Object pool
+    /// </summary>
+    public sealed class ObjectPool<T, TPoolObjectLifecycle>
+        where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
+    {
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private TPoolObjectLifecycle _allocator;// = new TPoolObjectLifecycle();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
+
+        /// <summary>
+        /// Object pool
+        /// </summary>
+        public ObjectPool()
+        {
+            _objectStack = new ConcurrentStack<T>();
+            for (var i = 0; i < _allocator.InitialSize; i++)
+                _objectStack.Push(_allocator.New());
+            Interlocked.Add(ref _count, _allocator.InitialSize);
+        }
+
+        /// <summary>
+        /// Get a new instance from the pool
+        /// </summary>
+        /// <returns>Object instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T New()
+        {
+            if (!_objectStack.TryPop(out var value))
+                return _allocator.New();
+
+            Interlocked.Decrement(ref _count);
+            if (_allocator.ResetMode == PoolResetMode.BeforeUse)
+                _allocator.Reset(value);
+            return value;
+        }
+        /// <summary>
+        /// Store the instance back to the pool
+        /// </summary>
+        /// <param name="obj">Object to store</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Store(T obj)
+        {
+            if (_allocator.ResetMode == PoolResetMode.AfterUse)
+                _allocator.Reset(obj);
             _objectStack.Push(obj);
             Interlocked.Increment(ref _count);
         }

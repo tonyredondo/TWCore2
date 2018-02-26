@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Int value type serializer
     /// </summary>
-	public class NumberSerializer : TypeSerializer<int>
+	public struct NumberSerializer : ITypeSerializer<int>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
@@ -133,7 +133,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init(SerializerMode mode)
+        public void Init(SerializerMode mode)
         {
             _mode = mode;
             _decimalCache?.Clear(mode);
@@ -153,7 +153,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">Type of the value to write</param>
         /// <returns>true if the type serializer can write the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanWrite(Type type)
+        public bool CanWrite(Type type)
             =>
             type == typeof(decimal) || type == typeof(double) || type == typeof(float) ||
             type == typeof(long) || type == typeof(ulong) ||
@@ -167,7 +167,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType value</param>
         /// <returns>true if the type serializer can read the type; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override bool CanRead(byte type)
+        public bool CanRead(byte type)
             => ReadTypes.Contains(type);
         /// <inheritdoc />
         /// <summary>
@@ -176,7 +176,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Write(BinaryWriter writer, object value)
+        public void Write(BinaryWriter writer, object value)
         {
             var valueType = value?.GetType();
             var decType = DataTypeHelper.GetDecreaseDataType(value, valueType);
@@ -195,9 +195,9 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefDecimalByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefDecimalByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefDecimalUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefDecimalUShort, (ushort)objIdx);
                     }
                     else
                     {
@@ -219,13 +219,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefDoubleByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefDoubleByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefDoubleUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefDoubleUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteDouble(writer, DataType.Double, v2);
+                        WriteHelper.WriteDouble(writer, DataType.Double, v2);
                         DoubleCache.SerializerSet(v2);
                     }
                     #endregion
@@ -242,13 +242,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefFloatByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefFloatByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefFloatUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefFloatUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteFloat(writer, DataType.Float, v3);
+                        WriteHelper.WriteFloat(writer, DataType.Float, v3);
                         FloatCache.SerializerSet(v3);
                     }
                     #endregion
@@ -260,13 +260,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefLongByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefLongByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefLongUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefLongUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteLong(writer, DataType.Long, v4);
+                        WriteHelper.WriteLong(writer, DataType.Long, v4);
                         LongCache.SerializerSet(v4);
                     }
                     #endregion
@@ -278,13 +278,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefULongByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefULongByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefULongUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefULongUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteULong(writer, DataType.ULong, v5);
+                        WriteHelper.WriteULong(writer, DataType.ULong, v5);
                         ULongCache.SerializerSet(v5);
                     }
                     #endregion
@@ -296,13 +296,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefIntByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefIntByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefIntUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefIntUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteInt(writer, DataType.Int, v6);
+                        WriteHelper.WriteInt(writer, DataType.Int, v6);
                         IntCache.SerializerSet(v6);
                     }
                     #endregion
@@ -314,13 +314,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefUIntByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefUIntByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefUIntUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefUIntUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteUInt(writer, DataType.UInt, v7);
+                        WriteHelper.WriteUInt(writer, DataType.UInt, v7);
                         UIntCache.SerializerSet(v7);
                     }
                     #endregion
@@ -330,10 +330,10 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     var v8 = Factory.Converter.ToShort(value);
                     objIdx = ShortCache.SerializerGet(v8);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
-                        WriteByte(writer, DataType.RefShortByte, (byte)objIdx);
+                        WriteHelper.WriteByte(writer, DataType.RefShortByte, (byte)objIdx);
                     else
                     {
-                        WriteShort(writer, DataType.Short, v8);
+                        WriteHelper.WriteShort(writer, DataType.Short, v8);
                         ShortCache.SerializerSet(v8);
                     }
                     #endregion
@@ -343,10 +343,10 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     var v9 = Factory.Converter.ToUShort(value);
                     objIdx = UShortCache.SerializerGet(v9);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
-                        WriteByte(writer, DataType.RefUShortByte, (byte)objIdx);
+                        WriteHelper.WriteByte(writer, DataType.RefUShortByte, (byte)objIdx);
                     else
                     {
-                        WriteUshort(writer, DataType.UShort, v9);
+                        WriteHelper.WriteUshort(writer, DataType.UShort, v9);
                         UShortCache.SerializerSet(v9);
                     }
                     #endregion
@@ -420,7 +420,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                             writer.Write(DataType.Byte20);
                             return;
                         default:
-                            WriteByte(writer, DataType.Byte, v10);
+                            WriteHelper.WriteByte(writer, DataType.Byte, v10);
                             return;
                     }
                 #endregion
@@ -447,7 +447,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="writer">Binary writer of the stream</param>
         /// <param name="value">Object value to be written</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void WriteValue(BinaryWriter writer, int value)
+        public void WriteValue(BinaryWriter writer, int value)
         {
             #region Static values
             switch (value)
@@ -531,13 +531,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(writer, DataType.RefIntByte, (byte)objIdx);
+                            WriteHelper.WriteByte(writer, DataType.RefIntByte, (byte)objIdx);
                         else
-                            WriteUshort(writer, DataType.RefIntUShort, (ushort)objIdx);
+                            WriteHelper.WriteUshort(writer, DataType.RefIntUShort, (ushort)objIdx);
                     }
                     else
                     {
-                        WriteInt(writer, DataType.Int, value);
+                        WriteHelper.WriteInt(writer, DataType.Int, value);
                         IntCache.SerializerSet(value);
                     }
                     #endregion
@@ -547,10 +547,10 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     var v8 = (short)value;
                     objIdx = ShortCache.SerializerGet(v8);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
-                        WriteByte(writer, DataType.RefShortByte, (byte)objIdx);
+                        WriteHelper.WriteByte(writer, DataType.RefShortByte, (byte)objIdx);
                     else
                     {
-                        WriteShort(writer, DataType.Short, v8);
+                        WriteHelper.WriteShort(writer, DataType.Short, v8);
                         ShortCache.SerializerSet(v8);
                     }
                     #endregion
@@ -560,17 +560,17 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     var v9 = (ushort)value;
                     objIdx = UShortCache.SerializerGet(v9);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
-                        WriteByte(writer, DataType.RefUShortByte, (byte)objIdx);
+                        WriteHelper.WriteByte(writer, DataType.RefUShortByte, (byte)objIdx);
                     else
                     {
-                        WriteUshort(writer, DataType.UShort, v9);
+                        WriteHelper.WriteUshort(writer, DataType.UShort, v9);
                         UShortCache.SerializerSet(v9);
                     }
                     #endregion
                     return;
                 case DataType.Byte:
                     #region Byte Type
-                    WriteByte(writer, DataType.Byte, (byte)value);
+                    WriteHelper.WriteByte(writer, DataType.Byte, (byte)value);
                     #endregion
                     return;
                 case DataType.SByte:
@@ -590,7 +590,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override object Read(BinaryReader reader, byte type)
+        public object Read(BinaryReader reader, byte type)
         {
             switch (type)
             {
@@ -760,7 +760,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="type">DataType</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadValue(BinaryReader reader, byte type)
+        public int ReadValue(BinaryReader reader, byte type)
         {
             switch (type)
             {
@@ -855,7 +855,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// <param name="reader">Binary reader of the stream</param>
         /// <returns>Object instance of the value deserialized</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override int ReadValue(BinaryReader reader)
+        public int ReadValue(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)

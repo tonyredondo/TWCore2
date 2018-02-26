@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Dynamic;
 using System.Runtime.CompilerServices;
@@ -30,6 +31,7 @@ namespace TWCore.Net.RPC.Client
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<string, string> NameCache = new ConcurrentDictionary<string, string>();
 
         /// <inheritdoc />
         /// <summary>
@@ -56,9 +58,9 @@ namespace TWCore.Net.RPC.Client
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
             var binderName = binder.Name;
-            if (binderName.Length > 5 && binderName.EndsWith("Async", StringComparison.Ordinal))
+            if (binderName.Length > 5)
             {
-                var name = binderName.Substring(0, binderName.Length - 5);
+                var name = NameCache.GetOrAdd(binderName, bName => bName.EndsWith("Async", StringComparison.Ordinal) ? bName.Substring(0, binderName.Length - 5) : bName);
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args);
             }
             else

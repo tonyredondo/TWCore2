@@ -100,7 +100,6 @@ namespace TWCore.Services.Messaging
                 collection.Add("Maximum businesses per queue", _maxMessagesPerQueue);
                 collection.Add("Business item initial count in percent of the total maximum items", InitialBusinessesPercent);
                 collection.Add("Business initial count", BusinessInitialCount);
-                collection.Add("Available business on the pool", _businessPool?.Count, true);
             });
         }
         #endregion

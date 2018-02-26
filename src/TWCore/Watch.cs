@@ -257,13 +257,23 @@ namespace TWCore
         [IgnoreStackFrameLog]
         public sealed class WItem : IDisposable
         {
-            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem> ItemPools = new ObjectPool<WItem>(pool => new WItem(), i => i.Reset(), 0, PoolResetMode.BeforeUse);
+            [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ObjectPool<WItem, ItemPoolAllocator> ItemPools = new ObjectPool<WItem, ItemPoolAllocator>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Worker<LogStatItem> LogStatsWorker = new Worker<LogStatItem>(action: WorkerMethod);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly LRU2QCollection<string, StatusCounter> Counters = new LRU2QCollection<string, StatusCounter>(100);
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static long _frequency = Stopwatch.Frequency;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _watcherCount;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<int, string> IndentTexts = new ConcurrentDictionary<int, string>();
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly double FrequencyTime = 1000d / Stopwatch.Frequency;
+
+            private struct ItemPoolAllocator : IPoolObjectLifecycle<WItem>
+            {
+                public int InitialSize => 0;
+                public PoolResetMode ResetMode => PoolResetMode.BeforeUse;
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public WItem New() => new WItem();
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Reset(WItem value) => value.Reset();
+            }
 
             [IgnoreStackFrameLog]
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -317,7 +327,7 @@ namespace TWCore
             {
                 Counters.NodeRemoved += (key, value) => value.Dispose();
             }
-            
+
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _initTicks;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _ticksTimestamp;
             [DebuggerBrowsable(DebuggerBrowsableState.Never)] private double _lastTapTicks;
@@ -408,7 +418,7 @@ namespace TWCore
                 item._lastMessage = message;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
-                item._counter = Counters.GetOrAdd(message, msg =>  new StatusCounter(CounterPreffix + msg));
+                item._counter = Counters.GetOrAdd(message, msg => new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(message);
                 return item;
             }
@@ -420,7 +430,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._level = level;
-                item._counter = Counters.GetOrAdd(message, msg =>  new StatusCounter(CounterPreffix + msg));
+                item._counter = Counters.GetOrAdd(message, msg => new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(message);
                 return item;
             }
@@ -431,7 +441,7 @@ namespace TWCore
                 item._lastMessage = lastMessage;
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
-                item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
+                item._counter = Counters.GetOrAdd(startMessage, msg => new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -443,7 +453,7 @@ namespace TWCore
                 item._id = Interlocked.Increment(ref _watcherCount);
                 item._groupValue = null;
                 item._level = level;
-                item._counter = Counters.GetOrAdd(startMessage, msg =>  new StatusCounter(CounterPreffix + msg));
+                item._counter = Counters.GetOrAdd(startMessage, msg => new StatusCounter(CounterPreffix + msg));
                 item.StartedTap(startMessage ?? lastMessage);
                 return item;
             }
@@ -552,7 +562,7 @@ namespace TWCore
 
             #region IDisposable Support
             [DebuggerBrowsable(DebuggerBrowsableState.Never)]
-            private bool _disposedValue; 
+            private bool _disposedValue;
             /// <summary>
             /// Dispose Object
             /// </summary>

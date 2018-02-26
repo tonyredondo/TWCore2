@@ -269,11 +269,57 @@ namespace TWCore.Net.RPC.Client
             return (TReturn)response.ReturnValue;
         }
 
-        private static readonly ObjectPool<(object[], Type[])> ServiceInvokeArgs1Pool = new ObjectPool<(object[], Type[])>(i => (new object[1], new Type[1]));
-        private static readonly ObjectPool<(object[], Type[])> ServiceInvokeArgs2Pool = new ObjectPool<(object[], Type[])>(i => (new object[2], new Type[2]));
-        private static readonly ObjectPool<(object[], Type[])> ServiceInvokeArgs3Pool = new ObjectPool<(object[], Type[])>(i => (new object[3], new Type[3]));
-        private static readonly ObjectPool<(object[], Type[])> ServiceInvokeArgs4Pool = new ObjectPool<(object[], Type[])>(i => (new object[4], new Type[4]));
+        private static readonly ObjectPool<(object[], Type[]), Args1Allocator> ServiceInvokeArgs1Pool = new ObjectPool<(object[], Type[]), Args1Allocator>();
+        private static readonly ObjectPool<(object[], Type[]), Args2Allocator> ServiceInvokeArgs2Pool = new ObjectPool<(object[], Type[]), Args2Allocator>();
+        private static readonly ObjectPool<(object[], Type[]), Args3Allocator> ServiceInvokeArgs3Pool = new ObjectPool<(object[], Type[]), Args3Allocator>();
+        private static readonly ObjectPool<(object[], Type[]), Args4Allocator> ServiceInvokeArgs4Pool = new ObjectPool<(object[], Type[]), Args4Allocator>();
         
+        private struct Args1Allocator : IPoolObjectLifecycle<(object[], Type[])>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public (object[], Type[]) New() => (new object[1], new Type[1]);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset((object[], Type[]) value)
+            {
+            }
+        }
+        private struct Args2Allocator : IPoolObjectLifecycle<(object[], Type[])>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public (object[], Type[]) New() => (new object[2], new Type[2]);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset((object[], Type[]) value)
+            {
+            }
+        }
+        private struct Args3Allocator : IPoolObjectLifecycle<(object[], Type[])>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public (object[], Type[]) New() => (new object[3], new Type[3]);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset((object[], Type[]) value)
+            {
+            }
+        }
+        private struct Args4Allocator : IPoolObjectLifecycle<(object[], Type[])>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public (object[], Type[]) New() => (new object[4], new Type[4]);
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset((object[], Type[]) value)
+            {
+            }
+        }
+
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TReturn>(string serviceName, string method, TArg1 arg1, CancellationToken? cancellationToken = null)
         {

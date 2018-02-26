@@ -42,12 +42,6 @@ namespace TWCore
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _onetimeInitAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _count;
-
-        /// <summary>
-        /// Get the number of objects in the queue
-        /// </summary>
-        public int Count => _count;
 
         /// <inheritdoc />
         /// <summary>
@@ -88,7 +82,6 @@ namespace TWCore
                 tAlloc[i] = t;
             }
             _objectStack.PushRange(tAlloc);
-            Interlocked.Add(ref _count, number);
         }
         /// <summary>
         /// Get a new instance from the pool
@@ -99,12 +92,10 @@ namespace TWCore
         {
             if (_objectStack.TryPop(out var value))
             {
-                Interlocked.Decrement(ref _count);
                 if (_resetMode == PoolResetMode.BeforeUse)
                     _resetAction?.Invoke(value);
                 return value;
             }
-            Interlocked.Exchange(ref _count, 0);
             value = new T();
             _onetimeInitAction?.Invoke(value);
             return value;
@@ -119,7 +110,6 @@ namespace TWCore
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
-            Interlocked.Increment(ref _count);
         }
         /// <summary>
         /// Get current objects in the pool
@@ -136,7 +126,6 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            Interlocked.Exchange(ref _count, 0);
             _objectStack.Clear();
         }
     }

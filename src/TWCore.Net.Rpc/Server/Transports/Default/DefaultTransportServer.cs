@@ -256,7 +256,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 var listenerTask = _listener.AcceptTcpClientAsync();
                 var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
                 if (rTask == tokenTask) break;
-                ThreadPool.UnsafeQueueUserWorkItem(ConnectionReceived, listenerTask.Result);
+                var pTsk = Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
             }
         }
         

@@ -32,7 +32,7 @@ namespace TWCore.Serialization.PWSerializer
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void Init(SerializerMode mode) { }
+        public abstract void Init(SerializerMode mode);
         /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>

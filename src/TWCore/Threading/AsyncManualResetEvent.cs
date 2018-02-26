@@ -158,7 +158,7 @@ namespace TWCore.Threading
             if (_mTcs == null) return Task.CompletedTask;
             var tcs = _mTcs;
             if (tcs.Task.IsCompleted) return Task.CompletedTask;
-            ThreadPool.UnsafeQueueUserWorkItem(s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs);
+            Task.Factory.StartNew(s => ((TaskCompletionSource<bool>) s).TrySetResult(true), tcs, CancellationToken.None);
             return tcs.Task;
         }
         #endregion

@@ -271,7 +271,7 @@ namespace TWCore
         public static Task<TResult> InvokeAsync<TResult>(this Func<TResult> func)
         {
             var tcs = new TaskCompletionSource<TResult>();
-            ThreadPool.UnsafeQueueUserWorkItem(InternalInvokeAsync<TResult>, new object[] {tcs, func});
+            Task.Factory.StartNew(InternalInvokeAsync<TResult>, new object[] {tcs, func}, CancellationToken.None);
             return tcs.Task;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

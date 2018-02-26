@@ -165,7 +165,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 try
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    ThreadPool.UnsafeQueueUserWorkItem(MessageReceivedHandler, message);
+                    var procMsg = Task.Factory.StartNew(MessageReceivedHandler, message, _tokenSource.Token);
                 }
                 catch (IOException)
                 {
@@ -184,7 +184,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Dispose();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async void MessageReceivedHandler(object rawMessage)
+        private async Task MessageReceivedHandler(object rawMessage)
         {
             try
             {

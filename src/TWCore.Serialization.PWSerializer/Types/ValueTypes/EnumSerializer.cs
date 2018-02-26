@@ -36,6 +36,14 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         });
         /// <inheritdoc />
         /// <summary>
+        /// Type serializer initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Init(SerializerMode mode)
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
         /// <param name="type">Type of the value to write</param>

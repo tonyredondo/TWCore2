@@ -88,6 +88,10 @@ namespace TWCore
         /// Gets or Sets if the worker must ignore Exceptions
         /// </summary>
         public bool IgnoreExceptions { get; set; }
+        /// <summary>
+        /// Get if the worker is using its own thread.
+        /// </summary>
+        public bool UseOwnThread { get; }
         #endregion
 
         #region .ctors
@@ -97,8 +101,9 @@ namespace TWCore
         /// <param name="action">Action to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
         /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Action<T> action, bool startActive = true, bool ignoreExceptions = false)
+        public Worker(Action<T> action, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = true)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = null;
@@ -108,6 +113,7 @@ namespace TWCore
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
+            UseOwnThread = useOwnThread;
             Init();
         }
         /// <summary>
@@ -117,8 +123,9 @@ namespace TWCore
         /// <param name="action">Action to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
         /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<bool> precondition, Action<T> action, bool startActive = true, bool ignoreExceptions = false)
+        public Worker(Func<bool> precondition, Action<T> action, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = true)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = precondition;
@@ -128,6 +135,7 @@ namespace TWCore
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
+            UseOwnThread = useOwnThread;
             Init();
         }
         /// <summary>
@@ -136,8 +144,9 @@ namespace TWCore
         /// <param name="function">Func to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
         /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false)
+        public Worker(Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = null;
@@ -147,6 +156,7 @@ namespace TWCore
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
+            UseOwnThread = useOwnThread;
             Init();
         }
         /// <summary>
@@ -156,8 +166,9 @@ namespace TWCore
         /// <param name="function">Func to process each element of the queue</param>
         /// <param name="startActive">Start active flag, default value is true</param>
         /// <param name="ignoreExceptions">Sets if the worker must ignore Exceptions</param>
+        /// <param name="useOwnThread">Sets if the worker uses its own thread</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Worker(Func<bool> precondition, Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false)
+        public Worker(Func<bool> precondition, Func<T, Task> function, bool startActive = true, bool ignoreExceptions = false, bool useOwnThread = false)
         {
             _queue = new ConcurrentQueue<T>();
             _precondition = precondition;
@@ -167,6 +178,7 @@ namespace TWCore
             _tokenSource = new CancellationTokenSource();
             _startActive = startActive;
             IgnoreExceptions = ignoreExceptions;
+            UseOwnThread = useOwnThread;
             Init();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -174,7 +186,9 @@ namespace TWCore
         {
             _processHandler.Reset();
             _tokenSource = new CancellationTokenSource();
-            _processThread = _precondition == null ? OneLoopDequeueThread() : OneLoopDequeueThreadWithPrecondition();
+            _processThread = _precondition == null ? 
+                (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThread, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThread()) :
+                (UseOwnThread ? Task.Factory.StartNew(OneLoopDequeueThreadWithPrecondition, CancellationToken.None, TaskCreationOptions.LongRunning, TaskScheduler.Default) : OneLoopDequeueThreadWithPrecondition());
         }
         #endregion
 

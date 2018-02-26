@@ -132,24 +132,21 @@ namespace TWCore.Serialization.WSerializer
         /// <returns>Object value with new type</returns>
         public static object Change(object obj, Type typeTo)
         {
-            var u = Nullable.GetUnderlyingType(typeTo);
-            var typeInfo = typeTo.GetTypeInfo();
-
-            if (u != null)
-            {
-                if (obj == null)
-                    return typeInfo.IsValueType ? Activator.CreateInstance(typeTo) : null;
-                return u == typeof(object) ? obj : Convert.ChangeType(obj, u);
-            }
-            
             if (typeTo == typeof(object))
                 return obj;
-            if (typeTo == obj?.GetType())
+            if (obj == null)
+                return typeTo.IsValueType ? Activator.CreateInstance(typeTo) : null;
+            var objType = obj.GetType();
+            if (typeTo == objType)
                 return obj;
-            if (obj != null && typeInfo.IsAssignableFrom(obj.GetType().GetTypeInfo()))
-                return obj;
-            if (typeInfo.IsEnum)
+            if (typeTo.IsEnum)
                 return Enum.ToObject(typeTo, obj);
+            if (typeTo.IsAssignableFrom(objType))
+                return obj;
+
+            var underlyingType = Nullable.GetUnderlyingType(typeTo);
+            if (underlyingType != null)
+                return underlyingType == typeof(object) ? obj : Convert.ChangeType(obj, underlyingType);
             try
             {
                 return Convert.ChangeType(obj, typeTo);

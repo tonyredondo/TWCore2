@@ -117,7 +117,7 @@ namespace TWCore.Diagnostics.Log
                     default:
                         return Storage.WriteAsync(item);
                 }
-            }, false, true);
+            }, false, true, true);
             _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
             _lastLogItemsWorker = new Worker<ILogItem>(item =>
             {

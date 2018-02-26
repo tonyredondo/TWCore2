@@ -184,6 +184,7 @@ namespace TWCore.Cache.Storages.IO
             Core.Log.InfoBasic("Disposing...");
             _handlers.ParallelEach(s => s.Dispose());
             _handlers = null;
+            Core.Log.InfoBasic("Disposed.");
         }
         #endregion
 

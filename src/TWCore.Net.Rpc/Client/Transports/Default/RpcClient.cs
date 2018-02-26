@@ -236,28 +236,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     try
                     {
                         var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                        switch (message)
-                        {
-                            case RPCSessionResponseMessage sessionMessage:
-                                if (sessionMessage.Succeed)
-                                {
-                                    _sessionId = sessionMessage.SessionId;
-                                    _onSession = true;
-                                    _sessionEvent.Set();
-                                }
-                                else
-                                    await DisconnectAsync().ConfigureAwait(false);
-
-                                break;
-                            default:
-                                ThreadPool.UnsafeQueueUserWorkItem(state =>
-                                {
-                                    var sArray = (object[]) state;
-                                    var client = (RpcClient) sArray[0];
-                                    client.OnMessageReceived?.Invoke(client, (RPCMessage) sArray[1]);
-                                }, new object[] {this, message});
-                                break;
-                        }
+                        var procMsg = Task.Factory.StartNew(MessageReceivedHandler, message, _connectionCancellationToken);
                     }
                     catch (IOException ex)
                     {
@@ -271,7 +250,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         _client?.Close();
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                     OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
@@ -279,6 +258,33 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 }
             }
             Dispose();
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task MessageReceivedHandler(object rawMessage)
+        {
+            try
+            {
+                switch (rawMessage)
+                {
+                    case RPCSessionResponseMessage sessionMessage:
+                        if (sessionMessage.Succeed)
+                        {
+                            _sessionId = sessionMessage.SessionId;
+                            _onSession = true;
+                            _sessionEvent.Set();
+                        }
+                        else
+                            await DisconnectAsync().ConfigureAwait(false);
+                        break;
+                    case RPCMessage message:
+                        OnMessageReceived?.Invoke(this, message);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
         #endregion
 

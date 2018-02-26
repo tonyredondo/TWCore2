@@ -30,6 +30,14 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.Char, DataType.CharDefault });
         /// <inheritdoc />
         /// <summary>
+        /// Type serializer initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override void Init(SerializerMode mode)
+        {
+        }
+        /// <inheritdoc />
+        /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
         /// <param name="type">Type of the value to write</param>

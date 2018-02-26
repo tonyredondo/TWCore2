@@ -124,11 +124,6 @@ namespace TWCore.Serialization.PWSerializer
         private static byte GetDecreaseDataType(sbyte value)
             => (value >= 0) ? DataType.Byte : DataType.SByte;
 
-
-
-        private static readonly ConcurrentDictionary<Type, (Type UnderlyingType, TypeInfo TypeInfo)> TypeChangeCache =
-            new ConcurrentDictionary<Type, (Type UnderlyingType, TypeInfo TypeInfo)>();
-
         /// <summary>
         /// Change a object type
         /// </summary>
@@ -137,20 +132,21 @@ namespace TWCore.Serialization.PWSerializer
         /// <returns>Object value with new type</returns>
         public static object Change(object obj, Type typeTo)
         {
-            (var underlyingType, var typeInfo) = TypeChangeCache.GetOrAdd(typeTo, tTo => (Nullable.GetUnderlyingType(tTo), tTo.GetTypeInfo()));
-
-            if (obj == null)
-                return typeInfo.IsValueType ? Activator.CreateInstance(typeTo) : null;
-            if (underlyingType != null)
-                return underlyingType == typeof(object) ? obj : Convert.ChangeType(obj, underlyingType);
             if (typeTo == typeof(object))
                 return obj;
-
+            if (obj == null)
+                return typeTo.IsValueType ? Activator.CreateInstance(typeTo) : null;
             var objType = obj.GetType();
-            if (typeTo == objType || typeInfo.IsAssignableFrom(objType.GetTypeInfo()))
+            if (typeTo == objType)
                 return obj;
-            if (typeInfo.IsEnum)
+            if (typeTo.IsEnum)
                 return Enum.ToObject(typeTo, obj);
+            if (typeTo.IsAssignableFrom(objType))
+                return obj;
+
+            var underlyingType = Nullable.GetUnderlyingType(typeTo);
+            if (underlyingType != null)
+                return underlyingType == typeof(object) ? obj : Convert.ChangeType(obj, underlyingType);
             try
             {
                 return Convert.ChangeType(obj, typeTo);

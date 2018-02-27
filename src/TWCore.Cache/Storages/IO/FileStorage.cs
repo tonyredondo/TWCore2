@@ -304,7 +304,7 @@ namespace TWCore.Cache.Storages.IO
                                 if (index != null)
                                 {
                                     var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
-                                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                    _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                                     indexLoaded = true;
                                 }
                             }
@@ -325,7 +325,7 @@ namespace TWCore.Cache.Storages.IO
                                     if (index != null)
                                     {
                                         var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
-                                        _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                        _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                                         indexLoaded = true;
                                     }
                                 }

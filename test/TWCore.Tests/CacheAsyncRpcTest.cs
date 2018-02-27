@@ -21,7 +21,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class CacheAsyncRpcTest : ContainerParameterServiceAsync
     {
-        private static ISerializer GlobalSerializer = new PWBinarySerializer();
+        private static ISerializer GlobalSerializer = new WBinarySerializer();
 
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)

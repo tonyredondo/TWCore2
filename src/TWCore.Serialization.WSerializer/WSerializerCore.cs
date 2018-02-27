@@ -295,16 +295,32 @@ namespace TWCore.Serialization.WSerializer
                             if (iList.Count > 0)
                             {
                                 bw.Write(DataType.ListStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iList.Count];
-                                for (var i = 0; i < iList.Count; i++)
+                                var valueTypeSerializer = serializersTable.GetSerializerByValueType(lType.InnerType);
+                                if (valueTypeSerializer != null)
                                 {
-                                    var itemList = iList[i];
-                                    itemList = ResolveLinqEnumerables(itemList);
-                                    var itemType = itemList?.GetType() ?? lType.InnerType;
-                                    aPlan[i] = new SerializerPlanItem.RuntimeValue(itemType, serializersTable.GetSerializerByValueType(itemType)?.GetType(), itemList);
+                                    for (var i = 0; i < iList.Count; i++)
+                                    {
+                                        var itemList = iList[i];
+                                        if (itemList == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            valueTypeSerializer.Write(bw, itemList);
+                                    }
                                 }
-                                scope = new SerializerScope(aPlan, scope.Type);
-                                scopeStack.Push(scope);
+                                else
+                                {
+                                    var aPlan = new SerializerPlanItem.RuntimeValue[iList.Count];
+                                    for (var i = 0; i < iList.Count; i++)
+                                    {
+                                        var itemList = iList[i];
+                                        if (itemList != null)
+                                            itemList = ResolveLinqEnumerables(itemList);
+                                        var itemType = itemList?.GetType() ?? lType.InnerType;
+                                        aPlan[i] = new SerializerPlanItem.RuntimeValue(itemType, itemType != lType.InnerType ? serializersTable.GetSerializerByValueType(itemType)?.GetType() : null, itemList);
+                                    }
+                                    scope = new SerializerScope(aPlan, scope.Type);
+                                    scopeStack.Push(scope);
+                                }
                             }
                             else
                             {
@@ -325,18 +341,39 @@ namespace TWCore.Serialization.WSerializer
                             if (iDictio.Count > 0)
                             {
                                 bw.Write(DataType.DictionaryStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iDictio.Count * 2];
-                                var aIdx = 0;
-                                foreach (var keyValue in iDictio.Keys)
+                                if (dictioItem.KeySerializerType != null && dictioItem.ValueSerializerType != null)
                                 {
-                                    var kv = ResolveLinqEnumerables(keyValue);
-                                    var valueValue = iDictio[keyValue];
-                                    valueValue = ResolveLinqEnumerables(valueValue);
-                                    aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(kv?.GetType() ?? dictioItem.KeyType, dictioItem.KeySerializerType, kv);
-                                    aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(valueValue?.GetType() ?? dictioItem.ValueType, dictioItem.ValueSerializerType, valueValue);
+                                    foreach (var keyValue in iDictio.Keys)
+                                    {
+                                        if (keyValue == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
+
+                                        var valueValue = iDictio[keyValue];
+                                        if (valueValue == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
+                                    }
                                 }
-                                scope = new SerializerScope(aPlan, scope.Type);
-                                scopeStack.Push(scope);
+                                else
+                                {
+                                    var aPlan = new SerializerPlanItem.RuntimeValue[iDictio.Count * 2];
+                                    var aIdx = 0;
+                                    foreach (var keyValue in iDictio.Keys)
+                                    {
+                                        var kv = ResolveLinqEnumerables(keyValue);
+                                        var valueValue = iDictio[keyValue];
+                                        valueValue = ResolveLinqEnumerables(valueValue);
+                                        aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(kv?.GetType() ?? dictioItem.KeyType, dictioItem.KeySerializerType, kv);
+                                        aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(
+                                            valueValue?.GetType() ?? dictioItem.ValueType,dictioItem.ValueSerializerType, valueValue);
+                                    }
+
+                                    scope = new SerializerScope(aPlan, scope.Type);
+                                    scopeStack.Push(scope);
+                                }
                             }
                             else
                             {

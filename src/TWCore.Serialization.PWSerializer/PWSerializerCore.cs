@@ -116,8 +116,8 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator> SerPool = new ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator>();
-        private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(Environment.ProcessorCount, scope => scope.Init());
-        private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(Environment.ProcessorCount, p => p.Init());
+        private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(10, scope => scope.Init());
+        private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(20);
         private readonly byte[] _bufferSer = new byte[3];
 
         #region Public Methods
@@ -350,20 +350,39 @@ namespace TWCore.Serialization.PWSerializer
                             if (iListCount > 0)
                             {
                                 bw.Write(DataType.ListStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
-                                for (var i = 0; i < iListCount; i++)
+                                var valueTypeSerializer = serializersTable.GetSerializerByValueType(lType.InnerType);
+                                if (valueTypeSerializer != null)
                                 {
-                                    var itemList = iList[i];
-                                    itemList = ResolveLinqEnumerables(itemList);
-                                    var itemType = itemList?.GetType() ?? lType.InnerType;
-                                    var srpVal = SerializerRuntimePool.New();
-                                    var serValue = serializersTable.GetSerializerByValueType(itemType);
-                                    srpVal.Init(lType.InnerType, serValue?.GetType(), itemList);
-                                    aPlan[i] = srpVal;
+                                    for (var i = 0; i < iListCount; i++)
+                                    {
+                                        var itemList = iList[i];
+                                        if (itemList == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            valueTypeSerializer.Write(bw, itemList);
+                                    }
                                 }
-                                scope = SerializerScopePool.New();
-                                scope.Init(aPlan, scope.Type);
-                                scopeStack.Push(scope);
+                                else
+                                {
+
+                                    var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                    for (var i = 0; i < iListCount; i++)
+                                    {
+                                        var itemList = iList[i];
+                                        if (itemList != null)
+                                            itemList = ResolveLinqEnumerables(itemList);
+                                        Type serType = null;
+                                        if (itemList != null)
+                                            serType = serializersTable.GetSerializerByValueType(itemList.GetType())?.GetType();
+                                        var srpVal = SerializerRuntimePool.New();
+                                        srpVal.Init(lType.InnerType, serType, itemList);
+                                        aPlan[i] = srpVal;
+                                    }
+
+                                    scope = SerializerScopePool.New();
+                                    scope.Init(aPlan, scope.Type);
+                                    scopeStack.Push(scope);
+                                }
                             }
                             else
                             {
@@ -385,24 +404,46 @@ namespace TWCore.Serialization.PWSerializer
                             if (iDictioCount > 0)
                             {
                                 bw.Write(DataType.DictionaryStart);
-                                var aPlan = new SerializerPlanItem.RuntimeValue[iDictioCount * 2];
-                                var aIdx = 0;
-                                foreach (var keyValue in iDictio.Keys)
+                                
+                                if (dictioItem.KeySerializerType != null && dictioItem.ValueSerializerType != null)
                                 {
-                                    var kv = ResolveLinqEnumerables(keyValue);
-                                    var valueValue = iDictio[keyValue];
-                                    valueValue = ResolveLinqEnumerables(valueValue);
-                                    var aPlanKeyVal = SerializerRuntimePool.New();
-                                    aPlanKeyVal.Init(dictioItem.KeyType, dictioItem.KeySerializerType, kv);
-                                    aPlan[aIdx++] = aPlanKeyVal;
+                                    foreach (var keyValue in iDictio.Keys)
+                                    {
+                                        if (keyValue == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
 
-                                    var aPlanValVal = SerializerRuntimePool.New();
-                                    aPlanValVal.Init(dictioItem.ValueType, dictioItem.ValueSerializerType, valueValue);
-                                    aPlan[aIdx++] = aPlanValVal;
+                                        var valueValue = iDictio[keyValue];
+                                        if (valueValue == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                            serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
+                                    }
                                 }
-                                scope = SerializerScopePool.New();
-                                scope.Init(aPlan, scope.Type);
-                                scopeStack.Push(scope);
+                                else
+                                {
+                                    var aPlan = new SerializerPlanItem.RuntimeValue[iDictioCount * 2];
+                                    var aIdx = 0;
+                                    foreach (var keyValue in iDictio.Keys)
+                                    {
+                                        var kv = ResolveLinqEnumerables(keyValue);
+                                        var valueValue = iDictio[keyValue];
+                                        valueValue = ResolveLinqEnumerables(valueValue);
+                                        var aPlanKeyVal = SerializerRuntimePool.New();
+                                        aPlanKeyVal.Init(dictioItem.KeyType, dictioItem.KeySerializerType, kv);
+                                        aPlan[aIdx++] = aPlanKeyVal;
+
+                                        var aPlanValVal = SerializerRuntimePool.New();
+                                        aPlanValVal.Init(dictioItem.ValueType, dictioItem.ValueSerializerType,
+                                            valueValue);
+                                        aPlan[aIdx++] = aPlanValVal;
+                                    }
+
+                                    scope = SerializerScopePool.New();
+                                    scope.Init(aPlan, scope.Type);
+                                    scopeStack.Push(scope);
+                                }
                             }
                             else
                             {
@@ -476,6 +517,9 @@ namespace TWCore.Serialization.PWSerializer
                             scope.Init(GetSerializerPlan(currentSerializerPlanTypes, serializersTable, rvItem.Value?.GetType() ?? rvItem.Type), rvItem.Type, rvItem.Value);
                             scopeStack.Push(scope);
                         }
+                        rvItem.Type = null;
+                        rvItem.SerializerType = null;
+                        rvItem.Value = null;
                         SerializerRuntimePool.Store(rvItem);
                         continue;
 

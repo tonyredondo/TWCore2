@@ -183,13 +183,6 @@ namespace TWCore.Serialization.PWSerializer.Serializer
                 SerializerType = serializer;
                 Value = value;
             }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Init()
-            {
-                Type = null;
-                SerializerType = null;
-                Value = null;
-            }
         }
         #endregion
 

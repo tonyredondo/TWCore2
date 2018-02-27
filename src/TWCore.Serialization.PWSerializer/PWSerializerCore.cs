@@ -362,26 +362,105 @@ namespace TWCore.Serialization.PWSerializer
                                             valueTypeSerializer.Write(bw, itemList);
                                     }
                                 }
+                                else if (iListCount == 1)
+                                {
+                                    if (iList[0] == null)
+                                        bw.Write(DataType.ValueNull);
+                                    else
+                                    {
+                                        var itemList = iList[0];
+                                        valueTypeSerializer = serializersTable.GetSerializerByValueType(itemList.GetType());
+                                        if (valueTypeSerializer != null)
+                                        {
+                                            valueTypeSerializer.Write(bw, itemList);
+                                        }
+                                        else
+                                        {
+                                            var aPlan = new SerializerPlanItem.RuntimeValue[1];
+                                            itemList = ResolveLinqEnumerables(itemList);
+                                            var serType = serializersTable.GetSerializerByValueType(itemList.GetType())?.GetType();
+                                            var srpVal = SerializerRuntimePool.New();
+                                            srpVal.Init(lType.InnerType, serType, itemList);
+                                            aPlan[0] = srpVal;
+                                            scope = SerializerScopePool.New();
+                                            scope.Init(aPlan, scope.Type);
+                                            scopeStack.Push(scope);
+                                        }
+                                    }
+                                }
                                 else
                                 {
-
-                                    var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
-                                    for (var i = 0; i < iListCount; i++)
+                                    if (lType.InnerType == typeof(object) && iList[0] != null)
                                     {
-                                        var itemList = iList[i];
-                                        if (itemList != null)
-                                            itemList = ResolveLinqEnumerables(itemList);
-                                        Type serType = null;
-                                        if (itemList != null)
-                                            serType = serializersTable.GetSerializerByValueType(itemList.GetType())?.GetType();
-                                        var srpVal = SerializerRuntimePool.New();
-                                        srpVal.Init(lType.InnerType, serType, itemList);
-                                        aPlan[i] = srpVal;
-                                    }
+                                        var canValueType = true;
+                                        var vType = iList[0].GetType();
+                                        valueTypeSerializer = serializersTable.GetSerializerByValueType(vType);
+                                        if (valueTypeSerializer != null)
+                                        {
+                                            for (var i = 1; i < iListCount; i++)
+                                            {
+                                                var itemList = iList[i];
+                                                if (itemList != null && itemList.GetType() == vType) continue;
+                                                canValueType = false;
+                                                break;
+                                            }
+                                        }
+                                        else
+                                            canValueType = false;
+                                        if (canValueType)
+                                        {
+                                            for (var i = 0; i < iListCount; i++)
+                                            {
+                                                var itemList = iList[i];
+                                                if (itemList == null)
+                                                    bw.Write(DataType.ValueNull);
+                                                else
+                                                    valueTypeSerializer.Write(bw, itemList);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                            for (var i = 0; i < iListCount; i++)
+                                            {
+                                                var itemList = iList[i];
+                                                if (itemList != null)
+                                                    itemList = ResolveLinqEnumerables(itemList);
+                                                Type serType = null;
+                                                if (itemList != null)
+                                                    serType = serializersTable.GetSerializerByValueType(itemList.GetType())
+                                                        ?.GetType();
+                                                var srpVal = SerializerRuntimePool.New();
+                                                srpVal.Init(lType.InnerType, serType, itemList);
+                                                aPlan[i] = srpVal;
+                                            }
 
-                                    scope = SerializerScopePool.New();
-                                    scope.Init(aPlan, scope.Type);
-                                    scopeStack.Push(scope);
+                                            scope = SerializerScopePool.New();
+                                            scope.Init(aPlan, scope.Type);
+                                            scopeStack.Push(scope);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                        for (var i = 0; i < iListCount; i++)
+                                        {
+                                            var itemList = iList[i];
+                                            if (itemList != null)
+                                                itemList = ResolveLinqEnumerables(itemList);
+                                            Type serType = null;
+                                            if (itemList != null)
+                                                serType = serializersTable.GetSerializerByValueType(itemList.GetType())
+                                                    ?.GetType();
+                                            var srpVal = SerializerRuntimePool.New();
+                                            srpVal.Init(lType.InnerType, serType, itemList);
+                                            aPlan[i] = srpVal;
+                                        }
+
+                                        scope = SerializerScopePool.New();
+                                        scope.Init(aPlan, scope.Type);
+                                        scopeStack.Push(scope);
+                                    }
                                 }
                             }
                             else

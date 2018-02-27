@@ -40,9 +40,9 @@ namespace TWCore.Messaging.RabbitMQ
 	/// </summary>
 	public class RabbitMQueueRawClient : MQueueRawClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new ConcurrentDictionary<Guid, RabbitResponseMessage>();
-        private readonly ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
-        private readonly ConcurrentDictionary<Guid, string> _correlationIdConsumers = new ConcurrentDictionary<Guid, string>();
+        private static readonly NonBlocking.ConcurrentDictionary<Guid, RabbitResponseMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, RabbitResponseMessage>();
+        private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<RabbitMQueue>> _routeConnection = new NonBlocking.ConcurrentDictionary<string, ObjectPool<RabbitMQueue>>();
+        private readonly NonBlocking.ConcurrentDictionary<Guid, string> _correlationIdConsumers = new NonBlocking.ConcurrentDictionary<Guid, string>();
 
         #region Fields
         private List<RabbitMQueue> _senders;

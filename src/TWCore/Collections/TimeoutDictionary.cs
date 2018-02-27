@@ -39,7 +39,7 @@ namespace TWCore.Collections
     public class TimeoutDictionary<TKey, TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly NonBlocking.ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
         #endregion
 
         #region Events
@@ -88,7 +88,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeoutDictionary()
         {
-            _dictionary = new ConcurrentDictionary<TKey, TimeoutClass>();
+            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutClass>();
         }
         #endregion
 

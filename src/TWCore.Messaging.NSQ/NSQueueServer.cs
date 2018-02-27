@@ -31,7 +31,7 @@ namespace TWCore.Messaging.NSQ
 	/// </summary>
 	public class NSQueueServer : MQueueServerBase
 	{
-		private readonly ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new ConcurrentDictionary<string, ObjectPool<Producer>>();
+		private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<Producer>> _rQueue = new NonBlocking.ConcurrentDictionary<string, ObjectPool<Producer>>();
 
 		#region .ctor
 		/// <summary>

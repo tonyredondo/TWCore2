@@ -27,7 +27,7 @@ namespace TWCore.Web.Logger
     [IgnoreStackFrameLog]
     public class TWCoreLoggerProvider : ILoggerProvider
     {
-        private readonly ConcurrentDictionary<string, TWCoreLogger> _loggers = new ConcurrentDictionary<string, TWCoreLogger>();
+        private readonly NonBlocking.ConcurrentDictionary<string, TWCoreLogger> _loggers = new NonBlocking.ConcurrentDictionary<string, TWCoreLogger>();
 
         /// <inheritdoc />
         /// <summary>

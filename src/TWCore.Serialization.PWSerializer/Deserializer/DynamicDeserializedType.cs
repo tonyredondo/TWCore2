@@ -256,7 +256,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
 
         #endregion
 
-        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static DeserializerTypeInfo GetDeserializationTypeInfo(Type type)
         {

@@ -23,7 +23,7 @@ namespace TWCore.Messaging
     /// </summary>
     public static class MemoryQueueManager
     {
-        private static readonly ConcurrentDictionary<(string Route, string Name), MemoryQueue> QueuesDictionary = new ConcurrentDictionary<(string Route, string Name), MemoryQueue>();
+        private static readonly NonBlocking.ConcurrentDictionary<(string Route, string Name), MemoryQueue> QueuesDictionary = new NonBlocking.ConcurrentDictionary<(string Route, string Name), MemoryQueue>();
 
         /// <summary>
         /// Get a MemoryQueue instance from route and name pair

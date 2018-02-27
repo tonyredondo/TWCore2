@@ -37,7 +37,7 @@ namespace TWCore.Services
     public class ServiceContainer : IServiceContainer
     {
         #region Statics
-        protected static readonly ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new ConcurrentDictionary<string, ContainerParameterHandler>();
+        protected static readonly NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler>();
         private static string[] _currentArgs;
         private static volatile bool _serviceEndAfterStart;
         private static bool? _hasConsole = null;

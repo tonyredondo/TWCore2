@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// </summary>
 	public class HtmlFileLogStorage : ILogStorage
     {
-        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
         private readonly StringBuilder _stringBuffer = new StringBuilder(128);
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;

@@ -51,8 +51,8 @@ namespace TWCore
     public static class Core
     {
         private const string SettingsTemplateFormat = "{{Settings:{0}}}";
-        private static readonly ConcurrentDictionary<Type, SettingsBase> SettingsCache = new ConcurrentDictionary<Type, SettingsBase>();
-        private static readonly ConcurrentDictionary<string, Type> TypesCache = new ConcurrentDictionary<string, Type>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, SettingsBase> SettingsCache = new NonBlocking.ConcurrentDictionary<Type, SettingsBase>();
+        private static readonly NonBlocking.ConcurrentDictionary<string, Type> TypesCache = new NonBlocking.ConcurrentDictionary<string, Type>();
         private static CoreSettings _globalSettings;
         private static Dictionary<string, object> _data;
         private static Dictionary<object, object> _objectData;

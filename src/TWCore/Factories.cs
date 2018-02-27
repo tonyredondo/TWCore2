@@ -189,8 +189,8 @@ namespace TWCore
 
         #region Default delegates implementation
 
-        private static readonly ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new ConcurrentDictionary<MethodBase, object[]>();
-        private static readonly ConcurrentDictionary<Type, object[]> TypeAttributes = new ConcurrentDictionary<Type, object[]>();
+        private static readonly NonBlocking.ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new NonBlocking.ConcurrentDictionary<MethodBase, object[]>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, object[]> TypeAttributes = new NonBlocking.ConcurrentDictionary<Type, object[]>();
 
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
         {

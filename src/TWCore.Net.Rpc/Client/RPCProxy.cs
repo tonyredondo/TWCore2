@@ -33,7 +33,7 @@ namespace TWCore.Net.RPC.Client
 	    private RPCClient _client;
 	    private string _serviceName;
 	    private readonly Dictionary<string, FieldInfo> _events;
-        private readonly ConcurrentDictionary<string, string> _memberNames = new ConcurrentDictionary<string, string>();
+        private readonly NonBlocking.ConcurrentDictionary<string, string> _memberNames = new NonBlocking.ConcurrentDictionary<string, string>();
 
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

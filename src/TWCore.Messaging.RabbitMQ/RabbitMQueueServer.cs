@@ -30,7 +30,7 @@ namespace TWCore.Messaging.RabbitMQ
 	/// </summary>
 	public class RabbitMQueueServer : MQueueServerBase
     {
-        private readonly ConcurrentDictionary<string, RabbitMQueue> _rQueue = new ConcurrentDictionary<string, RabbitMQueue>();
+        private readonly NonBlocking.ConcurrentDictionary<string, RabbitMQueue> _rQueue = new NonBlocking.ConcurrentDictionary<string, RabbitMQueue>();
 		private byte _priority;
 		private byte _deliveryMode;
 		private string _expiration;

@@ -32,7 +32,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueRawServer : MQueueRawServerBase
     {
-        private readonly ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new ConcurrentDictionary<string, ObjectPool<IConnection>>();
+        private readonly NonBlocking.ConcurrentDictionary<string, ObjectPool<IConnection>> _rQueue = new NonBlocking.ConcurrentDictionary<string, ObjectPool<IConnection>>();
         private readonly ConnectionFactory _factory;
 
         #region .ctor

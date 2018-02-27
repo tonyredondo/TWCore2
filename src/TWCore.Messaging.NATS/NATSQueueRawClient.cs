@@ -40,7 +40,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueRawClient : MQueueRawClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NATSQueueMessage>();
+        private static readonly NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage>();
         private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 
         #region Fields

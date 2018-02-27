@@ -40,7 +40,7 @@ namespace TWCore
     /// </summary>
     public static class ObjectCloner
     {
-        private static readonly ConcurrentDictionary<Type, ObjectPlan> ObjectPlans = new ConcurrentDictionary<Type, ObjectPlan>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, ObjectPlan> ObjectPlans = new NonBlocking.ConcurrentDictionary<Type, ObjectPlan>();
 
         /// <summary>
         /// Clone a object and copy Properties and Fields

@@ -32,8 +32,8 @@ namespace TWCore.Serialization.WSerializer.Serializer
     internal abstract class SerializerPlanItem
     {
         #region Static
-        private static readonly ConcurrentDictionary<Type, string> AllTypeNames = new ConcurrentDictionary<Type, string>();
-        private static readonly ConcurrentDictionary<Type, Tuple<string, string, string>> AllTypeNamesTuples = new ConcurrentDictionary<Type, Tuple<string, string, string>>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, string> AllTypeNames = new NonBlocking.ConcurrentDictionary<Type, string>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, Tuple<string, string, string>> AllTypeNamesTuples = new NonBlocking.ConcurrentDictionary<Type, Tuple<string, string, string>>();
         #endregion
 
         #region Fields and Properties

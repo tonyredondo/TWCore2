@@ -34,7 +34,7 @@ namespace TWCore
         private static readonly string[] IgnoredAssemblies = { ", System.Private.CoreLib", ", mscorlib", ", NETStandard" };
         private static readonly Regex AssemblyVersionRegex =
             new Regex(", Version=[a-zA-Z0-9.]*, Culture=[a-zA-Z0-9]*, PublicKeyToken=[a-zA-Z0-9]*", RegexOptions.Compiled | RegexOptions.IgnoreCase);
-        private static readonly ConcurrentDictionary<Type, string> TypesNameCache = new ConcurrentDictionary<Type, string>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, string> TypesNameCache = new NonBlocking.ConcurrentDictionary<Type, string>();
 
         /// <summary>
         /// Gets the UnderlyingType behind a Base type in case a nullable type.

@@ -31,7 +31,7 @@ namespace TWCore.Net.RPC.Client
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly ConcurrentDictionary<string, string> NameCache = new ConcurrentDictionary<string, string>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<string, string> NameCache = new NonBlocking.ConcurrentDictionary<string, string>();
 
         /// <inheritdoc />
         /// <summary>

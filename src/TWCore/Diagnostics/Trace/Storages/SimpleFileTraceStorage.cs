@@ -34,7 +34,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// </summary>
     public class SimpleFileTraceStorage : ITraceStorage
     {
-        private static readonly ConcurrentDictionary<string, StreamWriter> LogStreams = new ConcurrentDictionary<string, StreamWriter>();
+        private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;

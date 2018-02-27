@@ -22,7 +22,7 @@ namespace TWCore.Data.Cache
 {
     public abstract class CachedDal<TEntity, TDal> : ICachedDal
     {
-        protected ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<string, IEnumerable<TEntity>>();
+        protected NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>>();
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
         public virtual void Clear() => Cache.Clear();
@@ -31,7 +31,7 @@ namespace TWCore.Data.Cache
 
     public abstract class CachedDalAsync<TEntity, TDal> : ICachedDalAsync
     {
-        protected ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new ConcurrentDictionary<string, IEnumerable<TEntity>>();
+        protected NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>> Cache { get; } = new NonBlocking.ConcurrentDictionary<string, IEnumerable<TEntity>>();
         protected TDal Dal { get; } = Core.Injector.New<TDal>();
 
         public virtual void Clear() => Cache.Clear();

@@ -40,7 +40,7 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueClient : MQueueClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
+        private static readonly NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage>();
         private static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
 
         #region Fields

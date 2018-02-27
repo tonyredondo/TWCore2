@@ -37,7 +37,7 @@ namespace TWCore.Messaging.NATS
     {
         #region Fields
         private readonly ConnectionFactory _factory;
-        private readonly ConcurrentDictionary<Task, object> _processingTasks = new ConcurrentDictionary<Task, object>();
+        private readonly NonBlocking.ConcurrentDictionary<Task, object> _processingTasks = new NonBlocking.ConcurrentDictionary<Task, object>();
         private readonly object _lock = new object();
         private readonly string _name;
         private IConnection _connection;

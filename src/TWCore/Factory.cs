@@ -19,7 +19,6 @@ using System.Runtime.CompilerServices;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
-using TWCore.Numerics;
 using TWCore.Reflection;
 using TWCore.Threading;
 
@@ -88,10 +87,6 @@ namespace TWCore
         /// Thread helper methods
         /// </summary>
         public static IThread Thread => _factories?.Thread ?? throw new FrameworkNotInitializedException();
-        /// <summary>
-        /// Converter factory
-        /// </summary>
-        public static IConverterFactory Converter => _factories?.Converter ?? throw new FrameworkNotInitializedException();
         #endregion
 
         #region Methods

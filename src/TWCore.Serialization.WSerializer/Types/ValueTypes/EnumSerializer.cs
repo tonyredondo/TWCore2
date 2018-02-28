@@ -69,7 +69,7 @@ namespace TWCore.Serialization.WSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Write(BinaryWriter writer, object value)
         {
-            var iValue = Factory.Converter.ToInt(value);
+            var iValue = ((IConvertible) value).ToInt32(null);
             switch(iValue)
             {
                 case -1:

@@ -26,7 +26,6 @@ using System.Runtime.InteropServices;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
-using TWCore.Numerics;
 using TWCore.Reflection;
 using TWCore.Threading;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
@@ -112,10 +111,6 @@ namespace TWCore
         /// Thread helper methods
         /// </summary>
         public virtual IThread Thread { get; protected set; } = new Thread();
-        /// <summary>
-        /// Converter factory
-        /// </summary>
-        public virtual IConverterFactory Converter { get; protected set; } = new DefaultConverterFactory();
         #endregion
 
         /// <summary>

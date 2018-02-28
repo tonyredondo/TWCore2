@@ -180,12 +180,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         {
             var valueType = value?.GetType();
             var decType = DataTypeHelper.GetDecreaseDataType(value, valueType);
+            var convValue = (IConvertible) value ?? 0;
             int objIdx;
             switch (decType)
             {
                 case DataType.Decimal:
                     #region Decimal Type
-                    var v1 = Factory.Converter.ToDecimal(value);
+                    var v1 = convValue.ToDecimal(null);
                     if (v1 == default(decimal))
                     {
                         writer.Write(DataType.DecimalDefault);
@@ -209,7 +210,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Double:
                     #region Double Type
-                    var v2 = Factory.Converter.ToDouble(value);
+                    var v2 = convValue.ToDouble(null);
                     if (Math.Abs(v2 - default(double)) < 0.0000000000001)
                     {
                         writer.Write(DataType.DoubleDefault);
@@ -232,7 +233,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Float:
                     #region Float Type
-                    var v3 = Factory.Converter.ToFloat(value);
+                    var v3 = convValue.ToSingle(null);
                     if (Math.Abs(v3 - default(float)) < 0.0000000000001)
                     {
                         writer.Write(DataType.FloatDefault);
@@ -255,7 +256,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Long:
                     #region Long Type
-                    var v4 = Factory.Converter.ToLong(value);
+                    var v4 = convValue.ToInt64(null);
                     objIdx = LongCache.SerializerGet(v4);
                     if (objIdx > -1)
                     {
@@ -273,7 +274,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.ULong:
                     #region ULong Type
-                    var v5 = Factory.Converter.ToULong(value);
+                    var v5 = convValue.ToUInt64(null);
                     objIdx = ULongCache.SerializerGet(v5);
                     if (objIdx > -1)
                     {
@@ -291,7 +292,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Int:
                     #region Int Type
-                    var v6 = Factory.Converter.ToInt(value);
+                    var v6 = convValue.ToInt32(null);
                     objIdx = IntCache.SerializerGet(v6);
                     if (objIdx > -1)
                     {
@@ -309,7 +310,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.UInt:
                     #region UInt Type
-                    var v7 = Factory.Converter.ToUInt(value);
+                    var v7 = convValue.ToUInt32(null);
                     objIdx = UIntCache.SerializerGet(v7);
                     if (objIdx > -1)
                     {
@@ -327,7 +328,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Short:
                     #region Short Type
-                    var v8 = Factory.Converter.ToShort(value);
+                    var v8 = convValue.ToInt16(null);
                     objIdx = ShortCache.SerializerGet(v8);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
                         WriteHelper.WriteByte(writer, DataType.RefShortByte, (byte)objIdx);
@@ -340,7 +341,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.UShort:
                     #region UShort Type
-                    var v9 = Factory.Converter.ToUShort(value);
+                    var v9 = convValue.ToUInt16(null);
                     objIdx = UShortCache.SerializerGet(v9);
                     if (objIdx > -1 && objIdx <= byte.MaxValue)
                         WriteHelper.WriteByte(writer, DataType.RefUShortByte, (byte)objIdx);
@@ -353,7 +354,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                     return;
                 case DataType.Byte:
                     #region Byte Type
-                    var v10 = Factory.Converter.ToByte(value);
+                    var v10 = convValue.ToByte(null);
                     switch (v10)
                     {
                         case 0:
@@ -426,7 +427,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
                 #endregion
                 case DataType.SByte:
                     #region SByte Type
-                    var sByte = Factory.Converter.ToSByte(value);
+                    var sByte = convValue.ToSByte(null);
                     switch (sByte)
                     {
                         case -1:

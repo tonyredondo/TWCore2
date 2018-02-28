@@ -38,7 +38,7 @@ namespace TWCore.Serialization.WSerializer.Serializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual void ReplacePlan(SerializerPlanItem[] plan)
+        public void ChangePlan(SerializerPlanItem[] plan)
         {
             Plan = plan;
             PlanLength = plan?.Length ?? 0;

@@ -402,7 +402,7 @@ namespace TWCore.Serialization.WSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;
@@ -455,7 +455,7 @@ namespace TWCore.Serialization.WSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;

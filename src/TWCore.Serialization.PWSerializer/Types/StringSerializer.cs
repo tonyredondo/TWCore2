@@ -354,9 +354,9 @@ namespace TWCore.Serialization.PWSerializer.Types
                     }
                 }
             }
-
-            var bytes = DefaultUTF8Encoding.GetBytes(value);
-            var length = bytes.Length;
+            var length = DefaultUTF8Encoding.GetByteCount(value);
+            var bytes = new byte[length];
+            DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 0);
 
             #region Write Length
             switch (length)

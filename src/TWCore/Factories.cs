@@ -45,46 +45,41 @@ namespace TWCore
         /// <summary>
         /// Activation helper
         /// </summary>
-        public virtual IAccessorsFactory Accessors { get; protected set; } = new DefaultAccessorsFactory();
+        public IAccessorsFactory Accessors { get; protected set; } = new DefaultAccessorsFactory();
         /// <summary>
         /// Log Item Factory
         /// </summary>
-        public virtual CreateLogItemDelegate CreateLogItem { get; protected set; } = BaseCreateLogItem;
+        public CreateLogItemDelegate CreateLogItem { get; protected set; } = BaseCreateLogItem;
         /// <summary>
         /// Default LogEngine factory
         /// </summary>
-        public virtual CreateLogEngineDelegate CreateLogEngine { get; protected set; } = () => new DefaultLogEngine();
+        public CreateLogEngineDelegate CreateLogEngine { get; protected set; } = () => new DefaultLogEngine();
         /// <summary>
         /// Trace Item Factory
         /// </summary>
-        public virtual CreateTraceItemDelegate CreateTraceItem { get; protected set; } = BaseCreateTraceItem;
+        public CreateTraceItemDelegate CreateTraceItem { get; protected set; } = BaseCreateTraceItem;
         /// <summary>
         /// Default TraceEngine factory
         /// </summary>
-        public virtual CreateTraceEngineDelegate CreateTraceEngine { get; protected set; } = () => new DefaultTraceEngine();
+        public CreateTraceEngineDelegate CreateTraceEngine { get; protected set; } = () => new DefaultTraceEngine();
         /// <summary>
         /// Default StatusEngine factory
         /// </summary>
-        public virtual CreateStatusEngineDelegate CreateStatusEngine { get; protected set; } = () => new DefaultStatusEngine();
+        public CreateStatusEngineDelegate CreateStatusEngine { get; protected set; } = () => new DefaultStatusEngine();
         /// <summary>
         /// Gets the available assemblies loaded on the AppDomain
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public virtual GetAssembliesDelegate GetAssemblies { get; protected set; } = () => throw new NullReferenceException();
+        public GetAssembliesDelegate GetAssemblies { get; protected set; } = () => throw new NullReferenceException();
         /// <summary>
         /// Gets the available assemblies on the folder
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public virtual GetAssembliesDelegate GetAllAssemblies { get; protected set; } = () => throw new NullReferenceException();
-        /// <summary>
-        /// Compare for equality two byte arrays
-        /// </summary>
-        /// <returns>True if the arrays are equals; otherwise, false.</returns>
-        public virtual EqualsBytesDelegate BytesEquals { get; protected set; } = BaseBytesEquals;
+        public GetAssembliesDelegate GetAllAssemblies { get; protected set; } = () => throw new NullReferenceException();
         /// <summary>
         /// Gets the platform type
         /// </summary>
-        public virtual PlatformType PlatformType
+        public PlatformType PlatformType
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -98,19 +93,23 @@ namespace TWCore
                     _platformType = PlatformType.Windows;
                 return _platformType;
             }
+            protected set
+            {
+                _platformType = value;
+            }
         }
         /// <summary>
         /// Sequential Guid Generator
         /// </summary>
-        public virtual GuidGeneratorDelegate SequentialGuidGenerator { get; protected set; } = BaseSequentialGuidGenerator;
+        public GuidGeneratorDelegate SequentialGuidGenerator { get; protected set; } = BaseSequentialGuidGenerator;
         /// <summary>
         /// Get New Guid
         /// </summary>
-        public virtual GetGuidDelegate NewGuid { get; protected set; } = BaseNewGuid;
+        public GetGuidDelegate NewGuid { get; protected set; } = BaseNewGuid;
         /// <summary>
         /// Thread helper methods
         /// </summary>
-        public virtual IThread Thread { get; protected set; } = new Thread();
+        public IThread Thread { get; protected set; } = new Thread();
         #endregion
 
         /// <summary>
@@ -187,6 +186,7 @@ namespace TWCore
         private static readonly NonBlocking.ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new NonBlocking.ConcurrentDictionary<MethodBase, object[]>();
         private static readonly NonBlocking.ConcurrentDictionary<Type, object[]> TypeAttributes = new NonBlocking.ConcurrentDictionary<Type, object[]>();
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
         {
             if (assemblyName == null || typeName == null)
@@ -331,6 +331,7 @@ namespace TWCore
             };
             return lItem;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static TraceItem BaseCreateTraceItem(string groupName, string traceName, object traceObject)
         {
             return new TraceItem
@@ -342,45 +343,51 @@ namespace TWCore
                 TraceObject = traceObject
             };
         }
-        private static bool BaseBytesEquals(byte[] x, byte[] y)
+        
+        /// <summary>
+        /// Compare for equality two byte arrays
+        /// </summary>
+        /// <returns>True if the arrays are equals; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public unsafe bool BytesEquals(byte[] x, byte[] y)
         {
-            unsafe
+            if (x == y)
+                return true;
+            if (x == null || y == null || x.Length != y.Length)
+                return false;
+            fixed (byte* bytes1 = x, bytes2 = y)
             {
-                if (x == y)
-                    return true;
-                if (x == null || y == null || x.Length != y.Length)
-                    return false;
-                fixed (byte* bytes1 = x, bytes2 = y)
+                var len = x.Length;
+                var rem = len % (sizeof(long) * 16);
+                var b1 = (long*)bytes1;
+                var b2 = (long*)bytes2;
+                var e1 = (long*)(bytes1 + len - rem);
+
+                while (b1 < e1)
                 {
-                    var len = x.Length;
-                    var rem = len % (sizeof(long) * 16);
-                    var b1 = (long*)bytes1;
-                    var b2 = (long*)bytes2;
-                    var e1 = (long*)(bytes1 + len - rem);
-
-                    while (b1 < e1)
-                    {
-                        if (*(b1) != *(b2) || *(b1 + 1) != *(b2 + 1) ||
-                            *(b1 + 2) != *(b2 + 2) || *(b1 + 3) != *(b2 + 3) ||
-                            *(b1 + 4) != *(b2 + 4) || *(b1 + 5) != *(b2 + 5) ||
-                            *(b1 + 6) != *(b2 + 6) || *(b1 + 7) != *(b2 + 7) ||
-                            *(b1 + 8) != *(b2 + 8) || *(b1 + 9) != *(b2 + 9) ||
-                            *(b1 + 10) != *(b2 + 10) || *(b1 + 11) != *(b2 + 11) ||
-                            *(b1 + 12) != *(b2 + 12) || *(b1 + 13) != *(b2 + 13) ||
-                            *(b1 + 14) != *(b2 + 14) || *(b1 + 15) != *(b2 + 15))
-                            return false;
-                        b1 += 16;
-                        b2 += 16;
-                    }
-
-                    for (var i = 0; i < rem; i++)
-                        if (x[len - 1 - i] != y[len - 1 - i])
-                            return false;
-                    return true;
+                    if (*(b1) != *(b2) || *(b1 + 1) != *(b2 + 1) ||
+                        *(b1 + 2) != *(b2 + 2) || *(b1 + 3) != *(b2 + 3) ||
+                        *(b1 + 4) != *(b2 + 4) || *(b1 + 5) != *(b2 + 5) ||
+                        *(b1 + 6) != *(b2 + 6) || *(b1 + 7) != *(b2 + 7) ||
+                        *(b1 + 8) != *(b2 + 8) || *(b1 + 9) != *(b2 + 9) ||
+                        *(b1 + 10) != *(b2 + 10) || *(b1 + 11) != *(b2 + 11) ||
+                        *(b1 + 12) != *(b2 + 12) || *(b1 + 13) != *(b2 + 13) ||
+                        *(b1 + 14) != *(b2 + 14) || *(b1 + 15) != *(b2 + 15))
+                        return false;
+                    b1 += 16;
+                    b2 += 16;
                 }
+
+                for (var i = 0; i < rem; i++)
+                    if (x[len - 1 - i] != y[len - 1 - i])
+                        return false;
+                return true;
             }
         }
-        private static Guid BaseSequentialGuidGenerator()
+        /// <summary>
+        /// Sequential Guid Generator
+        /// </summary>[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid BaseSequentialGuidGenerator()
         {
             var guidArray = Guid.NewGuid().ToByteArray();
             var baseDate = new DateTime(1900, 1, 1);
@@ -405,7 +412,10 @@ namespace TWCore
 
             return new Guid(guidArray);
         }
-        private static Guid BaseNewGuid(bool sequential = false)
+        /// <summary>
+        /// Get New Guid
+        /// </summary>[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Guid BaseNewGuid(bool sequential = false)
             => sequential ? Factory.SequentialGuidGenerator() : Guid.NewGuid();
         #endregion
     }

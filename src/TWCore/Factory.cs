@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.Diagnostics.Log;
@@ -67,11 +68,6 @@ namespace TWCore
         /// <returns>Assemblies array</returns>
         public static GetAssembliesDelegate GetAllAssemblies => _factories?.GetAllAssemblies ?? throw new FrameworkNotInitializedException();
         /// <summary>
-        /// Compare for equality two byte arrays
-        /// </summary>
-        /// <returns>True if the arrays are equals; otherwise, false.</returns>
-        public static EqualsBytesDelegate BytesEquals => _factories?.BytesEquals ?? throw new FrameworkNotInitializedException();
-        /// <summary>
         /// Gets the platform type
         /// </summary>
         public static PlatformType PlatformType => _factories?.PlatformType ?? PlatformType.Unknown;
@@ -96,12 +92,12 @@ namespace TWCore
         /// <param name="factories">Factories object instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static void SetFactories(Factories factories)
-        { 
+        {
             _factories = factories;
         }
         #endregion
 
-        #region IO
+        #region Others Methods
         /// <summary>
         /// Get the absolute path from a relative path
         /// </summary>
@@ -118,9 +114,12 @@ namespace TWCore
         /// <returns>Relative path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetRelativePath(string absolutePath, string basePath = null) => _factories?.GetRelativePath(absolutePath, basePath) ?? throw new FrameworkNotInitializedException();
-        #endregion
-
-        #region Sockets
+        /// <summary>
+        /// Compare for equality two byte arrays
+        /// </summary>
+        /// <returns>True if the arrays are equals; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool BytesEquals(byte[] x, byte[] y) => _factories?.BytesEquals(x, y) ?? throw new FrameworkNotInitializedException();
         /// <summary>
         /// Set Socket Loopback Fast Path
         /// </summary>

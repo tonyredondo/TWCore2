@@ -641,4 +641,598 @@ namespace TWCore.Services.Messaging
         protected virtual void OnDispose() { }
         #endregion
     }
+    
+    /// <inheritdoc />
+    /// <summary>
+    /// Business Async base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    /// <typeparam name="T4">Message object type 4 to process</typeparam>
+    /// <typeparam name="T5">Message object type 5 to process</typeparam>
+    /// <typeparam name="T6">Message object type 6 to process</typeparam>
+    public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6> : IBusinessAsync<T1, T2, T3, T4, T5, T6>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init()
+        {
+            OnInit();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return ProcessAsync(mt1, cancellationToken);
+                case T2 mt2:
+                    return ProcessAsync(mt2, cancellationToken);
+                case T3 mt3:
+                    return ProcessAsync(mt3, cancellationToken);
+                case T4 mt4:
+                    return ProcessAsync(mt4, cancellationToken);
+                case T5 mt5:
+                    return ProcessAsync(mt5, cancellationToken);
+            }
+            return ProcessAsync((T6)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T1 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T2 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T3 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T4 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T5 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T6 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+    
+    /// <inheritdoc />
+    /// <summary>
+    /// Business Async base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    /// <typeparam name="T4">Message object type 4 to process</typeparam>
+    /// <typeparam name="T5">Message object type 5 to process</typeparam>
+    /// <typeparam name="T6">Message object type 6 to process</typeparam>
+    /// <typeparam name="T7">Message object type 7 to process</typeparam>
+    public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6, T7> : IBusinessAsync<T1, T2, T3, T4, T5, T6, T7>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init()
+        {
+            OnInit();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return ProcessAsync(mt1, cancellationToken);
+                case T2 mt2:
+                    return ProcessAsync(mt2, cancellationToken);
+                case T3 mt3:
+                    return ProcessAsync(mt3, cancellationToken);
+                case T4 mt4:
+                    return ProcessAsync(mt4, cancellationToken);
+                case T5 mt5:
+                    return ProcessAsync(mt5, cancellationToken);
+                case T6 mt6:
+                    return ProcessAsync(mt6, cancellationToken);
+            }
+            return ProcessAsync((T7)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T7 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T1 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T2 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T3 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T4 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T5 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T6 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T7 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
+    
+    /// <inheritdoc />
+    /// <summary>
+    /// Business Async base class
+    /// </summary>
+    /// <typeparam name="T1">Message object type 1 to process</typeparam>
+    /// <typeparam name="T2">Message object type 2 to process</typeparam>
+    /// <typeparam name="T3">Message object type 3 to process</typeparam>
+    /// <typeparam name="T4">Message object type 4 to process</typeparam>
+    /// <typeparam name="T5">Message object type 5 to process</typeparam>
+    /// <typeparam name="T6">Message object type 6 to process</typeparam>
+    /// <typeparam name="T7">Message object type 7 to process</typeparam>
+    /// <typeparam name="T8">Message object type 8 to process</typeparam>
+    public abstract class BusinessAsyncBase<T1, T2, T3, T4, T5, T6, T7, T8> : IBusinessAsync<T1, T2, T3, T4, T5, T6, T7, T8>
+    {
+        protected CancellationToken TimeoutCancellationToken;
+
+        #region IBusiness Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Initialize business instance
+        /// </summary>
+        public void Init()
+        {
+            OnInit();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(object message, CancellationToken cancellationToken)
+        {
+            switch (message)
+            {
+                case T1 mt1:
+                    return ProcessAsync(mt1, cancellationToken);
+                case T2 mt2:
+                    return ProcessAsync(mt2, cancellationToken);
+                case T3 mt3:
+                    return ProcessAsync(mt3, cancellationToken);
+                case T4 mt4:
+                    return ProcessAsync(mt4, cancellationToken);
+                case T5 mt5:
+                    return ProcessAsync(mt5, cancellationToken);
+                case T6 mt6:
+                    return ProcessAsync(mt6, cancellationToken);
+                case T7 mt7:
+                    return ProcessAsync(mt7, cancellationToken);
+            }
+            return ProcessAsync((T8)message, cancellationToken);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T1 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T2 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T3 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T4 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T5 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T6 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T7 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Process message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <param name="cancellationToken">Cancellation token for process message timeout</param>
+        /// <returns>Process result</returns>
+        public Task<object> ProcessAsync(T8 message, CancellationToken cancellationToken)
+        {
+            TimeoutCancellationToken = cancellationToken;
+            return OnProcessAsync(message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Dispose all resources
+        /// </summary>
+        public void Dispose()
+        {
+            OnDispose();
+        }
+        #endregion
+
+        #region Abstract Methods
+        /// <summary>
+        /// On Init business
+        /// </summary>
+        protected virtual void OnInit() { }
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T1 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T2 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T3 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T4 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T5 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T6 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T7 message);
+        /// <summary>
+        /// On Process Async message
+        /// </summary>
+        /// <param name="message">Message to process</param>
+        /// <returns>Process result</returns>
+        protected abstract Task<object> OnProcessAsync(T8 message);
+        /// <summary>
+        /// On Dispose business
+        /// </summary>
+        protected virtual void OnDispose() { }
+        #endregion
+    }
 }

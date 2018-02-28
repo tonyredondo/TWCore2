@@ -127,7 +127,7 @@ namespace TWCore.Collections
         #endregion
 
         #region Public Methods
-        private readonly ConcurrentDictionary<string, string> _partialKeys = new ConcurrentDictionary<string, string>();
+        private readonly NonBlocking.ConcurrentDictionary<string, string> _partialKeys = new NonBlocking.ConcurrentDictionary<string, string>();
         /// <summary>
         /// Get if part of the name is contained on the key.
         /// </summary>

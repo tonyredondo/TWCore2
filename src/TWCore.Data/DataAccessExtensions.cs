@@ -26,7 +26,7 @@ namespace TWCore.Data
     /// </summary>
     public static class DataAccessExtensions
     {
-        private static readonly ConcurrentDictionary<(Assembly, string), string> ResourceCache = new ConcurrentDictionary<(Assembly, string), string>();
+        private static readonly NonBlocking.ConcurrentDictionary<(Assembly, string), string> ResourceCache = new NonBlocking.ConcurrentDictionary<(Assembly, string), string>();
 
 		/// <summary>
 		/// Gets the Sql query from a embedded resource

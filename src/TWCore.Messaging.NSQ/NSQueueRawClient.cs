@@ -41,7 +41,7 @@ namespace TWCore.Messaging.NSQ
     /// </summary>
     public class NSQueueRawClient : MQueueRawClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NSQueueMessage>();
+        private static readonly NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NSQueueMessage>();
         private static readonly NSQMessageHandler MessageHandler = new NSQMessageHandler();
         private static readonly UTF8Encoding Encoding = new UTF8Encoding(false);
 

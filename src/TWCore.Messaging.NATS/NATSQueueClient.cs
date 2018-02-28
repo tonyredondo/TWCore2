@@ -39,7 +39,7 @@ namespace TWCore.Messaging.NATS
     /// </summary>
     public class NATSQueueClient : MQueueClientBase
     {
-        private static readonly ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new ConcurrentDictionary<Guid, NATSQueueMessage>();
+        private static readonly NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage> ReceivedMessages = new NonBlocking.ConcurrentDictionary<Guid, NATSQueueMessage>();
 
         #region Fields
         private ConnectionFactory _factory;

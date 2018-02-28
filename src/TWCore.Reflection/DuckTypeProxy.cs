@@ -19,11 +19,11 @@ namespace TWCore.Reflection
 	{
 		#region Private fields
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates = null;
+		NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates = null;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo = null;
+		NonBlocking.ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo = null;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates = null;
+		NonBlocking.ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates = null;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
 		object _realObject;
 		#endregion
@@ -44,11 +44,11 @@ namespace TWCore.Reflection
 			var containerType = realObject.GetType();
 			if (_realObject is DynamicObject)
 			{
-				_dynMethodDelegates = new ConcurrentDictionary<(string, string), CallSite>();
+				_dynMethodDelegates = new NonBlocking.ConcurrentDictionary<(string, string), CallSite>();
 			}
 			else
 			{
-				_methodsDelegates = new ConcurrentDictionary<string, MethodAccessorDelegate>();
+				_methodsDelegates = new NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate>();
 				var methods = containerType.GetMethods();
 				for (var i = 0; i < methods.Length; i++)
 				{
@@ -58,7 +58,7 @@ namespace TWCore.Reflection
 					_methodsDelegates.TryAdd(method.Name, accessor);
 				}
 			}
-			_propertyInfo = new ConcurrentDictionary<string, FastPropertyInfo>();
+			_propertyInfo = new NonBlocking.ConcurrentDictionary<string, FastPropertyInfo>();
 			var properties = containerType.GetProperties();
 			for (var i = 0; i < properties.Length; i++)
 			{
@@ -84,8 +84,7 @@ namespace TWCore.Reflection
 			if (_methodsDelegates != null && _methodsDelegates.TryGetValue(methodName, out var mDelegate))
 				return mDelegate(_realObject, args);
 
-			var dContainer = _realObject as DynamicObject;
-			if (dContainer == null)
+			if (!(_realObject is DynamicObject dContainer))
 				throw new MissingMethodException(_realObject?.GetType().Name, methodName);
 
 			var types = new List<Type>(args.Length);

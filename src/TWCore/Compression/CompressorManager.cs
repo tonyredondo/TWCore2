@@ -30,7 +30,7 @@ namespace TWCore.Compression
         /// <summary>
         /// List of registered compressors
         /// </summary>
-        public static readonly ConcurrentDictionary<string, ICompressor> Compressors = new ConcurrentDictionary<string, ICompressor>(StringComparer.OrdinalIgnoreCase);
+        public static readonly NonBlocking.ConcurrentDictionary<string, ICompressor> Compressors = new NonBlocking.ConcurrentDictionary<string, ICompressor>(StringComparer.OrdinalIgnoreCase);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static CompressorManager()

@@ -46,7 +46,7 @@ namespace TWCore.Text
     /// </summary>
     public static class StringParser
     {
-        private static readonly ConcurrentDictionary<string, object> Cache = new ConcurrentDictionary<string, object>();
+        private static readonly NonBlocking.ConcurrentDictionary<string, object> Cache = new NonBlocking.ConcurrentDictionary<string, object>();
 
         /// <summary>
         /// Parse a string to another type.

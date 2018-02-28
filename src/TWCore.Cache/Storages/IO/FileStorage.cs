@@ -199,10 +199,10 @@ namespace TWCore.Cache.Storages.IO
             #region Fields
             // ReSharper disable once NotAccessedField.Local
             private Task _loadTask;
-            private ConcurrentDictionary<string, StorageItemMeta> _metas;
+            private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _metas;
             private int _currentTransactionLogLength;
             private FileStream _transactionStream;
-            private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
+            private readonly NonBlocking.ConcurrentDictionary<string, SerializedObject> _pendingItems;
             private readonly Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
             private readonly string _transactionLogFilePath;
             private readonly string _indexFilePath;
@@ -263,8 +263,8 @@ namespace TWCore.Cache.Storages.IO
                 var oldTransactionLogFilePath = _transactionLogFilePath + ".old";
                 _indexFilePath = Path.Combine(BasePath, IndexFileName + IndexSerializer.Extensions[0]);
                 var oldindexFilePath = _indexFilePath + ".old";
-                _metas = new ConcurrentDictionary<string, StorageItemMeta>();
-                _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
+                _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
+                _pendingItems = new NonBlocking.ConcurrentDictionary<string, SerializedObject>();
                 var tokenSource = new CancellationTokenSource();
                 var token = tokenSource.Token;
                 _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(function: WorkerProcess)
@@ -304,7 +304,7 @@ namespace TWCore.Cache.Storages.IO
                                 if (index != null)
                                 {
                                     var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
-                                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                    _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                                     indexLoaded = true;
                                 }
                             }
@@ -325,7 +325,7 @@ namespace TWCore.Cache.Storages.IO
                                     if (index != null)
                                     {
                                         var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
-                                        _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                                        _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                                         indexLoaded = true;
                                     }
                                 }
@@ -348,7 +348,7 @@ namespace TWCore.Cache.Storages.IO
                             if (storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
                                 eTime = storage.ItemsExpirationAbsoluteDateOverwrite.Value;
 
-                            if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+                            if (_metas == null) _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
 
                             var allFiles = Directory.EnumerateFiles(BasePath, "*" + DataExtension, SearchOption.AllDirectories);
                             var idx = 0;

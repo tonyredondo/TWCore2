@@ -27,7 +27,7 @@ namespace TWCore.Diagnostics.Status
     /// </summary>
     public class DayStatus : IStatusItemProvider
     {
-        private readonly ConcurrentDictionary<string, IStatusItemProvider> _data = new ConcurrentDictionary<string, IStatusItemProvider>();
+        private readonly NonBlocking.ConcurrentDictionary<string, IStatusItemProvider> _data = new NonBlocking.ConcurrentDictionary<string, IStatusItemProvider>();
 
         #region Properties
         /// <inheritdoc />

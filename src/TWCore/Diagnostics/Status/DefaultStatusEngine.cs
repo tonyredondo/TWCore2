@@ -518,8 +518,8 @@ namespace TWCore.Diagnostics.Status
             }
             private class StatusAttributesContainer
             {
-                private static readonly ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]> StatusPropPerType = new ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]>();
-                private static readonly ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]> StatusRefPropPerType = new ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]>();
+                private static readonly NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]> StatusPropPerType = new NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]>();
+                private static readonly NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]> StatusRefPropPerType = new NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]>();
                 private readonly WeakReference<object> _target;
                 private readonly (FastPropertyInfo, StatusPropertyAttribute)[] _statusAttributes;
                 private readonly (FastPropertyInfo, StatusReferenceAttribute)[] _statusReferenceAttributes;

@@ -287,8 +287,9 @@ namespace TWCore.Serialization.WSerializer.Types
                 }
             }
 
-            var bytes = Encoding.GetBytes(value);
-            var length = bytes.Length;
+            var length = Encoding.GetByteCount(value);
+            var bytes = new byte[length];
+            Encoding.GetBytes(value, 0, value.Length, bytes, 0);
 
             #region Write Length
             switch (length)

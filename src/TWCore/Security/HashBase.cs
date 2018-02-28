@@ -32,7 +32,7 @@ namespace TWCore.Security
     /// </summary>
     public abstract class HashBase : IHash
     {
-        private static readonly ConcurrentDictionary<string, string> StringHashCache = new ConcurrentDictionary<string, string>(StringComparer.Ordinal);
+        private static readonly NonBlocking.ConcurrentDictionary<string, string> StringHashCache = new NonBlocking.ConcurrentDictionary<string, string>(StringComparer.Ordinal);
         private static readonly LRU2QCollection<string, byte[]> StringBytesHashCache = new LRU2QCollection<string, byte[]>(1000);
         private static readonly LRU2QCollection<string, Guid> StringGuidHashCache = new LRU2QCollection<string, Guid>(1000);
         private readonly string _instanceName;

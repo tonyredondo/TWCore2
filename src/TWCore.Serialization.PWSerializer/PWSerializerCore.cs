@@ -113,7 +113,7 @@ namespace TWCore.Serialization.PWSerializer
         }
 
         #region Serializer
-        private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator> SerPool = new ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator>();
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(10, scope => scope.Init());
@@ -465,7 +465,7 @@ namespace TWCore.Serialization.PWSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;
@@ -526,7 +526,7 @@ namespace TWCore.Serialization.PWSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;

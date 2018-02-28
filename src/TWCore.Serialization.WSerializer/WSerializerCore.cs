@@ -45,8 +45,8 @@ namespace TWCore.Serialization.WSerializer
                     Environment.ProcessorCount);
         private static readonly ByteArrayComparer ByteComparer = new ByteArrayComparer();
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
-        private static readonly ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new ConcurrentDictionary<Type, byte[]>();
-        private static readonly ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new ConcurrentDictionary<byte[], Type>(ByteComparer);
+        private static readonly NonBlocking.ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, byte[]>();
+        private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteComparer);
         private static readonly IHash Hash = HashManager.Get("SHA1");
         private readonly HashSet<Type> _knownTypes = new HashSet<Type>();
 
@@ -62,7 +62,7 @@ namespace TWCore.Serialization.WSerializer
         }
 
         #region Serializer
-        private static readonly ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new ConcurrentDictionary<Type, SerializerPlan>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(Environment.ProcessorCount, s => s.Clear());
         private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
@@ -402,7 +402,7 @@ namespace TWCore.Serialization.WSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;
@@ -455,7 +455,7 @@ namespace TWCore.Serialization.WSerializer
                             }
                             else
                             {
-                                scope.ReplacePlan(EndPlan);
+                                scope.ChangeScopePlan(EndPlan);
                             }
                         }
                         continue;
@@ -817,8 +817,8 @@ namespace TWCore.Serialization.WSerializer
             i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
             Environment.ProcessorCount);
         private static readonly ReferencePool<Stack<DeserializerTypeItem>> DTypeStackPool = new ReferencePool<Stack<DeserializerTypeItem>>(Environment.ProcessorCount, s => s.Clear());
-        private static readonly ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new ConcurrentDictionary<(string, string, string), Type>();
-        private static readonly ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new ConcurrentDictionary<Type, DeserializerTypeInfo>();
+        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
 
         #region Public Methods
         /// <summary>

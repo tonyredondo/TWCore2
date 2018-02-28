@@ -32,7 +32,7 @@ namespace TWCore.Threading
     public class AsyncManualResetEvent : IDisposable
     {
         private volatile TaskCompletionSource<bool> _mTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        private static readonly ConcurrentDictionary<CancellationToken, Task> CTasks = new ConcurrentDictionary<CancellationToken, Task>();
+        private static readonly NonBlocking.ConcurrentDictionary<CancellationToken, Task> CTasks = new NonBlocking.ConcurrentDictionary<CancellationToken, Task>();
 
         #region Properties
         /// <summary>

@@ -59,10 +59,12 @@ namespace TWCore.Collections
         /// <summary>
         /// Key Selector
         /// </summary>
+        [NonSerialized]
         public Func<TItem, TKey> KeySelector = DefaultKeySelector;
         /// <summary>
         /// Combine delegate
         /// </summary>
+        [NonSerialized]
         public Func<TItem, TItem, TItem> CombineDelegate = DefaultCombineDelegate;
         /// <summary>
         /// Gets or sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.

@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -26,6 +28,7 @@ namespace TWCore.Messaging.Configuration
     /// <summary>
     /// Defines a connection configuration
     /// </summary>
+    [DataContract, Serializable]
     public class MQConnection
     {
         private string _key;

@@ -280,7 +280,7 @@ namespace TWCore.Collections
                 Task = Task.Delay(valueTimeout, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
-                    var mDictio = (ConcurrentDictionary<TKey, TimeoutClass>)objArray[0];
+                    var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutClass>)objArray[0];
                     var mKey = (TKey)objArray[1];
                     if (mDictio != null && mDictio.TryRemove(mKey, out var tVal))
                         OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });

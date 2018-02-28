@@ -22,7 +22,7 @@ namespace TWCore.Messaging
     /// <summary>
     /// Message queue access rights
     /// </summary>
-    [Flags]
+    [Flags, Serializable]
     public enum MQAccessRights : byte
     {
         /// <summary>

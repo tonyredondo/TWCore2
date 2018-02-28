@@ -34,7 +34,7 @@ namespace TWCore.Messaging.Configuration
     /// <summary>
     /// Message queue send/recv configuration
     /// </summary>
-    [XmlRoot("QueueConfig"), DataContract]
+    [XmlRoot("QueueConfig"), DataContract, Serializable]
     public class MQPairConfig : INameItem
     {
         /// <inheritdoc />

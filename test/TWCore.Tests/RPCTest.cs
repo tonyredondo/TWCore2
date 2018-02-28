@@ -9,6 +9,7 @@ using TWCore.Net.RPC.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports.Default;
+using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;

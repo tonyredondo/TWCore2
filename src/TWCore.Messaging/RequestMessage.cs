@@ -24,7 +24,7 @@ namespace TWCore.Messaging
     /// <summary>
     /// Defines a new Request Message for messaging
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public sealed class RequestMessage : IMessage
     {
         /// <inheritdoc />

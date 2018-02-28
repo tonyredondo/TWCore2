@@ -26,7 +26,7 @@ namespace TWCore.Messaging.Configuration
     /// <summary>
     /// Message queue security user configuration
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public class MQSecurityUser
     {
         /// <summary>

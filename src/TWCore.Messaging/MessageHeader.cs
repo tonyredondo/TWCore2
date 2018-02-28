@@ -28,7 +28,7 @@ namespace TWCore.Messaging
     /// <summary>
     /// Message Header Base
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public class MessageHeader
     {
         /// <summary>

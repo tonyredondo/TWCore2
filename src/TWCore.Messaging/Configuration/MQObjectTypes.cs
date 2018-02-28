@@ -26,7 +26,7 @@ namespace TWCore.Messaging.Configuration
     /// <summary>
     /// Message queue object types
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public class MQObjectTypes
     {
         /// <summary>

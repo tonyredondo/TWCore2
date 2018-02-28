@@ -135,7 +135,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client == null || !_client.Connected) return;
+                if (_client == null || !_client.Connected || _isDisposing) return;
                 _serializer.Serialize(message, _writeStream);
                 try
                 {
@@ -177,7 +177,8 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 }
                 catch (Exception ex)
                 {
-                    Core.Log.Write(ex);
+                    if (!_tokenSource.Token.IsCancellationRequested && _client.Connected && !_isDisposing)
+                        Core.Log.Write(ex);
                     break;
                 }
             }
@@ -223,6 +224,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         }
         #endregion
 
+        private bool _isDisposing;
         /// <inheritdoc />
         /// <summary>
         /// Disposes the RpcClient instance
@@ -232,6 +234,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             try
             {
+                _isDisposing = true;
                 _client?.Dispose();
                 _readStream?.Dispose();
                 _writeStream?.Dispose();

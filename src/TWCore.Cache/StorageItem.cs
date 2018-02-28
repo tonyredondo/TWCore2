@@ -25,7 +25,7 @@ namespace TWCore.Cache
     /// <summary>
     /// Storage item
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public sealed class StorageItem : IDisposable
     {
         /// <summary>

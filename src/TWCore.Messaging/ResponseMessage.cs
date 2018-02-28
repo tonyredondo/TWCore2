@@ -30,7 +30,7 @@ namespace TWCore.Messaging
     /// <summary>
     /// Defines a new Response message for messaging
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public sealed class ResponseMessage : IMessage
     {
         /// <summary>

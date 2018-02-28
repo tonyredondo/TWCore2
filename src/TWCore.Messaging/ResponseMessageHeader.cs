@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
@@ -22,7 +23,7 @@ namespace TWCore.Messaging
     /// <summary>
     /// Message Response Header
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public sealed class ResponseMessageHeader
     {
         /// <summary>

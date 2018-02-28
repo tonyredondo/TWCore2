@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -24,7 +25,7 @@ namespace TWCore.Messaging.Configuration
     /// <summary>
     /// Message queue server queues
     /// </summary>
-    [DataContract]
+    [DataContract, Serializable]
     public class MQServerQueues
     {
         /// <summary>

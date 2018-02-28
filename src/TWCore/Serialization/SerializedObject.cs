@@ -23,7 +23,7 @@ using TWCore.Compression;
 namespace TWCore.Serialization
 {
     [DataContract, Serializable]
-    public class SerializedObject
+    public sealed class SerializedObject
     {
         #region Properties
         /// <summary>

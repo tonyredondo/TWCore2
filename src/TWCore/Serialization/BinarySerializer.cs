@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Compression;
@@ -123,7 +122,7 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
                 return OnDeserialize(stream, itemType);
-			using (var ms = new RecycleMemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 Compressor.Decompress(stream, ms);
                 ms.Position = 0;
@@ -366,9 +365,9 @@ namespace TWCore.Serialization
 
         #region GetSerializedObject
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializedObject GetSerializedObject(object item) => new SerializedObject(item, this);
+        public SerializedObject GetSerializedObject(object item) => item is SerializedObject serObj ? serObj : new SerializedObject(item, this);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializedObject GetSerializedObject<T>(T item) => new SerializedObject(item, this);
+        public SerializedObject GetSerializedObject<T>(T item) => typeof(T) == typeof(SerializedObject) ? item as SerializedObject : new SerializedObject(item, this);
         #endregion
 
         #region CoreStart

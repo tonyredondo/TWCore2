@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -12,10 +11,10 @@ using Microsoft.CSharp.RuntimeBinder;
 
 namespace TWCore.Reflection
 {
-	/// <summary>
-	/// DuckType Container for Proxy objects
-	/// </summary>
-	public abstract class DuckTypeProxy
+    /// <summary>
+    /// DuckType Container for Proxy objects
+    /// </summary>
+    public abstract class DuckTypeProxy
 	{
 		#region Private fields
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]

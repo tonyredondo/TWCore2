@@ -9,7 +9,7 @@
 A multipurpose framework library for .net core
     </Description>
     <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
-    <Version>0.2.86</Version>
+    <Version>0.2.87</Version>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
     <Copyright></Copyright>
@@ -27,7 +27,7 @@ A multipurpose framework library for .net core
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="3.2.6" />
+    <PackageReference Include="Npgsql" Version="3.2.7" />
   </ItemGroup>
 
   <ItemGroup>

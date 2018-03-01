@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
@@ -34,9 +35,12 @@ namespace TWCore.Cache
     public class StorageItemMeta : IDisposable
     {
         #region Static Timer
+        private static readonly object LockPad = new object();
         private static readonly HashSet<StorageItemMeta> AllMetas = new HashSet<StorageItemMeta>();
-        private static int _registeredCount;
-        private static bool _expirationTimerSetted;
+        private static volatile int _registeredCount;
+        private static volatile int _currentCount;
+        private static volatile bool _expirationTimerSetted;
+        private static volatile bool _runningTimer;
         private static Timer _globalExpirationTimer;
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetExpirationTimer()
@@ -46,36 +50,78 @@ namespace TWCore.Cache
             _globalExpirationTimer?.Dispose();
             _globalExpirationTimer = new Timer(i =>
             {
-                lock (AllMetas)
-                    AllMetas.Where(m => m.IsExpired).Each(m => Try.Do(m.FireOnExpire));
+                if (_runningTimer) return;
+                try
+                {
+                    _runningTimer = true;
+                    StorageItemMeta[] metasToRemove;
+                    lock (LockPad)
+                    {
+                        metasToRemove = AllMetas.Where(m => m.IsExpired).ToArray();
+                        foreach (var meta in metasToRemove)
+                            if (AllMetas.Remove(meta))
+                                _currentCount--;
+                    }
+                    foreach (var meta in metasToRemove)
+                    {
+                        try
+                        {
+                            meta?.FireOnExpire();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                    }
+                    if (metasToRemove.Length > 0 && _registeredCount > 0 && (double)_currentCount / _registeredCount < 0.6)
+                    {
+                        lock (LockPad)
+                            AllMetas.TrimExcess();
+                        GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                        GC.Collect();
+                        _registeredCount = _currentCount;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                finally
+                {
+                    _runningTimer = false;
+                }
             }, null, 5000, 5000);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void RegisterMeta(StorageItemMeta meta)
         {
-            lock (AllMetas)
+            lock (LockPad)
             {
                 if (!_expirationTimerSetted) SetExpirationTimer();
-                AllMetas.Add(meta);
+                if (!AllMetas.Add(meta)) return;
                 _registeredCount++;
+                _currentCount++;
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void DeregisterMeta(StorageItemMeta meta)
         {
-            lock (AllMetas)
+            lock (LockPad)
             {
-                AllMetas.Remove(meta);
-                var currentCount = AllMetas.Count;
-                if (_registeredCount > 0 && (double)currentCount / _registeredCount < 0.6)
-                {
+                if (!AllMetas.Remove(meta)) return;
+                _currentCount--;
+            }
+            if (_registeredCount > 0 && (double)_currentCount / _registeredCount < 0.6)
+            {
+                lock (LockPad)
                     AllMetas.TrimExcess();
-                    _registeredCount = currentCount;
-                }
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
+                GC.Collect();
+                _registeredCount = _currentCount;
             }
         }
         #endregion
-        
+
         #region Properties
         /// <summary>
         /// Item Key
@@ -128,6 +174,7 @@ namespace TWCore.Cache
         {
             Dispose();
         }
+        private volatile bool _disposed;
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
@@ -135,6 +182,8 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
             DeregisterMeta(this);
             OnExpire = null;
         }

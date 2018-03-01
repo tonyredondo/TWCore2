@@ -36,57 +36,51 @@ namespace TWCore.Cache.Client
         private Task _pingTask;
 
         #region Properties
+        /// <summary>
+        /// Enabled property has changed.
+        /// </summary>
+        public event EventHandler<bool> EnabledChanged;
 
         /// <summary>
         /// Pool Item Name
         /// </summary>
         public string Name { get; private set; }
-
         /// <summary>
         /// Storage instance
         /// </summary>
         public IStorageAsync Storage { get; private set; }
-
         /// <summary>
         /// Storage mode inside the pool
         /// </summary>
         public StorageItemMode Mode { get; private set; }
-
         /// <summary>
         /// Lastest ping time
         /// </summary>
         public double PingTime { get; private set; }
-
         /// <summary>
         /// Gets if the storages is enabled (got recent ping response)
         /// </summary>
         public bool Enabled { get; private set; }
-
         /// <summary>
         /// Number of successful ping responses
         /// </summary>
         public int PingResponse { get; private set; }
-
         /// <summary>
         /// Number of ping failures
         /// </summary>
         public int PingFailure { get; private set; }
-
         /// <summary>
         /// Number of consecutive ping failures
         /// </summary>
         public int PingConsecutiveFailure { get; private set; }
-
         /// <summary>
         /// Delays between ping tries in milliseconds
         /// </summary>
         public int PingDelay { get; set; }
-
         /// <summary>
         /// Delay after a ping error for next try
         /// </summary>
         public int PingDelayOnError { get; set; }
-
         #endregion
 
         #region .ctor
@@ -180,11 +174,10 @@ namespace TWCore.Cache.Client
                         Core.Log.Error("The pool item node: {0} doesn't have any storage associated", Name);
                         break;
                     }
-
+                    var lastEnabled = Enabled;
                     try
                     {
                         sw.Restart();
-                        Enabled = false;
                         var stoTask = Storage.IsEnabledAsync();
                         var rTask = await Task.WhenAny(stoTask, tokenTask).ConfigureAwait(false);
                         if (rTask == tokenTask) break;
@@ -203,8 +196,10 @@ namespace TWCore.Cache.Client
                         PingFailure++;
                         PingConsecutiveFailure++;
                     }
-
                     PingTime = sw.Elapsed.TotalMilliseconds;
+
+                    if (Enabled != lastEnabled)
+                        EnabledChanged?.Invoke(this, Enabled);
                     Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
 
                     await Task.Delay(PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay, _token).ConfigureAwait(false);

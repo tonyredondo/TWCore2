@@ -41,63 +41,83 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
         private static readonly ArrayEqualityComparer<string> StringArrayComparer = new ArrayEqualityComparer<string>(StringComparer.Ordinal);
 
-        private static readonly ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer), OPoolAllocator> OPool = new ObjectPool<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer), OPoolAllocator>();
-
         #region Allocators
-        private struct OPoolAllocator : IPoolObjectLifecycle<(SerializerCache<string[]>, SerializerCache<object>, StringSerializer)>
+        private class SerPoolItem
         {
-            public int InitialSize => Environment.ProcessorCount;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            public readonly SerializerCache<string[]> TypesCache;
+            public readonly SerializerCache<object> ObjectCache;
+            public StringSerializer PropertiesSerializer;
+            //
+            public readonly HashSet<Type> CurrentSerializerPlanTypes;
+            public readonly Stack<SerializerScope> ScopeStack;
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public (SerializerCache<string[]>, SerializerCache<object>, StringSerializer) New()
+            public SerPoolItem()
             {
-                var serCacheArr = new SerializerCache<string[]>(SerializerMode.CachedUShort, StringArrayComparer);
-                var serCacheObj = new SerializerCache<object>(SerializerMode.CachedUShort);
-                var serString = new StringSerializer();
-                serString.Init(SerializerMode.CachedUShort);
-                return (serCacheArr, serCacheObj, serString);
+                TypesCache = new SerializerCache<string[]>(SerializerMode.CachedUShort, StringArrayComparer);
+                ObjectCache = new SerializerCache<object>(SerializerMode.CachedUShort);
+                PropertiesSerializer = new StringSerializer();
+                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                //
+                CurrentSerializerPlanTypes = new HashSet<Type>();
+                ScopeStack = new Stack<SerializerScope>();
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset((SerializerCache<string[]>, SerializerCache<object>, StringSerializer) value)
+            public void Clear()
             {
-                value.Item1.Clear(SerializerMode.CachedUShort);
-                value.Item2.Clear(SerializerMode.CachedUShort);
-                value.Item3.Init(SerializerMode.CachedUShort);
+                TypesCache.Clear(SerializerMode.CachedUShort);
+                ObjectCache.Clear(SerializerMode.CachedUShort);
+                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                CurrentSerializerPlanTypes.Clear();
+                ScopeStack.Clear();
             }
         }
-        private struct SerPoolAllocator : IPoolObjectLifecycle<(HashSet<Type>, Stack<SerializerScope>)>
+        private class DesPoolItem
         {
-            public int InitialSize => Environment.ProcessorCount;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            public readonly SerializerCache<string[]> TypesCache;
+            public readonly SerializerCache<object> ObjectCache;
+            public StringSerializer PropertiesSerializer;
+            //
+            public readonly Dictionary<Type, Type[]> PropertiesTypes;
+            public readonly Stack<DeserializerType> DeserializerStack;
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public (HashSet<Type>, Stack<SerializerScope>) New()
-                => (new HashSet<Type>(), new Stack<SerializerScope>());
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset((HashSet<Type>, Stack<SerializerScope>) value)
+            public DesPoolItem()
             {
-                value.Item1.Clear();
-                value.Item2.Clear();
+                TypesCache = new SerializerCache<string[]>(SerializerMode.CachedUShort, StringArrayComparer);
+                ObjectCache = new SerializerCache<object>(SerializerMode.CachedUShort);
+                PropertiesSerializer = new StringSerializer();
+                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                //
+                PropertiesTypes = new Dictionary<Type, Type[]>();
+                DeserializerStack = new Stack<DeserializerType>();
+            }
+
+            public void Clear()
+            {
+                TypesCache.Clear(SerializerMode.CachedUShort);
+                ObjectCache.Clear(SerializerMode.CachedUShort);
+                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                PropertiesTypes.Clear();
+                DeserializerStack.Clear();
             }
         }
-        private struct DesPoolAllocator : IPoolObjectLifecycle<(Dictionary<Type, Type[]>, Stack<DeserializerType>)>
+
+        private struct SerPoolAllocator : IPoolObjectLifecycle<SerPoolItem>
         {
             public int InitialSize => Environment.ProcessorCount;
             public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public (Dictionary<Type, Type[]>, Stack<DeserializerType>) New()
-                => (new Dictionary<Type, Type[]>(), new Stack<DeserializerType>());
-
+            public SerPoolItem New() => new SerPoolItem();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset((Dictionary<Type, Type[]>, Stack<DeserializerType>) value)
-            {
-                value.Item1.Clear();
-                value.Item2.Clear();
-            }
+            public void Reset(SerPoolItem value) => value.Clear();
+        }
+        private struct DesPoolAllocator : IPoolObjectLifecycle<DesPoolItem>
+        {
+            public int InitialSize => Environment.ProcessorCount;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public DesPoolItem New() => new DesPoolItem();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(DesPoolItem value) => value.Clear();
         }
         #endregion
 
@@ -115,7 +135,7 @@ namespace TWCore.Serialization.PWSerializer
         #region Serializer
         private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
-        private static readonly ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator> SerPool = new ObjectPool<(HashSet<Type>, Stack<SerializerScope>), SerPoolAllocator>();
+        private static readonly ObjectPool<SerPoolItem, SerPoolAllocator> SerPool = new ObjectPool<SerPoolItem, SerPoolAllocator>();
         private static readonly ReferencePool<SerializerScope> SerializerScopePool = new ReferencePool<SerializerScope>(10, scope => scope.Init());
         private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(20);
         private readonly byte[] _bufferSer = new byte[3];
@@ -131,16 +151,14 @@ namespace TWCore.Serialization.PWSerializer
         {
             var type = value?.GetType() ?? typeof(object);
             var serPool = SerPool.New();
-            var currentSerializerPlanTypes = serPool.Item1;
+            var currentSerializerPlanTypes = serPool.CurrentSerializerPlanTypes;
             var serializersTable = SerializersTable.GetTable(Mode);
             var numberSerializer = serializersTable.NumberSerializer;
-            var tuple = OPool.New();
-            var typesCache = tuple.Item1;
-            var objectCache = tuple.Item2;
-            var propertySerializer = tuple.Item3;
-
+            var typesCache = serPool.TypesCache;
+            var objectCache = serPool.ObjectCache;
+            var propertySerializer = serPool.PropertiesSerializer;
             var plan = GetSerializerPlan(currentSerializerPlanTypes, serializersTable, type);
-            var scopeStack = serPool.Item2;
+            var scopeStack = serPool.ScopeStack;
             var scope = SerializerScopePool.New();
             scope.Init(plan, typeof(object), value);
             scopeStack.Push(scope);
@@ -613,7 +631,6 @@ namespace TWCore.Serialization.PWSerializer
             } while (scope != null);
             SerPool.Store(serPool);
             SerializersTable.ReturnTable(serializersTable);
-            OPool.Store(tuple);
         }
         #endregion
 
@@ -787,7 +804,7 @@ namespace TWCore.Serialization.PWSerializer
         #endregion
 
         #region Deserializer
-        private static readonly ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>), DesPoolAllocator> DesPool = new ObjectPool<(Dictionary<Type, Type[]>, Stack<DeserializerType>), DesPoolAllocator>();
+        private static readonly ObjectPool<DesPoolItem, DesPoolAllocator> DesPool = new ObjectPool<DesPoolItem, DesPoolAllocator>();
         private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(Environment.ProcessorCount, d => d.Clear());
         private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(Environment.ProcessorCount, s => s.Clear());
         private readonly byte[] _bufferDes = new byte[8];
@@ -815,12 +832,11 @@ namespace TWCore.Serialization.PWSerializer
             var desPool = DesPool.New();
             var serializersTable = DeserializersTable.GetTable(sMode);
             var numberSerializer = serializersTable.NumberSerializer;
-            var tuple = OPool.New();
-            var typesCache = tuple.Item1;
-            var objectCache = tuple.Item2;
-            var propertySerializer = tuple.Item3;
-            var propertiesTypes = desPool.Item1;
-            var desStack = desPool.Item2;
+            var typesCache = desPool.TypesCache;
+            var objectCache = desPool.ObjectCache;
+            var propertySerializer = desPool.PropertiesSerializer;
+            var propertiesTypes = desPool.PropertiesTypes;
+            var desStack = desPool.DeserializerStack;
             DeserializerType typeItem = null;
             Type valueType = null;
 
@@ -1065,8 +1081,6 @@ namespace TWCore.Serialization.PWSerializer
                 }
             }
             while (desStack.Count > 0 || valueType != null);
-
-            OPool.Store(tuple);
             DesPool.Store(desPool);
             DeserializersTable.ReturnTable(serializersTable);
             return typeItem?.Value;
@@ -1091,10 +1105,10 @@ namespace TWCore.Serialization.PWSerializer
 
             var serializersTable = DeserializersTable.GetTable(sMode);
             var numberSerializer = serializersTable.NumberSerializer;
-            var tuple = OPool.New();
-            var typesCache = tuple.Item1;
-            var objectCache = tuple.Item2;
-            var propertySerializer = tuple.Item3;
+            var serPool = SerPool.New();
+            var typesCache = serPool.TypesCache;
+            var objectCache = serPool.ObjectCache;
+            var propertySerializer = serPool.PropertiesSerializer;
 
             var desStack = GdStackPool.New();
             DynamicDeserializedType typeItem = null;
@@ -1350,8 +1364,6 @@ namespace TWCore.Serialization.PWSerializer
                 }
             }
             while (desStack.Count > 0 || valueType != null);
-
-            OPool.Store(tuple);
             GdStackPool.Store(desStack);
             DeserializersTable.ReturnTable(serializersTable);
             return typeItem;

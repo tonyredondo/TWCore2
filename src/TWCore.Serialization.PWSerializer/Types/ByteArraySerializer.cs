@@ -105,39 +105,40 @@ namespace TWCore.Serialization.PWSerializer.Types
 				writer.Write(DataType.ByteArrayNull);
 				return;
 			}
-			if (value.Length == 0)
-				writer.Write(DataType.ByteArrayEmpty);
-			else
-			{
-				#region Ref Cache Get
-				var objIdx = _refCache.SerializerGet(value);
-				if (objIdx > -1)
-				{
-					if (objIdx <= byte.MaxValue)
-						WriteHelper.WriteByte(writer, DataType.RefByteArrayByte, (byte)objIdx);
-					else
-					    WriteHelper.WriteUshort(writer, DataType.RefByteArrayUShort, (ushort)objIdx);
-					return;
-				}
-				#endregion
+            if (value.Length == 0)
+            {
+                writer.Write(DataType.ByteArrayEmpty);
+                return;
+            }
 
-				#region Write Array
-				var length = value.Length;
-				if (length <= byte.MaxValue)
-				    WriteHelper.WriteByte(writer, DataType.ByteArrayLengthByte, (byte)length);
-				else if (length <= ushort.MaxValue)
-				    WriteHelper.WriteUshort(writer, DataType.ByteArrayLengthUShort, (ushort)length);
-				else
-				    WriteHelper.WriteInt(writer, DataType.ByteArrayLengthInt, length);
-				writer.Write(value);
-				#endregion
+            #region Ref Cache Get
+            var objIdx = _refCache.SerializerGet(value);
+            if (objIdx > -1)
+            {
+                if (objIdx <= byte.MaxValue)
+                    WriteHelper.WriteByte(writer, DataType.RefByteArrayByte, (byte)objIdx);
+                else
+                    WriteHelper.WriteUshort(writer, DataType.RefByteArrayUShort, (ushort)objIdx);
+                return;
+            }
+            #endregion
 
-				#region Save to Cache
-				if (length <= MaxArrayLength)
-				    _refCache.SerializerSet(value);
-				#endregion
-			}
-		}
+            #region Write Array
+            var length = value.Length;
+            if (length <= byte.MaxValue)
+                WriteHelper.WriteByte(writer, DataType.ByteArrayLengthByte, (byte)length);
+            else if (length <= ushort.MaxValue)
+                WriteHelper.WriteUshort(writer, DataType.ByteArrayLengthUShort, (ushort)length);
+            else
+                WriteHelper.WriteInt(writer, DataType.ByteArrayLengthInt, length);
+            writer.Write(value);
+            #endregion
+
+            #region Save to Cache
+            if (length <= MaxArrayLength)
+                _refCache.SerializerSet(value);
+            #endregion
+        }
         /// <inheritdoc />
         /// <summary>
         /// Reads a value from the serialized stream.

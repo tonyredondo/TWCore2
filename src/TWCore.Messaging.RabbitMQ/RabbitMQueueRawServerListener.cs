@@ -50,7 +50,7 @@ namespace TWCore.Messaging.RabbitMQ
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
-            public SubArray<byte> Body;
+            public byte[] Body;
         }
         #endregion
 
@@ -180,12 +180,12 @@ namespace TWCore.Messaging.RabbitMQ
             try
             {
                 Counters.IncrementProcessingThreads();
-                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, _receiver.Route, _receiver.Name);
-                Counters.IncrementTotalReceivingBytes(message.Body.Count);
+                Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
+                Counters.IncrementTotalReceivingBytes(message.Body.Length);
                 if (ResponseServer)
                 {
                     var evArgs =
-                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Count)
+                        new RawResponseReceivedEventArgs(_name, message.Body, message.CorrelationId, message.Body.Length)
                         {
                             Metadata =
                             {
@@ -207,7 +207,7 @@ namespace TWCore.Messaging.RabbitMQ
                 else
                 {
                     var evArgs =
-                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId, message.Body.Count)
+                        new RawRequestReceivedEventArgs(_name, _receiver, message.Body, message.CorrelationId, message.Body.Length)
                         {
                             Metadata =
                             {

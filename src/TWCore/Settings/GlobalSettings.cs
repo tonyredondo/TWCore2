@@ -50,18 +50,28 @@ namespace TWCore.Settings
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public KeyValueCollection GetItems(string environmentName, string machineName, string applicationName)
         {
-            KeyValueCollection baseItems = null;
-            if (Applications != null)
+            var globals = Global?.GetItems(environmentName, machineName);
+            if (globals != null)
+                globals.ThrowExceptionOnDuplicateKeys = false;
+            if (Applications == null) return globals;
+
+            var results = new KeyValueCollection
             {
-                if (Applications.TryGetByPartialKey(applicationName, out var appSetting))
-                    baseItems = appSetting.GetItems(environmentName, machineName);
+                ThrowExceptionOnDuplicateKeys = false
+            };
+
+            var appsNames = applicationName.SplitAndTrim(",");
+            foreach(var appName in appsNames)
+            {
+                if (Applications.TryGetByPartialKey(appName, out var appSetting))
+                {
+                    var items = appSetting.GetItems(environmentName, machineName);
+                    items?.Each(i => results.Add(i));
+                }
                 else
                     Core.Log.Warning("The Settings for ApplicationName = {0} cannot be found.", applicationName);
             }
-            var results = new KeyValueCollection(baseItems);
-            var globals = Global?.GetItems(environmentName, machineName) ?? new KeyValueCollection();
-            globals.ThrowExceptionOnDuplicateKeys = false;
-            globals.Each(i => results.Add(i));
+            globals?.Each(i => results.Add(i));
             return results;
         }
     }

@@ -18,8 +18,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
@@ -37,7 +39,7 @@ namespace TWCore.Net.Multicast
         private static readonly PeerConnection PeerConnection;
         private static readonly List<RegisteredService> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
-        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(15);
+        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
         private static Task _sendThread;
         private static CancellationTokenSource _tokenSource;
         private static CancellationToken _token;
@@ -331,7 +333,7 @@ namespace TWCore.Net.Multicast
                     if (_token.IsCancellationRequested)
                         return;
                 }
-                await Task.Delay(5000, _token);
+                await Task.Delay(10000, _token);
             }
         }
         #endregion
@@ -340,6 +342,7 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Registered Service
         /// </summary>
+        [Serializable, DataContract]
         public class RegisteredService
         {
             [NonSerialize, NonSerialized]
@@ -349,38 +352,47 @@ namespace TWCore.Net.Multicast
             /// <summary>
             /// Service Id
             /// </summary>
+            [DataMember, XmlAttribute]
             public Guid ServiceId { get; set; }
             /// <summary>
             /// Service Category
             /// </summary>
+            [DataMember, XmlAttribute]
             public string Category { get; set; }
             /// <summary>
             /// Service Name
             /// </summary>
+            [DataMember, XmlAttribute]
             public string Name { get; set; }
             /// <summary>
             /// Service Description
             /// </summary>
+            [DataMember]
             public string Description { get; set; }
             /// <summary>
             /// Machine Name
             /// </summary>
+            [DataMember, XmlAttribute]
             public string MachineName { get; set; }
             /// <summary>
             /// Application Name
             /// </summary>
+            [DataMember, XmlAttribute]
             public string ApplicationName { get; set; }
             /// <summary>
             /// Framework Version
             /// </summary>
+            [DataMember, XmlAttribute]
             public string FrameworkVersion { get; set; }
             /// <summary>
             /// Environment Name
             /// </summary>
+            [DataMember, XmlAttribute]
             public string EnvironmentName { get; set; }
             /// <summary>
             /// Additional Data
             /// </summary>
+            [DataMember]
             public SerializedObject Data { get; set; }
             #endregion
         }
@@ -388,6 +400,7 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Received Service
         /// </summary>
+        [Serializable]
         public class ReceivedService : RegisteredService
         {
             /// <summary>

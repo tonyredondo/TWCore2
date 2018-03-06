@@ -61,32 +61,52 @@ namespace TWCore.Services
         /// On Continue from pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnContinue() => this.Each(i => i.OnContinue());
+        public void OnContinue() => this.Each(i =>
+        {
+            Core.Log.InfoBasic("Continue: {0}", i.GetType().FullName);
+            i.OnContinue();
+        });
         /// <inheritdoc />
         /// <summary>
         /// On Pause method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnPause() => this.Reverse().Each(i => i.OnPause());
+        public void OnPause() => this.Reverse().Each(i =>
+        {
+            Core.Log.InfoBasic("Pause: {0}", i.GetType().FullName);
+            i.OnPause();
+        });
         /// <inheritdoc />
         /// <summary>
         /// On shutdown requested method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnShutdown() => this.Reverse().Each(i => i.OnShutdown());
+        public void OnShutdown() => this.Reverse().Each(i =>
+        {
+            Core.Log.InfoBasic("Shutting down: {0}", i.GetType().FullName);
+            i.OnShutdown();
+        });
         /// <inheritdoc />
         /// <summary>
         /// On Service Start method
         /// </summary>
         /// <param name="args">Start arguments</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnStart(string[] args) => this.Each(i => i.OnStart(args));
+        public void OnStart(string[] args) => this.Each(i =>
+        {
+            Core.Log.InfoBasic("Starting: {0}", i.GetType().FullName);
+            i.OnStart(args);
+        });
         /// <inheritdoc />
         /// <summary>
         /// On Service Stops method
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void OnStop() => this.Reverse().Each(i => i.OnStop());
+        public void OnStop() => this.Reverse().Each(i =>
+        {
+            Core.Log.InfoBasic("Stopping: {0}", i.GetType().FullName);
+            i.OnStop();
+        });
         #endregion
     }
 }

@@ -60,7 +60,7 @@ namespace TWCore.Settings
                 ThrowExceptionOnDuplicateKeys = false
             };
 
-            var appsNames = applicationName.SplitAndTrim(",");
+            var appsNames = applicationName?.SplitAndTrim(",") ?? new string[0];
             foreach(var appName in appsNames)
             {
                 if (Applications.TryGetByPartialKey(appName, out var appSetting))

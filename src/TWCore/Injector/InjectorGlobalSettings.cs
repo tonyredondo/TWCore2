@@ -53,32 +53,36 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public InjectorSettings GetSettings(string environment, string applicationName)
         {
-            var set1 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName?.SplitAndTrim(",").Contains(applicationName) == true);
-            var set2 = Settings?.FirstOrDefault(i => i.EnvironmentName.IsNullOrWhitespace() && i.ApplicationName?.SplitAndTrim(",").Contains(applicationName) == true);
-            var set3 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName.IsNullOrWhitespace());
-            var set4 = Global;
-
+            var appNames = applicationName?.SplitAndTrim(",") ?? new string[0];
             var res = new InjectorSettings();
-            res.Arguments.AddRange(set1?.Arguments);
-            res.Arguments.AddRange(set2?.Arguments);
-            res.Arguments.AddRange(set3?.Arguments);
-            res.Arguments.AddRange(set4?.Arguments);
 
-            res.InstantiableClasses.AddRange(set1?.InstantiableClasses);
-            res.InstantiableClasses.AddRange(set2?.InstantiableClasses);
-            res.InstantiableClasses.AddRange(set3?.InstantiableClasses);
-            res.InstantiableClasses.AddRange(set4?.InstantiableClasses);
+            foreach (var appName in appNames)
+            {
+                var set1 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName?.SplitAndTrim(",").Contains(appName) == true);
+                var set2 = Settings?.FirstOrDefault(i => i.EnvironmentName.IsNullOrWhitespace() && i.ApplicationName?.SplitAndTrim(",").Contains(appName) == true);
+                var set3 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName.IsNullOrWhitespace());
+                var set4 = Global;
 
-            res.Interfaces.AddRange(set1?.Interfaces);
-            NonIntantiableClassAppend(set2?.Interfaces, res.Interfaces);
-            NonIntantiableClassAppend(set3?.Interfaces, res.Interfaces);
-            NonIntantiableClassAppend(set4?.Interfaces, res.Interfaces);
+                res.Arguments.AddRange(set1?.Arguments);
+                res.Arguments.AddRange(set2?.Arguments);
+                res.Arguments.AddRange(set3?.Arguments);
+                res.Arguments.AddRange(set4?.Arguments);
 
-            res.Abstracts.AddRange(set1?.Abstracts);
-            NonIntantiableClassAppend(set2?.Abstracts, res.Abstracts);
-            NonIntantiableClassAppend(set3?.Abstracts, res.Abstracts);
-            NonIntantiableClassAppend(set4?.Abstracts, res.Abstracts);
+                res.InstantiableClasses.AddRange(set1?.InstantiableClasses);
+                res.InstantiableClasses.AddRange(set2?.InstantiableClasses);
+                res.InstantiableClasses.AddRange(set3?.InstantiableClasses);
+                res.InstantiableClasses.AddRange(set4?.InstantiableClasses);
 
+                res.Interfaces.AddRange(set1?.Interfaces);
+                NonIntantiableClassAppend(set2?.Interfaces, res.Interfaces);
+                NonIntantiableClassAppend(set3?.Interfaces, res.Interfaces);
+                NonIntantiableClassAppend(set4?.Interfaces, res.Interfaces);
+
+                res.Abstracts.AddRange(set1?.Abstracts);
+                NonIntantiableClassAppend(set2?.Abstracts, res.Abstracts);
+                NonIntantiableClassAppend(set3?.Abstracts, res.Abstracts);
+                NonIntantiableClassAppend(set4?.Abstracts, res.Abstracts);
+            }
             return res;
         }
 

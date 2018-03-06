@@ -442,6 +442,18 @@ namespace TWCore
             Init(factories);
 			ServiceContainerFactory(new ServiceList(servicesFunc()), null).Run(args);
         }
+        /// <summary>
+        /// Run defined IService with the default container from Injector configuration 
+        /// </summary>
+        /// <param name="args"></param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RunServicesFromInjector(string[] args)
+        {
+            InitDefaults();
+            var services = Injector.GetAllInstances<IService>();
+            var service = new ServiceList(services);
+            ServiceContainerFactory(service, null).Run(args);
+        }
         #endregion
 
         #region OnInitActions Queue

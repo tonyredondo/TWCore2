@@ -108,8 +108,17 @@ namespace TWCore
                 useTriplets = true;
             if (termArr[0][0] == 'D')
                 useDot = true;
-            if (!int.TryParse(termArr[0].Substring(1), out var duration))
-                duration = 1;
+            int duration;
+            if (useTriplets || useDot)
+            {
+                if (!int.TryParse(termArr[0].Substring(1), out duration))
+                    duration = 1;
+            }
+            else
+            {
+                if (!int.TryParse(termArr[0], out duration))
+                    duration = 1;
+            }
             switch (duration)
             {
                 case 1: dIndex = 0; break;

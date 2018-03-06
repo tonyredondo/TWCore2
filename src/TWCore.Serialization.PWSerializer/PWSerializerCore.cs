@@ -205,80 +205,12 @@ namespace TWCore.Serialization.PWSerializer
                         var oidx = objectCache.SerializerGet(scope.Value);
                         if (oidx > -1)
                         {
-                            #region Object Reference
-                            switch (oidx)
-                            {
-                                case 0:
-                                    bw.Write(DataType.RefObjectByte0);
-                                    break;
-                                case 1:
-                                    bw.Write(DataType.RefObjectByte1);
-                                    break;
-                                case 2:
-                                    bw.Write(DataType.RefObjectByte2);
-                                    break;
-                                case 3:
-                                    bw.Write(DataType.RefObjectByte3);
-                                    break;
-                                case 4:
-                                    bw.Write(DataType.RefObjectByte4);
-                                    break;
-                                case 5:
-                                    bw.Write(DataType.RefObjectByte5);
-                                    break;
-                                case 6:
-                                    bw.Write(DataType.RefObjectByte6);
-                                    break;
-                                case 7:
-                                    bw.Write(DataType.RefObjectByte7);
-                                    break;
-                                case 8:
-                                    bw.Write(DataType.RefObjectByte8);
-                                    break;
-                                case 9:
-                                    bw.Write(DataType.RefObjectByte9);
-                                    break;
-                                case 10:
-                                    bw.Write(DataType.RefObjectByte10);
-                                    break;
-                                case 11:
-                                    bw.Write(DataType.RefObjectByte11);
-                                    break;
-                                case 12:
-                                    bw.Write(DataType.RefObjectByte12);
-                                    break;
-                                case 13:
-                                    bw.Write(DataType.RefObjectByte13);
-                                    break;
-                                case 14:
-                                    bw.Write(DataType.RefObjectByte14);
-                                    break;
-                                case 15:
-                                    bw.Write(DataType.RefObjectByte15);
-                                    break;
-                                case 16:
-                                    bw.Write(DataType.RefObjectByte16);
-                                    break;
-                                case 17:
-                                    bw.Write(DataType.RefObjectByte17);
-                                    break;
-                                case 18:
-                                    bw.Write(DataType.RefObjectByte18);
-                                    break;
-                                case 19:
-                                    bw.Write(DataType.RefObjectByte19);
-                                    break;
-                                case 20:
-                                    bw.Write(DataType.RefObjectByte20);
-                                    break;
-                                default:
-                                    if (oidx <= byte.MaxValue)
-                                        Write(bw, DataType.RefObjectByte, (byte)oidx);
-                                    else
-                                        Write(bw, DataType.RefObjectUShort, (ushort)oidx);
-                                    break;
-                            }
-                            #endregion
+                            if (oidx <= 20)
+                                bw.Write((byte)(DataType.RefObjectByte0 + oidx));
+                            else if (oidx <= byte.MaxValue)
+                                Write(bw, DataType.RefObjectByte, (byte)oidx);
+                            else
+                                Write(bw, DataType.RefObjectUShort, (ushort)oidx);
                             SerializerScopePool.Store(scopeStack.Pop());
                             scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                         }
@@ -286,7 +218,6 @@ namespace TWCore.Serialization.PWSerializer
                         {
                             objectCache.SerializerSet(scope.Value);
                             var tStartItem = (SerializerPlanItem.TypeStart)item;
-                            //var valType = scope.Value.GetType();
                             if (item.Type != scope.Type)
                             {
                                 var tParts = tStartItem.TypeParts;
@@ -308,43 +239,12 @@ namespace TWCore.Serialization.PWSerializer
                                 typesCache.SerializerSet(props);
                                 #endregion
                             }
+                            else if (typeIdx <= 24)
+                                bw.Write((byte)(DataType.TypeRefByte0 + typeIdx));
+                            else if (typeIdx <= byte.MaxValue)
+                                Write(bw, DataType.TypeRefByte, (byte)typeIdx);
                             else
-                            {
-                                switch (typeIdx)
-                                {
-                                    case 0: bw.Write(DataType.TypeRefByte0); break;
-                                    case 1: bw.Write(DataType.TypeRefByte1); break;
-                                    case 2: bw.Write(DataType.TypeRefByte2); break;
-                                    case 3: bw.Write(DataType.TypeRefByte3); break;
-                                    case 4: bw.Write(DataType.TypeRefByte4); break;
-                                    case 5: bw.Write(DataType.TypeRefByte5); break;
-                                    case 6: bw.Write(DataType.TypeRefByte6); break;
-                                    case 7: bw.Write(DataType.TypeRefByte7); break;
-                                    case 8: bw.Write(DataType.TypeRefByte8); break;
-                                    case 9: bw.Write(DataType.TypeRefByte9); break;
-                                    case 10: bw.Write(DataType.TypeRefByte10); break;
-                                    case 11: bw.Write(DataType.TypeRefByte11); break;
-                                    case 12: bw.Write(DataType.TypeRefByte12); break;
-                                    case 13: bw.Write(DataType.TypeRefByte13); break;
-                                    case 14: bw.Write(DataType.TypeRefByte14); break;
-                                    case 15: bw.Write(DataType.TypeRefByte15); break;
-                                    case 16: bw.Write(DataType.TypeRefByte16); break;
-                                    case 17: bw.Write(DataType.TypeRefByte17); break;
-                                    case 18: bw.Write(DataType.TypeRefByte18); break;
-                                    case 19: bw.Write(DataType.TypeRefByte19); break;
-                                    case 20: bw.Write(DataType.TypeRefByte20); break;
-                                    case 21: bw.Write(DataType.TypeRefByte21); break;
-                                    case 22: bw.Write(DataType.TypeRefByte22); break;
-                                    case 23: bw.Write(DataType.TypeRefByte23); break;
-                                    case 24: bw.Write(DataType.TypeRefByte24); break;
-                                    default:
-                                        if (typeIdx <= byte.MaxValue)
-                                            Write(bw, DataType.TypeRefByte, (byte)typeIdx);
-                                        else
-                                            Write(bw, DataType.TypeRefUShort, (ushort)typeIdx);
-                                        break;
-                                }
-                            }
+                                Write(bw, DataType.TypeRefUShort, (ushort)typeIdx);
 
                             if (tStartItem.IsIList)
                                 numberSerializer.WriteValue(bw, ((IList)scope.Value).Count);
@@ -501,7 +401,7 @@ namespace TWCore.Serialization.PWSerializer
                             if (iDictioCount > 0)
                             {
                                 bw.Write(DataType.DictionaryStart);
-                                
+
                                 if (dictioItem.KeySerializerType != null && dictioItem.ValueSerializerType != null)
                                 {
                                     foreach (var keyValue in iDictio.Keys)
@@ -852,7 +752,7 @@ namespace TWCore.Serialization.PWSerializer
                         var vTypeParts = new string[vTypePartsLength];
                         for (var i = 0; i < vTypePartsLength; i++)
                             vTypeParts[i] = propertySerializer.ReadValue(br);
-                        var vType = string.Join(",", vTypeParts);
+                        var vType = string.Join(".", vTypeParts);
                         valueType = Core.GetType(vType) ?? valueType;
                         continue;
                     case DataType.TypeStart:
@@ -1124,7 +1024,7 @@ namespace TWCore.Serialization.PWSerializer
                         var vTypeParts = new string[vTypePartsLength];
                         for (var i = 0; i < vTypePartsLength; i++)
                             vTypeParts[i] = propertySerializer.ReadValue(br);
-                        valueType = string.Join(",", vTypeParts);
+                        valueType = string.Join(".", vTypeParts);
                         continue;
                     case DataType.TypeStart:
                         var typePropertiesLength = numberSerializer.ReadValue(br);

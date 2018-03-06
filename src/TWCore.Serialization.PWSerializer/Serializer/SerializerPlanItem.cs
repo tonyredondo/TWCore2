@@ -60,7 +60,9 @@ namespace TWCore.Serialization.PWSerializer.Serializer
                 PlanType = SerializerPlanItemType.TypeStart;
                 Type = type;
                 IsArray = type.IsArray;
-                TypeParts = type.GetTypeName().Split(",", StringSplitOptions.RemoveEmptyEntries);
+                var typeName = type.GetTypeName();
+                typeName = typeName.Replace(", ", ",");
+                TypeParts = typeName.Split(".", StringSplitOptions.RemoveEmptyEntries);
             }
         }
         #endregion

@@ -92,7 +92,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Body = ea.Body
                 };
                 #pragma warning disable 4014
-                EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, message));
                 #pragma warning restore 4014
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
@@ -177,6 +177,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
+            if (message == null) return;
             try
             {
                 Counters.IncrementProcessingThreads();

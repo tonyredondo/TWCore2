@@ -72,7 +72,7 @@ namespace TWCore.Messaging.NSQ
                     };
 
                     #pragma warning disable 4014
-                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
+                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg));
                     #pragma warning restore 4014
 
                     Try.Do(message.Finish, false);
@@ -205,6 +205,7 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
+            if (message == null) return;
 			try
 			{
 				Counters.IncrementProcessingThreads();
@@ -213,7 +214,6 @@ namespace TWCore.Messaging.NSQ
 				switch (messageBody)
 				{
 					case RequestMessage request when request.Header != null:
-					{
 						request.Header.ApplicationReceivedTime = Core.Now;
 						Counters.IncrementReceivingTime(request.Header.TotalTime);
 						if (request.Header.ClientName != Config.Name)
@@ -223,15 +223,12 @@ namespace TWCore.Messaging.NSQ
 							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
 						await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
 						break;
-					}
 					case ResponseMessage response when response.Header != null:
-					{
 						response.Header.Response.ApplicationReceivedTime = Core.Now;
 						Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-						var evArgs = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
-						await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
+						var evArgs2 = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
+						await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
 						break;
-					}
 				}
 				Counters.IncrementTotalMessagesProccesed();
 			}

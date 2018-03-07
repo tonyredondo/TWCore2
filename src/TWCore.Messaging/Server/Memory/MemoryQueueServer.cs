@@ -134,7 +134,7 @@ namespace TWCore.Messaging
 					var rTask = await Task.WhenAny(rcvTask, tokenTask).ConfigureAwait(false);
 					if (rTask == tokenTask) break;
 					#pragma warning disable 4014
-					EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result);
+					Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result));
 					#pragma warning restore 4014
 				}
 				WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
@@ -152,6 +152,7 @@ namespace TWCore.Messaging
 
 			private async Task ProcessingTaskAsync(MemoryQueue.Message message)
 			{
+                if (message == null) return;
 				try
 				{
 					Counters.IncrementProcessingThreads();
@@ -160,31 +161,24 @@ namespace TWCore.Messaging
 					switch (messageBody)
 					{
 						case RequestMessage request when request.Header != null:
-							{
-								if (_cloneObject)
-									request.Body = request.Body.DeepClone();
-								request.Header.ApplicationReceivedTime = Core.Now;
-								Counters.IncrementReceivingTime(request.Header.TotalTime);
-								if (request.Header.ClientName != Config.Name)
-									Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-								var evArgs =
-									new RequestReceivedEventArgs(_name, Connection, request, 1);
-								if (request.Header.ResponseQueue != null)
-									evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-							    await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
-								break;
-							}
+							if (_cloneObject)
+								request.Body = request.Body.DeepClone();
+							request.Header.ApplicationReceivedTime = Core.Now;
+							Counters.IncrementReceivingTime(request.Header.TotalTime);
+							if (request.Header.ClientName != Config.Name)
+								Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+							var evArgs = new RequestReceivedEventArgs(_name, Connection, request, 1);
+							if (request.Header.ResponseQueue != null)
+								evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+							await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
+							break;
 						case ResponseMessage response when response.Header != null:
-							{
-								if (_cloneObject)
-									response.Body = response.Body.DeepClone();
-								response.Header.Response.ApplicationReceivedTime = Core.Now;
-								Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-								var evArgs =
-									new ResponseReceivedEventArgs(_name, response, 1);
-								await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
-								break;
-							}
+							if (_cloneObject)
+								response.Body = response.Body.DeepClone();
+							response.Header.Response.ApplicationReceivedTime = Core.Now;
+							Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+							await OnResponseReceivedAsync(new ResponseReceivedEventArgs(_name, response, 1)).ConfigureAwait(false);
+							break;
 					}
 
 					Counters.IncrementTotalMessagesProccesed();

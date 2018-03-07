@@ -66,7 +66,7 @@ namespace TWCore.Messaging.NATS
                     CorrelationId = correlationId,
                     Body = body
                 };
-                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
             }
             catch (Exception ex)
             {
@@ -202,25 +202,21 @@ namespace TWCore.Messaging.NATS
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
-                        {
-                            request.Header.ApplicationReceivedTime = Core.Now;
-                            Counters.IncrementReceivingTime(request.Header.TotalTime);
-                            if (request.Header.ClientName != Config.Name)
-                                Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-                            var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
-                            if (request.Header.ResponseQueue != null)
-                                evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
-                            await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
-                            break;
-                        }
+                        request.Header.ApplicationReceivedTime = Core.Now;
+                        Counters.IncrementReceivingTime(request.Header.TotalTime);
+                        if (request.Header.ClientName != Config.Name)
+                            Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
+                        var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
+                        if (request.Header.ResponseQueue != null)
+                            evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
+                        await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
+                        break;
                     case ResponseMessage response when response.Header != null:
-                        {
-                            response.Header.Response.ApplicationReceivedTime = Core.Now;
-                            Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                            var evArgs = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
-                            await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
-                            break;
-                        }
+                        response.Header.Response.ApplicationReceivedTime = Core.Now;
+                        Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
+                        var evArgs2 = new ResponseReceivedEventArgs(_name, response, message.Body.Count);
+                        await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
+                        break;
                 }
                 Counters.IncrementTotalMessagesProccesed();
             }

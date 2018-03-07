@@ -100,7 +100,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Body = ea.Body
                 };
                 #pragma warning disable 4014
-                EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, message));
                 #pragma warning restore 4014
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
@@ -185,6 +185,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
+            if (message == null) return;
             try
             {
                 Counters.IncrementProcessingThreads();
@@ -193,7 +194,6 @@ namespace TWCore.Messaging.RabbitMQ
                 switch (messageBody)
                 {
                     case RequestMessage request when request.Header != null:
-                    {
                         request.Header.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(request.Header.TotalTime);
                         if (request.Header.ClientName != Config.Name)
@@ -211,12 +211,10 @@ namespace TWCore.Messaging.RabbitMQ
                             evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
                         await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);
                         break;
-                    }
                     case ResponseMessage response when response.Header != null:
-                    {
                         response.Header.Response.ApplicationReceivedTime = Core.Now;
                         Counters.IncrementReceivingTime(response.Header.Response.TotalTime);
-                        var evArgs =
+                        var evArgs2 =
                             new ResponseReceivedEventArgs(_name, response, message.Body.Length)
                             {
                                 Metadata =
@@ -225,9 +223,8 @@ namespace TWCore.Messaging.RabbitMQ
                                     ["MessageId"] = message.Properties.MessageId
                                 }
                             };
-                        await OnResponseReceivedAsync(evArgs).ConfigureAwait(false);
+                        await OnResponseReceivedAsync(evArgs2).ConfigureAwait(false);
                         break;
-                    }
                 }
                 Counters.IncrementTotalMessagesProccesed();
             }

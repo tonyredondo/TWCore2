@@ -350,14 +350,27 @@ namespace TWCore
             };
             Init(factories);
         }
-		#endregion
+        /// <summary>
+        /// Initialize with the default factories.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void InitDefaults(string configurationFile, bool setDirectoryToConfigurationFilePath = true)
+        {
+            var factories = new DefaultFactories
+            {
+                SetDirectoryToConfigurationFilePath = setDirectoryToConfigurationFilePath,
+                ConfigurationFile = configurationFile
+            };
+            Init(factories);
+        }
+        #endregion
 
-		#region Run Service
-		/// <summary>
-		/// Starts the default container with the arguments
-		/// </summary>
-		/// <param name="args">Service arguments</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Run Service
+        /// <summary>
+        /// Starts the default container with the arguments
+        /// </summary>
+        /// <param name="args">Service arguments</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartContainer(string[] args)
         {
             InitDefaults();

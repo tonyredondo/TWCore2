@@ -49,36 +49,54 @@ namespace TWCore
         [DllImport("rpcrt4.dll", SetLastError = true)]
         private static extern int UuidCreateSequential(out Guid guid);
 
-		#region Properties
-		/// <summary>
-		/// Sets the current directory to the base assembly location
-		/// </summary>
-		public bool SetDirectoryToBaseAssembly { get; set; } = true;
+        #region Properties
+        /// <summary>
+        /// Sets the current directory to the base assembly location
+        /// </summary>
+        public bool SetDirectoryToBaseAssembly { get; set; } = true;
+        /// <summary>
+        /// Sets the current directory to the configuration file path
+        /// </summary>
+        public bool SetDirectoryToConfigurationFilePath { get; set; } = false;
+        /// <summary>
+        /// Gets or Sets the configuration file
+        /// </summary>
+        public string ConfigurationFile { get; set; }
         /// <summary>
         /// Bool indicating if all assemblies were loaded.
         /// </summary>
         private bool AllAssembliesLoaded { get; set; }
-		#endregion
+        #endregion
 
-		#region .ctor
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region .ctor
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DefaultFactories()
         {
             Accessors = new CompleteAccessorsFactory();
-			GetAssemblies = DefaultGetAssemblies;
-			GetAllAssemblies = DefaultGetAllAssemblies;
+            GetAssemblies = DefaultGetAssemblies;
+            GetAllAssemblies = DefaultGetAllAssemblies;
+            if (File.Exists($"{Core.ApplicationName}.config.json"))
+                ConfigurationFile = $"{Core.ApplicationName}.config.json";
+            else if (File.Exists($"{Core.ApplicationName}.json"))
+                ConfigurationFile = $"{Core.ApplicationName}.json";
+            else if (File.Exists(Path.Combine(AppContext.BaseDirectory, $"{Core.ApplicationName}.config.json")))
+                ConfigurationFile = Path.Combine(AppContext.BaseDirectory, $"{Core.ApplicationName}.config.json");
+            else if (File.Exists(Path.Combine(AppContext.BaseDirectory, $"{Core.ApplicationName}.json")))
+                ConfigurationFile = Path.Combine(AppContext.BaseDirectory, $"{Core.ApplicationName}.json");
         }
-		#endregion
+        #endregion
 
-		#region Public Methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Public Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {
             if (SetDirectoryToBaseAssembly)
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+            if (SetDirectoryToConfigurationFilePath && (Path.IsPathRooted(ConfigurationFile) || !string.IsNullOrEmpty(Path.GetDirectoryName(ConfigurationFile))))
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(ConfigurationFile));
 
             if (Factory.PlatformType == PlatformType.Windows)
-				SequentialGuidGenerator = GetSequentialGuid;
+                SequentialGuidGenerator = GetSequentialGuid;
 
             Core.Log.ItemFactory = Factory.CreateLogItem;
             Core.Trace.ItemFactory = Factory.CreateTraceItem;
@@ -89,106 +107,110 @@ namespace TWCore
 
             AttachStatus();
 
-            ServiceContainer.RegisterParametersHandler("configfile=[Path]", 
-			                                           "Load the application using other configuration file.",
-			                                           obj => { });
-            
+            ServiceContainer.RegisterParametersHandler("configfile=[Path]",
+                                                       "Load the application using other configuration file.",
+                                                       obj => { });
+
             var line = Environment.CommandLine;
             var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
             var argumentLine = line.Replace(asmLocation, string.Empty);
 
             var cleanArguments = GetArguments(argumentLine);
             var argConfigFile = cleanArguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
-            
             if (!string.IsNullOrWhiteSpace(argConfigFile))
             {
-                argConfigFile = argConfigFile.Substring(11)?.Replace("'", string.Empty).Trim();
+                argConfigFile = argConfigFile.Substring(11).Replace("'", string.Empty).Trim();
                 if (!LoadConfigFile(argConfigFile, cleanArguments))
-                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded. CommandLine: {1}", 
+                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded. CommandLine: {1}",
                         argConfigFile, argumentLine));
             }
-            else
+            else if (ConfigurationFile != null)
             {
-                if (!LoadConfigFile($"{Core.ApplicationName}.config.json", cleanArguments))
-                    LoadConfigFile($"{Core.ApplicationName}.json", cleanArguments);
+                if (!LoadConfigFile(ConfigurationFile, cleanArguments))
+                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.",
+                        ConfigurationFile));
+            }
+            else if (!LoadConfigFile($"{Core.ApplicationName}.config.json", cleanArguments))
+            {
+                LoadConfigFile($"{Core.ApplicationName}.json", cleanArguments);
             }
             SetLargeObjectHeapCompactTimeout();
         }
         #endregion
 
 
-		#region Private factory methods
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private Assembly[] DefaultGetAssemblies()
-		{
-			if (_assemblies != null) return _assemblies;
-			_assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
-			{
-				if (d.IsDynamic) return false;
-				var assemblyName = d.GetName();
-				return !IsExcludedAssembly(assemblyName.Name);
-			}).DistinctBy(i => i.Location).ToArray();
-			return _assemblies;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private Assembly[] DefaultGetAllAssemblies()
-		{
-			var resolver = AssemblyResolverManager.GetAssemblyResolver();
-			if (!AllAssembliesLoaded || (!_usedResolver && resolver != null))
-			{
-				if (resolver != null)
-				{
-					_usedResolver = true;
-				}
-				else
-				{
-					var loaded = AppDomain.CurrentDomain.GetAssemblies();
-					foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
-					{
-						try
-						{
-							var name = AssemblyName.GetAssemblyName(file);
-							if (IsExcludedAssembly(name.Name)) continue;
-							if (loaded.All(l => l.FullName != name.FullName))
-								AppDomain.CurrentDomain.Load(name);
-						}
-						catch
-						{
-							// ignored
-						}
-					}
-				}
-				AllAssembliesLoaded = true;
-				_assemblies = null;
-				return DefaultGetAssemblies();
-			}
-			return _assemblies;
-		}
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		private static Guid GetSequentialGuid()
-		{
-			//https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
-			UuidCreateSequential(out var guid);
-			var s = guid.ToByteArray();
-			var t = new byte[16];
-			t[3] = s[0];
-			t[2] = s[1];
-			t[1] = s[2];
-			t[0] = s[3];
-			t[5] = s[4];
-			t[4] = s[5];
-			t[7] = s[6];
-			t[6] = s[7];
-			t[8] = s[8];
-			t[9] = s[9];
-			t[10] = s[10];
-			t[11] = s[11];
-			t[12] = s[12];
-			t[13] = s[13];
-			t[14] = s[14];
-			t[15] = s[15];
-			return new Guid(t);
-		}
+        #region Private factory methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Assembly[] DefaultGetAssemblies()
+        {
+            if (_assemblies != null) return _assemblies;
+            _assemblies = AppDomain.CurrentDomain.GetAssemblies().Where(d =>
+            {
+                if (d.IsDynamic) return false;
+                var assemblyName = d.GetName();
+                return !IsExcludedAssembly(assemblyName.Name);
+            }).DistinctBy(i => i.Location).ToArray();
+            return _assemblies;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Assembly[] DefaultGetAllAssemblies()
+        {
+            var resolver = AssemblyResolverManager.GetAssemblyResolver();
+            if (!AllAssembliesLoaded || (!_usedResolver && resolver != null))
+            {
+                if (resolver != null)
+                {
+                    _usedResolver = true;
+                }
+                else
+                {
+                    var loaded = AppDomain.CurrentDomain.GetAssemblies();
+                    foreach (var file in Directory.EnumerateFiles(AppDomain.CurrentDomain.BaseDirectory, "*.dll", SearchOption.TopDirectoryOnly))
+                    {
+                        try
+                        {
+                            var name = AssemblyName.GetAssemblyName(file);
+                            if (IsExcludedAssembly(name.Name)) continue;
+                            if (loaded.All(l => l.FullName != name.FullName))
+                                AppDomain.CurrentDomain.Load(name);
+                        }
+                        catch
+                        {
+                            // ignored
+                        }
+                    }
+                }
+                AllAssembliesLoaded = true;
+                _assemblies = null;
+                return DefaultGetAssemblies();
+            }
+            return _assemblies;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Guid GetSequentialGuid()
+        {
+            //https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
+            UuidCreateSequential(out var guid);
+            var s = guid.ToByteArray();
+            var t = new byte[16];
+            t[3] = s[0];
+            t[2] = s[1];
+            t[1] = s[2];
+            t[0] = s[3];
+            t[5] = s[4];
+            t[4] = s[5];
+            t[7] = s[6];
+            t[6] = s[7];
+            t[8] = s[8];
+            t[9] = s[9];
+            t[10] = s[10];
+            t[11] = s[11];
+            t[12] = s[12];
+            t[13] = s[13];
+            t[14] = s[14];
+            t[15] = s[15];
+            return new Guid(t);
+        }
 
         #endregion
 
@@ -212,7 +234,7 @@ namespace TWCore
 
             for (var i = 0; i < cleanArguments.Count; i++)
                 cleanArguments[i] = cleanArguments[i]?.Trim();
-            
+
             return cleanArguments;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -232,7 +254,7 @@ namespace TWCore
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool LoadConfigFile(string configFile, List<string> args)
         {
             ServiceContainer.RegisterParametersHandler("environment=[Environment]",
@@ -244,7 +266,7 @@ namespace TWCore
             ServiceContainer.RegisterParametersHandler("noconsole",
                 "Remove the console output/input.",
                 obj => { obj.ShouldEndExecution = false; });
-            
+
             var envConfigFile = args?.FirstOrDefault(a => a.StartsWith("environment=", StringComparison.OrdinalIgnoreCase));
             envConfigFile = envConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
 
@@ -253,7 +275,7 @@ namespace TWCore
 
             if (args?.Any(a => string.Equals(a, "noconsole", StringComparison.Ordinal)) == true)
                 ServiceContainer.HasConsole = false;
-            
+
             if (envConfigFile.IsNotNullOrWhitespace())
                 Core.EnvironmentName = envConfigFile;
             if (mnameConfigFile.IsNotNullOrWhitespace())
@@ -319,14 +341,14 @@ namespace TWCore
                 return false;
             }
         }
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()
         {
             Core.Status.Attach(() =>
             {
                 using (var process = Process.GetCurrentProcess())
                 {
-                    var sItem = new StatusItem {Name = "Application Information"};
+                    var sItem = new StatusItem { Name = "Application Information" };
                     sItem.Values.Add("Command Line", Environment.CommandLine);
                     sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
 
@@ -399,12 +421,12 @@ namespace TWCore
                 }
             });
         }
-		#endregion
+        #endregion
 
-		#region LargeObjectHeap Compact Timeout Method
-		private static int _lastValue;
+        #region LargeObjectHeap Compact Timeout Method
+        private static int _lastValue;
         private static Timer _largeObjectTimer;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetLargeObjectHeapCompactTimeout()
         {

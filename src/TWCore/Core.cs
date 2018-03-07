@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
@@ -55,8 +56,8 @@ namespace TWCore
         private static CoreSettings _globalSettings;
         private static Dictionary<string, object> _data;
         private static Dictionary<object, object> _objectData;
-        [ThreadStatic] private static Dictionary<string, object> _threadData;
-        [ThreadStatic] private static Dictionary<object, object> _threadObjectData;
+        private static AsyncLocal<Dictionary<string, object>> _taskData;
+        private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
 
@@ -106,15 +107,13 @@ namespace TWCore
         /// </summary>
         public static InjectorEngine Injector { get; private set; } = new InjectorEngine();
         /// <summary>
-        /// Thread global data dictionary
+        /// Task global data dictionary
         /// </summary>
-        public static Dictionary<string, object> ThreadData => _threadData ?? (_threadData = new Dictionary<string, object>());
-
+        public static Dictionary<string, object> TaskData => _taskData?.Value ?? (_taskData = new AsyncLocal<Dictionary<string, object>>()).Value;
         /// <summary>
-        /// Thread global object data dictionary
+        /// Task global object data dictionary
         /// </summary>
-        public static Dictionary<object, object> ThreadObjectData => _threadObjectData ?? (_threadObjectData = new Dictionary<object, object>());
-
+        public static Dictionary<object, object> TaskObjectData => _taskObjectData?.Value ?? (_taskObjectData = new AsyncLocal<Dictionary<object, object>>()).Value;
         /// <summary>
         /// Current Framework version
         /// </summary>
@@ -377,6 +376,16 @@ namespace TWCore
 			ServiceContainerFactory(null, null).Run(args);
         }
         /// <summary>
+        /// Starts the default container with the arguments
+        /// </summary>
+        /// <param name="args">Service arguments</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void StartContainer(string[] args, Factories factories)
+        {
+            Init(factories);
+            ServiceContainerFactory(null, null).Run(args);
+        }
+        /// <summary>
         /// Run IService with the default container
         /// </summary>
         /// <param name="initAction">Action for initialize</param>
@@ -395,8 +404,19 @@ namespace TWCore
         public static void RunService<TIService>(string[] args) where TIService : class, new()
         {
             InitDefaults();
-            var service = (IService)Injector.New<TIService>(); // Activator.CreateInstance<TIService>();
+            var service = (IService)Injector.New<TIService>();
 			ServiceContainerFactory(service, null).Run(args);
+        }
+        /// <summary>
+        /// Run IService with the default container
+        /// </summary>
+        /// <param name="args">Service arguments</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void RunService<TIService>(string[] args, Factories factories) where TIService : class, new()
+        {
+            Init(factories);
+            var service = (IService)Injector.New<TIService>();
+            ServiceContainerFactory(service, null).Run(args);
         }
         /// <summary>
         /// Run IService with the default container

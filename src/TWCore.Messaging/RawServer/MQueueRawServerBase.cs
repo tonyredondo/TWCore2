@@ -269,8 +269,8 @@ namespace TWCore.Messaging.RawServer
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
-                Counters.IncrementProcessingThreads();
-                Core.Log.InfoMedium("Request message received with correlationId = {0} . Current messages in process = {1}", e.CorrelationId, Counters.CurrentProcessingThreads);
+                var pThreads = Counters.IncrementProcessingThreads();
+                Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, pThreads);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueRawServerEvents.RequestReceived != null)
@@ -327,8 +327,8 @@ namespace TWCore.Messaging.RawServer
             try
             {
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
-                Counters.IncrementProcessingThreads();
-                Core.Log.InfoMedium("Response message received with correlationId = {0} . Current messages in process = {1}", e.CorrelationId, Counters.CurrentProcessingThreads);
+                var pThreads = Counters.IncrementProcessingThreads();
+                Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, pThreads);
                 if (ResponseReceived != null)
                     await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueRawServerEvents.ResponseReceived != null)

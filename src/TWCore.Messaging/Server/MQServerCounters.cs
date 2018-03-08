@@ -93,7 +93,7 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Peak value of the number of active processing threads on the last thirty minutes
         /// </summary>
-        public long PeakLastThirtyMinutesProcessingThreads => _peakLastThirtyMinutesProcessingThreads
+        public long PeakLastThirtyMinutesProcessingThreads => _peakLastThirtyMinutesProcessingThreads;
         /// <summary>
         /// Date and time of the peak value of number of active processing threads on the last thirty minutes
         /// </summary>
@@ -137,12 +137,12 @@ namespace TWCore.Messaging.Server
 		{
 			_timerThirtyMinutes = new Timer(state =>
 			{
-				LastThirtyMinutesMessages = CurrentMessages;
-				PeakLastThirtyMinutesMessages = CurrentMessages;
+                Interlocked.Exchange(ref _lastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
+                Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, Interlocked.Read(ref _currentMessages));
 				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
 
-				LastThirtyMinutesProcessingThreads = CurrentProcessingThreads;
-				PeakLastThirtyMinutesProcessingThreads = CurrentProcessingThreads;
+                Interlocked.Exchange(ref _lastThirtyMinutesProcessingThreads, Interlocked.Read(ref _currentProcessingThreads));
+                Interlocked.Exchange(ref _peakLastThirtyMinutesProcessingThreads, Interlocked.Read(ref _currentProcessingThreads));
 				PeakLastThirtyMinutesProcessingThreadsLastDate = LastProcessingDateTime;
 			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 

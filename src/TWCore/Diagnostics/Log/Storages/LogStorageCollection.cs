@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
@@ -38,6 +39,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private volatile bool _isDirty;
         private LogLevel _lastMaxLogLevel = LogLevel.Error;
         private List<(ILogStorage, LogLevel)> _cItems;
+        private int _itemsCount;
 
         #region.ctor
         /// <summary>
@@ -74,6 +76,7 @@ namespace TWCore.Diagnostics.Log.Storages
                     _isDirty = true;
                     CalculateMaxLogLevel();
                 }
+                Interlocked.Exchange(ref _itemsCount, _items.Count);
             }
             Core.Status.AttachChild(storage, this);
         }
@@ -101,7 +104,11 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(ILogStorage storage)
         {
-            _items.RemoveAll(i => i.Item1 == storage);
+            lock (_locker)
+            {
+                _items.RemoveAll(i => i.Item1 == storage);
+                Interlocked.Exchange(ref _itemsCount, _items.Count);
+            }
         }
         /// <summary>
         /// Change the log level of a given storage
@@ -117,15 +124,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <summary>
         /// Gets the storage quantities inside the collection
         /// </summary>
-        public int Count
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                lock (_locker)
-                    return _items.Count;
-            }
-        }
+        public int Count => _itemsCount;
         /// <summary>
         /// Clears the collection
         /// </summary>
@@ -136,6 +135,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
                 _items.Clear();
                 _isDirty = true;
+                Interlocked.Exchange(ref _itemsCount, _items.Count);
                 CalculateMaxLogLevel();
             }
         }

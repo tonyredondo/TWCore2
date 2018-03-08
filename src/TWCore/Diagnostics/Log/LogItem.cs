@@ -30,6 +30,7 @@ namespace TWCore.Diagnostics.Log
     [DataContract]
     public class LogItem : ILogItem
     {
+        #region Properties
         /// <inheritdoc />
         /// <summary>
         /// Item unique identifier
@@ -120,8 +121,23 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         [XmlElement, DataMember]
         public SerializableException Exception { get; set; }
-    }
+        #endregion
 
+        #region Static Methods
+        /// <summary>
+        /// Retrieve LogItem instance
+        /// </summary>
+        /// <returns>LogItem instance</returns>
+        public static LogItem Retrieve()
+            => ReferencePool<LogItem>.Shared.New();
+        /// <summary>
+        /// Store LogItem instance
+        /// </summary>
+        /// <param name="value">LogItem instance</param>
+        public static void Store(LogItem value)
+            => ReferencePool<LogItem>.Shared.Store(value);
+        #endregion
+    }
 
     /// <inheritdoc />
     /// <summary>

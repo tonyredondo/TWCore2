@@ -114,6 +114,8 @@ namespace TWCore.Diagnostics.Log
                         return Task.CompletedTask;
                     case NewLineLogItem _:
                         return Storage.WriteEmptyLineAsync();
+                    case LogItem lItem:
+                        return Storage.WriteAsync(item).ContinueWith(_ => LogItem.Store(lItem), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
                     default:
                         return Storage.WriteAsync(item);
                 }
@@ -208,7 +210,7 @@ namespace TWCore.Diagnostics.Log
                 _itemsWorker?.Enqueue(item);
             }
             if (item.Level == LogLevel.Error)
-                _lastLogItemsWorker?.Enqueue(item);
+                _lastLogItemsWorker?.Enqueue(item.DeepClone());
         }
         /// <inheritdoc />
         /// <summary>
@@ -567,7 +569,7 @@ namespace TWCore.Diagnostics.Log
             if (item == null) return;
             _itemsWorker?.Enqueue(item);
             if (item.Level != LogLevel.Error) return;
-            _lastLogItemsWorker?.Enqueue(item);
+            _lastLogItemsWorker?.Enqueue(item.DeepClone());
             Start();
         }
         #endregion

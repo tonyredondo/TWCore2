@@ -323,21 +323,19 @@ namespace TWCore
             if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)
                 return null;
 
-            var lItem = new LogItem
-            {
-                Id = Guid.NewGuid(),
-                EnvironmentName = Core.EnvironmentName,
-                MachineName = Core.MachineName,
-                Timestamp = Core.Now,
-                ApplicationName = Core.ApplicationName,
-                Level = level,
-                Code = code,
-                Message = message,
-                GroupName = groupName,
-                AssemblyName = assemblyName,
-                TypeName = typeName,
-                Exception = ex != null ? new SerializableException(ex) : null
-            };
+            var lItem = LogItem.Retrieve();
+            lItem.Id = Guid.NewGuid();
+            lItem.EnvironmentName = Core.EnvironmentName;
+            lItem.MachineName = Core.MachineName;
+            lItem.Timestamp = Core.Now;
+            lItem.ApplicationName = Core.ApplicationName;
+            lItem.Level = level;
+            lItem.Code = code;
+            lItem.Message = message;
+            lItem.GroupName = groupName;
+            lItem.AssemblyName = assemblyName;
+            lItem.TypeName = typeName;
+            lItem.Exception = ex != null ? new SerializableException(ex) : null;
             return lItem;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

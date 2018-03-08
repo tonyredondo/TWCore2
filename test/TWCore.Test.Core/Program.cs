@@ -58,15 +58,15 @@ namespace TWCore.Test.Core
             {
                 TWCore.Core.Log.InfoBasic("STARTING TEST SERVICE");
                 //**
-                TWCore.Core.Injector.Settings.Interfaces.Add(new NonInstantiable
-                {
-                    Type = "TWCore.ICoreStart, TWCore",
-                    ClassDefinitions = new NameCollection<Instantiable>
-                    {
-                        new Instantiable { Name = "C1", Type = "TWCore.CoreStart, TWCore", Singleton = true }
-                    }
-                });
-                var value = TWCore.Core.Injector.New<ICoreStart>("C1");
+                //TWCore.Core.Injector.Settings.Interfaces.Add(new NonInstantiable
+                //{
+                //    Type = "TWCore.ICoreStart, TWCore",
+                //    ClassDefinitions = new NameCollection<Instantiable>
+                //    {
+                //        new Instantiable { Name = "C1", Type = "TWCore.CoreStart, TWCore", Singleton = true }
+                //    }
+                //});
+                //var value = TWCore.Core.Injector.New<ICoreStart>("C1");
 
                 var cd = new ConcurrentDictionary<string, string>();
                 cd.GetOrAdd(string.Empty, k =>

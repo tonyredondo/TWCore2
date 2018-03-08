@@ -182,6 +182,7 @@ namespace TWCore
         #endregion
 
         #region Default delegates implementation
+        private static readonly NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
 
         private static readonly NonBlocking.ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new NonBlocking.ConcurrentDictionary<MethodBase, object[]>();
         private static readonly NonBlocking.ConcurrentDictionary<Type, object[]> TypeAttributes = new NonBlocking.ConcurrentDictionary<Type, object[]>();
@@ -197,9 +198,15 @@ namespace TWCore
                 {
                     var method = frame.GetMethod();
                     if (method == null) continue;
+                    if (MethodValues.TryGetValue(method, out var mValues))
+                    {
+                        assemblyName = mValues.AssemblyName;
+                        typeName = mValues.TypeName;
+                        break;
+                    }
 
                     #region Name Attr
-                    var attrs = MethodAttributes.GetOrAdd(method, i => i.GetCustomAttributes(false));// method.GetCustomAttributes(false);
+                    var attrs = MethodAttributes.GetOrAdd(method, i => i.GetCustomAttributes(false)); // method.GetCustomAttributes(false);
                     StackFrameLogAttribute nameAttr = null;
                     int attrsCases = 0;
                     for (var i = 0; i < attrs.Length; i++)
@@ -221,6 +228,7 @@ namespace TWCore
                     {
                         assemblyName = method.DeclaringType.Assembly.FullName;
                         typeName = nameAttr.ClassName;
+                        MethodValues.TryAdd(method, (assemblyName, typeName));
                         break;
                     }
                     #endregion
@@ -251,9 +259,9 @@ namespace TWCore
                     {
                         assemblyName = declarationType.Assembly.FullName;
                         typeName = nameTypeAttr.ClassName;
+                        MethodValues.TryAdd(method, (assemblyName, typeName));
                         break;
                     }
-
                     #endregion
 
                     if (method.Name.Contains("MoveNext"))
@@ -285,6 +293,7 @@ namespace TWCore
                         {
                             assemblyName = actualType.Assembly.FullName;
                             typeName = actualTypeNameTypeAttr.ClassName;
+                            MethodValues.TryAdd(method, (assemblyName, typeName));
                             break;
                         }
                         #endregion
@@ -293,6 +302,7 @@ namespace TWCore
                         typeName = actualType.Name;
                         if (actualType.ReflectedType != null && typeName.Contains("<"))
                             typeName = actualType.ReflectedType.Name;
+                        MethodValues.TryAdd(method, (assemblyName, typeName));
                         break;
                     }
 
@@ -307,6 +317,7 @@ namespace TWCore
                             continue;
                         assemblyName = declarationType.Assembly.FullName;
                         typeName = declarationType.Name;
+                        MethodValues.TryAdd(method, (assemblyName, typeName));
                         break;
                     }
                 }

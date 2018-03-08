@@ -20,7 +20,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
@@ -72,11 +71,16 @@ namespace TWCore.Messaging.Server
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueServerListener> QueueServerListeners { get; } = new List<IMQueueServerListener>();
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets if the server is configured as response server
-		/// </summary>
-		[StatusProperty]
+        /// <inheritdoc />
+        /// <summary>
+        /// Message queue listener server counters
+        /// </summary>
+        public MQServerCounters Counters { get; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets if the server is configured as response server
+        /// </summary>
+        [StatusProperty]
 		public bool ResponseServer { get; set; } = false;
         #endregion
 
@@ -85,29 +89,29 @@ namespace TWCore.Messaging.Server
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        //public event AsyncEventHandler<RequestReceivedEventArgs> RequestReceived;
         public AsyncEvent<RequestReceivedEventArgs> RequestReceived { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        //public event AsyncEventHandler<ResponseReceivedEventArgs> ResponseReceived;
         public AsyncEvent<ResponseReceivedEventArgs> ResponseReceived { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is sent
         /// </summary>
-        //public event AsyncEventHandler<ResponseSentEventArgs> ResponseSent;
         public AsyncEvent<ResponseSentEventArgs> ResponseSent { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is about to be sent
         /// </summary>
-        //public event EventHandler<ResponseSentEventArgs> BeforeSendResponse;
         public AsyncEvent<ResponseSentEventArgs> BeforeSendResponse { get; set; }
         #endregion
 
         #region .ctor
+        public MQueueServerBase()
+        {
+            Counters = new MQServerCounters();
+        }
         ~MQueueServerBase()
 		{
 			Dispose();
@@ -134,6 +138,7 @@ namespace TWCore.Messaging.Server
 
 			Core.Status.Attach(collection =>
 			{
+                Core.Status.AttachChild(Counters, this);
 				if (QueueServerListeners?.Any() != true) return;
 				foreach (var listener in QueueServerListeners)
 					Core.Status.AttachChild(listener, this);
@@ -255,65 +260,98 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
 		{
-			if (_serverQueues?.AdditionalSendQueues?.Any() == true)
-				e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
-			e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
+            Counters.IncrementMessages();
+            try
+            {
+                Counters.IncrementReceivingTime(e.Request.Header.TotalTime);
+                if (_serverQueues?.AdditionalSendQueues?.Any() == true)
+                    e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
+                e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
+                Counters.IncrementProcessingThreads();
+                Core.Log.InfoMedium("Request message received with correlationId = {0} . Current messages in process = {1}", e.Request.CorrelationId, Counters.CurrentProcessingThreads);
+                if (RequestReceived != null)
+                    await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
+                if (MQueueServerEvents.RequestReceived != null)
+                    await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-            if (RequestReceived != null)
-		        await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
-			if (MQueueServerEvents.RequestReceived != null)
-				await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
+                {
+                    e.Response.Header.Response.ApplicationSentDate = Core.Now;
 
-			if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
-			{
-				e.Response.Header.Response.ApplicationSentDate = Core.Now;
+                    ResponseSentEventArgs rsea = null;
+                    if (BeforeSendResponse != null || MQueueServerEvents.BeforeSendResponse != null ||
+                        ResponseSent != null || MQueueServerEvents.ResponseSent != null)
+                    {
+                        rsea = new ResponseSentEventArgs(Name, e.Response);
+                        if (BeforeSendResponse != null)
+                            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                        if (MQueueServerEvents.BeforeSendResponse != null)
+                            await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                    }
 
-				ResponseSentEventArgs rsea = null;
-				if (BeforeSendResponse != null || MQueueServerEvents.BeforeSendResponse != null ||
-				    ResponseSent != null || MQueueServerEvents.ResponseSent != null)
-			    {
-					rsea = new ResponseSentEventArgs(Name, e.Response);
-			        if (BeforeSendResponse != null)
-			            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-			        if (MQueueServerEvents.BeforeSendResponse != null)
-			            await MQueueServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-			    }
-
-			    var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
-				if (sentBytes > -1)
-				{
-				    if (rsea != null)
-				    {
-				        rsea.MessageLength = sentBytes;
-				        if (ResponseSent != null)
-				            await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-				        if (MQueueServerEvents.ResponseSent != null)
-				            await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-				    }
-				}
-				else
-					Core.Log.Warning("The message couldn't be sent.");
-			}
+                    var sentBytes = await OnSendAsync(e.Response, e).ConfigureAwait(false);
+                    if (sentBytes > -1)
+                    {
+                        if (rsea != null)
+                        {
+                            rsea.MessageLength = sentBytes;
+                            if (ResponseSent != null)
+                                await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                            if (MQueueServerEvents.ResponseSent != null)
+                                await MQueueServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                        Core.Log.Warning("The message couldn't be sent.");
+                }
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                Counters.IncrementTotalMessagesProccesed();
+            }
+            catch (Exception)
+            {
+                Counters.IncrementTotalExceptions();
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                throw;
+            }
 		}
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
 		{
-		    if (ResponseReceived != null)
-		        await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			if (MQueueServerEvents.ResponseReceived != null)
-				await MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-		}
-		#endregion
+            Counters.IncrementMessages();
+            try
+            {
+                Counters.IncrementReceivingTime(e.Message.Header.Response.TotalTime);
+                Counters.IncrementProcessingThreads();
+                Core.Log.InfoMedium("Response message received with correlationId = {0} . Current messages in process = {1}", e.Message.CorrelationId, Counters.CurrentProcessingThreads);
+                if (ResponseReceived != null)
+                    await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                if (MQueueServerEvents.ResponseReceived != null)
+                    await MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                Counters.IncrementTotalMessagesProccesed();
+            }
+            catch (Exception)
+            {
+                Counters.IncrementTotalExceptions();
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                throw;
+            }
+        }
+        #endregion
 
-		#region Abstract Methods
-		/// <summary>
-		/// On Create all server listeners
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		/// <returns>IMQueueServerListener</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region Abstract Methods
+        /// <summary>
+        /// On Create all server listeners
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        /// <returns>IMQueueServerListener</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		protected abstract IMQueueServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false);
 		/// <summary>
 		/// On client initialization

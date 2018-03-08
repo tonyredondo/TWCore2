@@ -166,10 +166,6 @@ namespace TWCore.Messaging.RawServer
 		/// </summary>
 		public long TotalExceptions { get; private set; }
 		/// <summary>
-		/// Total network time
-		/// </summary>
-		public double TotalNetworkTime { get; private set; }
-		/// <summary>
 		/// Total receiving time
 		/// </summary>
 		public double TotalReceivingBytes { get; private set; }
@@ -271,22 +267,12 @@ namespace TWCore.Messaging.RawServer
 					new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
 					new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
 					new StatusItemValueItem("Exceptions", TotalExceptions, true),
-					new StatusItemValueItem("Network Time (ms)", TotalNetworkTime, true),
 					new StatusItemValueItem("Receiving Bytes (MB)", TotalReceivingBytes.ToMegabytes(), true));
 			});
 		}
 		#endregion
 
 		#region Public Methods
-		/// <summary>
-		/// Increments the total network time
-		/// </summary>
-		/// <param name="increment">Increment value</param>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalNetworkTime(TimeSpan increment)
-		{
-			TotalNetworkTime += increment.TotalMilliseconds;
-		}
 		/// <summary>
 		/// Increments the total receiving time
 		/// </summary>

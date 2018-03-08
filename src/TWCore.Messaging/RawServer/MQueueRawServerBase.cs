@@ -20,7 +20,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
@@ -72,11 +71,16 @@ namespace TWCore.Messaging.RawServer
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueRawServerListener> QueueServerListeners { get; } = new List<IMQueueRawServerListener>();
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets if the server is configured as response server
-		/// </summary>
-		[StatusProperty]
+        /// <inheritdoc />
+        /// <summary>
+        /// Message queue listener server counters
+        /// </summary>
+        public MQRawServerCounters Counters { get; }
+        /// <inheritdoc />
+        /// <summary>
+        /// Gets if the server is configured as response server
+        /// </summary>
+        [StatusProperty]
 		public bool ResponseServer { get; set; } = false;
         #endregion
 
@@ -107,6 +111,17 @@ namespace TWCore.Messaging.RawServer
         public AsyncEvent<RawResponseSentEventArgs> BeforeSendResponse { get; set; }
         #endregion
 
+        #region .ctor
+        public MQueueRawServerBase()
+        {
+            Counters = new MQRawServerCounters();
+        }
+        ~MQueueRawServerBase()
+        {
+            Dispose();
+        }
+        #endregion
+
         #region Public Methods
         /// <inheritdoc />
         /// <summary>
@@ -127,7 +142,8 @@ namespace TWCore.Messaging.RawServer
 
 			Core.Status.Attach(collection =>
 			{
-				if (QueueServerListeners?.Any() != true) return;
+                Core.Status.AttachChild(Counters, this);
+                if (QueueServerListeners?.Any() != true) return;
 				foreach (var listener in QueueServerListeners)
 					Core.Status.AttachChild(listener, this);
 			});
@@ -247,55 +263,88 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
 		{
-			if (_serverQueues?.AdditionalSendQueues?.Any() == true)
-				e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
+            Counters.IncrementMessages();
+            try
+            {
+                if (_serverQueues?.AdditionalSendQueues?.Any() == true)
+                    e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
+                Counters.IncrementTotalReceivingBytes(e.MessageLength);
+                Counters.IncrementProcessingThreads();
+                Core.Log.InfoMedium("Request message received with correlationId = {0} . Current messages in process = {1}", e.CorrelationId, Counters.CurrentProcessingThreads);
+                if (RequestReceived != null)
+                    await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                if (MQueueRawServerEvents.RequestReceived != null)
+                    await MQueueRawServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-            if (RequestReceived != null)
-			    await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			if (MQueueRawServerEvents.RequestReceived != null)
-				await MQueueRawServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                if (e.SendResponse && e.Response != null)
+                {
+                    var response = e.Response;
 
-			if (e.SendResponse && e.Response != null)
-			{
-				var response = e.Response;
-
-				RawResponseSentEventArgs rsea = null;
-			    if (BeforeSendResponse != null || MQueueRawServerEvents.BeforeSendResponse != null ||
-			        ResponseSent != null || MQueueRawServerEvents.ResponseSent != null)
-			    {
-			        rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
-			        if (BeforeSendResponse != null)
-			            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-			        if (MQueueRawServerEvents.BeforeSendResponse != null)
-			            await MQueueRawServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
-			    }
+                    RawResponseSentEventArgs rsea = null;
+                    if (BeforeSendResponse != null || MQueueRawServerEvents.BeforeSendResponse != null ||
+                        ResponseSent != null || MQueueRawServerEvents.ResponseSent != null)
+                    {
+                        rsea = new RawResponseSentEventArgs(Name, response, e.CorrelationId);
+                        if (BeforeSendResponse != null)
+                            await BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                        if (MQueueRawServerEvents.BeforeSendResponse != null)
+                            await MQueueRawServerEvents.BeforeSendResponse.InvokeAsync(this, rsea).ConfigureAwait(false);
+                    }
 
 
-			    response = rsea != null ? rsea.Message : e.Response;
-				var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
-				if (sentBytes > -1)
-				{
-				    if (rsea != null)
-				    {
-				        rsea.MessageLength = sentBytes;
-				        if (ResponseSent != null)
-				            await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-				        if (MQueueRawServerEvents.ResponseSent != null)
-				            await MQueueRawServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
-				    }
-				}
-				else
-					Core.Log.Warning("The message couldn't be sent.");
-			}
-		}
+                    response = rsea != null ? rsea.Message : e.Response;
+                    var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
+                    if (sentBytes > -1)
+                    {
+                        if (rsea != null)
+                        {
+                            rsea.MessageLength = sentBytes;
+                            if (ResponseSent != null)
+                                await ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                            if (MQueueRawServerEvents.ResponseSent != null)
+                                await MQueueRawServerEvents.ResponseSent.InvokeAsync(this, rsea).ConfigureAwait(false);
+                        }
+                    }
+                    else
+                        Core.Log.Warning("The message couldn't be sent.");
+                }
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                Counters.IncrementTotalMessagesProccesed();
+            }
+            catch (Exception)
+            {
+                Counters.IncrementTotalExceptions();
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                throw;
+            }
+        }
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
 		{
-            if (ResponseReceived != null)
-			    await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-			if (MQueueRawServerEvents.ResponseReceived != null)
-				await MQueueRawServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-		}
+            Counters.IncrementMessages();
+            try
+            {
+                Counters.IncrementTotalReceivingBytes(e.MessageLength);
+                Counters.IncrementProcessingThreads();
+                Core.Log.InfoMedium("Response message received with correlationId = {0} . Current messages in process = {1}", e.CorrelationId, Counters.CurrentProcessingThreads);
+                if (ResponseReceived != null)
+                    await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                if (MQueueRawServerEvents.ResponseReceived != null)
+                    await MQueueRawServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                Counters.IncrementTotalMessagesProccesed();
+            }
+            catch (Exception)
+            {
+                Counters.IncrementTotalExceptions();
+                Counters.DecrementProcessingThreads();
+                Counters.DecrementMessages();
+                throw;
+            }
+        }
 		#endregion
 
 		#region Abstract Methods

@@ -31,61 +31,73 @@ namespace TWCore.Messaging.Server
 	public class MQServerCounters
 	{
 		private Timer _timerThirtyMinutes;
+        private long _currentMessages;
+        private long _peakCurrentMessages;
+        private long _lastThirtyMinutesMessages;
+        private long _peakLastThirtyMinutesMessages;
+        private long _currentProcessingThreads;
+        private long _peakCurrentProcessingThreads;
+        private long _lastThirtyMinutesProcessingThreads;
+        private long _peakLastThirtyMinutesProcessingThreads;
+        private long _totalMessagesReceived;
+        private long _totalMessagesProccesed;
+        private long _totalExceptions;
+        private long _totalReceivingTime;
 
-		#region Messages On Process
-		/// <summary>
-		/// Number of Messages on process
-		/// </summary>
-		public long CurrentMessages { get; private set; }
-		/// <summary>
-		/// Peak value of number of messages on process
-		/// </summary>
-		public long PeakCurrentMessages { get; private set; }
+        #region Messages On Process
+        /// <summary>
+        /// Number of Messages on process
+        /// </summary>
+        public long CurrentMessages => _currentMessages;
+        /// <summary>
+        /// Peak value of number of messages on process
+        /// </summary>
+        public long PeakCurrentMessages => _peakCurrentMessages;
 		/// <summary>
 		/// Date and time of the peak value of number of message on process
 		/// </summary>
 		public DateTime PeakCurrentMessagesLastDate { get; private set; }
 
-		/// <summary>
-		/// Number of messages processed on the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesMessages { get; private set; }
-		/// <summary>
-		/// Peak value of number of message processed on the last thirty minutes
-		/// </summary>
-		public long PeakLastThirtyMinutesMessages { get; private set; }
-		/// <summary>
-		/// Date and time of the peak value of number of message processed on the last thirty minutes
-		/// </summary>
-		public DateTime PeakLastThirtyMinutesMessagesLastDate { get; private set; }
-		#endregion
+        /// <summary>
+        /// Number of messages processed on the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesMessages => _lastThirtyMinutesMessages;
+        /// <summary>
+        /// Peak value of number of message processed on the last thirty minutes
+        /// </summary>
+        public long PeakLastThirtyMinutesMessages => _peakLastThirtyMinutesMessages;
+        /// <summary>
+        /// Date and time of the peak value of number of message processed on the last thirty minutes
+        /// </summary>
+        public DateTime PeakLastThirtyMinutesMessagesLastDate { get; private set; }
+        #endregion
 
-		#region Processing Threads
-		/// <summary>
-		/// Number of current active processing threads
-		/// </summary>
-		public long CurrentProcessingThreads { get; private set; }
-		/// <summary>
-		/// Peak value of number of active processing threads
-		/// </summary>
-		public long PeakCurrentProcessingThreads { get; private set; }
-		/// <summary>
-		/// Date and time of the peak value of number of active processing threads
-		/// </summary>
-		public DateTime PeakCurrentProcessingThreadsLastDate { get; private set; }
+        #region Processing Threads
+        /// <summary>
+        /// Number of current active processing threads
+        /// </summary>
+        public long CurrentProcessingThreads => _currentProcessingThreads;
+        /// <summary>
+        /// Peak value of number of active processing threads
+        /// </summary>
+        public long PeakCurrentProcessingThreads => _peakCurrentProcessingThreads;
+        /// <summary>
+        /// Date and time of the peak value of number of active processing threads
+        /// </summary>
+        public DateTime PeakCurrentProcessingThreadsLastDate { get; private set; }
 
-		/// <summary>
-		/// Number of active processing threads on the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesProcessingThreads { get; private set; }
-		/// <summary>
-		/// Peak value of the number of active processing threads on the last thirty minutes
-		/// </summary>
-		public long PeakLastThirtyMinutesProcessingThreads { get; private set; }
-		/// <summary>
-		/// Date and time of the peak value of number of active processing threads on the last thirty minutes
-		/// </summary>
-		public DateTime PeakLastThirtyMinutesProcessingThreadsLastDate { get; private set; }
+        /// <summary>
+        /// Number of active processing threads on the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesProcessingThreads => _lastThirtyMinutesProcessingThreads;
+        /// <summary>
+        /// Peak value of the number of active processing threads on the last thirty minutes
+        /// </summary>
+        public long PeakLastThirtyMinutesProcessingThreads => _peakLastThirtyMinutesProcessingThreads
+        /// <summary>
+        /// Date and time of the peak value of number of active processing threads on the last thirty minutes
+        /// </summary>
+        public DateTime PeakLastThirtyMinutesProcessingThreadsLastDate { get; private set; }
 		#endregion
 
 		#region Properties
@@ -98,29 +110,29 @@ namespace TWCore.Messaging.Server
 		/// </summary>
 		public DateTime LastProcessingDateTime { get; private set; }
 
-		/// <summary>
-		/// Number of received messages
-		/// </summary>
-		public long TotalMessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of processed messages
-		/// </summary>
-		public long TotalMessagesProccesed { get; private set; }
-		/// <summary>
-		/// Number of exceptions
-		/// </summary>
-		public long TotalExceptions { get; private set; }
-		/// <summary>
-		/// Total receiving time
-		/// </summary>
-		public double TotalReceivingTime { get; private set; }
-		#endregion
+        /// <summary>
+        /// Number of received messages
+        /// </summary>
+        public long TotalMessagesReceived => _totalMessagesReceived;
+        /// <summary>
+        /// Number of processed messages
+        /// </summary>
+        public long TotalMessagesProccesed => _totalMessagesProccesed;
+        /// <summary>
+        /// Number of exceptions
+        /// </summary>
+        public long TotalExceptions => _totalExceptions;
+        /// <summary>
+        /// Total receiving time
+        /// </summary>
+        public long TotalReceivingTime => _totalReceivingTime;
+        #endregion
 
-		#region .ctor
-		/// <summary>
-		/// Message queue server counters
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region .ctor
+        /// <summary>
+        /// Message queue server counters
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQServerCounters()
 		{
 			_timerThirtyMinutes = new Timer(state =>
@@ -182,84 +194,75 @@ namespace TWCore.Messaging.Server
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementReceivingTime(TimeSpan increment)
-		{
-			TotalReceivingTime += increment.TotalMilliseconds;
-		}
-
-		/// <summary>
-		/// Increments the total exceptions number
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalExceptions()
-		{
-			TotalExceptions++;
-		}
-		/// <summary>
-		/// Increments the total exceptions number
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public long IncrementReceivingTime(TimeSpan increment)
+		    => Interlocked.Add(ref _totalReceivingTime, (long)increment.TotalMilliseconds);
+        /// <summary>
+        /// Increments the total exceptions number
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public long IncrementTotalExceptions()
+		    => Interlocked.Increment(ref _totalExceptions);
+        /// <summary>
+        /// Increments the total exceptions number
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalMessagesProccesed()
-		{
-			TotalMessagesProccesed++;
-		}
+            => Interlocked.Increment(ref _totalMessagesProccesed);
 		/// <summary>
 		/// Increments the messages
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementMessages()
+		public long IncrementMessages()
 		{
-			CurrentMessages++;
-			LastThirtyMinutesMessages++;
-			TotalMessagesReceived++;
+            var cMsg = Interlocked.Increment(ref _currentMessages);
+            var ltM = Interlocked.Increment(ref _lastThirtyMinutesMessages);
+            Interlocked.Increment(ref _totalMessagesReceived);
 			LastMessageDateTime = Core.Now;
-			if (CurrentMessages >= PeakCurrentMessages)
+			if (cMsg >= Interlocked.Read(ref _peakCurrentMessages))
 			{
-				PeakCurrentMessages = CurrentMessages;
+                Interlocked.Exchange(ref _peakCurrentMessages, cMsg);
 				PeakCurrentMessagesLastDate = LastMessageDateTime;
 			}
-			if (LastThirtyMinutesMessages >= PeakLastThirtyMinutesMessages)
+			if (ltM >= Interlocked.Read(ref _peakLastThirtyMinutesMessages))
 			{
-				PeakLastThirtyMinutesMessages = LastThirtyMinutesMessages;
+                Interlocked.Exchange(ref _peakLastThirtyMinutesMessages, ltM);
 				PeakLastThirtyMinutesMessagesLastDate = LastMessageDateTime;
 			}
-		}
-		/// <summary>
-		/// Decrement the current messages
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DecrementMessages()
-		{
-			CurrentMessages--;
-		}
+            return cMsg;
+        }
+        /// <summary>
+        /// Decrement the current messages
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public long DecrementMessages()
+            => Interlocked.Decrement(ref _currentMessages);
 		/// <summary>
 		/// Increment the processing threads
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementProcessingThreads()
+		public long IncrementProcessingThreads()
 		{
-			CurrentProcessingThreads++;
-			LastThirtyMinutesProcessingThreads++;
+            var cpt = Interlocked.Increment(ref _currentProcessingThreads);
+            var ltmpt = Interlocked.Increment(ref _lastThirtyMinutesProcessingThreads);
 			LastProcessingDateTime = Core.Now;
-			if (CurrentProcessingThreads >= PeakCurrentProcessingThreads)
+			if (cpt >= Interlocked.Read(ref _peakCurrentProcessingThreads))
 			{
-				PeakCurrentProcessingThreads = CurrentProcessingThreads;
+                Interlocked.Exchange(ref _peakCurrentProcessingThreads, cpt);
 				PeakCurrentProcessingThreadsLastDate = LastProcessingDateTime;
 			}
-			if (LastThirtyMinutesProcessingThreads >= PeakLastThirtyMinutesProcessingThreads)
+			if (ltmpt >= Interlocked.Read(ref _peakLastThirtyMinutesProcessingThreads))
 			{
-				PeakLastThirtyMinutesProcessingThreads = LastThirtyMinutesProcessingThreads;
+                Interlocked.Exchange(ref _peakLastThirtyMinutesProcessingThreads, ltmpt);
 				PeakLastThirtyMinutesProcessingThreadsLastDate = LastMessageDateTime;
 			}
+            return cpt;
 		}
-		/// <summary>
-		/// Decrement the current processing threads
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void DecrementProcessingThreads()
-		{
-			CurrentProcessingThreads--;
-		}
+        /// <summary>
+        /// Decrement the current processing threads
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void DecrementProcessingThreads()
+            => Interlocked.Decrement(ref _currentProcessingThreads);
 		#endregion
 	}
 }

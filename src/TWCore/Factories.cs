@@ -181,9 +181,8 @@ namespace TWCore
         #endregion
 
         #region Default delegates implementation
+        private static readonly (string AssemblyName, string TypeName) DefaultMValue;
         private static readonly NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
-        private static readonly NonBlocking.ConcurrentDictionary<MethodBase, object[]> MethodAttributes = new NonBlocking.ConcurrentDictionary<MethodBase, object[]>();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, object[]> TypeAttributes = new NonBlocking.ConcurrentDictionary<Type, object[]>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ILogItem BaseCreateLogItem(LogLevel level, string code, string message, string groupName, Exception ex, string assemblyName, string typeName)
@@ -196,128 +195,124 @@ namespace TWCore
                 {
                     var method = frame.GetMethod();
                     if (method == null) continue;
-                    if (MethodValues.TryGetValue(method, out var mValues))
+                    var value = MethodValues.GetOrAdd(method, cMethod =>
                     {
-                        assemblyName = mValues.AssemblyName;
-                        typeName = mValues.TypeName;
-                        break;
-                    }
-
-                    #region Name Attr
-                    var attrs = MethodAttributes.GetOrAdd(method, i => i.GetCustomAttributes(false)); // method.GetCustomAttributes(false);
-                    StackFrameLogAttribute nameAttr = null;
-                    int attrsCases = 0;
-                    for (var i = 0; i < attrs.Length; i++)
-                    {
-                        if (attrs[i] is IgnoreStackFrameLogAttribute)
+                        #region Name Attr
+                        var attrs = method.GetCustomAttributes(false);
+                        StackFrameLogAttribute nameAttr = null;
+                        int attrsCases = 0;
+                        for (var i = 0; i < attrs.Length; i++)
                         {
-                            attrsCases = 1;
-                            break;
-                        }
-                        if (attrs[i] is StackFrameLogAttribute nA)
-                        {
-                            nameAttr = nA;
-                            attrsCases = 2;
-                            break;
-                        }
-                    }
-                    if (attrsCases == 1) continue;
-                    if (attrsCases == 2)
-                    {
-                        assemblyName = method.DeclaringType.Assembly.FullName;
-                        typeName = nameAttr.ClassName;
-                        MethodValues.TryAdd(method, (assemblyName, typeName));
-                        break;
-                    }
-                    #endregion
-
-                    var declarationType = method.DeclaringType;
-                    if (declarationType == null) continue;
-
-                    #region Name Type Attr
-                    var typeAttrs = TypeAttributes.GetOrAdd(declarationType, i => i.GetCustomAttributes(false)); //declarationType.GetCustomAttributes(false);
-                    StackFrameLogAttribute nameTypeAttr = null;
-                    var typeAttrsCases = 0;
-                    for (var i = 0; i < typeAttrs.Length; i++)
-                    {
-                        if (typeAttrs[i] is IgnoreStackFrameLogAttribute)
-                        {
-                            typeAttrsCases = 1;
-                            break;
-                        }
-                        if (typeAttrs[i] is StackFrameLogAttribute nA)
-                        {
-                            nameTypeAttr = nA;
-                            typeAttrsCases = 2;
-                            break;
-                        }
-                    }
-                    if (typeAttrsCases == 1) continue;
-                    if (typeAttrsCases == 2)
-                    {
-                        assemblyName = declarationType.Assembly.FullName;
-                        typeName = nameTypeAttr.ClassName;
-                        MethodValues.TryAdd(method, (assemblyName, typeName));
-                        break;
-                    }
-                    #endregion
-
-                    if (method.Name.Contains("MoveNext"))
-                    {
-                        var actualType = declarationType.DeclaringType;
-
-                        if (actualType.Assembly == typeof(Core).Assembly) continue;
-
-                        #region Actual type attrs
-                        var actualTypeAttrs = TypeAttributes.GetOrAdd(actualType, i => i.GetCustomAttributes(false)); //actualType.GetCustomAttributes(false);
-                        StackFrameLogAttribute actualTypeNameTypeAttr = null;
-                        int actualTypeCases = 0;
-                        for (var i = 0; i < actualTypeAttrs.Length; i++)
-                        {
-                            if (actualTypeAttrs[i] is IgnoreStackFrameLogAttribute)
+                            if (attrs[i] is IgnoreStackFrameLogAttribute)
                             {
-                                actualTypeCases = 1;
+                                attrsCases = 1;
                                 break;
                             }
-                            if (actualTypeAttrs[i] is StackFrameLogAttribute nA)
+                            if (attrs[i] is StackFrameLogAttribute nA)
                             {
-                                actualTypeNameTypeAttr = nA;
-                                actualTypeCases = 2;
+                                nameAttr = nA;
+                                attrsCases = 2;
                                 break;
                             }
                         }
-                        if (actualTypeCases == 1) continue;
-                        if (actualTypeCases == 2)
+                        if (attrsCases == 1) return DefaultMValue;
+                        if (attrsCases == 2)
                         {
-                            assemblyName = actualType.Assembly.FullName;
-                            typeName = actualTypeNameTypeAttr.ClassName;
-                            MethodValues.TryAdd(method, (assemblyName, typeName));
-                            break;
+                            assemblyName = method.DeclaringType.Assembly.FullName;
+                            typeName = nameAttr.ClassName;
+                            return (assemblyName, typeName);
                         }
                         #endregion
 
-                        assemblyName = actualType.Assembly.FullName;
-                        typeName = actualType.Name;
-                        if (actualType.ReflectedType != null && typeName.Contains("<"))
-                            typeName = actualType.ReflectedType.Name;
-                        MethodValues.TryAdd(method, (assemblyName, typeName));
-                        break;
-                    }
+                        var declarationType = method.DeclaringType;
+                        if (declarationType == null) return DefaultMValue;
 
-                    if (!method.Name.Contains("<") &&
-                        !declarationType.Name.Contains("<") &&
-                        !declarationType.AssemblyQualifiedName.Contains("System.Private") &&
-                        !declarationType.AssemblyQualifiedName.Contains("mscorlib"))
-                    {
-                        if (declarationType.Name.Contains("ConcurrentDictionary"))
-                            continue;
-                        if (declarationType.Name.Contains("CacheCollectionBase`3"))
-                            continue;
-                        assemblyName = declarationType.Assembly.FullName;
-                        typeName = declarationType.Name;
-                        MethodValues.TryAdd(method, (assemblyName, typeName));
-                        break;
-                    }
+                        #region Name Type Attr
+                        var typeAttrs = declarationType.GetCustomAttributes(false);
+                        StackFrameLogAttribute nameTypeAttr = null;
+                        var typeAttrsCases = 0;
+                        for (var i = 0; i < typeAttrs.Length; i++)
+                        {
+                            if (typeAttrs[i] is IgnoreStackFrameLogAttribute)
+                            {
+                                typeAttrsCases = 1;
+                                break;
+                            }
+                            if (typeAttrs[i] is StackFrameLogAttribute nA)
+                            {
+                                nameTypeAttr = nA;
+                                typeAttrsCases = 2;
+                                break;
+                            }
+                        }
+                        if (typeAttrsCases == 1) return DefaultMValue;
+                        if (typeAttrsCases == 2)
+                        {
+                            assemblyName = declarationType.Assembly.FullName;
+                            typeName = nameTypeAttr.ClassName;
+                            return (assemblyName, typeName);
+                        }
+                        #endregion
+
+                        if (method.Name.Contains("MoveNext"))
+                        {
+                            var actualType = declarationType.DeclaringType;
+                            if (actualType.Assembly == typeof(Core).Assembly) return DefaultMValue;
+
+                            #region Actual type attrs
+                            var actualTypeAttrs = actualType.GetCustomAttributes(false);
+                            StackFrameLogAttribute actualTypeNameTypeAttr = null;
+                            int actualTypeCases = 0;
+                            for (var i = 0; i < actualTypeAttrs.Length; i++)
+                            {
+                                if (actualTypeAttrs[i] is IgnoreStackFrameLogAttribute)
+                                {
+                                    actualTypeCases = 1;
+                                    break;
+                                }
+                                if (actualTypeAttrs[i] is StackFrameLogAttribute nA)
+                                {
+                                    actualTypeNameTypeAttr = nA;
+                                    actualTypeCases = 2;
+                                    break;
+                                }
+                            }
+                            if (actualTypeCases == 1) return DefaultMValue;
+                            if (actualTypeCases == 2)
+                            {
+                                assemblyName = actualType.Assembly.FullName;
+                                typeName = actualTypeNameTypeAttr.ClassName;
+                                return (assemblyName, typeName);
+                            }
+                            #endregion
+
+                            assemblyName = actualType.Assembly.FullName;
+                            typeName = actualType.Name;
+                            if (actualType.ReflectedType != null && typeName.Contains("<"))
+                                typeName = actualType.ReflectedType.Name;
+                            return(assemblyName, typeName);
+                        }
+
+                        if (!method.Name.Contains("<") &&
+                            !declarationType.Name.Contains("<") &&
+                            !declarationType.AssemblyQualifiedName.Contains("System.Private") &&
+                            !declarationType.AssemblyQualifiedName.Contains("mscorlib"))
+                        {
+                            if (declarationType.Name.Contains("ConcurrentDictionary"))
+                                return DefaultMValue;
+                            if (declarationType.Name.Contains("CacheCollectionBase`3"))
+                                return DefaultMValue;
+                            assemblyName = declarationType.Assembly.FullName;
+                            typeName = declarationType.Name;
+                            return (assemblyName, typeName);
+                        }
+
+                        return DefaultMValue;
+                    });
+                    if (value.AssemblyName == DefaultMValue.AssemblyName && value.TypeName == DefaultMValue.TypeName) continue;
+                    assemblyName = value.AssemblyName;
+                    typeName = value.TypeName;
+                    break;
                 }
             }
             if (!Core.DebugMode && assemblyName == typeof(Core).Assembly.FullName && level > LogLevel.Stats)

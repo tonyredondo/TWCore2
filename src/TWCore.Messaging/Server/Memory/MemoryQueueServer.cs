@@ -133,18 +133,19 @@ namespace TWCore.Messaging
 					var rcvTask = _receiver.DequeueAsync(_token);
 					var rTask = await Task.WhenAny(rcvTask, tokenTask).ConfigureAwait(false);
 					if (rTask == tokenTask) break;
-					#pragma warning disable 4014
-					Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result));
+                    #pragma warning disable 4014
+                    EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result);
 					#pragma warning restore 4014
 				}
-				WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
-			}
+                Core.Log.InfoDetail("Listener stopped, waiting to finalize al processing messages.");
+				await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
+            }
 
-			/// <inheritdoc />
-			/// <summary>
-			/// On Dispose
-			/// </summary>
-			[MethodImpl(MethodImplOptions.AggressiveInlining)]
+            /// <inheritdoc />
+            /// <summary>
+            /// On Dispose
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
 			protected override void OnDispose()
 			{
 			}

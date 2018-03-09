@@ -112,7 +112,7 @@ namespace TWCore.Tests
 
                 using (var mqClient = mqConfig.GetClient())
                 {
-                    var totalQ = 500000;
+                    var totalQ = 50000;
 
                     #region Sync Mode
                     Core.Log.Warning("Sync Mode Test, using Unique Response Queue");
@@ -135,11 +135,6 @@ namespace TWCore.Tests
                         await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
                         ).ConfigureAwait(false);
-
-                        //Parallel.For(0, totalQ, i =>
-                        //{
-                        //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
-                        //});
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
                     }

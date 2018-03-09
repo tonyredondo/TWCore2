@@ -66,7 +66,7 @@ namespace TWCore.Messaging.NATS
                     CorrelationId = correlationId,
                     Body = body
                 };
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
+                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
             }
             catch (Exception ex)
             {
@@ -111,7 +111,7 @@ namespace TWCore.Messaging.NATS
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
-            WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+            await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
             await _monitorTask.ConfigureAwait(false);
         }
         /// <inheritdoc />

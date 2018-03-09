@@ -72,7 +72,7 @@ namespace TWCore.Messaging.NSQ
                     };
 
                     #pragma warning disable 4014
-                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg));
+                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
                     #pragma warning restore 4014
 
                     Try.Do(message.Finish, false);
@@ -125,7 +125,7 @@ namespace TWCore.Messaging.NSQ
             _monitorTask = Task.Run(MonitorProcess, _token);
 			await token.WhenCanceledAsync().ConfigureAwait(false);
 			OnDispose();
-		    WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+		    await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
 		    await _monitorTask.ConfigureAwait(false);
 		}
 		/// <inheritdoc />

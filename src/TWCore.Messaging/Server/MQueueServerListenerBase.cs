@@ -32,8 +32,8 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
-        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
-        protected int ActiveWorkers;
+        protected readonly AsyncManualResetEvent WorkerEvent = new AsyncManualResetEvent(true);
+        protected long ActiveWorkers = 0;
 
         #region Properties
         /// <inheritdoc />
@@ -165,8 +165,8 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
-            Interlocked.Increment(ref ActiveWorkers);
-            WorkerEvent.Reset();
+            if (Interlocked.Increment(ref ActiveWorkers) > 0 && WorkerEvent.IsSet)
+                WorkerEvent.Reset();
             Counters.IncrementMessages();
             try
             {
@@ -176,9 +176,12 @@ namespace TWCore.Messaging.Server
             {
                 Core.Log.Write(ex);
             }
-            Counters.DecrementMessages();
-            if (Interlocked.Decrement(ref ActiveWorkers) == 0)
-                WorkerEvent.Set();
+            finally
+            {
+                Counters.DecrementMessages();
+                if (Interlocked.Decrement(ref ActiveWorkers) < 1 && !WorkerEvent.IsSet)
+                    WorkerEvent.Set();
+            }
         }
         #endregion
     }

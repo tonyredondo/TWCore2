@@ -15,8 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -99,11 +97,8 @@ namespace TWCore.Messaging.RabbitMQ
                     Properties = ea.BasicProperties,
                     Body = ea.Body
                 };
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, message));
                 _receiver.Channel.BasicAck(ea.DeliveryTag, false);
-
-                #pragma warning disable 4014
-                EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
-                #pragma warning restore 4014
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);

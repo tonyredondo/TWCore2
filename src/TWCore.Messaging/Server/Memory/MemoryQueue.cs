@@ -33,12 +33,12 @@ namespace TWCore.Messaging
         private static readonly NonBlocking.ConcurrentDictionary<CancellationToken, Task> CancellationTasks = new NonBlocking.ConcurrentDictionary<CancellationToken, Task>();
         private readonly ConcurrentQueue<Guid> _messageQueue = new ConcurrentQueue<Guid>();
         private readonly NonBlocking.ConcurrentDictionary<Guid, Message> _messageStorage = new NonBlocking.ConcurrentDictionary<Guid, Message>();
-        private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>();
+        private TaskCompletionSource<bool> _queueTask = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         
         public class Message
         {
             public object Value;
-            public readonly TaskCompletionSource<bool> TaskSource = new TaskCompletionSource<bool>();
+            public readonly TaskCompletionSource<bool> TaskSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         }
 
         #region Queue Methods

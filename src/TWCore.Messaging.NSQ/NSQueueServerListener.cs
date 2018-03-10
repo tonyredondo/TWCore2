@@ -15,8 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,11 +68,8 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
+                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg));
                     Try.Do(message.Finish, false);
-
-                    #pragma warning disable 4014
-                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
-                    #pragma warning restore 4014
                 }
                 catch (Exception ex)
                 {

@@ -15,8 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -67,7 +65,7 @@ namespace TWCore.Messaging.NATS
                     Body = body,
                     Name = name
                 };
-                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
+                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
             }
             catch (Exception ex)
             {

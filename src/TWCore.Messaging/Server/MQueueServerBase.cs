@@ -229,7 +229,7 @@ namespace TWCore.Messaging.Server
 			if (_tokenSource == null) return;
 			Core.Log.InfoBasic("Stopping queue server listeners for {0}", Name);
 			_tokenSource.Cancel();
-			Task.WaitAll(_listenerTasks.ToArray(), TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
+			Task.WaitAll(_listenerTasks.ToArray());
 			_listenerTasks.Clear();
 			QueueServerListeners.Each(l => l.Dispose());
 			QueueServerListeners.Clear();

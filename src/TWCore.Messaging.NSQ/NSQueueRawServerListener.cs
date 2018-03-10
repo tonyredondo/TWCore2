@@ -72,10 +72,11 @@ namespace TWCore.Messaging.NSQ
                         Body = body,
                         Name = name
                     };
-                    #pragma warning disable 4014
-                    Task.Run(() => _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg));
-                    #pragma warning restore 4014
                     Try.Do(message.Finish, false);
+
+                    #pragma warning disable 4014
+                    _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
+                    #pragma warning restore 4014
                 }
                 catch (Exception ex)
                 {

@@ -70,12 +70,11 @@ namespace TWCore.Messaging.NSQ
                         CorrelationId = correlationId,
                         Body = body
                     };
+                    Try.Do(message.Finish, false);
 
                     #pragma warning disable 4014
                     _listener.EnqueueMessageToProcessAsync(_listener.ProcessingTaskAsync, rMsg);
                     #pragma warning restore 4014
-
-                    Try.Do(message.Finish, false);
                 }
                 catch (Exception ex)
                 {

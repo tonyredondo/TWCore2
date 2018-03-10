@@ -99,10 +99,11 @@ namespace TWCore.Messaging.RabbitMQ
                     Properties = ea.BasicProperties,
                     Body = ea.Body
                 };
+                _receiver.Channel.BasicAck(ea.DeliveryTag, false);
+
                 #pragma warning disable 4014
                 EnqueueMessageToProcessAsync(ProcessingTaskAsync, message);
                 #pragma warning restore 4014
-                _receiver.Channel.BasicAck(ea.DeliveryTag, false);
             };
             _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
             _monitorTask = Task.Run(MonitorProcess, _token);

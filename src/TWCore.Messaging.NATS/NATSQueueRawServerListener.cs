@@ -67,7 +67,7 @@ namespace TWCore.Messaging.NATS
                     Body = body,
                     Name = name
                 };
-                Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg));
+                EnqueueMessageToProcessAsync(ProcessingTaskAsync, rMsg);
             }
             catch (Exception ex)
             {

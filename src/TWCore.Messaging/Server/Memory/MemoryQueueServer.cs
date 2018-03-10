@@ -133,7 +133,8 @@ namespace TWCore.Messaging
                     if (_token.IsCancellationRequested) break;
 
                     #pragma warning disable 4014
-                    EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvValue);
+                    //EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvValue);
+                    Task.Run(() => EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvValue));
 					#pragma warning restore 4014
 				}
             }

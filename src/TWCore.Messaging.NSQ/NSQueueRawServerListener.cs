@@ -44,7 +44,7 @@ namespace TWCore.Messaging.NSQ
 
 		#region Nested Type
 
-	    private class NSQMessage
+	    private struct NSQMessage
 		{
 			public Guid CorrelationId;
             public string Name;

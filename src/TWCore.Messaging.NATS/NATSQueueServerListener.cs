@@ -47,7 +47,7 @@ namespace TWCore.Messaging.NATS
         #endregion
 
         #region Nested Type
-        private class NATSQMessage
+        private struct NATSQMessage
         {
             public Guid CorrelationId;
             public SubArray<byte> Body;

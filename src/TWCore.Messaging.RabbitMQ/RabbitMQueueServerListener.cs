@@ -47,7 +47,7 @@ namespace TWCore.Messaging.RabbitMQ
         #endregion
 
         #region Nested Type
-        private class RabbitMessage
+        private struct RabbitMessage
         {
             public Guid CorrelationId;
             public IBasicProperties Properties;
@@ -180,7 +180,7 @@ namespace TWCore.Messaging.RabbitMQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task ProcessingTaskAsync(RabbitMessage message)
         {
-            if (message == null) return;
+            if (message.Body == null) return;
             try
             {
                 Counters.IncrementProcessingThreads();

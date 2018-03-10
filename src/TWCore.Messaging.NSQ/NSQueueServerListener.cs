@@ -45,7 +45,7 @@ namespace TWCore.Messaging.NSQ
 		#endregion
 
 		#region Nested Type
-		private class NSQMessage
+		private struct NSQMessage
 		{
 			public Guid CorrelationId;
 			public SubArray<byte> Body;
@@ -198,7 +198,7 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task ProcessingTaskAsync(NSQMessage message)
 		{
-            if (message == null) return;
+            if (message.Body == null) return;
 			try
 			{
 				Counters.IncrementProcessingThreads();

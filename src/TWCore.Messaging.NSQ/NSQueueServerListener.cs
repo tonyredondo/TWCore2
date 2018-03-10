@@ -125,7 +125,6 @@ namespace TWCore.Messaging.NSQ
             _monitorTask = Task.Run(MonitorProcess, _token);
 			await token.WhenCanceledAsync().ConfigureAwait(false);
 			OnDispose();
-		    await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
 		    await _monitorTask.ConfigureAwait(false);
 		}
 		/// <inheritdoc />

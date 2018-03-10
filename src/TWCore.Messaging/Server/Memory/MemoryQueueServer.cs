@@ -127,18 +127,15 @@ namespace TWCore.Messaging
 			{
 				_token = token;
 				_receiver = MemoryQueueManager.GetQueue(Connection.Route, Connection.Name);
-				var tokenTask = token.WhenCanceledAsync();
 				while (!_token.IsCancellationRequested)
 				{
-					var rcvTask = _receiver.DequeueAsync(_token);
-					var rTask = await Task.WhenAny(rcvTask, tokenTask).ConfigureAwait(false);
-					if (rTask == tokenTask) break;
+					var rcvValue = await _receiver.DequeueAsync(_token).ConfigureAwait(false);
+                    if (_token.IsCancellationRequested) break;
+
                     #pragma warning disable 4014
-                    EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvTask.Result);
+                    EnqueueMessageToProcessAsync(ProcessingTaskAsync, rcvValue);
 					#pragma warning restore 4014
 				}
-                Core.Log.InfoDetail("Listener stopped, waiting to finalize al processing messages.");
-				await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
             }
 
             /// <inheritdoc />

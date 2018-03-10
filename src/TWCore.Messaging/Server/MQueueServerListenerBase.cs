@@ -32,8 +32,7 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
-        protected readonly AsyncManualResetEvent WorkerEvent = new AsyncManualResetEvent(true);
-        protected long ActiveWorkers = 0;
+        private long _activeWorkers = 0;
 
         #region Properties
         /// <inheritdoc />
@@ -111,9 +110,12 @@ namespace TWCore.Messaging.Server
         /// <param name="token">Cancellation token</param>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task TaskStartAsync(CancellationToken token)
+        public async Task TaskStartAsync(CancellationToken token)
         {
-            return OnListenerTaskStartAsync(token);
+            await OnListenerTaskStartAsync(token).ConfigureAwait(false);
+            Core.Log.InfoDetail("Listener stopped, waiting to finalize al processing messages.");
+            await TaskUtil.SleepUntil(() => Interlocked.Read(ref _activeWorkers) < 1,
+                Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec * 1000).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -165,8 +167,7 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
-            if (Interlocked.Increment(ref ActiveWorkers) > 0 && WorkerEvent.IsSet)
-                WorkerEvent.Reset();
+            Interlocked.Increment(ref _activeWorkers);
             Counters.IncrementMessages();
             try
             {
@@ -176,12 +177,8 @@ namespace TWCore.Messaging.Server
             {
                 Core.Log.Write(ex);
             }
-            finally
-            {
-                Counters.DecrementMessages();
-                if (Interlocked.Decrement(ref ActiveWorkers) < 1 && !WorkerEvent.IsSet)
-                    WorkerEvent.Set();
-            }
+            Counters.DecrementMessages();
+            Interlocked.Decrement(ref _activeWorkers);
         }
         #endregion
     }

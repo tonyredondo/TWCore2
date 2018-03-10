@@ -181,7 +181,7 @@ namespace TWCore
         #endregion
 
         #region Default delegates implementation
-        private static readonly (string AssemblyName, string TypeName) DefaultMValue;
+        private static readonly (string AssemblyName, string TypeName) DefaultMValue = (null, null);
         private static readonly NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)> MethodValues = new NonBlocking.ConcurrentDictionary<MethodBase, (string AssemblyName, string TypeName)>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

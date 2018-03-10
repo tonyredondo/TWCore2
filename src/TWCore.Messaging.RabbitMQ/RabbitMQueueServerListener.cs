@@ -112,7 +112,6 @@ namespace TWCore.Messaging.RabbitMQ
                 _receiver.Channel.BasicCancel(_receiverConsumerTag);
             _receiver.Close();
 
-            await WorkerEvent.WaitAsync(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec)).ConfigureAwait(false);
             await _monitorTask.ConfigureAwait(false);
         }
         /// <inheritdoc />

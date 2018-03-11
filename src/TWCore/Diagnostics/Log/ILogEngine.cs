@@ -96,12 +96,41 @@ namespace TWCore.Diagnostics.Log
         /// </summary>
         void WriteEmptyLine();
         
+        
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        void Debug(string message);
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        void Debug(string message, object arg1);
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        void Debug(string message, object arg1, object arg2);
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        void Debug(string message, object arg1, object arg2, object arg3);
         /// <summary>
         /// Write a debug item into the log storages
         /// </summary>
         /// <param name="message">Item message with pattern support</param>
         /// <param name="args">Arguments to bing with the pattern</param>
         void Debug(string message, params object[] args);
+        
+        
         /// <summary>
         /// Write a verbose item into the log storages
         /// </summary>

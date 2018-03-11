@@ -195,6 +195,8 @@ namespace TWCore.Diagnostics.Log
         #endregion
 
         #region Log Methods
+        
+        #region Write Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a log item into the log storages
@@ -266,8 +268,65 @@ namespace TWCore.Diagnostics.Log
         /// <param name="ex">Related exception if is available</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Exception ex) => Write(LogLevel.Error, null, (ex as SerializableException.WrappedException)?.Message ?? ex.Message, null, ex);
+        #endregion
         
         #region Basic Members
+        
+        #region Debug Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Debug(string message)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.Debug))
+                WriteUnsafe(LogLevel.Debug, null, message);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Debug(string message, object arg1)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.Debug))
+                WriteUnsafe(LogLevel.Debug, null, message, arg1);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Debug(string message, object arg1, object arg2)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.Debug))
+                WriteUnsafe(LogLevel.Debug, null, message, arg1, arg2);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a debug item into the log storages
+        /// </summary>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Debug(string message, object arg1, object arg2, object arg3)
+        {
+            if (!Core.DebugMode) return;
+            if (IsLogLevelValid(LogLevel.Debug))
+                WriteUnsafe(LogLevel.Debug, null, message, arg1, arg2, arg3);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Write a debug item into the log storages
@@ -281,6 +340,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Debug))
                 WriteUnsafe(LogLevel.Debug, null, message, args);
         }
+        #endregion
+        
+        #region Verbose Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a verbose item into the log storages
@@ -293,6 +355,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, null, message, args);
         }
+        #endregion
+        
+        #region Error Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a error item into the log storages
@@ -318,6 +383,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, null, message, args);
         }
+        #endregion
+        
+        #region Warning Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a warning item into the log storages
@@ -330,6 +398,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, null, message, args);
         }
+        #endregion
+        
+        #region InfoBasic Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoLevel1 item into the log storages
@@ -342,6 +413,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, null, message, args);
         }
+        #endregion
+        
+        #region InfoMedium Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoMedium item into the log storages
@@ -354,6 +428,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, null, message, args);
         }
+        #endregion
+        
+        #region InfoDetail Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoDetailed item into the log storages
@@ -366,6 +443,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoDetail))
                 WriteUnsafe(LogLevel.InfoDetail, null, message, args);
         }
+        #endregion
+        
+        #region Stats Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a Stats item into the log storages
@@ -380,7 +460,11 @@ namespace TWCore.Diagnostics.Log
         }
         #endregion
         
+        #endregion
+        
         #region Basic Group Members
+        
+        #region DebugGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a debug item into the log storages
@@ -395,6 +479,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Debug))
                 WriteUnsafe(LogLevel.Debug, groupName, message, args);
         }
+        #endregion
+        
+        #region VerboseGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a verbose item into the log storages
@@ -408,6 +495,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Verbose))
                 WriteUnsafe(LogLevel.Verbose, groupName, message, args);
         }
+        #endregion
+        
+        #region ErrorGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a error item into the log storages
@@ -435,6 +525,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Error))
                 WriteUnsafe(LogLevel.Error, groupName, message, args);
         }
+        #endregion
+        
+        #region WarningGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a warning item into the log storages
@@ -448,6 +541,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.Warning))
                 WriteUnsafe(LogLevel.Warning, groupName, message, args);
         }
+        #endregion
+        
+        #region InfoBasicGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoLevel1 item into the log storages
@@ -461,6 +557,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoBasic))
                 WriteUnsafe(LogLevel.InfoBasic, groupName, message, args);
         }
+        #endregion
+        
+        #region InfoMediumGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoMedium item into the log storages
@@ -474,6 +573,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.InfoMedium))
                 WriteUnsafe(LogLevel.InfoMedium, groupName, message, args);
         }
+        #endregion
+        
+        #region InfoDetailGroup Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a InfoDetailed item into the log storages
@@ -489,6 +591,9 @@ namespace TWCore.Diagnostics.Log
         }
         #endregion
         
+        #endregion
+        
+        #region LibDebug Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a LibDebug item into the log storages
@@ -502,6 +607,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.LibDebug))
                 WriteUnsafe(LogLevel.LibDebug, null, message, args);
         }
+        #endregion
+        
+        #region LibVerbose Methods
         /// <inheritdoc />
         /// <summary>
         /// Write a LibVerbose item into the log storages
@@ -515,6 +623,9 @@ namespace TWCore.Diagnostics.Log
             if (IsLogLevelValid(LogLevel.LibVerbose))
                 WriteUnsafe(LogLevel.LibVerbose, null, message, args);
         }
+        #endregion
+        
+        #region WriteEmptyLine Method
         /// <inheritdoc />
         /// <summary>
         /// Write a log empty line
@@ -524,6 +635,8 @@ namespace TWCore.Diagnostics.Log
         {
             Write(new NewLineLogItem());
         }
+        #endregion
+        
         #endregion
 
         #region Pending Items
@@ -556,8 +669,33 @@ namespace TWCore.Diagnostics.Log
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsLogLevelValid(LogLevel logLevel)
+            => Storage.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storage.GetMaxLogLevel());
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafe(LogLevel level, string groupName, string message, Exception ex = null)
         {
-            return Storage.Count <= 0 || (logLevel <= MaxLogLevel && logLevel <= Storage.GetMaxLogLevel());
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            WriteUnsafeInternal(level, groupName, message, ex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafe(LogLevel level, string groupName, string message, object arg1, Exception ex = null)
+        {
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            message = string.Format(message, arg1);
+            WriteUnsafeInternal(level, groupName, message, ex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafe(LogLevel level, string groupName, string message, object arg1, object arg2, Exception ex = null)
+        {
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            message = string.Format(message, arg1, arg2);
+            WriteUnsafeInternal(level, groupName, message, ex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafe(LogLevel level, string groupName, string message, object arg1, object arg2, object arg3, Exception ex = null)
+        {
+            if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
+            message = string.Format(message, arg1, arg2, arg3);
+            WriteUnsafeInternal(level, groupName, message, ex);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void WriteUnsafe(LogLevel level, string groupName, string message, object[] args, Exception ex = null)
@@ -565,6 +703,11 @@ namespace TWCore.Diagnostics.Log
             if (!Enabled || !(_itemsWorker?.Count < MaximumItemsInQueue)) return;
             if (args?.Length > 0)
                 message = string.Format(message, args);
+            WriteUnsafeInternal(level, groupName, message, ex);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WriteUnsafeInternal(LogLevel level, string groupName, string message, Exception ex = null)
+        {
             var item = ItemFactory(level, null, message, groupName, ex, null, null);
             if (item == null) return;
             _itemsWorker?.Enqueue(item);

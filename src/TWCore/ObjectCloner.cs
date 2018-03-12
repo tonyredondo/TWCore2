@@ -306,6 +306,8 @@ namespace TWCore
                         if (field.IsInitOnly) continue;
                         if (field.IsStatic) continue;
                         if (field.IsPrivate) continue;
+                        if (field.IsNotSerialized) continue;
+                        if (field.GetAttribute<NonSerializedAttribute>() != null) continue;
                         var fieldType = field.FieldType;
                         var fieldTypeInfo = fieldType.GetTypeInfo();
                         var fieldIsNullable = fieldTypeInfo.IsGenericType && fieldTypeInfo.GetGenericTypeDefinition() == typeof(Nullable<>);

@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
+using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Global
@@ -129,7 +130,7 @@ namespace TWCore.Messaging
                 sQueue.Enqueue(message.CorrelationId, message);
             }
 
-            return Task.FromResult(true);
+            return TaskUtil.CompleteTrue;
         }
         #endregion
 

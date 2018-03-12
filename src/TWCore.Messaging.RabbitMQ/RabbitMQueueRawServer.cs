@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+using TWCore.Threading;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -125,7 +126,7 @@ namespace TWCore.Messaging.RabbitMQ
 					Core.Log.Write(ex);
 				}
 			}
-			return Task.FromResult(response ? message.Count : -1);
+		    return response ? Task.FromResult(message.Count) : TaskUtil.CompleteValueMinus1;
 		}
 
 		/// <inheritdoc />

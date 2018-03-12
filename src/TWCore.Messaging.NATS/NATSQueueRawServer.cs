@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+using TWCore.Threading;
+
 // ReSharper disable InconsistentNaming
 
 
@@ -117,7 +119,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return Task.FromResult(response ? message.Count : -1);
+            return response ? Task.FromResult(message.Count) : TaskUtil.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

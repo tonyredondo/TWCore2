@@ -33,14 +33,14 @@ namespace TWCore.Messaging
 	/// </summary>
 	public class MemoryQueueServer : MQueueServerBase
 	{
-		/// <inheritdoc />
-		/// <summary>
-		/// On Create all server listeners
-		/// </summary>
-		/// <param name="connection">Queue server listener</param>
-		/// <param name="responseServer">true if the server is going to act as a response server</param>
-		/// <returns>IMQueueServerListener</returns>
-		protected override IMQueueServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
+        /// <inheritdoc />
+        /// <summary>
+        /// On Create all server listeners
+        /// </summary>
+        /// <param name="connection">Queue server listener</param>
+        /// <param name="responseServer">true if the server is going to act as a response server</param>
+        /// <returns>IMQueueServerListener</returns>
+        protected override IMQueueServerListener OnCreateQueueServerListener(MQConnection connection, bool responseServer = false)
 			=> new MemoryQueueServerListener(connection, this, responseServer);
 
 		/// <inheritdoc />
@@ -52,7 +52,7 @@ namespace TWCore.Messaging
 		protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
 		{
 			if (e.ResponseQueues?.Any() != true)
-				return Task.FromResult(-1);
+				return TaskUtil.CompleteValueMinus1;
 			var response = true;
 			foreach (var queue in e.ResponseQueues)
 			{
@@ -68,7 +68,7 @@ namespace TWCore.Messaging
 					Core.Log.Write(ex);
 				}
 			}
-			return Task.FromResult(response ? 1 : -1);
+		    return response ? TaskUtil.CompleteValuePlus1 : TaskUtil.CompleteValueMinus1;
 		}
 
 		/// <inheritdoc />
@@ -87,7 +87,7 @@ namespace TWCore.Messaging
 			private readonly string _name;
 			private MemoryQueue _receiver;
 			private CancellationToken _token;
-			private bool _cloneObject;
+			private readonly bool _cloneObject;
 
 			#region .ctor
 

@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
+
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Messaging.NATS
@@ -64,7 +66,7 @@ namespace TWCore.Messaging.NATS
         protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return Task.FromResult(-1);
+                return TaskUtil.CompleteValueMinus1;
 
             var senderOptions = Config.ResponseOptions.ServerSenderOptions;
             if (senderOptions == null)
@@ -94,7 +96,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return Task.FromResult(response ? data.Count : -1);
+            return response ? Task.FromResult(data.Count) : TaskUtil.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

@@ -39,8 +39,16 @@ namespace TWCore.Threading
         /// Complete String Empty
         /// </summary>
         public static readonly Task<string> CompleteEmpty = Task.FromResult(string.Empty);
-        
-        
+        /// <summary>
+        /// Complete value 1
+        /// </summary>
+        public static readonly Task<int> CompleteValuePlus1 = Task.FromResult(1);
+        /// <summary>
+        /// Complete value -1
+        /// </summary>
+        public static readonly Task<int> CompleteValueMinus1 = Task.FromResult(-1);
+
+
         /// <summary>
         /// Sleeps the thread until a condition is true
         /// </summary>

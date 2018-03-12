@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using RabbitMQ.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
 
 namespace TWCore.Messaging.RabbitMQ
 {
@@ -72,7 +73,7 @@ namespace TWCore.Messaging.RabbitMQ
         protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return Task.FromResult(-1);
+                return TaskUtil.CompleteValueMinus1;
 
             var correlationId = message.CorrelationId.ToString();
             var data = SenderSerializer.Serialize(message);
@@ -107,7 +108,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Core.Log.Write(ex);
                 }
             }
-            return Task.FromResult(response ? data.Count : -1);
+            return response ? Task.FromResult(data.Count) : TaskUtil.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

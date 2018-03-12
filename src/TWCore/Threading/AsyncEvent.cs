@@ -62,8 +62,8 @@ namespace TWCore.Threading
 					}
 				}
 			}
-			foreach (var callback in _callArray)
-				await callback(sender, eventArgs).ConfigureAwait(false);
+            for(var i = 0; i < _callArray.Length; i++)
+				await _callArray[i](sender, eventArgs).ConfigureAwait(false);
         }
         #endregion
 

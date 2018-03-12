@@ -36,6 +36,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
         private readonly object _locker = new object();
         private readonly List<(ILogStorage, LogLevel)> _items = new List<(ILogStorage, LogLevel)>();
+        private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>(1);
         private volatile bool _isDirty;
         private LogLevel _lastMaxLogLevel = LogLevel.Error;
         private List<(ILogStorage, LogLevel)> _cItems;
@@ -182,19 +183,29 @@ namespace TWCore.Diagnostics.Log.Storages
                     _isDirty = false;
                 }
             }
-            var tsk = _cItems.Select(async sto =>
+            var tsks = _procTaskPool.New();
+            for (var i = 0; i < _cItems.Count; i++)
             {
-                try
-                {
-                    if (sto.Item2.HasFlag(item.Level))
-                        await sto.Item1.WriteAsync(item).ConfigureAwait(false);
-                }
-                catch
-                {
-                    // ignored
-                }
+                if (_cItems[i].Item2.HasFlag(item.Level))
+                    tsks.Add(InternalWriteAsync(_cItems[i].Item1, item));
+            }
+            var resTask = Task.WhenAll(tsks).ContinueWith(_ => 
+            {
+                tsks.Clear();
+                _procTaskPool.Store(tsks);
             });
-            return Task.WhenAll(tsk);
+            return resTask;
+        }
+        private static async Task InternalWriteAsync(ILogStorage storage, ILogItem logItem)
+        {
+            try
+            {
+                await storage.WriteAsync(logItem).ConfigureAwait(false);
+            }
+            catch
+            {
+                //
+            }
         }
         /// <inheritdoc />
         /// <summary>

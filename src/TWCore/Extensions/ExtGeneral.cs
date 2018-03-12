@@ -105,7 +105,6 @@ namespace TWCore
         }
         #endregion
 
-
         #region String Dictionary Extensions
         /// <summary>
         /// Convert object properties to a Dictionary
@@ -165,6 +164,7 @@ namespace TWCore
         }
         #endregion
 
+        
         #region Task extensions
         /// <summary>
         /// Waits for task finalization and returns the result value

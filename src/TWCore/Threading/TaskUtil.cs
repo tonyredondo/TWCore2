@@ -114,5 +114,25 @@ namespace TWCore.Threading
             while (!condition())
                 await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
         }
+
+        private static readonly ManualResetEvent DummyEventSlim = new ManualResetEvent(false);
+        /// <summary>
+        /// Create a delay task
+        /// </summary>
+        /// <param name="milliseconds">Milliseconds of delay</param>
+        /// <returns>Task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task Delay(int milliseconds)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(DummyEventSlim,
+                (state, isTimeout) => ((TaskCompletionSource<bool>)state).TrySetResult(true),
+                tcs, 
+                milliseconds, 
+                true);
+            var t = tcs.Task;
+            t.ContinueWith((antecedent) => rwh.Unregister(null));
+            return t;
+        }
     }
 }

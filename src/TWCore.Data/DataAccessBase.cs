@@ -605,8 +605,9 @@ namespace TWCore.Data
                             {
                                 var cIndex = ExtractColumnNames(nameOrQuery, reader);
                                 entityBinder.ColumnIndex = cIndex;
-                                row.RowValues = new object[cIndex.Count];
-                                reader.GetValues(row.RowValues);
+                                var rowValues = new object[cIndex.Count];
+                                reader.GetValues(rowValues);
+                                row.SetRowValues(rowValues);
                             }
                         }
                         returnValue = returnValueParam?.Value;
@@ -614,8 +615,7 @@ namespace TWCore.Data
                         connection.Close();
                         #endregion
 
-                        //Returns the value of T as result of the fillMethod call.
-                        return row.RowValues?.Any() == true ? row.Entity : default(T);
+                        return row.Entity;
                     }
                     catch
                     {
@@ -1633,16 +1633,16 @@ namespace TWCore.Data
                             {
                                 var cIndex = ExtractColumnNames(nameOrQuery, reader);
                                 entityBinder.ColumnIndex = cIndex;
-                                row.RowValues = new object[cIndex.Count];
-                                reader.GetValues(row.RowValues);
+                                var rowValues = new object[cIndex.Count];
+                                reader.GetValues(rowValues);
+                                row.SetRowValues(rowValues);
                             }
                         }
                         ParametersBinder.RetrieveOutputParameters(command, parameters, ParametersPrefix);
                         connection.Close();
                         #endregion
 
-                        //Returns the value of T as result of the fillMethod call.
-                        return row.RowValues?.Any() == true ? row.Entity : default(T);
+                        return row.Entity;
                     }
                     catch
                     {

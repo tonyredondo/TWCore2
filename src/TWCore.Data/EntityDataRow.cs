@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace TWCore.Data
 {
@@ -25,21 +26,13 @@ namespace TWCore.Data
     public class EntityDataRow<T>
     {
         private volatile bool _bound;
+        private object[] _rowValues;
+        private EntityBinder _binder;
+        private FillDataDelegate<T> _fillMethod;
         private T _entity;
 
+
         #region Properties
-        /// <summary>
-        /// Database row values
-        /// </summary>
-        public object[] RowValues;
-        /// <summary>
-        /// Entity binder instance
-        /// </summary>
-        public readonly EntityBinder Binder;
-        /// <summary>
-        /// Fill method function
-        /// </summary>
-        public readonly FillDataDelegate<T> FillMethod;
         /// <summary>
         /// Gets the entity after calling the fillmethod
         /// </summary>
@@ -48,10 +41,20 @@ namespace TWCore.Data
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                if (_bound) return _entity;
-                _entity = FillMethod(Binder, RowValues);
-                _bound = true;
-                return _entity;
+
+                if (_bound || _rowValues == null)
+                    return _entity;
+                lock (this)
+                {
+                    if (_bound) return _entity;
+                    var values = _rowValues;
+                    _entity = _fillMethod(_binder, values);
+                    _rowValues = null;
+                    _fillMethod = null;
+                    _binder = null;
+                    _bound = true;
+                    return _entity;
+                }
             }
         }
         #endregion
@@ -62,9 +65,16 @@ namespace TWCore.Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public EntityDataRow(object[] rowValues, EntityBinder binder, FillDataDelegate<T> fillMethod)
         {
-            RowValues = rowValues;
-            Binder = binder;
-            FillMethod = fillMethod;
+            _entity = default(T);
+            _rowValues = rowValues;
+            _binder = binder;
+            _fillMethod = fillMethod;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal void SetRowValues(object[] rowValues)
+        {
+            _rowValues = rowValues;
         }
     }
 }

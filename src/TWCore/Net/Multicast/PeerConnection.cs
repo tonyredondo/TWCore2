@@ -163,8 +163,7 @@ namespace TWCore.Net.Multicast
         {
             if (!_connected) return;
             _tokenSource?.Cancel();
-            _tokenSource = new CancellationTokenSource();
-            _token = _tokenSource.Token;
+            Task.WaitAll(_clientsReceiveTasks.ToArray());
             foreach (var client in _clients)
             {
                 client.DropMulticastGroup(_multicastIp);
@@ -173,6 +172,8 @@ namespace TWCore.Net.Multicast
             _clients.Clear();
             _sendClients.Clear();
             _clientsReceiveTasks.Clear();
+            _tokenSource = new CancellationTokenSource();
+            _token = _tokenSource.Token;
             _connected = false;
         }
         /// <summary>
@@ -285,6 +286,10 @@ namespace TWCore.Net.Multicast
                     {
                         Core.Log.Write(ex);
                     }
+                }
+                catch (ObjectDisposedException)
+                {
+                    //
                 }
                 catch (Exception ex)
                 {

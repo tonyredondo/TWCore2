@@ -118,7 +118,12 @@ namespace TWCore.Threading
         private static readonly ManualResetEvent DummyEventSlim = new ManualResetEvent(false);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void FinalizeTaskCompletion(object state, bool isTimeout)
-            => ((TaskCompletionSource<object>)state).TrySetResult(null);
+        {
+            if (isTimeout)
+                ((TaskCompletionSource<object>)state).TrySetResult(null);
+            else
+                ((TaskCompletionSource<object>)state).TrySetCanceled();
+        }
         /// <summary>
         /// Create a delay task
         /// </summary>

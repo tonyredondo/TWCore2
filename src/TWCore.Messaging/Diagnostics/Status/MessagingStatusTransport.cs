@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Threading;
-using TWCore.Messaging.Client;
 using TWCore.Services;
 
 // ReSharper disable UnusedMember.Global

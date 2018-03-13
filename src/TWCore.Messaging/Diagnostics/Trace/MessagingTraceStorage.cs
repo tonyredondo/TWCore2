@@ -19,9 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Messaging.Client;
 using TWCore.Services;
-
+// ReSharper disable CheckNamespace
 // ReSharper disable InconsistentlySynchronizedField
 // ReSharper disable UnusedMember.Global
 // ReSharper disable IntroduceOptionalParameters.Global

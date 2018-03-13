@@ -32,7 +32,7 @@ namespace TWCore.Messaging.Server
     /// </summary>
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
-        private long _activeWorkers = 0;
+        private long _activeWorkers;
 
         #region Properties
         /// <inheritdoc />

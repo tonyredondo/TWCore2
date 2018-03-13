@@ -16,12 +16,11 @@ limitations under the License.
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Threading;
-using Thread = System.Threading.Thread;
+// ReSharper disable MethodSupportsCancellation
+
+// ReSharper disable CheckNamespace
 
 namespace TWCore.Messaging
 {

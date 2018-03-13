@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -23,6 +22,8 @@ using System.Threading.Tasks;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
 using TWCore.Threading;
+// ReSharper disable CheckNamespace
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Messaging
 {
@@ -83,8 +84,7 @@ namespace TWCore.Messaging
 		#region Nested Classes
 		private class MemoryQueueServerListener : MQueueServerListenerBase
 		{
-			private readonly Type _messageType;
-			private readonly string _name;
+		    private readonly string _name;
 			private MemoryQueue _receiver;
 			private CancellationToken _token;
 			private readonly bool _cloneObject;
@@ -102,7 +102,7 @@ namespace TWCore.Messaging
 			internal MemoryQueueServerListener(MQConnection connection, IMQueueServer server, bool responseServer) : base(
 				connection, server, responseServer)
 			{
-				_messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
+			    var messageType = responseServer ? typeof(ResponseMessage) : typeof(RequestMessage);
 				_name = server.Name;
 				_cloneObject = false;
 
@@ -111,7 +111,7 @@ namespace TWCore.Messaging
 
                 Core.Status.Attach(collection =>
 				{
-					collection.Add("Message Type", _messageType);
+					collection.Add("Message Type", messageType);
 				});
 			}
 

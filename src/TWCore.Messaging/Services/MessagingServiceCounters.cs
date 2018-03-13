@@ -15,8 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
@@ -215,8 +213,8 @@ namespace TWCore.Services
             lock (_locker)
             {
                 _dayStatus.Register("Processed Messages", time);
-                _processTimes = _processTimes.HasValue ? (_processTimes.Value * 0.8) + (time * 0.2) : time;
-                _lastMinuteProcessTimes = _lastMinuteProcessTimes.HasValue ? (_lastMinuteProcessTimes.Value * 0.8) + (time * 0.2) : time;
+                _processTimes = _processTimes * 0.8 + time * 0.2 ?? time;
+                _lastMinuteProcessTimes = _lastMinuteProcessTimes * 0.8 + time * 0.2 ?? time;
 
                 var avgPt = ProcessAverageTime;
                 if (avgPt > PeakProcessAverageTime)

@@ -14,11 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using TWCore.Threading;
-
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Messaging.RawServer
@@ -31,42 +27,18 @@ namespace TWCore.Messaging.RawServer
         /// <summary>
         /// Events that fires when a request message is received
         /// </summary>
-        //public static event AsyncEventHandler<RawRequestReceivedEventArgs> RequestReceived;
         public static AsyncEvent<RawRequestReceivedEventArgs> RequestReceived { get; set; }
-
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        //public static event AsyncEventHandler<RawResponseReceivedEventArgs> ResponseReceived;
         public static AsyncEvent<RawResponseReceivedEventArgs> ResponseReceived { get; set; }
-
         /// <summary>
         /// Events that fires when a response message is sent
         /// </summary>
-        //public static event AsyncEventHandler<RawResponseSentEventArgs> ResponseSent;
         public static AsyncEvent<RawResponseSentEventArgs> ResponseSent { get; set; }
-
         /// <summary>
         /// Events that fires when a response message is about to be sent
         /// </summary>
-        //public static event AsyncEventHandler<RawResponseSentEventArgs> BeforeSendResponse;
         public static AsyncEvent<RawResponseSentEventArgs> BeforeSendResponse { get; set; }
-
-
-        //
-		/*
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task FireRequestReceivedAsync(object sender, RawRequestReceivedEventArgs e) 
-            => RequestReceived?.InvokeAsync(sender, e) ?? Task.CompletedTask;
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task FireResponseReceivedAsync(object sender, RawResponseReceivedEventArgs e)
-            => ResponseReceived?.InvokeAsync(sender, e) ?? Task.CompletedTask;
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task FireResponseSentAsync(object sender, RawResponseSentEventArgs e)
-            => ResponseSent?.InvokeAsync(sender, e) ?? Task.CompletedTask;
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		internal static Task FireBeforeSendResponseAsync(object sender, RawResponseSentEventArgs e)
-            => BeforeSendResponse?.InvokeAsync(sender, e) ?? Task.CompletedTask;
-        */
     }
 }

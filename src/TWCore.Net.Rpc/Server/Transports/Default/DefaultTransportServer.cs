@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -28,6 +27,8 @@ using TWCore.Net.RPC.Attributes;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnassignedGetOnlyAutoProperty
+// ReSharper disable MethodSupportsCancellation
+#pragma warning disable 4014
 
 namespace TWCore.Net.RPC.Server.Transports.Default
 {
@@ -256,7 +257,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 var listenerTask = _listener.AcceptTcpClientAsync();
                 var rTask = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
                 if (rTask == tokenTask) break;
-                var pTsk = Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
+                Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
             }
         }
         

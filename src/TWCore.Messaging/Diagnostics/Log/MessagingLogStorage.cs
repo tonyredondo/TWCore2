@@ -18,10 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Messaging.Client;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
-
+// ReSharper disable CheckNamespace
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Log.Storages

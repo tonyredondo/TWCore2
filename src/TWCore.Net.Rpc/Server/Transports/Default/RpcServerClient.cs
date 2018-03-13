@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using TWCore.Serialization;
 using TWCore.Threading;
 using Thread = System.Threading.Thread;
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Net.RPC.Server.Transports.Default
 {
@@ -165,7 +166,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                 try
                 {
                     var message = _serializer.Deserialize<RPCMessage>(_readStream);
-                    var procMsg = Task.Factory.StartNew(MessageReceivedHandler, message, _tokenSource.Token);
+                    Task.Factory.StartNew(MessageReceivedHandler, message, _tokenSource.Token);
                 }
                 catch (IOException)
                 {

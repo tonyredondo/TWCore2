@@ -71,7 +71,6 @@ namespace TWCore.Messaging.Server
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueServerListener> QueueServerListeners { get; } = new List<IMQueueServerListener>();
-        /// <inheritdoc />
         /// <summary>
         /// Message queue listener server counters
         /// </summary>
@@ -108,7 +107,7 @@ namespace TWCore.Messaging.Server
         #endregion
 
         #region .ctor
-        public MQueueServerBase()
+	    protected MQueueServerBase()
         {
             Counters = new MQServerCounters();
         }

@@ -322,8 +322,8 @@ namespace TWCore.Messaging.RawServer
             var l10MM = Interlocked.Increment(ref _lastTenMinutesMessages);
             var l20MM = Interlocked.Increment(ref _lastTwentyMinutesMessages);
             var l30MM = Interlocked.Increment(ref _lastThirtyMinutesMessages);
-            var tMM = Interlocked.Increment(ref _totalMessagesReceived);
-			LastMessageDateTime = Core.Now;
+		    Interlocked.Increment(ref _totalMessagesReceived);
+            LastMessageDateTime = Core.Now;
 			if (cM >= Interlocked.Read(ref _peakCurrentMessages))
 			{
                 Interlocked.Exchange(ref _peakCurrentMessages, cM);

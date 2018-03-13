@@ -71,7 +71,6 @@ namespace TWCore.Messaging.RawServer
 		/// Gets the list of message queue server listeners
 		/// </summary>
 		public List<IMQueueRawServerListener> QueueServerListeners { get; } = new List<IMQueueRawServerListener>();
-        /// <inheritdoc />
         /// <summary>
         /// Message queue listener server counters
         /// </summary>
@@ -112,7 +111,7 @@ namespace TWCore.Messaging.RawServer
         #endregion
 
         #region .ctor
-        public MQueueRawServerBase()
+	    protected MQueueRawServerBase()
         {
             Counters = new MQRawServerCounters();
         }
@@ -292,7 +291,7 @@ namespace TWCore.Messaging.RawServer
                     }
 
 
-                    response = rsea != null ? rsea.Message : e.Response;
+                    response = rsea?.Message ?? e.Response;
                     var sentBytes = await OnSendAsync(response, e).ConfigureAwait(false);
                     if (sentBytes > -1)
                     {

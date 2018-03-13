@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -25,6 +24,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Serialization;
 using TWCore.Threading;
+// ReSharper disable MethodSupportsCancellation
 
 // ReSharper disable UnassignedGetOnlyAutoProperty
 // ReSharper disable MemberCanBePrivate.Global

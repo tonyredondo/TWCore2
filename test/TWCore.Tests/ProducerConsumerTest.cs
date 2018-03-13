@@ -19,7 +19,7 @@ namespace TWCore.Tests
                 for (var i = 0; i < 2500; i++)
                 {
                     producer.Add("Valor: " + i);
-                    await TaskUtil.Delay(1, token).ConfigureAwait(false);
+                    await Task.Delay(1, token).ConfigureAwait(false);
                 }
             });
 

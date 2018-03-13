@@ -138,7 +138,7 @@ namespace TWCore.Messaging.RabbitMQ
                         if (_receiverConsumerTag != null)
                             _receiver.Channel.BasicCancel(_receiverConsumerTag);
                         Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
-                        await TaskUtil.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
+                        await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
                         lock (_lock)
                             _exceptionSleep = false;
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
@@ -151,19 +151,19 @@ namespace TWCore.Messaging.RabbitMQ
                         Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
 
                         while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-                            await TaskUtil.Delay(500, _token).ConfigureAwait(false);
+                            await Task.Delay(500, _token).ConfigureAwait(false);
 
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
                     }
 
-                    await TaskUtil.Delay(1000, _token).ConfigureAwait(false);
+                    await Task.Delay(1000, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException) { }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                     if (!_token.IsCancellationRequested)
-                        await TaskUtil.Delay(2000, _token).ConfigureAwait(false);
+                        await Task.Delay(2000, _token).ConfigureAwait(false);
                 }
             }
         }

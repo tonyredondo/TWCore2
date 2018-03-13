@@ -329,7 +329,7 @@ namespace TWCore
             }
             Log.Start();
 
-            TaskUtil.Delay(25).WaitAsync();
+            Task.Delay(25).WaitAsync();
 
             var dlog = (Log as DefaultLogEngine);
             dlog?.LogDoneTask.WaitAsync();
@@ -524,7 +524,7 @@ namespace TWCore
         private static void UpdateLocalUtc(Task tsk = null)
         {
             LocalUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
-            TaskUtil.Delay(5000).ContinueWith(UpdateLocalUtc);
+            Task.Delay(5000).ContinueWith(UpdateLocalUtc);
         }
         #endregion
 
@@ -616,7 +616,7 @@ namespace TWCore
             //Checks if a reload time is set.
             if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
             {
-                TaskUtil.Delay(GlobalSettings.SettingsReloadTimeInMinutes * 60 * 1000).ContinueWith(t =>
+                Task.Delay(GlobalSettings.SettingsReloadTimeInMinutes * 60 * 1000).ContinueWith(t =>
                 {
                     LoadSettings(settingsFilePath, environmentName, machineName, applicationName);
                 });

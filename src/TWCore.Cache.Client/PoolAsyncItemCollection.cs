@@ -279,7 +279,7 @@ namespace TWCore.Cache.Client
                     }
                 }
 
-                await TaskUtil.Delay(250).ConfigureAwait(false);
+                await Task.Delay(250).ConfigureAwait(false);
             }
 
             Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);

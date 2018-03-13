@@ -278,7 +278,7 @@ namespace TWCore.Collections
                 Value = value,
                 TokenSource = cts,
                 Timeout = valueTimeout,
-                Task = TaskUtil.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
+                Task = Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
                     var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];

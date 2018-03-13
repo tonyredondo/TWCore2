@@ -200,7 +200,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 _buffer.Add(item);
             if (_waiting) return Task.CompletedTask;
             _waiting = true;
-            TaskUtil.Delay(BufferTimeoutInSeconds * 1000).ContinueWith(t =>
+            Task.Delay(BufferTimeoutInSeconds * 1000).ContinueWith(t =>
             {
                 SendEmail();
             });

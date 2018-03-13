@@ -93,7 +93,7 @@ namespace TWCore
             Core.Log.LibDebug("Creating a disposal task. [{0}]", GetType().Name);
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
-            _disposeTask = TaskUtil.Delay(500, _cancellationToken).ContinueWith(tsk =>
+            _disposeTask = Task.Delay(500, _cancellationToken).ContinueWith(tsk =>
             {
                 if (_cancellationToken.IsCancellationRequested) return;
                 if (Interlocked.Read(ref _locks) < 1)

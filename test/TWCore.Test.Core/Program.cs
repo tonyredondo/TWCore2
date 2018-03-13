@@ -77,7 +77,7 @@ namespace TWCore.Test.Core
                     return string.Empty;
                 });
                 //**
-                await TaskUtil.Delay(10000, token).ConfigureAwait(false);
+                await Task.Delay(10000, token).ConfigureAwait(false);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }
         }

@@ -61,7 +61,7 @@ namespace TWCore.Services
             {
                 Core.Log.InfoBasic("Waiting for StorageManager Ready state...");
                 loopCount++;
-                await TaskUtil.Delay(1000).ConfigureAwait(false);
+                await Task.Delay(1000).ConfigureAwait(false);
             }
             if (!Manager.IsReady())
                 Core.Log.Warning("The StorageManager is not on Ready state, some data couldn't be found during this state.");

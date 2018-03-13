@@ -334,7 +334,7 @@ namespace TWCore.Net.Multicast
                     if (_token.IsCancellationRequested)
                         return;
                 }
-                await TaskUtil.Delay(10000, _token).ConfigureAwait(false);
+                await Task.Delay(10000, _token).ConfigureAwait(false);
             }
         }
         #endregion

@@ -226,7 +226,7 @@ namespace TWCore.IO
                     }
                     catch
                     {
-                        await TaskUtil.Delay(500).ConfigureAwait(false);
+                        await Task.Delay(500).ConfigureAwait(false);
                     }
                 }
                 _fwatcher = nWatcher;

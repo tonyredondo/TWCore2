@@ -31,7 +31,7 @@ namespace TWCore.Tests
                     CacheSingleTest(),
                     CacheSingleTest()
                 ).ConfigureAwait(false);
-                await TaskUtil.Delay(2000).ConfigureAwait(false);
+                await Task.Delay(2000).ConfigureAwait(false);
             }
         }
 

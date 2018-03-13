@@ -41,7 +41,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateDelay(this Action action, int milliseconds)
         {
-            return () => TaskUtil.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
+            return () => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }
@@ -54,7 +54,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateDelay<T>(this Action<T> action, int milliseconds)
         {
-            return obj => TaskUtil.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
+            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }
@@ -691,7 +691,7 @@ namespace TWCore
                 {
                     exceptions.Add(ex);
                 }
-                await TaskUtil.Delay(retryInterval).ConfigureAwait(false);
+                await Task.Delay(retryInterval).ConfigureAwait(false);
             }
             throw new AggregateException("The function couldn't be executed successfully", exceptions);
         }
@@ -776,7 +776,7 @@ namespace TWCore
         public static Task<bool> CallAndWaitFor(this Task task, int milliseconds)
         {
             if (task.IsCompleted) return TaskUtil.CompleteTrue;
-            return Task.WhenAny(TaskUtil.Delay(milliseconds), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
+            return Task.WhenAny(Task.Delay(milliseconds), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
@@ -791,7 +791,7 @@ namespace TWCore
         {
             if (task.IsCompleted) return TaskUtil.CompleteTrue;
             if (cancellationToken.IsCancellationRequested) return TaskUtil.CompleteFalse;
-            return Task.WhenAny(TaskUtil.Delay(milliseconds, cancellationToken), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
+            return Task.WhenAny(Task.Delay(milliseconds, cancellationToken), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         #endregion

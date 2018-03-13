@@ -58,7 +58,7 @@ namespace TWCore.Threading
         public static async Task SleepUntil(Func<bool> condition, CancellationToken token)
         {
             while (!token.IsCancellationRequested && !condition())
-                await TaskUtil.Delay(Factory.Thread.SleepTimeBetweenConditionCheck, token).ConfigureAwait(false);
+                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck, token).ConfigureAwait(false);
         }
         /// <summary>
         /// Sleeps the thread until a condition is true
@@ -82,7 +82,7 @@ namespace TWCore.Threading
             var time = Factory.Thread.SleepTimeBetweenConditionCheck < milliseconds ? Factory.Thread.SleepTimeBetweenConditionCheck : milliseconds;
             var sw = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && !condition() && sw.ElapsedMilliseconds < milliseconds)
-                await TaskUtil.Delay(time, token).ConfigureAwait(false);
+                await Task.Delay(time, token).ConfigureAwait(false);
         }
         /// <summary>
         /// Sleeps the thread until a condition is true
@@ -108,59 +108,11 @@ namespace TWCore.Threading
                     ? Factory.Thread.SleepTimeBetweenConditionCheck : ms;
                 var sw = Stopwatch.StartNew();
                 while (!condition() && sw.ElapsedMilliseconds < ms)
-                    await TaskUtil.Delay(time).ConfigureAwait(false);
+                    await Task.Delay(time).ConfigureAwait(false);
                 return;
             }
             while (!condition())
-                await TaskUtil.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
-        }
-
-        private static readonly ManualResetEvent DummyEventSlim = new ManualResetEvent(false);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FinalizeTaskCompletion(object state, bool isTimeout)
-        {
-            if (isTimeout)
-                ((TaskCompletionSource<object>)state).TrySetResult(null);
-            else
-                ((TaskCompletionSource<object>)state).TrySetCanceled();
-        }
-        /// <summary>
-        /// Create a delay task
-        /// </summary>
-        /// <param name="milliseconds">Milliseconds of delay</param>
-        /// <returns>Task instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task Delay(int milliseconds)
-        {
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(DummyEventSlim,
-                FinalizeTaskCompletion,
-                tcs, 
-                milliseconds, 
-                true);
-            var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
-            return t;
-        }
-        /// <summary>
-        /// Create a delay task
-        /// </summary>
-        /// <param name="milliseconds">Milliseconds of delay</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Task instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task Delay(int milliseconds, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
-            var waitHandle = cancellationToken.WaitHandle;
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle,
-                FinalizeTaskCompletion,
-                tcs,
-                milliseconds,
-                true);
-            var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
-            return t;
+                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
         }
     }
 }

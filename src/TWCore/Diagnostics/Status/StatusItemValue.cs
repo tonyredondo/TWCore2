@@ -47,6 +47,11 @@ namespace TWCore.Diagnostics.Status
         [XmlAttribute, DataMember]
         public string Value { get; set; }
         /// <summary>
+        /// Raw Value
+        /// </summary>
+        [XmlElement, DataMember]
+        public object RawValue { get; set; }
+        /// <summary>
         /// Value Type
         /// </summary>
         [XmlAttribute, DataMember]
@@ -87,6 +92,7 @@ namespace TWCore.Diagnostics.Status
             if (value == null)
             {
                 Value = null;
+                RawValue = null;
                 Type = StatusItemValueType.Text;
                 plot = false;
             }
@@ -94,28 +100,39 @@ namespace TWCore.Diagnostics.Status
             {
                 switch (value)
                 {
+                    case ReadableBytes readBytes:
+                        Type = StatusItemValueType.Text;
+                        RawValue = readBytes.Value;
+                        Value = readBytes.Text;
+                        break;
                     case int intValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case decimal decValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = decValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case double doubleValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = doubleValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case float floatValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = floatValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case long longValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case short shortValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case byte byteValue:
@@ -124,30 +141,37 @@ namespace TWCore.Diagnostics.Status
                         break;
                     case uint intValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = intValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case ulong longValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = longValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case ushort shortValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = shortValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case sbyte byteValue:
                         Type = StatusItemValueType.Number;
+                        RawValue = value;
                         Value = byteValue.ToString("0.####", CultureInfo.InvariantCulture);
                         break;
                     case DateTime date:
                         Type = StatusItemValueType.Date;
+                        RawValue = date.ToString("o");
                         Value = date.TimeOfDay.TotalSeconds > 0 ? date.ToString("s") : date.ToString("yyyy-MM-dd");
                         break;
                     case TimeSpan time:
                         Type = StatusItemValueType.Time;
+                        RawValue = time.TotalMilliseconds;
                         Value = time.ToString();
                         break;
                     default:
                         Type = StatusItemValueType.Text;
+                        RawValue = value.ToString();
                         Value = value.ToString();
                         plot = false;
                         break;

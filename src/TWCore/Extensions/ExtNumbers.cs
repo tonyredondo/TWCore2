@@ -23,30 +23,40 @@ using System.Runtime.CompilerServices;
 namespace TWCore
 {
     /// <summary>
+    /// Readable Bytes
+    /// </summary>
+    public struct ReadableBytes
+    {
+        public string Text { get; set; }
+        public long Value { get; set; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override string ToString() => Text;
+    }
+
+    /// <summary>
     /// Extensions for numbers data types
     /// </summary>
     public static partial class Extensions
     {
-        #region ReadeableLength
+        #region ReadableBytes
         /// <summary>
-        /// Format the length to a human readeable style format.
+        /// Format the length to a human readable style format.
         /// </summary>
         /// <param name="bytes">Bytes length to format</param>
         /// <returns>Human readeable style format</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToReadeableBytes(this long bytes)
+        public static ReadableBytes ToReadableBytes(this long bytes)
         {
             const int scale = 1024;
             var orders = new[] { "GB", "MB", "KB", "Bytes" };
             var max = (long)System.Math.Pow(scale, orders.Length - 1);
-
             foreach (var order in orders)
             {
                 if (bytes > max)
-                    return string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order);
+                    return new ReadableBytes { Text = string.Format("{0:##.##} {1}", decimal.Divide(bytes, max), order), Value = bytes };
                 max /= scale;
             }
-            return "0 Bytes";
+            return new ReadableBytes { Text = "0 Bytes", Value = bytes };
         }
         /// <summary>
         /// Format the length to a human readeable style format.
@@ -54,21 +64,21 @@ namespace TWCore
         /// <param name="bytes">Bytes length to format</param>
         /// <returns>Human readeable style format</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToReadeableBytes(this double bytes) => ToReadeableBytes((long)bytes);
+        public static ReadableBytes ToReadableBytes(this double bytes) => ToReadableBytes((long)bytes);
         /// <summary>
         /// Format the length to a human readeable style format.
         /// </summary>
         /// <param name="bytes">Bytes length to format</param>
         /// <returns>Human readeable style format</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToReadeableBytes(this float bytes) => ToReadeableBytes((long)bytes);
+        public static ReadableBytes ToReadableBytes(this float bytes) => ToReadableBytes((long)bytes);
         /// <summary>
         /// Format the length to a human readeable style format.
         /// </summary>
         /// <param name="bytes">Bytes length to format</param>
         /// <returns>Human readeable style format</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ToReadeableBytes(this int bytes) => ToReadeableBytes((long)bytes);
+        public static ReadableBytes ToReadableBytes(this int bytes) => ToReadableBytes((long)bytes);
         #endregion
 
         #region Converts

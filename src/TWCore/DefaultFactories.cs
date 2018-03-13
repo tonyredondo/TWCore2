@@ -25,6 +25,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
@@ -105,7 +106,7 @@ namespace TWCore
             Core.ApplicationDisplayName = Core.ApplicationName;
             Core.EnvironmentName = Environment.GetEnvironmentVariable(EnvironmentVariableName);
 
-            AttachStatus();
+            Task.Run(() => AttachStatus());
 
             ServiceContainer.RegisterParametersHandler("configfile=[Path]",
                                                        "Load the application using other configuration file.",

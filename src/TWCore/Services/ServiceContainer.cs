@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
+using System.Threading.Tasks;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBeProtected.Global
@@ -362,7 +363,7 @@ namespace TWCore.Services
                 ServiceStartWithConsole();
             else
                 ServiceStartNoConsole();
-            
+
             Core.Dispose();
         }
 
@@ -452,29 +453,35 @@ namespace TWCore.Services
         {
             if (_discovery) return;
             if (!Core.GlobalSettings.EnableDiscovery) return;
-
-            Core.Log.LibDebug("Registering Discovery services.");
-            _discovery = true;
-
-            var serializer = SerializerManager.DefaultBinarySerializer;
-            if (!string.IsNullOrWhiteSpace(Core.GlobalSettings.DiscoverySerializerMimeType))
+            Task.Run(() =>
             {
-                serializer = SerializerManager.GetByMimeType(Core.GlobalSettings.DiscoverySerializerMimeType);
-                if (serializer == null)
+                if (_discovery) return;
+                if (!Core.GlobalSettings.EnableDiscovery) return;
+
+                Core.Log.LibDebug("Registering Discovery services.");
+                _discovery = true;
+
+                var serializer = SerializerManager.DefaultBinarySerializer;
+                if (!string.IsNullOrWhiteSpace(Core.GlobalSettings.DiscoverySerializerMimeType))
                 {
-                    Core.Log.Warning("Discovery.SerializerMimeType can't be loaded, using default binary serializer.");
-                    serializer = SerializerManager.DefaultBinarySerializer;
+                    serializer = SerializerManager.GetByMimeType(Core.GlobalSettings.DiscoverySerializerMimeType);
+                    if (serializer == null)
+                    {
+                        Core.Log.Warning("Discovery.SerializerMimeType can't be loaded, using default binary serializer.");
+                        serializer = SerializerManager.DefaultBinarySerializer;
+                    }
                 }
-            }
-            DiscoveryService.Serializer = serializer;
-            try
-            {
-                DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
-            }
-            catch(Exception ex)
-            {
-                Core.Log.Write(ex);
-            }
+
+                DiscoveryService.Serializer = serializer;
+                try
+                {
+                    DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+            });
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected virtual void UnregisterDiscovery()
@@ -487,7 +494,7 @@ namespace TWCore.Services
             {
                 DiscoveryService.Disconnect();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }

@@ -5,6 +5,7 @@ using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Serialization;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
+using TWCore.Threading;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
 // ReSharper disable FieldCanBeMadeReadOnly.Local
@@ -30,7 +31,7 @@ namespace TWCore.Tests
                     CacheSingleTest(),
                     CacheSingleTest()
                 ).ConfigureAwait(false);
-                await Task.Delay(2000).ConfigureAwait(false);
+                await TaskUtil.Delay(2000).ConfigureAwait(false);
             }
         }
 

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -278,7 +279,7 @@ namespace TWCore.Cache.Client
                     }
                 }
 
-                await Task.Delay(250).ConfigureAwait(false);
+                await TaskUtil.Delay(250).ConfigureAwait(false);
             }
 
             Core.Log.Warning("Error looking for enabled Caches in Mode {0}. There is not connection to any cache server.", mode);

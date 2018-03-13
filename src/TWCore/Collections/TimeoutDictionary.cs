@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable UnusedMember.Global
 
@@ -277,7 +278,7 @@ namespace TWCore.Collections
                 Value = value,
                 TokenSource = cts,
                 Timeout = valueTimeout,
-                Task = Task.Delay(valueTimeout, cts.Token).ContinueWith((task, obj) =>
+                Task = TaskUtil.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
                     var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutClass>)objArray[0];

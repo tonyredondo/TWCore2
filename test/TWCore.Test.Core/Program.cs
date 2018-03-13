@@ -11,6 +11,7 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
+using TWCore.Threading;
 
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedVariable
@@ -76,7 +77,7 @@ namespace TWCore.Test.Core
                     return string.Empty;
                 });
                 //**
-                await Task.Delay(10000, token).ConfigureAwait(false);
+                await TaskUtil.Delay(10000, token).ConfigureAwait(false);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
             }
         }

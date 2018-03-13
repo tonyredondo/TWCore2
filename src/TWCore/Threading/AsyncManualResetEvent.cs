@@ -90,7 +90,7 @@ namespace TWCore.Threading
         public Task<bool> WaitAsync(int milliseconds)
         {
             if (_mTcs == null) return TaskUtil.CompleteFalse;
-            var delayTask = Task.Delay(milliseconds);
+            var delayTask = TaskUtil.Delay(milliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
@@ -103,7 +103,7 @@ namespace TWCore.Threading
         public Task<bool> WaitAsync(TimeSpan timeout)
         {
             if (_mTcs == null) return TaskUtil.CompleteFalse;
-            var delayTask = Task.Delay(timeout);
+            var delayTask = TaskUtil.Delay((int)timeout.TotalMilliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }

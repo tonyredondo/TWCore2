@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable MethodSupportsCancellation
 
 namespace TWCore
@@ -92,7 +93,7 @@ namespace TWCore
             Core.Log.LibDebug("Creating a disposal task. [{0}]", GetType().Name);
             _cancellationTokenSource = new CancellationTokenSource();
             _cancellationToken = _cancellationTokenSource.Token;
-            _disposeTask = Task.Delay(500, _cancellationToken).ContinueWith(tsk =>
+            _disposeTask = TaskUtil.Delay(500, _cancellationToken).ContinueWith(tsk =>
             {
                 if (_cancellationToken.IsCancellationRequested) return;
                 if (Interlocked.Read(ref _locks) < 1)

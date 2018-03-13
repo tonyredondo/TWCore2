@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+using TWCore.Threading;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MethodSupportsCancellation
 #pragma warning disable CS4014 // Because a call is not awaited
@@ -157,7 +158,7 @@ namespace TWCore.Messaging.NSQ
 					{
 						OnDispose();
 						Core.Log.Warning("An exception has been thrown, the listener has been stoped for {0} seconds.", Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec);
-						await Task.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
+						await TaskUtil.Delay(Config.RequestOptions.ServerReceiverOptions.SleepOnExceptionInSec * 1000, _token).ConfigureAwait(false);
 						lock (_lock)
 							_exceptionSleep = false;
                         _receiver = new Consumer(Connection.Name, Connection.Name);
@@ -171,21 +172,21 @@ namespace TWCore.Messaging.NSQ
 						Core.Log.Warning("Maximum simultaneous messages per queue has been reached, the message needs to wait to be processed, consider increase the MaxSimultaneousMessagePerQueue value, CurrentValue={0}.", Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue);
 
 						while (!_token.IsCancellationRequested && Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
-							await Task.Delay(500, _token).ConfigureAwait(false);
+							await TaskUtil.Delay(500, _token).ConfigureAwait(false);
 
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
                     }
 
-					await Task.Delay(100, _token).ConfigureAwait(false);
+					await TaskUtil.Delay(100, _token).ConfigureAwait(false);
 				}
 				catch (TaskCanceledException) { }
 				catch (Exception ex)
 				{
 					Core.Log.Write(ex);
 					if (!_token.IsCancellationRequested)
-						await Task.Delay(2000, _token).ConfigureAwait(false);
+						await TaskUtil.Delay(2000, _token).ConfigureAwait(false);
 				}
 			}
 		}

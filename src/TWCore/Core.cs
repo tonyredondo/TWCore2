@@ -35,6 +35,7 @@ using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Settings;
+using TWCore.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -328,7 +329,7 @@ namespace TWCore
             }
             Log.Start();
 
-            Task.Delay(25).WaitAsync();
+            TaskUtil.Delay(25).WaitAsync();
 
             var dlog = (Log as DefaultLogEngine);
             dlog?.LogDoneTask.WaitAsync();
@@ -523,7 +524,7 @@ namespace TWCore
         private static void UpdateLocalUtc(Task tsk = null)
         {
             LocalUtcOffset = TimeSpan.FromMinutes(Math.Round((DateTime.Now - DateTime.UtcNow).TotalMinutes));
-            Task.Delay(5000).ContinueWith(UpdateLocalUtc);
+            TaskUtil.Delay(5000).ContinueWith(UpdateLocalUtc);
         }
         #endregion
 
@@ -615,7 +616,7 @@ namespace TWCore
             //Checks if a reload time is set.
             if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
             {
-                Task.Delay(TimeSpan.FromMinutes(GlobalSettings.SettingsReloadTimeInMinutes)).ContinueWith(t =>
+                TaskUtil.Delay(GlobalSettings.SettingsReloadTimeInMinutes * 60 * 1000).ContinueWith(t =>
                 {
                     LoadSettings(settingsFilePath, environmentName, machineName, applicationName);
                 });

@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using TWCore.Cache;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports;
+using TWCore.Threading;
 
 // ReSharper disable CheckNamespace
 
@@ -60,7 +61,7 @@ namespace TWCore.Services
             {
                 Core.Log.InfoBasic("Waiting for StorageManager Ready state...");
                 loopCount++;
-                await Task.Delay(1000).ConfigureAwait(false);
+                await TaskUtil.Delay(1000).ConfigureAwait(false);
             }
             if (!Manager.IsReady())
                 Core.Log.Warning("The StorageManager is not on Ready state, some data couldn't be found during this state.");

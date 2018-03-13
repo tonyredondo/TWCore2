@@ -20,6 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
+using TWCore.Threading;
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 
@@ -202,7 +203,7 @@ namespace TWCore.Cache.Client
                         EnabledChanged?.Invoke(this, Enabled);
                     Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
 
-                    await Task.Delay(PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay, _token).ConfigureAwait(false);
+                    await TaskUtil.Delay(PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)
                 {

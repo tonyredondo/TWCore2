@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Serialization;
+using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.IO
@@ -225,7 +226,7 @@ namespace TWCore.IO
                     }
                     catch
                     {
-                        await Task.Delay(500).ConfigureAwait(false);
+                        await TaskUtil.Delay(500).ConfigureAwait(false);
                     }
                 }
                 _fwatcher = nWatcher;

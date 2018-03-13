@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.IO;
 using TWCore.Services;
+using TWCore.Threading;
 // ReSharper disable UnusedVariable
 // ReSharper disable AccessToDisposedClosure
 // ReSharper disable MethodSupportsCancellation
@@ -89,7 +90,7 @@ namespace TWCore.Tests
                         cbs.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7 });
                         if (i % 50 == 0)
                             Core.Log.InfoMedium("Write {0}", i);
-                        await Task.Delay(1, cts.Token).ConfigureAwait(false);
+                        await TaskUtil.Delay(1, cts.Token).ConfigureAwait(false);
                     }
                 });
                 Task.Run(async () =>
@@ -102,7 +103,7 @@ namespace TWCore.Tests
                         cbs.Read(buffer, 0, 7);
                         if (i % 50 == 0)
                             Core.Log.InfoMedium("Read {0}", i);
-                        await Task.Delay(1, cts.Token).ConfigureAwait(false);
+                        await TaskUtil.Delay(1, cts.Token).ConfigureAwait(false);
                     }
                 });
                 Console.ReadLine();
@@ -126,7 +127,7 @@ namespace TWCore.Tests
                         sharedms.WriteBytes(new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 });
                         if (i % 50 == 0)
                             Core.Log.InfoMedium("Write {0}", i);
-                        await Task.Delay(1, cts.Token).ConfigureAwait(false);
+                        await TaskUtil.Delay(1, cts.Token).ConfigureAwait(false);
                     }
                 });
                 Task.Run(async () =>
@@ -139,7 +140,7 @@ namespace TWCore.Tests
                         sharedms.Read(buffer, 0, 7);
                         if (i % 50 == 0)
                             Core.Log.InfoMedium("Read {0}", i);
-                        await Task.Delay(1, cts.Token).ConfigureAwait(false);
+                        await TaskUtil.Delay(1, cts.Token).ConfigureAwait(false);
                     }
                 });
                 Console.ReadLine();

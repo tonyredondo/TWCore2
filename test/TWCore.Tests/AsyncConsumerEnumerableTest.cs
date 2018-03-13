@@ -17,8 +17,8 @@ namespace TWCore.Tests
             var consumer = new AsyncConsumerEnumerable<string>
             {
                 Task.Run(() => "Hola"),
-                Task.Delay(5000).ContinueWith(t => "Esperó 5 segundos"),
-                Task.Delay(2000).ContinueWith(t => "Mundo (tenia una espera de 2 pero ya se habia cumplido)"),
+                TaskUtil.Delay(5000).ContinueWith(t => "Esperó 5 segundos"),
+                TaskUtil.Delay(2000).ContinueWith(t => "Mundo (tenia una espera de 2 pero ya se habia cumplido)"),
                 Task.Run(() => new[] { "Tambien", "Soporto", "Arrays" })
             };
 

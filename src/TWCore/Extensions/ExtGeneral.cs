@@ -654,6 +654,7 @@ namespace TWCore
         /// <param name="handle">Handle.</param>
         /// <param name="millisecondsTimeout">Milliseconds timeout.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WaitOne(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
         {
             var n = WaitHandle.WaitAny(new[] { handle, cancellationToken.WaitHandle }, millisecondsTimeout);
@@ -675,6 +676,7 @@ namespace TWCore
         /// <param name="handle">Handle.</param>
         /// <param name="timeout">Timeout.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WaitOne(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
             => handle.WaitOne((int)timeout.TotalMilliseconds, cancellationToken);
         /// <summary>
@@ -683,6 +685,7 @@ namespace TWCore
         /// <returns><c>true</c>, if one was waited, <c>false</c> otherwise.</returns>
         /// <param name="handle">Handle.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool WaitOne(this WaitHandle handle, CancellationToken cancellationToken)
             => handle.WaitOne(Timeout.Infinite, cancellationToken);
 
@@ -693,22 +696,21 @@ namespace TWCore
         /// <param name="handle">Handle.</param>
         /// <param name="millisecondsTimeout">Milliseconds timeout.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> WaitOneAsync(this WaitHandle handle, int millisecondsTimeout, CancellationToken cancellationToken)
         {
             if (handle == null)
                 throw new ArgumentNullException("waitHandle");
-
             var tcs = new TaskCompletionSource<bool>();
             var registeredHandle = ThreadPool.UnsafeRegisterWaitForSingleObject(
                 handle,
-                (state, timedOut) => ((TaskCompletionSource<bool>)state).TrySetResult(!timedOut),
+                FinalizeTaskCompletionBoolWithCancellation,
                 tcs,
                 millisecondsTimeout,
                 true);
             var tokenRegistration = cancellationToken.Register(
-                state => ((TaskCompletionSource<bool>)state).TrySetCanceled(),
+                TaskCompletionBoolCancellation,
                 tcs);
-
             var t = tcs.Task;
             t.ContinueWith((antecedent) =>
             {
@@ -717,6 +719,12 @@ namespace TWCore
             });
             return t;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void TaskCompletionBoolCancellation(object state)
+            => ((TaskCompletionSource<bool>)state).TrySetCanceled();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FinalizeTaskCompletionBoolWithCancellation(object state, bool isTimeout)
+            => ((TaskCompletionSource<bool>)state).TrySetResult(!isTimeout);
         /// <summary>
         /// WaitOne Async
         /// </summary>
@@ -724,6 +732,7 @@ namespace TWCore
         /// <param name="handle">Handle.</param>
         /// <param name="timeout">Timeout.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> WaitOneAsync(this WaitHandle handle, TimeSpan timeout, CancellationToken cancellationToken)
             => handle.WaitOneAsync((int)timeout.TotalMilliseconds, cancellationToken);
         /// <summary>
@@ -732,6 +741,7 @@ namespace TWCore
         /// <returns>The async Task with the result.</returns>
         /// <param name="handle">Handle.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> WaitOneAsync(this WaitHandle handle, CancellationToken cancellationToken)
             => handle.WaitOneAsync(Timeout.Infinite, cancellationToken);
         /// <summary>
@@ -739,14 +749,14 @@ namespace TWCore
         /// </summary>
         /// <returns>The async Task with the result.</returns>
         /// <param name="waitHandle">Handle.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task WaitOneAsync(this WaitHandle waitHandle)
         {
             if (waitHandle == null)
                 throw new ArgumentNullException("waitHandle");
 
-            var tcs = new TaskCompletionSource<bool>();
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle,
-                delegate { tcs.TrySetResult(true); }, null, -1, true);
+            var tcs = new TaskCompletionSource<object>();
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, null, -1, true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));
             return t;
@@ -757,17 +767,22 @@ namespace TWCore
         /// <returns>The async Task with the result.</returns>
         /// <param name="waitHandle">Handle.</param>
         /// <param name="millisecondsTimeout">Milliseconds timeout.</param>
-	    public static Task WaitOneAsync(this WaitHandle waitHandle, int millisecondsTimeout)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task WaitOneAsync(this WaitHandle waitHandle, int millisecondsTimeout)
         {
             if (waitHandle == null)
                 throw new ArgumentNullException("waitHandle");
 
-            var tcs = new TaskCompletionSource<bool>();
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, delegate { tcs.TrySetResult(true); }, null, millisecondsTimeout, true);
+            var tcs = new TaskCompletionSource<object>();
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, null, millisecondsTimeout, true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));
             return t;
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FinalizeTaskCompletionObject(object state, bool isTimeout)
+            => ((TaskCompletionSource<object>)state).TrySetResult(null);
         #endregion
     }
 }

@@ -116,6 +116,9 @@ namespace TWCore.Threading
         }
 
         private static readonly ManualResetEvent DummyEventSlim = new ManualResetEvent(false);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void FinalizeTaskCompletion(object state, bool isTimeout)
+            => ((TaskCompletionSource<object>)state).TrySetResult(null);
         /// <summary>
         /// Create a delay task
         /// </summary>
@@ -124,11 +127,31 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task Delay(int milliseconds)
         {
-            var tcs = new TaskCompletionSource<bool>();
+            var tcs = new TaskCompletionSource<object>();
             var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(DummyEventSlim,
-                (state, isTimeout) => ((TaskCompletionSource<bool>)state).TrySetResult(true),
+                FinalizeTaskCompletion,
                 tcs, 
                 milliseconds, 
+                true);
+            var t = tcs.Task;
+            t.ContinueWith((antecedent) => rwh.Unregister(null));
+            return t;
+        }
+        /// <summary>
+        /// Create a delay task
+        /// </summary>
+        /// <param name="milliseconds">Milliseconds of delay</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>Task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Task Delay(int milliseconds, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<object>();
+            var waitHandle = cancellationToken.WaitHandle;
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle,
+                FinalizeTaskCompletion,
+                tcs,
+                milliseconds,
                 true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));

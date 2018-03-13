@@ -478,12 +478,12 @@ namespace TWCore
         /// </summary>
         /// <param name="cancellationToken">Cancellation token instance</param>
         /// <returns>Task to await the cancellation</returns>
-        public static async Task WhenCanceledAsync(this CancellationToken cancellationToken)
+        public static Task WhenCanceledAsync(this CancellationToken cancellationToken)
         {
-            if (cancellationToken.IsCancellationRequested) return;
+            if (cancellationToken.IsCancellationRequested) return Task.CompletedTask;
             var tcs = new TaskCompletionSource<object>();
-            using (cancellationToken.Register(() => tcs.TrySetResult(null), false))
-                await tcs.Task.ConfigureAwait(false);
+            var registration = cancellationToken.Register(state => ((TaskCompletionSource<object>)state).TrySetResult(null), tcs, false);
+            return tcs.Task.ContinueWith((_, obj) => ((CancellationTokenRegistration)obj).Dispose(), registration);
         }
         /// <summary>
         /// Create a Task to await the cancellation of the token
@@ -702,15 +702,8 @@ namespace TWCore
             if (handle == null)
                 throw new ArgumentNullException("waitHandle");
             var tcs = new TaskCompletionSource<bool>();
-            var registeredHandle = ThreadPool.UnsafeRegisterWaitForSingleObject(
-                handle,
-                FinalizeTaskCompletionBoolWithCancellation,
-                tcs,
-                millisecondsTimeout,
-                true);
-            var tokenRegistration = cancellationToken.Register(
-                TaskCompletionBoolCancellation,
-                tcs);
+            var registeredHandle = ThreadPool.UnsafeRegisterWaitForSingleObject(handle, FinalizeTaskCompletionBoolWithCancellation, tcs, millisecondsTimeout, true);
+            var tokenRegistration = cancellationToken.Register(TaskCompletionBoolCancellation, tcs);
             var t = tcs.Task;
             t.ContinueWith((antecedent) =>
             {

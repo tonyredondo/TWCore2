@@ -756,7 +756,7 @@ namespace TWCore
                 throw new ArgumentNullException("waitHandle");
 
             var tcs = new TaskCompletionSource<object>();
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, null, -1, true);
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, tcs, -1, true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));
             return t;
@@ -774,7 +774,7 @@ namespace TWCore
                 throw new ArgumentNullException("waitHandle");
 
             var tcs = new TaskCompletionSource<object>();
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, null, millisecondsTimeout, true);
+            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle, FinalizeTaskCompletionObject, tcs, millisecondsTimeout, true);
             var t = tcs.Task;
             t.ContinueWith((antecedent) => rwh.Unregister(null));
             return t;

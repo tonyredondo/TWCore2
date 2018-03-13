@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using NsqSharp;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MethodSupportsCancellation
 #pragma warning disable 414

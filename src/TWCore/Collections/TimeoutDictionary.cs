@@ -23,6 +23,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable UnusedMember.Global
 
@@ -39,7 +40,7 @@ namespace TWCore.Collections
     public class TimeoutDictionary<TKey, TValue>
     {
         #region Fields
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly NonBlocking.ConcurrentDictionary<TKey, TimeoutClass> _dictionary;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct> _dictionary;
         #endregion
 
         #region Events
@@ -53,7 +54,7 @@ namespace TWCore.Collections
         /// <summary>
         /// Internal dictionary item
         /// </summary>
-        private class TimeoutClass
+        private struct TimeoutStruct
         {
             public TValue Value;
             public Task Task;
@@ -88,7 +89,7 @@ namespace TWCore.Collections
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeoutDictionary()
         {
-            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutClass>();
+            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>();
         }
         #endregion
 
@@ -143,7 +144,7 @@ namespace TWCore.Collections
         public void Clear()
         {
             foreach (var item in _dictionary)
-                item.Value?.TokenSource?.Cancel();
+                item.Value.TokenSource?.Cancel();
             _dictionary.Clear();
         }
         /// <summary>
@@ -229,7 +230,7 @@ namespace TWCore.Collections
         public bool TryGetValue(TKey key, out TValue value)
         {
             var res = _dictionary.TryGetValue(key, out var val);
-            value = val != null ? val.Value : default(TValue);
+            value = val.Value;
             return res;
         }
 
@@ -244,8 +245,8 @@ namespace TWCore.Collections
         {
             var res = _dictionary.TryRemove(key, out var val);
             if (res)
-                val?.TokenSource?.Cancel();
-            value = val != null ? val.Value : default(TValue);
+                val.TokenSource?.Cancel();
+            value = val.Value;
             return res;
         }
 
@@ -269,22 +270,21 @@ namespace TWCore.Collections
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private TimeoutClass Create(TKey key, TValue value, TimeSpan valueTimeout)
+        private TimeoutStruct Create(TKey key, TValue value, TimeSpan valueTimeout)
         {
             var cts = new CancellationTokenSource();
-            return new TimeoutClass
+            return new TimeoutStruct
             {
                 Value = value,
                 TokenSource = cts,
                 Timeout = valueTimeout,
-                Task = Task.Delay(valueTimeout, cts.Token).ContinueWith((task, obj) =>
+                Task = Task.Delay((int)valueTimeout.TotalMilliseconds, cts.Token).ContinueWith((task, obj) =>
                 {
                     var objArray = (object[])obj;
-                    var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutClass>)objArray[0];
+                    var mDictio = (NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>)objArray[0];
                     var mKey = (TKey)objArray[1];
                     if (mDictio != null && mDictio.TryRemove(mKey, out var tVal))
                         OnItemTimeout?.Invoke(this, new TimeOutEventArgs { Key = mKey, Value = tVal.Value, TimeOut = tVal.Timeout });
-
                 }, new object[] { _dictionary, key }, CancellationToken.None,
                         TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                         TaskScheduler.Default)
@@ -293,10 +293,10 @@ namespace TWCore.Collections
 
         private class TimeoutDictionaryEnumerator : IEnumerator<KeyValuePair<TKey, TValue>>
         {
-            private IEnumerator<KeyValuePair<TKey, TimeoutClass>> _enumerator;
+            private IEnumerator<KeyValuePair<TKey, TimeoutStruct>> _enumerator;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public TimeoutDictionaryEnumerator(IEnumerator<KeyValuePair<TKey, TimeoutClass>> enumerator) 
+            public TimeoutDictionaryEnumerator(IEnumerator<KeyValuePair<TKey, TimeoutStruct>> enumerator) 
                 => _enumerator = enumerator;
 
             public KeyValuePair<TKey, TValue> Current

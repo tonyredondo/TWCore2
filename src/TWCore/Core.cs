@@ -35,6 +35,7 @@ using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Settings;
+using TWCore.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -615,7 +616,7 @@ namespace TWCore
             //Checks if a reload time is set.
             if (GlobalSettings != null && GlobalSettings.SettingsReloadTimeInMinutes > 0)
             {
-                Task.Delay(TimeSpan.FromMinutes(GlobalSettings.SettingsReloadTimeInMinutes)).ContinueWith(t =>
+                Task.Delay(GlobalSettings.SettingsReloadTimeInMinutes * 60 * 1000).ContinueWith(t =>
                 {
                     LoadSettings(settingsFilePath, environmentName, machineName, applicationName);
                 });

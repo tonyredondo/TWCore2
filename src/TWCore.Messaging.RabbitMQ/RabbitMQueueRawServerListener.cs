@@ -22,6 +22,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
+using TWCore.Threading;
 // ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Messaging.RabbitMQ

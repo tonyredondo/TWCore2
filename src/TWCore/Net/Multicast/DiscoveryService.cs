@@ -25,6 +25,7 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
+using TWCore.Threading;
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable EventNeverSubscribedTo.Global
@@ -333,7 +334,7 @@ namespace TWCore.Net.Multicast
                     if (_token.IsCancellationRequested)
                         return;
                 }
-                await Task.Delay(10000, _token);
+                await Task.Delay(10000, _token).ConfigureAwait(false);
             }
         }
         #endregion

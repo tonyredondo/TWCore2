@@ -11,6 +11,7 @@ using TWCore.Net.Multicast;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
+using TWCore.Threading;
 
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedVariable

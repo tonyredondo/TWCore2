@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Threading;
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global

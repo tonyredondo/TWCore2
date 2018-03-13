@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using TWCore.Settings;
+using TWCore.Threading;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -199,7 +200,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 _buffer.Add(item);
             if (_waiting) return Task.CompletedTask;
             _waiting = true;
-            Task.Delay(TimeSpan.FromSeconds(BufferTimeoutInSeconds)).ContinueWith(t =>
+            Task.Delay(BufferTimeoutInSeconds * 1000).ContinueWith(t =>
             {
                 SendEmail();
             });

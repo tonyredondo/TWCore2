@@ -22,6 +22,7 @@ using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
+using TWCore.Threading;
 // ReSharper disable MethodSupportsCancellation
 #pragma warning disable 414
 

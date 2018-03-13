@@ -114,48 +114,5 @@ namespace TWCore.Threading
             while (!condition())
                 await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
         }
-
-        private static readonly ManualResetEvent DummyEventSlim = new ManualResetEvent(false);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void FinalizeTaskCompletion(object state, bool isTimeout)
-            => ((TaskCompletionSource<object>)state).TrySetResult(null);
-        /// <summary>
-        /// Create a delay task
-        /// </summary>
-        /// <param name="milliseconds">Milliseconds of delay</param>
-        /// <returns>Task instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task Delay(int milliseconds)
-        {
-            var tcs = new TaskCompletionSource<object>();
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(DummyEventSlim,
-                FinalizeTaskCompletion,
-                tcs, 
-                milliseconds, 
-                true);
-            var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
-            return t;
-        }
-        /// <summary>
-        /// Create a delay task
-        /// </summary>
-        /// <param name="milliseconds">Milliseconds of delay</param>
-        /// <param name="cancellationToken">Cancellation token</param>
-        /// <returns>Task instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task Delay(int milliseconds, CancellationToken cancellationToken)
-        {
-            var tcs = new TaskCompletionSource<object>();
-            var waitHandle = cancellationToken.WaitHandle;
-            var rwh = ThreadPool.UnsafeRegisterWaitForSingleObject(waitHandle,
-                FinalizeTaskCompletion,
-                tcs,
-                milliseconds,
-                true);
-            var t = tcs.Task;
-            t.ContinueWith((antecedent) => rwh.Unregister(null));
-            return t;
-        }
     }
 }

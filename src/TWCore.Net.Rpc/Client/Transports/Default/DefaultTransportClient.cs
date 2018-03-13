@@ -253,8 +253,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             if (_currentIndex > ResetIndex) _currentIndex = -1;
 			var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
             await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
-            await Task.WhenAny(handler.Event.WaitAsync(_connectionCancellationToken),
-                Task.Delay(InvokeMethodTimeout, _connectionCancellationToken)).ConfigureAwait(false);
+            await handler.Event.WaitAsync(InvokeMethodTimeout, _connectionCancellationToken).ConfigureAwait(false);
             if (handler.Event.IsSet)
                 return handler.Message;
             _connectionCancellationToken.ThrowIfCancellationRequested();
@@ -280,9 +279,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_connectionCancellationToken, cancellationToken))
             {
                 await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
-                await Task.WhenAny(
-                    handler.Event.WaitAsync(linkedTokenSource.Token),
-                    Task.Delay(InvokeMethodTimeout, linkedTokenSource.Token)).ConfigureAwait(false);
+                await handler.Event.WaitAsync(InvokeMethodTimeout, linkedTokenSource.Token).ConfigureAwait(false);
             }
             if (handler.Event.IsSet)
                 return handler.Message;

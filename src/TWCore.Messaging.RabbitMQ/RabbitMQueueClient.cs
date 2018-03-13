@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -120,8 +119,9 @@ namespace TWCore.Messaging.RabbitMQ
                     if (_clientQueues.RecvQueue != null)
                         _receiver = new RabbitMQueue(_clientQueues.RecvQueue);
                 }
+                if (_senderOptions == null) throw new Exception("Client Sender Options is Null.");
 
-				_priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
+                _priority = (byte)(_senderOptions.MessagePriority == MQMessagePriority.High ? 9 :
 				                   _senderOptions.MessagePriority == MQMessagePriority.Low ? 1 : 5);
 				_expiration = (_senderOptions.MessageExpirationInSec * 1000).ToString();
 				_deliveryMode = (byte)(_senderOptions.Recoverable ? 2 : 1);

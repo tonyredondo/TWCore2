@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeMadeStatic.Global
@@ -31,8 +30,8 @@ namespace TWCore.Data
     public class DalRegister : IDalRegister
     {
         private readonly object _locker = new object();
-        private bool _loaded = false;
-        private List<(Type Interface, Type Implementation)> _typesToRegister = null;
+        private bool _loaded;
+        private List<(Type Interface, Type Implementation)> _typesToRegister;
 
         /// <inheritdoc />
         /// <summary>

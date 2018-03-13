@@ -1,4 +1,20 @@
-﻿using System;
+﻿/*
+Copyright 2015-2018 Daniel Adrian Redondo Suarez
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Dynamic;
@@ -18,13 +34,13 @@ namespace TWCore.Reflection
 	{
 		#region Private fields
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates = null;
+		private NonBlocking.ConcurrentDictionary<string, MethodAccessorDelegate> _methodsDelegates;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		NonBlocking.ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo = null;
+		private NonBlocking.ConcurrentDictionary<string, FastPropertyInfo> _propertyInfo;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		NonBlocking.ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates = null;
+		private NonBlocking.ConcurrentDictionary<(string Method, string Types), CallSite> _dynMethodDelegates;
 		[DebuggerBrowsable(DebuggerBrowsableState.Never)]
-		object _realObject;
+		private object _realObject;
 		#endregion
 
 		#region Properties
@@ -96,12 +112,12 @@ namespace TWCore.Reflection
 				typesKey += type.FullName;
 			}
 
-			var callSite = _dynMethodDelegates.GetOrAdd((methodName, typesKey), _mName =>
+			var callSite = _dynMethodDelegates.GetOrAdd((methodName, typesKey), mName =>
 			{
 				var csArgs = Enumerable.Range(0, args.Length + 1)
 									   .Select(i => CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null));
 
-				var cSiteBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None, _mName.Method, types, this.GetType(), csArgs);
+				var cSiteBinder = Microsoft.CSharp.RuntimeBinder.Binder.InvokeMember(CSharpBinderFlags.None, mName.Method, types, GetType(), csArgs);
 					
 				switch (args.Length)
 				{
@@ -216,8 +232,9 @@ namespace TWCore.Reflection
 			var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(an, AssemblyBuilderAccess.Run);
 			var moduleBuilder = assemblyBuilder.DefineDynamicModule("MainModule");
 			var typeBuilder = moduleBuilder.DefineType(typeSignature, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout,
-				typeof(DuckTypeProxy), new Type[] { interfaceType });
-			var constructor = typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+				typeof(DuckTypeProxy), new[] { interfaceType });
+			//var constructor = typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
+			typeBuilder.DefineDefaultConstructor(MethodAttributes.Public);
 
 			//Create Members
 			CreateInterfaceMethods(interfaceType, typeBuilder);
@@ -235,9 +252,9 @@ namespace TWCore.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void CreateInterfaceProperties(Type interfaceType, TypeBuilder typeBuilder)
 		{
-			var getPropertyMethod = typeof(DuckTypeProxy).GetMethod("GetProperty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(string) }, null);
-			var setPropertyMethod = typeof(DuckTypeProxy).GetMethod("SetProperty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(string), typeof(object) }, null);
-			var debAttrCtor = typeof(DebuggerBrowsableAttribute).GetConstructor(new Type[] { typeof(DebuggerBrowsableState) });
+			var getPropertyMethod = typeof(DuckTypeProxy).GetMethod("GetProperty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string) }, null);
+			var setPropertyMethod = typeof(DuckTypeProxy).GetMethod("SetProperty", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(object) }, null);
+			var debAttrCtor = typeof(DebuggerBrowsableAttribute).GetConstructor(new[] { typeof(DebuggerBrowsableState) });
 			var interfaceProperties = interfaceType.GetProperties();
 			for (var i = 0; i < interfaceProperties.Length; i++)
 			{
@@ -253,11 +270,8 @@ namespace TWCore.Reflection
 					gen.Emit(OpCodes.Ldarg_0);
 					gen.Emit(OpCodes.Ldstr, iProperty.Name);
 					gen.Emit(OpCodes.Call, getPropertyMethod);
-					if (iProperty.PropertyType.IsValueType)
-						gen.Emit(OpCodes.Unbox_Any, iProperty.PropertyType);
-					else
-						gen.Emit(OpCodes.Castclass, iProperty.PropertyType);
-					gen.Emit(OpCodes.Stloc_0);
+				    gen.Emit(iProperty.PropertyType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, iProperty.PropertyType);
+				    gen.Emit(OpCodes.Stloc_0);
 					gen.Emit(OpCodes.Br_S, label);
 					gen.MarkLabel(label);
 					gen.Emit(OpCodes.Ldloc_0);
@@ -284,7 +298,7 @@ namespace TWCore.Reflection
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private static void CreateInterfaceMethods(Type interfaceType, TypeBuilder typeBuilder)
 		{
-			var callMethod = typeof(DuckTypeProxy).GetMethod("CallMethod", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new Type[] { typeof(string), typeof(object[]) }, null);
+			var callMethod = typeof(DuckTypeProxy).GetMethod("CallMethod", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, null, new[] { typeof(string), typeof(object[]) }, null);
 			var interfaceMethods = interfaceType.GetMethods();
 			for (var i = 0; i < interfaceMethods.Length; i++)
 			{
@@ -298,12 +312,13 @@ namespace TWCore.Reflection
 
 				var gen = methodBuilder.GetILGenerator();
 
-				LocalBuilder loc = null;
+				//LocalBuilder loc = null;
 				Label label = new Label();
 				if (iMethod.ReturnType != typeof(void))
 				{
-					loc = gen.DeclareLocal(iMethod.ReturnType);
-					label = gen.DefineLabel();
+					//loc = gen.DeclareLocal(iMethod.ReturnType);
+				    gen.DeclareLocal(iMethod.ReturnType);
+                    label = gen.DefineLabel();
 				}
 
 				gen.Emit(OpCodes.Nop);
@@ -374,11 +389,8 @@ namespace TWCore.Reflection
 				gen.Emit(OpCodes.Call, callMethod);
 				if (iMethod.ReturnType != typeof(void))
 				{
-					if (iMethod.ReturnType.IsValueType)
-						gen.Emit(OpCodes.Unbox_Any, iMethod.ReturnType);
-					else
-						gen.Emit(OpCodes.Castclass, iMethod.ReturnType);
-					gen.Emit(OpCodes.Stloc_0);
+				    gen.Emit(iMethod.ReturnType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, iMethod.ReturnType);
+				    gen.Emit(OpCodes.Stloc_0);
 					gen.Emit(OpCodes.Br_S, label);
 					gen.MarkLabel(label);
 					gen.Emit(OpCodes.Ldloc_0);

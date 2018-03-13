@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// Guid value type serializer
     /// </summary>
@@ -32,7 +32,6 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             DataType.Guid, DataType.GuidDefault, DataType.RefGuidByte, DataType.RefGuidUShort
         });
 
-        private SerializerMode _mode;
         private SerializerCache<Guid> _cache;
 
         /// <inheritdoc />
@@ -42,7 +41,6 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            _mode = mode;
             if (_cache == null)
                 _cache = new SerializerCache<Guid>(mode);
             else

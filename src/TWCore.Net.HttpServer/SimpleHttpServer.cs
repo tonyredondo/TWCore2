@@ -30,6 +30,7 @@ using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
+#pragma warning disable 4014
 
 namespace TWCore.Net.HttpServer
 {
@@ -419,7 +420,7 @@ namespace TWCore.Net.HttpServer
                 var listenerTask = _listener.AcceptTcpClientAsync();
                 var result = await Task.WhenAny(listenerTask, tokenTask).ConfigureAwait(false);
                 if (result == tokenTask) break;
-                var pTsk = Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
+                Task.Factory.StartNew(ConnectionReceived, listenerTask.Result, _token);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

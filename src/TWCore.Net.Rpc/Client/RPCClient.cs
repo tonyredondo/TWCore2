@@ -480,6 +480,7 @@ namespace TWCore.Net.RPC.Client
             var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), key =>
             {
                 if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
+                // ReSharper disable once AccessToModifiedClosure
                 var iArgs = args ?? _emptyArgs;
 
                 var methods = descriptor.Methods.Values.Where(m => m.Name == key.Method && (m.Parameters?.Length ?? 0) == iArgs.Length).ToArray();

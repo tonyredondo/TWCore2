@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// DateTime value type serializer
     /// </summary>
@@ -32,7 +32,6 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             DataType.DateTime, DataType.DateTimeDefault, DataType.RefDateTimeByte, DataType.RefDateTimeUShort
         });
 
-        private SerializerMode _mode;
         private SerializerCache<DateTime> _cache;
 
         /// <inheritdoc />
@@ -42,7 +41,6 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            _mode = mode;
             if (_cache == null)
                 _cache = new SerializerCache<DateTime>(mode);
             else

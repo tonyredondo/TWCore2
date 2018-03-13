@@ -18,7 +18,6 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore.IO;
 using TBot = Telegram.Bot;
 using TBotApi = Telegram.Bot.TelegramBotClient;
 // ReSharper disable MemberCanBeMadeStatic.Local

@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.WSerializer

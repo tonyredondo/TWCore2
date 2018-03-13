@@ -21,7 +21,6 @@ using System.Threading.Tasks;
 using NATS.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.RawServer;
-using TWCore.Threading;
 // ReSharper disable InconsistentNaming
 // ReSharper disable MethodSupportsCancellation
 #pragma warning disable CS4014 // Because a call is not awaited
@@ -154,7 +153,7 @@ namespace TWCore.Messaging.NATS
                         _connection.Close();
                         _receiver.Unsubscribe();
                         _connection = _factory.CreateConnection(Connection.Route);
-                        _receiver = _connection.SubscribeAsync(Connection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                        _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
                     }
 
                     if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
@@ -168,7 +167,7 @@ namespace TWCore.Messaging.NATS
                         _connection.Close();
                         _receiver.Unsubscribe();
                         _connection = _factory.CreateConnection(Connection.Route);
-                        _receiver = _connection.SubscribeAsync(Connection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                        _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
                     }
 
                     await Task.Delay(100, _token).ConfigureAwait(false);

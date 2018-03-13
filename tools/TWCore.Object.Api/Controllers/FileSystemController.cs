@@ -478,8 +478,7 @@ namespace TWCore.Object.Api.Controllers
                 {
                     var srvPe = EnsureServiceEntry(servicesPathEntries, srv);
                     if (!wChildren) continue;
-                    var data = srv.Data.GetValue() as Dictionary<string, object>;
-                    if (data == null) continue;
+                    if (!(srv.Data.GetValue() is Dictionary<string, object> data)) continue;
                     if (!data.TryGetValue("Port", out var port)) continue;
                     var strPort = port.ToString();
                     if (srvPe.Entries.All(c => c.Path != strPort))

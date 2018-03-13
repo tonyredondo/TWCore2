@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
-using TWCore.Threading;
+// ReSharper disable MethodSupportsCancellation
 
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Local
 

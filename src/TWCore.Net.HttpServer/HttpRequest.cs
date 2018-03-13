@@ -131,12 +131,11 @@ namespace TWCore.Net.HttpServer
 
             //Core.Log.LibVerbose("Request: {0}", request);
 
-            int lastIndex, newIndex;
-            newIndex = request.IndexOf(' ', 2);
+            var newIndex = request.IndexOf(' ', 2);
             if (newIndex < 0)
                 throw new Exception("Invalid http request line");
             var strMethod = request.Substring(0, newIndex);
-            lastIndex = newIndex + 1;
+            var lastIndex = newIndex + 1;
             newIndex = request.IndexOf(' ', lastIndex);
             if (newIndex < 0)
                 throw new Exception("Invalid http request line");

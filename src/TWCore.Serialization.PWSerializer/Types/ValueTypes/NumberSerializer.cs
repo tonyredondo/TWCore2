@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// Int value type serializer
     /// </summary>

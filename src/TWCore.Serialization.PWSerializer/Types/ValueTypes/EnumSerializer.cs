@@ -17,12 +17,11 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// Enum value type serializer
     /// </summary>

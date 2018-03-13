@@ -23,7 +23,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using System;
 using TWCore.Serialization;
-using TWCore.Settings;
 using TWCore.Web.Logger;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMethodReturnValue.Global

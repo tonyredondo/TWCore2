@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,7 +27,6 @@ using TWCore.Serialization.PWSerializer.Serializer;
 using TWCore.Serialization.PWSerializer.Types;
 // ReSharper disable SuggestBaseTypeForParameter
 // ReSharper disable ForCanBeConvertedToForeach
-
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.PWSerializer

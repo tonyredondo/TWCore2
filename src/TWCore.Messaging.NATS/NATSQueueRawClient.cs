@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -140,7 +139,7 @@ namespace TWCore.Messaging.NATS
                     if (UseSingleResponseQueue)
                     {
                         _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
-                        _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                        _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
                     }
                 }
             }
@@ -240,7 +239,7 @@ namespace TWCore.Messaging.NATS
                 message.Name = _receiverConnection.Name + "_" + correlationId;
                 message.Route = _receiverConnection.Route;
                 message.Connection = _factory.CreateConnection(message.Route);
-                message.Consumer = message.Connection.SubscribeAsync(message.Name, new EventHandler<MsgHandlerEventArgs>(MessageHandler));
+                message.Consumer = message.Connection.SubscribeAsync(message.Name, MessageHandler);
                 var waitResult = await message.WaitHandler.WaitAsync(_receiverOptionsTimeout, cancellationToken).ConfigureAwait(false);
                 message.Consumer.Unsubscribe();
                 message.Connection.Close();

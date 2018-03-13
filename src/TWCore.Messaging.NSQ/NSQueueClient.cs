@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -88,13 +87,13 @@ namespace TWCore.Messaging.NSQ
         #endregion
 
         #region .ctor
-        /// <inheritdoc />
-        /// <summary>
-        /// NSQ Queue Client
-        /// </summary>
-        public NSQueueClient()
-        {
-        }
+        ///// <inheritdoc />
+        ///// <summary>
+        ///// NSQ Queue Client
+        ///// </summary>
+        //public NSQueueClient()
+        //{
+        //}
         #endregion
 
 

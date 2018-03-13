@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using Microsoft.Extensions.Logging;
-using System.Collections.Concurrent;
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Web.Logger

@@ -21,7 +21,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.PWSerializer.Types
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// Byte array optimized serializer
     /// </summary>

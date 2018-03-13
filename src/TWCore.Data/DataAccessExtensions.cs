@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System.Collections.Concurrent;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedParameter.Global

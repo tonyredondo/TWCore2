@@ -23,7 +23,7 @@ using System.Text;
 
 namespace TWCore.Serialization.PWSerializer.Types
 {
-    /// <inheritdoc />
+    /// <inheritdoc cref="ITypeSerializer" />
     /// <summary>
     /// String type serializer
     /// </summary>

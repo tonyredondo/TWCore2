@@ -20,7 +20,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using TWCore.Threading;
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -274,7 +273,7 @@ namespace TWCore.Cache.Client
                     if (onlyMemoryStorages)
                     {
                         Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
-                        ItemsCache.TryAdd((mode, onlyMemoryStorages), poolItems);
+                        ItemsCache.TryAdd((mode, true), poolItems);
                         return poolItems;
                     }
                 }

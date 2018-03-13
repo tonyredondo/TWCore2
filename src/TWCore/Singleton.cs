@@ -56,7 +56,7 @@ namespace TWCore
 	                var constructors = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic);
 	                foreach (var ctor in constructors)
 	                {
-		                if (ctor.GetParameters().Any(p => !p.HasDefaultValue) != false) continue;
+		                if (ctor.GetParameters().Any(p => !p.HasDefaultValue)) continue;
 		                Value = (T)ctor.Invoke(new object[0]);
 		                return;
 	                }

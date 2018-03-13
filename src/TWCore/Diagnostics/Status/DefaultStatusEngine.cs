@@ -16,7 +16,6 @@ limitations under the License.
 
 #pragma warning disable IDE0018 // Declaración de variables alineada
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;

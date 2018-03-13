@@ -27,6 +27,7 @@ using TWCore.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedField.Local
+// ReSharper disable MethodSupportsCancellation
 
 namespace TWCore.Net.Multicast
 {
@@ -109,9 +110,14 @@ namespace TWCore.Net.Multicast
 
                 foreach (var ipAddress in addresses)
                 {
-                    var client = new UdpClient();
-                    client.Client.SendBufferSize = 8192;
-                    client.Client.ReceiveBufferSize = 8192;
+                    var client = new UdpClient
+                    {
+                        Client =
+                        {
+                            SendBufferSize = 8192,
+                            ReceiveBufferSize = 8192
+                        }
+                    };
                     client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(nicPropv4.Index));
@@ -128,9 +134,14 @@ namespace TWCore.Net.Multicast
             {
                 try
                 {
-                    var basicReceiver = new UdpClient();
-                    basicReceiver.Client.SendBufferSize = 8192;
-                    basicReceiver.Client.ReceiveBufferSize = 8192;
+                    var basicReceiver = new UdpClient
+                    {
+                        Client =
+                        {
+                            SendBufferSize = 8192,
+                            ReceiveBufferSize = 8192
+                        }
+                    };
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     basicReceiver.Client.Bind(new IPEndPoint(IPAddress.Any, Port));

@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using TWCore.Diagnostics.Log;

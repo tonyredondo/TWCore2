@@ -19,7 +19,6 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Serialization;
-using TWCore.Threading;
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.IO

@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -285,7 +284,7 @@ namespace TWCore
                 string gValue;
                 if (string.IsNullOrEmpty(item.Group))
                 {
-                    gValue = item.Id.ToString("00");
+                    gValue = string.Format("{0:00}", item.Id);
                     if (EnableIndent)
                         indent = IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 2));
                 }

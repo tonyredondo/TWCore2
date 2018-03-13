@@ -25,7 +25,6 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Security;
 using TWCore.Serialization;
-using TWCore.Threading;
 // ReSharper disable ReturnTypeCanBeEnumerable.Global
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable EventNeverSubscribedTo.Global
@@ -137,6 +136,7 @@ namespace TWCore.Net.Multicast
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
             PeerConnection.Disconnect();
+            _sendThread.WaitAsync();
             _connected = false;
         }
 

@@ -35,7 +35,6 @@ using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Settings;
-using TWCore.Threading;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 
@@ -380,6 +379,7 @@ namespace TWCore
         /// Starts the default container with the arguments
         /// </summary>
         /// <param name="args">Service arguments</param>
+        /// <param name="factories">Factories instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void StartContainer(string[] args, Factories factories)
         {
@@ -412,6 +412,7 @@ namespace TWCore
         /// Run IService with the default container
         /// </summary>
         /// <param name="args">Service arguments</param>
+        /// <param name="factories">Factories instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void RunService<TIService>(string[] args, Factories factories) where TIService : class, new()
         {

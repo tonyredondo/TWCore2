@@ -56,10 +56,10 @@ namespace TWCore.Services
             ServiceName = serviceName;
             Core.Data[nameof(ServiceWrapper)] = this;
         }
-        ~ServiceWrapper()
-        {
-            //Console.WriteLine("SERVICE WRAPPER HAS BEEN DISPOSED!!!");
-        }
+        //~ServiceWrapper()
+        //{
+        //    Console.WriteLine("SERVICE WRAPPER HAS BEEN DISPOSED!!!");
+        //}
         #endregion
 
         #region Static Method

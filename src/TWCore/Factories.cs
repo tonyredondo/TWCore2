@@ -17,7 +17,6 @@ limitations under the License.
 using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -199,28 +198,17 @@ namespace TWCore
                     {
                         #region Name Attr
                         var attrs = method.GetCustomAttributes(false);
-                        StackFrameLogAttribute nameAttr = null;
-                        int attrsCases = 0;
                         for (var i = 0; i < attrs.Length; i++)
                         {
-                            if (attrs[i] is IgnoreStackFrameLogAttribute)
+                            switch (attrs[i])
                             {
-                                attrsCases = 1;
-                                break;
+                                case IgnoreStackFrameLogAttribute _:
+                                    return DefaultMValue;
+                                case StackFrameLogAttribute nA:
+                                    assemblyName = method.DeclaringType.Assembly.FullName;
+                                    typeName = nA.ClassName;
+                                    return (assemblyName, typeName);
                             }
-                            if (attrs[i] is StackFrameLogAttribute nA)
-                            {
-                                nameAttr = nA;
-                                attrsCases = 2;
-                                break;
-                            }
-                        }
-                        if (attrsCases == 1) return DefaultMValue;
-                        if (attrsCases == 2)
-                        {
-                            assemblyName = method.DeclaringType.Assembly.FullName;
-                            typeName = nameAttr.ClassName;
-                            return (assemblyName, typeName);
                         }
                         #endregion
 
@@ -229,28 +217,17 @@ namespace TWCore
 
                         #region Name Type Attr
                         var typeAttrs = declarationType.GetCustomAttributes(false);
-                        StackFrameLogAttribute nameTypeAttr = null;
-                        var typeAttrsCases = 0;
                         for (var i = 0; i < typeAttrs.Length; i++)
                         {
-                            if (typeAttrs[i] is IgnoreStackFrameLogAttribute)
+                            switch (typeAttrs[i])
                             {
-                                typeAttrsCases = 1;
-                                break;
+                                case IgnoreStackFrameLogAttribute _:
+                                    return DefaultMValue;
+                                case StackFrameLogAttribute nA:
+                                    assemblyName = declarationType.Assembly.FullName;
+                                    typeName = nA.ClassName;
+                                    return (assemblyName, typeName);
                             }
-                            if (typeAttrs[i] is StackFrameLogAttribute nA)
-                            {
-                                nameTypeAttr = nA;
-                                typeAttrsCases = 2;
-                                break;
-                            }
-                        }
-                        if (typeAttrsCases == 1) return DefaultMValue;
-                        if (typeAttrsCases == 2)
-                        {
-                            assemblyName = declarationType.Assembly.FullName;
-                            typeName = nameTypeAttr.ClassName;
-                            return (assemblyName, typeName);
                         }
                         #endregion
 
@@ -261,34 +238,23 @@ namespace TWCore
 
                             #region Actual type attrs
                             var actualTypeAttrs = actualType.GetCustomAttributes(false);
-                            StackFrameLogAttribute actualTypeNameTypeAttr = null;
-                            int actualTypeCases = 0;
                             for (var i = 0; i < actualTypeAttrs.Length; i++)
                             {
-                                if (actualTypeAttrs[i] is IgnoreStackFrameLogAttribute)
+                                switch (actualTypeAttrs[i])
                                 {
-                                    actualTypeCases = 1;
-                                    break;
+                                    case IgnoreStackFrameLogAttribute _:
+                                        return DefaultMValue;
+                                    case StackFrameLogAttribute nA:
+                                        assemblyName = actualType.Assembly.FullName;
+                                        typeName = nA.ClassName;
+                                        return (assemblyName, typeName);
                                 }
-                                if (actualTypeAttrs[i] is StackFrameLogAttribute nA)
-                                {
-                                    actualTypeNameTypeAttr = nA;
-                                    actualTypeCases = 2;
-                                    break;
-                                }
-                            }
-                            if (actualTypeCases == 1) return DefaultMValue;
-                            if (actualTypeCases == 2)
-                            {
-                                assemblyName = actualType.Assembly.FullName;
-                                typeName = actualTypeNameTypeAttr.ClassName;
-                                return (assemblyName, typeName);
                             }
                             #endregion
 
                             assemblyName = actualType.Assembly.FullName;
                             typeName = actualType.Name;
-                            if (actualType.ReflectedType != null && typeName.Contains("<"))
+                            if (actualType.ReflectedType != null && typeName?.Contains("<") == true)
                                 typeName = actualType.ReflectedType.Name;
                             return(assemblyName, typeName);
                         }

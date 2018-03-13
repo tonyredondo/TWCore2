@@ -21,7 +21,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Threading;
-using Thread = System.Threading.Thread;
 
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMethodReturnValue.Global

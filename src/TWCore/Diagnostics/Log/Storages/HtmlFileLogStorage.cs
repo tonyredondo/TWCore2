@@ -15,7 +15,6 @@ limitations under the License.
  */
 
 using System;
-using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -479,7 +478,7 @@ namespace TWCore.Diagnostics.Log.Storages
             if (_sWriter == null) return;
             var time = item.Timestamp.GetTimeSpanFormat();
             var format = PreFormat;
-            string buffer = null;
+            string buffer;
             lock (_sWriter)
             {
                 if (_firstWrite)

@@ -92,14 +92,13 @@ namespace TWCore
 
         #region Private 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Nullable<(int, int)> GetFreqAndTempo(string term, int tempo = 120, int octave = 4)
+        private static (int, int)? GetFreqAndTempo(string term, int tempo = 120, int octave = 4)
         {
             if (string.IsNullOrEmpty(term)) return null;
             var termArr = term.SplitAndTrim('-');
 
             var useTriplets = false;
             var useDot = false;
-            var note = string.Empty;
             var dIndex = 0;
             var dOctave = octave - 2;
 
@@ -129,7 +128,7 @@ namespace TWCore
                 case 32: dIndex = 5; break;
                 case 64: dIndex = 6; break;
             }
-            note = termArr[1];
+            var note = termArr[1];
             if (termArr.Length > 2 && int.TryParse(termArr[2], out var deltaOctave))
                 dOctave += deltaOctave;
 

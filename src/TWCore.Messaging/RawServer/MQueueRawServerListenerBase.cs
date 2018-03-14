@@ -32,8 +32,7 @@ namespace TWCore.Messaging.RawServer
     /// </summary>
     public abstract class MQueueRawServerListenerBase : IMQueueRawServerListener
     {
-        protected readonly ManualResetEventSlim WorkerEvent = new ManualResetEventSlim(true);
-        protected int ActiveWorkers;
+        private long _activeWorkers;
 
         #region Properties
         /// <inheritdoc />
@@ -111,8 +110,13 @@ namespace TWCore.Messaging.RawServer
 		/// <param name="token">Cancellation token</param>
 		/// <returns>Task of the method execution</returns>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public Task TaskStartAsync(CancellationToken token)
-            => OnListenerTaskStartAsync(token);
+		public async Task TaskStartAsync(CancellationToken token)
+        {
+            await OnListenerTaskStartAsync(token).ConfigureAwait(false);
+            Core.Log.InfoDetail("Listener stopped, waiting to finalize al processing messages.");
+            await TaskUtil.SleepUntil(() => Interlocked.Read(ref _activeWorkers) < 1,
+                Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec * 1000).ConfigureAwait(false);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Dispose all resources
@@ -163,8 +167,7 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected async Task EnqueueMessageToProcessAsync<T>(Func<T, Task> processingFunc, T message)
         {
-            Interlocked.Increment(ref ActiveWorkers);
-            WorkerEvent.Reset();
+            Interlocked.Increment(ref _activeWorkers);
             Counters.IncrementMessages();
             try
             {
@@ -175,8 +178,7 @@ namespace TWCore.Messaging.RawServer
                 Core.Log.Write(ex);
             }
             Counters.DecrementMessages();
-            if (Interlocked.Decrement(ref ActiveWorkers) == 0)
-                WorkerEvent.Set();
+            Interlocked.Decrement(ref _activeWorkers);
         }
         #endregion
     }

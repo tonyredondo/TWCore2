@@ -104,18 +104,18 @@ namespace TWCore.Messaging.RabbitMQ
 					{
 						if (string.IsNullOrEmpty(queue.Name))
 						{
-							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + replyTo, e.CorrelationId);
+							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + replyTo, crId);
 							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, replyTo, props, (byte[])message);
 						}
 						else if (queue.Name.StartsWith(replyTo, StringComparison.Ordinal))
 						{
-							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name + "_" + replyTo, e.CorrelationId);
+							Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name + "_" + replyTo, crId);
 							rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name + "_" + replyTo, props, (byte[])message);
 						}
 					}
 					else
 					{
-						Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name, e.CorrelationId);
+						Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", message.Count, rabbitQueue.Route + "/" + queue.Name, crId);
 						rabbitQueue.Channel.BasicPublish(rabbitQueue.ExchangeName ?? string.Empty, queue.Name, props, (byte[])message);
 					}
 				}

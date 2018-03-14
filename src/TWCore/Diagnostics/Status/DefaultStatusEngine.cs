@@ -244,6 +244,10 @@ namespace TWCore.Diagnostics.Status
             private readonly object _locker = new object();
             private readonly List<StatusContainer> _statusList = new List<StatusContainer>();
             private readonly List<StatusAttributesContainer> _statusAttributeContainer = new List<StatusAttributesContainer>();
+            private readonly ReferencePool<List<StatusContainer>> _containerListPool = new ReferencePool<List<StatusContainer>>(1, lst => lst.Clear());
+            private readonly ReferencePool<List<StatusData>> _statusListPool = new ReferencePool<List<StatusData>>(2, lst => lst.Clear());
+            private readonly ReferencePool<StatusItem> _statusItemPool = new ReferencePool<StatusItem>(0, s => { s.Values.Clear(); s.Children.Clear(); });
+            private readonly ReferencePool<StatusData> _statusDataPool = new ReferencePool<StatusData>(0, s => s.Clear());
             private bool _firstTime = true;
 
             #region Public Methods
@@ -274,7 +278,7 @@ namespace TWCore.Diagnostics.Status
                     var sItem = EnsureTarget(target, parent);
                     sItem.AddStatusItemValuesCollection(action);
                 }
-                var sI = new StatusItem();
+                var sI = _statusItemPool.New();
                 try
                 {
                     action(sI.Values);
@@ -283,6 +287,7 @@ namespace TWCore.Diagnostics.Status
                 {
                     // ignored
                 }
+                _statusItemPool.Store(sI);
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Add(object target, object parent)
@@ -302,6 +307,7 @@ namespace TWCore.Diagnostics.Status
                     _statusList.RemoveAll(i => i.Object == target || i.Parent == target);
                 }
             }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public List<StatusItem> GetStatus()
             {
@@ -309,32 +315,44 @@ namespace TWCore.Diagnostics.Status
                 {
                     if (_firstTime)
                     {
-                        var sInit = new List<StatusContainer>(_statusList);
+                        var sInit = _containerListPool.New();
+                        sInit.AddRange(_statusList);
                         foreach (var item in sInit)
                         {
                             if (item.Object == null) continue;
                             item.GetStatusItems();
                         }
                         _firstTime = false;
+                        _containerListPool.Store(sInit);
                     }
-                    var sList = new List<StatusContainer>(_statusList);
-                    var values = new List<StatusData>();
-                    var roots = new List<StatusData>();
+                    var sList = _containerListPool.New();
+                    sList.AddRange(_statusList);
+                    var values = _statusListPool.New();
+                    var roots = _statusListPool.New();
                     foreach (var item in sList)
                     {
                         if (item.Object == null) continue;
-                        var value = new StatusData(item.Object, item.GetStatusItems(), item.Parent);
+                        var value = _statusDataPool.New();
+                        value.Init(item.Object, item.GetStatusItems(), item.Parent);
                         values.Add(value);
                         if (item.Parent == null)
                             roots.Add(value);
                     }
+                    _containerListPool.Store(sList);
+
+                    var rValues = new List<StatusItem>();
                     foreach (var root in roots)
                     {
                         CreateTree(root, values);
                         SetIds(string.Empty, root.Value);
+                        rValues.Add(root.Value);
                     }
+
                     //
-                    var rValues = roots.Select(i => i.Value).ToList();
+                    foreach (var value in values)
+                        _statusDataPool.Store(value);
+                    _statusListPool.Store(values);
+                    _statusListPool.Store(roots);
                     MergeSimilar(rValues);
                     //
                     rValues.Sort((a, b) =>
@@ -499,18 +517,26 @@ namespace TWCore.Diagnostics.Status
             #region Nested Types
             private class StatusData
             {
-                public readonly object Object;
-                public readonly object Parent;
+                public object Object;
+                public object Parent;
                 public StatusItem Value;
                 public List<StatusItem> Statuses;
                 public bool Processed;
 
                 #region .ctor
-                public StatusData(object obj, List<StatusItem> statuses, object parent)
+                public void Init(object obj, List<StatusItem> statuses, object parent)
                 {
                     Object = obj;
                     Statuses = statuses;
                     Parent = parent;
+                }
+                public void Clear()
+                {
+                    Object = null;
+                    Parent = null;
+                    Value = null;
+                    Statuses = null;
+                    Processed = false;
                 }
                 #endregion
             }
@@ -657,9 +683,8 @@ namespace TWCore.Diagnostics.Status
             {
                 lock (_locker)
                 {
-                    if (Object == null) return new List<StatusItem>();
-
                     var lstStatus = new List<StatusItem>();
+                    if (Object == null) return lstStatus;
 
                     foreach(var item in _lstStatusItem)
                     {

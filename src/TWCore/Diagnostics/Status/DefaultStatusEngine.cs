@@ -413,7 +413,6 @@ namespace TWCore.Diagnostics.Status
                 }
                 status.Processed = true;
             }
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void FlattenStatus(StatusData status)
             {
@@ -660,54 +659,69 @@ namespace TWCore.Diagnostics.Status
                 {
                     if (Object == null) return new List<StatusItem>();
 
-                    var resultItems = _lstStatusItem
-                        .Select(s =>
-                        {
-                            try
-                            {
-                                return s();
-                            }
-                            catch(Exception ex)
-                            {
-                                Core.Log.Write(ex);
-                                return (false, null);
-                            }
-                        })
-                        .ToArray()
-                        .Where(r => r.Ran)
-                        .Select(s => s.Result)
-                        .Where(s => s != null)
-                        .ToArray();
-                    var resultItems2 = _lstStatusValueCollection.Select(s =>
+                    var lstStatus = new List<StatusItem>();
+
+                    foreach(var item in _lstStatusItem)
                     {
-                        var item = new StatusItem();
+                        if (item == null) continue;
                         try
                         {
-                            s(item.Values);
+                            var (ran, result) = item();
+                            if (ran)
+                                lstStatus.Add(result);
                         }
                         catch(Exception ex)
                         {
                             Core.Log.Write(ex);
                         }
-                        return item;
-                    }).ToArray();
-
-                    var results = resultItems.Concat(resultItems2)
-                        .GroupBy(s => s.Name)
-                        .Select(s =>
+                    }
+                    foreach(var item in _lstStatusValueCollection)
+                    {
+                        if (item == null) continue;
+                        try
                         {
-                            if (s.Count() == 1) return s.First();
-                            return new StatusItem
-                            {
-                                Name = s.Key,
-                                Values = new StatusItemValuesCollection(s.SelectMany(i => i.Values)),
-                                Children = new List<StatusItem>(s.SelectMany(i => i.Children))
-                            };
-                        }).ToList();
+                            var sItem = new StatusItem();
+                            item(sItem.Values);
+                            lstStatus.Add(sItem);
+
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                    }
+
+                    var results = GetAndGroup(lstStatus);
                     return results;
                 }
             }
             #endregion
+
+            private static List<StatusItem> GetAndGroup(List<StatusItem> col)
+            {
+                if (col.Count < 2) return col;
+                var response = new List<StatusItem>();
+                var group = col.GroupBy(s => s.Name);
+                foreach (var item in group)
+                {
+                    if (item.Count() == 1)
+                    {
+                        response.Add(item.First());
+                    }
+                    else
+                    {
+                        var values = item.SelectMany(i => i.Values).DistinctBy(i => i.Key).ToArray();
+                        var children = GetAndGroup(item.SelectMany(i => i.Children).ToList());
+                        response.Add(new StatusItem
+                        {
+                            Name = item.Key,
+                            Values = new StatusItemValuesCollection(values),
+                            Children = children
+                        });
+                    }
+                }
+                return response;
+            }
         }
         #endregion
 

@@ -105,7 +105,6 @@ namespace TWCore.Messaging.NATS
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);
             OnDispose();
-            WorkerEvent.Wait(TimeSpan.FromSeconds(Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec));
             await _monitorTask.ConfigureAwait(false);
         }
         /// <inheritdoc />

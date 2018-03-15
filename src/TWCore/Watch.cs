@@ -313,7 +313,7 @@ namespace TWCore
                     case 2:
                         cTime = item.LastTapTicks * FrequencyTime;
                         gTime = item.GlobalTicks * FrequencyTime;
-                        item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, cTime);
+                        item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, gTime);
                         if (Math.Abs(cTime - gTime) > 0.00001)
                             Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
                         else

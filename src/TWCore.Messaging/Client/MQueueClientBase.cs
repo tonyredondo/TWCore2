@@ -76,19 +76,16 @@ namespace TWCore.Messaging.Client
         /// <summary>
         /// Events that fires when a request message is sent
         /// </summary>
-        //public event AsyncEventHandler<RequestSentEventArgs> OnRequestSent;
         public AsyncEvent<RequestSentEventArgs> OnRequestSent { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a request message is about to be sent
         /// </summary>
-        //public event AsyncEventHandler<RequestSentEventArgs> OnBeforeSendRequest;
         public AsyncEvent<RequestSentEventArgs> OnBeforeSendRequest { get; set; }
         /// <inheritdoc />
         /// <summary>
         /// Events that fires when a response message is received
         /// </summary>
-        //public event AsyncEventHandler<ResponseReceivedEventArgs> OnResponseReceived;
         public AsyncEvent<ResponseReceivedEventArgs> OnResponseReceived { get; set; }
         #endregion
 

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime;
 using System.Runtime.CompilerServices;
 using TWCore.Net.HttpServer;
 using TWCore.Net.Multicast;
@@ -77,8 +78,9 @@ namespace TWCore.Diagnostics.Status.Transports
                 ctx.Response.ContentType = SerializerMimeTypes.Json;
                 jsonSerializer.Serialize(statuses, ctx.Response.OutputStream);
             });
-            _httpServer.AddGetHandler("/gccollect", ctx => 
+            _httpServer.AddGetHandler("/gccollect", ctx =>
             {
+                GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 ctx.Response.ContentType = SerializerMimeTypes.Json;

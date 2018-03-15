@@ -342,12 +342,27 @@ namespace TWCore.Diagnostics.Status
 
                     var rValues = new List<StatusItem>();
                     foreach (var root in roots)
-                    {
                         CreateTree(root, values);
+                    foreach (var gItem in roots.GroupBy(r => r.Value?.Name).ToArray())
+                    {
+                        if (gItem.Count() == 1) continue;
+                        var group = new StatusData
+                        {
+                            Value = new StatusItem { Name = "Instances of : " + gItem.Key }
+                        };
+                        gItem.Each((item, index) => 
+                        {
+                            item.Value.Name += " [I:" + index + "]";
+                            group.Value.Children.Add(item.Value);
+                            roots.Remove(item);
+                        });
+                        roots.Add(group);
+                    }
+                    foreach (var root in roots)
+                    {
                         SetIds(string.Empty, root.Value);
                         rValues.Add(root.Value);
                     }
-
                     //
                     foreach (var value in values)
                         _statusDataPool.Store(value);
@@ -422,10 +437,17 @@ namespace TWCore.Diagnostics.Status
                             status.Value.Children.Add(item.Value);
                     }
                     MergeSimilar(status.Value.Children);
-                    foreach (var gItem in status.Value.Children.GroupBy(g => g.Name))
+                    foreach (var gItem in status.Value.Children.GroupBy(g => g.Name).ToArray())
                     {
                         if (gItem.Count() == 1) continue;
-                        gItem.Each((item, index) => item.Name += " [" + index + "]");
+                        var group = new StatusItem {Name = "Instances of : " + gItem.Key};
+                        gItem.Each((item, index) =>
+                        {
+                            item.Name += " [I:" + index + "]";
+                            group.Children.Add(item);
+                            status.Value.Children.Remove(item);
+                        });
+                        status.Value.Children.Add(group);
                     }
                     status.Value.Children.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
                 }
@@ -443,9 +465,25 @@ namespace TWCore.Diagnostics.Status
                 {
                     if (status.Object == StatusContainer.Root) return;
 
+                    var name = attr?.Name;
+                    if (name == null)
+                    {
+                        if (type.IsGenericType)
+                        {
+                            if (type.GetInterface("IList") != null)
+                            {
+                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
+                                name = (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
+                            }
+                            else
+                                name = type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
+                        }
+                        else
+                            name = type.Namespace + "." + type.Name;
+                    }
                     status.Value = new StatusItem
                     {
-                        Name = attr?.Name ?? type.Namespace + "." + type.Name
+                        Name = name
                     };
                     return;
                 }
@@ -458,7 +496,25 @@ namespace TWCore.Diagnostics.Status
                 else
                     status.Statuses.Remove(sValue);
                 if (sValue.Name == null)
-                    sValue.Name = attr?.Name ?? type.Namespace + "." + type.Name;
+                {
+                    var name = attr?.Name;
+                    if (name == null)
+                    {
+                        if (type.IsGenericType)
+                        {
+                            if (type.GetInterface("IList") != null)
+                            {
+                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
+                                name = (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
+                            }
+                            else
+                                name = type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
+                        }
+                        else
+                            name = type.Namespace + "." + type.Name;
+                    }
+                    sValue.Name = name;
+                }
                 sValue.Children.AddRange(status.Statuses);
                 status.Statuses = null;
                 status.Value = sValue;

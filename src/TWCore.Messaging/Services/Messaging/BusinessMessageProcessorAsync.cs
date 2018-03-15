@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
@@ -34,6 +35,7 @@ namespace TWCore.Services.Messaging
         private static readonly BusinessMessageProcessorSettings Settings = Core.GetSettings<BusinessMessageProcessorSettings>();
         private ObjectPool<IBusinessAsync> _businessPool;
         private readonly Func<IBusinessAsync> _creationFunction;
+        private readonly int _maxMessages;
         private readonly int _maxMessagesPerQueue;
 
         #region Static Properties
@@ -62,9 +64,12 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             _maxMessagesPerQueue = pairConfig?.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
                 throw new ArgumentNullException(nameof(pairConfig), "The MQPairConfig can't be null");
-            var serverCount = pairConfig.ServerQueues.Count;
-            BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
-            AttachStatus();
+            var serverQueues = pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
+                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+            _maxMessages = (serverQueues?.RecvQueues?.Count ?? 0) * _maxMessagesPerQueue;
+            BusinessInitialCount = (int)(_maxMessages * InitialBusinessesPercent) + 1; AttachStatus();
         }
         /// <summary>
         /// Business message processor
@@ -77,8 +82,12 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             _maxMessagesPerQueue = server?.Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
                 throw new ArgumentNullException(nameof(server), "The IMQueueServer can't be null");
-            var serverCount = server.Config.ServerQueues.Count;
-            BusinessInitialCount = (int)((_maxMessagesPerQueue * serverCount) * InitialBusinessesPercent) + 1; //We start with the 30% of the total businesses
+            var serverQueues = server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
+                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
+                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+            _maxMessages = (serverQueues?.RecvQueues?.Count ?? 0) * _maxMessagesPerQueue;
+            BusinessInitialCount = (int)(_maxMessages * InitialBusinessesPercent) + 1;
             AttachStatus();
         }
         /// <summary>
@@ -98,6 +107,7 @@ namespace TWCore.Services.Messaging
             Core.Status.Attach(collection =>
             {
                 collection.Add("Maximum businesses per queue", _maxMessagesPerQueue);
+                collection.Add("Maximum total businesses", _maxMessages);
                 collection.Add("Business item initial count in percent of the total maximum items", InitialBusinessesPercent);
                 collection.Add("Business initial count", BusinessInitialCount);
             });
@@ -114,6 +124,7 @@ namespace TWCore.Services.Messaging
             Core.Log.LibDebug("Initializing message processor...");
             Core.Log.LibDebug("Business item initial count in percent of the total maximum items = {0}", InitialBusinessesPercent);
             Core.Log.LibDebug("Maximum businesses per queue = {0}", _maxMessagesPerQueue);
+            Core.Log.LibDebug("Maximum businesses = {0}", _maxMessages);
             Core.Log.LibDebug("Business Initial Count = {0}", BusinessInitialCount);
             Dispose();
             _businessPool = new ObjectPool<IBusinessAsync>(pool =>

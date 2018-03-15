@@ -38,27 +38,11 @@ namespace TWCore.Services
         /// Process average time
         /// </summary>
         public double ProcessAverageTime => _processTimes ?? 0;
-        /// <summary>
-        /// Peak value of process average time
-        /// </summary>
-        public double PeakProcessAverageTime { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of process average time
-        /// </summary>
-        public DateTime PeakProcessAverageTimeLastDate { get; private set; }
 
         /// <summary>
         /// Process average time on the last minute
         /// </summary>
         public double LastMinuteProcessAverageTime => _lastMinuteProcessTimes ?? 0;
-        /// <summary>
-        /// Peak value of process average time on the last minute
-        /// </summary>
-        public double PeakLastMinuteProcessAverageTime { get; private set; }
-        /// <summary>
-        /// Date and time of the peak value of process average time on the last minute
-        /// </summary>
-        public DateTime PeakLastMinuteProcessAverageTimeLastDate { get; private set; }
 
         /// <summary>
         /// Number of current active processing threads
@@ -120,8 +104,6 @@ namespace TWCore.Services
                 lock (_locker)
                 {
                     _lastMinuteProcessTimes = null;
-                    PeakLastMinuteProcessAverageTime = 0;
-                    PeakLastMinuteProcessAverageTimeLastDate = DateTime.MinValue;
 
                     LastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;
                     PeakLastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;
@@ -132,28 +114,20 @@ namespace TWCore.Services
             Core.Status.Attach(collection =>
             {
                 collection.Add("Message process time average",
-                    new StatusItemValueItem("Time (ms)", ProcessAverageTime, true),
-                    new StatusItemValueItem("Peak Time (ms)", PeakProcessAverageTime, true),
-                    new StatusItemValueItem("Peak DateTime", PeakProcessAverageTimeLastDate));
-
-                collection.Add("Message process time average in last minute ",
-                    new StatusItemValueItem("Time (ms)", LastMinuteProcessAverageTime, true),
-                    new StatusItemValueItem("Peak Time (ms)", PeakLastMinuteProcessAverageTime, true),
-                    new StatusItemValueItem("Peak DateTime", PeakLastMinuteProcessAverageTimeLastDate));
+                    new StatusItemValueItem("Historic Time (ms)", ProcessAverageTime, true),
+                    new StatusItemValueItem("Last Minute Time (ms)", LastMinuteProcessAverageTime, true));
 
                 collection.Add("Current active processing threads",
                     new StatusItemValueItem("Quantity", CurrentMessagesBeingProcessed, true),
                     new StatusItemValueItem("Peak Quantity", PeakCurrentMessagesBeingProcessed, true),
-                    new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesBeingProcessedLastDate));
+                    new StatusItemValueItem("Peak DateTime", PeakCurrentMessagesBeingProcessedLastDate),
+                    new StatusItemValueItem("Last Message Date", LastMessageDateTime),
+                    new StatusItemValueItem("Last Processing Date", LastProcessingDateTime));
 
                 collection.Add("Last minute active processed threads",
                     new StatusItemValueItem("Quantity", LastMinuteMessagesBeingProcessed, true),
                     new StatusItemValueItem("Peak Quantity", PeakLastMinuteMessagesBeingProcessed, true),
                     new StatusItemValueItem("Peak DateTime", PeakLastMinuteMessagesBeingProcessedLastDate));
-
-                collection.Add("Last DateTime",
-                    new StatusItemValueItem("Message Received", LastMessageDateTime),
-                    new StatusItemValueItem("Message Processed", LastProcessingDateTime));
 
                 collection.Add("Totals",
                     new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
@@ -212,23 +186,10 @@ namespace TWCore.Services
         {
             lock (_locker)
             {
-                _dayStatus.Register("Processed Messages", time);
+                _dayStatus.Register("Successfully Processed Messages", time);
                 _processTimes = _processTimes * 0.8 + time * 0.2 ?? time;
                 _lastMinuteProcessTimes = _lastMinuteProcessTimes * 0.8 + time * 0.2 ?? time;
-
-                var avgPt = ProcessAverageTime;
-                if (avgPt > PeakProcessAverageTime)
-                {
-                    PeakProcessAverageTime = avgPt;
-                    PeakProcessAverageTimeLastDate = Core.Now;
-                }
-
-                var avgLmpt = LastMinuteProcessAverageTime;
-                if (avgLmpt > PeakLastMinuteProcessAverageTime)
-                {
-                    PeakLastMinuteProcessAverageTime = avgLmpt;
-                    PeakLastMinuteProcessAverageTimeLastDate = Core.Now;
-                }
+                LastProcessingDateTime = Core.Now;
             }
         }
         /// <summary>

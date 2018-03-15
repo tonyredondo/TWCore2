@@ -45,17 +45,14 @@ namespace TWCore.Services
         /// <summary>
         /// Events that fires when a message has been received
         /// </summary>
-        //public event AsyncEventHandler<MessageEventArgs> MessageReceived;
         public AsyncEvent<MessageEventArgs> MessageReceived { get; set; }
         /// <summary>
         /// Events that fires before sending a message
         /// </summary>
-        //public event AsyncEventHandler<MessageEventArgs> BeforeSendMessage;
         public AsyncEvent<MessageEventArgs> BeforeSendMessage { get; set; }
         /// <summary>
         /// Events that fires when a message has been sent
         /// </summary>
-        //public event AsyncEventHandler<MessageEventArgs> MessageSent;
         public AsyncEvent<MessageEventArgs> MessageSent { get; set; }
         #endregion
 

@@ -150,7 +150,9 @@ namespace TWCore.Triggers
         /// </summary>
         public void Load()
         {
-            InnerOnTriggerExecute(new LocalLoaderTrigger());
+            var trigger = new LocalLoaderTrigger();
+            Core.Status.AttachChild(trigger, this);
+            InnerOnTriggerExecute(trigger);
         }
         /// <summary>
         /// Unload and dispose all the registered triggers

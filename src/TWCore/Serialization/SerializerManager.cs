@@ -105,6 +105,9 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         static SerializerManager()
         {
+            Register(new JsonTextSerializer());
+            Register(new XmlTextSerializer());
+            Register(new BinaryFormatterSerializer());
             Core.RunOnInit(() =>
             {
                 if (Factory.GetAllAssemblies != null)
@@ -118,6 +121,9 @@ namespace TWCore.Serialization
                             {
                                 if (type.IsInterface || type.IsAbstract || type.ImplementedInterfaces.All(i => i != typeof(ISerializer))) continue;
                                 var serType = type.AsType();
+                                if (serType == typeof(JsonTextSerializer)) continue;
+                                if (serType == typeof(XmlTextSerializer)) continue;
+                                if (serType == typeof(BinaryFormatterSerializer)) continue;
                                 try
                                 {
                                     Register((ISerializer)Activator.CreateInstance(serType));

@@ -224,7 +224,6 @@ namespace TWCore.Diagnostics.Status
 
             var sw = Stopwatch.StartNew();
             var items = _statusCollection.GetStatus();
-            GC.Collect(0);
             return new StatusItemCollection
             {
                 Timestamp = Core.Now,

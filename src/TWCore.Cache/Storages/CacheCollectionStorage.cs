@@ -48,6 +48,7 @@ namespace TWCore.Cache.Storages
         protected CacheCollectionStorage(ICacheCollection<string, (StorageItemMeta, SerializedObject)> cacheCollection)
         {
             _storage = cacheCollection;
+            SetReady(true);
             Core.Status.Attach(collection =>
             {
                 if (_storage == null)

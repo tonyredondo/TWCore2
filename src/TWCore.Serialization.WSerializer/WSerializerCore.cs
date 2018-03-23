@@ -1244,6 +1244,7 @@ namespace TWCore.Serialization.WSerializer
             {
                 case DataType.TypeNameBool: return typeof(bool);
                 case DataType.TypeNameByte: return typeof(byte);
+                case DataType.TypeNameSerializedObject: return typeof(SerializedObject);
                 case DataType.TypeNameChar: return typeof(char);
                 case DataType.TypeNameDateTime: return typeof(DateTime);
                 case DataType.TypeNameDateTimeOffset: return typeof(DateTimeOffset);

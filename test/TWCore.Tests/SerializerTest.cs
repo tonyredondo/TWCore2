@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer.Deserializer;
+using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 // ReSharper disable InconsistentNaming
@@ -28,6 +29,17 @@ namespace TWCore.Tests
                 LastName = "Redondo",
                 Age = 33
             };
+
+            var sObj = new SerializedObject(sTest, new WBinarySerializer());
+            var valueO = sObj.ToSubArray();
+            var value = sObj.SerializeToWBinary();
+            var sObj2 = (SerializedObject) value.DeserializeFromWBinary<object>();
+            var ss1 = sObj2.GetValue();
+            var value2 = sObj.SerializeToPWBinary();
+            var sObj3 = (SerializedObject) value2.DeserializeFromPWBinary<object>();
+            var ss2 = sObj3.GetValue();
+
+            
             var collection = new List<List<STest>>();
             for (var i = 0; i <= 10000; i++)
             {

@@ -127,6 +127,8 @@ namespace TWCore.Serialization.WSerializer.Serializer
                 return DataType.TypeNameSByte;
             if (type == typeof(byte))
                 return DataType.TypeNameByte;
+            if (type == typeof(SerializedObject))
+                return DataType.TypeNameSerializedObject;
             if (type == typeof(char))
                 return DataType.TypeNameChar;
             return type == typeof(DateTimeOffset) ? DataType.TypeNameDateTimeOffset : DataType.Unknown;

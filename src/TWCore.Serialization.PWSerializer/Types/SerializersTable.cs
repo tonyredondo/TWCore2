@@ -177,6 +177,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         public static EnumSerializer EnumSerializer;
         public static BoolSerializer BoolSerializer;
         public static CharSerializer CharSerializer;
+        public static SerializedObjectSerializer SerializedObjectSerializer;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private SerializersTable(SerializerMode mode)
@@ -228,6 +229,11 @@ namespace TWCore.Serialization.PWSerializer.Types
                 TimeSpanSerializer.Write(bw, value);
                 return;
             }
+            if (serializerType == typeof(SerializedObjectSerializer))
+            {
+                SerializedObjectSerializer.Write(bw, value);
+                return;
+            }
             if (serializerType == typeof(ByteArraySerializer))
             {
                 ByteArraySerializer.Write(bw, value);
@@ -262,6 +268,8 @@ namespace TWCore.Serialization.PWSerializer.Types
                 tSer = EnumSerializer;
             else if (ByteArraySerializer.CanWrite(type))
                 tSer = ByteArraySerializer;
+            else if (SerializedObjectSerializer.CanWrite(type))
+                tSer = SerializedObjectSerializer;
             else if (CharSerializer.CanWrite(type))
                 tSer = CharSerializer;
             _typesCache[type] = tSer;
@@ -431,6 +439,8 @@ namespace TWCore.Serialization.PWSerializer.Types
                 DeserializerTypesCache[i] = typeof(DateTimeSerializer);
             foreach (var i in TimeSpanSerializer.ReadTypes)
                 DeserializerTypesCache[i] = typeof(TimeSpanSerializer);
+            foreach (var i in SerializedObjectSerializer.ReadTypes)
+                DeserializerTypesCache[i] = typeof(SerializedObjectSerializer);
             foreach (var i in ByteArraySerializer.ReadTypes)
                 DeserializerTypesCache[i] = typeof(ByteArraySerializer);
             foreach (var i in CharSerializer.ReadTypes)
@@ -450,6 +460,7 @@ namespace TWCore.Serialization.PWSerializer.Types
         public static EnumSerializer EnumSerializer;
         public static BoolSerializer BoolSerializer;
         public static CharSerializer CharSerializer;
+        public static SerializedObjectSerializer SerializedObjectSerializer;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private DeserializersTable(SerializerMode mode)
@@ -481,6 +492,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                 else if (type == typeof(BoolSerializer)) tSer = BoolSerializer;
                 else if (type == typeof(DateTimeSerializer)) tSer = DateTimeSerializer;
                 else if (type == typeof(TimeSpanSerializer)) tSer = TimeSpanSerializer;
+                else if (type == typeof(SerializedObjectSerializer)) tSer = SerializedObjectSerializer;
                 else if (type == typeof(ByteArraySerializer)) tSer = ByteArraySerializer;
                 else if (type == typeof(CharSerializer)) tSer = CharSerializer;
             }

@@ -17,6 +17,7 @@ limitations under the License.
 using DasMulli.Win32.ServiceUtils;
 using System;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using TWCore.Settings;
@@ -108,7 +109,9 @@ namespace TWCore.Services
         {
             if (args.Contains("/service-run", StringComparer.OrdinalIgnoreCase))
             {
+                Directory.SetCurrentDirectory(AppContext.BaseDirectory);
                 Core.Log.LibDebug("Starting...");
+                Core.Log.InfoBasic("Current Directory: {0}", Directory.GetCurrentDirectory());
                 InitAction?.Invoke();
                 if (!string.IsNullOrWhiteSpace(BannerText))
                 {

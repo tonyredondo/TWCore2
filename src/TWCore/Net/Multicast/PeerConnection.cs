@@ -287,6 +287,10 @@ namespace TWCore.Net.Multicast
                         Core.Log.Write(ex);
                     }
                 }
+                catch(InvalidCastException)
+                {
+                    //
+                }
                 catch (ObjectDisposedException)
                 {
                     //

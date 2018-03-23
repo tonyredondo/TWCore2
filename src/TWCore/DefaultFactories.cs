@@ -91,11 +91,16 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {
-            if (SetDirectoryToBaseAssembly)
+            var line = Environment.CommandLine;
+            var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
+            var argumentLine = line.Replace(asmLocation, string.Empty);
+            var cleanArguments = GetArguments(argumentLine);
+
+            if (SetDirectoryToBaseAssembly || cleanArguments.Contains("service-run", StringComparer.OrdinalIgnoreCase))
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             if (SetDirectoryToConfigurationFilePath && (Path.IsPathRooted(ConfigurationFile) || !string.IsNullOrEmpty(Path.GetDirectoryName(ConfigurationFile))))
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(ConfigurationFile));
-
+            
             if (Factory.PlatformType == PlatformType.Windows)
                 SequentialGuidGenerator = GetSequentialGuid;
 
@@ -112,11 +117,7 @@ namespace TWCore
                                                        "Load the application using other configuration file.",
                                                        obj => { });
 
-            var line = Environment.CommandLine;
-            var asmLocation = Path.GetFullPath(Assembly.GetEntryAssembly().Location);
-            var argumentLine = line.Replace(asmLocation, string.Empty);
-
-            var cleanArguments = GetArguments(argumentLine);
+            
             var argConfigFile = cleanArguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(argConfigFile))
             {

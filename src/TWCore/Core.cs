@@ -184,6 +184,7 @@ namespace TWCore
             if (DebugMode)
             {
                 Log.InfoBasic("Core Init - Platform: {0} - OS: {1}", Factory.PlatformType, RuntimeInformation.OSDescription);
+                Log.InfoBasic("Directory: {0}", Directory.GetCurrentDirectory());
             }
             AssemblyResolverManager.RegisterDomain();
             if (ServiceContainer.HasConsole)

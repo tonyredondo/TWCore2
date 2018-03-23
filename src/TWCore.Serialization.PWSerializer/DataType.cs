@@ -64,6 +64,9 @@ namespace TWCore.Serialization.PWSerializer
         public const byte   DictionaryStart             = 34;
         public const byte   DictionaryEnd               = 35;
  
+	    public const byte	SerializedObject			= 40;
+	    public const byte	SerializedObjectNull		= 41;
+	    
 		public const byte   Decimal 					= 45;
 		public const byte   DecimalDefault				= 46;
 		public const byte   RefDecimalByte				= 47;

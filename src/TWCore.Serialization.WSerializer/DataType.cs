@@ -253,6 +253,10 @@ namespace TWCore.Serialization.WSerializer
 
         public const byte   FileStart                   = 225;
 
+	    public const byte	SerializedObject			= 227;
+	    public const byte	SerializedObjectNull		= 228;
+	    public const byte	TypeNameSerializedObject    = 229;
+	    
         public const byte   TypeNameDecimal             = 233;
         public const byte   TypeNameDouble              = 234;
         public const byte   TypeNameFloat               = 235;

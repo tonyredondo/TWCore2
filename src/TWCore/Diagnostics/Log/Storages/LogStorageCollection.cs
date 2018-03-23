@@ -36,7 +36,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;
         private readonly object _locker = new object();
         private readonly List<(ILogStorage, LogLevel)> _items = new List<(ILogStorage, LogLevel)>();
-        private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>(1);
+        private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>();
         private volatile bool _isDirty;
         private LogLevel _lastMaxLogLevel = LogLevel.Error;
         private List<(ILogStorage, LogLevel)> _cItems;
@@ -196,6 +196,7 @@ namespace TWCore.Diagnostics.Log.Storages
             });
             return resTask;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static async Task InternalWriteAsync(ILogStorage storage, ILogItem logItem)
         {
             try

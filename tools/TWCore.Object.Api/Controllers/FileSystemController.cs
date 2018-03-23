@@ -25,6 +25,7 @@ using System.Xml.Serialization;
 using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.Net.Multicast;
+using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Settings;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -408,6 +409,17 @@ namespace TWCore.Object.Api.Controllers
                 var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
                 var statusHttpServices = DiscoveryService.GetLocalRegisteredServices("STATUS.HTTP");
                 var statusFilesServices = DiscoveryService.GetLocalRegisteredServices("STATUS.FILE");
+
+                var appNames = traceFilesServices.Select(ts => ts.ApplicationName).ToArray();
+
+                var folderServicesData = DiscoveryService.GetLocalRegisteredServices("FOLDERS")
+                .Where(s => appNames.Contains(s.ApplicationName))
+                .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
+                .ToArray();
+
+                var asmResolver = AssemblyResolverManager.GetAssemblyResolver();
+                asmResolver?.AppendPath(folderServicesData);
+
                 var servicesPathEntries = new Dictionary<string, PathEntry>();
     
                 foreach (var srv in logFilesServices)
@@ -490,7 +502,7 @@ namespace TWCore.Object.Api.Controllers
                         });
                 }
 
-                return (servicesPathEntries, TimeSpan.FromSeconds(10));
+                return (servicesPathEntries, TimeSpan.FromSeconds(30));
             });
         }
         private static PathEntry EnsureServiceEntry(Dictionary<string, PathEntry> servicesPathEntries, DiscoveryService.ReceivedService srv)

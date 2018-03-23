@@ -30,6 +30,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     {
         private readonly object _locker = new object();
         private readonly List<ITraceStorage> _items = new List<ITraceStorage>();
+        private readonly ReferencePool<List<Task>> _procTaskPool = new ReferencePool<List<Task>>();
         private List<ITraceStorage> _cItems;
         private volatile bool _isDirty;
 
@@ -98,18 +99,27 @@ namespace TWCore.Diagnostics.Trace.Storages
                     _cItems = new List<ITraceStorage>(_items);
                 }
             }
-            var tsk = _cItems.Select(async i =>
+            var tsks = _procTaskPool.New();
+            for (var i = 0; i < _cItems.Count; i++)
+                tsks.Add(InternalWriteAsync(_cItems[i], item));
+            var resTask = Task.WhenAll(tsks).ContinueWith(_ =>
             {
-                try
-                {
-                    await i.WriteAsync(item).ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
+                tsks.Clear();
+                _procTaskPool.Store(tsks);
             });
-            return Task.WhenAll(tsk);
+            return resTask;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static async Task InternalWriteAsync(ITraceStorage storage, TraceItem item)
+        {
+            try
+            {
+                await storage.WriteAsync(item).ConfigureAwait(false);
+            }
+            catch
+            {
+                //
+            }
         }
         /// <inheritdoc />
         /// <summary>

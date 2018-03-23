@@ -15,11 +15,13 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Log;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -81,30 +83,63 @@ namespace TWCore.Reflection
             searchPaths = searchPaths.Distinct().Where(Directory.Exists).ToList();
 
             var basePath = Domain.BaseDirectory;
-            searchPaths.ParallelEach(sPath =>
+            var cBag = new ConcurrentBag<AssemblyInfo>();
+            foreach(var sPath in searchPaths)
             {
                 var localPath = Path.Combine(basePath, sPath?.Trim());
                 var localExeFiles = Directory.EnumerateFiles(localPath, "*.exe", SearchOption.AllDirectories);
                 var localDllFiles = Directory.EnumerateFiles(localPath, "*.dll", SearchOption.AllDirectories);
                 var localFiles = localExeFiles.Concat(localDllFiles);
-                var localAssembliesInfo = localFiles.AsParallel().Select(file =>
+                Parallel.ForEach(localFiles, file =>
                 {
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
-                        if (IsExcludedAssembly(name.Name)) return null;
+                        if (IsExcludedAssembly(name.Name)) return;
                         if (domainAssemblies.All(l => l.FullName != name.FullName))
-                            return new AssemblyInfo(file, name);
+                            cBag.Add(new AssemblyInfo(file, name));
                     }
                     catch (Exception ex)
                     {
                         Core.Log.Write(LogLevel.Warning, ex);
                     }
-                    return null;
-                }).RemoveNulls();
-                Assemblies.AddRange(localAssembliesInfo);
-            });
+                });
+            };
+            Assemblies.AddRange(cBag);
             _assembliesInfoLoaded = true;
+        }
+        /// <summary>
+        /// Append an assembly path
+        /// </summary>
+        /// <param name="paths">Assemblies path where the resolver is going to search</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void AppendPath(params string[] paths)
+        {
+            if (paths == null || paths.Length == 0) return;
+            var basePath = Domain.BaseDirectory;
+            var localAssembliesInfo = new List<AssemblyInfo>();
+            foreach (var path in paths)
+            {
+                var localPath = Path.Combine(basePath, path?.Trim());
+                var localExeFiles = Directory.EnumerateFiles(localPath, "*.exe", SearchOption.AllDirectories);
+                var localDllFiles = Directory.EnumerateFiles(localPath, "*.dll", SearchOption.AllDirectories);
+                var localFiles = localExeFiles.Concat(localDllFiles);
+                foreach(var file in localFiles)
+                {
+                    try
+                    {
+                        var name = AssemblyName.GetAssemblyName(file);
+                        if (IsExcludedAssembly(name.Name)) continue;
+                        if (!Assemblies.Contains(name.FullName))
+                            localAssembliesInfo.Add(new AssemblyInfo(file, name));
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(LogLevel.Warning, ex);
+                    }
+                }
+            }
+            Assemblies.AddRange(localAssembliesInfo);
         }
         /// <summary>
         /// Bind the resolver to the Domain
@@ -146,7 +181,14 @@ namespace TWCore.Reflection
             if (Assemblies.Contains(args.Name))
             {
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
-                return Assemblies[args.Name].Instance;
+                try
+                {
+                    return Assemblies[args.Name].Instance;
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
 
             var asmName = new AssemblyName(args.Name);
@@ -162,7 +204,15 @@ namespace TWCore.Reflection
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInstance.Instance;
+            try
+            {
+                return asmInstance.Instance;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -172,7 +222,14 @@ namespace TWCore.Reflection
             if (Assemblies.Contains(args.Name))
             {
                 Core.Log.LibDebug("Assembly {0} found.", args.Name);
-                return Assemblies[args.Name].Instance;
+                try
+                {
+                    return Assemblies[args.Name].Instance;
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
             }
 
             var asmName = new AssemblyName(args.Name);
@@ -188,7 +245,15 @@ namespace TWCore.Reflection
                 return null;
             }
             Core.Log.LibDebug("Assembly {0} found.", args.Name);
-            return asmInstance.Instance;
+            try
+            {
+                return asmInstance.Instance;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            return null;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -216,14 +281,16 @@ namespace TWCore.Reflection
         /// </summary>
         public class AssemblyInfo
         {
+            Lazy<Assembly> _lazyInstance;
+
             /// <summary>
             /// AssemblyName object from the assembly
             /// </summary>
-            public AssemblyName AssemblyName { get; set; }
+            public AssemblyName AssemblyName { get; }
             /// <summary>
             /// Assembly file location
             /// </summary>
-            public string FilePath { get; set; }
+            public string FilePath { get; }
             /// <summary>
             /// Friendly name of the assembly
             /// </summary>
@@ -235,13 +302,13 @@ namespace TWCore.Reflection
             /// <summary>
             /// Assembly instance
             /// </summary>
-            public Assembly Instance { get; private set; }
+            public Assembly Instance => _lazyInstance.Value;
 
             public AssemblyInfo(string filePath, AssemblyName assemblyName)
             {
                 FilePath = filePath;
                 AssemblyName = assemblyName;
-                Instance = Assembly.LoadFile(filePath);
+                _lazyInstance = new Lazy<Assembly>(() => Assembly.LoadFile(FilePath));
             }
         }
         #endregion

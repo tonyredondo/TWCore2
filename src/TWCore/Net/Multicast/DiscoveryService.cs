@@ -75,17 +75,13 @@ namespace TWCore.Net.Multicast
         /// </summary>
         public static string MulticastIp { get; private set; } = "230.23.12.83";
         /// <summary>
-        /// Messages Serializer
-        /// </summary>
-        public static ISerializer Serializer { get; set; } = SerializerManager.DefaultBinarySerializer;
-        /// <summary>
         /// Has a registered local service
         /// </summary>
         public static bool HasRegisteredLocalService
         {
             get
             {
-                lock(LocalServices)
+                lock (LocalServices)
                     return LocalServices.Count > 0;
             }
         }
@@ -282,39 +278,45 @@ namespace TWCore.Net.Multicast
         #region Private Methods
         private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
-            try
-            {
-                var rService = Serializer.Deserialize<RegisteredService>(e.Data);
-                var received = new ReceivedService
-                {
-                    ServiceId = rService.ServiceId,
-                    Category = rService.Category,
-                    Name = rService.Name,
-                    Description = rService.Description,
-                    MachineName = rService.MachineName,
-                    ApplicationName = rService.ApplicationName,
-                    FrameworkVersion = rService.FrameworkVersion,
-                    EnvironmentName = rService.EnvironmentName,
-                    Data = rService.Data,
-                    Addresses = new[] {e.Address}
-                };
-                bool exist;
-                lock (ReceivedServices)
-                {
-                    exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
-                    if (exist)
-                        received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
-                    ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
-                }
+            var serObj = SerializedObject.FromSubArray(e.Data);
+            if (!(serObj?.GetValue() is List<RegisteredService> lstRegisteredService)) return;
+            if (lstRegisteredService == null) return;
 
-                var eArgs = new EventArgs<ReceivedService>(received);
-                if (!exist)
-                    OnNewServiceReceived?.Invoke(sender, eArgs);
-                OnServiceReceived?.Invoke(sender, eArgs);
-            }
-            catch(Exception)
+            foreach (var rService in lstRegisteredService)
             {
-                //
+                try
+                {
+                    var received = new ReceivedService
+                    {
+                        ServiceId = rService.ServiceId,
+                        Category = rService.Category,
+                        Name = rService.Name,
+                        Description = rService.Description,
+                        MachineName = rService.MachineName,
+                        ApplicationName = rService.ApplicationName,
+                        FrameworkVersion = rService.FrameworkVersion,
+                        EnvironmentName = rService.EnvironmentName,
+                        Data = rService.Data,
+                        Addresses = new[] { e.Address }
+                    };
+                    bool exist;
+                    lock (ReceivedServices)
+                    {
+                        exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
+                        if (exist)
+                            received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
+                        ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                    }
+
+                    var eArgs = new EventArgs<ReceivedService>(received);
+                    if (!exist)
+                        OnNewServiceReceived?.Invoke(sender, eArgs);
+                    OnServiceReceived?.Invoke(sender, eArgs);
+                }
+                catch (Exception)
+                {
+                    //
+                }
             }
         }
         private static async Task SendThreadAsync()
@@ -329,11 +331,11 @@ namespace TWCore.Net.Multicast
                 {
                     if (srv.GetDataFunc != null)
                         srv.Data = srv.GetDataFunc();
-                    var srvValue = Serializer.Serialize(srv);
-                    await PeerConnection.SendAsync(srvValue).ConfigureAwait(false);
-                    if (_token.IsCancellationRequested)
-                        return;
                 }
+
+                var sObj = new SerializedObject(tmpList);
+                var sObjArr = sObj.ToSubArray();
+                await PeerConnection.SendAsync(sObjArr).ConfigureAwait(false);
                 await Task.Delay(10000, _token).ConfigureAwait(false);
             }
         }

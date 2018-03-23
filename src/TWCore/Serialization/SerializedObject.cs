@@ -15,8 +15,10 @@ limitations under the License.
  */
 
 using System;
+using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Text;
 using System.Xml.Serialization;
 using TWCore.Compression;
 
@@ -79,6 +81,60 @@ namespace TWCore.Serialization
                     serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
             }
             return serializer.Deserialize(Data, type);
+        }
+        /// <summary>
+        /// Get SubArray representation of the SerializedObject instance
+        /// </summary>
+        /// <returns>SubArray instance</returns>
+        public SubArray<byte> ToSubArray()
+        {
+            var dataTypeByte = Encoding.UTF8.GetBytes(DataType ?? string.Empty);
+            var serializerMimeTypeByte = Encoding.UTF8.GetBytes(SerializerMimeType ?? string.Empty);
+            var dataByte = Data ?? new byte[0];
+            var ms = new MemoryStream();
+            var bw = new BinaryWriter(ms);
+            bw.Write(dataTypeByte.Length);
+            bw.Write(dataTypeByte);
+            bw.Write(serializerMimeTypeByte.Length);
+            bw.Write(serializerMimeTypeByte);
+            bw.Write(dataByte.Length);
+            bw.Write(dataByte);
+            return ms.ToSubArray();
+        }
+        /// <summary>
+        /// Get SerializedObject instance from the SubArray representation.
+        /// </summary>
+        /// <param name="byteArray">SubArray instance</param>
+        /// <returns>SerializedObject instance</returns>
+        public static SerializedObject FromSubArray(SubArray<byte> byteArray)
+        {
+            var ms = byteArray.ToMemoryStream();
+            var br = new BinaryReader(ms);
+            var rByte = byteArray.Count;
+
+            var dataTypeByteLength = br.ReadInt32();
+            if (dataTypeByteLength < 0) return null;
+            if (dataTypeByteLength > byteArray.Count) return null;
+            var dataTypeByte = br.ReadBytes(dataTypeByteLength);
+            rByte -= dataTypeByteLength;
+
+            var serializerMimeTypeByteLength = br.ReadInt32();
+            if (serializerMimeTypeByteLength < 0) return null;
+            if (serializerMimeTypeByteLength > rByte) return null;
+            var serializerMimeTypeByte = br.ReadBytes(serializerMimeTypeByteLength);
+            rByte -= serializerMimeTypeByteLength;
+
+            var dataByteLength = br.ReadInt32();
+            if (dataByteLength < 0) return null;
+            if (dataByteLength > rByte) return null;
+            var dataByte = br.ReadBytes(dataByteLength);
+
+            return new SerializedObject
+            {
+                DataType = Encoding.UTF8.GetString(dataTypeByte),
+                SerializerMimeType = Encoding.UTF8.GetString(serializerMimeTypeByte),
+                Data = dataByte
+            };
         }
         #endregion
     }

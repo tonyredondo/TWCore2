@@ -84,7 +84,7 @@ namespace TWCore.Reflection
 
             var basePath = Domain.BaseDirectory;
             var cBag = new ConcurrentBag<AssemblyInfo>();
-            foreach(var sPath in searchPaths)
+            foreach (var sPath in searchPaths)
             {
                 var localPath = Path.Combine(basePath, sPath?.Trim());
                 var localExeFiles = Directory.EnumerateFiles(localPath, "*.exe", SearchOption.AllDirectories);
@@ -106,6 +106,7 @@ namespace TWCore.Reflection
                 });
             };
             Assemblies.AddRange(cBag);
+            Parallel.ForEach(Assemblies, asm => asm.Preload());
             _assembliesInfoLoaded = true;
         }
         /// <summary>
@@ -116,6 +117,7 @@ namespace TWCore.Reflection
         public void AppendPath(params string[] paths)
         {
             if (paths == null || paths.Length == 0) return;
+            var domainAssemblies = Domain.GetAssemblies();
             var basePath = Domain.BaseDirectory;
             var localAssembliesInfo = new List<AssemblyInfo>();
             foreach (var path in paths)
@@ -124,13 +126,13 @@ namespace TWCore.Reflection
                 var localExeFiles = Directory.EnumerateFiles(localPath, "*.exe", SearchOption.AllDirectories);
                 var localDllFiles = Directory.EnumerateFiles(localPath, "*.dll", SearchOption.AllDirectories);
                 var localFiles = localExeFiles.Concat(localDllFiles);
-                foreach(var file in localFiles)
+                foreach (var file in localFiles)
                 {
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
                         if (IsExcludedAssembly(name.Name)) continue;
-                        if (!Assemblies.Contains(name.FullName))
+                        if (domainAssemblies.All(l => l.FullName != name.FullName) && !Assemblies.Contains(name.FullName))
                             localAssembliesInfo.Add(new AssemblyInfo(file, name));
                     }
                     catch (Exception ex)
@@ -140,6 +142,7 @@ namespace TWCore.Reflection
                 }
             }
             Assemblies.AddRange(localAssembliesInfo);
+            Parallel.ForEach(Assemblies, asm => asm.Preload());
         }
         /// <summary>
         /// Bind the resolver to the Domain
@@ -185,14 +188,14 @@ namespace TWCore.Reflection
                 {
                     return Assemblies[args.Name].Instance;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Core.Log.Write(ex);
                 }
             }
 
             var asmName = new AssemblyName(args.Name);
-            
+
             var asmInstance =
                 Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version && a.AssemblyName.CultureName == asmName.CultureName) ??
                 Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version) ??
@@ -302,13 +305,18 @@ namespace TWCore.Reflection
             /// <summary>
             /// Assembly instance
             /// </summary>
-            public Assembly Instance => _lazyInstance.Value;
+            public Assembly Instance => _lazyInstance?.Value;
 
             public AssemblyInfo(string filePath, AssemblyName assemblyName)
             {
                 FilePath = filePath;
                 AssemblyName = assemblyName;
                 _lazyInstance = new Lazy<Assembly>(() => Assembly.LoadFile(FilePath));
+            }
+
+            public void Preload()
+            {
+                var value = _lazyInstance.Value;
             }
         }
         #endregion

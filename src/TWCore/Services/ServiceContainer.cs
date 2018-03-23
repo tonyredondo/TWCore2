@@ -472,7 +472,6 @@ namespace TWCore.Services
                     }
                 }
 
-                DiscoveryService.Serializer = serializer;
                 try
                 {
                     DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);

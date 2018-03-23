@@ -19,6 +19,7 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading.Tasks;
 using System.Xml.Serialization;
 using TWCore.Compression;
 
@@ -46,16 +47,32 @@ namespace TWCore.Serialization
         #endregion
 
         #region .ctor
-        public SerializedObject() { }
-        public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer) { }
+
+        public SerializedObject()
+        {
+        }
+
+        public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer)
+        {
+        }
+
         public SerializedObject(object data, ISerializer serializer)
         {
             if (data == null) return;
             var type = data.GetType();
             DataType = type.GetTypeName();
-            SerializerMimeType = serializer.MimeTypes[0] + ((serializer.Compressor != null) ? ":" + serializer.Compressor.EncodingType : string.Empty);
-            Data = (byte[])serializer.Serialize(data, type);
+            if (data is byte[] bytes)
+            {
+                SerializerMimeType = null;
+                Data = bytes;
+            }
+            else
+            {
+                SerializerMimeType = serializer.MimeTypes[0] + ((serializer.Compressor != null) ? ":" + serializer.Compressor.EncodingType : string.Empty);
+                Data = (byte[]) serializer.Serialize(data, type);
+            }
         }
+
         #endregion
 
         #region Methods
@@ -66,75 +83,241 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object GetValue()
         {
-            if (Data == null || Data.Length == 0) return null;
+            if (Data == null) return null;
             var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
-            ISerializer serializer;
-            if (string.IsNullOrWhiteSpace(SerializerMimeType))
-                serializer = SerializerManager.DefaultBinarySerializer;
-            else
-            {
-                var idx = SerializerMimeType.IndexOf(':');
-                var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
-                var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
-                serializer = SerializerManager.GetByMimeType(serMime);
-                if (!string.IsNullOrWhiteSpace(serComp))
-                    serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
-            }
+            if (string.IsNullOrWhiteSpace(SerializerMimeType)) 
+                return type == typeof(byte[]) ? Data : null;
+            var idx = SerializerMimeType.IndexOf(':');
+            var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
+            var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
+            var serializer = SerializerManager.GetByMimeType(serMime);
+            if (!string.IsNullOrWhiteSpace(serComp))
+                serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
             return serializer.Deserialize(Data, type);
         }
         /// <summary>
         /// Get SubArray representation of the SerializedObject instance
         /// </summary>
         /// <returns>SubArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SubArray<byte> ToSubArray()
         {
-            var dataTypeByte = Encoding.UTF8.GetBytes(DataType ?? string.Empty);
-            var serializerMimeTypeByte = Encoding.UTF8.GetBytes(SerializerMimeType ?? string.Empty);
-            var dataByte = Data ?? new byte[0];
-            var ms = new MemoryStream();
-            var bw = new BinaryWriter(ms);
-            bw.Write(dataTypeByte.Length);
-            bw.Write(dataTypeByte);
-            bw.Write(serializerMimeTypeByte.Length);
-            bw.Write(serializerMimeTypeByte);
-            bw.Write(dataByte.Length);
-            bw.Write(dataByte);
-            return ms.ToSubArray();
+            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
+            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
+            using (var ms = new MemoryStream())
+            using (var bw = new BinaryWriter(ms))
+            {
+                bw.Write(dataTypeByte?.Length ?? -1);
+                if (dataTypeByte != null) bw.Write(dataTypeByte);
+                bw.Write(serializerMimeTypeByte?.Length ?? -1);
+                if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
+                bw.Write(Data?.Length ?? -1);
+                if (Data != null) bw.Write(Data);
+                return ms.ToSubArray();
+            }
         }
+        /// <summary>
+        /// Get SubArray representation of the SerializedObject instance
+        /// </summary>
+        /// <returns>SubArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteTo(Stream stream)
+        {
+            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
+            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
+            using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
+            {
+                bw.Write(dataTypeByte?.Length ?? -1);
+                if (dataTypeByte != null) bw.Write(dataTypeByte);
+                bw.Write(serializerMimeTypeByte?.Length ?? -1);
+                if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
+                bw.Write(Data?.Length ?? -1);
+                if (Data != null) bw.Write(Data);
+            }
+        }
+        /// <summary>
+        /// Writes the SerializedObject to a binary writer
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteTo(BinaryWriter bw)
+        {
+            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
+            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
+            bw.Write(dataTypeByte?.Length ?? -1);
+            if (dataTypeByte != null) bw.Write(dataTypeByte);
+            bw.Write(serializerMimeTypeByte?.Length ?? -1);
+            if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
+            bw.Write(Data?.Length ?? -1);
+            if (Data != null) bw.Write(Data);
+        }
+        /// <summary>
+        /// Write the SerializedObject to a file
+        /// </summary>
+        /// <param name="filepath">Filepath to save the serialized object instance</param>
+        /// <returns>Awaitable task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task ToFileAsync(string filepath)
+        {
+            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
+            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
+            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+            {
+                await fs.WriteBytesAsync(BitConverter.GetBytes(dataTypeByte?.Length ?? -1), false).ConfigureAwait(false);
+                if (dataTypeByte != null) 
+                    await fs.WriteBytesAsync(dataTypeByte, false).ConfigureAwait(false);
+                await fs.WriteBytesAsync(BitConverter.GetBytes(serializerMimeTypeByte?.Length ?? -1), false).ConfigureAwait(false);
+                if (serializerMimeTypeByte != null) 
+                    await fs.WriteBytesAsync(serializerMimeTypeByte, false).ConfigureAwait(false);
+                await fs.WriteBytesAsync(BitConverter.GetBytes(Data?.Length ?? -1), false).ConfigureAwait(false);
+                if (Data != null) 
+                    await fs.WriteBytesAsync(Data).ConfigureAwait(false);
+            }
+        }
+        
         /// <summary>
         /// Get SerializedObject instance from the SubArray representation.
         /// </summary>
         /// <param name="byteArray">SubArray instance</param>
         /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromSubArray(SubArray<byte> byteArray)
         {
-            var ms = byteArray.ToMemoryStream();
-            var br = new BinaryReader(ms);
-            var rByte = byteArray.Count;
+            using(var ms = byteArray.ToMemoryStream())
+            using (var br = new BinaryReader(ms))
+            {
+                var rByte = byteArray.Count;
 
+                var dataTypeByteLength = br.ReadInt32();
+                if (dataTypeByteLength < -1 || dataTypeByteLength > rByte) return null;
+                var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
+                rByte -= dataTypeByteLength;
+
+                var serializerMimeTypeByteLength = br.ReadInt32();
+                if (serializerMimeTypeByteLength < -1 || serializerMimeTypeByteLength > rByte) return null;
+                var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
+                rByte -= serializerMimeTypeByteLength;
+
+                var dataLength = br.ReadInt32();
+                if (dataLength < -1 || dataLength > rByte) return null;
+                var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
+
+                return new SerializedObject
+                {
+                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
+                    Data = data
+                };
+            }
+        }
+        /// <summary>
+        /// Get SerializedObject instance from a stream
+        /// </summary>
+        /// <param name="stream">Source stream</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromStream(Stream stream)
+        {
+            using (var br = new BinaryReader(stream, Encoding.UTF8, true))
+            {
+                var dataTypeByteLength = br.ReadInt32();
+                if (dataTypeByteLength < -1) return null;
+                var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
+
+                var serializerMimeTypeByteLength = br.ReadInt32();
+                if (serializerMimeTypeByteLength < -1) return null;
+                var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
+
+                var dataLength = br.ReadInt32();
+                if (dataLength < -1) return null;
+                var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
+
+                return new SerializedObject
+                {
+                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
+                    Data = data
+                };
+            }
+        }
+        /// <summary>
+        /// Get SerializedObject instance from a BinaryReader
+        /// </summary>
+        /// <param name="br">BinaryReader instance</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromStream(BinaryReader br)
+        {
             var dataTypeByteLength = br.ReadInt32();
-            if (dataTypeByteLength < 0) return null;
-            if (dataTypeByteLength > byteArray.Count) return null;
-            var dataTypeByte = br.ReadBytes(dataTypeByteLength);
-            rByte -= dataTypeByteLength;
+            if (dataTypeByteLength < -1) return null;
+            var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
 
             var serializerMimeTypeByteLength = br.ReadInt32();
-            if (serializerMimeTypeByteLength < 0) return null;
-            if (serializerMimeTypeByteLength > rByte) return null;
-            var serializerMimeTypeByte = br.ReadBytes(serializerMimeTypeByteLength);
-            rByte -= serializerMimeTypeByteLength;
+            if (serializerMimeTypeByteLength < -1) return null;
+            var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
 
-            var dataByteLength = br.ReadInt32();
-            if (dataByteLength < 0) return null;
-            if (dataByteLength > rByte) return null;
-            var dataByte = br.ReadBytes(dataByteLength);
+            var dataLength = br.ReadInt32();
+            if (dataLength < -1) return null;
+            var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
 
             return new SerializedObject
             {
-                DataType = Encoding.UTF8.GetString(dataTypeByte),
-                SerializerMimeType = Encoding.UTF8.GetString(serializerMimeTypeByte),
-                Data = dataByte
+                DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
+                Data = data
             };
+        }
+        /// <summary>
+        /// Read the SerializedObject from a file
+        /// </summary>
+        /// <param name="filepath">Filepath to load the serialized object instance</param>
+        /// <returns>Awaitable task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<SerializedObject> FromFileAsync(string filepath)
+        {
+            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                var length = fs.Length;
+                var bInt = new byte[4];
+                
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var dtLength = BitConverter.ToInt32(bInt, 0);
+                if (dtLength < -1 || dtLength > length) return null;
+                byte[] dataTypeByte = null;
+                if (dtLength != -1)
+                {
+                    dataTypeByte = new byte[dtLength];
+                    await fs.ReadAsync(dataTypeByte, 0, dtLength).ConfigureAwait(false);
+                    length -= dtLength;
+                }
+
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var smtLength = BitConverter.ToInt32(bInt, 0);
+                if (smtLength < -1 || smtLength > length) return null;
+                byte[] serializerMimeTypeByte = null;
+                if (smtLength != -1)
+                {
+                    serializerMimeTypeByte = new byte[smtLength];
+                    await fs.ReadAsync(serializerMimeTypeByte, 0, smtLength).ConfigureAwait(false);
+                    length -= smtLength;
+                }
+                
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var dataLength = BitConverter.ToInt32(bInt, 0);
+                if (dataLength < -1 || dataLength > length) return null;
+                byte[] data = null;
+                if (dataLength != -1)
+                {
+                    data = new byte[dataLength];
+                    await fs.ReadAsync(data, 0, dataLength).ConfigureAwait(false);
+                }
+                
+                return new SerializedObject
+                {
+                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
+                    Data = data
+                };
+            }
         }
         #endregion
     }

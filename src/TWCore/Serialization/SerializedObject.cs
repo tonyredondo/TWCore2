@@ -51,7 +51,7 @@ namespace TWCore.Serialization
         public SerializedObject()
         {
         }
-
+        
         public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer)
         {
         }
@@ -73,6 +73,12 @@ namespace TWCore.Serialization
             }
         }
 
+        private SerializedObject(byte[] data, string dataType, string serializerMimeType)
+        {
+            Data = data;
+            DataType = dataType;
+            SerializerMimeType = serializerMimeType;
+        }
         #endregion
 
         #region Methods
@@ -201,12 +207,9 @@ namespace TWCore.Serialization
                 if (dataLength < -1 || dataLength > rByte) return null;
                 var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
 
-                return new SerializedObject
-                {
-                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
-                    Data = data
-                };
+                return new SerializedObject(data,
+                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
             }
         }
         /// <summary>
@@ -231,12 +234,9 @@ namespace TWCore.Serialization
                 if (dataLength < -1) return null;
                 var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
 
-                return new SerializedObject
-                {
-                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
-                    Data = data
-                };
+                return new SerializedObject(data,
+                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
             }
         }
         /// <summary>
@@ -259,12 +259,9 @@ namespace TWCore.Serialization
             if (dataLength < -1) return null;
             var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
 
-            return new SerializedObject
-            {
-                DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
-                Data = data
-            };
+            return new SerializedObject(data,
+                dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
         }
         /// <summary>
         /// Read the SerializedObject from a file
@@ -311,12 +308,9 @@ namespace TWCore.Serialization
                     await fs.ReadAsync(data, 0, dataLength).ConfigureAwait(false);
                 }
                 
-                return new SerializedObject
-                {
-                    DataType = dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    SerializerMimeType = serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null,
-                    Data = data
-                };
+                return new SerializedObject(data,
+                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
             }
         }
         #endregion

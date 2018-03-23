@@ -133,7 +133,7 @@ namespace TWCore.Net.Multicast
         {
             if (!_connected) return;
             _tokenSource?.Cancel();
-            _sendThread.WaitAsync();
+            _sendThread?.WaitAsync();
             PeerConnection.Disconnect();
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;

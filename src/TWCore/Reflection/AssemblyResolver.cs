@@ -289,14 +289,16 @@ namespace TWCore.Reflection
                    assemblyName.Equals("NETStandard", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("System.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.Equals("System", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("WindowsBase", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SOS.NETCore", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Newtonsoft.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("SQLitePCLRaw.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("StackExchange.", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("RabbitMQ.", StringComparison.OrdinalIgnoreCase) ||
-                   assemblyName.Equals("mscorlib", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("mscor", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Remotion.", StringComparison.OrdinalIgnoreCase) ||
-                   assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
+                   assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase) ||
+                   assemblyName.StartsWith("api-ms-", StringComparison.OrdinalIgnoreCase);
         }
         #endregion
 

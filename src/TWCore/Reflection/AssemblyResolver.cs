@@ -35,7 +35,7 @@ namespace TWCore.Reflection
     public class AssemblyResolver
     {
         private object _lock = new object();
-        private HashSet<string> _badFiles = new HashSet<string>();
+        private HashSet<string> _ignoreFileNames = new HashSet<string>();
         private bool _assembliesInfoLoaded;
 
         #region Properties
@@ -97,7 +97,7 @@ namespace TWCore.Reflection
                 {
                     var fileName = Path.GetFileName(file);
                     lock(_lock)
-                        if (_badFiles.Contains(fileName)) return;
+                        if (!_ignoreFileNames.Add(fileName)) return;
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
@@ -107,8 +107,7 @@ namespace TWCore.Reflection
                     }
                     catch (BadImageFormatException)
                     {
-                        lock (_lock)
-                            _badFiles.Add(fileName);
+                        //
                     }
                     catch (Exception ex)
                     {
@@ -146,7 +145,7 @@ namespace TWCore.Reflection
                 {
                     var fileName = Path.GetFileName(file);
                     lock (_lock)
-                        if (_badFiles.Contains(fileName)) return;
+                        if (!_ignoreFileNames.Add(fileName)) return;
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
@@ -156,8 +155,7 @@ namespace TWCore.Reflection
                     }
                     catch (BadImageFormatException)
                     {
-                        lock (_lock)
-                            _badFiles.Add(fileName);
+                        //
                     }
                     catch (Exception ex)
                     {

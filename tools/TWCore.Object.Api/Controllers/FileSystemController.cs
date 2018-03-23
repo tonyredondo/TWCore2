@@ -412,10 +412,11 @@ namespace TWCore.Object.Api.Controllers
 
                 var appNames = traceFilesServices.Select(ts => ts.ApplicationName).ToArray();
 
-                var folderServicesData = DiscoveryService.GetLocalRegisteredServices("FOLDERS")
-                .Where(s => appNames.Contains(s.ApplicationName))
-                .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
-                .ToArray();
+                var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");
+                var folderServicesData = folderServices
+                    .Where(s => appNames.Contains(s.ApplicationName) && s.ApplicationName != Core.ApplicationName)
+                    .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
+                    .ToArray();
 
                 var asmResolver = AssemblyResolverManager.GetAssemblyResolver();
                 asmResolver?.AppendPath(folderServicesData);

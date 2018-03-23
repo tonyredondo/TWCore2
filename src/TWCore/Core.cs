@@ -31,7 +31,6 @@ using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Injector;
-using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Services;
@@ -337,8 +336,6 @@ namespace TWCore
 
             if (onError)
                 throw new Exception("Error initializing the application.");
-
-            DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "FOLDERS", "Folders for the services.", new SerializedObject(new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }));
 
             Log.LibDebug("Core has been initialized.");
         }

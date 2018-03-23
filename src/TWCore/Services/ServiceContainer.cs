@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -475,6 +476,7 @@ namespace TWCore.Services
                 try
                 {
                     DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
+                    DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "FOLDERS", "Folders for the services.", new SerializedObject(new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }));
                 }
                 catch (Exception ex)
                 {

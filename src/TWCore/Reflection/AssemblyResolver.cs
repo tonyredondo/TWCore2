@@ -34,6 +34,8 @@ namespace TWCore.Reflection
     /// </summary>
     public class AssemblyResolver
     {
+        private object _lock = new object();
+        private HashSet<string> _badFiles = new HashSet<string>();
         private bool _assembliesInfoLoaded;
 
         #region Properties
@@ -44,7 +46,7 @@ namespace TWCore.Reflection
         /// <summary>
         /// Paths array where the assemblies are located
         /// </summary>
-        public string[] Paths { get; }
+        public List<string> Paths { get; }
         /// <summary>
         /// Loaded AssembliesInfo available collection
         /// </summary>
@@ -61,7 +63,7 @@ namespace TWCore.Reflection
         public AssemblyResolver(AppDomain domain, string[] paths)
         {
             Domain = domain;
-            Paths = paths;
+            Paths = new List<string>(paths);
         }
         #endregion
 
@@ -79,7 +81,8 @@ namespace TWCore.Reflection
             Assemblies.AddRange(domainAssembliesInfo);
 
             var searchPaths = new List<string> { Domain.BaseDirectory };
-            searchPaths.AddRange(Paths);
+            lock (_lock)
+                searchPaths.AddRange(Paths);
             searchPaths = searchPaths.Distinct().Where(Directory.Exists).ToList();
 
             var basePath = Domain.BaseDirectory;
@@ -92,12 +95,20 @@ namespace TWCore.Reflection
                 var localFiles = localExeFiles.Concat(localDllFiles);
                 Parallel.ForEach(localFiles, file =>
                 {
+                    var fileName = Path.GetFileName(file);
+                    lock(_lock)
+                        if (_badFiles.Contains(fileName)) return;
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
                         if (IsExcludedAssembly(name.Name)) return;
                         if (domainAssemblies.All(l => l.FullName != name.FullName))
                             cBag.Add(new AssemblyInfo(file, name));
+                    }
+                    catch (BadImageFormatException)
+                    {
+                        lock (_lock)
+                            _badFiles.Add(fileName);
                     }
                     catch (Exception ex)
                     {
@@ -119,27 +130,40 @@ namespace TWCore.Reflection
             if (paths == null || paths.Length == 0) return;
             var domainAssemblies = Domain.GetAssemblies();
             var basePath = Domain.BaseDirectory;
-            var localAssembliesInfo = new List<AssemblyInfo>();
+            var localAssembliesInfo = new ConcurrentBag<AssemblyInfo>();
             foreach (var path in paths)
             {
+                lock (_lock)
+                {
+                    if (Paths.Contains(path, StringComparer.OrdinalIgnoreCase)) continue;
+                    Paths.Add(path);
+                }
                 var localPath = Path.Combine(basePath, path?.Trim());
                 var localExeFiles = Directory.EnumerateFiles(localPath, "*.exe", SearchOption.AllDirectories);
                 var localDllFiles = Directory.EnumerateFiles(localPath, "*.dll", SearchOption.AllDirectories);
                 var localFiles = localExeFiles.Concat(localDllFiles);
-                foreach (var file in localFiles)
+                Parallel.ForEach(localFiles, file =>
                 {
+                    var fileName = Path.GetFileName(file);
+                    lock (_lock)
+                        if (_badFiles.Contains(fileName)) return;
                     try
                     {
                         var name = AssemblyName.GetAssemblyName(file);
-                        if (IsExcludedAssembly(name.Name)) continue;
+                        if (IsExcludedAssembly(name.Name)) return;
                         if (domainAssemblies.All(l => l.FullName != name.FullName) && !Assemblies.Contains(name.FullName))
                             localAssembliesInfo.Add(new AssemblyInfo(file, name));
                     }
+                    catch (BadImageFormatException)
+                    {
+                        lock (_lock)
+                            _badFiles.Add(fileName);
+                    }
                     catch (Exception ex)
                     {
-                        Core.Log.Write(LogLevel.Warning, ex);
+                        Core.Log.Write(ex);
                     }
-                }
+                });
             }
             Assemblies.AddRange(localAssembliesInfo);
             Parallel.ForEach(Assemblies, asm => asm.Preload());

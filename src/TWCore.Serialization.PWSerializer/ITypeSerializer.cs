@@ -32,6 +32,11 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         void Init(SerializerMode mode);
         /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        void Clear();
+        /// <summary>
         /// Gets if the type serializer can write the type
         /// </summary>
         /// <param name="type">Type of the value to write</param>

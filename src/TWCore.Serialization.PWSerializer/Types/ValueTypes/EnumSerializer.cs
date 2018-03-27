@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Enum value type serializer
     /// </summary>
-	public struct EnumSerializer : ITypeSerializer<int>
+	public class EnumSerializer : ITypeSerializer<int>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
@@ -39,6 +39,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
+        {
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
         {
         }
         /// <inheritdoc />

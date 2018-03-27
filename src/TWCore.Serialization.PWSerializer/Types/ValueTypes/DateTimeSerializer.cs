@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// DateTime value type serializer
     /// </summary>
-	public struct DateTimeSerializer : ITypeSerializer<DateTime>
+	public class DateTimeSerializer : ITypeSerializer<DateTime>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
@@ -41,10 +41,15 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            if (_cache == null)
-                _cache = new SerializerCache<DateTime>(mode);
-            else
-                _cache.Clear(mode);
+            _cache = new SerializerCache<DateTime>(mode);
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _cache.Clear();
         }
         /// <inheritdoc />
         /// <summary>

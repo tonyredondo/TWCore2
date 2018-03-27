@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// <summary>
     /// SerializedObject optimized serializer
     /// </summary>
-    public struct SerializedObjectSerializer : ITypeSerializer<SerializedObject>
+    public class SerializedObjectSerializer : ITypeSerializer<SerializedObject>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
@@ -38,6 +38,13 @@ namespace TWCore.Serialization.PWSerializer.Types
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
+        {
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
         {
         }
         /// <inheritdoc />

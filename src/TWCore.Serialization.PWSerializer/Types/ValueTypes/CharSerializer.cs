@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Char value type serializer
     /// </summary>
-	public struct CharSerializer : ITypeSerializer<char>
+	public class CharSerializer : ITypeSerializer<char>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new [] { DataType.Char, DataType.CharDefault });
         /// <inheritdoc />
@@ -34,6 +34,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
+        {
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
         {
         }
         /// <inheritdoc />

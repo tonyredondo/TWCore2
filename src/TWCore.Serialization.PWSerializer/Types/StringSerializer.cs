@@ -27,7 +27,7 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// <summary>
     /// String type serializer
     /// </summary>
-	public struct StringSerializer : ITypeSerializer<string>
+	public class StringSerializer : ITypeSerializer<string>
     {
         private static readonly Encoding DefaultUTF8Encoding = new UTF8Encoding(false);
 
@@ -54,7 +54,6 @@ namespace TWCore.Serialization.PWSerializer.Types
             DataType.RefString8Byte13,  DataType.RefString8Byte14,  DataType.RefString8Byte15,  DataType.RefString8UShort
         });
 
-        private SerializerMode _mode;
         private SerializerCache<string> _cache;
         private SerializerCache<string> _cache8;
         private SerializerCache<string> _cache16;
@@ -68,26 +67,22 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            _mode = mode;
-            if (_cache == null)
-                _cache = new SerializerCache<string>(_mode);
-            else
-                _cache.Clear(_mode);
-
-            if (_cache8 == null)
-                _cache8 = new SerializerCache<string>(_mode);
-            else
-                _cache8.Clear(_mode);
-
-            if (_cache16 == null)
-                _cache16 = new SerializerCache<string>(_mode);
-            else
-                _cache16.Clear(_mode);
-            if (_cache32 == null)
-                _cache32 = new SerializerCache<string>(_mode);
-            else
-                _cache32.Clear(_mode);
+            _cache = new SerializerCache<string>(mode);
+            _cache8 = new SerializerCache<string>(mode);
+            _cache16 = new SerializerCache<string>(mode);
+            _cache32 = new SerializerCache<string>(mode);
             _useCache = (mode != SerializerMode.NoCached);
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _cache.Clear();
+            _cache8.Clear();
+            _cache16.Clear();
+            _cache32.Clear();
         }
         /// <inheritdoc />
         /// <summary>

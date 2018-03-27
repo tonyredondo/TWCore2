@@ -53,23 +53,8 @@ namespace TWCore.Serialization.PWSerializer
             _currentIndex = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear(SerializerMode mode)
+        public void Clear()
         {
-            switch (mode)
-            {
-                case SerializerMode.Cached512:
-                    _maxIndex = 511;
-                    break;
-                case SerializerMode.Cached1024:
-                    _maxIndex = 1023;
-                    break;
-                case SerializerMode.Cached2048:
-                    _maxIndex = 2047;
-                    break;
-                case SerializerMode.CachedUShort:
-                    _maxIndex = 65534;
-                    break;
-            }
             _currentIndex = 0;
             _serializationCache.Clear();
             _deserializationCache.Clear();

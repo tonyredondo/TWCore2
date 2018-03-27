@@ -62,9 +62,9 @@ namespace TWCore.Serialization.PWSerializer
 
             public void Clear()
             {
-                TypesCache.Clear(SerializerMode.CachedUShort);
-                ObjectCache.Clear(SerializerMode.CachedUShort);
-                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                TypesCache.Clear();
+                ObjectCache.Clear();
+                PropertiesSerializer.Clear();
                 CurrentSerializerPlanTypes.Clear();
                 ScopeStack.Clear();
             }
@@ -91,9 +91,9 @@ namespace TWCore.Serialization.PWSerializer
 
             public void Clear()
             {
-                TypesCache.Clear(SerializerMode.CachedUShort);
-                ObjectCache.Clear(SerializerMode.CachedUShort);
-                PropertiesSerializer.Init(SerializerMode.CachedUShort);
+                TypesCache.Clear();
+                ObjectCache.Clear();
+                PropertiesSerializer.Clear();
                 PropertiesTypes.Clear();
                 DeserializerStack.Clear();
             }

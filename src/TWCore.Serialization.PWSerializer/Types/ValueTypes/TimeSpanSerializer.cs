@@ -25,14 +25,13 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// TimeSpan value type serializer
     /// </summary>
-	public struct TimeSpanSerializer : ITypeSerializer<TimeSpan>
+	public class TimeSpanSerializer : ITypeSerializer<TimeSpan>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.TimeSpan, DataType.TimeSpanDefault, DataType.RefTimeSpanByte, DataType.RefTimeSpanUShort
         });
 
-        private SerializerMode _mode;
         private SerializerCache<TimeSpan> _cache;
 
         /// <inheritdoc />
@@ -42,11 +41,15 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            _mode = mode;
-            if (_cache == null)
-                _cache = new SerializerCache<TimeSpan>(_mode);
-            else
-                _cache.Clear(mode);
+            _cache = new SerializerCache<TimeSpan>(mode);
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _cache.Clear();
         }
         /// <inheritdoc />
         /// <summary>

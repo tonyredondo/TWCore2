@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
     /// <summary>
     /// Int value type serializer
     /// </summary>
-	public struct NumberSerializer : ITypeSerializer<int>
+	public class NumberSerializer : ITypeSerializer<int>
     {
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new[]
         {
@@ -136,15 +136,22 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         public void Init(SerializerMode mode)
         {
             _mode = mode;
-            _decimalCache?.Clear(mode);
-            _doubleCache?.Clear(mode);
-            _floatCache?.Clear(mode);
-            _longCache?.Clear(mode);
-            _uLongCache?.Clear(mode);
-            _intCache?.Clear(mode);
-            _uIntCache?.Clear(mode);
-            _shortCache?.Clear(mode);
-            _uShortCache?.Clear(mode);
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _decimalCache?.Clear();
+            _doubleCache?.Clear();
+            _floatCache?.Clear();
+            _longCache?.Clear();
+            _uLongCache?.Clear();
+            _intCache?.Clear();
+            _uIntCache?.Clear();
+            _shortCache?.Clear();
+            _uShortCache?.Clear();
         }
         /// <inheritdoc />
         /// <summary>

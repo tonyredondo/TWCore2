@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Net.Multicast;
+using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
@@ -43,7 +44,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("testlog.txt");
                 TWCore.Core.Log.AddHtmlFileStorage("testlog.htm");
-                
+
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;

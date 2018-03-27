@@ -25,7 +25,7 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// <summary>
     /// Byte array optimized serializer
     /// </summary>
-    public struct ByteArraySerializer : ITypeSerializer<byte[]>
+    public class ByteArraySerializer : ITypeSerializer<byte[]>
     {
         private const int MaxArrayLength = 84995;
         private static readonly byte[] EmptyBytes = new byte[0];
@@ -36,7 +36,6 @@ namespace TWCore.Serialization.PWSerializer.Types
         });
 
         #region Field
-        private SerializerMode _mode;
         private SerializerCache<byte[]> _refCache;
         #endregion
 
@@ -47,11 +46,15 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerMode mode)
         {
-            _mode = mode;
-            if (_refCache == null)
-                _refCache = new SerializerCache<byte[]>(_mode);
-            else
-                _refCache.Clear(mode);
+            _refCache = new SerializerCache<byte[]>(mode);
+        }
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            _refCache.Clear();
         }
         /// <inheritdoc />
         /// <summary>

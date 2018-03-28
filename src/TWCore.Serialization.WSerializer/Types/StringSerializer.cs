@@ -288,70 +288,39 @@ namespace TWCore.Serialization.WSerializer.Types
             }
 
             var length = Encoding.GetByteCount(value);
-            var bytes = new byte[length];
-            Encoding.GetBytes(value, 0, value.Length, bytes, 0);
+            byte[] bytes;
 
-            #region Write Length
-            switch (length)
+            if (length < 17)
             {
-                case 1:
-                    writer.Write(DataType.StringLengthByte1);
-                    break;
-                case 2:
-                    writer.Write(DataType.StringLengthByte2);
-                    break;
-                case 3:
-                    writer.Write(DataType.StringLengthByte3);
-                    break;
-                case 4:
-                    writer.Write(DataType.StringLengthByte4);
-                    break;
-                case 5:
-                    writer.Write(DataType.StringLengthByte5);
-                    break;
-                case 6:
-                    writer.Write(DataType.StringLengthByte6);
-                    break;
-                case 7:
-                    writer.Write(DataType.StringLengthByte7);
-                    break;
-                case 8:
-                    writer.Write(DataType.StringLengthByte8);
-                    break;
-                case 9:
-                    writer.Write(DataType.StringLengthByte9);
-                    break;
-                case 10:
-                    writer.Write(DataType.StringLengthByte10);
-                    break;
-                case 11:
-                    writer.Write(DataType.StringLengthByte11);
-                    break;
-                case 12:
-                    writer.Write(DataType.StringLengthByte12);
-                    break;
-                case 13:
-                    writer.Write(DataType.StringLengthByte13);
-                    break;
-                case 14:
-                    writer.Write(DataType.StringLengthByte14);
-                    break;
-                case 15:
-                    writer.Write(DataType.StringLengthByte15);
-                    break;
-                case 16:
-                    writer.Write(DataType.StringLengthByte16);
-                    break;
-                default:
-                    if (length <= byte.MaxValue)
-                        WriteByte(writer, DataType.StringLengthByte, (byte)length);
-                    else if (length <= ushort.MaxValue)
-                        WriteUshort(writer, DataType.StringLengthUShort, (ushort)length);
-                    else
-                        WriteInt(writer, DataType.StringLengthInt, length);
-                    break;
+                bytes = new byte[length + 1];
+                bytes[0] = (byte)(DataType.StringLengthByte1 + (length - 1));
+                Encoding.GetBytes(value, 0, value.Length, bytes, 1);
             }
-            #endregion
+            else if (length <= byte.MaxValue)
+            {
+                bytes = new byte[length + 2];
+                bytes[0] = DataType.StringLengthByte;
+                bytes[1] = (byte)length;
+                Encoding.GetBytes(value, 0, value.Length, bytes, 2);
+            }
+            else if (length <= ushort.MaxValue)
+            {
+                bytes = new byte[length + 3];
+                bytes[0] = DataType.StringLengthUShort;
+                bytes[1] = (byte)(ushort)length;
+                bytes[2] = (byte)(((ushort)length) >> 8);
+                Encoding.GetBytes(value, 0, value.Length, bytes, 3);
+            }
+            else
+            {
+                bytes = new byte[length + 5];
+                bytes[0] = DataType.StringLengthInt;
+                bytes[1] = (byte)length;
+                bytes[2] = (byte)(length >> 8);
+                bytes[3] = (byte)(length >> 16);
+                bytes[4] = (byte)(length >> 24);
+                Encoding.GetBytes(value, 0, value.Length, bytes, 5);
+            }
 
             writer.Write(bytes, 0, bytes.Length);
 

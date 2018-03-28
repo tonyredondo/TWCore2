@@ -38,34 +38,128 @@ namespace TWCore.Serialization.WSerializer
     public class WSerializerCore
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
-        private static readonly ObjectPool<(SerializerCache<Type>, SerializerCache<object>)> CachePool = new ObjectPool<(SerializerCache<Type>, SerializerCache<object>)>(pool =>
-                    (new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort)),
-                    i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
-                    Environment.ProcessorCount);
         private static readonly ByteArrayComparer ByteComparer = new ByteArrayComparer();
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
         private static readonly NonBlocking.ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, byte[]>();
         private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteComparer);
         private static readonly IHash Hash = HashManager.Get("SHA1");
-        private readonly HashSet<Type> _knownTypes = new HashSet<Type>();
+        private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
+        
+        private static readonly ObjectPool<CachePoolItem, CachePoolAllocator> CachePool = new ObjectPool<CachePoolItem, CachePoolAllocator>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
+        private static readonly ObjectPool<Stack<SerializerScope>, StackPoolAllocator> StackPool = new ObjectPool<Stack<SerializerScope>, StackPoolAllocator>();
+        private static readonly ObjectPool<DesCachePoolItem, DesCachePoolAllocator> DCachePool = new ObjectPool<DesCachePoolItem, DesCachePoolAllocator>();
+        private static readonly ObjectPool<Stack<DeserializerTypeItem>, DesStackPoolAllocator> DTypeStackPool = new ObjectPool<Stack<DeserializerTypeItem>, DesStackPoolAllocator>();
+        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
+        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
 
+        private readonly HashSet<Type> _knownTypes = new HashSet<Type>();
+        private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
+        private readonly byte[] _buffer = new byte[3];
+
+        #region Allocators
+        private struct CachePoolItem
+        {
+            public readonly SerializerCache<Type> TypeCache;
+            public readonly SerializerCache<object> ObjectCache;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public CachePoolItem(SerializerCache<Type> typeCache, SerializerCache<object> objectCache)
+            {
+                TypeCache = typeCache;
+                ObjectCache = objectCache;
+            }
+        }
+        private struct DesCachePoolItem
+        {
+            public readonly SerializerCache<DeserializerTypeDefinition> TypeCache;
+            public readonly SerializerCache<object> ObjectCache;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public DesCachePoolItem(SerializerCache<DeserializerTypeDefinition> typeCache, SerializerCache<object> objectCache)
+            {
+                TypeCache = typeCache;
+                ObjectCache = objectCache;
+            }
+        }
+        
+        private struct CachePoolAllocator : IPoolObjectLifecycle<CachePoolItem>
+        {
+            public int InitialSize => Environment.ProcessorCount;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public CachePoolItem New() 
+                => new CachePoolItem(new SerializerCache<Type>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort));
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(CachePoolItem value)
+            {
+                value.TypeCache.Clear(SerializerMode.CachedUShort);
+                value.ObjectCache.Clear(SerializerMode.CachedUShort);
+            }
+        }
+        private struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
+        {
+            public int InitialSize => Environment.ProcessorCount;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stack<SerializerScope> New() => new Stack<SerializerScope>();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(Stack<SerializerScope> value) => value.Clear();
+        }
+        private struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
+        {
+            public int InitialSize => Environment.ProcessorCount;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public DesCachePoolItem New() 
+                => new DesCachePoolItem(new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort), new SerializerCache<object>(SerializerMode.CachedUShort));
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(DesCachePoolItem value)
+            {
+                value.TypeCache.Clear(SerializerMode.CachedUShort);
+                value.ObjectCache.Clear(SerializerMode.CachedUShort);
+            }
+        }
+        private struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
+        {
+            public int InitialSize => Environment.ProcessorCount;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public Stack<DeserializerTypeItem> New() => new Stack<DeserializerTypeItem>();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(Stack<DeserializerTypeItem> value) => value.Clear();
+        }
+        #endregion
+        
+        private SerializerMode _mode = SerializerMode.Cached2048; 
+        
+        #region Properties
         /// <summary>
         /// Serializer Mode
         /// </summary>
-        public SerializerMode Mode = SerializerMode.Cached2048;
+        public SerializerMode Mode
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _mode;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            set => _mode = value;
+        }
+        #endregion
 
+        #region .ctor
+        /// <summary>
+        /// Wanhjör Serializer
+        /// </summary>
         public WSerializerCore() { }
+        /// <summary>
+        /// Wanhjör Serializer
+        /// </summary>
+        /// <param name="mode">Serializer mode</param>
         public WSerializerCore(SerializerMode mode)
         {
             Mode = mode;
         }
+        #endregion
 
         #region Serializer
-        private static readonly NonBlocking.ConcurrentDictionary<Type, SerializerPlan> SerializationPlans = new NonBlocking.ConcurrentDictionary<Type, SerializerPlan>();
-        private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
-        private static readonly ReferencePool<Stack<SerializerScope>> StackPool = new ReferencePool<Stack<SerializerScope>>(Environment.ProcessorCount, s => s.Clear());
-        private readonly HashSet<Type> _currentSerializerPlanTypes = new HashSet<Type>();
-        private readonly byte[] _buffer = new byte[3];
 
         #region Public Methods
         /// <summary>
@@ -86,8 +180,8 @@ namespace TWCore.Serialization.WSerializer
             var stringSerializer = serializersTable.StringSerializer;
             var numberSerializer = serializersTable.NumberSerializer;
             var cacheTuple = CachePool.New();
-            var typesCache = cacheTuple.Item1;
-            var objectCache = cacheTuple.Item2;
+            var typesCache = cacheTuple.TypeCache;
+            var objectCache = cacheTuple.ObjectCache;
 
             var plan = GetSerializerPlan(serializersTable, type);
             var scopeStack = StackPool.New();
@@ -96,7 +190,7 @@ namespace TWCore.Serialization.WSerializer
 
             var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
             bw.Write(DataType.FileStart);
-            bw.Write((byte)Mode);
+            bw.Write((byte)_mode);
             do
             {
                 #region Get the Current Scope
@@ -802,7 +896,7 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static object ResolveLinqEnumerables(object value)
         {
-            if (value is IEnumerable iEValue && !(value is string))
+            if (value is IEnumerable iEValue && !(iEValue is string))
                 value = iEValue.Enumerate();
             return value;
         }
@@ -811,13 +905,6 @@ namespace TWCore.Serialization.WSerializer
         #endregion
 
         #region Deserializer
-        private static readonly ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)> DCachePool = new ObjectPool<(SerializerCache<DeserializerTypeDefinition>, SerializerCache<object>)>(pool =>
-            (new SerializerCache<DeserializerTypeDefinition>(SerializerMode.CachedUShort, TypeDefinitionComparer), new SerializerCache<object>(SerializerMode.CachedUShort)),
-            i => { i.Item1.Clear(SerializerMode.CachedUShort); i.Item2.Clear(SerializerMode.CachedUShort); },
-            Environment.ProcessorCount);
-        private static readonly ReferencePool<Stack<DeserializerTypeItem>> DTypeStackPool = new ReferencePool<Stack<DeserializerTypeItem>>(Environment.ProcessorCount, s => s.Clear());
-        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
-        private static readonly NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo> DeserializationTypeInfo = new NonBlocking.ConcurrentDictionary<Type, DeserializerTypeInfo>();
 
         #region Public Methods
         /// <summary>
@@ -839,8 +926,8 @@ namespace TWCore.Serialization.WSerializer
             var sMode = (SerializerMode)bMode;
             var serializersTable = DeserializersTable.GetTable(sMode);
             var dCache = DCachePool.New();
-            var typesCache = dCache.Item1;
-            var objectCache = dCache.Item2;
+            var typesCache = dCache.TypeCache;
+            var objectCache = dCache.ObjectCache;
             var stringSerializer = serializersTable.StringSerializer;
             var numberSerializer = serializersTable.NumberSerializer;
 
@@ -1368,6 +1455,7 @@ namespace TWCore.Serialization.WSerializer
 
         #endregion
 
+        #region Public Methods
         /// <summary>
         /// Add Known Type
         /// </summary>
@@ -1399,5 +1487,6 @@ namespace TWCore.Serialization.WSerializer
         {
             _knownTypes.Clear();
         }
+        #endregion
     }
 }

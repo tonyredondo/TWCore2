@@ -84,8 +84,6 @@ namespace TWCore.Test.Core
                 //});
                 //var value = TWCore.Core.Injector.New<ICoreStart>("C1");
 
-                Test();
-
                 var cd = new ConcurrentDictionary<string, string>();
                 cd.GetOrAdd(string.Empty, k =>
                 {
@@ -95,57 +93,6 @@ namespace TWCore.Test.Core
                 //**
                 await Task.Delay(10000, token).ConfigureAwait(false);
                 TWCore.Core.Log.InfoBasic("FINALIZING TEST SERVICE");
-            }
-
-            private void Test()
-            {
-
-                AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Providers\Amadeus\Service" });
-
-                var objs = "c:\\temp\\test.pwbin".DeserializeFromPWBinaryFile<SerializedObject>();
-                var objsArray = objs.GetValue() as object[];
-                var airRS = objsArray[0];
-
-                
-                SubArray<byte> pwBytes = new SubArray<byte>();
-                SubArray<byte> wBytes = new SubArray<byte>();
-
-                pwBytes = airRS.SerializeToPWBinary();
-                pwBytes.DeserializeFromPWBinary<object>();
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Factory.Thread.Sleep(1000);
-                using (Watch.Create("PWBinary SERIALIZER"))
-                    for (var i = 0; i < 100; i++)
-                        pwBytes = airRS.SerializeToPWBinary();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Factory.Thread.Sleep(1000);
-                using (Watch.Create("PWBinary DESERIALIZER"))
-                    for (var i = 0; i < 100; i++)
-                        pwBytes.DeserializeFromPWBinary<object>();
-                //GC.Collect();
-                //GC.WaitForPendingFinalizers();
-                //Factory.Thread.Sleep(1000);
-                //using (Watch.Create("PWBinary DESERIALIZER GENERIC"))
-                //    for (var i = 0; i < 100; i++)
-                //        pwBytes.DeserializeFromPWBinary(null);
-
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Factory.Thread.Sleep(1000);
-                using (Watch.Create("WBinary SERIALIZER"))
-                    for (var i = 0; i < 100; i++)
-                        wBytes = airRS.SerializeToWBinary();
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-                Factory.Thread.Sleep(1000);
-                using (Watch.Create("WBinary DESERIALIZER"))
-                    for (var i = 0; i < 100; i++)
-                        wBytes.DeserializeFromWBinary<object>();
-
-                Console.ReadLine();
             }
         }
     }

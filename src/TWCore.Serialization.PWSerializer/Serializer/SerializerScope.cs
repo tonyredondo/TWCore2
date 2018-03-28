@@ -37,14 +37,11 @@ namespace TWCore.Serialization.PWSerializer.Serializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init(SerializerPlan plan, Type originalType, object value)
         {
-            if (plan != null)
-            {
-                Plan = plan.Plan;
-                Type = originalType;
-                IsIList = plan.IsIList;
-                IsIDictionary = plan.IsIDictionary;
-                PlanLength = plan.Plan.Length;
-            }
+            Plan = plan.Plan;
+            Type = originalType;
+            IsIList = plan.IsIList;
+            IsIDictionary = plan.IsIDictionary;
+            PlanLength = plan.Plan.Length;
             Value = value;
             Index = 0;
         }
@@ -69,13 +66,5 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             PlanLength = plan?.Length ?? 0;
             Index = 0;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializerPlanItem Next() => Plan[Index++];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool HasPendingIndex() => Index < PlanLength;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializerPlanItem NextIfAvailable() => Index < PlanLength ? Plan[Index++] : null;
     }
 }

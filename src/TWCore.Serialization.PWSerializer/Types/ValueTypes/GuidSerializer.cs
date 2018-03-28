@@ -39,10 +39,11 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(SerializerMode mode)
+        public void Init()
         {
-            _cache = new SerializerCache<Guid>(mode);
+            _cache = new SerializerCache<Guid>();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear serializer cache
         /// </summary>

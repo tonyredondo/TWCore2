@@ -24,150 +24,8 @@ namespace TWCore.Serialization.PWSerializer.Types
 {
     public class SerializersTable
     {
-		#region Static Pool
-		private static readonly ObjectPool<SerializersTable, UshortAllocator> CachedUShortTablePool = new ObjectPool<SerializersTable, UshortAllocator>();
-        private static readonly ObjectPool<SerializersTable, C2048Allocator> Cached2048TablePool = new ObjectPool<SerializersTable, C2048Allocator>();
-        private static readonly ObjectPool<SerializersTable, C1024Allocator> Cached1024TablePool = new ObjectPool<SerializersTable, C1024Allocator>();
-        private static readonly ObjectPool<SerializersTable, C512Allocator> Cached512TablePool = new ObjectPool<SerializersTable, C512Allocator>();
-        private static readonly ObjectPool<SerializersTable, NoCachedAllocator> NoCachedTablePool = new ObjectPool<SerializersTable, NoCachedAllocator>();
-
-        #region Allocators
-        private struct UshortAllocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SerializersTable New() => new SerializersTable(SerializerMode.CachedUShort);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(SerializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C2048Allocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SerializersTable New() => new SerializersTable(SerializerMode.Cached2048);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(SerializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C1024Allocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SerializersTable New() => new SerializersTable(SerializerMode.Cached1024);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(SerializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C512Allocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SerializersTable New() => new SerializersTable(SerializerMode.Cached512);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(SerializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct NoCachedAllocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public SerializersTable New() => new SerializersTable(SerializerMode.NoCached);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(SerializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        #endregion
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializersTable GetTable(SerializerMode mode) 
-        {
-			switch (mode)
-			{
-				case SerializerMode.CachedUShort:
-				    return CachedUShortTablePool.New();
-				case SerializerMode.Cached2048:
-				    return Cached2048TablePool.New();
-				case SerializerMode.Cached1024:
-				    return Cached1024TablePool.New();
-				case SerializerMode.Cached512:
-				    return Cached512TablePool.New();
-				default:
-				    return NoCachedTablePool.New();
-			}
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ReturnTable(SerializersTable table) 
-        {
-			switch (table.Mode)
-			{
-				case SerializerMode.CachedUShort:
-				    CachedUShortTablePool.Store(table);
-                    break;
-				case SerializerMode.Cached2048:
-				    Cached2048TablePool.Store(table);
-					break;
-				case SerializerMode.Cached1024:
-				    Cached1024TablePool.Store(table);
-					break;
-				case SerializerMode.Cached512:
-				    Cached512TablePool.Store(table);
-					break;
-				default:
-				    NoCachedTablePool.Store(table);
-					break;
-			}
-        }
-        #endregion
-
         private readonly Dictionary<Type, ITypeSerializer> _typesCache = new Dictionary<Type, ITypeSerializer>();
 
-        public readonly SerializerMode Mode;
         public NumberSerializer NumberSerializer = new NumberSerializer();
         public StringSerializer StringSerializer = new StringSerializer();
         public GuidSerializer GuidSerializer = new GuidSerializer();
@@ -180,15 +38,25 @@ namespace TWCore.Serialization.PWSerializer.Types
         public static SerializedObjectSerializer SerializedObjectSerializer = new SerializedObjectSerializer();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private SerializersTable(SerializerMode mode)
+        public SerializersTable()
         {
-            Mode = mode;
-            DateTimeSerializer.Init(mode);
-            GuidSerializer.Init(mode);
-            NumberSerializer.Init(mode);
-            TimeSpanSerializer.Init(mode);
-            ByteArraySerializer.Init(mode);
-            StringSerializer.Init(mode);
+            DateTimeSerializer.Init();
+            GuidSerializer.Init();
+            NumberSerializer.Init();
+            TimeSpanSerializer.Init();
+            ByteArraySerializer.Init();
+            StringSerializer.Init();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            DateTimeSerializer.Clear();
+            GuidSerializer.Clear();
+            NumberSerializer.Clear();
+            TimeSpanSerializer.Clear();
+            ByteArraySerializer.Clear();
+            StringSerializer.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -209,9 +77,19 @@ namespace TWCore.Serialization.PWSerializer.Types
                 EnumSerializer.Write(bw, value);
                 return;
             }
+            if (serializerType == typeof(DateTimeSerializer))
+            {
+                DateTimeSerializer.Write(bw, value);
+                return;
+            }
             if (serializerType == typeof(GuidSerializer))
             {
                 GuidSerializer.Write(bw, value);
+                return;
+            }
+            if (serializerType == typeof(SerializedObjectSerializer))
+            {
+                SerializedObjectSerializer.Write(bw, value);
                 return;
             }
             if (serializerType == typeof(BoolSerializer))
@@ -219,19 +97,9 @@ namespace TWCore.Serialization.PWSerializer.Types
                 BoolSerializer.Write(bw, value);
                 return;
             }
-            if (serializerType == typeof(DateTimeSerializer))
-            {
-                DateTimeSerializer.Write(bw, value);
-                return;
-            }
             if (serializerType == typeof(TimeSpanSerializer))
             {
                 TimeSpanSerializer.Write(bw, value);
-                return;
-            }
-            if (serializerType == typeof(SerializedObjectSerializer))
-            {
-                SerializedObjectSerializer.Write(bw, value);
                 return;
             }
             if (serializerType == typeof(ByteArraySerializer))
@@ -273,230 +141,6 @@ namespace TWCore.Serialization.PWSerializer.Types
             else if (CharSerializer.CanWrite(type))
                 tSer = CharSerializer;
             _typesCache[type] = tSer;
-            return tSer;
-        }
-    }
-
-    public class DeserializersTable
-    {
-        #region Static Pool
-        private static readonly ObjectPool<DeserializersTable, UshortAllocator> CachedUShortTablePool = new ObjectPool<DeserializersTable, UshortAllocator>();
-        private static readonly ObjectPool<DeserializersTable, C2048Allocator> Cached2048TablePool = new ObjectPool<DeserializersTable, C2048Allocator>();
-        private static readonly ObjectPool<DeserializersTable, C1024Allocator> Cached1024TablePool = new ObjectPool<DeserializersTable, C1024Allocator>();
-        private static readonly ObjectPool<DeserializersTable, C512Allocator> Cached512TablePool = new ObjectPool<DeserializersTable, C512Allocator>();
-        private static readonly ObjectPool<DeserializersTable, NoCachedAllocator> NoCachedTablePool = new ObjectPool<DeserializersTable, NoCachedAllocator>();
-
-        #region Allocators
-        private struct UshortAllocator : IPoolObjectLifecycle<DeserializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeserializersTable New() => new DeserializersTable(SerializerMode.CachedUShort);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(DeserializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C2048Allocator : IPoolObjectLifecycle<DeserializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached2048);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(DeserializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C1024Allocator : IPoolObjectLifecycle<DeserializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached1024);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(DeserializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct C512Allocator : IPoolObjectLifecycle<DeserializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached512);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(DeserializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        private struct NoCachedAllocator : IPoolObjectLifecycle<DeserializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public DeserializersTable New() => new DeserializersTable(SerializerMode.NoCached);
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(DeserializersTable value)
-            {
-                var mode = value.Mode;
-                value.DateTimeSerializer.Clear();
-                value.GuidSerializer.Clear();
-                value.NumberSerializer.Clear();
-                value.TimeSpanSerializer.Clear();
-                value.ByteArraySerializer.Clear();
-                value.StringSerializer.Clear();
-            }
-        }
-        #endregion
-
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static DeserializersTable GetTable(SerializerMode mode)
-        {
-            switch (mode)
-            {
-                case SerializerMode.CachedUShort:
-                    return CachedUShortTablePool.New();
-                case SerializerMode.Cached2048:
-                    return Cached2048TablePool.New();
-                case SerializerMode.Cached1024:
-                    return Cached1024TablePool.New();
-                case SerializerMode.Cached512:
-                    return Cached512TablePool.New();
-                default:
-                    return NoCachedTablePool.New();
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void ReturnTable(DeserializersTable table)
-        {
-            switch (table.Mode)
-            {
-                case SerializerMode.CachedUShort:
-                    CachedUShortTablePool.Store(table);
-                    break;
-                case SerializerMode.Cached2048:
-                    Cached2048TablePool.Store(table);
-                    break;
-                case SerializerMode.Cached1024:
-                    Cached1024TablePool.Store(table);
-                    break;
-                case SerializerMode.Cached512:
-                    Cached512TablePool.Store(table);
-                    break;
-                default:
-                    NoCachedTablePool.Store(table);
-                    break;
-            }
-        }
-        #endregion
-
-        public static readonly Dictionary<byte, Type> DeserializerTypesCache = new Dictionary<byte, Type>();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        static DeserializersTable()
-        {
-            foreach (var i in NumberSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(NumberSerializer);
-            foreach (var i in StringSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(StringSerializer);
-            foreach (var i in EnumSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(EnumSerializer);
-            foreach (var i in GuidSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(GuidSerializer);
-            foreach (var i in BoolSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(BoolSerializer);
-            foreach (var i in DateTimeSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(DateTimeSerializer);
-            foreach (var i in TimeSpanSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(TimeSpanSerializer);
-            foreach (var i in SerializedObjectSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(SerializedObjectSerializer);
-            foreach (var i in ByteArraySerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(ByteArraySerializer);
-            foreach (var i in CharSerializer.ReadTypes)
-                DeserializerTypesCache[i] = typeof(CharSerializer);
-        }
-
-
-        public readonly Dictionary<byte, ITypeSerializer> ByteCache = new Dictionary<byte, ITypeSerializer>();
-        public readonly SerializerMode Mode;
-
-        public NumberSerializer NumberSerializer = new NumberSerializer();
-        public StringSerializer StringSerializer = new StringSerializer();
-        public GuidSerializer GuidSerializer = new GuidSerializer();
-        public DateTimeSerializer DateTimeSerializer = new DateTimeSerializer();
-        public TimeSpanSerializer TimeSpanSerializer = new TimeSpanSerializer();
-        public ByteArraySerializer ByteArraySerializer = new ByteArraySerializer();
-        public static EnumSerializer EnumSerializer = new EnumSerializer();
-        public static BoolSerializer BoolSerializer = new BoolSerializer();
-        public static CharSerializer CharSerializer = new CharSerializer();
-        public static SerializedObjectSerializer SerializedObjectSerializer = new SerializedObjectSerializer();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private DeserializersTable(SerializerMode mode)
-        {
-            Mode = mode;
-            DateTimeSerializer.Init(mode);
-            GuidSerializer.Init(mode);
-            NumberSerializer.Init(mode);
-            TimeSpanSerializer.Init(mode);
-            ByteArraySerializer.Init(mode);
-            StringSerializer.Init(mode);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public object Read(BinaryReader br, byte currentByte)
-            => GetSerializerByValueByte(currentByte).Read(br, currentByte);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ITypeSerializer GetSerializerByValueByte(byte value)
-        {
-            if (ByteCache.TryGetValue(value, out var tSer))
-                return tSer;
-            if (DeserializerTypesCache.TryGetValue(value, out var type))
-            {
-                if (type == typeof(NumberSerializer)) tSer = NumberSerializer;
-                else if (type == typeof(StringSerializer)) tSer = StringSerializer;
-                else if (type == typeof(EnumSerializer)) tSer = EnumSerializer;
-                else if (type == typeof(GuidSerializer)) tSer = GuidSerializer;
-                else if (type == typeof(BoolSerializer)) tSer = BoolSerializer;
-                else if (type == typeof(DateTimeSerializer)) tSer = DateTimeSerializer;
-                else if (type == typeof(TimeSpanSerializer)) tSer = TimeSpanSerializer;
-                else if (type == typeof(SerializedObjectSerializer)) tSer = SerializedObjectSerializer;
-                else if (type == typeof(ByteArraySerializer)) tSer = ByteArraySerializer;
-                else if (type == typeof(CharSerializer)) tSer = CharSerializer;
-            }
-            ByteCache[value] = tSer;
             return tSer;
         }
     }

@@ -58,21 +58,20 @@ namespace TWCore.Serialization.PWSerializer.Types
         private SerializerCache<string> _cache8;
         private SerializerCache<string> _cache16;
         private SerializerCache<string> _cache32;
-        private bool _useCache;
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(SerializerMode mode)
+        public void Init()
         {
-            _cache = new SerializerCache<string>(mode);
-            _cache8 = new SerializerCache<string>(mode);
-            _cache16 = new SerializerCache<string>(mode);
-            _cache32 = new SerializerCache<string>(mode);
-            _useCache = (mode != SerializerMode.NoCached);
+            _cache = new SerializerCache<string>();
+            _cache8 = new SerializerCache<string>();
+            _cache16 = new SerializerCache<string>();
+            _cache32 = new SerializerCache<string>();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear serializer cache
         /// </summary>
@@ -120,221 +119,65 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(BinaryWriter writer, string value)
         {
-            switch (value)
+            if (value == null)
             {
-                case null:
-                    writer.Write(DataType.StringNull);
-                    return;
-                case "":
-                    writer.Write(DataType.StringEmpty);
-                    return;
+                writer.Write(DataType.StringNull);
+                return;
             }
-            var cache8 = false;
-            var cache16 = false;
-            var cache32 = false;
-            if (_useCache)
+            if (value == string.Empty)
             {
-                var vLength = value.Length;
+                writer.Write(DataType.StringEmpty);
+                return;
+            }
+
+            var vLength = value.Length;
+
+            if (vLength > 2)
+            {
                 if (vLength <= 8)
                 {
-                    cache8 = true;
                     var objIdx = _cache8.SerializerGet(value);
                     if (objIdx > -1)
                     {
-                        #region Write Reference
-                        switch (objIdx)
-                        {
-                            case 0:
-                                writer.Write(DataType.RefString8Byte0);
-                                return;
-                            case 1:
-                                writer.Write(DataType.RefString8Byte1);
-                                return;
-                            case 2:
-                                writer.Write(DataType.RefString8Byte2);
-                                return;
-                            case 3:
-                                writer.Write(DataType.RefString8Byte3);
-                                return;
-                            case 4:
-                                writer.Write(DataType.RefString8Byte4);
-                                return;
-                            case 5:
-                                writer.Write(DataType.RefString8Byte5);
-                                return;
-                            case 6:
-                                writer.Write(DataType.RefString8Byte6);
-                                return;
-                            case 7:
-                                writer.Write(DataType.RefString8Byte7);
-                                return;
-                            case 8:
-                                writer.Write(DataType.RefString8Byte8);
-                                return;
-                            case 9:
-                                writer.Write(DataType.RefString8Byte9);
-                                return;
-                            case 10:
-                                writer.Write(DataType.RefString8Byte10);
-                                return;
-                            case 11:
-                                writer.Write(DataType.RefString8Byte11);
-                                return;
-                            case 12:
-                                writer.Write(DataType.RefString8Byte12);
-                                return;
-                            case 13:
-                                writer.Write(DataType.RefString8Byte13);
-                                return;
-                            case 14:
-                                writer.Write(DataType.RefString8Byte14);
-                                return;
-                            case 15:
-                                writer.Write(DataType.RefString8Byte15);
-                                return;
-                            default:
-                                if (objIdx <= byte.MaxValue)
-                                    WriteHelper.WriteByte(writer, DataType.RefString8Byte, (byte)objIdx);
-                                else
-                                    WriteHelper.WriteUshort(writer, DataType.RefString8UShort, (ushort)objIdx);
-                                return;
-                        }
-                        #endregion
+                        if (objIdx < 16)
+                            writer.Write((byte)(DataType.RefString8Byte0 + objIdx));
+                        else if (objIdx <= byte.MaxValue)
+                            WriteHelper.WriteByte(writer, DataType.RefString8Byte, (byte)objIdx);
+                        else
+                            WriteHelper.WriteUshort(writer, DataType.RefString8UShort, (ushort)objIdx);
+                        return;
                     }
+                    _cache8.SerializerSet(value);
                 }
                 else if (vLength <= 16)
                 {
-                    cache16 = true;
                     var objIdx = _cache16.SerializerGet(value);
                     if (objIdx > -1)
                     {
-                        #region Write Reference
-                        switch (objIdx)
-                        {
-                            case 0:
-                                writer.Write(DataType.RefString16Byte0);
-                                return;
-                            case 1:
-                                writer.Write(DataType.RefString16Byte1);
-                                return;
-                            case 2:
-                                writer.Write(DataType.RefString16Byte2);
-                                return;
-                            case 3:
-                                writer.Write(DataType.RefString16Byte3);
-                                return;
-                            case 4:
-                                writer.Write(DataType.RefString16Byte4);
-                                return;
-                            case 5:
-                                writer.Write(DataType.RefString16Byte5);
-                                return;
-                            case 6:
-                                writer.Write(DataType.RefString16Byte6);
-                                return;
-                            case 7:
-                                writer.Write(DataType.RefString16Byte7);
-                                return;
-                            case 8:
-                                writer.Write(DataType.RefString16Byte8);
-                                return;
-                            case 9:
-                                writer.Write(DataType.RefString16Byte9);
-                                return;
-                            case 10:
-                                writer.Write(DataType.RefString16Byte10);
-                                return;
-                            case 11:
-                                writer.Write(DataType.RefString16Byte11);
-                                return;
-                            case 12:
-                                writer.Write(DataType.RefString16Byte12);
-                                return;
-                            case 13:
-                                writer.Write(DataType.RefString16Byte13);
-                                return;
-                            case 14:
-                                writer.Write(DataType.RefString16Byte14);
-                                return;
-                            case 15:
-                                writer.Write(DataType.RefString16Byte15);
-                                return;
-                            default:
-                                if (objIdx <= byte.MaxValue)
-                                    WriteHelper.WriteByte(writer, DataType.RefString16Byte, (byte)objIdx);
-                                else
-                                    WriteHelper.WriteUshort(writer, DataType.RefString16UShort, (ushort)objIdx);
-                                return;
-                        }
-                        #endregion
+                        if (objIdx < 16)
+                            writer.Write((byte)(DataType.RefString16Byte0 + objIdx));
+                        else if (objIdx <= byte.MaxValue)
+                            WriteHelper.WriteByte(writer, DataType.RefString16Byte, (byte)objIdx);
+                        else
+                            WriteHelper.WriteUshort(writer, DataType.RefString16UShort, (ushort)objIdx);
+                        return;
                     }
+                    _cache16.SerializerSet(value);
                 }
                 else if (vLength <= 32)
                 {
-                    cache32 = true;
                     var objIdx = _cache32.SerializerGet(value);
                     if (objIdx > -1)
                     {
-                        #region Write Reference
-                        switch (objIdx)
-                        {
-                            case 0:
-                                writer.Write(DataType.RefString32Byte0);
-                                return;
-                            case 1:
-                                writer.Write(DataType.RefString32Byte1);
-                                return;
-                            case 2:
-                                writer.Write(DataType.RefString32Byte2);
-                                return;
-                            case 3:
-                                writer.Write(DataType.RefString32Byte3);
-                                return;
-                            case 4:
-                                writer.Write(DataType.RefString32Byte4);
-                                return;
-                            case 5:
-                                writer.Write(DataType.RefString32Byte5);
-                                return;
-                            case 6:
-                                writer.Write(DataType.RefString32Byte6);
-                                return;
-                            case 7:
-                                writer.Write(DataType.RefString32Byte7);
-                                return;
-                            case 8:
-                                writer.Write(DataType.RefString32Byte8);
-                                return;
-                            case 9:
-                                writer.Write(DataType.RefString32Byte9);
-                                return;
-                            case 10:
-                                writer.Write(DataType.RefString32Byte10);
-                                return;
-                            case 11:
-                                writer.Write(DataType.RefString32Byte11);
-                                return;
-                            case 12:
-                                writer.Write(DataType.RefString32Byte12);
-                                return;
-                            case 13:
-                                writer.Write(DataType.RefString32Byte13);
-                                return;
-                            case 14:
-                                writer.Write(DataType.RefString32Byte14);
-                                return;
-                            case 15:
-                                writer.Write(DataType.RefString32Byte15);
-                                return;
-                            default:
-                                if (objIdx <= byte.MaxValue)
-                                    WriteHelper.WriteByte(writer, DataType.RefString32Byte, (byte)objIdx);
-                                else
-                                    WriteHelper.WriteUshort(writer, DataType.RefString32UShort, (ushort)objIdx);
-                                return;
-                        }
-                        #endregion
+                        if (objIdx < 16)
+                            writer.Write((byte)(DataType.RefString32Byte0 + objIdx));
+                        else if (objIdx <= byte.MaxValue)
+                            WriteHelper.WriteByte(writer, DataType.RefString32Byte, (byte)objIdx);
+                        else
+                            WriteHelper.WriteUshort(writer, DataType.RefString32UShort, (ushort)objIdx);
+                        return;
                     }
+                    _cache32.SerializerSet(value);
                 }
                 else
                 {
@@ -347,97 +190,46 @@ namespace TWCore.Serialization.PWSerializer.Types
                             WriteHelper.WriteUshort(writer, DataType.RefStringUShort, (ushort)objIdx);
                         return;
                     }
+                    _cache.SerializerSet(value);
                 }
             }
+
             var length = DefaultUTF8Encoding.GetByteCount(value);
-            var bytes = new byte[length];
-            DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 0);
+            byte[] bytes;
 
-            #region Write Length
-            switch (length)
+            if (length < 21)
             {
-                case 1:
-                    writer.Write(DataType.StringLengthByte1);
-                    break;
-                case 2:
-                    writer.Write(DataType.StringLengthByte2);
-                    break;
-                case 3:
-                    writer.Write(DataType.StringLengthByte3);
-                    break;
-                case 4:
-                    writer.Write(DataType.StringLengthByte4);
-                    break;
-                case 5:
-                    writer.Write(DataType.StringLengthByte5);
-                    break;
-                case 6:
-                    writer.Write(DataType.StringLengthByte6);
-                    break;
-                case 7:
-                    writer.Write(DataType.StringLengthByte7);
-                    break;
-                case 8:
-                    writer.Write(DataType.StringLengthByte8);
-                    break;
-                case 9:
-                    writer.Write(DataType.StringLengthByte9);
-                    break;
-                case 10:
-                    writer.Write(DataType.StringLengthByte10);
-                    break;
-                case 11:
-                    writer.Write(DataType.StringLengthByte11);
-                    break;
-                case 12:
-                    writer.Write(DataType.StringLengthByte12);
-                    break;
-                case 13:
-                    writer.Write(DataType.StringLengthByte13);
-                    break;
-                case 14:
-                    writer.Write(DataType.StringLengthByte14);
-                    break;
-                case 15:
-                    writer.Write(DataType.StringLengthByte15);
-                    break;
-                case 16:
-                    writer.Write(DataType.StringLengthByte16);
-                    break;
-                case 17:
-                    writer.Write(DataType.StringLengthByte17);
-                    break;
-                case 18:
-                    writer.Write(DataType.StringLengthByte18);
-                    break;
-                case 19:
-                    writer.Write(DataType.StringLengthByte19);
-                    break;
-                case 20:
-                    writer.Write(DataType.StringLengthByte20);
-                    break;
-                default:
-                    if (length <= byte.MaxValue)
-                        WriteHelper.WriteByte(writer, DataType.StringLengthByte, (byte)length);
-                    else if (length <= ushort.MaxValue)
-                        WriteHelper.WriteUshort(writer, DataType.StringLengthUShort, (ushort)length);
-                    else
-                        WriteHelper.WriteInt(writer, DataType.StringLengthUShort, length);
-                    break;
+                bytes = new byte[length + 1];
+                bytes[0] = (byte)(DataType.StringLengthByte1 + (length - 1));
+                DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 1);
             }
-            #endregion
-
-            writer.Write(bytes, 0, length);
-
-            if (!_useCache || length <= 2) return;
-            if (cache8)
-                _cache8.SerializerSet(value);
-            else if (cache16)
-                _cache16.SerializerSet(value);
-            else if (cache32)
-                _cache32.SerializerSet(value);
+            else if (length <= byte.MaxValue)
+            {
+                bytes = new byte[length + 2];
+                bytes[0] = DataType.StringLengthByte;
+                bytes[1] = (byte)length;
+                DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 2);
+            }
+            else if (length <= ushort.MaxValue)
+            {
+                bytes = new byte[length + 3];
+                bytes[0] = DataType.StringLengthUShort;
+                bytes[1] = (byte)(ushort)length;
+                bytes[2] = (byte)(((ushort)length) >> 8);
+                DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 3);
+            }
             else
-                _cache.SerializerSet(value);
+            {
+                bytes = new byte[length + 5];
+                bytes[0] = DataType.StringLengthInt;
+                bytes[1] = (byte)length;
+                bytes[2] = (byte)(length >> 8);
+                bytes[3] = (byte)(length >> 16);
+                bytes[4] = (byte)(length >> 24);
+                DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 5);
+            }
+
+            writer.Write(bytes, 0, bytes.Length);
         }
         /// <inheritdoc />
         /// <summary>
@@ -659,9 +451,9 @@ namespace TWCore.Serialization.PWSerializer.Types
 
             var bytes = reader.ReadBytes(length);
             var strValue = DefaultUTF8Encoding.GetString(bytes);
-
-            if (!_useCache || length <= 2) return strValue;
             var sLength = strValue.Length;
+
+            if (sLength <= 2) return strValue;
             if (sLength <= 8)
                 _cache8.DeserializerSet(strValue);
             else if (sLength <= 16)

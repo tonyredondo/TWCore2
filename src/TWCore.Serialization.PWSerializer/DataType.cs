@@ -161,8 +161,6 @@ namespace TWCore.Serialization.PWSerializer
         public const byte   ByteArrayLengthByte         = 136;
         public const byte   ByteArrayLengthUShort       = 137;
         public const byte   ByteArrayLengthInt          = 138;
-        public const byte   RefByteArrayByte            = 139;
-        public const byte   RefByteArrayUShort          = 140;
 
 		public const byte   StringNull 					= 143;
         public const byte   StringEmpty                 = 144;
@@ -275,10 +273,5 @@ namespace TWCore.Serialization.PWSerializer
         public const byte   RefObjectUShort				= 246;
 
         public const byte   PWFileStart                 = 250;
-        public const byte   PWDataCachedUShort          = 251;
-        public const byte   PWDataCached2048            = 252;
-        public const byte   PWDataCached1024            = 253;
-        public const byte   PWDataCached512             = 254;
-        public const byte   PWDataNoCached              = 255;
     }
 }

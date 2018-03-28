@@ -45,14 +45,12 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
             DataType.Byte17, DataType.Byte18, DataType.Byte19, DataType.Byte20
         });
 
-        private SerializerMode _mode;
-
         #region Decimal Cache
         private SerializerCache<decimal> _decimalCache;
         private SerializerCache<decimal> DecimalCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _decimalCache ?? (_decimalCache = new SerializerCache<decimal>(_mode)); }
+            get { return _decimalCache ?? (_decimalCache = new SerializerCache<decimal>()); }
         }
         #endregion
 
@@ -61,7 +59,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<double> DoubleCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _doubleCache ?? (_doubleCache = new SerializerCache<double>(_mode)); }
+            get { return _doubleCache ?? (_doubleCache = new SerializerCache<double>()); }
         }
         #endregion
 
@@ -70,7 +68,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<float> FloatCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _floatCache ?? (_floatCache = new SerializerCache<float>(_mode)); }
+            get { return _floatCache ?? (_floatCache = new SerializerCache<float>()); }
         }
         #endregion
 
@@ -79,7 +77,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<long> LongCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _longCache ?? (_longCache = new SerializerCache<long>(_mode)); }
+            get { return _longCache ?? (_longCache = new SerializerCache<long>()); }
         }
         #endregion
 
@@ -88,7 +86,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<ulong> ULongCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _uLongCache ?? (_uLongCache = new SerializerCache<ulong>(_mode)); }
+            get { return _uLongCache ?? (_uLongCache = new SerializerCache<ulong>()); }
         }
         #endregion
 
@@ -97,7 +95,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<int> IntCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _intCache ?? (_intCache = new SerializerCache<int>(_mode)); }
+            get { return _intCache ?? (_intCache = new SerializerCache<int>()); }
         }
         #endregion
 
@@ -106,7 +104,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<uint> UIntCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _uIntCache ?? (_uIntCache = new SerializerCache<uint>(_mode)); }
+            get { return _uIntCache ?? (_uIntCache = new SerializerCache<uint>()); }
         }
         #endregion
 
@@ -115,7 +113,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<short> ShortCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _shortCache ?? (_shortCache = new SerializerCache<short>(_mode)); }
+            get { return _shortCache ?? (_shortCache = new SerializerCache<short>()); }
         }
         #endregion
 
@@ -124,7 +122,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         private SerializerCache<ushort> UShortCache
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return _uShortCache ?? (_uShortCache = new SerializerCache<ushort>(_mode)); }
+            get { return _uShortCache ?? (_uShortCache = new SerializerCache<ushort>()); }
         }
         #endregion
 
@@ -133,10 +131,10 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(SerializerMode mode)
+        public void Init()
         {
-            _mode = mode;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear serializer cache
         /// </summary>

@@ -25,36 +25,22 @@ namespace TWCore.Serialization.PWSerializer
     {
         private readonly Dictionary<T, int> _serializationCache;
         private readonly Dictionary<int, T> _deserializationCache;
-        private int _maxIndex;
+        private const int MaxIndex = 2047;
         private int _currentIndex;
 
         public int Count => _currentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializerCache(SerializerMode mode, IEqualityComparer<T> sercomparer = null, IEqualityComparer<int> descomparer = null)
+        public SerializerCache(IEqualityComparer<T> sercomparer = null, IEqualityComparer<int> descomparer = null)
         {
             _serializationCache = new Dictionary<T, int>(sercomparer);
             _deserializationCache = new Dictionary<int, T>(descomparer);
-            switch (mode)
-            {
-                case SerializerMode.Cached512:
-                    _maxIndex = 511;
-                    break;
-                case SerializerMode.Cached1024:
-                    _maxIndex = 1023;
-                    break;
-                case SerializerMode.Cached2048:
-                    _maxIndex = 2047;
-                    break;
-                case SerializerMode.CachedUShort:
-                    _maxIndex = 65534;
-                    break;
-            }
             _currentIndex = 0;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
+            if (_currentIndex == 0) return;
             _currentIndex = 0;
             _serializationCache.Clear();
             _deserializationCache.Clear();
@@ -67,8 +53,8 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(T value)
         {
-            if (_currentIndex < _maxIndex)
-                _serializationCache[value] = _currentIndex++;
+            if (_currentIndex < MaxIndex)
+                _serializationCache.Add(value, _currentIndex++);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -78,8 +64,8 @@ namespace TWCore.Serialization.PWSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DeserializerSet(T value)
         {
-            if (_currentIndex < _maxIndex)
-                _deserializationCache[_currentIndex++] = value;
+            if (_currentIndex < MaxIndex)
+                _deserializationCache.Add(_currentIndex++, value);
         }
     }
 }

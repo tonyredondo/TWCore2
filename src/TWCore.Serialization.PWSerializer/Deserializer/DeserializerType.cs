@@ -120,13 +120,11 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
             {
                 case 0:
                     var propName = Properties[CurrentPropertyIndex++];
-                    if (TypeInfo.Properties.TryGetValue(propName, out var fPropInfo))
+                    if (lastObject != null && TypeInfo.Properties.TryGetValue(propName, out var fPropInfo))
                     {
                         var fastProp = fPropInfo.Property;
                         var propType = fastProp.PropertyType;
-                        if (lastObject == null)
-                            fastProp.SetValue(Value, null);
-                        else if (lastObject.GetType() == propType)
+                        if (lastObject.GetType() == propType)
                             fastProp.SetValue(Value, lastObject);
                         else if (fPropInfo.IsEnum)
                             fastProp.SetValue(Value, Enum.ToObject(propType, lastObject));

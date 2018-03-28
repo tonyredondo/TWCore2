@@ -30,7 +30,7 @@ namespace TWCore.Serialization.PWSerializer
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        void Init(SerializerMode mode);
+        void Init();
         /// <summary>
         /// Clear serializer cache
         /// </summary>

@@ -32,7 +32,6 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly string[] sExtensions = { ".pwbin" };
         private static readonly string[] sMimeTypes = { SerializerMimeTypes.PWBinary };
         private static readonly ReferencePool<PWSerializerCore> _pool = ReferencePool<PWSerializerCore>.Shared;
-        private SerializerMode _mode = SerializerMode.Cached2048;
 
         #region Properties
         /// <inheritdoc />
@@ -45,21 +44,12 @@ namespace TWCore.Serialization.PWSerializer
         /// Supported mime types
         /// </summary>
         public override string[] MimeTypes => sMimeTypes;
-        /// <summary>
-        /// Serialization mode
-        /// </summary>
-        public SerializerMode SerializerMode
-        {
-            get => _mode;
-            set => _mode = value;
-        }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
             var ser = _pool.New();
-            ser.Mode = _mode;
             var obj = ser.Deserialize(stream, itemType);
             _pool.Store(ser);
             return obj;
@@ -68,7 +58,6 @@ namespace TWCore.Serialization.PWSerializer
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             var ser = _pool.New();
-            ser.Mode = _mode;
             ser.Serialize(stream, item);
             _pool.Store(ser);
         }
@@ -85,7 +74,6 @@ namespace TWCore.Serialization.PWSerializer
             {
                 Compressor = Compressor,
                 UseFileExtensions = UseFileExtensions,
-                SerializerMode = SerializerMode
             };
             return nSerializer;
         }

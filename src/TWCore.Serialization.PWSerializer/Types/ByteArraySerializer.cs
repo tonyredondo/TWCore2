@@ -27,34 +27,27 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// </summary>
     public class ByteArraySerializer : ITypeSerializer<byte[]>
     {
-        private const int MaxArrayLength = 84995;
         private static readonly byte[] EmptyBytes = new byte[0];
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.ByteArrayNull, DataType.ByteArrayEmpty, DataType.ByteArrayLengthByte, DataType.ByteArrayLengthUShort, DataType.ByteArrayLengthInt,
-            DataType.RefByteArrayByte, DataType.RefByteArrayUShort
         });
-
-        #region Field
-        private SerializerCache<byte[]> _refCache;
-        #endregion
 
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init(SerializerMode mode)
+        public void Init()
         {
-            _refCache = new SerializerCache<byte[]>(mode);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear serializer cache
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            _refCache.Clear();
         }
         /// <inheritdoc />
         /// <summary>
@@ -113,19 +106,6 @@ namespace TWCore.Serialization.PWSerializer.Types
                 writer.Write(DataType.ByteArrayEmpty);
                 return;
             }
-
-            #region Ref Cache Get
-            var objIdx = _refCache.SerializerGet(value);
-            if (objIdx > -1)
-            {
-                if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataType.RefByteArrayByte, (byte)objIdx);
-                else
-                    WriteHelper.WriteUshort(writer, DataType.RefByteArrayUShort, (ushort)objIdx);
-                return;
-            }
-            #endregion
-
             #region Write Array
             var length = value.Length;
             if (length <= byte.MaxValue)
@@ -135,11 +115,6 @@ namespace TWCore.Serialization.PWSerializer.Types
             else
                 WriteHelper.WriteInt(writer, DataType.ByteArrayLengthInt, length);
             writer.Write(value);
-            #endregion
-
-            #region Save to Cache
-            if (length <= MaxArrayLength)
-                _refCache.SerializerSet(value);
             #endregion
         }
         /// <inheritdoc />
@@ -152,7 +127,6 @@ namespace TWCore.Serialization.PWSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte[] ReadValue(BinaryReader reader, byte type)
         {
-            var objIdx = -1;
             var length = 0;
             switch (type)
             {
@@ -160,12 +134,6 @@ namespace TWCore.Serialization.PWSerializer.Types
                     return null;
                 case DataType.ByteArrayEmpty:
                     return EmptyBytes;
-                case DataType.RefByteArrayByte:
-                    objIdx = reader.ReadByte();
-                    break;
-                case DataType.RefByteArrayUShort:
-                    objIdx = reader.ReadUInt16();
-                    break;
                 case DataType.ByteArrayLengthByte:
                     length = reader.ReadByte();
                     break;
@@ -176,12 +144,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                     length = reader.ReadInt32();
                     break;
             }
-            if (objIdx > -1)
-                return _refCache.DeserializerGet(objIdx);
-
             var cValue = reader.ReadBytes(length);
-            if (length <= MaxArrayLength)
-                _refCache.DeserializerSet(cValue);
             return cValue;
         }
         /// <inheritdoc />

@@ -24,11 +24,12 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Object by reference Pool
     /// </summary>
     /// <typeparam name="T">Object type, must be a class with a default constructor</typeparam>
-    public sealed class ReferencePool<T> where T : class, new()
+    public sealed class ReferencePool<T> : IPool<T> where T : class, new()
     {
         #region Statics
         /// <summary>
@@ -66,6 +67,7 @@ namespace TWCore
                 Preallocate(initialBufferSize);
         }
 
+        /// <inheritdoc />
         /// <summary>
         /// Preallocate a number of objects on the pool
         /// </summary>
@@ -82,6 +84,7 @@ namespace TWCore
             }
             _objectStack.PushRange(tAlloc);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get a new instance from the pool
         /// </summary>
@@ -99,6 +102,7 @@ namespace TWCore
             _onetimeInitAction?.Invoke(value);
             return value;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Store the instance back to the pool
         /// </summary>
@@ -110,6 +114,7 @@ namespace TWCore
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get current objects in the pool
         /// </summary>
@@ -119,6 +124,7 @@ namespace TWCore
         {
             return _objectStack.ToArray();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear the current object stack
         /// </summary>

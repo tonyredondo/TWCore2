@@ -24,11 +24,12 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore
 {
+    /// <inheritdoc />
     /// <summary>
     /// Object Pool
     /// </summary>
     /// <typeparam name="T">Object type</typeparam>
-    public sealed class ObjectPool<T>
+    public sealed class ObjectPool<T> : IPool<T>
     {
         private readonly ConcurrentStack<T> _objectStack;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
@@ -52,6 +53,7 @@ namespace TWCore
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Preallocate a number of objects on the pool
         /// </summary>
@@ -59,8 +61,10 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            _objectStack.PushRange(Enumerable.Range(0, number).Select(i => _createFunc(this)).ToArray());
+            for(var i = 0; i < number; i++)
+                _objectStack.Push(_createFunc(this));
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get a new instance from the pool
         /// </summary>
@@ -74,6 +78,7 @@ namespace TWCore
                 _resetAction?.Invoke(value);
             return value;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Store the instance back to the pool
         /// </summary>
@@ -85,6 +90,7 @@ namespace TWCore
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get current objects in the pool
         /// </summary>
@@ -94,6 +100,7 @@ namespace TWCore
         {
             return _objectStack.ToReadOnly();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear the current object stack
         /// </summary>
@@ -104,37 +111,10 @@ namespace TWCore
         }
     }
 
-
-    /// <summary>
-    /// Pool Object Lifecycle
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public interface IPoolObjectLifecycle<T>
-    {
-        /// <summary>
-        /// Pool initial size
-        /// </summary>
-        int InitialSize { get; }
-        /// <summary>
-        /// Pool reset mode
-        /// </summary>
-        PoolResetMode ResetMode { get; }
-        /// <summary>
-        /// Creates a new item in the pool
-        /// </summary>
-        /// <returns>New item instance</returns>
-        T New();
-        /// <summary>
-        /// Reset item
-        /// </summary>
-        /// <param name="value">Item instance</param>
-        void Reset(T value);
-    }
-
     /// <summary>
     /// Object pool
     /// </summary>
-    public sealed class ObjectPool<T, TPoolObjectLifecycle>
+    public sealed class ObjectPool<T, TPoolObjectLifecycle> : IPool<T>
         where TPoolObjectLifecycle : struct, IPoolObjectLifecycle<T>
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ConcurrentStack<T> _objectStack;
@@ -149,7 +129,18 @@ namespace TWCore
             for (var i = 0; i < _allocator.InitialSize; i++)
                 _objectStack.Push(_allocator.New());
         }
-
+        /// <inheritdoc />
+        /// <summary>
+        /// Preallocate a number of objects on the pool
+        /// </summary>
+        /// <param name="number">Number of objects to allocate</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Preallocate(int number)
+        {
+            for(var i = 0; i < number; i++)
+                _objectStack.Push(_allocator.New());
+        }
+        /// <inheritdoc />
         /// <summary>
         /// Get a new instance from the pool
         /// </summary>
@@ -163,6 +154,7 @@ namespace TWCore
                 _allocator.Reset(value);
             return value;
         }
+        /// <inheritdoc />
         /// <summary>
         /// Store the instance back to the pool
         /// </summary>
@@ -174,6 +166,7 @@ namespace TWCore
                 _allocator.Reset(obj);
             _objectStack.Push(obj);
         }
+        /// <inheritdoc />
         /// <summary>
         /// Get current objects in the pool
         /// </summary>
@@ -183,6 +176,7 @@ namespace TWCore
         {
             return _objectStack.ToReadOnly();
         }
+        /// <inheritdoc />
         /// <summary>
         /// Clear the current object stack
         /// </summary>

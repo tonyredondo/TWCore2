@@ -100,11 +100,24 @@ namespace TWCore.Net.RPC.Client.Transports
         /// Messaging RPC Transport client
         /// </summary>
         /// <param name="queueClient">QueueClient instance</param>
+        public MessagingTransportClient(IMQueueClient queueClient)
+        {
+            _queueClient = queueClient;
+            Core.Status.Attach(collection =>
+            {
+                Core.Status.AttachChild(Serializer, this);
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
+        }
+        /// <summary>
+        /// Messaging RPC Transport client
+        /// </summary>
+        /// <param name="queueClient">QueueClient instance</param>
         /// <param name="serializer">Serializer instance</param>
         public MessagingTransportClient(IMQueueClient queueClient, ISerializer serializer)
         {
             _queueClient = queueClient;
-            Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
+            Serializer = serializer ?? Serializer ?? SerializerManager.DefaultBinarySerializer;
             Core.Status.Attach(collection =>
             {
                 Core.Status.AttachChild(Serializer, this);

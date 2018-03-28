@@ -51,7 +51,16 @@ namespace TWCore.Net.RPC.Server.Transports
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data
         /// </summary>
-        public ISerializer Serializer { get; set; }
+        public ISerializer Serializer
+        {
+            get => _queueServer?.SenderSerializer;
+            set
+            {
+                if (_queueServer == null) return;
+                _queueServer.SenderSerializer = value;
+                _queueServer.ReceiverSerializer = value;
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Transport Counters
@@ -83,11 +92,28 @@ namespace TWCore.Net.RPC.Server.Transports
         /// Messaging RPC Transport server
         /// </summary>
         /// <param name="queueServer">QueueServer instance</param>
+        public MessagingTransportServer(IMQueueServer queueServer)
+        {
+            _queueServer = queueServer;
+            Core.Status.Attach(collection =>
+            {
+                collection.Add(nameof(Name), Name);
+                collection.Add(nameof(EnableGetDescriptors), EnableGetDescriptors);
+                collection.Add("Bytes Sent", Counters.BytesSent, true);
+                collection.Add("Bytes Received", Counters.BytesReceived, true);
+                Core.Status.AttachChild(Serializer, this);
+                Core.Status.AttachChild(_queueServer, this);
+            }, this);
+        }
+        /// <summary>
+        /// Messaging RPC Transport server
+        /// </summary>
+        /// <param name="queueServer">QueueServer instance</param>
         /// <param name="serializer">Serializer instance</param>
         public MessagingTransportServer(IMQueueServer queueServer, ISerializer serializer = null)
         {
             _queueServer = queueServer;
-            Serializer = serializer ?? SerializerManager.DefaultBinarySerializer;
+            Serializer = serializer ?? Serializer ?? SerializerManager.DefaultBinarySerializer;
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Name), Name);

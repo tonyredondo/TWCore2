@@ -227,10 +227,17 @@ namespace TWCore.Serialization.PWSerializer
                             var tStartItem = (SerializerPlanItem.TypeStart)item;
                             if (item.Type != scope.Type)
                             {
-                                var tParts = tStartItem.TypeParts;
-                                Write(bw, DataType.TypeName, (byte)tParts.Length);
-                                for (var i = 0; i < tParts.Length; i++)
-                                    propertySerializer.WriteValue(bw, tParts[i]);
+                                bw.Write(DataType.TypeName);
+                                propertySerializer.WriteValue(bw, tStartItem.AssemblyName);
+                                propertySerializer.WriteValue(bw, tStartItem.NamespaceName);
+                                propertySerializer.WriteValue(bw, tStartItem.TypeName);
+                                numberSerializer.WriteValue(bw, tStartItem.Quantity);
+                                for (var i = 0; i < tStartItem.Quantity; i++)
+                                {
+                                    propertySerializer.WriteValue(bw, tStartItem.AssembliesNames[i]);
+                                    propertySerializer.WriteValue(bw, tStartItem.NamespacesNames[i]);
+                                    propertySerializer.WriteValue(bw, tStartItem.TypesNames[i]);
+                                }
                             }
 
                             var typeIdx = typesCache.SerializerGet(tStartItem.Properties);
@@ -713,6 +720,7 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly ObjectPool<DesPoolItem, DesPoolAllocator> DesPool = new ObjectPool<DesPoolItem, DesPoolAllocator>();
         private static readonly ReferencePool<DeserializerType> DesarializerTypePool = new ReferencePool<DeserializerType>(Environment.ProcessorCount, d => d.Clear());
         private static readonly ReferencePool<Stack<DynamicDeserializedType>> GdStackPool = new ReferencePool<Stack<DynamicDeserializedType>>(Environment.ProcessorCount, s => s.Clear());
+        private static readonly NonBlocking.ConcurrentDictionary<(string, string, string), Type> DeserializationTypes = new NonBlocking.ConcurrentDictionary<(string, string, string), Type>();
 
         /// <summary>
         /// Deserialize a Portable Tony Wanhjor stream into a object value
@@ -749,12 +757,24 @@ namespace TWCore.Serialization.PWSerializer
                 {
                     #region TypeStart
                     case DataType.TypeName:
-                        var vTypePartsLength = (int)br.ReadByte();
-                        var vTypeParts = new string[vTypePartsLength];
-                        for (var i = 0; i < vTypePartsLength; i++)
-                            vTypeParts[i] = propertySerializer.ReadValue(br);
-                        var vType = string.Join(".", vTypeParts);
-                        valueType = Core.GetType(vType) ?? valueType;
+                        var assemblyName = propertySerializer.ReadValue(br);
+                        var namespaceName = propertySerializer.ReadValue(br);
+                        var typeName = propertySerializer.ReadValue(br);
+                        var baseValueType = GetDeserializationType((assemblyName, namespaceName, typeName));
+                        var typeQuantity = numberSerializer.ReadValue(br);
+                        if (typeQuantity > 0)
+                        {
+                            var innerTypes = new Type[typeQuantity];
+                            for (var i = 0; i < typeQuantity; i++)
+                            {
+                                var gAssemblyName = propertySerializer.ReadValue(br);
+                                var gNamespaceName = propertySerializer.ReadValue(br);
+                                var gTypeName = propertySerializer.ReadValue(br);
+                                innerTypes[i] = GetDeserializationType((gAssemblyName, gNamespaceName, gTypeName));
+                            }
+                            baseValueType = baseValueType.MakeGenericType(innerTypes);
+                        }
+                        valueType = baseValueType ?? valueType;
                         continue;
                     case DataType.TypeStart:
                         var typePropertiesLength = numberSerializer.ReadValue(br);
@@ -1016,11 +1036,26 @@ namespace TWCore.Serialization.PWSerializer
                 {
                     #region TypeStart
                     case DataType.TypeName:
-                        var vTypePartsLength = (int)br.ReadByte();
-                        var vTypeParts = new string[vTypePartsLength];
-                        for (var i = 0; i < vTypePartsLength; i++)
-                            vTypeParts[i] = propertySerializer.ReadValue(br);
-                        valueType = string.Join(".", vTypeParts);
+                        var assemblyName = propertySerializer.ReadValue(br);
+                        var namespaceName = propertySerializer.ReadValue(br);
+                        var typeName = propertySerializer.ReadValue(br);
+                        var baseValueType = namespaceName + "." + typeName;
+                        var typeQuantity = numberSerializer.ReadValue(br);
+                        if (typeQuantity > 0)
+                        {
+                            var innerTypes = new string[typeQuantity];
+                            for (var i = 0; i < typeQuantity; i++)
+                            {
+                                var gAssemblyName = propertySerializer.ReadValue(br);
+                                var gNamespaceName = propertySerializer.ReadValue(br);
+                                var gTypeName = propertySerializer.ReadValue(br);
+                                innerTypes[i] = "[" + gNamespaceName + "." + gTypeName + (string.IsNullOrEmpty(gAssemblyName) ? "]" : "," + gAssemblyName + "]");
+                            }
+                            baseValueType = baseValueType + "[" + innerTypes.Join(",") + "]";
+                        }
+                        if (!string.IsNullOrEmpty(assemblyName))
+                            baseValueType = baseValueType + ", " + assemblyName;
+                        valueType = baseValueType ?? valueType;
                         continue;
                     case DataType.TypeStart:
                         var typePropertiesLength = numberSerializer.ReadValue(br);
@@ -1263,6 +1298,19 @@ namespace TWCore.Serialization.PWSerializer
             GdStackPool.Store(desStack);
             DesPool.Store(desPool);
             return typeItem;
+        }
+
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Type GetDeserializationType((string, string, string) type)
+        {
+            return DeserializationTypes.GetOrAdd(type, mType =>
+            {
+                var key = mType.Item2 + "." + mType.Item3;
+                if (!string.IsNullOrEmpty(mType.Item1))
+                    key += ", " + mType.Item1;
+                return Core.GetType(key);
+            });
         }
         #endregion
     }

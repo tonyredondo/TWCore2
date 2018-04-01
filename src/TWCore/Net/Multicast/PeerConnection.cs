@@ -123,17 +123,12 @@ namespace TWCore.Net.Multicast
 
                 foreach (var ipAddress in addresses)
                 {
-                    var client = new UdpClient
-                    {
-                        Client =
-                        {
-                            SendBufferSize = 8192,
-                            ReceiveBufferSize = 8192
-                        }
-                    };
+                    var client = new UdpClient();
                     client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
                     client.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastInterface, IPAddress.HostToNetworkOrder(nicPropv4.Index));
+                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 4096);
+                    client.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 4096);
                     client.Client.Bind(new IPEndPoint(ipAddress, Port));
                     client.MulticastLoopback = true;
                     client.JoinMulticastGroup(_multicastIp, ipAddress);
@@ -147,16 +142,11 @@ namespace TWCore.Net.Multicast
             {
                 try
                 {
-                    var basicReceiver = new UdpClient
-                    {
-                        Client =
-                        {
-                            SendBufferSize = 8192,
-                            ReceiveBufferSize = 8192
-                        }
-                    };
+                    var basicReceiver = new UdpClient();
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                     basicReceiver.Client.SetSocketOption(SocketOptionLevel.IP, SocketOptionName.MulticastTimeToLive, 50);
+                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.SendBuffer, 4096);
+                    basicReceiver.Client.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReceiveBuffer, 4096);
                     basicReceiver.Client.Bind(new IPEndPoint(IPAddress.Any, Port));
                     basicReceiver.JoinMulticastGroup(_multicastIp);
                     _clientsReceiveTasks.Add(ReceiveSocketThreadAsync(basicReceiver));

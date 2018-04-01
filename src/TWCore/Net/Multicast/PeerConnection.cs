@@ -37,6 +37,7 @@ namespace TWCore.Net.Multicast
     public class PeerConnection
     {
         private const int PacketSize = 512;
+        private static ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
         private readonly TimeoutDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<Guid, ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
@@ -55,6 +56,18 @@ namespace TWCore.Net.Multicast
         /// </summary>
         public event EventHandler<PeerConnectionMessageReceivedEventArgs> OnReceive;
 
+        #region Allocators
+        private struct ByteArrayAllocator : IPoolObjectLifecycle<byte[]>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public byte[] New() => new byte[PacketSize];
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(byte[] value) => Array.Clear(value, 0, PacketSize);
+        }
+        #endregion
+        
         #region Properties
         /// <summary>
         /// Port number
@@ -194,7 +207,7 @@ namespace TWCore.Net.Multicast
             var endpointHash = new HashSet<EndPoint>();
             for (var i = 0; i < numMsgs; i++)
             {
-                var datagram = new byte[PacketSize];
+                var datagram = DatagramPool.New();
                 var csize = remain >= dtsize ? dtsize : remain;
                 Buffer.BlockCopy(guidBytes, 0, datagram, 0, 16);
                 Buffer.BlockCopy(numMsgsBytes, 0, datagram, 16, 2);
@@ -220,6 +233,8 @@ namespace TWCore.Net.Multicast
 
                 remain -= dtsize;
                 offset += csize;
+                
+                DatagramPool.Store(datagram);
             }
         }
         /// <summary>
@@ -274,7 +289,7 @@ namespace TWCore.Net.Multicast
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    _receivedMessagesDatagram.TryRemove(guid, out var _);
+                    _receivedMessagesDatagram.TryRemove(guid, out _);
 
                     buffer = receivedDatagrams.GetMessage();
 

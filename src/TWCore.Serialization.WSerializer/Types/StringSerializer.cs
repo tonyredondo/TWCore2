@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Buffers;
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Serialization.WSerializer.Types
@@ -288,24 +289,28 @@ namespace TWCore.Serialization.WSerializer.Types
             }
 
             var length = Encoding.GetByteCount(value);
+            int bytesLength;
             byte[] bytes;
 
             if (length < 17)
             {
-                bytes = new byte[length + 1];
+                bytesLength = length + 1;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = (byte)(DataType.StringLengthByte1 + (length - 1));
                 Encoding.GetBytes(value, 0, value.Length, bytes, 1);
             }
             else if (length <= byte.MaxValue)
             {
-                bytes = new byte[length + 2];
+                bytesLength = length + 2;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthByte;
                 bytes[1] = (byte)length;
                 Encoding.GetBytes(value, 0, value.Length, bytes, 2);
             }
             else if (length <= ushort.MaxValue)
             {
-                bytes = new byte[length + 3];
+                bytesLength = length + 3;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthUShort;
                 bytes[1] = (byte)(ushort)length;
                 bytes[2] = (byte)(((ushort)length) >> 8);
@@ -313,7 +318,8 @@ namespace TWCore.Serialization.WSerializer.Types
             }
             else
             {
-                bytes = new byte[length + 5];
+                bytesLength = length + 5;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthInt;
                 bytes[1] = (byte)length;
                 bytes[2] = (byte)(length >> 8);
@@ -322,7 +328,8 @@ namespace TWCore.Serialization.WSerializer.Types
                 Encoding.GetBytes(value, 0, value.Length, bytes, 5);
             }
 
-            writer.Write(bytes, 0, bytes.Length);
+            writer.Write(bytes, 0, bytesLength);
+            ArrayPool<byte>.Shared.Return(bytes);
 
             if (!_useCache)
                 return;

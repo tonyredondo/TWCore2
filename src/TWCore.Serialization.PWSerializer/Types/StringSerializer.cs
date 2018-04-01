@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -195,24 +196,28 @@ namespace TWCore.Serialization.PWSerializer.Types
             }
 
             var length = DefaultUTF8Encoding.GetByteCount(value);
+            int bytesLength;
             byte[] bytes;
 
             if (length < 21)
             {
-                bytes = new byte[length + 1];
+                bytesLength = length + 1;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = (byte)(DataType.StringLengthByte1 + (length - 1));
                 DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 1);
             }
             else if (length <= byte.MaxValue)
             {
-                bytes = new byte[length + 2];
+                bytesLength = length + 2;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthByte;
                 bytes[1] = (byte)length;
                 DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 2);
             }
             else if (length <= ushort.MaxValue)
             {
-                bytes = new byte[length + 3];
+                bytesLength = length + 3;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthUShort;
                 bytes[1] = (byte)(ushort)length;
                 bytes[2] = (byte)(((ushort)length) >> 8);
@@ -220,7 +225,8 @@ namespace TWCore.Serialization.PWSerializer.Types
             }
             else
             {
-                bytes = new byte[length + 5];
+                bytesLength = length + 5;
+                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
                 bytes[0] = DataType.StringLengthInt;
                 bytes[1] = (byte)length;
                 bytes[2] = (byte)(length >> 8);
@@ -229,7 +235,8 @@ namespace TWCore.Serialization.PWSerializer.Types
                 DefaultUTF8Encoding.GetBytes(value, 0, value.Length, bytes, 5);
             }
 
-            writer.Write(bytes, 0, bytes.Length);
+            writer.Write(bytes, 0, bytesLength);
+            ArrayPool<byte>.Shared.Return(bytes);
         }
         /// <inheritdoc />
         /// <summary>

@@ -119,7 +119,8 @@ namespace TWCore.Net.Multicast
                 var nicPropv4 = nicProp?.GetIPv4Properties();
                 if (nicPropv4 == null) continue;
                 var addresses = nicProp.UnicastAddresses
-                    .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork).Select(a => a.Address);
+                    .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
+                    .Select(a => a.Address);
 
                 foreach (var ipAddress in addresses)
                 {

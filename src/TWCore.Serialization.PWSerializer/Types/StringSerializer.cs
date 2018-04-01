@@ -456,8 +456,10 @@ namespace TWCore.Serialization.PWSerializer.Types
             }
             if (length == 0) return null;
 
-            var bytes = reader.ReadBytes(length);
-            var strValue = DefaultUTF8Encoding.GetString(bytes);
+            var bytes = ArrayPool<byte>.Shared.Rent(length);
+            reader.Read(bytes, 0, length);
+            var strValue = DefaultUTF8Encoding.GetString(bytes, 0, length);
+            ArrayPool<byte>.Shared.Return(bytes);
             var sLength = strValue.Length;
 
             if (sLength <= 2) return strValue;

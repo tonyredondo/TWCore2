@@ -520,8 +520,10 @@ namespace TWCore.Serialization.WSerializer.Types
             }
             if (length == 0) return null;
 
-            var bytes = reader.ReadBytes(length);
-            var strValue = Encoding.GetString(bytes);
+            var bytes = ArrayPool<byte>.Shared.Rent(length);
+            reader.Read(bytes, 0, length);
+            var strValue = Encoding.GetString(bytes, 0, length);
+            ArrayPool<byte>.Shared.Return(bytes);
 
             if (!_useCache)
                 return strValue;

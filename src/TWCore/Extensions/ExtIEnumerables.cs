@@ -76,8 +76,8 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i]);
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++) action(eachObject[i]);
 			return eachObject;
 		}
 		/// <summary>
@@ -90,8 +90,8 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object> action, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++)
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++)
             {
 				if (token.IsCancellationRequested)
 					break;
@@ -108,8 +108,8 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i], i);
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++) action(eachObject[i], i);
             return eachObject;
 		}
 		/// <summary>
@@ -122,8 +122,8 @@ namespace TWCore
 		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int> action, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++)
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++)
             {
 				if (token.IsCancellationRequested)
 					break;
@@ -138,11 +138,11 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state)
+		public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, TArg state)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++) action(eachObject[i], i, state);
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++) action(eachObject[i], i, state);
 			return eachObject;
 		}
 		/// <summary>
@@ -153,11 +153,11 @@ namespace TWCore
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable EachObject(this IEnumerable enumerable, Action<object, int, object> action, object state, CancellationToken token)
+		public static IEnumerable EachObject<TArg>(this IEnumerable enumerable, Action<object, int, TArg> action, TArg state, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var eachObject = enumerable as object[] ?? enumerable.Cast<object>().ToArray();
-		    for (var i = 0; i < eachObject.Length; i++)
+			var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
+		    for (var i = 0; i < eachObject.Count; i++)
 			{
 				if (token.IsCancellationRequested)
 					break;
@@ -177,8 +177,8 @@ namespace TWCore
 		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var objs = enumerable as T[] ?? enumerable.ToArray();
-		    for (var i = 0; i < objs.Length; i++)
+			var objs = enumerable as IList<T> ?? enumerable.ToList();
+		    for (var i = 0; i < objs.Count; i++)
 		        action(objs[i]);
 			return objs;
 		}
@@ -192,8 +192,8 @@ namespace TWCore
 		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T> action, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var objs = enumerable as T[] ?? enumerable.ToArray();
-			for(var i = 0; i < objs.Length; i++)
+			var objs = enumerable as IList<T> ?? enumerable.ToList();
+			for(var i = 0; i < objs.Count; i++)
 			{
 				if (token.IsCancellationRequested)
 					break;
@@ -210,8 +210,8 @@ namespace TWCore
 		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var objs = enumerable as T[] ?? enumerable.ToArray();
-			for(var i = 0; i < objs.Length; i++)
+			var objs = enumerable as IList<T> ?? enumerable.ToList();
+			for(var i = 0; i < objs.Count; i++)
 				action(objs[i], i);
 			return objs;
 		}
@@ -225,8 +225,8 @@ namespace TWCore
 		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int> action, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var objs = enumerable as T[] ?? enumerable.ToArray();
-			for(var i = 0; i < objs.Length; i++)
+			var objs = enumerable as IList<T> ?? enumerable.ToList();
+			for(var i = 0; i < objs.Count; i++)
 			{
 				if (token.IsCancellationRequested)
 					break;
@@ -241,11 +241,11 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state)
+		public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, TArg state)
 		{
 			if (enumerable == null || action == null) return enumerable;
-			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
-			for(var i = 0; i < innerObjs.Length; i++)
+			var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
+			for(var i = 0; i < innerObjs.Count; i++)
 				action(innerObjs[i], i, state);
 			return innerObjs;
 		}
@@ -257,11 +257,11 @@ namespace TWCore
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, Action<T, int, object> action, object state, CancellationToken token)
+		public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, Action<T, int, TArg> action, TArg state, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
-			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
-			for(var i = 0; i < innerObjs.Length; i++)
+			var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
+			for(var i = 0; i < innerObjs.Count; i++)
 			{
 				if (token.IsCancellationRequested)
 					break;
@@ -345,7 +345,7 @@ namespace TWCore
 		/// <param name="action">The Action delegate to perform on each element of the IEnumerable</param>
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int, object> action, object state)
+		public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, TArg state)
 		{
 			if (enumerable == null || action == null) return enumerable;
 			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
@@ -361,7 +361,7 @@ namespace TWCore
 		/// <param name="state">Object to pass to the Action on each element of the IEnumerable</param>
 		/// <param name="token">Cancellation token in case the current execution thread is cancelled</param>
 		/// <returns>IEnumerable instance</returns>
-		public static IEnumerable<T> Each<T>(this IEnumerable<T> enumerable, ActionRef<T, int, object> action, object state, CancellationToken token)
+		public static IEnumerable<T> Each<T, TArg>(this IEnumerable<T> enumerable, ActionRef<T, int, TArg> action, TArg state, CancellationToken token)
 		{
 			if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
 			var innerObjs = enumerable as T[] ?? enumerable.ToArray();
@@ -462,7 +462,16 @@ namespace TWCore
 		/// <returns>IEnumerable without null items</returns>
 		public static IEnumerable<T> RemoveNulls<T>(this IEnumerable<T> enumerable) where T : class
 		{
-            return enumerable != null ? RemoveNullsInner(enumerable) : null;
+            if (enumerable == null) return null;
+            if (enumerable is IList<T> enumList)
+            {
+                var noNullValues = new List<T>();
+                for (var i = 0; i < enumList.Count; i++)
+                    if (enumList[i] != null)
+                        noNullValues.Add(enumList[i]);
+                return noNullValues;
+            }
+            return RemoveNullsInner(enumerable);
 
             IEnumerable<T> RemoveNullsInner(IEnumerable<T> _enum)
 			{
@@ -478,12 +487,23 @@ namespace TWCore
 		/// <returns>IEnumerable without the default value items</returns>
 		public static IEnumerable<T> RemoveDefaults<T>(this IEnumerable<T> enumerable)
 		{
-            return enumerable != null ? RemoveDefaultsInner(enumerable) : null;
+            if (enumerable == null) return null;
+            var comparer = EqualityComparer<T>.Default;
+            var defaultValue = default(T);
+            if (enumerable is IList<T> enumList)
+            {
+                var noDefaults  = new List<T>();
+                for (var i = 0; i < enumList.Count; i++)
+                    if (!comparer.Equals(enumList[i], defaultValue))
+                        noDefaults.Add(enumList[i]);
+                return noDefaults;
+            }
+            return RemoveDefaultsInner(enumerable);
 
 			IEnumerable<T> RemoveDefaultsInner(IEnumerable<T> _enum)
 			{
 				foreach (var item in _enum)
-					if (!EqualityComparer<T>.Default.Equals(item, default(T)))
+					if (!comparer.Equals(item, defaultValue))
 						yield return item;
 			}
 		}
@@ -504,9 +524,22 @@ namespace TWCore
 		public static (T[], T[]) Split<T>(this IEnumerable<T> enumerable,
 			Predicate<T> separatorPredicate)
 		{
-			var groups = enumerable.GroupBy(item => separatorPredicate(item)).ToArray();
-			return (groups.FirstOrDefault(g => g.Key)?.ToArray() ?? new T[0], 
-				groups.FirstOrDefault(g => !g.Key)?.ToArray() ?? new T[0]);
+            if (enumerable == null) return (new T[0], new T[0]);
+            var firstList = ReferencePool<List<T>>.Shared.New();
+            var secondList = ReferencePool<List<T>>.Shared.New();
+            foreach (var item in enumerable)
+            {
+                if (separatorPredicate(item))
+                    firstList.Add(item);
+                else
+                    secondList.Add(item);
+            }
+            var value = (firstList.ToArray(), secondList.ToArray());
+            firstList.Clear();
+            secondList.Clear();
+            ReferencePool<List<T>>.Shared.Store(firstList);
+            ReferencePool<List<T>>.Shared.Store(secondList);
+            return value;
 		}
 		
         #region SymmetricExceptWith
@@ -844,15 +877,28 @@ namespace TWCore
 			/// </summary>
 			Descending
 		}
-		#endregion
+        #endregion
 
-		#region ICollection
-		/// <summary>
-		/// Remove items from the collection using the predicate.
-		/// </summary>
-		/// <param name="collection">Collection object source</param>
-		/// <param name="predicate">Predicate to know is an element need to be removed from the ICollection</param>
-		public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate) => collection?.Where(p => predicate(p)).ToArray().Each(i => collection.Remove(i));
+        #region ICollection
+        /// <summary>
+        /// Remove items from the collection using the predicate.
+        /// </summary>
+        /// <param name="collection">Collection object source</param>
+        /// <param name="predicate">Predicate to know is an element need to be removed from the ICollection</param>
+        public static void RemoveCollection<T>(this ICollection<T> collection, Predicate<T> predicate)
+        {
+            if (collection == null) return;
+            var lstWithPredicate = ReferencePool<List<T>>.Shared.New();
+            foreach(var item in collection)
+            {
+                if (predicate(item))
+                    lstWithPredicate.Add(item);
+            }
+            foreach (var item in lstWithPredicate)
+                collection.Remove(item);
+            lstWithPredicate.Clear();
+            ReferencePool<List<T>>.Shared.Store(lstWithPredicate);
+        }
 		/// <summary>
 		/// Remove items from the collection using the predicate.
 		/// </summary>
@@ -1311,6 +1357,721 @@ namespace TWCore
 	    /// <exception cref="T:System.OverflowException">The dictionary already contains the maximum number of elements (<see cref="F:System.Int32.MaxValue"></see>).</exception>
 	    public static async Task<TValue> GetOrAddAsync<TKey, TValue>(this ConcurrentDictionary<TKey, TValue> dictionary, TKey key, Func<TKey, Task<TValue>> valueFactory)
 	        => dictionary.TryGetValue(key, out var resultingValue) ? resultingValue : dictionary.GetOrAdd(key, await valueFactory(key).ConfigureAwait(false));
+        #endregion
+
+        #region Linq Extensions
+        /// <summary>
+        /// Determines whether all elements of a sequence satisfy a condition.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 that contains the elements to apply the predicate to.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.</returns>
+        public static bool All<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            var res = true;
+            foreach(var item in source)
+            {
+                res &= predicate(item, state);
+                if (!res) break;
+            }
+            return res;
+        }
+        /// <summary>
+        /// Determines whether any element of a sequence satisfies a condition.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 whose elements to apply the predicate to.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.</returns>
+        public static bool Any<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            var res = false;
+            foreach (var item in source)
+            {
+                res &= predicate(item, state);
+                if (res) break;
+            }
+            return res;
+        }
+        /// <summary>
+        /// Returns the first element in a sequence that satisfies a specified condition.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The first element in the sequence that passes the test in the specified predicate function.</returns>
+        public static TSource First<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            foreach (var item in source)
+                if (predicate(item, state))
+                    return item;
+            throw new InvalidOperationException();
+        }
+        /// <summary>
+        /// Returns the first element of the sequence that satisfies a condition or a default value if no such element is found.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>default(TSource) if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.</returns>
+        public static TSource FirstOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            foreach (var item in source)
+                if (predicate(item, state))
+                    return item;
+            return default(TSource);
+        }
+        /// <summary>
+        /// Returns the last element of a sequence that satisfies a specified condition.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The last element in the sequence that passes the test in the specified predicate function.</returns>
+        public static TSource Last<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            foreach (var item in source.Reverse())
+                if (predicate(item, state))
+                    return item;
+            throw new InvalidOperationException();
+        }
+        /// <summary>
+        /// Returns the last element of a sequence that satisfies a condition or a default value if no such element is found.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>default(TSource) if the sequence is empty or if no elements pass the test in the predicate function; otherwise, the last element that passes the test in the predicate function.</returns>
+        public static TSource LastOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            foreach (var item in source.Reverse())
+                if (predicate(item, state))
+                    return item;
+            return default(TSource);
+        }
+
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            int? maxValue = null;
+            foreach(var item in source)
+            {
+                var value = selector(item);
+                if (!maxValue.HasValue || maxValue.Value < value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            long? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!maxValue.HasValue || maxValue.Value < value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            float? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!maxValue.HasValue || maxValue.Value < value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            double? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!maxValue.HasValue || maxValue.Value < value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            decimal? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!maxValue.HasValue || maxValue.Value < value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            int? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!maxValue.HasValue || maxValue.Value < value.Value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            long? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!maxValue.HasValue || maxValue.Value < value.Value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            float? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!maxValue.HasValue || maxValue.Value < value.Value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            double? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!maxValue.HasValue || maxValue.Value < value.Value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the maximum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MaxItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            decimal? maxValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!maxValue.HasValue || maxValue.Value < value.Value)
+                {
+                    maxValue = value;
+                    resItem = item;
+                }
+            }
+            if (maxValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            int? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!minValue.HasValue || minValue.Value > value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            long? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!minValue.HasValue || minValue.Value > value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            float? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!minValue.HasValue || minValue.Value > value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            double? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!minValue.HasValue || minValue.Value > value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            decimal? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (!minValue.HasValue || minValue.Value > value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, int?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            int? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!minValue.HasValue || minValue.Value > value.Value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, long?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            long? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!minValue.HasValue || minValue.Value > value.Value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, float?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            float? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!minValue.HasValue || minValue.Value > value.Value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, double?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            double? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!minValue.HasValue || minValue.Value > value.Value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+        /// <summary>
+        /// Invokes a transform function on each element of a sequence and returns the first item with the minimum value.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <param name="source">A sequence of values to determine the maximum value of.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <returns>The first item with the maximum value in the sequence.</returns>
+        public static TSource MinItem<TSource>(this IEnumerable<TSource> source, Func<TSource, decimal?> selector)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var resItem = default(TSource);
+            decimal? minValue = null;
+            foreach (var item in source)
+            {
+                var value = selector(item);
+                if (value == null) continue;
+                if (!minValue.HasValue || minValue.Value > value.Value)
+                {
+                    minValue = value;
+                    resItem = item;
+                }
+            }
+            if (minValue == null) throw new InvalidOperationException();
+            return resItem;
+        }
+
+        /// <summary>
+        /// Returns the only element of a sequence that satisfies a specified condition, and throws an exception if more than one such element exists.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return a single element from.</param>
+        /// <param name="predicate">A function to test an element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The single element of the input sequence that satisfies a condition.</returns>
+        public static TSource Single<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var @default = default(TSource);
+            var found = false;
+            foreach (var item in source)
+            {
+                if (predicate(item, state))
+                {
+                    if (found) throw new InvalidOperationException();
+                    @default = item;
+                    found = true;
+                }
+            }
+            if (found) return @default;
+            throw new InvalidOperationException();
+        }
+        /// <summary>
+        /// Returns the only element of a sequence that satisfies a specified condition or a default value if no such element exists; this method throws an exception if more than one element satisfies the condition.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return a single element from.</param>
+        /// <param name="predicate">A function to test an element for a condition.</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The single element of the input sequence that satisfies the condition, or default(TSource) if no such element is found.</returns>
+        public static TSource SingleOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            var @default = default(TSource);
+            var found = false;
+            foreach (var item in source)
+            {
+                if (predicate(item, state))
+                {
+                    if (found) throw new InvalidOperationException();
+                    @default = item;
+                    found = true;
+                }
+            }
+            return @default;
+        }
+        /// <summary>
+        /// Projects each element of a sequence into a new form.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the argument</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by selector.</typeparam>
+        /// <param name="enumerable">A sequence of values to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <param name="state">State object value</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 whose elements are the result of invoking the transform function on each element of source.</returns>
+        public static IEnumerable<TResult> Select<T, TArg, TResult>(this IEnumerable<T> enumerable, Func<T, TArg, TResult> selector, TArg state)
+        {
+            foreach(var item in enumerable)
+                yield return selector(item, state);
+        }
+        /// <summary>
+        /// Projects each element of a sequence into a new form.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the argument</typeparam>
+        /// <typeparam name="TResult">The type of the value returned by selector.</typeparam>
+        /// <param name="enumerable">A sequence of values to invoke a transform function on.</param>
+        /// <param name="selector">A transform function to apply to each element.</param>
+        /// <param name="state">State object value</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 whose elements are the result of invoking the transform function on each element of source.</returns>
+        public static IEnumerable<TResult> Select<T, TArg, TResult>(this IEnumerable<T> enumerable, Func<T, int, TArg, TResult> selector, TArg state)
+        {
+            var idx = 0;
+            foreach (var item in enumerable)
+                yield return selector(item, idx++, state);
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state element.</typeparam>
+        /// <param name="enumerable">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance.</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 that contains elements from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<TSource> Where<TSource, TArg>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, bool> predicate, TArg state)
+        {
+            foreach(var item in enumerable)
+                if (predicate(item, state))
+                    yield return item;
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the state element.</typeparam>
+        /// <param name="enumerable">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="state">State object instance.</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 that contains elements from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<TSource> Where<TSource, TArg>(this IEnumerable<TSource> enumerable, Func<TSource, int, TArg, bool> predicate, TArg state)
+        {
+            var idx = 0;
+            foreach (var item in enumerable)
+                if (predicate(item, idx++, state))
+                    yield return item;
+        }
         #endregion
     }
 }

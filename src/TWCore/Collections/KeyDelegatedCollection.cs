@@ -232,9 +232,8 @@ namespace TWCore.Collections
             var key = KeySelector(item);
             lock (Ilocker)
             {
-                if (Contains(key))
+                if (Dictionary.TryGetValue(key, out var oItem))
                 {
-                    var oItem = this[key];
                     var nItem = CombineDelegate(oItem, item);
                     Remove(key);
                     base.Add(nItem);
@@ -266,11 +265,7 @@ namespace TWCore.Collections
         {
             item = default(TItem);
             lock (Ilocker)
-            {
-                if (!Contains(key)) return false;
-                item = this[key];
-                return true;
-            }
+                return Dictionary.TryGetValue(key, out item);
         }
         #endregion
 

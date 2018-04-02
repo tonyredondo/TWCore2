@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -285,7 +286,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteToStream(this Stream source, Stream destination, int length = 0, int bufferSize = 4096, int timeOutToReadBytes = 0)
         {
-            var buffer = new byte[bufferSize];
+            var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
             var toRead = length;
             var nolength = (toRead <= 0);
             while (toRead > 0 || nolength)
@@ -303,6 +304,7 @@ namespace TWCore
                 toRead -= bytesRead;
                 destination.Write(buffer, 0, bytesRead);
             }
+            ArrayPool<byte>.Shared.Return(buffer);
         }
         /// <summary>
         /// Write the string content to a stream destination using buffered reading/writing
@@ -315,7 +317,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task WriteToStreamAsync(this Stream source, Stream destination, int length = 0, int bufferSize = 4096, int timeOutToReadBytes = 0)
         {
-            var buffer = new byte[bufferSize];
+            var buffer = ArrayPool<byte>.Shared.Rent(bufferSize);
             var toRead = length;
             var nolength = (toRead <= 0);
             while (toRead > 0 || nolength)
@@ -333,6 +335,7 @@ namespace TWCore
                 toRead -= bytesRead;
                 await destination.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
             }
+            ArrayPool<byte>.Shared.Return(buffer);
         }
         #endregion
     }

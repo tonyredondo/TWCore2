@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -123,7 +124,6 @@ namespace TWCore.Serialization.PWSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DesPoolItem value) => value.Clear();
         }
-
         private struct SerializerScopeAllocator : IPoolObjectLifecycle<SerializerScope>
         {
             public int InitialSize => 15;
@@ -133,6 +133,15 @@ namespace TWCore.Serialization.PWSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializerScope value) => value.Init();
         }
+        private struct RuntimeValueAllocator : IPoolObjectLifecycle<SerializerPlanItem.RuntimeValue>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public SerializerPlanItem.RuntimeValue New() => new SerializerPlanItem.RuntimeValue();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void Reset(SerializerPlanItem.RuntimeValue value) => value.Init(null, null, null);
+        }
         #endregion
 
         #region Serializer
@@ -140,7 +149,7 @@ namespace TWCore.Serialization.PWSerializer
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         private static readonly ObjectPool<SerPoolItem, SerPoolAllocator> SerPool = new ObjectPool<SerPoolItem, SerPoolAllocator>();
         private static readonly ObjectPool<SerializerScope, SerializerScopeAllocator> SerializerScopePool = new ObjectPool<SerializerScope, SerializerScopeAllocator>();
-        private static readonly ReferencePool<SerializerPlanItem.RuntimeValue> SerializerRuntimePool = new ReferencePool<SerializerPlanItem.RuntimeValue>(20);
+        private static readonly ObjectPool<SerializerPlanItem.RuntimeValue, RuntimeValueAllocator> SerializerRuntimePool = new ObjectPool<SerializerPlanItem.RuntimeValue, RuntimeValueAllocator>();
         private readonly byte[] _bufferSer = new byte[3];
 
 
@@ -181,10 +190,14 @@ namespace TWCore.Serialization.PWSerializer
                     item = scope.Plan[scope.Index++];
                 else
                 {
-                    SerializerScopePool.Store(scopeStack.Pop());
+                    var oldStack = scopeStack.Pop();
+                    if (oldStack.Plan is SerializerPlanItem.RuntimeValue[] runtimeArray)
+                        ArrayPool<SerializerPlanItem.RuntimeValue>.Shared.Return(runtimeArray, true);
+                    SerializerScopePool.Store(oldStack);
                     scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                     continue;
                 }
+                if (item == null) continue;
                 #endregion
 
                 #region Switch Plan Type
@@ -308,7 +321,7 @@ namespace TWCore.Serialization.PWSerializer
                                         }
                                         else
                                         {
-                                            var aPlan = new SerializerPlanItem.RuntimeValue[1];
+                                            var aPlan = ArrayPool<SerializerPlanItem.RuntimeValue>.Shared.Rent(1);
                                             itemList = ResolveLinqEnumerables(itemList);
                                             var serType = serializersTable.GetSerializerByValueType(itemList.GetType())?.GetType();
                                             var srpVal = SerializerRuntimePool.New();
@@ -352,7 +365,7 @@ namespace TWCore.Serialization.PWSerializer
                                         }
                                         else
                                         {
-                                            var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                            var aPlan = ArrayPool<SerializerPlanItem.RuntimeValue>.Shared.Rent(iListCount);
                                             for (var i = 0; i < iListCount; i++)
                                             {
                                                 var itemList = iList[i];
@@ -374,7 +387,7 @@ namespace TWCore.Serialization.PWSerializer
                                     }
                                     else
                                     {
-                                        var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                        var aPlan = ArrayPool<SerializerPlanItem.RuntimeValue>.Shared.Rent(iListCount);
                                         for (var i = 0; i < iListCount; i++)
                                         {
                                             var itemList = iList[i];
@@ -434,7 +447,7 @@ namespace TWCore.Serialization.PWSerializer
                                 }
                                 else
                                 {
-                                    var aPlan = new SerializerPlanItem.RuntimeValue[iDictioCount * 2];
+                                    var aPlan = ArrayPool<SerializerPlanItem.RuntimeValue>.Shared.Rent(iDictioCount * 2);
                                     var aIdx = 0;
                                     foreach (var keyValue in iDictio.Keys)
                                     {

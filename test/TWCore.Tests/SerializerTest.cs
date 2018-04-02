@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer.Deserializer;
@@ -33,13 +34,13 @@ namespace TWCore.Tests
             var sObj = new SerializedObject(sTest, new WBinarySerializer());
             var valueO = sObj.ToSubArray();
             var value = sObj.SerializeToWBinary();
-            var sObj2 = (SerializedObject) value.DeserializeFromWBinary<object>();
+            var sObj2 = (SerializedObject)value.DeserializeFromWBinary<object>();
             var ss1 = sObj2.GetValue();
             var value2 = sObj.SerializeToPWBinary();
-            var sObj3 = (SerializedObject) value2.DeserializeFromPWBinary<object>();
+            var sObj3 = (SerializedObject)value2.DeserializeFromPWBinary<object>();
             var ss2 = sObj3.GetValue();
 
-            
+
             var collection = new List<List<STest>>();
             for (var i = 0; i <= 10000; i++)
             {
@@ -71,8 +72,6 @@ namespace TWCore.Tests
                 collection.Add(colSTest);
             }
 
-            string jsonText = null;
-            SubArray<byte> jsonBytes = null, pwBytes = null, wBytes = null;
 
             var lt = new List<STest>
             {
@@ -80,75 +79,95 @@ namespace TWCore.Tests
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
-            var fByte = lt.SerializeToPWBinary();
-            var obj1 = (DynamicDeserializedType)fByte.DeserializeFromPWBinary(null);
+            var memStream = new MemoryStream();
 
-            pwBytes = collection[0].SerializeToPWBinary();
-            var obj = (DynamicDeserializedType)pwBytes.DeserializeFromPWBinary(null);
+            lt.SerializeToPWBinary(memStream);
+            memStream.Position = 0;
+            var obj1 = (DynamicDeserializedType)memStream.DeserializeFromPWBinary(null);
+            memStream.Position = 0;
+
+            collection[0].SerializeToPWBinary(memStream);
+            memStream.Position = 0;
+
+            var obj = (DynamicDeserializedType)memStream.DeserializeFromPWBinary(null);
             var lst = obj.GetObject<List<STest>>();
-            var obj2 = pwBytes.DeserializeFromPWBinary<List<STest>>();
+            memStream.Position = 0;
+            var obj2 = memStream.DeserializeFromPWBinary<List<STest>>();
+            memStream.Position = 0;
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON SERIALIZER"))
-                for (var i = 0; i < 100000; i++)
-                    jsonText = collection[i % 10000].SerializeToJson();
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
-            using (Watch.Create("JSON DESERIALIZER"))
-                for (var i = 0; i < 100000; i++)
-                    jsonText.DeserializeFromJson<List<STest>>();
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Factory.Thread.Sleep(1000);
+            //using (Watch.Create("JSON SERIALIZER"))
+            //    for (var i = 0; i < 100000; i++)
+            //    {
+            //        collection[i % 10000].SerializeToJson(memStream);
+            //        memStream.Position = 0;
+            //    }
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Factory.Thread.Sleep(1000);
+            //using (Watch.Create("JSON DESERIALIZER"))
+            //    for (var i = 0; i < 100000; i++)
+            //    {
+            //        memStream.DeserializeFromJson<List<STest>>();
+            //        memStream.Position = 0;
+            //    }
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
-                    pwBytes = collection[i % 10000].SerializeToPWBinary();
+                {
+                    collection[i % 10000].SerializeToPWBinary(memStream);
+                    memStream.Position = 0;
+                }
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
-                    pwBytes.DeserializeFromPWBinary<List<STest>>();
+                {
+                    memStream.DeserializeFromPWBinary<List<STest>>();
+                    memStream.Position = 0;
+                }
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER GENERIC"))
                 for (var i = 0; i < 100000; i++)
-                    pwBytes.DeserializeFromPWBinary(null);
+                {
+                    memStream.DeserializeFromPWBinary(null);
+                    memStream.Position = 0;
+                }
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("WBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
-                    wBytes = collection[i % 10000].SerializeToWBinary();
+                {
+                    collection[i % 10000].SerializeToWBinary(memStream);
+                    memStream.Position = 0;
+                }
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Factory.Thread.Sleep(1000);
             using (Watch.Create("WBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
-                    wBytes.DeserializeFromWBinary<List<STest>>();
+                {
+                    memStream.DeserializeFromWBinary<List<STest>>();
+                    memStream.Position = 0;
+                }
 
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			Factory.Thread.Sleep(1000);
-			using (Watch.Create("Object Cloner"))
-				for (var i = 0; i < 100000; i++)
-					lt.DeepClone();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Factory.Thread.Sleep(1000);
+            using (Watch.Create("Object Cloner"))
+                for (var i = 0; i < 100000; i++)
+                    lt.DeepClone();
 
-
-            jsonBytes = Encoding.UTF8.GetBytes(jsonText);
-
-            Core.Log.InfoBasic("Json length: {0}", jsonBytes.Count);
-            Core.Log.InfoBasic("Json: {0}", Encoding.UTF8.GetString(jsonBytes));
-            Core.Log.InfoBasic("PWBytes: {0}", pwBytes.Count);
-            Core.Log.InfoBasic("PW: {0}", Encoding.UTF8.GetString(pwBytes));
-            Core.Log.InfoBasic("WBytes: {0}", wBytes.Count);
-            Core.Log.InfoBasic("W: {0}", Encoding.UTF8.GetString(wBytes));
             Console.ReadLine();
         }
     }

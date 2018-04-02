@@ -51,7 +51,7 @@ namespace TWCore.Net
             {
                 var hostIPs = Dns.GetHostAddressesAsync(hostNameOrAddress).WaitAsync();
                 var localIPs = Dns.GetHostAddressesAsync(Dns.GetHostName()).WaitAsync();
-                return hostIPs.Any(hostIp => IPAddress.IsLoopback(hostIp) || localIPs.Contains(hostIp));
+                return hostIPs.Any((hostIp, lIps) => IPAddress.IsLoopback(hostIp) || lIps.Contains(hostIp), localIPs);
             }
             catch
             {

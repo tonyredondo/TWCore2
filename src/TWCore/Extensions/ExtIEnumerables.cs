@@ -681,7 +681,7 @@ namespace TWCore
 				foreach (var item in array)
 				{
 					var key = mKeySelector(item);
-					var similarItems = source.Where<T, (T item, TKey key)>((i, vTuple) => !ReferenceEquals(vTuple.item, i) && Equals(keySelector(i), vTuple.key), (item, key)).ToList();
+					var similarItems = source.Where((i, vTuple) => !ReferenceEquals(vTuple.item, i) && Equals(keySelector(i), vTuple.key), (item, key)).ToList();
 					var nItem = similarItems.Count > 1 ? mMergeFunction(similarItems) : item;
 					source = source.Where((s, mSimilarItems) => !mSimilarItems.Contains(s), similarItems).ToArray();
 					yield return nItem;
@@ -1371,13 +1371,12 @@ namespace TWCore
         /// <returns>true if every element of the source sequence passes the test in the specified predicate, or if the sequence is empty; otherwise, false.</returns>
         public static bool All<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
         {
-            var res = true;
             foreach(var item in source)
             {
-                res &= predicate(item, state);
-                if (!res) break;
+                if (!predicate(item, state))
+	            	return false;
             }
-            return res;
+            return true;
         }
         /// <summary>
         /// Determines whether any element of a sequence satisfies a condition.
@@ -1390,13 +1389,12 @@ namespace TWCore
         /// <returns>true if any elements in the source sequence pass the test in the specified predicate; otherwise, false.</returns>
         public static bool Any<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
         {
-            var res = false;
             foreach (var item in source)
             {
-                res &= predicate(item, state);
-                if (res) break;
+	            if (predicate(item, state))
+		            return true;
             }
-            return res;
+            return false;
         }
         /// <summary>
         /// Returns the first element in a sequence that satisfies a specified condition.
@@ -1430,7 +1428,7 @@ namespace TWCore
             foreach (var item in source)
                 if (predicate(item, state))
                     return item;
-            return default(TSource);
+            return default;
         }
         /// <summary>
         /// Returns the last element of a sequence that satisfies a specified condition.
@@ -1464,7 +1462,7 @@ namespace TWCore
             foreach (var item in source.Reverse())
                 if (predicate(item, state))
                     return item;
-            return default(TSource);
+            return default;
         }
 
         /// <summary>
@@ -1482,11 +1480,9 @@ namespace TWCore
             foreach(var item in source)
             {
                 var value = selector(item);
-                if (!maxValue.HasValue || maxValue.Value < value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1506,11 +1502,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!maxValue.HasValue || maxValue.Value < value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1530,11 +1524,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!maxValue.HasValue || maxValue.Value < value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && !(maxValue.Value < value)) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1554,11 +1546,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!maxValue.HasValue || maxValue.Value < value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && !(maxValue.Value < value)) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1578,11 +1568,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!maxValue.HasValue || maxValue.Value < value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1603,11 +1591,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!maxValue.HasValue || maxValue.Value < value.Value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1628,11 +1614,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!maxValue.HasValue || maxValue.Value < value.Value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1653,11 +1637,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!maxValue.HasValue || maxValue.Value < value.Value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1678,11 +1660,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!maxValue.HasValue || maxValue.Value < value.Value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && !(maxValue.Value < value.Value)) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1703,11 +1683,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!maxValue.HasValue || maxValue.Value < value.Value)
-                {
-                    maxValue = value;
-                    resItem = item;
-                }
+	            if (maxValue.HasValue && maxValue.Value >= value.Value) continue;
+	            maxValue = value;
+	            resItem = item;
             }
             if (maxValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1728,11 +1706,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!minValue.HasValue || minValue.Value > value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1752,11 +1728,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!minValue.HasValue || minValue.Value > value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1776,11 +1750,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!minValue.HasValue || minValue.Value > value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && !(minValue.Value > value)) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1800,11 +1772,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!minValue.HasValue || minValue.Value > value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && !(minValue.Value > value)) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1824,11 +1794,9 @@ namespace TWCore
             foreach (var item in source)
             {
                 var value = selector(item);
-                if (!minValue.HasValue || minValue.Value > value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1849,11 +1817,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!minValue.HasValue || minValue.Value > value.Value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value.Value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1874,11 +1840,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!minValue.HasValue || minValue.Value > value.Value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value.Value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1899,11 +1863,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!minValue.HasValue || minValue.Value > value.Value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1924,11 +1886,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!minValue.HasValue || minValue.Value > value.Value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && !(minValue.Value > value.Value)) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1949,11 +1909,9 @@ namespace TWCore
             {
                 var value = selector(item);
                 if (value == null) continue;
-                if (!minValue.HasValue || minValue.Value > value.Value)
-                {
-                    minValue = value;
-                    resItem = item;
-                }
+	            if (minValue.HasValue && minValue.Value <= value.Value) continue;
+	            minValue = value;
+	            resItem = item;
             }
             if (minValue == null) throw new InvalidOperationException();
             return resItem;
@@ -1975,12 +1933,10 @@ namespace TWCore
             var found = false;
             foreach (var item in source)
             {
-                if (predicate(item, state))
-                {
-                    if (found) throw new InvalidOperationException();
-                    @default = item;
-                    found = true;
-                }
+	            if (!predicate(item, state)) continue;
+	            if (found) throw new InvalidOperationException();
+	            @default = item;
+	            found = true;
             }
             if (found) return @default;
             throw new InvalidOperationException();
@@ -2001,12 +1957,10 @@ namespace TWCore
             var found = false;
             foreach (var item in source)
             {
-                if (predicate(item, state))
-                {
-                    if (found) throw new InvalidOperationException();
-                    @default = item;
-                    found = true;
-                }
+	            if (!predicate(item, state)) continue;
+	            if (found) throw new InvalidOperationException();
+	            @default = item;
+	            found = true;
             }
             return @default;
         }

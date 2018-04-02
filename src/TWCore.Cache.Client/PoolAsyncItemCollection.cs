@@ -207,7 +207,7 @@ namespace TWCore.Cache.Client
         /// <param name="name">Name of the storage</param>
         /// <returns>true if the storage is on the collection; otherwise, false.</returns>
         public bool Contains(string name)
-            => Items.Any(i => i.Name == name);
+            => Items.Any((i, mName) => i.Name == mName, name);
         /// <summary>
         /// Gets if a storage name is on the Pool item collection
         /// </summary>

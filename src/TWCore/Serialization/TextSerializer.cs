@@ -210,15 +210,15 @@ namespace TWCore.Serialization
                 if (Compressor != null)
                 {
                     var compExt = Compressor.FileExtension;
-                    if (!Extensions.Any(ext => resPath.EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    if (!Extensions.Any((ext, vTuple) => vTuple.resPath.EndsWith(ext + vTuple.compExt, StringComparison.OrdinalIgnoreCase), (resPath, compExt)))
                     {
-                        if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                        if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                             resPath = filePath + Extensions.FirstOrDefault() + compExt;
                         else
                             resPath = filePath + compExt;
                     }
                 }
-                else if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                else if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                 {
                     resPath = filePath + Extensions.FirstOrDefault();
                 }
@@ -242,32 +242,32 @@ namespace TWCore.Serialization
         public virtual async Task SerializeToFileAsync(object item, Type itemType, string filePath)
         {
             filePath = Factory.GetAbsolutePath(filePath);
-            string[] fPath = { filePath };
+            var resPath = filePath;
             if (UseFileExtensions)
             {
                 if (Compressor != null)
                 {
                     var compExt = Compressor.FileExtension;
-                    if (!Extensions.Any(ext => fPath[0].EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    if (!Extensions.Any((ext, vTuple) => vTuple.resPath.EndsWith(ext + vTuple.compExt, StringComparison.OrdinalIgnoreCase), (resPath, compExt)))
                     {
-                        if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
-                            fPath[0] = filePath + Extensions.FirstOrDefault() + compExt;
+                        if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
+                            resPath = filePath + Extensions.FirstOrDefault() + compExt;
                         else
-                            fPath[0] = filePath + compExt;
+                            resPath = filePath + compExt;
                     }
                 }
-                else if (!Extensions.Any(ext => fPath[0].EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                else if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                 {
-                    fPath[0] = filePath + Extensions.FirstOrDefault();
+                    resPath = filePath + Extensions.FirstOrDefault();
                 }
             }
-            if (!string.Equals(fPath[0], filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
-                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, fPath[0]);
+            if (!string.Equals(resPath, filePath, StringComparison.OrdinalIgnoreCase) && !SerializerManager.SupressFileExtensionWarning)
+                Core.Log.Warning("The {0} is using the UseFileExtensions flag, so the file: {1} was changed to: {2}", GetType().Name, filePath, resPath);
             using (var stream = new RecycleMemoryStream())
             {
                 Serialize(item, itemType, stream);
                 stream.Position = 0;
-                using (var fstream = File.Open(fPath[0], FileMode.Create, FileAccess.Write))
+                using (var fstream = File.Open(resPath, FileMode.Create, FileAccess.Write))
                     await stream.CopyToAsync(fstream).ConfigureAwait(false);
             }
         }

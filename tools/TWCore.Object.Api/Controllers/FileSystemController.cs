@@ -123,20 +123,20 @@ namespace TWCore.Object.Api.Controllers
                         Type = PathEntryType.Directory
                     })
                     .Concat(Directory.EnumerateFiles(path)
-                        .Where(file =>
+                        .Where((file, vTuple) =>
                         {
                             if (Path.GetFileName(file)[0] == '.') return false;
-                            if (withFilters)
+                            if (vTuple.withFilters)
                             {
-                                if (file.IndexOf(filter, StringComparison.OrdinalIgnoreCase) < 0) return false;
+                                if (file.IndexOf(vTuple.filter, StringComparison.OrdinalIgnoreCase) < 0) return false;
                             }
-                            foreach (var ext in Extensions)
+                            foreach (var ext in vTuple.Extensions)
                             {
                                 if (file.EndsWith(ext, StringComparison.OrdinalIgnoreCase))
                                     return true;
                             }
                             return false;
-                        })
+                        }, (withFilters, filter, Extensions))
                         .Select(d => new PathEntry
                         {
                             Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),

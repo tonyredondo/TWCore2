@@ -140,7 +140,7 @@ namespace TWCore.Data
                         result = Enum.Parse(propertyType, value.ToString());
                     else if (ValueConverter != null && ValueConverter.Convert(value, valueType, prop.PropertyType, out var valueConverterResult))
                         result = valueConverterResult;
-                    else if (!InvalidCastList.Any(i => i.ValueType == valueType && i.PropertyType == propertyType))
+                    else if (!InvalidCastList.Any((i, vTuple) => i.ValueType == vTuple.valueType && i.PropertyType == vTuple.propertyType, (valueType, propertyType)))
                     {
                         try
                         {

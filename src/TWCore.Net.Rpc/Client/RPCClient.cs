@@ -477,37 +477,12 @@ namespace TWCore.Net.RPC.Client
                         types[i] = args[i].GetType();
                 }
             }
-            var mDesc = _methodDescriptorCache.GetOrAdd((serviceName, method, types), key =>
+            var key = (serviceName, method, types);
+            if (!_methodDescriptorCache.TryGetValue(key, out var mDesc))
             {
-                if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
-                // ReSharper disable once AccessToModifiedClosure
-                var iArgs = args ?? _emptyArgs;
-
-                var methods = descriptor.Methods.Values.Where((m, mKey) => m.Name == mKey.Method && (m.Parameters?.Length ?? 0) == iArgs.Length, key).ToArray();
-                switch (methods.Length)
-                {
-                    case 0:
-                        return null;
-                    case 1:
-                        return methods[0];
-                    default:
-                        return methods.FirstOrDefault(m =>
-                        {
-                            for (var i = 0; i < m.Parameters.Length; i++)
-                            {
-                                var p1 = m.Parameters[i].Parameter;
-                                var v2 = iArgs[i];
-                                var p1TypeInfo = p1.ParameterType.GetTypeInfo();
-                                if (v2 != null && !p1TypeInfo.IsAssignableFrom(v2.GetType().GetTypeInfo()))
-                                    return false;
-                                if (v2 != null || !p1TypeInfo.IsValueType) continue;
-                                if (!p1TypeInfo.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
-                                    return false;
-                            }
-                            return true;
-                        });
-                }
-            });
+                var methodDescriptorCreator = new MethodDescriptorCreator(args, Descriptors);
+                mDesc = _methodDescriptorCache.GetOrAdd(key, methodDescriptorCreator.Create);
+            }
             if (mDesc == null)
                 throw new MissingMemberException($"The method '{method}' with {args?.Length} arguments on service {serviceName} can't be found in the service description.");
 
@@ -515,6 +490,55 @@ namespace TWCore.Net.RPC.Client
                 args = _nullItemArgs;
 
             return RPCRequestMessage.Retrieve(mDesc.Id, args, useCancellationToken);
+        }
+
+        private struct MethodDescriptorCreator
+        {
+            private readonly object[] Args;
+            private readonly ServiceDescriptorCollection Descriptors;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public MethodDescriptorCreator(object[] args, ServiceDescriptorCollection descriptors)
+            {
+                Args = args ?? _emptyArgs;
+                Descriptors = descriptors;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public MethodDescriptor Create((string ServiceName, string Method, Type[] Types) key)
+            {
+                if (!Descriptors.Items.TryGetValue(key.ServiceName, out var descriptor)) return null;
+                var methods = descriptor.Methods.Values.Where(MethodsWhere, key).ToArray();
+                switch (methods.Length)
+                {
+                    case 0:
+                        return null;
+                    case 1:
+                        return methods[0];
+                    default:
+                        return methods.FirstOrDefault(FirstMethodWithParameter);
+                }
+            }
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private bool MethodsWhere(MethodDescriptor method, (string ServiceName, string Method, Type[] Types) key)
+                => method.Name == key.Method && (method.Parameters?.Length ?? 0) == Args.Length;
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private bool FirstMethodWithParameter(MethodDescriptor method)
+            {
+                for (var i = 0; i < method.Parameters.Length; i++)
+                {
+                    var p1 = method.Parameters[i].Parameter;
+                    var v2 = Args[i];
+                    if (v2 != null && !p1.ParameterType.IsAssignableFrom(v2.GetType()))
+                        return false;
+                    if (v2 != null || !p1.ParameterType.IsValueType) continue;
+                    if (!p1.ParameterType.IsGenericType || p1.ParameterType.GetGenericTypeDefinition() != typeof(Nullable<>))
+                        return false;
+                }
+                return true;
+            }
         }
         #endregion
 

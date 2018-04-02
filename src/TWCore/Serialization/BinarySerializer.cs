@@ -174,15 +174,15 @@ namespace TWCore.Serialization
                 if (Compressor != null)
                 {
                     var compExt = Compressor.FileExtension;
-                    if (!Extensions.Any(ext => resPath.EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    if (!Extensions.Any((ext, vTuple) => vTuple.resPath.EndsWith(ext + vTuple.compExt, StringComparison.OrdinalIgnoreCase), (resPath, compExt)))
                     {
-                        if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                        if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                             resPath = filePath + Extensions.FirstOrDefault() + compExt;
                         else
                             resPath = filePath + compExt;
                     }
                 }
-                else if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                else if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                 {
                     resPath = filePath + Extensions.FirstOrDefault();
                 }
@@ -212,15 +212,15 @@ namespace TWCore.Serialization
                 if (Compressor != null)
                 {
                     var compExt = Compressor.FileExtension;
-                    if (!Extensions.Any(ext => resPath.EndsWith(ext + compExt, StringComparison.OrdinalIgnoreCase)))
+                    if (!Extensions.Any((ext, vTuple) => vTuple.resPath.EndsWith(ext + vTuple.compExt, StringComparison.OrdinalIgnoreCase), (resPath, compExt)))
                     {
-                        if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                        if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                             resPath = filePath + Extensions.FirstOrDefault() + compExt;
                         else
                             resPath = filePath + compExt;
                     }
                 }
-                else if (!Extensions.Any(ext => resPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase)))
+                else if (!Extensions.Any((ext, rPath) => rPath.EndsWith(ext, StringComparison.OrdinalIgnoreCase), resPath))
                 {
                     resPath = filePath + Extensions.FirstOrDefault();
                 }

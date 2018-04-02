@@ -87,7 +87,7 @@ namespace TWCore.Net.HttpServer
         /// <returns>Item values</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetValues(string key)
-            => this.Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase)).Select(x => x.Value).ToArray();
+            => this.Where((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key).Select(x => x.Value).ToArray();
         /// <summary>
         /// Removes items with a key
         /// </summary>
@@ -95,7 +95,7 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Remove(string key)
         {
-            this.Where(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase)).ToArray().Each(x => base.Remove(x));
+            this.Where((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key).ToArray().Each(x => base.Remove(x));
         }
 
         /// <summary>

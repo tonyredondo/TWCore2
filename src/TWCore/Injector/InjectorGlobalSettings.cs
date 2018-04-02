@@ -58,9 +58,12 @@ namespace TWCore.Injector
 
             foreach (var appName in appNames)
             {
-                var set1 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName?.SplitAndTrim(",").Contains(appName) == true);
-                var set2 = Settings?.FirstOrDefault(i => i.EnvironmentName.IsNullOrWhitespace() && i.ApplicationName?.SplitAndTrim(",").Contains(appName) == true);
-                var set3 = Settings?.FirstOrDefault(i => i.EnvironmentName?.SplitAndTrim(",").Contains(environment) == true && i.ApplicationName.IsNullOrWhitespace());
+                var set1 = Settings?.FirstOrDefault((i, vTuple) => 
+                    i.EnvironmentName?.SplitAndTrim(",").Contains(vTuple.environment) == true && i.ApplicationName?.SplitAndTrim(",").Contains(vTuple.appName) == true, (environment, appName));
+                var set2 = Settings?.FirstOrDefault((i, aName) 
+                    => i.EnvironmentName.IsNullOrWhitespace() && i.ApplicationName?.SplitAndTrim(",").Contains(aName) == true, appName);
+                var set3 = Settings?.FirstOrDefault((i, env) 
+                    => i.EnvironmentName?.SplitAndTrim(",").Contains(env) == true && i.ApplicationName.IsNullOrWhitespace(), environment);
                 var set4 = Global;
 
                 res.Arguments.AddRange(set1?.Arguments);

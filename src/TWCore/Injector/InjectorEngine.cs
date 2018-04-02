@@ -272,7 +272,7 @@ namespace TWCore.Injector
             if (def == null) return;
             if (name == null)
             {
-                if (def.ClassDefinitions.FirstOrDefault(d => d.Type == instantiableType.AssemblyQualifiedName) != null) return;
+                if (def.ClassDefinitions.FirstOrDefault((d, iType) => d.Type == iType.AssemblyQualifiedName, instantiableType) != null) return;
                 var inst = new Instantiable
                 {
                     Type = instantiableType.AssemblyQualifiedName,
@@ -282,7 +282,7 @@ namespace TWCore.Injector
                 if (args?.Any() == true)
                 {
                     inst.Parameters = new NameCollection<Parameter>();
-                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Length == args.Length);
+                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
                     if (ctor != null)
                     {
                         var pargs = ctor.GetParameters();
@@ -294,7 +294,7 @@ namespace TWCore.Injector
                     }
                     else
                     {
-                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Count(p => !p.HasDefaultValue) == args.Length);
+                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
                         var pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
                         for (var i = 0; i < pargs.Length; i++)
                         {
@@ -312,7 +312,7 @@ namespace TWCore.Injector
                 if (args?.Any() == true)
                 {
                     inst.Parameters = new NameCollection<Parameter>();
-                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Length == args.Length);
+                    var ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Length == aLength, args.Length);
                     if (ctor != null)
                     {
                         var pargs = ctor.GetParameters();
@@ -324,7 +324,7 @@ namespace TWCore.Injector
                     }
                     else
                     {
-                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault(c => c.GetParameters().Count(p => !p.HasDefaultValue) == args.Length);
+                        ctor = instantiableType.GetTypeInfo().DeclaredConstructors.FirstOrDefault((c, aLength) => c.GetParameters().Count(p => !p.HasDefaultValue) == aLength, args.Length);
                         var pargs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
                         for (var i = 0; i < pargs.Length; i++)
                         {
@@ -441,7 +441,7 @@ namespace TWCore.Injector
         {
             if (Settings == null) throw new NullReferenceException("The injector settings is null.");
             RegisterAttributes();
-            var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault(i => i.Name == name);
+            var instanceDefinition = Settings.GetInstantiableClassDefinition(type).FirstOrDefault((i, mName) => i.Name == mName, name);
             if (instanceDefinition == null) return null;
             if (instanceDefinition.Singleton && _instantiableCache.TryGetValue(instanceDefinition, out var activator) && activator?.SingletonValue != null)
                 return activator.SingletonValue;

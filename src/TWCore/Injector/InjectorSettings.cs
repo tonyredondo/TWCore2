@@ -70,15 +70,15 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetInterfaceDefinition(string type)
         {
-            return Interfaces.FirstOrDefault(i =>
+            return Interfaces.FirstOrDefault((i, mType) =>
             {
-                if (type.Length == i.Type.Length)
-                    return type == i.Type;
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
                 
-                var tArr = type.Split(',');
+                var tArr = mType.Split(',');
                 var iArr = i.Type.Split(',');
                 return tArr[0] == iArr[0];
-            });
+            }, type);
         }
         /// <summary>
         /// Get an abstract definition
@@ -88,15 +88,15 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetAbstractDefinition(string type)
         {
-            return Abstracts.FirstOrDefault(i =>
+            return Abstracts.FirstOrDefault((i, mType) =>
             {
-                if (type.Length == i.Type.Length)
-                    return type == i.Type;
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
                 
-                var tArr = type.Split(',');
+                var tArr = mType.Split(',');
                 var iArr = i.Type.Split(',');
                 return tArr[0] == iArr[0];
-            });
+            }, type);
         }
         /// <summary>
         /// Get an instantiable class definition
@@ -129,7 +129,7 @@ namespace TWCore.Injector
             if (interfaceType == null)
                 throw new KeyNotFoundException($"The Interface type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
             var className = name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
-            return interfaceType.ClassDefinitions.FirstOrDefault(i => i.Name == className);
+            return interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
         }
         /// <summary>
         /// Get an abstract implementation definition
@@ -144,7 +144,7 @@ namespace TWCore.Injector
             if (abstractType == null)
                 throw new KeyNotFoundException($"The Abstract type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
             var className = name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
-            return abstractType.ClassDefinitions.FirstOrDefault(i => i.Name == className);
+            return abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
         }
         /// <summary>
         /// Preload all declared types

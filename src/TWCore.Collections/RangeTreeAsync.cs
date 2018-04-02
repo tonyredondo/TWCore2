@@ -98,8 +98,8 @@ namespace TWCore.Collections
                 var results = _rangeTree.Query(value);
 
                 // add additional results
-                results.AddRange(_addedItemsRebuilding.Where(item => item.Range.Contains(value)));
-                results.AddRange(_addedItems.Where(item => item.Range.Contains(value)));
+                results.AddRange(_addedItemsRebuilding.Where((item, mValue) => item.Range.Contains(mValue), value));
+                results.AddRange(_addedItems.Where((item, mValue) => item.Range.Contains(mValue), value));
 
                 return FilterResults(results);
             }
@@ -122,8 +122,8 @@ namespace TWCore.Collections
                 var results = _rangeTree.Query(range);
 
                 // add additional results
-                results.AddRange(_addedItemsRebuilding.Where(item => item.Range.Intersects(range)));
-                results.AddRange(_addedItems.Where(item => item.Range.Intersects(range)));
+                results.AddRange(_addedItemsRebuilding.Where((item, mRange) => item.Range.Intersects(mRange), range));
+                results.AddRange(_addedItems.Where((item, mRange) => item.Range.Intersects(mRange), range));
 
                 return FilterResults(results);
             }

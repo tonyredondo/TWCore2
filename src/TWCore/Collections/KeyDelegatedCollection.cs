@@ -79,7 +79,7 @@ namespace TWCore.Collections
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection()
+        public KeyDelegatedCollection() : base(null, 0)
         {
             OnInit();
         }
@@ -89,7 +89,7 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection(bool throwExceptionOnDuplicateKeys)
+        public KeyDelegatedCollection(bool throwExceptionOnDuplicateKeys) : base(null, 0)
         {
             ThrowExceptionOnDuplicateKeys = throwExceptionOnDuplicateKeys;
             OnInit();
@@ -100,7 +100,7 @@ namespace TWCore.Collections
         /// </summary>
         /// <param name="enumerable">Enumerable to fill the instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection(IEnumerable<TItem> enumerable)
+        public KeyDelegatedCollection(IEnumerable<TItem> enumerable) : base(null, 0)
         {
             OnInit();
             AddRange(enumerable);
@@ -121,7 +121,7 @@ namespace TWCore.Collections
         /// Collection of Items where the Key is calculated from a delegate.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection(Func<TItem, TKey> keySelector)
+        public KeyDelegatedCollection(Func<TItem, TKey> keySelector) : base(null, 0)
         {
             KeySelector = keySelector;
             if (DefaultKeySelector == null && KeySelector != null)
@@ -135,7 +135,7 @@ namespace TWCore.Collections
         /// <param name="keySelector">Key selector</param>
         /// <param name="throwExceptionOnDuplicateKeys">Sets the behavior when adding an item, throwing an exception if the key is duplicated, or ignoring the item.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public KeyDelegatedCollection(Func<TItem, TKey> keySelector, bool throwExceptionOnDuplicateKeys)
+        public KeyDelegatedCollection(Func<TItem, TKey> keySelector, bool throwExceptionOnDuplicateKeys) : base(null, 0)
         {
             ThrowExceptionOnDuplicateKeys = throwExceptionOnDuplicateKeys;
             KeySelector = keySelector;
@@ -264,6 +264,7 @@ namespace TWCore.Collections
         public bool TryGet(TKey key, out TItem item)
         {
             item = default(TItem);
+            if (Count == 0) return false;
             lock (Ilocker)
                 return Dictionary.TryGetValue(key, out item);
         }

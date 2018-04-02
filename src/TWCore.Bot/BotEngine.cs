@@ -302,7 +302,7 @@ namespace TWCore.Bot
 
             Core.Log.LibVerbose("Message received, looking for command...");
             var message = e.Item1;
-            var sCommands = Commands.Where(cmd => cmd.Condition(message.Text)).ToArray();
+            var sCommands = Commands.Where((cmd, sMessage) => cmd.Condition(sMessage.Text), message).ToArray();
             if (sCommands.Any())
             {
                 #region Get Chat

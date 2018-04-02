@@ -106,15 +106,15 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<Instantiable> GetInstantiableClassDefinition(string type)
         {
-            return InstantiableClasses.Where(i =>
+            return InstantiableClasses.Where((i, mType) =>
             {
-                if (type.Length == i.Type.Length)
-                    return type == i.Type;
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
                 
-                var tArr = type.Split(',');
+                var tArr = mType.Split(',');
                 var iArr = i.Type.Split(',');
                 return tArr[0] == iArr[0];
-            });
+            }, type);
         }
         /// <summary>
         /// Get an interface implementation definition

@@ -483,7 +483,7 @@ namespace TWCore.Net.RPC.Client
                 // ReSharper disable once AccessToModifiedClosure
                 var iArgs = args ?? _emptyArgs;
 
-                var methods = descriptor.Methods.Values.Where(m => m.Name == key.Method && (m.Parameters?.Length ?? 0) == iArgs.Length).ToArray();
+                var methods = descriptor.Methods.Values.Where((m, mKey) => m.Name == mKey.Method && (m.Parameters?.Length ?? 0) == iArgs.Length, key).ToArray();
                 switch (methods.Length)
                 {
                     case 0:

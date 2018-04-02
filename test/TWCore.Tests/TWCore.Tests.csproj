@@ -5,6 +5,10 @@
     <Version>0.2.0-alpha</Version>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj" />

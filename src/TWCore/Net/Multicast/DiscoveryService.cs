@@ -259,7 +259,7 @@ namespace TWCore.Net.Multicast
         public static ReceivedService[] GetRegisteredServices(string name)
         {
             lock (ReceivedServices)
-                return ReceivedServices.ToValueArray().Where(r => r.Name == name).ToArray();
+                return ReceivedServices.ToValueArray().Where((r, mName) => r.Name == mName, name).ToArray();
         }
         /// <summary>
         /// Get registered services
@@ -269,7 +269,7 @@ namespace TWCore.Net.Multicast
         public static ReceivedService[] GetLocalRegisteredServices(string name)
         {
             lock (ReceivedServices)
-                return ReceivedServices.ToValueArray().Where(s => s.MachineName == Core.MachineName && s.Name == name).ToArray();
+                return ReceivedServices.ToValueArray().Where((s, mName) => s.MachineName == Core.MachineName && s.Name == mName, name).ToArray();
         }
         #endregion
 

@@ -95,7 +95,7 @@ namespace TWCore.Collections
         {
             lock (Padlock)
             {
-                var nStack = _eventHandlersStack.Where(item => item != handler).ToArray();
+                var nStack = _eventHandlersStack.Where((item, mHandler) => item != mHandler, handler).ToArray();
                 if (nStack.Any())
                     _eventHandlersStack = new Stack<EventHandler>(nStack.Reverse());
             }
@@ -187,7 +187,7 @@ namespace TWCore.Collections
         {
             lock (Padlock)
             {
-                var nStack = _eventHandlersStack.Where(item => item != handler).ToArray();
+                var nStack = _eventHandlersStack.Where((item, mHandler) => item != mHandler, handler).ToArray();
                 if (nStack.Any())
                     _eventHandlersStack = new Stack<EventHandler<T>>(nStack.Reverse());
             }

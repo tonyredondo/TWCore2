@@ -427,7 +427,7 @@ namespace TWCore.Diagnostics.Status
 
                 (var equalSet, var notEqualSet) = data.Split(item => item.Parent == status.Object);
                 FlattenStatus(status);
-                var equalSetDistinct = equalSet.Where(s => s != status).Each(FlattenStatus).ToArray();
+                var equalSetDistinct = equalSet.Where((s, st) => s != st, status).Each(FlattenStatus).ToArray();
                 if (equalSetDistinct.Length > 0)
                 {
                     foreach (var item in equalSetDistinct)

@@ -248,8 +248,8 @@ namespace TWCore.Cache.Client
                 lock(EnabledItems)
                 { 
                     var iWhere = onlyMemoryStorages ?
-                        EnabledItems.Where(i => i.Mode.HasFlag(mode) && i.Storage.Type == StorageType.Memory) :
-                        EnabledItems.Where(i => i.Mode.HasFlag(mode));
+                        EnabledItems.Where((i, sMode) => i.Mode.HasFlag(sMode) && i.Storage.Type == StorageType.Memory, mode) :
+                        EnabledItems.Where((i, sMode) => i.Mode.HasFlag(sMode), mode);
                     poolItems = iWhere.ToArray();
                 }
                 

@@ -220,7 +220,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         var hubName = eventAttribute.HubName;
                         RpcServerClient[] clients;
                         lock (_locker)
-                            clients = _sessions.Where(s => s.OnSession && s.Hub == hubName).ToArray();
+                            clients = _sessions.Where((s, mHubName) => s.OnSession && s.Hub == mHubName, hubName).ToArray();
                         if (clients.Length > 0)
                         {
                             await Task.WhenAll(clients.Select(s => s.SendRpcMessageAsync(eventMessage))).ConfigureAwait(false);
@@ -363,7 +363,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             };
             lock (_locker)
             {
-                _sessions.Where(s => s.OnSession && s.Hub == hub)
+                _sessions.Where((s, mHub) => s.OnSession && s.Hub == mHub, hub)
                     .Select(s => s.SendRpcMessageAsync(msg)).ToArray();
             }
         }
@@ -385,7 +385,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             };
             lock (_locker)
             {
-                _sessions.Where(s => s.OnSession && s.Hub == hub && s.SessionId != exceptSessionId)
+                _sessions.Where((s, vTuple) => s.OnSession && s.Hub == vTuple.hub && s.SessionId != vTuple.exceptSessionId, (hub, exceptSessionId))
                     .Select(s => s.SendRpcMessageAsync(msg)).ToArray();
             }
         }
@@ -426,7 +426,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             };
             lock (_locker)
             {
-                _sessions.Where(s => s.OnSession && s.SessionId != exceptSessionId)
+                _sessions.Where((s, mExceptSessionId) => s.OnSession && s.SessionId != mExceptSessionId, exceptSessionId)
                     .Select(s => s.SendRpcMessageAsync(msg)).ToArray();
             }
         }
@@ -447,7 +447,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             };
             lock (_locker)
             {
-                _sessions.Where(s => s.OnSession && s.SessionId == sessionId)
+                _sessions.Where((s, mSessionId) => s.OnSession && s.SessionId == mSessionId, sessionId)
                     .Select(s => s.SendRpcMessageAsync(msg)).ToArray();
             }
         }

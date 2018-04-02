@@ -820,7 +820,7 @@ namespace TWCore.Data.Schema.Generator
                 var mName = string.Join("", names.ToArray());
                 whereIdx.Name = "By" + mName;
 
-                if (container.Wheres.All(w => w.Name != whereIdx.Name))
+                if (container.Wheres.All((w, wName) => w.Name != wName, whereIdx.Name))
                     container.Wheres.Add(whereIdx);
             }
             return container;

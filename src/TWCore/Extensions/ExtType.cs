@@ -93,7 +93,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static MethodInfo GetGenericMethod(this Type type, string name, params Type[] parameterTypes)
         {
-            var methods = type.GetRuntimeMethods().Where(method => method.Name == name);
+            var methods = type.GetRuntimeMethods().Where((method, mName) => method.Name == mName, name);
             foreach (var method in methods)
             {
                 if (method.HasParameters(parameterTypes))

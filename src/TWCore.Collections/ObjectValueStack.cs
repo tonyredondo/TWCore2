@@ -96,7 +96,7 @@ namespace TWCore.Collections
             {
                 if (_stack.Count <= 0) return;
                 var oldPeek = _stack.Peek();
-                var nStack = _stack.Where(item => item.Sender != sender).ToArray();
+                var nStack = _stack.Where((item, mSender) => item.Sender != mSender, sender).ToArray();
                 if (nStack.Any())
                     _stack = new Stack<ObjectValue<T>>(nStack.Reverse());
 

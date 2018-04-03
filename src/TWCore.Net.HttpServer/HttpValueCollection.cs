@@ -79,7 +79,7 @@ namespace TWCore.Net.HttpServer
         /// <param name="key">Item key</param>
         /// <returns>true if the collection has the item; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ContainsKey(string key) => this.Any(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase));
+        public bool ContainsKey(string key) => this.Any((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key);
         /// <summary>
         /// Gets the item values of a key
         /// </summary>

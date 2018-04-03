@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Serialization;
+using TWCore.Threading;
 
 namespace TWCore.Cache.Client
 {
@@ -937,7 +938,7 @@ namespace TWCore.Cache.Client
         /// </summary>
         /// <returns>true if the storage is enabled; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> IsEnabledAsync() => Task.FromResult(_pool.AnyEnabled());
+        public Task<bool> IsEnabledAsync() => _pool.AnyEnabled() ? TaskUtil.CompleteTrue : TaskUtil.CompleteFalse;
         /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.

@@ -173,7 +173,7 @@ namespace TWCore
                         {
                             var name = AssemblyName.GetAssemblyName(file);
                             if (IsExcludedAssembly(name.Name)) continue;
-                            if (loaded.All(l => l.FullName != name.FullName))
+                            if (loaded.All((l, fullName) => l.FullName != fullName, name.FullName))
                                 AppDomain.CurrentDomain.Load(name);
                         }
                         catch

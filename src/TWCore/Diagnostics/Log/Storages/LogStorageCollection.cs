@@ -71,7 +71,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             lock (_locker)
             {
-                if (_items.All(i => i.Item1 != storage))
+                if (_items.All((i, mStorage) => i.Item1 != mStorage, storage))
                 {
                     _items.Add((storage, writeLevel));
                     _isDirty = true;

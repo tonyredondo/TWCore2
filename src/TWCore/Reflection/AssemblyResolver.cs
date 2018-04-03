@@ -102,7 +102,7 @@ namespace TWCore.Reflection
                     {
                         var name = AssemblyName.GetAssemblyName(file);
                         if (IsExcludedAssembly(name.Name)) return;
-                        if (domainAssemblies.All(l => l.FullName != name.FullName))
+                        if (domainAssemblies.All((l, fullName) => l.FullName != fullName, name.FullName))
                             cBag.Add(new AssemblyInfo(file, name));
                     }
                     catch (BadImageFormatException)
@@ -150,7 +150,7 @@ namespace TWCore.Reflection
                     {
                         var name = AssemblyName.GetAssemblyName(file);
                         if (IsExcludedAssembly(name.Name)) return;
-                        if (domainAssemblies.All(l => l.FullName != name.FullName) && !Assemblies.Contains(name.FullName))
+                        if (domainAssemblies.All((l, fullName) => l.FullName != fullName, name.FullName) && !Assemblies.Contains(name.FullName))
                             localAssembliesInfo.Add(new AssemblyInfo(file, name));
                     }
                     catch (BadImageFormatException)

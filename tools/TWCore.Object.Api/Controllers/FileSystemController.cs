@@ -100,8 +100,8 @@ namespace TWCore.Object.Api.Controllers
                         Error = "Directory doesn't exist."
                     });
 
-                if (GetRootEntryCollection().Entries.Concat(services.Values.SelectMany(v => v.Entries)).All(rp =>
-                    !path.StartsWith(rp.Path, StringComparison.OrdinalIgnoreCase)))
+                if (GetRootEntryCollection().Entries.Concat(services.Values.SelectMany(v => v.Entries))
+                    .All((rp, aPath) => !aPath.StartsWith(rp.Path, StringComparison.OrdinalIgnoreCase), path))
                     return new ObjectResult(new PathEntryCollection
                     {
                         Current = virtualPath,
@@ -431,7 +431,7 @@ namespace TWCore.Object.Api.Controllers
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     path = Path.GetFullPath(path);
                     if (!Directory.Exists(path)) continue;
-                    if (srvPe.Entries.All(c => c.Path != path))
+                    if (srvPe.Entries.All((c, aPath) => c.Path != aPath, path))
                         srvPe.Entries.Add(new PathEntry
                         {
                             Name = "LOGS",
@@ -447,7 +447,7 @@ namespace TWCore.Object.Api.Controllers
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     path = Path.GetFullPath(path);
                     if (!Directory.Exists(path)) continue;
-                    if (srvPe.Entries.All(c => c.Path != path))
+                    if (srvPe.Entries.All((c, aPath) => c.Path != aPath, path))
                         srvPe.Entries.Add(new PathEntry
                         {
                             Name = "HTTP LOGS",
@@ -463,7 +463,7 @@ namespace TWCore.Object.Api.Controllers
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     path = Path.GetFullPath(path);
                     if (!Directory.Exists(path)) continue;
-                    if (srvPe.Entries.All(c => c.Path != path))
+                    if (srvPe.Entries.All((c, aPath) => c.Path != aPath, path))
                         srvPe.Entries.Add(new PathEntry
                         {
                             Name = "TRACES",
@@ -479,7 +479,7 @@ namespace TWCore.Object.Api.Controllers
                     if (string.IsNullOrWhiteSpace(path)) continue;
                     path = Path.GetFullPath(path);
                     if (!Directory.Exists(path)) continue;
-                    if (srvPe.Entries.All(c => c.Path != path))
+                    if (srvPe.Entries.All((c, aPath) => c.Path != aPath, path))
                         srvPe.Entries.Add(new PathEntry
                         {
                             Name = "STATUSES",
@@ -494,7 +494,7 @@ namespace TWCore.Object.Api.Controllers
                     if (!(srv.Data.GetValue() is Dictionary<string, object> data)) continue;
                     if (!data.TryGetValue("Port", out var port)) continue;
                     var strPort = port.ToString();
-                    if (srvPe.Entries.All(c => c.Path != strPort))
+                    if (srvPe.Entries.All((c, aPort) => c.Path != aPort, strPort))
                         srvPe.Entries.Add(new PathEntry
                         {
                             Name = "CURRENT STATUS",

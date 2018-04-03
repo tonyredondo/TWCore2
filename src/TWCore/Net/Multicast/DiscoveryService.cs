@@ -162,7 +162,7 @@ namespace TWCore.Net.Multicast
             service.ServiceId = serviceText.GetHashSHA1Guid();
             lock (LocalServices)
             {
-                if (LocalServices.All(s => s.ServiceId != service.ServiceId))
+                if (LocalServices.All((s, serviceId) => s.ServiceId != serviceId, service.ServiceId))
                     LocalServices.Add(service);
             }
             return service.ServiceId;
@@ -192,7 +192,7 @@ namespace TWCore.Net.Multicast
             service.ServiceId = serviceText.GetHashSHA1Guid();
             lock (LocalServices)
             {
-                if (LocalServices.All(s => s.ServiceId != service.ServiceId))
+                if (LocalServices.All((s, serviceId) => s.ServiceId != serviceId, service.ServiceId))
                     LocalServices.Add(service);
             }
             return service.ServiceId;

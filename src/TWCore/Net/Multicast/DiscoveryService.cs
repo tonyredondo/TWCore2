@@ -92,7 +92,7 @@ namespace TWCore.Net.Multicast
         {
             LocalServices = new List<RegisteredService>();
             ReceivedServices = new TimeoutDictionary<Guid, ReceivedService>();
-            ReceivedServices.OnItemTimeout += (s, e) => Try.Do(() => OnServiceExpired?.Invoke(s, new EventArgs<ReceivedService>(e.Value)), false);
+            ReceivedServices.OnItemTimeout += (s, e) => Try.Do(vTuple => OnServiceExpired?.Invoke(vTuple.s, new EventArgs<ReceivedService>(vTuple.e.Value)), (s, e), false);
             PeerConnection = new PeerConnection();
             PeerConnection.OnReceive += PeerConnection_OnReceive;
             _tokenSource = new CancellationTokenSource();

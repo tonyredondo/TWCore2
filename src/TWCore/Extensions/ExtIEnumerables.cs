@@ -681,7 +681,7 @@ namespace TWCore
                 foreach (var item in array)
                 {
                     var key = mKeySelector(item);
-                    var similarItems = source.Where((i, vTuple) => !ReferenceEquals(vTuple.item, i) && Equals(keySelector(i), vTuple.key), (item, key)).ToList();
+                    var similarItems = source.Where((i, vTuple) => !ReferenceEquals(vTuple.item, i) && Equals(vTuple.keySelector(i), vTuple.key), (item, key, keySelector)).ToList();
                     var nItem = similarItems.Count > 1 ? mMergeFunction(similarItems) : item;
                     source = source.Where((s, mSimilarItems) => !mSimilarItems.Contains(s), similarItems).ToArray();
                     yield return nItem;

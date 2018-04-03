@@ -113,8 +113,8 @@ namespace TWCore.Object.Api.Controllers
                     .Where(d =>
                     {
                         if (Path.GetFileName(d)[0] == '.') return false;
-                        return Try.Do(() => Directory.EnumerateDirectories(d).Any(), false) ||
-                               Try.Do(() => Directory.EnumerateFiles(d).Any(), false);
+                        return Try.Do(dArg => Directory.EnumerateDirectories(dArg).Any(), d, false) ||
+                               Try.Do(dArg => Directory.EnumerateFiles(dArg).Any(), d, false);
                     })
                     .Select((d, mPath) => new PathEntry
                     {
@@ -414,7 +414,7 @@ namespace TWCore.Object.Api.Controllers
 
                 var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");
                 var folderServicesData = folderServices
-                    .Where(s => appNames.Contains(s.ApplicationName) && s.ApplicationName != Core.ApplicationName)
+                    .Where((s, names) => names.Contains(s.ApplicationName) && s.ApplicationName != Core.ApplicationName, appNames)
                     .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
                     .ToArray();
 

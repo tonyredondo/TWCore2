@@ -72,7 +72,7 @@ namespace TWCore.Settings
                 if (arrayAttribute == null && dictionaryAttribute == null)
                 {
                     //No Array
-                    var settingValueObject = Try.Do(() => StringParser.Parse(settingValue, p.PropertyType, p.GetValue(instance), dataFormat, provider), false);
+                    var settingValueObject = Try.Do(vTuple => StringParser.Parse(vTuple.settingValue, vTuple.p.PropertyType, vTuple.p.GetValue(vTuple.instance), vTuple.dataFormat, vTuple.provider), (settingValue, p, instance, dataFormat, provider), false);
                     p.SetValue(instance, settingValueObject);
                 }
                 else if (dictionaryAttribute?.ItemSeparator != null && p.PropertyType.GetTypeInfo().ImplementedInterfaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>))))
@@ -115,7 +115,7 @@ namespace TWCore.Settings
 
 
                     var valueArray = settingsValueArray?
-                    .Select((val, vTuple) => Try.Do(tuple => StringParser.Parse(val, tuple.eType, tuple.defaultValue, tuple.dataFormat, tuple.provider), vTuple, false), (eType, defaultValue, dataFormat, provider)).ToArray();
+                    .Select((val, vTuple) => Try.Do(tuple => StringParser.Parse(tuple.val, tuple.vTuple.eType, tuple.vTuple.defaultValue, tuple.vTuple.dataFormat, tuple.vTuple.provider), (val, vTuple), false), (eType, defaultValue, dataFormat, provider)).ToArray();
                     Array myValueArray = null;
 
                     if (valueArray != null)

@@ -98,13 +98,13 @@ namespace TWCore.IO
             {
                 var currentPath = Path.GetDirectoryName(AppContext.BaseDirectory);
                 FilePath = Path.Combine(currentPath, FilePath);
-                Try.Do(() =>
+                Try.Do(fw =>
                 {
-                    if (_fwatcher == null) return;
-                    _fwatcher.EnableRaisingEvents = false;
-                    _fwatcher.Dispose();
-                    _fwatcher = null;
-                });
+                    if (fw == null) return;
+                    fw.EnableRaisingEvents = false;
+                    fw.Dispose();
+                    fw = null;
+                }, _fwatcher);
                 if (!LoadFile())
                 {
                     _instance = Activator.CreateInstance<T>();
@@ -209,12 +209,12 @@ namespace TWCore.IO
                 var watchException = e.GetException();
                 OnException?.Invoke(this, new EventArgs<Exception>(watchException));
                 FileObjectEvents.FireException(this, watchException);
-                Try.Do(() =>
+                Try.Do(fw =>
                 {
-                    if (_fwatcher == null) return;
-                    _fwatcher.EnableRaisingEvents = false;
-                    _fwatcher.Dispose();
-                });
+                    if (fw == null) return;
+                    fw.EnableRaisingEvents = false;
+                    fw.Dispose();
+                }, _fwatcher);
                 _fwatcher = null;
                 var nWatcher = CreateWatcher();
                 while (!nWatcher.EnableRaisingEvents)

@@ -99,7 +99,7 @@ namespace TWCore.Data
 
             if (type == typeof(DictionaryObject))
             {
-                var dicData = ColumnIndex.Select(c => new KeyValuePair<string, object>(c.Key, rowValues[c.Value])).ToDictionary();
+                var dicData = ColumnIndex.Select((c, rValues) => new KeyValuePair<string, object>(c.Key, rValues[c.Value]), rowValues).ToDictionary();
                 return (T)(object)new DictionaryObject(dicData);
             }
             

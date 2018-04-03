@@ -91,7 +91,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                 lock (mStatus._locker)
                 {
                     if (mStatus._traceItems.Count == 0) return;
-                    itemsToSend = new List<MessagingTraceItem>(mStatus._traceItems.Select(i => new MessagingTraceItem
+                    itemsToSend = new List<MessagingTraceItem>(mStatus._traceItems.Select((i, aStatus) => new MessagingTraceItem
                     {
                         EnvironmentName = Core.EnvironmentName,
                         MachineName = Core.MachineName,
@@ -100,8 +100,8 @@ namespace TWCore.Diagnostics.Trace.Storages
                         Id = i.Id,
                         Timestamp = i.Timestamp,
                         TraceName = i.TraceName,
-                        TraceObject = mStatus._sendCompleteTrace ? i.TraceObject : null
-                    }));
+                        TraceObject = aStatus._sendCompleteTrace ? i.TraceObject : null
+                    }, mStatus));
                     mStatus._traceItems.Clear();
                 }
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);

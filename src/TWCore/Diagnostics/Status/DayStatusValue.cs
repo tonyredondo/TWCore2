@@ -89,12 +89,12 @@ namespace TWCore.Diagnostics.Status
                 };
                 var daysValuePairs = _values.ToArray().OrderByDescending(i => i.Key).ToArray();
                 var total = daysValuePairs.SelectMany(i => i.Value).Sum(i => i.Count);
-                var daysSums = daysValuePairs.Select(i =>
+                var daysSums = daysValuePairs.Select((i, mTotal) =>
                 {
                     var totalCallsDay = i.Value.Sum(v => v.Count);
-                    var percentCallsDay = (double)totalCallsDay * 100 / total;
+                    var percentCallsDay = (double)totalCallsDay * 100 / mTotal;
                     return new DaysSum(i.Key, i.Value, totalCallsDay, percentCallsDay);
-                }).ToArray();
+                }, total).ToArray();
                 var now = Core.Now;
                 foreach (var dsItem in daysSums)
                 {
@@ -119,7 +119,7 @@ namespace TWCore.Diagnostics.Status
                         for (var i = 0; i < dsItem.Value.Length; i++)
                         {
                             var values = dsItem.Value[i].Cast<string>().GroupBy(v => v)
-                                .Select(v => new StatusItemValueItem(v.Key, v.Count(), StatusItemValueStatus.Unknown, dsItem.Key == now.Date && i == now.Hour)).ToArray();
+                                .Select((v, vTuple) => new StatusItemValueItem(v.Key, v.Count(), StatusItemValueStatus.Unknown, vTuple.dsItem.Key == vTuple.now.Date && i == vTuple.now.Hour), (dsItem, now)).ToArray();
                             dayItem.Values.Add($"Number of calls at {i}H", values);
                         }
                     }

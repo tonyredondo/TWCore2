@@ -114,7 +114,8 @@ namespace TWCore.Settings
                     var isDefaultValue = true;
 
 
-                    var valueArray = settingsValueArray?.Select(val => Try.Do(() => StringParser.Parse(val, eType, defaultValue, dataFormat, provider), false)).ToArray();
+                    var valueArray = settingsValueArray?
+                    .Select((val, vTuple) => Try.Do(tuple => StringParser.Parse(val, tuple.eType, tuple.defaultValue, tuple.dataFormat, tuple.provider), vTuple, false), (eType, defaultValue, dataFormat, provider)).ToArray();
                     Array myValueArray = null;
 
                     if (valueArray != null)

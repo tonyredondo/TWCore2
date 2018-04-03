@@ -224,7 +224,7 @@ namespace TWCore.Diagnostics.Status
                 var qArray = _queue.ToArray();
                 if (qArray.Length > 0)
                 {
-                    var sorted = qArray.Select((i, idx) => (_funcToAverage(i), i)).OrderBy(i => i.Item1).ToArray();
+                    var sorted = qArray.Select((i, func) => (func(i), i), _funcToAverage).OrderBy(i => i.Item1).ToArray();
                     CallsQuantity = sorted.Length;
                     LowestValue = sorted.First().Item2;
                     HighestValue = sorted.Last().Item2;

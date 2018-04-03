@@ -82,12 +82,12 @@ namespace TWCore.Diagnostics.Status
 
                 var daysValuePairs = _values.ToArray().OrderByDescending(i => i.Key).ToArray();
                 var total = daysValuePairs.SelectMany(i => i.Value).Sum();
-                var daysSums = daysValuePairs.Select(i =>
+                var daysSums = daysValuePairs.Select((i, mTotal) =>
                 {
                     var totalDay = i.Value.Sum();
-                    var percentDay = (double)totalDay * 100 / total;
+                    var percentDay = (double)totalDay * 100 / mTotal;
                     return new DaysSum(i.Key, i.Value, totalDay, percentDay);
-                }).ToArray();
+                }, total).ToArray();
 
                 foreach (var item in daysSums)
                 {

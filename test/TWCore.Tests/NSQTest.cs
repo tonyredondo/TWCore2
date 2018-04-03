@@ -137,7 +137,7 @@ namespace TWCore.Tests
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
+                            Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
                         );
                         //Parallel.For(0, totalQ, i =>
                         //{
@@ -174,7 +174,7 @@ namespace TWCore.Tests
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
+                            Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
                         );
                         //Parallel.For(0, totalQ, i =>
                         //{
@@ -225,7 +225,7 @@ namespace TWCore.Tests
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync(byteRequest)).ToArray()
+                            Enumerable.Range(0, totalQ).Select((i, vTuple) => (Task)vTuple.mqClient.SendAndReceiveAsync(vTuple.byteRequest), (mqClient, byteRequest)).ToArray()
                         );
                         //Parallel.For(0, totalQ, i =>
                         //{
@@ -262,7 +262,7 @@ namespace TWCore.Tests
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         Task.WaitAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync(byteRequest)).ToArray()
+                            Enumerable.Range(0, totalQ).Select((i, vTuple) => (Task)vTuple.mqClient.SendAndReceiveAsync(vTuple.byteRequest), (mqClient, byteRequest)).ToArray()
                         );
                         //Parallel.For(0, totalQ, i =>
                         //{

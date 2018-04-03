@@ -196,7 +196,7 @@ namespace TWCore.Injector
         /// <returns>All instances array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object[] GetAllInstances(Type type)
-            => GetNames(type).Select(n => New(type, n)).ToArray();
+            => GetNames(type).Select((n, mType) => New(mType, n), type).ToArray();
         /// <summary>
         /// Register a instantiable type to a non instantiable type
         /// </summary>

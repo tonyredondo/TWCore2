@@ -146,9 +146,11 @@ namespace TWCore.Net.HttpServer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void FillFromString(string query, bool urlencoded)
         {
-            query.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray()).Select(i => new KeyValue(
-                    (urlencoded ? Uri.UnescapeDataString(i[0]) : i[0]).Replace("+", " "),
-                    (urlencoded ? Uri.UnescapeDataString(i[1]) : i[1]).Replace("+", " "))).Each(i => base.Add(i));
+            query.SplitAndTrim('&').Select(i => i.SplitAndTrim('=').ToArray())
+                .Select((i, uEnconded) => new KeyValue(
+                    (uEnconded ? Uri.UnescapeDataString(i[0]) : i[0]).Replace("+", " "),
+                    (uEnconded ? Uri.UnescapeDataString(i[1]) : i[1]).Replace("+", " ")), urlencoded)
+                    .Each(i => base.Add(i));
         }
         #endregion
     }

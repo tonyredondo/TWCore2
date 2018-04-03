@@ -69,7 +69,7 @@ namespace TWCore.Object.Compiler
                     foreach (var asm in resolver.Assemblies)
                         locationReferences.Add(asm.FilePath);
                 }
-                _references = locationReferences.Select(location => Try.Do(() => (MetadataReference)MetadataReference.CreateFromFile(location))).RemoveNulls().ToArray();
+                _references = locationReferences.Select(location => Try.Do(loc => (MetadataReference)MetadataReference.CreateFromFile(loc), location)).RemoveNulls().ToArray();
                 return _references;
             }
         }

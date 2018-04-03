@@ -116,12 +116,12 @@ namespace TWCore.Object.Api.Controllers
                         return Try.Do(() => Directory.EnumerateDirectories(d).Any(), false) ||
                                Try.Do(() => Directory.EnumerateFiles(d).Any(), false);
                     })
-                    .Select(d => new PathEntry
+                    .Select((d, mPath) => new PathEntry
                     {
-                        Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
+                        Name = Path.GetFullPath(d).Replace(mPath, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
                         Path = Path.GetFullPath(d),
                         Type = PathEntryType.Directory
-                    })
+                    }, path)
                     .Concat(Directory.EnumerateFiles(path)
                         .Where((file, vTuple) =>
                         {
@@ -137,13 +137,13 @@ namespace TWCore.Object.Api.Controllers
                             }
                             return false;
                         }, (withFilters, filter, Extensions))
-                        .Select(d => new PathEntry
+                        .Select((d, mPath) => new PathEntry
                         {
-                            Name = Path.GetFullPath(d).Replace(path, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
+                            Name = Path.GetFullPath(d).Replace(mPath, string.Empty, StringComparison.OrdinalIgnoreCase).Replace("/", string.Empty).Replace("\\", string.Empty),
                             Path = Path.GetFullPath(d),
                             Type = PathEntryType.File,
                             IsBinary = !TextExtensions.Contains(Path.GetExtension(d), StringComparer.OrdinalIgnoreCase)
-                        }))
+                        }, path))
                         .OrderBy(d => d.Name)
                     .ToArray();
                 return new ObjectResult(new PathEntryCollection { Current = virtualPath, Entries = pathEntries });

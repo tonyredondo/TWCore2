@@ -1415,7 +1415,7 @@ namespace TWCore
         /// <param name="selectFunction">Select function</param>
         /// <returns>Standard deviation value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static double GetStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select(i => (double)selectFunction(i)).GetStdDev();
+        public static double GetStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select((i, func) => (double)func(i), selectFunction).GetStdDev();
         /// <summary>
         /// Gets the average and the standard deviation
         /// </summary>
@@ -1433,7 +1433,7 @@ namespace TWCore
         /// <param name="selectFunction">Select function</param>
         /// <returns>Average and Standard deviation value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static (double Average, double StandardDeviation) GetAverageAndStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select(i => (double)selectFunction(i)).GetAverageAndStdDev();
+        public static (double Average, double StandardDeviation) GetAverageAndStdDev<T>(this IEnumerable<T> enumerable, Func<T, decimal> selectFunction) => enumerable.Select((i, func) => (double)func(i), selectFunction).GetAverageAndStdDev();
         #endregion
 
         #region KeyedCollections
@@ -1507,6 +1507,8 @@ namespace TWCore
             if (predicates == null) return default;
             var comparer = EqualityComparer<T>.Default;
             var foundArray = ReferencePool<List<T>>.Shared.New();
+            for (var i = 0; i < predicates.Length - 1; i++)
+                foundArray.Add(default);
             foreach (var item in source)
             {
                 for (var i = 0; i < predicates.Length; i++)
@@ -1546,6 +1548,8 @@ namespace TWCore
             if (predicates == null) return default;
             var comparer = EqualityComparer<T>.Default;
             var foundArray = ReferencePool<List<T>>.Shared.New();
+            for (var i = 0; i < predicates.Length - 1; i++)
+                foundArray.Add(default);
             foreach (var item in source)
             {
                 for (var i = 0; i < predicates.Length; i++)

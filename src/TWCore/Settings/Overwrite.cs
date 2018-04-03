@@ -56,7 +56,7 @@ namespace TWCore.Settings
                     foreach (var env in environments)
                     {
                         if (hasMachines)
-                            result.AddRange(machines.Select(machine => env + ">" + machine));
+                            result.AddRange(machines.Select((machine, mEnv) => mEnv + ">" + machine, env));
                         else
                             result.Add(env);
                     }

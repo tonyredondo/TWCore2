@@ -30,7 +30,7 @@ namespace TWCore.Tests
         public static void Run(int min, int max, int numberElements, int capacity)
         {
             var randNum = new Random();
-            var randomNumbers = Enumerable.Repeat(0, numberElements).Select(i => randNum.Next(min, max)).ToArray();
+            var randomNumbers = Enumerable.Repeat(0, numberElements).Select((i, vTuple) => vTuple.randNum.Next(vTuple.min, vTuple.max), (randNum, min, max)).ToArray();
             var lru = new LRUCollection<int, long>(capacity);
             var lfu = new LFUCollection<int, long>(capacity);
             var lru2Q = new LRU2QCollection<int, long>(capacity);

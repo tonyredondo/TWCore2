@@ -191,5 +191,184 @@ namespace TWCore
                 throw new Exception(exceptionMessage, e);
             }
         }
+        /// <summary>
+        /// Evaluates a function inside a try/catch sentence and returns the value.
+        /// </summary>
+        /// <typeparam name="T">Function type</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="onException">Function to be executed in case an Exception catch</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <returns>Function result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Func<Exception, T> onException, T defaultValue = default(T))
+        {
+            var res = defaultValue;
+            try
+            {
+                res = tryFunction(state);
+            }
+            catch (Exception e)
+            {
+                if (onException != null)
+                    res = onException(e);
+                else
+                    Core.Log.Write(e);
+            }
+            return res;
+        }
+        /// <summary>
+        /// Evaluates a function inside a try/catch sentence and returns the value.
+        /// </summary>
+        /// <typeparam name="T">Function type</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="onException">Action to be executed in case an Exception catch</param>
+        /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <returns>Function result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, Action<Exception> onException = null, bool throwsAfter = false, T defaultValue = default(T))
+        {
+            var res = defaultValue;
+            try
+            {
+                res = tryFunction(state);
+            }
+            catch (Exception e)
+            {
+                if (onException != null)
+                    onException(e);
+                else
+                    Core.Log.Write(e);
+                if (throwsAfter)
+                    throw;
+            }
+            return res;
+        }
+        /// <summary>
+        /// Evaluates a function inside a try/catch sentence and returns the value.
+        /// </summary>
+        /// <typeparam name="T">Function type</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <param name="defaultValue">Default value</param>
+        /// <returns>Function result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, bool throwsAfter, T defaultValue = default(T))
+        {
+            var res = defaultValue;
+            try
+            {
+                res = tryFunction(state);
+            }
+            catch (Exception e)
+            {
+                Core.Log.Write(e);
+                if (throwsAfter)
+                    throw;
+            }
+            return res;
+        }
+        /// <summary>
+        /// Evaluates a function inside a try/catch sentence and returns the value.
+        /// </summary>
+        /// <typeparam name="T">Function type</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="tryFunction">Function to be executed inside the try/catch.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="exceptionMessage">Message on exception</param>
+        /// <returns>Function result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T Do<T, TArg>(Func<TArg, T> tryFunction, in TArg state, string exceptionMessage)
+        {
+            T res;
+            try
+            {
+                res = tryFunction(state);
+            }
+            catch (Exception e)
+            {
+                throw new Exception(exceptionMessage, e);
+            }
+            return res;
+        }
+        /// <summary>
+        /// Execute an action inside a try/catch sentence and returns if it was sucessfully executed or not.
+        /// </summary>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="action">Action to be executed inside the try/catch sentence.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="onException">Action to be executed in case an Exception catch</param>
+        /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <returns>true if the action was executed sucessfully, otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Do<TArg>(Action<TArg> action, in TArg state, Action<Exception> onException = null, bool throwsAfter = false)
+        {
+            try
+            {
+                action(state);
+                return true;
+            }
+            catch (Exception e)
+            {
+                if (onException != null)
+                    onException(e);
+                else
+                    Core.Log.Write(e);
+                if (throwsAfter)
+                    throw;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Execute an action inside a try/catch sentence and returns if it was sucessfully executed or not.
+        /// </summary>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="action">Action to be executed inside the try/catch sentence.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="throwsAfter">Indicates if after the catch handleling the exceptions need to be throw to an upper try/catch</param>
+        /// <returns>true if the action was executed sucessfully, otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Do<TArg>(Action<TArg> action, in TArg state, bool throwsAfter)
+        {
+            try
+            {
+                action(state);
+                return true;
+            }
+            catch (Exception e)
+            {
+                Core.Log.Write(e);
+                if (throwsAfter)
+                    throw;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Execute an action inside a try/catch sentence and returns if it was sucessfully executed or not.
+        /// </summary>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="action">Action to be executed inside the try/catch sentence.</param>
+        /// <param name="state">State object instance</param>
+        /// <param name="exceptionMessage">Exception message</param>
+        /// <returns>true if the action was executed sucessfully, otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Do<TArg>(Action<TArg> action, in TArg state, string exceptionMessage)
+        {
+            try
+            {
+                action(state);
+                return true;
+            }
+            catch (Exception e)
+            {
+                throw new Exception(exceptionMessage, e);
+            }
+        }
     }
 }

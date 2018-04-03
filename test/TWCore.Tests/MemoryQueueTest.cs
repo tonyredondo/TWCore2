@@ -133,7 +133,7 @@ namespace TWCore.Tests
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
                         await Task.WhenAll(
-                            Enumerable.Range(0, totalQ).Select(_ => (Task)mqClient.SendAndReceiveAsync<string>("Hola mundo")).ToArray()
+                            Enumerable.Range(0, totalQ).Select((i, mqc) => (Task)mqc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
                         ).ConfigureAwait(false);
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));

@@ -427,7 +427,7 @@ namespace TWCore
         /// <returns>Byte array value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static byte[] FromHexStringToByteArray(this string hex)
-            => Enumerable.Range(0, hex.Length).Where(x => x % 2 == 0).Select(x => Convert.ToByte(hex.Substring(x, 2), 16)).ToArray();
+            => Enumerable.Range(0, hex.Length).Where(x => x % 2 == 0).Select((x, mHex) => Convert.ToByte(mHex.Substring(x, 2), 16), hex).ToArray();
         #endregion
 
         /// <summary>

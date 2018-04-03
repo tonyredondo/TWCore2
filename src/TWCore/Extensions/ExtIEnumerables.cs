@@ -79,7 +79,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++) action(eachObject[i]);
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i]);
             return eachObject;
         }
         /// <summary>
@@ -94,7 +95,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++)
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
@@ -113,7 +115,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++) action(eachObject[i], i);
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i], i);
             return eachObject;
         }
         /// <summary>
@@ -128,7 +131,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++)
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
@@ -148,7 +152,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++) action(eachObject[i], i, state);
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++) action(eachObject[i], i, state);
             return eachObject;
         }
         /// <summary>
@@ -164,7 +169,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var eachObject = enumerable as IList<object> ?? enumerable.Cast<object>().ToList();
-            for (var i = 0; i < eachObject.Count; i++)
+            var length = eachObject.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
@@ -186,7 +192,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < objs.Count; i++)
+            var length = objs.Count;
+            for (var i = 0; i < length; i++)
                 action(objs[i]);
             return objs;
         }
@@ -202,7 +209,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < objs.Count; i++)
+            var length = objs.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
@@ -221,7 +229,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < objs.Count; i++)
+            var length = objs.Count;
+            for (var i = 0; i < length; i++)
                 action(objs[i], i);
             return objs;
         }
@@ -237,7 +246,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var objs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < objs.Count; i++)
+            var length = objs.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;
@@ -257,7 +267,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null) return enumerable;
             var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < innerObjs.Count; i++)
+            var length = innerObjs.Count;
+            for (var i = 0; i < length; i++)
                 action(innerObjs[i], i, state);
             return innerObjs;
         }
@@ -274,7 +285,8 @@ namespace TWCore
         {
             if (enumerable == null || action == null || token.IsCancellationRequested) return enumerable;
             var innerObjs = enumerable as IList<T> ?? enumerable.ToList();
-            for (var i = 0; i < innerObjs.Count; i++)
+            var length = innerObjs.Count;
+            for (var i = 0; i < length; i++)
             {
                 if (token.IsCancellationRequested)
                     break;

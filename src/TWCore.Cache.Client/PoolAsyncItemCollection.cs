@@ -214,7 +214,7 @@ namespace TWCore.Cache.Client
         /// <param name="name">Name of the storage</param>
         /// <returns>true if the storage is on the collection; otherwise, false.</returns>
         public PoolAsyncItem GetByName(string name)
-            => Items.FirstOrDefault(i => i.Name == name);
+            => Items.FirstOrDefault((i, mName) => i.Name == mName, name);
         /// <summary>
         /// Gets if any storage is enabled
         /// </summary>

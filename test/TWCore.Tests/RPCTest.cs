@@ -209,10 +209,10 @@ namespace TWCore.Tests
             => _tmpSPerson ?? (_tmpSPerson = SimplePersonas.Concat(SimplePersonas).Concat(SimplePersonas).Concat(SimplePersonas).ToList());
 
         public SimplePerson GetSimplePersona(Guid simplePersonaId)
-            => SimplePersonas.FirstOrDefault(p => p.PersonId == simplePersonaId);
+            => SimplePersonas.FirstOrDefault((p, pId) => p.PersonId == pId, simplePersonaId);
 
         public SimplePerson GetSimplePersona(string name, string apellido)
-            => SimplePersonas.FirstOrDefault(p => p.Firstname == name && p.Lastname == apellido);
+            => SimplePersonas.FirstOrDefault((p, vTuple) => p.Firstname == vTuple.name && p.Lastname == vTuple.apellido, (name, apellido));
 
         public string SayHi(string name)
             => $"Hi {name}!";

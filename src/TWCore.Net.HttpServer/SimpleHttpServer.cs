@@ -284,7 +284,7 @@ namespace TWCore.Net.HttpServer
                 ctl.Context = context;
                 if (action == null)
                     action = url.Substring(1);
-                var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault(m => string.Equals(m.Name, action, StringComparison.InvariantCultureIgnoreCase));
+                var ctlMethod = ctl.GetType().GetRuntimeMethods().FirstOrDefault((m, mAction) => string.Equals(m.Name, mAction, StringComparison.InvariantCultureIgnoreCase), action);
                 if (ctlMethod == null) return;
                 var mParams = ctlMethod.GetParameters();
                 if (mParams.Length > 0)
@@ -458,7 +458,7 @@ namespace TWCore.Net.HttpServer
                     #endregion
 
                     #region Route handler
-                    var uHandler = RouteHandlers.TryGetValue(context.Request.Method, out var handlers) ? handlers.FirstOrDefault(r => r.Match(context.Request.Url.AbsolutePath)) : null;
+                    var uHandler = RouteHandlers.TryGetValue(context.Request.Method, out var handlers) ? handlers.FirstOrDefault((r, absPath) => r.Match(absPath), context.Request.Url.AbsolutePath) : null;
                     if (uHandler != null)
                     {
                         //watch.Tap("Url Handle: " + uHandler.Method + " " + uHandler.Url);

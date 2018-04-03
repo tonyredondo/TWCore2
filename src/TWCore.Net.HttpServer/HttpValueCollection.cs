@@ -59,7 +59,7 @@ namespace TWCore.Net.HttpServer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                var item = this.FirstOrDefault(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase));
+                var item = this.FirstOrDefault((x, mKey) => string.Equals(x.Key, mKey, StringComparison.OrdinalIgnoreCase), key);
                 return item?.Value;
             }
         }

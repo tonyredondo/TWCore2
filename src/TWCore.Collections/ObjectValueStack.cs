@@ -120,7 +120,7 @@ namespace TWCore.Collections
             lock (Padlock)
             {
                 if (_stack.Count <= 0) return;
-                var objValue = _stack.FirstOrDefault(item => item.Sender == sender);
+                var objValue = _stack.FirstOrDefault((item, mSender) => item.Sender == mSender, sender);
                 if (objValue != null)
                     objValue.Value = value;
 

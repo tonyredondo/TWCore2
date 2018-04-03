@@ -450,6 +450,34 @@ namespace TWCore
             }
             return foundArray.FirstOrDefault((item, cmp) => !cmp.Equals(item, default), comparer);
         }
+        /// <summary>
+        /// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
+        /// </summary>
+        /// <typeparam name="T">Type of item</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="source">IEnumerable source object</param>
+        /// <param name="predicates">Predicates to compare</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The item if is found</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T FindFirstOf<T, TArg>(this IEnumerable<T> source, Func<T, TArg, bool>[] predicates, in TArg state)
+        {
+            if (predicates == null) return default;
+            var comparer = EqualityComparer<T>.Default;
+            var foundArray = new T[predicates.Length - 1];
+            foreach (var item in source)
+            {
+                for (var i = 0; i < predicates.Length; i++)
+                {
+                    if (!predicates[i](item, state)) continue;
+                    if (i == 0)
+                        return item;
+                    if (comparer.Equals(foundArray[i - 1], default))
+                        foundArray[i - 1] = item;
+                }
+            }
+            return foundArray.FirstOrDefault((item, cmp) => !cmp.Equals(item, default), comparer);
+        }
         #endregion
 
         #endregion

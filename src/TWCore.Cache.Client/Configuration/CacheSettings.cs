@@ -48,9 +48,10 @@ namespace TWCore.Cache.Client.Configuration
         {
             if (Caches?.Contains(name) != true) return null;
             var cacheConfig = Caches[name];
-            var cConfig = cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true) ??
-                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true) ??
-                          cacheConfig.ClientOptionsList?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+            var cConfig = cacheConfig.ClientOptionsList?.FirstOf(
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                c => c.EnvironmentName.IsNullOrWhitespace());
 
             if (cConfig?.Pool == null) return null;
             var pingDelay = cConfig.Pool.PingDelay.ParseTo(5000);

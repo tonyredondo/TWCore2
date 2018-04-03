@@ -64,10 +64,12 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             _maxMessagesPerQueue = pairConfig?.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
                 throw new ArgumentNullException(nameof(pairConfig), "The MQPairConfig can't be null");
-            var serverQueues = pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
-                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-                               ?? pairConfig.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+            var serverQueues = pairConfig.ServerQueues?.FirstOf(
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName.IsNullOrWhitespace());
+
             _maxMessages = (serverQueues?.RecvQueues?.Count ?? 0) * _maxMessagesPerQueue;
             BusinessInitialCount = (int)(_maxMessages * InitialBusinessesPercent) + 1; AttachStatus();
         }
@@ -82,10 +84,12 @@ namespace TWCore.Services.Messaging
                 throw new ArgumentNullException(nameof(businessCreationFunction), "The bussines creation function can't be null");
             _maxMessagesPerQueue = server?.Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue ?? 
                 throw new ArgumentNullException(nameof(server), "The IMQueueServer can't be null");
-            var serverQueues = server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
-                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-                            ?? server.Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+            var serverQueues = server.Config.ServerQueues?.FirstOf(
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName.IsNullOrWhitespace());
+
             _maxMessages = (serverQueues?.RecvQueues?.Count ?? 0) * _maxMessagesPerQueue;
             BusinessInitialCount = (int)(_maxMessages * InitialBusinessesPercent) + 1;
             AttachStatus();

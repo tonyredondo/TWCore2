@@ -167,10 +167,12 @@ namespace TWCore.Messaging.RawServer
 				SenderSerializer = null;
 
 				Core.Log.InfoBasic("Adding queue client listener for {0}, Environment: {1}", Name, Core.EnvironmentName);
-				_clientQueues = Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-					?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
-					?? Config.ClientQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-					?? Config.ClientQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
+                _clientQueues = Config.ClientQueues?.FirstOf(
+                    c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                    c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                    c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                    c => c.EnvironmentName.IsNullOrWhitespace());
+
 				if (_clientQueues?.RecvQueue != null)
 				{
 					var queueListener = OnCreateQueueServerListener(_clientQueues.RecvQueue, ResponseServer);
@@ -189,14 +191,15 @@ namespace TWCore.Messaging.RawServer
 				SenderSerializer = SerializerManager.GetByMimeType(Config.ResponseOptions?.SerializerMimeType);
 				if (SenderSerializer != null && Config.ResponseOptions?.CompressorEncodingType.IsNotNullOrEmpty() == true)
 					SenderSerializer.Compressor = CompressorManager.GetByEncodingType(Config.ResponseOptions?.CompressorEncodingType);
-
-
+                
 				Core.Log.InfoBasic("Adding queue server listeners for {0}, Environment: {1}", Name, Core.EnvironmentName);
-				_serverQueues = Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-					?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true)
-					?? Config.ServerQueues?.FirstOrDefault(c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true)
-					?? Config.ServerQueues?.FirstOrDefault(c => c.EnvironmentName.IsNullOrWhitespace());
-				if (_serverQueues?.RecvQueues?.Any() == true)
+                _serverQueues = Config.ServerQueues?.FirstOf(
+                    c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                    c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                    c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                    c => c.EnvironmentName.IsNullOrWhitespace());
+
+                if (_serverQueues?.RecvQueues?.Any() == true)
 				{
 					_serverQueues.RecvQueues.Each(queue =>
 					{

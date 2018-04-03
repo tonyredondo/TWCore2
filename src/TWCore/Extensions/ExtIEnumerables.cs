@@ -424,60 +424,6 @@ namespace TWCore
                 return (IList<T>)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
             return linqExpression;
         }
-        /// <summary>
-        /// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
-        /// </summary>
-        /// <typeparam name="T">Type of item</typeparam>
-        /// <param name="source">IEnumerable source object</param>
-        /// <param name="predicates">Predicates to compare</param>
-        /// <returns>The item if is found</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T FindFirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)
-        {
-            if (predicates == null) return default;
-            var comparer = EqualityComparer<T>.Default;
-            var foundArray = new T[predicates.Length - 1];
-            foreach (var item in source)
-            {
-                for (var i = 0; i < predicates.Length; i++)
-                {
-                    if (!predicates[i](item)) continue;
-                    if (i == 0)
-                        return item;
-                    if (comparer.Equals(foundArray[i - 1], default))
-                        foundArray[i - 1] = item;
-                }
-            }
-            return foundArray.FirstOrDefault((item, cmp) => !cmp.Equals(item, default), comparer);
-        }
-        /// <summary>
-        /// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
-        /// </summary>
-        /// <typeparam name="T">Type of item</typeparam>
-        /// <typeparam name="TArg">Type of state</typeparam>
-        /// <param name="source">IEnumerable source object</param>
-        /// <param name="predicates">Predicates to compare</param>
-        /// <param name="state">State object instance</param>
-        /// <returns>The item if is found</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T FindFirstOf<T, TArg>(this IEnumerable<T> source, Func<T, TArg, bool>[] predicates, in TArg state)
-        {
-            if (predicates == null) return default;
-            var comparer = EqualityComparer<T>.Default;
-            var foundArray = new T[predicates.Length - 1];
-            foreach (var item in source)
-            {
-                for (var i = 0; i < predicates.Length; i++)
-                {
-                    if (!predicates[i](item, state)) continue;
-                    if (i == 0)
-                        return item;
-                    if (comparer.Equals(foundArray[i - 1], default))
-                        foundArray[i - 1] = item;
-                }
-            }
-            return foundArray.FirstOrDefault((item, cmp) => !cmp.Equals(item, default), comparer);
-        }
         #endregion
 
         #endregion
@@ -1279,7 +1225,7 @@ namespace TWCore
                 Token = token;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void ExecuteWithState(T item, ParallelLoopState state, long index) 
+            public void ExecuteWithState(T item, ParallelLoopState state, long index)
                 => Action(item, index, State);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void ExecuteWithStateAndCancellationToken(T item, ParallelLoopState state, long index)
@@ -1363,7 +1309,7 @@ namespace TWCore
             private readonly object _locker;
             private readonly CancellationToken Token;
             public readonly T[] Response;
-            
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public ParallelInvokeExecutor(int count, CancellationToken token = default)
             {
@@ -1548,6 +1494,83 @@ namespace TWCore
         #endregion
 
         #region Linq Extensions
+        /// <summary>
+        /// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
+        /// </summary>
+        /// <typeparam name="T">Type of item</typeparam>
+        /// <param name="source">IEnumerable source object</param>
+        /// <param name="predicates">Predicates to compare</param>
+        /// <returns>The item if is found</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T FirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)
+        {
+            if (predicates == null) return default;
+            var comparer = EqualityComparer<T>.Default;
+            var foundArray = ReferencePool<List<T>>.Shared.New();
+            foreach (var item in source)
+            {
+                for (var i = 0; i < predicates.Length; i++)
+                {
+                    if (!predicates[i](item)) continue;
+                    if (i == 0)
+                        return item;
+                    if (comparer.Equals(foundArray[i - 1], default))
+                        foundArray[i - 1] = item;
+                }
+            }
+            T value = default;
+            for (var i = 0; i < foundArray.Count; i++)
+            {
+                if (!comparer.Equals(foundArray[i], default))
+                {
+                    value = foundArray[i];
+                    break;
+                }
+            }
+            foundArray.Clear();
+            ReferencePool<List<T>>.Shared.Store(foundArray);
+            return value;
+        }
+        /// <summary>
+        /// Finds an item that fulfill a predicate if not, return the one that fulfill the next predicate and so on. 
+        /// </summary>
+        /// <typeparam name="T">Type of item</typeparam>
+        /// <typeparam name="TArg">Type of state</typeparam>
+        /// <param name="source">IEnumerable source object</param>
+        /// <param name="predicates">Predicates to compare</param>
+        /// <param name="state">State object instance</param>
+        /// <returns>The item if is found</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T FirstOf<T, TArg>(this IEnumerable<T> source, Func<T, TArg, bool>[] predicates, in TArg state)
+        {
+            if (predicates == null) return default;
+            var comparer = EqualityComparer<T>.Default;
+            var foundArray = ReferencePool<List<T>>.Shared.New();
+            foreach (var item in source)
+            {
+                for (var i = 0; i < predicates.Length; i++)
+                {
+                    if (!predicates[i](item, state)) continue;
+                    if (i == 0)
+                        return item;
+                    if (comparer.Equals(foundArray[i - 1], default))
+                        foundArray[i - 1] = item;
+                }
+            }
+            T value = default;
+            for (var i = 0; i < foundArray.Count; i++)
+            {
+                if (!comparer.Equals(foundArray[i], default))
+                {
+                    value = foundArray[i];
+                    break;
+                }
+            }
+            foundArray.Clear();
+            ReferencePool<List<T>>.Shared.Store(foundArray);
+            return value;
+        }
+
         /// <summary>
         /// Gets the index of an element in the IEnumerable using a predicate
         /// </summary>

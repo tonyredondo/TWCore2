@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/tools/TWCore.Diagnostics.Api/TWCore.Diagnostics.Api.csproj"
+                "${workspaceFolder}/test/TWCore.Test.Core/TWCore.Test.Core.csproj"
             ],
             "problemMatcher": "$msCompile"
         }

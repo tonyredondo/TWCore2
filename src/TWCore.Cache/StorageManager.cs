@@ -387,9 +387,7 @@ namespace TWCore.Cache
 				if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				try
 				{
-					var keyArray = storage.GetKeys();
-					foreach(var key in keyArray)
-						keys.Add(key);
+                    keys.UnionWith(storage.GetKeys());
 				}
 				catch (Exception ex)
 				{

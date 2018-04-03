@@ -412,7 +412,7 @@ namespace TWCore
 		/// <returns>The item if is found</returns>
 		public static T FindFirstOf<T>(this IEnumerable<T> source, params Predicate<T>[] predicates)
 		{
-			if (predicates == null) return default(T);
+			if (predicates == null) return default;
 			var comparer = EqualityComparer<T>.Default;
 			var foundArray = new T[predicates.Length - 1];
 			foreach (var item in source)
@@ -422,11 +422,11 @@ namespace TWCore
 					if (!predicates[i](item)) continue;
 					if (i == 0)
 						return item;
-					if (comparer.Equals(foundArray[i - 1], default(T)))
+					if (comparer.Equals(foundArray[i - 1], default))
 						foundArray[i - 1] = item;
 				}
 			}
-			return foundArray.FirstOrDefault(item => !comparer.Equals(item, default(T)));
+			return foundArray.FirstOrDefault((item, cmp) => !cmp.Equals(item, default), comparer);
 		}
 		#endregion
 		
@@ -786,7 +786,7 @@ namespace TWCore
 				lastArray.Each(item =>
 				{
 					var keyValue = keySelector(item);
-					var oItem = lst.FirstOrDefault(o => Equals(keyValue, keySelector(o)));
+					var oItem = lst.FirstOrDefault((o, vTuple) => Equals(vTuple.keyValue, vTuple.keySelector(o)), (keyValue, keySelector));
 					if (oItem == null)
 						lst.Add(item);
 					else

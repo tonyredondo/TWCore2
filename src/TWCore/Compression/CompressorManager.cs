@@ -77,7 +77,7 @@ namespace TWCore.Compression
         /// <returns>Compressor instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ICompressor GetByFileExtension(string fileExtension)
-            => Compressors.Values.FirstOrDefault(c => c.FileExtension.Equals(fileExtension, StringComparison.OrdinalIgnoreCase));
+            => Compressors.Values.FirstOrDefault((c, fExt) => c.FileExtension.Equals(fExt, StringComparison.OrdinalIgnoreCase), fileExtension);
         /// <summary>
         /// Get a compressor by type
         /// </summary>
@@ -85,7 +85,7 @@ namespace TWCore.Compression
         /// <returns>ICompressor instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ICompressor Get<T>() where T : ICompressor
-            => Compressors.Values.FirstOrDefault(v => v.GetType() == typeof(T));
+            => Compressors.Values.FirstOrDefault((v, tType) => v.GetType() == tType, typeof(T));
         /// <summary>
         /// Gets the compressors list
         /// </summary>

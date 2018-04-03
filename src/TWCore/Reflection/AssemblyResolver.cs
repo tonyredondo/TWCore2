@@ -219,9 +219,12 @@ namespace TWCore.Reflection
             var asmName = new AssemblyName(args.Name);
 
             var asmInstance =
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version && a.AssemblyName.CultureName == asmName.CultureName) ??
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version) ??
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name);
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name && a.AssemblyName.Version == mAsm.Version && a.AssemblyName.CultureName == mAsm.CultureName, asmName) ??
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name && a.AssemblyName.Version == mAsm.Version, asmName) ??
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name, asmName);
 
             if (asmInstance == null)
             {
@@ -260,9 +263,12 @@ namespace TWCore.Reflection
             var asmName = new AssemblyName(args.Name);
 
             var asmInstance =
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version && a.AssemblyName.CultureName == asmName.CultureName) ??
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name && a.AssemblyName.Version == asmName.Version) ??
-                Assemblies.FirstOrDefault(a => a.Name == asmName.Name);
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name && a.AssemblyName.Version == mAsm.Version && a.AssemblyName.CultureName == mAsm.CultureName, asmName) ??
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name && a.AssemblyName.Version == mAsm.Version, asmName) ??
+                Assemblies.FirstOrDefault((a, mAsm) => 
+                    a.Name == mAsm.Name, asmName);
 
             if (asmInstance == null)
             {

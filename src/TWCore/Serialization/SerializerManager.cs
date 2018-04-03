@@ -258,7 +258,7 @@ namespace TWCore.Serialization
         /// <typeparam name="T">Serializer type</typeparam>
         /// <returns>Serializer instance of that type</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static T GetByType<T>() where T : class, ISerializer => (T)Serializers.FirstOrDefault(s => s.GetType() == typeof(T)) ?? Activator.CreateInstance<T>();
+        public static T GetByType<T>() where T : class, ISerializer => (T)Serializers.FirstOrDefault((s, tType) => s.GetType() == tType, typeof(T)) ?? Activator.CreateInstance<T>();
         #endregion
 
         #region GetByFileName

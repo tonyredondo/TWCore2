@@ -389,7 +389,7 @@ namespace TWCore.Diagnostics.Status
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private void EnsureParent(object parent)
             {
-                if (parent == null || _statusList.FirstOrDefault(s => s.Object == parent) != null) return;
+                if (parent == null || _statusList.FirstOrDefault((s, mParent) => s.Object == mParent, parent) != null) return;
 
                 var sParent = new StatusContainer { Object = parent };
                 _statusList.Add(sParent);
@@ -405,7 +405,7 @@ namespace TWCore.Diagnostics.Status
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private StatusContainer EnsureTarget(object target, object parent)
             {
-                var sItem = _statusList.FirstOrDefault(s => s.Object == target);
+                var sItem = _statusList.FirstOrDefault((s, mTarget) => s.Object == mTarget, target);
                 if (sItem != null) return sItem;
 
                 sItem = new StatusContainer { Object = target, Parent = parent };
@@ -528,7 +528,7 @@ namespace TWCore.Diagnostics.Status
                     var baseIndex = sSlashItem.Name.IndexOf("\\", StringComparison.Ordinal);
                     var baseName = sSlashItem.Name.Substring(0, baseIndex);
                     var baseRest = sSlashItem.Name.Substring(baseIndex + 1);
-                    var baseStatus = statusValuesChildren.FirstOrDefault(c => c.Name == baseName);
+                    var baseStatus = statusValuesChildren.FirstOrDefault((c, mBaseName) => c.Name == mBaseName, baseName);
                     if (baseStatus == null)
                     {
                         baseStatus = new StatusItem { Name = baseName };

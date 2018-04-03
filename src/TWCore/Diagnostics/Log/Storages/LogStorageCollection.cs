@@ -97,7 +97,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <returns>Storage instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ILogStorage Get(Type storageType)
-            => _items.FirstOrDefault(i => i.Item1.GetType().IsAssignableFrom(storageType)).Item1;
+            => _items.FirstOrDefault((i, sType) => i.Item1.GetType().IsAssignableFrom(sType), storageType).Item1;
         /// <summary>
         /// Removes a existing storage from the collection
         /// </summary>

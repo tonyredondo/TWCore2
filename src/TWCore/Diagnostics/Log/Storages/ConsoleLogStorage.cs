@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
-        private static readonly StringBuilder StringBuffer = new StringBuilder();
+        private static readonly ConcurrentStack<StringBuilder> StringBuilderPool;
         private static readonly bool HasConsole;
         /// <summary>
         /// Use Color Schema on Console
@@ -47,6 +47,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             HasConsole = ServiceContainer.HasConsole;
             DefaultColor = HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
+            StringBuilderPool = new ConcurrentStack<StringBuilder>();
         }
         #endregion
         
@@ -93,33 +94,34 @@ namespace TWCore.Diagnostics.Log.Storages
         public Task WriteAsync(ILogItem item)
         {
             if (!HasConsole) return Task.CompletedTask;
-            string message;
-            var color = DefaultColor;
-            lock(PadLock)
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
+            
+            strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+            strBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+            if (!string.IsNullOrEmpty(item.GroupName))
+                strBuffer.Append(item.GroupName + " | ");
+
+            if (item.LineNumber > 0)
+                strBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+            else if (!string.IsNullOrEmpty(item.TypeName))
+                strBuffer.AppendFormat("<{0}> ", item.TypeName);
+
+            if (!string.IsNullOrEmpty(item.Code))
+                strBuffer.Append("[" + item.Code + "] ");
+
+            strBuffer.AppendLine(item.Message);
+            if (item.Exception != null)
             {
-                StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
-                StringBuffer.AppendFormat("{0, 11}: ", item.Level);
-
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    StringBuffer.Append(item.GroupName + " | ");
-
-                if (item.LineNumber > 0)
-                    StringBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                    StringBuffer.AppendFormat("<{0}> ", item.TypeName);
-
-                if (!string.IsNullOrEmpty(item.Code))
-                    StringBuffer.Append("[" + item.Code + "] ");
-
-                StringBuffer.AppendLine(item.Message);
-                if (item.Exception != null)
-                {
-                    StringBuffer.AppendLine("Exceptions:\r\n");
-                    GetExceptionDescription(item.Exception, StringBuffer);
-                }
-                message = StringBuffer.ToString();
-                StringBuffer.Clear();
+                strBuffer.AppendLine("Exceptions:\r\n");
+                GetExceptionDescription(item.Exception, strBuffer);
             }
+            var message = strBuffer.ToString();
+            var color = DefaultColor;
+            strBuffer.Clear();
+            StringBuilderPool.Push(strBuffer);
+
             if (UseColor)
             {
                 switch (item.Level)

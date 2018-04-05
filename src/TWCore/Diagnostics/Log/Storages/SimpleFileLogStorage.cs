@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -39,7 +40,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// All file log storage writers
         /// </summary>
         private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
-        private readonly StringBuilder _stringBuffer = new StringBuilder(128);
+        private static readonly ConcurrentStack<StringBuilder> StringBuilderPool = new ConcurrentStack<StringBuilder>();
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
@@ -237,43 +238,42 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             EnsureLogFile(FileName);
             if (_sWriter == null) return;
-            string buffer;
-            lock (_sWriter)
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
+            if (_firstWrite)
             {
-                if (_firstWrite)
-                {
-                    _stringBuffer.AppendLine();
-                    _stringBuffer.AppendLine();
-                    _stringBuffer.AppendLine();
-                    _stringBuffer.AppendLine();
-                    _stringBuffer.AppendLine();
-                    _stringBuffer.AppendLine("-.");
-                    _firstWrite = false;
-                }
-                _stringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
-                _stringBuffer.AppendFormat("{0, 11}: ", item.Level);
-
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    _stringBuffer.Append(item.GroupName + " - ");
-
-                if (item.LineNumber > 0)
-                    _stringBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                    _stringBuffer.Append("<" + item.TypeName + "> ");
-
-                if (!string.IsNullOrEmpty(item.Code))
-                    _stringBuffer.Append("[" + item.Code + "] ");
-
-                _stringBuffer.Append(item.Message);
-
-                if (item.Exception != null)
-                {
-                    _stringBuffer.Append("\r\nExceptions:\r\n");
-                    GetExceptionDescription(item.Exception, _stringBuffer);
-                }
-                buffer = _stringBuffer.ToString();
-                _stringBuffer.Clear();
+                strBuffer.AppendLine();
+                strBuffer.AppendLine();
+                strBuffer.AppendLine();
+                strBuffer.AppendLine();
+                strBuffer.AppendLine();
+                strBuffer.AppendLine("-.");
+                _firstWrite = false;
             }
+            strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+            strBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+            if (!string.IsNullOrEmpty(item.GroupName))
+                strBuffer.Append(item.GroupName + " - ");
+
+            if (item.LineNumber > 0)
+                strBuffer.AppendFormat("<{0};{1:000}> ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+            else if (!string.IsNullOrEmpty(item.TypeName))
+                strBuffer.Append("<" + item.TypeName + "> ");
+
+            if (!string.IsNullOrEmpty(item.Code))
+                strBuffer.Append("[" + item.Code + "] ");
+
+            strBuffer.Append(item.Message);
+
+            if (item.Exception != null)
+            {
+                strBuffer.Append("\r\nExceptions:\r\n");
+                GetExceptionDescription(item.Exception, strBuffer);
+            }
+            var buffer = strBuffer.ToString();
+            strBuffer.Clear();      
+            StringBuilderPool.Push(strBuffer);
             await _sWriter.WriteLineAsync(buffer).ConfigureAwait(false);
         }
         /// <inheritdoc />

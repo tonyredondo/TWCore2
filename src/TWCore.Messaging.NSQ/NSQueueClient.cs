@@ -222,7 +222,7 @@ namespace TWCore.Messaging.NSQ
             {
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", body.Length, queue.Route + "/" + queue.Name, message.Header.CorrelationId);
                 var nsqProducer = nsqProducerPool.New();
-                await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false):
+                await nsqProducer.PublishAsync(queue.Name, body).ConfigureAwait(false);
                 nsqProducerPool.Store(nsqProducer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", message.Header.CorrelationId);

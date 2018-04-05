@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -35,8 +36,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private static readonly object PadLock = new object();
         private static readonly ConsoleColor DefaultColor;
         private static readonly StringBuilder StringBuffer = new StringBuilder();
-        private static LogLevel _lastLogLevel;
-
+        private static readonly bool HasConsole;
         /// <summary>
         /// Use Color Schema on Console
         /// </summary>
@@ -45,10 +45,44 @@ namespace TWCore.Diagnostics.Log.Storages
         #region .ctor Static
         static ConsoleLogStorage()
         {
-            DefaultColor = ServiceContainer.HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
+            HasConsole = ServiceContainer.HasConsole;
+            DefaultColor = HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
         }
         #endregion
         
+        private class NonBlockingConsole
+        {
+            private static BlockingCollection<(string Message, ConsoleColor Color)> _queue = new BlockingCollection<(string Message, ConsoleColor Color)>();
+
+            static NonBlockingConsole()
+            {
+                var thread = new Thread(ConsoleThread)
+                {
+                    IsBackground = true,
+                    Priority = ThreadPriority.Lowest,
+                    Name = "Console Thread"
+                };
+                thread.Start();
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void WriteLine(string line, ConsoleColor color) 
+                => _queue.Add((line, color));
+
+            private static void ConsoleThread()
+            {
+                var lastColor = DefaultColor;
+                while (true)
+                {
+                    (var message, var color) = _queue.Take();
+                    if (color != lastColor)
+                    {
+                        Console.ForegroundColor = color;
+                        lastColor = color;
+                    }
+                    Console.Write(message);
+                }
+            }
+        }
         
         /// <inheritdoc />
         /// <summary>
@@ -58,8 +92,9 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(ILogItem item)
         {
-            if (!ServiceContainer.HasConsole) return Task.CompletedTask;
-            string buffer;
+            if (!HasConsole) return Task.CompletedTask;
+            string message;
+            var color = DefaultColor;
             lock(PadLock)
             {
                 StringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
@@ -82,48 +117,43 @@ namespace TWCore.Diagnostics.Log.Storages
                     StringBuffer.AppendLine("Exceptions:\r\n");
                     GetExceptionDescription(item.Exception, StringBuffer);
                 }
-                buffer = StringBuffer.ToString();
+                message = StringBuffer.ToString();
                 StringBuffer.Clear();
-
-                if (item.Level != _lastLogLevel && UseColor)
+            }
+            if (UseColor)
+            {
+                switch (item.Level)
                 {
-                    switch (item.Level)
-                    {
-                        case LogLevel.Error:
-                            Console.ForegroundColor = ConsoleColor.Red;
-                            break;
-                        case LogLevel.Warning:
-                            Console.ForegroundColor = ConsoleColor.Yellow;
-                            break;
-                        case LogLevel.InfoBasic:
-                        case LogLevel.InfoMedium:
-                        case LogLevel.InfoDetail:
-                            Console.ForegroundColor = ConsoleColor.Cyan;
-                            break;
-                        case LogLevel.Debug:
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
-                            break;
-                        case LogLevel.LibDebug:
-                            Console.ForegroundColor = ConsoleColor.DarkCyan;
-                            break;
-                        case LogLevel.Stats:
-                            Console.ForegroundColor = ConsoleColor.DarkGreen;
-                            break;
-                        case LogLevel.Verbose:
-                            Console.ForegroundColor = ConsoleColor.Gray;
-                            break;
-                        case LogLevel.LibVerbose:
-                            Console.ForegroundColor = ConsoleColor.DarkGray;
-                            break;
-                        default:
-                            Console.ForegroundColor = DefaultColor;
-                            break;
-                    }
+                    case LogLevel.Error:
+                        color = ConsoleColor.Red;
+                        break;
+                    case LogLevel.Warning:
+                        color = ConsoleColor.Yellow;
+                        break;
+                    case LogLevel.InfoBasic:
+                    case LogLevel.InfoMedium:
+                    case LogLevel.InfoDetail:
+                        color = ConsoleColor.Cyan;
+                        break;
+                    case LogLevel.Debug:
+                        color = ConsoleColor.DarkCyan;
+                        break;
+                    case LogLevel.LibDebug:
+                        color = ConsoleColor.DarkCyan;
+                        break;
+                    case LogLevel.Stats:
+                        color = ConsoleColor.DarkGreen;
+                        break;
+                    case LogLevel.Verbose:
+                        color = ConsoleColor.Gray;
+                        break;
+                    case LogLevel.LibVerbose:
+                        color = ConsoleColor.DarkGray;
+                        break;
                 }
             }
-
-            var cTask = Console.Out.WriteAsync(buffer);
-            return cTask.ContinueWith(_ => _lastLogLevel = item.Level, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            NonBlockingConsole.WriteLine(message, color);
+            return Task.CompletedTask;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

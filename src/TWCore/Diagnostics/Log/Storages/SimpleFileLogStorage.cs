@@ -275,7 +275,6 @@ namespace TWCore.Diagnostics.Log.Storages
                 _stringBuffer.Clear();
             }
             await _sWriter.WriteLineAsync(buffer).ConfigureAwait(false);
-            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -285,7 +284,6 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteEmptyLineAsync()
         {
             await _sWriter.WriteLineAsync(string.Empty).ConfigureAwait(false);
-            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc />

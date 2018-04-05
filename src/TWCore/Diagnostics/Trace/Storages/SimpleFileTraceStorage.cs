@@ -254,7 +254,6 @@ namespace TWCore.Diagnostics.Trace.Storages
                 item.TraceName, 
                 traceFilePath);
             await _sWriter.WriteLineAsync(line).ConfigureAwait(false);
-            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc />

@@ -519,7 +519,6 @@ namespace TWCore.Diagnostics.Log.Storages
                 _stringBuffer.Clear();
             }
             await _sWriter.WriteAsync(string.Format(format, item.Level, buffer, item.TypeName)).ConfigureAwait(false);
-            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -529,7 +528,6 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteEmptyLineAsync()
         {
             await _sWriter.WriteAsync(string.Format(PreFormat, "EmptyLine", "<br/>")).ConfigureAwait(false);
-            await _sWriter.FlushAsync().ConfigureAwait(false);
         }
 
         /// <inheritdoc />

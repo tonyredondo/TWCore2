@@ -37,7 +37,6 @@ namespace TWCore.Diagnostics.Log
         #region Private fields
         private readonly Worker<ILogItem> _itemsWorker;
         private readonly ConcurrentQueue<ILogItem> _lastLogItems = new ConcurrentQueue<ILogItem>();
-        private readonly Worker<ILogItem> _lastLogItemsWorker;
         private readonly ManualResetEventSlim _completationHandler = new ManualResetEventSlim(true);
         #endregion
 
@@ -119,15 +118,8 @@ namespace TWCore.Diagnostics.Log
                     default:
                         return Storage.WriteAsync(item);
                 }
-            }, false, true, true);
+            }, false, true, false);
             _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
-            _lastLogItemsWorker = new Worker<ILogItem>(item =>
-            {
-                if (_lastLogItems.Count > 10)
-                    _lastLogItems.TryDequeue(out var _);
-                if (!(item is NewLineLogItem))
-                    _lastLogItems.Enqueue(item);
-            }, false, true);
             Core.Status.Attach(() =>
             {
                 var sItem = new StatusItem();
@@ -176,8 +168,6 @@ namespace TWCore.Diagnostics.Log
             {
                 _itemsWorker?.StopAsync(int.MaxValue).WaitAsync();
                 _itemsWorker?.Clear();
-                _lastLogItemsWorker?.StopAsync(50).WaitAsync();
-                _lastLogItemsWorker?.Clear();
                 Storage?.Dispose();
             }
             _disposedValue = true;
@@ -211,8 +201,6 @@ namespace TWCore.Diagnostics.Log
                 _completationHandler.Reset();
                 _itemsWorker?.Enqueue(item);
             }
-            if (item.Level == LogLevel.Error)
-                _lastLogItemsWorker?.Enqueue(item.DeepClone());
         }
         /// <inheritdoc />
         /// <summary>
@@ -1614,7 +1602,6 @@ namespace TWCore.Diagnostics.Log
         public void Start() 
         {
             _itemsWorker.Start();
-            _lastLogItemsWorker.Start();
         }
         #endregion
 
@@ -1664,7 +1651,6 @@ namespace TWCore.Diagnostics.Log
             if (item == null) return;
             _itemsWorker?.Enqueue(item);
             if (item.Level != LogLevel.Error) return;
-            _lastLogItemsWorker?.Enqueue(item.DeepClone());
             Start();
         }
         #endregion

@@ -49,6 +49,7 @@ namespace TWCore.Net.Multicast
         private IPEndPoint _receiveEndpoint;
         private CancellationTokenSource _tokenSource;
         private CancellationToken _token;
+        private Task _cancellationTokenTask;
         private bool _connected;
 
         /// <summary>
@@ -91,6 +92,7 @@ namespace TWCore.Net.Multicast
         {
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
+            _cancellationTokenTask = _token.WhenCanceledAsync();
             _connected = false;
         }
         #endregion
@@ -178,6 +180,7 @@ namespace TWCore.Net.Multicast
             _clientsReceiveTasks.Clear();
             _tokenSource = new CancellationTokenSource();
             _token = _tokenSource.Token;
+            _cancellationTokenTask = _token.WhenCanceledAsync();
             _connected = false;
         }
         /// <summary>
@@ -250,13 +253,11 @@ namespace TWCore.Net.Multicast
         private async Task ReceiveSocketThreadAsync(UdpClient client)
         {
             var guidBytes = new byte[16];
-            var cancellationTask = _token.WhenCanceledAsync();
             while (!_token.IsCancellationRequested)
             {
                 try
                 {
-                    //Core.Log.InfoBasic("Waiting data on Endpoint: {0}", client.Client.LocalEndPoint);
-                    var whenAnyTask = await Task.WhenAny(client.ReceiveAsync(), cancellationTask).ConfigureAwait(false);
+                    var whenAnyTask = await Task.WhenAny(client.ReceiveAsync(), _cancellationTokenTask).ConfigureAwait(false);
                     if (_token.IsCancellationRequested)
                         return;
                     var udpReceiveResult = ((Task<UdpReceiveResult>) whenAnyTask).Result;

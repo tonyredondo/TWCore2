@@ -48,6 +48,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private int _numbersOfFiles;
         private volatile bool _firstWrite = true;
         private Timer _flushTimer;
+        private int _shouldFlush;
         
         #region Properties
         /// <summary>
@@ -123,7 +124,8 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (_sWriter == null) return;
                 try
                 {
-                    _sWriter.Flush();
+                    if (Interlocked.CompareExchange(ref _shouldFlush, 0, 1) == 1)
+                        _sWriter.Flush();
                 }
                 catch
                 {
@@ -286,6 +288,7 @@ namespace TWCore.Diagnostics.Log.Storages
             strBuffer.Clear();      
             StringBuilderPool.Push(strBuffer);
             await _sWriter.WriteLineAsync(buffer).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
         }
         /// <inheritdoc />
         /// <summary>
@@ -295,6 +298,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteEmptyLineAsync()
         {
             await _sWriter.WriteLineAsync(string.Empty).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
         }
 
         /// <inheritdoc />

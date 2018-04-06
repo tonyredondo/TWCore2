@@ -44,6 +44,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private int _numbersOfFiles;
         private volatile bool _firstWrite = true;
         private Timer _flushTimer;
+        private int _shouldFlush;
 
         #region Html format
         private const string Html = @"
@@ -357,7 +358,8 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (_sWriter == null) return;
                 try
                 {
-                    _sWriter.Flush();
+                    if (Interlocked.CompareExchange(ref _shouldFlush, 0, 1) == 1)
+                        _sWriter.Flush();
                 }
                 catch
                 {
@@ -530,6 +532,7 @@ namespace TWCore.Diagnostics.Log.Storages
             strBuffer.Clear();
             StringBuilderPool.Push(strBuffer);
             await _sWriter.WriteAsync(string.Format(format, item.Level, buffer, item.TypeName)).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
         }
         /// <inheritdoc />
         /// <summary>
@@ -539,6 +542,7 @@ namespace TWCore.Diagnostics.Log.Storages
         public async Task WriteEmptyLineAsync()
         {
             await _sWriter.WriteAsync(string.Format(PreFormat, "EmptyLine", "<br/>")).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
         }
 
         /// <inheritdoc />

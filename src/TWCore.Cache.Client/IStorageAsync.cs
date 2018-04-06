@@ -294,50 +294,6 @@ namespace TWCore.Cache.Client
         Task<bool> CopyAsync(string key, string newKey);
         #endregion
 
-        #region GetOrSet
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <returns>Storage item instance</returns>
-        Task<StorageItem> GetOrSetAsync(string key, SerializedObject data);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags);
-        #endregion
-
         /// <summary>
         /// Gets if the Storage is enabled.
         /// </summary>

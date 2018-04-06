@@ -347,55 +347,6 @@ namespace TWCore.Cache.Client
         public bool Copy(string key, string newKey) => InvokeArgs<string, string, bool>(key, newKey);
         #endregion
 
-        #region GetOrSet
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem GetOrSet(string key, SerializedObject data) => InvokeArgs<string, SerializedObject, StorageItem>(key, data);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan expirationDate) => InvokeArgs<string, SerializedObject, TimeSpan, StorageItem>(key, data, expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem GetOrSet(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags) => InvokeArgs<string, SerializedObject, TimeSpan?, string[], StorageItem>(key, data, expirationDate, tags);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem GetOrSet(string key, SerializedObject data, DateTime expirationDate) => InvokeArgs<string, SerializedObject, DateTime, StorageItem>(key, data, expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem GetOrSet(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => InvokeArgs<string, SerializedObject, DateTime?, string[], StorageItem>(key, data, expirationDate, tags);
-        #endregion
-
         /// <summary>
         /// Gets the keys of all items stored in the Storage
         /// </summary>
@@ -715,55 +666,6 @@ namespace TWCore.Cache.Client
         /// <returns>true if the copy was successful; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> CopyAsync(string key, string newKey) => InvokeArgsAsync<string, string, bool>(key, newKey);
-        #endregion
-
-        #region GetOrSet
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<StorageItem> GetOrSetAsync(string key, SerializedObject data) => InvokeArgsAsync<string, SerializedObject, StorageItem>(key, data);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan expirationDate) => InvokeArgsAsync<string, SerializedObject, TimeSpan, StorageItem>(key, data, expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags) => InvokeArgsAsync<string, SerializedObject, TimeSpan?, string[], StorageItem>(key, data, expirationDate, tags);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime expirationDate) => InvokeArgsAsync<string, SerializedObject, DateTime, StorageItem>(key, data, expirationDate);
-        /// <summary>
-        /// Gets the StorageItem of a key, if the key doesn't exist then create one using the given values
-        /// </summary>
-        /// <param name="key">Item key</param>
-        /// <param name="data">Item data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">String array with the Metadata tags</param>
-        /// <returns>Storage item instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<StorageItem> GetOrSetAsync(string key, SerializedObject data, DateTime? expirationDate, string[] tags) => InvokeArgsAsync<string, SerializedObject, DateTime?, string[], StorageItem>(key, data, expirationDate, tags);
         #endregion
 
         /// <summary>

@@ -72,7 +72,7 @@ namespace TWCore.Messaging.RabbitMQ
         protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
         {
             if (e.ResponseQueues?.Any() != true)
-                return TaskUtil.CompleteValueMinus1;
+                return TaskHelper.CompleteValueMinus1;
 
             var correlationId = message.CorrelationId.ToString();
             var data = SenderSerializer.Serialize(message);
@@ -107,7 +107,7 @@ namespace TWCore.Messaging.RabbitMQ
                     Core.Log.Write(ex);
                 }
             }
-            return response ? Task.FromResult(data.Count) : TaskUtil.CompleteValueMinus1;
+            return response ? Task.FromResult(data.Count) : TaskHelper.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

@@ -214,7 +214,7 @@ namespace TWCore.Messaging.NATS
                 producerPool.Store(producer);
             }
             Core.Log.LibVerbose("Message with CorrelationId={0} sent", correlationId);
-            return TaskUtil.CompleteTrue;
+            return TaskHelper.CompleteTrue;
         }
         #endregion
 

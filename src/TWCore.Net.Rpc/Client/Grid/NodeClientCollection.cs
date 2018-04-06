@@ -46,7 +46,7 @@ namespace TWCore.Net.RPC.Client.Grid
                 if (item.Available)
                     return item;
             }
-            await TaskUtil.SleepUntil(() =>
+            await TaskHelper.SleepUntil(() =>
             {
                 item = this.FirstOrDefault(i => i.Available);
                 return (item != null);

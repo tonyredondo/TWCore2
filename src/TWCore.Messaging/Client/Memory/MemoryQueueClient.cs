@@ -131,7 +131,7 @@ namespace TWCore.Messaging
                 sQueue.Enqueue(message.CorrelationId, message);
             }
 
-            return TaskUtil.CompleteTrue;
+            return TaskHelper.CompleteTrue;
         }
         #endregion
 

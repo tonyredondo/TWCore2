@@ -18,6 +18,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
+using TWCore.Threading;
+
 // ReSharper disable MemberHidesStaticFromOuterClass
 // ReSharper disable InheritdocConsiderUsage
 // ReSharper disable ConvertToAutoPropertyWhenPossible
@@ -1003,7 +1005,7 @@ namespace TWCore.Collections
             KeyValuePair<TKey, TValue> value;
             while (!TryDequeue(out value))
             {
-                Factory.Thread.SleepUntil(() => 0 != Interlocked.CompareExchange(ref _entries[0][0].Prev, 0, 0));
+                ThreadHelper.SleepUntil(() => 0 != Interlocked.CompareExchange(ref _entries[0][0].Prev, 0, 0));
             }
             return value;
         }

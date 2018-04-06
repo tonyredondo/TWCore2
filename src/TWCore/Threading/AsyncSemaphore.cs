@@ -49,7 +49,7 @@ namespace TWCore.Threading
                 if (_currentCount > 0)
                 {
                     --_currentCount;
-                    return TaskUtil.CompleteTrue;
+                    return TaskHelper.CompleteTrue;
                 }
 
                 var waiter = new TaskCompletionSource<bool>();
@@ -70,7 +70,7 @@ namespace TWCore.Threading
                 if (_currentCount > 0)
                 {
                     --_currentCount;
-                    return TaskUtil.CompleteTrue;
+                    return TaskHelper.CompleteTrue;
                 }
 
                 var waiter = new TaskCompletionSource<bool>();

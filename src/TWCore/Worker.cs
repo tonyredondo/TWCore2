@@ -250,9 +250,9 @@ namespace TWCore
                 var numItems = _queue.Count;
                 var remain = numItems > afterNumItemsInQueue ? numItems - afterNumItemsInQueue : 0;
                 if (EnableWaitTimeout)
-                    await TaskUtil.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout).ConfigureAwait(false);
+                    await TaskHelper.SleepUntil(() => _queue.Count <= remain, Core.GlobalSettings.WorkerWaitTimeout).ConfigureAwait(false);
                 else
-                    await TaskUtil.SleepUntil(() => _queue.Count <= remain).ConfigureAwait(false);
+                    await TaskHelper.SleepUntil(() => _queue.Count <= remain).ConfigureAwait(false);
             }
             _status = WorkerStatus.Stopped;
             _processHandler.Reset();
@@ -283,7 +283,7 @@ namespace TWCore
                 {
                     Interlocked.Decrement(ref _queueCount);
                     if (_precondition?.Invoke() == false)
-                        await TaskUtil.SleepUntil(_precondition, token).ConfigureAwait(false);
+                        await TaskHelper.SleepUntil(_precondition, token).ConfigureAwait(false);
                     if (token.IsCancellationRequested)
                         break;
                     try

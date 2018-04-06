@@ -53,7 +53,7 @@ namespace TWCore.Messaging
 		protected override Task<int> OnSendAsync(ResponseMessage message, RequestReceivedEventArgs e)
 		{
 			if (e.ResponseQueues?.Any() != true)
-				return TaskUtil.CompleteValueMinus1;
+				return TaskHelper.CompleteValueMinus1;
 			var response = true;
 			foreach (var queue in e.ResponseQueues)
 			{
@@ -69,7 +69,7 @@ namespace TWCore.Messaging
 					Core.Log.Write(ex);
 				}
 			}
-		    return response ? TaskUtil.CompleteValuePlus1 : TaskUtil.CompleteValueMinus1;
+		    return response ? TaskHelper.CompleteValuePlus1 : TaskHelper.CompleteValueMinus1;
 		}
 
 		/// <inheritdoc />

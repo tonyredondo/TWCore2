@@ -23,9 +23,9 @@ using System.Threading;
 namespace TWCore.Threading
 {
     /// <summary>
-    /// Task utilities
+    /// Task helper
     /// </summary>
-    public static class TaskUtil
+    public static class TaskHelper
     {
         /// <summary>
         /// Complete Task True
@@ -58,7 +58,7 @@ namespace TWCore.Threading
         public static async Task SleepUntil(Func<bool> condition, CancellationToken token)
         {
             while (!token.IsCancellationRequested && !condition())
-                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck, token).ConfigureAwait(false);
+                await Task.Delay(ThreadHelper.SleepTimeBetweenConditionCheck, token).ConfigureAwait(false);
         }
         /// <summary>
         /// Sleeps the thread until a condition is true
@@ -79,7 +79,7 @@ namespace TWCore.Threading
         public static async Task SleepUntil(Func<bool> condition, int milliseconds, CancellationToken token)
         {
             if (token.IsCancellationRequested) return;
-            var time = Factory.Thread.SleepTimeBetweenConditionCheck < milliseconds ? Factory.Thread.SleepTimeBetweenConditionCheck : milliseconds;
+            var time = ThreadHelper.SleepTimeBetweenConditionCheck < milliseconds ? ThreadHelper.SleepTimeBetweenConditionCheck : milliseconds;
             var sw = Stopwatch.StartNew();
             while (!token.IsCancellationRequested && !condition() && sw.ElapsedMilliseconds < milliseconds)
                 await Task.Delay(time, token).ConfigureAwait(false);
@@ -104,15 +104,15 @@ namespace TWCore.Threading
             if (milliseconds.HasValue)
             {
                 var ms = milliseconds.Value;
-                var time = Factory.Thread.SleepTimeBetweenConditionCheck < ms
-                    ? Factory.Thread.SleepTimeBetweenConditionCheck : ms;
+                var time = ThreadHelper.SleepTimeBetweenConditionCheck < ms
+                    ? ThreadHelper.SleepTimeBetweenConditionCheck : ms;
                 var sw = Stopwatch.StartNew();
                 while (!condition() && sw.ElapsedMilliseconds < ms)
                     await Task.Delay(time).ConfigureAwait(false);
                 return;
             }
             while (!condition())
-                await Task.Delay(Factory.Thread.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
+                await Task.Delay(ThreadHelper.SleepTimeBetweenConditionCheck).ConfigureAwait(false);
         }
     }
 }

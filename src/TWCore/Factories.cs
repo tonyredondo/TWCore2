@@ -104,10 +104,6 @@ namespace TWCore
         /// Get New Guid
         /// </summary>
         public GetGuidDelegate NewGuid { get; protected set; } = BaseNewGuid;
-        /// <summary>
-        /// Thread helper methods
-        /// </summary>
-        public IThread Thread { get; protected set; } = new Thread();
         #endregion
 
         /// <summary>

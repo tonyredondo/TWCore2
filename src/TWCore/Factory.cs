@@ -78,10 +78,6 @@ namespace TWCore
         /// Get New Guid
         /// </summary>
         public static GetGuidDelegate NewGuid => _factories?.NewGuid ?? throw new FrameworkNotInitializedException();
-        /// <summary>
-        /// Thread helper methods
-        /// </summary>
-        public static IThread Thread => _factories?.Thread ?? throw new FrameworkNotInitializedException();
         #endregion
 
         #region Methods

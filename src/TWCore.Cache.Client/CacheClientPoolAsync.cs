@@ -938,7 +938,7 @@ namespace TWCore.Cache.Client
         /// </summary>
         /// <returns>true if the storage is enabled; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> IsEnabledAsync() => _pool.AnyEnabled() ? TaskUtil.CompleteTrue : TaskUtil.CompleteFalse;
+        public Task<bool> IsEnabledAsync() => _pool.AnyEnabled() ? TaskHelper.CompleteTrue : TaskHelper.CompleteFalse;
         /// <inheritdoc />
         /// <summary>
         /// Gets if the Storage is ready to be requested.

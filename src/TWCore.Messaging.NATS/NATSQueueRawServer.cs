@@ -118,7 +118,7 @@ namespace TWCore.Messaging.NATS
                     Core.Log.Write(ex);
                 }
             }
-            return response ? Task.FromResult(message.Count) : TaskUtil.CompleteValueMinus1;
+            return response ? Task.FromResult(message.Count) : TaskHelper.CompleteValueMinus1;
         }
 
         /// <inheritdoc />

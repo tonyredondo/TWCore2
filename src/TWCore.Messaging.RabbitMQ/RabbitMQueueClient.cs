@@ -233,7 +233,7 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.LibVerbose("Sending {0} bytes to the Queue '{1}' with CorrelationId={2}", data.Count, sender.Route + "/" + sender.Name, message.Header.CorrelationId);
                 sender.Channel.BasicPublish(sender.ExchangeName ?? string.Empty, sender.Name, props, (byte[])data);
             }
-            return TaskUtil.CompleteTrue;
+            return TaskHelper.CompleteTrue;
         }
         #endregion
 

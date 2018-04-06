@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Net.HttpServer;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
@@ -37,8 +38,8 @@ namespace TWCore.Diagnostics.Status.Transports
     public class HttpStatusTransport : IStatusTransport
     {
         private const int MaxNumberOfTries = 3;
-        private readonly int _numberOfTries;
-        private readonly Guid _discoveryServiceId;
+        private int _numberOfTries;
+        private Guid _discoveryServiceId;
         private SimpleHttpServer _httpServer;
 
         #region Events
@@ -109,13 +110,19 @@ namespace TWCore.Diagnostics.Status.Transports
                 }
                 ctx.Response.WriteLine("</body></html>");
             });
+            StartListening(port).WaitAsync();
+            Core.Status.DeAttachObject(_httpServer);
+        }
+
+        private async Task StartListening(int port)
+        {
             var connected = false;
             while (true)
             {
                 try
                 {
                     _numberOfTries++;
-                    _httpServer.StartAsync(port).Wait();
+                    await _httpServer.StartAsync(port).ConfigureAwait(false);
                     connected = true;
                     break;
                 }
@@ -124,7 +131,7 @@ namespace TWCore.Diagnostics.Status.Transports
                     Core.Log.Write(ex);
                     if (_numberOfTries > MaxNumberOfTries)
                         break;
-                    Factory.Thread.Sleep(1000);
+                    await Task.Delay(1000).ConfigureAwait(false);
                 }
             }
             if (!connected)
@@ -142,7 +149,6 @@ namespace TWCore.Diagnostics.Status.Transports
                     });
                 }
             }
-            Core.Status.DeAttachObject(_httpServer);
         }
         /// <summary>
         /// Detructor

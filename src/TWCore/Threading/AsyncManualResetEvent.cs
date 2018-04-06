@@ -90,7 +90,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(int milliseconds)
         {
-            if (_mTcs == null) return TaskUtil.CompleteFalse;
+            if (_mTcs == null) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(milliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
@@ -103,7 +103,7 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(TimeSpan timeout)
         {
-            if (_mTcs == null) return TaskUtil.CompleteFalse;
+            if (_mTcs == null) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay((int)timeout.TotalMilliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask, 
@@ -118,8 +118,8 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
-            if (_mTcs == null) return TaskUtil.CompleteFalse;
-            if (cancellationToken.IsCancellationRequested) return TaskUtil.CompleteFalse;
+            if (_mTcs == null) return TaskHelper.CompleteFalse;
+            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(milliseconds, cancellationToken);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
@@ -134,8 +134,8 @@ namespace TWCore.Threading
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
         {
-            if (_mTcs == null) return TaskUtil.CompleteFalse;
-            if (cancellationToken.IsCancellationRequested) return TaskUtil.CompleteFalse;
+            if (_mTcs == null) return TaskHelper.CompleteFalse;
+            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(timeout, cancellationToken);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,

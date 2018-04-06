@@ -775,7 +775,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> CallAndWaitFor(this Task task, int milliseconds)
         {
-            if (task.IsCompleted) return TaskUtil.CompleteTrue;
+            if (task.IsCompleted) return TaskHelper.CompleteTrue;
             return Task.WhenAny(Task.Delay(milliseconds), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
@@ -789,8 +789,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
         {
-            if (task.IsCompleted) return TaskUtil.CompleteTrue;
-            if (cancellationToken.IsCancellationRequested) return TaskUtil.CompleteFalse;
+            if (task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
             return Task.WhenAny(Task.Delay(milliseconds, cancellationToken), task).ContinueWith((resTask, state) => resTask == (Task)state, task,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }

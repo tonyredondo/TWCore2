@@ -114,7 +114,7 @@ namespace TWCore.Messaging.Server
         {
             await OnListenerTaskStartAsync(token).ConfigureAwait(false);
             Core.Log.InfoDetail("Listener stopped, waiting to finalize al processing messages.");
-            await TaskUtil.SleepUntil(() => Interlocked.Read(ref _activeWorkers) < 1,
+            await TaskHelper.SleepUntil(() => Interlocked.Read(ref _activeWorkers) < 1,
                 Config.RequestOptions.ServerReceiverOptions.ProcessingWaitOnFinalizeInSec * 1000).ConfigureAwait(false);
         }
         /// <inheritdoc />

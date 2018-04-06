@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Threading;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.WSerializer;
@@ -97,7 +98,7 @@ namespace TWCore.Tests
 
             //GC.Collect();
             //GC.WaitForPendingFinalizers();
-            //Factory.Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             //using (Watch.Create("JSON SERIALIZER"))
             //    for (var i = 0; i < 100000; i++)
             //    {
@@ -106,7 +107,7 @@ namespace TWCore.Tests
             //    }
             //GC.Collect();
             //GC.WaitForPendingFinalizers();
-            //Factory.Thread.Sleep(1000);
+            //Thread.Sleep(1000);
             //using (Watch.Create("JSON DESERIALIZER"))
             //    for (var i = 0; i < 100000; i++)
             //    {
@@ -116,7 +117,7 @@ namespace TWCore.Tests
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("PWBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                 {
@@ -125,7 +126,7 @@ namespace TWCore.Tests
                 }
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                 {
@@ -134,7 +135,7 @@ namespace TWCore.Tests
                 }
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("PWBinary DESERIALIZER GENERIC"))
                 for (var i = 0; i < 100000; i++)
                 {
@@ -144,7 +145,7 @@ namespace TWCore.Tests
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("WBinary SERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                 {
@@ -153,7 +154,7 @@ namespace TWCore.Tests
                 }
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("WBinary DESERIALIZER"))
                 for (var i = 0; i < 100000; i++)
                 {
@@ -163,7 +164,7 @@ namespace TWCore.Tests
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            Factory.Thread.Sleep(1000);
+            Thread.Sleep(1000);
             using (Watch.Create("Object Cloner"))
                 for (var i = 0; i < 100000; i++)
                     lt.DeepClone();

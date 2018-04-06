@@ -136,7 +136,7 @@ namespace TWCore.Cache.Storages.IO
                 _handlers[i] = new FolderHandler(folder, this);
             }
             Core.Log.InfoBasic("Waiting the folder handlers to be loaded.");
-            TaskUtil.SleepUntil(() => _handlers.All(s => s.Loaded)).WaitAsync();
+            TaskHelper.SleepUntil(() => _handlers.All(s => s.Loaded)).WaitAsync();
             Core.Log.InfoBasic("All folder handlers are loaded, Index Count: {0}", Metas.Count());
             SetReady(true);
         }
@@ -645,7 +645,7 @@ namespace TWCore.Cache.Storages.IO
                 if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskUtil.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
                         .ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Remove));
@@ -668,7 +668,7 @@ namespace TWCore.Cache.Storages.IO
                 if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskUtil.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
                         .ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Add));

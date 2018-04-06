@@ -80,6 +80,16 @@ namespace TWCore.Diagnostics.Trace.Storages
                 _isDirty = true;
             }
         }
+        /// <summary>
+        /// Get all storages
+        /// </summary>
+        /// <returns>ITraceStorage array</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ITraceStorage[] GetAllStorages()
+        {
+            lock (_locker)
+                return _items.ToArray() ?? new ITraceStorage[0];
+        }
         #endregion
 
         #region ITraceStorage Members

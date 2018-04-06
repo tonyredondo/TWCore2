@@ -43,8 +43,9 @@ namespace TWCore.Test.Core
             TWCore.Core.RunOnInit(() =>
             {
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
-                TWCore.Core.Log.AddSimpleFileStorage("testlog.txt");
-                TWCore.Core.Log.AddHtmlFileStorage("testlog.htm");
+                TWCore.Core.Log.AddSimpleFileStorage("./log/testlog.txt");
+                TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
+                TWCore.Core.Trace.AddSimpleFileStorage("./traces");
                 
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;

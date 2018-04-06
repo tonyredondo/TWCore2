@@ -270,7 +270,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             private void WriteTraceThread()
             {
                 var token = _tokenSource.Token;
-                while (token.IsCancellationRequested)
+                while (!token.IsCancellationRequested)
                 {
                     try
                     {

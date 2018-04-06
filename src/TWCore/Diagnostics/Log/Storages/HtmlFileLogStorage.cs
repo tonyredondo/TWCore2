@@ -15,9 +15,11 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.Multicast;
@@ -35,12 +37,13 @@ namespace TWCore.Diagnostics.Log.Storages
 	public class HtmlFileLogStorage : ILogStorage
     {
         private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
-        private readonly StringBuilder _stringBuffer = new StringBuilder(128);
+        private static readonly ConcurrentStack<StringBuilder> StringBuilderPool = new ConcurrentStack<StringBuilder>();
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
         private int _numbersOfFiles;
         private volatile bool _firstWrite = true;
+        private Timer _flushTimer;
 
         #region Html format
         private const string Html = @"
@@ -349,6 +352,18 @@ namespace TWCore.Diagnostics.Log.Storages
             UseMaxLength = useMaxLength;
             MaxLength = maxLength;
             EnsureLogFile(fileName);
+            _flushTimer = new Timer(obj =>
+            {
+                if (_sWriter == null) return;
+                try
+                {
+                    _sWriter.Flush();
+                }
+                catch
+                {
+                    //
+                }
+            }, this, 1500, 1500);
             if (!string.IsNullOrWhiteSpace(fileName))
                 _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.HTML", "This is the Html Log base path", new SerializedObject(Path.GetDirectoryName(Path.GetFullPath(fileName))));
             Core.Status.Attach(collection =>
@@ -439,10 +454,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
                 var alreadyExist = File.Exists(fname);
-                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 2048, true))
-                {
-                    AutoFlush = true
-                };
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true));
                 if (!alreadyExist)
                     sw.WriteLine(Html);
                 return sw;
@@ -476,48 +488,47 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             EnsureLogFile(FileName);
             if (_sWriter == null) return;
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
             var time = item.Timestamp.GetTimeSpanFormat();
             var format = PreFormat;
-            string buffer;
-            lock (_sWriter)
+            if (_firstWrite)
             {
-                if (_firstWrite)
-                {
-                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
-                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
-                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
-                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
-                    _stringBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
-                    _stringBuffer.AppendFormat(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
-                    _firstWrite = false;
-                }
-                _stringBuffer.Append(time);
-                _stringBuffer.AppendFormat("{0, 11}: ", item.Level);
-
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    _stringBuffer.Append(item.GroupName + " | ");
-
-                if (item.LineNumber > 0)
-                    _stringBuffer.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                {
-                    _stringBuffer.Append("&lt;" + item.TypeName + "&gt; ");
-                    format = PreFormatWType;
-                }
-
-                if (!string.IsNullOrEmpty(item.Code))
-                    _stringBuffer.Append("[" + item.Code + "] ");
-
-                _stringBuffer.Append(System.Security.SecurityElement.Escape(item.Message));
-
-                if (item.Exception != null)
-                {
-                    _stringBuffer.Append("\r\nExceptions:\r\n");
-                    GetExceptionDescription(item.Exception, _stringBuffer);
-                }
-                buffer = _stringBuffer.ToString();
-                _stringBuffer.Clear();
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormat, "EmptyLine", "<br/>");
+                strBuffer.AppendFormat(PreFormatWTime, "Start", "&#8615; START &#8615;", time);
+                _firstWrite = false;
             }
+            strBuffer.Append(time);
+            strBuffer.AppendFormat("{0, 11}: ", item.Level);
+
+            if (!string.IsNullOrEmpty(item.GroupName))
+                strBuffer.Append(item.GroupName + " | ");
+
+            if (item.LineNumber > 0)
+                strBuffer.AppendFormat("&lt;{0};{1:000}&gt; ", string.IsNullOrEmpty(item.TypeName) ? string.Empty : item.TypeName, item.LineNumber);
+            else if (!string.IsNullOrEmpty(item.TypeName))
+            {
+                strBuffer.Append("&lt;" + item.TypeName + "&gt; ");
+                format = PreFormatWType;
+            }
+
+            if (!string.IsNullOrEmpty(item.Code))
+                strBuffer.Append("[" + item.Code + "] ");
+
+            strBuffer.Append(System.Security.SecurityElement.Escape(item.Message));
+
+            if (item.Exception != null)
+            {
+                strBuffer.Append("\r\nExceptions:\r\n");
+                GetExceptionDescription(item.Exception, strBuffer);
+            }
+            var buffer = strBuffer.ToString();
+            strBuffer.Clear();
+            StringBuilderPool.Push(strBuffer);
             await _sWriter.WriteAsync(string.Format(format, item.Level, buffer, item.TypeName)).ConfigureAwait(false);
         }
         /// <inheritdoc />
@@ -539,6 +550,8 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
+                _flushTimer?.Dispose();
+                _flushTimer = null;
                 _sWriter?.Write(PreFormat, "End", "&#8613; END &#8613;");
                 _sWriter?.Flush();
                 _sWriter?.Dispose();

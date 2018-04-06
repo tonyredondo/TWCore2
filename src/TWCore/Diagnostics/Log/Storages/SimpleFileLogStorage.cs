@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.Net.Multicast;
@@ -46,7 +47,8 @@ namespace TWCore.Diagnostics.Log.Storages
         private string _currentFileName;
         private int _numbersOfFiles;
         private volatile bool _firstWrite = true;
-
+        private Timer _flushTimer;
+        
         #region Properties
         /// <summary>
         /// File name with path
@@ -116,6 +118,18 @@ namespace TWCore.Diagnostics.Log.Storages
             UseMaxLength = useMaxLength;
             MaxLength = maxLength;
             EnsureLogFile(fileName);
+            _flushTimer = new Timer(obj =>
+            {
+                if (_sWriter == null) return;
+                try
+                {
+                    _sWriter.Flush();
+                }
+                catch
+                {
+                    //
+                }
+            }, this, 1500, 1500);
             if (!string.IsNullOrWhiteSpace(fileName))
                 _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "LOG.FILE", "This is the File Log base path", new SerializedObject(Path.GetDirectoryName(Path.GetFullPath(fileName))));
             Core.Status.Attach(collection =>
@@ -205,10 +219,7 @@ namespace TWCore.Diagnostics.Log.Storages
                 var folder = Path.GetDirectoryName(fname);
                 if (!string.IsNullOrWhiteSpace(folder) && !Directory.Exists(folder))
                     Directory.CreateDirectory(folder);
-                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 2048, true))
-                {
-                    AutoFlush = true
-                };
+                var sw = new StreamWriter(new FileStream(fname, FileMode.Append, FileAccess.Write, FileShare.ReadWrite, 4096, true));
                 return sw;
             });
             if (File.Exists(_currentFileName))
@@ -295,6 +306,8 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             try
             {
+                _flushTimer?.Dispose();
+                _flushTimer = null;
                 _sWriter?.WriteLine(".-");
                 _sWriter?.Flush();
                 _sWriter?.Dispose();

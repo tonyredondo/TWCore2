@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// </summary>
     public class TraceLogStorage : ILogStorage
     {
-        private readonly StringBuilder _stringBuffer = new StringBuilder(128);
+        private static readonly ConcurrentStack<StringBuilder> StringBuilderPool = new ConcurrentStack<StringBuilder>();
 
         /// <inheritdoc />
         /// <summary>
@@ -37,33 +38,33 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task WriteAsync(ILogItem item)
         {
-            lock(Console.Out)
+            if (!StringBuilderPool.TryPop(out var strBuffer))
+                strBuffer = new StringBuilder();
+            
+            strBuffer.Append(item.Timestamp.GetTimeSpanFormat());
+            strBuffer.AppendFormat(string.Format("{0, 11}: ", item.Level));
+
+            if (!string.IsNullOrEmpty(item.GroupName))
+                strBuffer.Append(item.GroupName + " - ");
+
+            if (item.LineNumber > 0)
+                strBuffer.AppendFormat(string.Format("<{0};{1:000}> ", item.TypeName, item.LineNumber));
+            else if (!string.IsNullOrEmpty(item.TypeName))
+                strBuffer.AppendFormat(string.Format("<{0}> ", item.TypeName));
+
+            if (!string.IsNullOrEmpty(item.Code))
+                strBuffer.Append("[" + item.Code + "] ");
+
+            strBuffer.AppendLine(item.Message);
+
+            if (item.Exception != null)
             {
-                _stringBuffer.Append(item.Timestamp.GetTimeSpanFormat());
-                _stringBuffer.AppendFormat(string.Format("{0, 11}: ", item.Level));
-
-                if (!string.IsNullOrEmpty(item.GroupName))
-                    _stringBuffer.Append(item.GroupName + " - ");
-
-                if (item.LineNumber > 0)
-                    _stringBuffer.AppendFormat(string.Format("<{0};{1:000}> ", item.TypeName, item.LineNumber));
-                else if (!string.IsNullOrEmpty(item.TypeName))
-                    _stringBuffer.AppendFormat(string.Format("<{0}> ", item.TypeName));
-
-                if (!string.IsNullOrEmpty(item.Code))
-                    _stringBuffer.Append("[" + item.Code + "] ");
-
-                _stringBuffer.AppendLine(item.Message);
-
-                if (item.Exception != null)
-                {
-                    _stringBuffer.AppendLine("Exceptions:\r\n");
-                    GetExceptionDescription(item.Exception, _stringBuffer);
-                }
-
-                System.Diagnostics.Trace.WriteLine(_stringBuffer.ToString());
-                _stringBuffer.Clear();
+                strBuffer.AppendLine("Exceptions:\r\n");
+                GetExceptionDescription(item.Exception, strBuffer);
             }
+            System.Diagnostics.Trace.WriteLine(strBuffer.ToString());
+            strBuffer.Clear();
+            StringBuilderPool.Push(strBuffer);
             return Task.CompletedTask;
         }
 

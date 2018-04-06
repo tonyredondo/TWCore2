@@ -25,6 +25,7 @@ using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer;
+using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable UnusedVariable
@@ -36,7 +37,7 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
-            SerializerManager.DefaultBinarySerializer = new PWBinarySerializer();
+            SerializerManager.DefaultBinarySerializer = new WBinarySerializer();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>

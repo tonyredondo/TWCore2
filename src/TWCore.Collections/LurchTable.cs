@@ -1005,7 +1005,7 @@ namespace TWCore.Collections
             KeyValuePair<TKey, TValue> value;
             while (!TryDequeue(out value))
             {
-                ThreadHelper.SleepUntil(() => 0 != Interlocked.CompareExchange(ref _entries[0][0].Prev, 0, 0));
+                TaskHelper.SleepUntil(() => 0 != Interlocked.CompareExchange(ref _entries[0][0].Prev, 0, 0)).WaitAsync();
             }
             return value;
         }

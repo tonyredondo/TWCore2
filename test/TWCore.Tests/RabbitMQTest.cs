@@ -32,10 +32,10 @@ using TWCore.Services;
 namespace TWCore.Tests
 {
     /// <inheritdoc />
-    public class RabbitMQTest : ContainerParameterService
+    public class RabbitMQTest : ContainerParameterServiceAsync
     {
         public RabbitMQTest() : base("rabbitmqtest", "RabbitMQ Test") { }
-        protected override void OnHandler(ParameterHandlerInfo info)
+        protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting RabbitMQ Test");
 
@@ -112,13 +112,13 @@ namespace TWCore.Tests
             //Core.Log.MaxLogLevel = Diagnostics.Log.LogLevel.InfoDetail;
 
             Core.Log.Warning("Starting with Normal Listener and Client");
-            NormalTest(mqConfig);
+            await NormalTestAsync(mqConfig).ConfigureAwait(false);
             mqConfig.ResponseOptions.ClientReceiverOptions.Parameters["SingleResponseQueue"] = "true";
             Core.Log.Warning("Starting with RAW Listener and Client");
-            RawTest(mqConfig);
+            await RawTestAsync(mqConfig).ConfigureAwait(false);
         }
 
-        private static void NormalTest(MQPairConfig mqConfig)
+        private static async Task NormalTestAsync(MQPairConfig mqConfig)
         {
             using (var mqServer = mqConfig.GetServer())
             {
@@ -139,7 +139,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                            var response = await mqClient.SendAndReceiveAsync<string>("Hola mundo").ConfigureAwait(false);
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -151,9 +151,9 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Task.WaitAll(
+                        await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
-                        );
+                        ).ConfigureAwait(false);
 
                         //Parallel.For(0, totalQ, i =>
                         //{
@@ -177,7 +177,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
+                            var response = await mqClient.SendAndReceiveAsync<string>("Hola mundo").ConfigureAwait(false);
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -189,9 +189,9 @@ namespace TWCore.Tests
                     Core.Log.Warning("Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Task.WaitAll(
+                        await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select((i, mc) => (Task)mc.SendAndReceiveAsync<string>("Hola mundo"), mqClient).ToArray()
-                        );
+                        ).ConfigureAwait(false);
                         //Parallel.For(0, totalQ, i =>
                         //{
                         //    var response = mqClient.SendAndReceiveAsync<string>("Hola mundo").WaitAndResults();
@@ -205,7 +205,7 @@ namespace TWCore.Tests
             }
         }
 
-        private static void RawTest(MQPairConfig mqConfig)
+        private static async Task RawTestAsync(MQPairConfig mqConfig)
         {
             using (var mqServer = mqConfig.GetRawServer())
             {
@@ -228,7 +228,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                            var response = await mqClient.SendAndReceiveAsync(byteRequest).ConfigureAwait(false);
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -240,9 +240,9 @@ namespace TWCore.Tests
                     Core.Log.Warning("RAW Parallel Mode Test, using Unique Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Task.WaitAll(
+                        await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select((i, vTuple) => (Task)vTuple.mqClient.SendAndReceiveAsync(vTuple.byteRequest), (mqClient, byteRequest)).ToArray()
-                        );
+                        ).ConfigureAwait(false);
                         //Parallel.For(0, totalQ, i =>
                         //{
                         //    var response = mqClient.SendAndReceive(byteRequest);
@@ -265,7 +265,7 @@ namespace TWCore.Tests
                     {
                         for (var i = 0; i < totalQ; i++)
                         {
-                            var response = mqClient.SendAndReceiveAsync(byteRequest).WaitAndResults();
+                            var response = await mqClient.SendAndReceiveAsync(byteRequest).ConfigureAwait(false);
                         }
                         Core.Log.InfoBasic("Total time: {0}", TimeSpan.FromMilliseconds(w.GlobalElapsedMilliseconds));
                         Core.Log.InfoBasic("Average time in ms: {0}. Press ENTER To Continue.", (w.GlobalElapsedMilliseconds / totalQ));
@@ -277,9 +277,9 @@ namespace TWCore.Tests
                     Core.Log.Warning("RAW Parallel Mode Test, using Multiple Response Queue");
                     using (var w = Watch.Create($"Hello World Example in Parallel Mode for {totalQ} times"))
                     {
-                        Task.WaitAll(
+                        await Task.WhenAll(
                             Enumerable.Range(0, totalQ).Select((i, vTuple) => (Task)vTuple.mqClient.SendAndReceiveAsync(vTuple.byteRequest), (mqClient, byteRequest)).ToArray()
-                        );
+                        ).ConfigureAwait(false);
                         //Parallel.For(0, totalQ, i =>
                         //{
                         //    var response = mqClient.SendAndReceive(byteRequest);

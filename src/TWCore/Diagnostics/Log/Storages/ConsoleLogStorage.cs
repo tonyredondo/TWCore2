@@ -51,6 +51,8 @@ namespace TWCore.Diagnostics.Log.Storages
         }
         #endregion
         
+        #region Nested Types
+        
         private class NonBlockingConsole
         {
             private static BlockingCollection<(string Message, ConsoleColor Color)> _queue = new BlockingCollection<(string Message, ConsoleColor Color)>();
@@ -84,6 +86,8 @@ namespace TWCore.Diagnostics.Log.Storages
                 }
             }
         }
+        
+        #endregion
         
         /// <inheritdoc />
         /// <summary>

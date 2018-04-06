@@ -15,8 +15,10 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.Net.Multicast;
@@ -34,9 +36,12 @@ namespace TWCore.Diagnostics.Trace.Storages
     public class SimpleFileTraceStorage : ITraceStorage
     {
         private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();
+        private NonBlockingTraceWriter _traceWriter;
         private readonly Guid _discoveryServiceId;
         private StreamWriter _sWriter;
         private string _currentFileName;
+        private Timer _flushTimer;
+        private int _shouldFlush;
 
         #region Properties
         /// <summary>
@@ -106,6 +111,20 @@ namespace TWCore.Diagnostics.Trace.Storages
                 }
             }
             CreateByDay = createByDay;
+            _traceWriter = new NonBlockingTraceWriter(this);
+            _flushTimer = new Timer(obj =>
+            {
+                if (_sWriter == null) return;
+                try
+                {
+                    if (Interlocked.CompareExchange(ref _shouldFlush, 0, 1) == 1)
+                        _sWriter.Flush();
+                }
+                catch
+                {
+                    //
+                }
+            }, this, 1500, 1500);
             EnsureTraceFile(FileName);
             _discoveryServiceId = DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "TRACE.FILE", "This is the File Trace base path", new SerializedObject(Path.GetFullPath(BasePath)));
             Core.Status.Attach(collection =>
@@ -222,6 +241,81 @@ namespace TWCore.Diagnostics.Trace.Storages
         }
         #endregion
 
+        #region Nested Types
+        
+        private class NonBlockingTraceWriter : IDisposable
+        {
+            private readonly BlockingCollection<(string FilePath, object Data)> _queue = new BlockingCollection<(string FilePath, object Data)>();
+            private readonly SimpleFileTraceStorage _storage;
+            private readonly CancellationTokenSource _tokenSource = new CancellationTokenSource();
+            
+            #region .ctor
+            public NonBlockingTraceWriter(SimpleFileTraceStorage storage)
+            {
+                _storage = storage;
+                var thread = new Thread(WriteTraceThread)
+                {
+                    IsBackground = true,
+                    Priority = ThreadPriority.Lowest,
+                    Name = "Trace Thread"
+                };
+                thread.Start();
+            }
+            #endregion
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public void WriteTrace(string filePath, object data) 
+                => _queue.Add((filePath, data));
+
+            private void WriteTraceThread()
+            {
+                var token = _tokenSource.Token;
+                while (token.IsCancellationRequested)
+                {
+                    try
+                    {
+                        (var filePath, var data) = _queue.Take(token);
+                        if (data != null)
+                        {
+                            try
+                            {
+                                var serializer = _storage.Serializer ?? SerializerManager.Serializers[0];
+                                serializer.SerializeToFile(data, filePath);
+                            }
+                            catch (Exception ex)
+                            {
+                                File.WriteAllText(filePath + ".txt", ex.Message + Environment.NewLine + ex.StackTrace);
+                            }
+                        }
+                        else
+                            File.WriteAllText(filePath + ".txt", "Object is Null");
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return;
+                    }
+                    catch (ObjectDisposedException)
+                    {
+                        return;
+                    }
+                    catch(Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            }
+
+            public void Dispose()
+            {
+                if (!_tokenSource.IsCancellationRequested)
+                    _tokenSource?.Cancel();
+                _tokenSource.Dispose();
+                _queue.Dispose();
+            }
+        }
+        
+        #endregion
+        
         /// <inheritdoc />
         /// <summary>
         /// Writes a trace item to the storage
@@ -233,27 +327,14 @@ namespace TWCore.Diagnostics.Trace.Storages
             EnsureTraceFile(FileName);
             if (_sWriter == null) return;
             var traceFilePath = GetObjectFilePath(item);
-            if (item.TraceObject != null)
-            {
-                try
-                {
-                    var serializer = Serializer ?? SerializerManager.Serializers[0];
-                    await serializer.SerializeToFileAsync(item.TraceObject, traceFilePath).ConfigureAwait(false);
-                }
-                catch(Exception ex)
-                {
-                    File.WriteAllText(traceFilePath + ".txt", ex.Message + "\r\n" + ex.StackTrace);
-                }
-            }
-            else
-                File.WriteAllText(traceFilePath + ".txt", "Object is Null");
-
+            _traceWriter?.WriteTrace(traceFilePath, item.TraceObject);
             var line = string.Format("{0} ({1, 15}) {2}: {3}", 
                 item.Timestamp.GetTimeSpanFormat(), 
                 string.IsNullOrEmpty(item.GroupName) ? "NO GROUP" : item.GroupName, 
                 item.TraceName, 
                 traceFilePath);
             await _sWriter.WriteLineAsync(line).ConfigureAwait(false);
+            Interlocked.Exchange(ref _shouldFlush, 1);
         }
 
         /// <inheritdoc />
@@ -265,6 +346,8 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             try
             {
+                _traceWriter?.Dispose();
+                _traceWriter = null;
                 _sWriter?.Dispose();
                 _sWriter = null;
             }

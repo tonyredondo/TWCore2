@@ -25,6 +25,7 @@ using TWCore.Net.RPC.Server.Transports;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization;
 using TWCore.Serialization.PWSerializer;
+using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
 // ReSharper disable RedundantArgumentDefaultValue
@@ -36,7 +37,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class CacheAsyncRpcTest : ContainerParameterServiceAsync
     {
-        private static BinarySerializer GlobalSerializer = new PWBinarySerializer();
+        private static BinarySerializer GlobalSerializer = new WBinarySerializer();
 
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)
@@ -87,8 +88,7 @@ namespace TWCore.Tests
 				var fileSto = new FileStorage("./cache_data")
 				{
 					NumberOfSubFolders = 10,
-                    Serializer = GlobalSerializer,
-                    MetaSerializer = GlobalSerializer
+                    IndexSerializer = GlobalSerializer
                 };
 				var lruSto = new LRU2QStorage(10000);
                 var stoManager = new StorageManager();

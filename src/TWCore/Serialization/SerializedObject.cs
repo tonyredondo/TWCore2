@@ -28,6 +28,11 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject
     {
+        /// <summary>
+        /// Serialized Object File Extension
+        /// </summary>
+        public const string FileExtension = ".sobj";
+        
         #region Properties
         /// <summary>
         /// Item Data
@@ -68,7 +73,9 @@ namespace TWCore.Serialization
             }
             else
             {
-                SerializerMimeType = serializer.MimeTypes[0] + ((serializer.Compressor != null) ? ":" + serializer.Compressor.EncodingType : string.Empty);
+                SerializerMimeType = serializer.MimeTypes[0];
+                if (serializer.Compressor != null)
+                    SerializerMimeType += ":" + serializer.Compressor.EncodingType;
                 Data = (byte[]) serializer.Serialize(data, type);
             }
         }
@@ -166,6 +173,8 @@ namespace TWCore.Serialization
         {
             var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
             var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
+            if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
+                filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
                 await fs.WriteBytesAsync(BitConverter.GetBytes(dataTypeByte?.Length ?? -1), false).ConfigureAwait(false);
@@ -271,6 +280,8 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task<SerializedObject> FromFileAsync(string filepath)
         {
+            if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
+                filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var length = fs.Length;

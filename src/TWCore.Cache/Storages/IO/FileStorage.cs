@@ -45,13 +45,9 @@ namespace TWCore.Cache.Storages.IO
         /// </summary>
         public string BasePath { get; set; }
         /// <summary>
-        /// Gets or sets the serializer to use when writting to disk
+        /// Gets the serializer in use to write the index file
         /// </summary>
-        public BinarySerializer Serializer { get; set; } = (BinarySerializer)SerializerManager.DefaultBinarySerializer;
-        /// <summary>
-        /// Gets the json serializer in use to write the meta file
-        /// </summary>
-        public BinarySerializer MetaSerializer { get; set; } = (BinarySerializer)SerializerManager.DefaultBinarySerializer;
+        public BinarySerializer IndexSerializer { get; set; } = (BinarySerializer)SerializerManager.DefaultBinarySerializer;
         /// <summary>
         /// Number of subfolders to sparse the files.
         /// </summary>
@@ -84,8 +80,7 @@ namespace TWCore.Cache.Storages.IO
             {
                 collection.Add(nameof(BasePath), BasePath);
                 collection.Add("Count", Metas?.Count(), StatusItemValueStatus.Ok);
-                collection.Add(nameof(Serializer), Serializer);
-                collection.Add(nameof(MetaSerializer), MetaSerializer);
+                collection.Add(nameof(IndexSerializer), IndexSerializer);
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
@@ -164,7 +159,7 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _handlers[GetFolderNumber(key)].OnTryGet(key, condition);
+            var res = _handlers[GetFolderNumber(key)].OnTryGet(key, condition).WaitAsync();
             value = res;
             return res != null;
         }
@@ -219,10 +214,6 @@ namespace TWCore.Cache.Storages.IO
             /// </summary>
             public string BasePath { get; private set; }
             /// <summary>
-            /// Gets or sets the serializer to use when writting to disk
-            /// </summary>
-            public BinarySerializer Serializer { get; private set; }
-            /// <summary>
             /// Gets the serializer in use to write the index file
             /// </summary>
             public BinarySerializer IndexSerializer { get; private set; }
@@ -251,14 +242,13 @@ namespace TWCore.Cache.Storages.IO
             {
                 _saveMetadataBuffered = ActionDelegate.Create(async () => await SaveMetadataAsync().ConfigureAwait(false)).CreateBufferedAction(1000);
                 BasePath = basePath;
-                Serializer = storage.Serializer;
-                IndexSerializer = storage.MetaSerializer;
+                IndexSerializer = storage.IndexSerializer;
                 TransactionLogThreshold = storage.TransactionLogThreshold;
                 SlowDownWriteThreshold = storage.SlowDownWriteThreshold;
                 Loaded = false;
                 LoadingFailed = false;
                 _transactionLogFilePath = Path.Combine(BasePath, TransactionLogFileName + IndexSerializer.Extensions[0]);
-                _dataPathPattern = Path.Combine(BasePath, "$FILE$" + DataExtension + Serializer.Extensions[0]);
+                _dataPathPattern = Path.Combine(BasePath, "$FILE$" + DataExtension);
                 var oldTransactionLogFilePath = _transactionLogFilePath + ".old";
                 _indexFilePath = Path.Combine(BasePath, IndexFileName + IndexSerializer.Extensions[0]);
                 var oldindexFilePath = _indexFilePath + ".old";
@@ -494,8 +484,7 @@ namespace TWCore.Cache.Storages.IO
             {
                 if (_storageWorker != null && _storageWorker.Count < SlowDownWriteThreshold)
                     _storageWorkerEvent.Set();
-                var meta = workerItem.Item1;
-                var transaction = workerItem.Item2;
+                var (meta, transaction) = workerItem;
                 if (meta == null) return;
                 if (transaction == FileStorageMetaLog.TransactionType.Add && meta.IsExpired) return;
                 if (_currentTransactionLogLength >= TransactionLogThreshold) _currentTransactionLogLength = 0;
@@ -535,17 +524,17 @@ namespace TWCore.Cache.Storages.IO
                     switch (transaction)
                     {
                         case FileStorageMetaLog.TransactionType.Remove:
-                            Core.Log.LibVerbose("Removing element from filesystem '{0}'.", meta.Key);
+                            Core.Log.DebugGroup(meta.Key, "Removing element from filesystem.");
                             File.Delete(filePath);
-                            return;
+                            break;
                         case FileStorageMetaLog.TransactionType.Add:
-                            Core.Log.LibVerbose("Writing element to filesystem '{0}'.", meta.Key);
+                            Core.Log.DebugGroup(meta.Key, "Writing element to filesystem.");
                             if (_pendingItems.TryGetValue(meta.Key, out var serObj))
                             {
-                                await Serializer.SerializeToFileAsync(serObj, filePath).ConfigureAwait(false);
-                                _pendingItems.TryRemove(meta.Key, out var _);
+                                await serObj.ToFileAsync(filePath).ConfigureAwait(false);
+                                _pendingItems.TryRemove(meta.Key, out _);
                             }
-                            return;
+                            break;
                     }
                 }
                 catch (Exception ex)
@@ -639,14 +628,13 @@ namespace TWCore.Cache.Storages.IO
                     Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
                     return (false, null);
                 }
-                _pendingItems.TryRemove(key, out var _);
+                _pendingItems.TryRemove(key, out _);
                 if (!_metas.TryRemove(key, out var meta)) return (false, null);
                 meta.Dispose();
                 if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
-                        .ConfigureAwait(false);
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold).ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Remove));
                 return (true, meta);
@@ -668,14 +656,13 @@ namespace TWCore.Cache.Storages.IO
                 if (_storageWorker.Count >= SlowDownWriteThreshold)
                 {
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold)
-                        .ConfigureAwait(false);
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < SlowDownWriteThreshold).ConfigureAwait(false);
                 }
                 _storageWorker.Enqueue((meta, FileStorageMetaLog.TransactionType.Add));
                 return true;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public StorageItem OnTryGet(string key, Predicate<StorageItemMeta> condition = null)
+            public async Task<StorageItem> OnTryGet(string key, Predicate<StorageItemMeta> condition = null)
             {
                 try
                 {
@@ -683,7 +670,7 @@ namespace TWCore.Cache.Storages.IO
                     _metas.TryGetValue(key, out var metaValue);
                     if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
                     {
-                        serObj = serObj ?? Serializer.DeserializeFromFile<SerializedObject>(GetDataPath(key));
+                        serObj = serObj ?? await SerializedObject.FromFileAsync(GetDataPath(key)).ConfigureAwait(false);
                         return new StorageItem(metaValue, serObj);
                     }
                 }
@@ -720,9 +707,12 @@ namespace TWCore.Cache.Storages.IO
                 {
 
                 }
+                Core.Log.InfoBasic("Stopping storage folder worker on: {0}", BasePath);
                 await _storageWorker.StopAsync(int.MaxValue).ConfigureAwait(false);
+                Core.Log.InfoBasic("Saving metadata on: {0}", BasePath);
                 await SaveMetadataAsync().ConfigureAwait(false);
                 _disposedValue = true;
+                Core.Log.InfoBasic("Saving Journal on: {0}", BasePath);
                 using (await _asyncLock.LockAsync().ConfigureAwait(false))
                 {
                     if (_transactionStream.CanWrite)
@@ -734,6 +724,7 @@ namespace TWCore.Cache.Storages.IO
                 }
                 _metas.Clear();
                 _pendingItems.Clear();
+                Core.Log.InfoBasic("Folder disposed: {0}", BasePath);
             }
 
             ~FolderHandler()

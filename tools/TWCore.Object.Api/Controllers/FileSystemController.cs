@@ -157,7 +157,7 @@ namespace TWCore.Object.Api.Controllers
         [HttpGet("api/files/load.{format}")]
         [HttpGet("api/files/load")]
         [FormatFilter]
-        public ActionResult LoadFile()
+        public async Task<ActionResult> LoadFile()
         {
             try
             {
@@ -175,13 +175,23 @@ namespace TWCore.Object.Api.Controllers
                 if (!System.IO.File.Exists(path))
                     return new ObjectResult(new FileLoadedStatus { FilePath = path, Loaded = false });
 
+                var isSerializedObject = ((string)path).IndexOf(SerializedObject.FileExtension, StringComparison.OrdinalIgnoreCase) > -1;
+                
                 var serializer = SerializerManager.GetByFileName(path);
-                if (serializer != null && (serializer.SerializerType == SerializerType.Binary || fileType != null))
+                if (isSerializedObject || (serializer != null && (serializer.SerializerType == SerializerType.Binary || fileType != null)))
                 {
                     try
                     {
-                        Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
-                        obj = serializer.DeserializeFromFile(fileType, path);
+                        if (isSerializedObject)
+                        {
+                            Core.Log.InfoBasic("SerializedObject found, deserializing...");
+                            obj = await SerializedObject.FromFileAsync(path);
+                        }
+                        else
+                        {
+                            Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
+                            obj = serializer.DeserializeFromFile(fileType, path);
+                        }
                         sessionData = HttpContext.Session.GetSessionData();
                         sessionData.FilePath = path;
                         sessionData.FileObject = obj;
@@ -196,27 +206,30 @@ namespace TWCore.Object.Api.Controllers
                     catch(Exception ex)
                     {
                         Core.Log.Write(ex);
-                        Core.Log.InfoBasic("Trying to deserialize from a continous stream...");
-                        using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                        if (!isSerializedObject)
                         {
-                            var lstObj = new List<object>();
-                            while (fs.Position != fs.Length)
+                            Core.Log.InfoBasic("Trying to deserialize from a continous stream...");
+                            using (var fs = System.IO.File.Open(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                             {
-                                var item = serializer.Deserialize<object>(fs);
-                                if (item != null)
-                                    lstObj.Add(item);
+                                var lstObj = new List<object>();
+                                while (fs.Position != fs.Length)
+                                {
+                                    var item = serializer.Deserialize<object>(fs);
+                                    if (item != null)
+                                        lstObj.Add(item);
+                                }
+                                obj = lstObj;
+                                sessionData = HttpContext.Session.GetSessionData();
+                                sessionData.FilePath = path;
+                                sessionData.FileObject = obj;
+                                HttpContext.Session.SetSessionData(sessionData);
+                                Core.Log.InfoBasic("File {0} was loaded.", path);
+                                return new ObjectResult(new FileLoadedStatus
+                                {
+                                    FilePath = sessionData.FilePath,
+                                    ObjectType = sessionData.FileObject?.GetType().Name
+                                });
                             }
-                            obj = lstObj;
-                            sessionData = HttpContext.Session.GetSessionData();
-                            sessionData.FilePath = path;
-                            sessionData.FileObject = obj;
-                            HttpContext.Session.SetSessionData(sessionData);
-                            Core.Log.InfoBasic("File {0} was loaded.", path);
-                            return new ObjectResult(new FileLoadedStatus
-                            {
-                                FilePath = sessionData.FilePath,
-                                ObjectType = sessionData.FileObject?.GetType().Name
-                            });
                         }
                     }
                 }
@@ -231,6 +244,9 @@ namespace TWCore.Object.Api.Controllers
                     string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".ini", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".srt", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".ts", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".vue", StringComparison.OrdinalIgnoreCase) ||
                     serializer?.SerializerType == SerializerType.Text)
                 {
 
@@ -314,12 +330,21 @@ namespace TWCore.Object.Api.Controllers
                 object obj;
                 SessionData sessionData;
 
+                var isSerializedObject = ((string)name).IndexOf(SerializedObject.FileExtension, StringComparison.OrdinalIgnoreCase) > -1;
 
                 var serializer = SerializerManager.GetByFileName(name);
-                if (serializer != null && serializer.SerializerType == SerializerType.Binary)
+                if (isSerializedObject || (serializer != null && serializer.SerializerType == SerializerType.Binary))
                 {
-                    Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
-                    obj = serializer.Deserialize(Request.Body, typeof(object));
+                    if (isSerializedObject)
+                    {
+                        Core.Log.InfoBasic("SerializedObject found, deserializing...");
+                        obj = SerializedObject.FromStream(Request.Body);
+                    }
+                    else
+                    {
+                        Core.Log.InfoBasic("Serializer {0} found, deserializing...", serializer.ToString());
+                        obj = serializer.Deserialize(Request.Body, typeof(object));
+                    }
                     sessionData = HttpContext.Session.GetSessionData();
                     sessionData.FilePath = name;
                     sessionData.FileObject = obj;
@@ -339,7 +364,11 @@ namespace TWCore.Object.Api.Controllers
                     string.Equals(extension, ".html", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".htm", StringComparison.OrdinalIgnoreCase) ||
                     string.Equals(extension, ".js", StringComparison.OrdinalIgnoreCase) ||
-                    string.Equals(extension, ".log", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".ini", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".srt", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".css", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".ts", StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(extension, ".vue", StringComparison.OrdinalIgnoreCase) ||
                     serializer?.SerializerType == SerializerType.Text)
                 {
                     obj = await Request.Body.TextReadToEndAsync();

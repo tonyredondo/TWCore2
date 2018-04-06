@@ -39,18 +39,12 @@ namespace TWCore.Cache.Configuration
         protected override StorageBase CreateStorage(KeyValueCollection parameters)
         {
             var basePath = parameters["BasePath"];
-            var serializerMimeType = parameters["SerializerMimeType"];
-            var metaSerializerMimeType = parameters["MetaSerializerMimeType"] ?? "application/json";
-            var compressorEncodingType = parameters["CompressorEncodingType"];
+            var indexSerializerMimeType = parameters["IndexSerializerMimeType"] ?? "application/json";
             var numberOfSubFolder = parameters["NumberOfSubFolder"].ParseTo((byte)25);
             var transactionLogThreshold = parameters["TransactionLogThreshold"].ParseTo(250);
             var slowDownWriteThreshold = parameters["SlowDownWriteThreshold"].ParseTo(1000);
             var storageType = parameters["StorageType"].ParseTo(FileStorageType.Normal);
-
-            var metaSerializer = SerializerManager.GetByMimeType<ISerializer>(metaSerializerMimeType);
-            var serializer = SerializerManager.GetByMimeType(serializerMimeType);
-            if (compressorEncodingType.IsNotNullOrWhitespace())
-                serializer.Compressor = CompressorManager.GetByEncodingType(compressorEncodingType);
+            var indexSerializer = SerializerManager.GetByMimeType<ISerializer>(indexSerializerMimeType);
 
             SerializerManager.SupressFileExtensionWarning = true;
 
@@ -62,15 +56,13 @@ namespace TWCore.Cache.Configuration
                     Core.Log.LibDebug("\tNumberOfSubFolders: {0}", numberOfSubFolder);
                     Core.Log.LibDebug("\tTransactionLogThreshold: {0}", transactionLogThreshold);
                     Core.Log.LibDebug("\tSlowDownWriteThreshold: {0}", slowDownWriteThreshold);
-                    Core.Log.LibDebug("\tMetaSerializer: {0}", metaSerializer);
-                    Core.Log.LibDebug("\tSerializer: {0}", serializer);
+                    Core.Log.LibDebug("\tIndexSerializer: {0}", indexSerializer);
                     return new FileStorage(basePath)
                     {
 						NumberOfSubFolders = numberOfSubFolder,
                         TransactionLogThreshold = transactionLogThreshold,
                         SlowDownWriteThreshold = slowDownWriteThreshold,
-						MetaSerializer = (BinarySerializer)metaSerializer,
-						Serializer = (BinarySerializer)serializer
+						IndexSerializer = (BinarySerializer)indexSerializer
                     };
             }
             return null;

@@ -72,19 +72,25 @@ namespace TWCore.Cache.Configuration
             var maxItemDurationInMinutes = MaxItemDurationInMinutes.ParseTo(-1);
             var itemsExpirationDateOverwriteInMinutes = ItemsExpirationDateOverwriteInMinutes.ParseTo(-1);
             var itemsExpirationAbsoluteDateOverwrite = ItemsExpirationAbsoluteDateOverwrite.ParseTo<DateTime?>(null, "dd/MM/YYYY");
+
+            if (expirationCheckTimeInMinutes > 0)
+                stoMng.ExpirationCheckTimeInMinutes = expirationCheckTimeInMinutes;
+            if (maxItemDurationInMinutes > -1)
+                stoMng.MaximumItemDuration = TimeSpan.FromMinutes(maxItemDurationInMinutes);
+            if (itemsExpirationDateOverwriteInMinutes > 0)
+                stoMng.ItemsExpirationDateOverwrite = TimeSpan.FromMinutes(itemsExpirationDateOverwriteInMinutes);
+            if (itemsExpirationAbsoluteDateOverwrite.HasValue)
+                stoMng.ItemsExpirationAbsoluteDateOverwrite = itemsExpirationAbsoluteDateOverwrite;
+            
             if (Storages?.Any() != true) return stoMng;
             foreach(var stoconfig in Storages)
             {
                 var sto = stoconfig.CreateInstance<StorageBase>();
                 if (sto == null) continue;
-                if (expirationCheckTimeInMinutes > 0)
-                    sto.ExpirationCheckTimeInMinutes = expirationCheckTimeInMinutes;
-                if (maxItemDurationInMinutes > -1)
-                    sto.MaximumItemDuration = TimeSpan.FromMinutes(maxItemDurationInMinutes);
-                if (itemsExpirationDateOverwriteInMinutes > 0)
-                    sto.ItemsExpirationDateOverwrite = TimeSpan.FromMinutes(itemsExpirationDateOverwriteInMinutes);
-                if (itemsExpirationAbsoluteDateOverwrite.HasValue)
-                    sto.ItemsExpirationAbsoluteDateOverwrite = itemsExpirationAbsoluteDateOverwrite;
+                sto.ExpirationCheckTimeInMinutes = stoMng.ExpirationCheckTimeInMinutes;
+                sto.MaximumItemDuration = stoMng.MaximumItemDuration;
+                sto.ItemsExpirationDateOverwrite = stoMng.ItemsExpirationDateOverwrite;
+                sto.ItemsExpirationAbsoluteDateOverwrite = stoMng.ItemsExpirationAbsoluteDateOverwrite;
                 sto.Init();
                 stoMng.Push(sto);
             }

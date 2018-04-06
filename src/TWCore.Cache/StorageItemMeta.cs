@@ -188,6 +188,30 @@ namespace TWCore.Cache
             OnExpire = null;
         }
         #endregion
+        
+        #region Static Methods
+        /// <summary>
+        /// Creates a new StorageItemMeta instance
+        /// </summary>
+        /// <param name="key">Key</param>
+        /// <param name="expirationDate">Expiration date</param>
+        /// <param name="tags">Tags</param>
+        /// <returns>StorageItemMeta instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static StorageItemMeta Create(string key, DateTime? expirationDate, string[] tags = null)
+        {
+            if (string.IsNullOrEmpty(key)) return null;
+            var dateNow = Core.Now;
+            if (expirationDate < dateNow) return null;
+            return new StorageItemMeta
+            {
+                CreationDate = dateNow,
+                ExpirationDate = expirationDate,
+                Key = key,
+                Tags = tags?.Distinct().ToList()
+            };
+        }
+        #endregion
 
         #region Protected Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

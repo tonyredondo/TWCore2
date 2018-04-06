@@ -549,9 +549,25 @@ namespace TWCore.Cache
         public bool Set(StorageItem item)
         {
             if (!Ready || item == null) return false;
-            if (!OnSet(item.Meta, item.Data)) return false;
             item.Meta.OnExpire -= OnItemExpire;
+            if (!OnSet(item.Meta, item.Data)) return false;
             item.Meta.OnExpire += OnItemExpire;
+            return true;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="meta">Item Meta</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(StorageItemMeta meta, SerializedObject data)
+        {
+            if (!Ready || meta == null) return false;
+            meta.OnExpire -= OnItemExpire;
+            if (!OnSet(meta, data)) return false;
+            meta.OnExpire += OnItemExpire;
             return true;
         }
         /// <inheritdoc />
@@ -616,16 +632,11 @@ namespace TWCore.Cache
         {
             if (!Ready || string.IsNullOrEmpty(key)) return false;
             var dateNow = Core.Now;
-            if (expirationDate.HasValue && expirationDate.Value < dateNow) return false;
             var expDate = expirationDate;
             if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
-            {
                 expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
-            }
             else if (ItemsExpirationDateOverwrite.HasValue)
-            {
                 expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
-            }
             if (MaximumItemDuration.HasValue)
             {
                 if (expDate.HasValue)
@@ -639,13 +650,7 @@ namespace TWCore.Cache
 
             Core.Log.LibVerbose("{0}-Set: {1}, with expiration: {2}", _name, key, expDate.HasValue ? expDate.Value.ToString(CultureInfo.CurrentCulture) : "NO EXPIRE");
 
-            var sMeta = new StorageItemMeta
-            {
-                CreationDate = dateNow,
-                ExpirationDate = expDate,
-                Key = key,
-                Tags = tags?.Distinct().ToList()
-            };
+            var sMeta = StorageItemMeta.Create(key, expDate, tags);
             if (!OnSet(sMeta, data)) return false;
             sMeta.OnExpire += OnItemExpire;
             return true;

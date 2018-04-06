@@ -204,6 +204,14 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>
+        /// <param name="meta">Item Meta</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(StorageItemMeta meta, SerializedObject data) => InvokeArgs<StorageItemMeta, SerializedObject, bool>(meta, data);
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
         /// <param name="key">Item Key</param>
         /// <param name="data">Item Data</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>

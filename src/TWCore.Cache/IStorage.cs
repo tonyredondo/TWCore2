@@ -174,6 +174,13 @@ namespace TWCore.Cache
         /// <param name="item">StorageItem</param>
         /// <returns>true if the data could be save; otherwise, false.</returns>
         bool Set(StorageItem item);
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="meta">Item Meta</param>
+	    /// <param name="data">Item Data</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    bool Set(StorageItemMeta meta, SerializedObject data);
         /// <summary>
         /// Sets and create a new StorageItem with the given data
         /// </summary>

@@ -39,13 +39,31 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
 
+	    #region Properties
         /// <inheritdoc />
         /// <summary>
         /// Gets the Storage Type
         /// </summary>
         /// <value>The type.</value>
         public StorageType Type => StorageType.Unknown;
-
+	    /// <summary>
+	    /// Gets or sets the time in minutes to check if some items has expired.
+	    /// </summary>
+	    public int ExpirationCheckTimeInMinutes { get; set; }
+	    /// <summary>
+	    /// Maximum duration per storage item
+	    /// </summary>
+	    public TimeSpan? MaximumItemDuration { get; set; }
+	    /// <summary>
+	    /// Overwrites the expiration date setted by each item in DateTime.
+	    /// </summary>
+	    public DateTime? ItemsExpirationAbsoluteDateOverwrite { get; set; }
+	    /// <summary>
+	    /// Overwrites the expiration date setted by each item in TimeSpan.
+	    /// </summary>
+	    public TimeSpan? ItemsExpirationDateOverwrite { get; set; }
+	    #endregion
+	    
         #region .ctor
         /// <summary>
         /// Storage Manager
@@ -605,17 +623,45 @@ namespace TWCore.Cache
 
         #region Set Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
+        private void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    private void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data)
+		    => CreateSet(sto, key, data, null, null);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref string key, ref SerializedObject data) => sto.Set(key, data);
+        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan expirationDate) 
+	        => CreateSet(sto, key, data, Core.Now.Add(expirationDate), null);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan expirationDate) => sto.Set(key, data, expirationDate);
+        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) 
+	        => CreateSet(sto, key, data, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) => sto.Set(key, data, expirationDate, tags);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime expirationDate) => sto.Set(key, data, expirationDate);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) => sto.Set(key, data, expirationDate, tags);
+        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime expirationDate) 
+	        => CreateSet(sto, key, data, expirationDate, null);
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) 
+		    => CreateSet(sto, key, data, expirationDate, tags);
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    private void CreateSet(IStorage sto, string key, SerializedObject data, DateTime? expirationDate, string[] tags)
+	    {
+		    var dateNow = Core.Now;
+		    var expDate = expirationDate;
+		    if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
+			    expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
+		    else if (ItemsExpirationDateOverwrite.HasValue)
+			    expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
+		    if (MaximumItemDuration.HasValue)
+		    {
+			    if (expDate.HasValue)
+			    {
+				    var expTime = expDate.Value - dateNow;
+				    expDate = dateNow.Add(TimeSpan.FromMilliseconds(Math.Min(expTime.TotalMilliseconds, MaximumItemDuration.Value.TotalMilliseconds)));
+			    }
+			    else
+				    expDate = dateNow.Add(MaximumItemDuration.Value);
+		    }
+		    sto.Set(StorageItemMeta.Create(key, expDate, tags), data);
+	    }
 
         /// <inheritdoc />
         /// <summary>
@@ -626,6 +672,16 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public bool Set(StorageItem item)
 			=> ExecuteInAllStack(ref item, SetAction);
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="meta">Item Meta</param>
+	    /// <param name="data">Item Data</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(StorageItemMeta meta, SerializedObject data)
+		    => ExecuteInAllStack(ref meta, ref data, SetAction);
         /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data

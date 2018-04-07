@@ -754,45 +754,7 @@ namespace TWCore.Cache
         #region Set Multi-Key Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetMultiAction(ref IStorage sto, ref StorageItem[] items) => sto.SetMulti(items);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data) 
-	        => CreateMultiSet(sto, keys, data, null, null);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan expirationDate) 
-	        => CreateMultiSet(sto, keys, data, Core.Now.Add(expirationDate), null);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) 
-	        => CreateMultiSet(sto, keys, data, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime expirationDate) 
-	        => CreateMultiSet(sto, keys, data, expirationDate, null);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) 
-	        => CreateMultiSet(sto, keys, data, expirationDate, tags);
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private void CreateMultiSet(IStorage sto, string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
-	    {
-		    if (keys == null) return;
-		    var dateNow = Core.Now;
-		    var expDate = expirationDate;
-		    if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
-			    expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
-		    else if (ItemsExpirationDateOverwrite.HasValue)
-			    expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
-		    if (MaximumItemDuration.HasValue)
-		    {
-			    if (expDate.HasValue)
-			    {
-				    var expTime = expDate.Value - dateNow;
-				    expDate = dateNow.Add(TimeSpan.FromMilliseconds(Math.Min(expTime.TotalMilliseconds, MaximumItemDuration.Value.TotalMilliseconds)));
-			    }
-			    else
-				    expDate = dateNow.Add(MaximumItemDuration.Value);
-		    }
-		    foreach (var key in keys)
-			    sto.Set(StorageItemMeta.Create(key, expDate, tags), data);
-	    }
-	    
+
         /// <inheritdoc />
         /// <summary>
         /// Sets a new StorageItem with the given data
@@ -811,53 +773,86 @@ namespace TWCore.Cache
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(string[] keys, SerializedObject data)
-            => ExecuteInAllStack(ref keys, ref data, SetMultiAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="keys">Items Keys</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
-            => ExecuteInAllStack(ref keys, ref data, ref expirationDate, SetMultiAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="keys">Items Keys</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
-            => ExecuteInAllStack(ref keys, ref data, ref expirationDate, ref tags, SetMultiAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="keys">Items Keys</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
-            => ExecuteInAllStack(ref keys, ref data, ref expirationDate, SetMultiAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="keys">Items Keys</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
-            => ExecuteInAllStack(ref keys, ref data, ref expirationDate, ref tags, SetMultiAction);
+        {
+	        if (keys == null) return false;
+	        var res = true;
+	        foreach (var key in keys)
+		        res &= Set(key, data);
+	        return res;
+        }
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="keys">Items Keys</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan expirationDate)
+	    {
+		    if (keys == null) return false;
+		    var res = true;
+		    foreach (var key in keys)
+			    res &= Set(key, data, expirationDate);
+		    return res;
+	    }
+
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="keys">Items Keys</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <param name="tags">Items meta tags</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool SetMulti(string[] keys, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+	    {
+		    if (keys == null) return false;
+		    var res = true;
+		    foreach (var key in keys)
+			    res &= Set(key, data, expirationDate, tags);
+		    return res;
+	    }
+
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="keys">Items Keys</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool SetMulti(string[] keys, SerializedObject data, DateTime expirationDate)
+	    {
+		    if (keys == null) return false;
+		    var res = true;
+		    foreach (var key in keys)
+			    res &= Set(key, data, expirationDate);
+		    return res;
+	    }
+
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="keys">Items Keys</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <param name="tags">Items meta tags</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool SetMulti(string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+	    {
+		    if (keys == null) return false;
+		    var res = true;
+		    foreach (var key in keys)
+			    res &= Set(key, data, expirationDate, tags);
+		    return res;
+	    }
         #endregion
 
         #region Update/Remove Data/Copy

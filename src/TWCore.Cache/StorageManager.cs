@@ -742,18 +742,46 @@ namespace TWCore.Cache
 
         #region Set Multi-Key Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref StorageItem[] items) => sto.SetMulti(items);
+        private void SetMultiAction(ref IStorage sto, ref StorageItem[] items) => sto.SetMulti(items);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data) => sto.SetMulti(keys, data);
+        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data) 
+	        => CreateMultiSet(sto, keys, data, null, null);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan expirationDate) => sto.SetMulti(keys, data, expirationDate);
+        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan expirationDate) 
+	        => CreateMultiSet(sto, keys, data, Core.Now.Add(expirationDate), null);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) => sto.SetMulti(keys, data, expirationDate, tags);
+        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) 
+	        => CreateMultiSet(sto, keys, data, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime expirationDate) => sto.SetMulti(keys, data, expirationDate);
+        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime expirationDate) 
+	        => CreateMultiSet(sto, keys, data, expirationDate, null);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) => sto.SetMulti(keys, data, expirationDate, tags);
-
+        private void SetMultiAction(ref IStorage sto, ref string[] keys, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) 
+	        => CreateMultiSet(sto, keys, data, expirationDate, tags);
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    private void CreateMultiSet(IStorage sto, string[] keys, SerializedObject data, DateTime? expirationDate, string[] tags)
+	    {
+		    if (keys == null) return;
+		    var dateNow = Core.Now;
+		    var expDate = expirationDate;
+		    if (ItemsExpirationAbsoluteDateOverwrite.HasValue)
+			    expDate = ItemsExpirationAbsoluteDateOverwrite.Value;
+		    else if (ItemsExpirationDateOverwrite.HasValue)
+			    expDate = dateNow.Add(ItemsExpirationDateOverwrite.Value);
+		    if (MaximumItemDuration.HasValue)
+		    {
+			    if (expDate.HasValue)
+			    {
+				    var expTime = expDate.Value - dateNow;
+				    expDate = dateNow.Add(TimeSpan.FromMilliseconds(Math.Min(expTime.TotalMilliseconds, MaximumItemDuration.Value.TotalMilliseconds)));
+			    }
+			    else
+				    expDate = dateNow.Add(MaximumItemDuration.Value);
+		    }
+		    foreach (var key in keys)
+			    sto.Set(StorageItemMeta.Create(key, expDate, tags), data);
+	    }
+	    
         /// <inheritdoc />
         /// <summary>
         /// Sets a new StorageItem with the given data

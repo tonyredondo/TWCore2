@@ -645,7 +645,16 @@ namespace TWCore.Cache
 			    else
 				    expDate = dateNow.Add(MaximumItemDuration.Value);
 		    }
-		    return StorageItemMeta.Create(key, expDate, tags);
+		    var meta = GetMeta(key);
+		    if (meta != null)
+		    {
+			    meta.CreationDate = dateNow;
+			    meta.ExpirationDate = expDate;
+			    meta.Tags = tags?.Distinct().ToList();
+		    }
+		    else
+		    	meta = StorageItemMeta.Create(key, expDate, tags);
+		    return meta;
 	    }
 
 	    /// <inheritdoc />

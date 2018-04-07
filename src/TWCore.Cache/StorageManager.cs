@@ -623,9 +623,9 @@ namespace TWCore.Cache
 
         #region Set Data
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
+        private static void SetAction(ref IStorage sto, ref StorageItem item) => sto.Set(item);
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
+	    private static void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    private StorageItemMeta CreateStorageItemMeta(string key, DateTime? expirationDate, string[] tags)
 	    {

@@ -648,7 +648,7 @@ namespace TWCore.Cache.Storages.IO
                     return false;
                 }
                 _pendingItems.AddOrUpdate(meta.Key, value, (k, v) => value);
-                if (_metas.TryRemove(meta.Key, out var oldMeta))
+                if (_metas.TryRemove(meta.Key, out var oldMeta) && oldMeta!= meta)
                     oldMeta.Dispose();
                 if (meta.IsExpired) return false;
                 if (!_metas.TryAdd(meta.Key, meta)) return false;

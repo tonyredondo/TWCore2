@@ -627,22 +627,7 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    private void SetAction(ref IStorage sto, ref StorageItemMeta meta, ref SerializedObject data) => sto.Set(meta, data);
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data)
-		    => CreateSet(sto, key, data, null, null);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan expirationDate) 
-	        => CreateSet(sto, key, data, Core.Now.Add(expirationDate), null);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref TimeSpan? expirationDate, ref string[] tags) 
-	        => CreateSet(sto, key, data, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime expirationDate) 
-	        => CreateSet(sto, key, data, expirationDate, null);
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private void SetAction(ref IStorage sto, ref string key, ref SerializedObject data, ref DateTime? expirationDate, ref string[] tags) 
-		    => CreateSet(sto, key, data, expirationDate, tags);
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    private void CreateSet(IStorage sto, string key, SerializedObject data, DateTime? expirationDate, string[] tags)
+	    private StorageItemMeta CreateStorageItemMeta(string key, DateTime? expirationDate, string[] tags)
 	    {
 		    var dateNow = Core.Now;
 		    var expDate = expirationDate;
@@ -660,18 +645,18 @@ namespace TWCore.Cache
 			    else
 				    expDate = dateNow.Add(MaximumItemDuration.Value);
 		    }
-		    sto.Set(StorageItemMeta.Create(key, expDate, tags), data);
+		    return StorageItemMeta.Create(key, expDate, tags);
 	    }
 
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets a new StorageItem with the given data
-        /// </summary>
-        /// <param name="item">Item</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public bool Set(StorageItem item)
-			=> ExecuteInAllStack(ref item, SetAction);
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="item">Item</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(StorageItem item)
+	    	=> ExecuteInAllStack(ref item, SetAction);
 	    /// <inheritdoc />
 	    /// <summary>
 	    /// Sets and create a new StorageItem with the given data
@@ -682,62 +667,79 @@ namespace TWCore.Cache
 	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool Set(StorageItemMeta meta, SerializedObject data)
 		    => ExecuteInAllStack(ref meta, ref data, SetAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Set(string key, SerializedObject data)
-            => ExecuteInAllStack(ref key, ref data, SetAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
-            => ExecuteInAllStack(ref key, ref data, ref expirationDate, SetAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
-            => ExecuteInAllStack(ref key, ref data, ref expirationDate, ref tags, SetAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Set(string key, SerializedObject data, DateTime expirationDate)
-			=> ExecuteInAllStack(ref key, ref data, ref expirationDate, SetAction);
-        /// <inheritdoc />
-        /// <summary>
-        /// Sets and create a new StorageItem with the given data
-        /// </summary>
-        /// <param name="key">Item Key</param>
-        /// <param name="data">Item Data</param>
-        /// <param name="expirationDate">Item expiration date</param>
-        /// <param name="tags">Items meta tags</param>
-        /// <returns>true if the data could be save; otherwise, false.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
-			=> ExecuteInAllStack(ref key, ref data, ref expirationDate, ref tags, SetAction);
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="key">Item Key</param>
+	    /// <param name="data">Item Data</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(string key, SerializedObject data)
+	    {
+		    var meta = CreateStorageItemMeta(key, null, null);
+		    return ExecuteInAllStack(ref meta, ref data, SetAction);
+	    }
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="key">Item Key</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
+	    {
+		    var meta = CreateStorageItemMeta(key, Core.Now.Add(expirationDate), null);
+		    return ExecuteInAllStack(ref meta, ref data, SetAction);
+	    }
+
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="key">Item Key</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <param name="tags">Items meta tags</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
+	    {
+		    var meta = CreateStorageItemMeta(key, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
+		    return ExecuteInAllStack(ref meta, ref data, SetAction);
+	    }
+
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="key">Item Key</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(string key, SerializedObject data, DateTime expirationDate)
+	    {
+		    var meta = CreateStorageItemMeta(key, expirationDate, null);
+		    return ExecuteInAllStack(ref meta, ref data, SetAction);
+	    }
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Sets and create a new StorageItem with the given data
+	    /// </summary>
+	    /// <param name="key">Item Key</param>
+	    /// <param name="data">Item Data</param>
+	    /// <param name="expirationDate">Item expiration date</param>
+	    /// <param name="tags">Items meta tags</param>
+	    /// <returns>true if the data could be save; otherwise, false.</returns>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
+	    {
+		    var meta = CreateStorageItemMeta(key, expirationDate, tags);
+		    return ExecuteInAllStack(ref meta, ref data, SetAction);
+	    }
         #endregion
 
         #region Set Multi-Key Data

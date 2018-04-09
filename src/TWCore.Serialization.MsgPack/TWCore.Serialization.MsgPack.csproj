@@ -28,7 +28,7 @@ A multipurpose framework library for .net core</Description>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MsgPack.Light" Version="1.5.0" />
+    <PackageReference Include="MessagePack" Version="1.7.3.4" />
   </ItemGroup>
 
   <ItemGroup>

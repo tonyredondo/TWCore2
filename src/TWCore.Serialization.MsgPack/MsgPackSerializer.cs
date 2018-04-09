@@ -19,7 +19,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using MP = ProGaudi.MsgPack.Light;
+using MessagePack;
+using NonBlocking;
 
 namespace TWCore.Serialization.MsgPack
 {
@@ -31,8 +32,10 @@ namespace TWCore.Serialization.MsgPack
     {
         private static readonly string[] SExtensions = { ".msgpack" };
         private static readonly string[] SMimeTypes = { "application/msgpack", "application/x-msgpack" };
-        private static readonly MethodInfo DeserializeMethod;
-        private static readonly MethodInfo SerializeMethod;
+        private static MethodInfo SerializeMethod;
+        private static MethodInfo DeserializeMethod;
+        private static ConcurrentDictionary<Type, MethodInfo> SerializeMethods = new ConcurrentDictionary<Type, MethodInfo>();
+        private static ConcurrentDictionary<Type, MethodInfo> DeserializeMethods = new ConcurrentDictionary<Type, MethodInfo>();
 
         #region Properties
         /// <inheritdoc />
@@ -49,9 +52,18 @@ namespace TWCore.Serialization.MsgPack
 
         static MsgPackSerializer()
         {
-            var methods = typeof(MP.MsgPackSerializer).GetMethods();
-            DeserializeMethod = methods.First(m => m.Name == "Deserialize" && m.GetParameters().Length == 1);
-            SerializeMethod = methods.First(m => m.Name == "Serialize" && m.GetParameters().Length == 1);
+            SerializeMethod = typeof(MessagePackSerializer).GetMethods().FirstOf(method =>
+            {
+                if (method.Name != "Serialize") return false;
+                if (method.GetParameters().Length != 3) return false;
+                return true;
+            });
+            DeserializeMethod = typeof(MessagePackSerializer).GetMethods().FirstOf(method =>
+            {
+                if (method.Name != "Deserialize") return false;
+                if (method.GetParameters().Length != 3) return false;
+                return true;
+            });
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -63,7 +75,8 @@ namespace TWCore.Serialization.MsgPack
                 ms.Position = 0;
                 try
                 {
-                    return DeserializeMethod.MakeGenericMethod(itemType).Invoke(null, new object[] { ms });
+                    var deserialize = DeserializeMethods.GetOrAdd(itemType, type => DeserializeMethod.MakeGenericMethod(type));
+                    return deserialize.Invoke(null, new object[] { stream, MessagePack.Resolvers.ContractlessStandardResolver.Instance, false });
                 }
                 catch(TargetInvocationException tie)
                 {
@@ -76,8 +89,8 @@ namespace TWCore.Serialization.MsgPack
         {
             try
             {
-                var data = (byte[])SerializeMethod.MakeGenericMethod(itemType).Invoke(null, new[] { item });
-                stream.WriteBytes(data);
+                var serialize = SerializeMethods.GetOrAdd(itemType, type => SerializeMethod.MakeGenericMethod(type));
+                serialize.Invoke(null, new object[] { stream, item, MessagePack.Resolvers.ContractlessStandardResolver.Instance });
             }
             catch (TargetInvocationException tie)
             {

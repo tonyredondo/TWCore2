@@ -74,6 +74,7 @@ namespace TWCore.Tests
             
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", collection[0].SerializeToJsonBytes().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", collection[0].SerializeToMsgPack().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
@@ -102,7 +103,31 @@ namespace TWCore.Tests
                 }
             }
 
-            
+
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (Watch.Create("MESSAGEPACK SERIALIZER"))
+            {
+                for (var i = 0; i < 100000; i++)
+                {
+                    collection[i % 10000].SerializeToMsgPack(memStream);
+                    memStream.Position = 0;
+                }
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (Watch.Create("MESSAGEPACK DESERIALIZER"))
+            {
+                for (var i = 0; i < 100000; i++)
+                {
+                    memStream.DeserializeFromMsgPack<List<STest>>();
+                    memStream.Position = 0;
+                }
+            }
+
+
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(1000);

@@ -75,8 +75,9 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", collection[0].SerializeToJsonBytes().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", collection[0].SerializeToMsgPack().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tPWBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
             
             Core.Log.InfoBasic("By time (100000 times):");
             GC.Collect();
@@ -154,7 +155,7 @@ namespace TWCore.Tests
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(1000);
-            using (Watch.Create("PWBinary SERIALIZER"))
+            using (Watch.Create("Portable WBinary SERIALIZER"))
             {
                 for (var i = 0; i < 100000; i++)
                 {
@@ -165,7 +166,7 @@ namespace TWCore.Tests
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZER"))
+            using (Watch.Create("Portable WBinary DESERIALIZER"))
             {
                 for (var i = 0; i < 100000; i++)
                 {
@@ -176,7 +177,7 @@ namespace TWCore.Tests
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(1000);
-            using (Watch.Create("PWBinary DESERIALIZER WITH NO MODEL"))
+            using (Watch.Create("Portable WBinary DESERIALIZER (WITH NO MODEL)"))
             {
                 for (var i = 0; i < 100000; i++)
                 {

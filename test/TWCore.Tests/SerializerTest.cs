@@ -75,7 +75,6 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", collection[0].SerializeToJsonBytes().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", collection[0].SerializeToMsgPack().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
             

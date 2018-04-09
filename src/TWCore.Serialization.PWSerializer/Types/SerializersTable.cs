@@ -144,4 +144,46 @@ namespace TWCore.Serialization.PWSerializer.Types
             return tSer;
         }
     }
+
+    public class SerializersBag
+    {
+        public readonly NumberSerializer Number = new NumberSerializer();
+        public readonly StringSerializer String = new StringSerializer();
+        public readonly GuidSerializer Guid = new GuidSerializer();
+        public readonly DateTimeSerializer DateTime = new DateTimeSerializer();
+        public readonly TimeSpanSerializer TimeSpan = new TimeSpanSerializer();
+        public readonly ByteArraySerializer ByteArray = new ByteArraySerializer();
+        public readonly EnumSerializer Enum = new EnumSerializer();
+        public readonly BoolSerializer Bool = new BoolSerializer();
+        public readonly CharSerializer Char = new CharSerializer();
+        public readonly SerializedObjectSerializer SerializedObject = new SerializedObjectSerializer();
+
+        public SerializersBag()
+        {
+            Number.Init();
+            String.Init();
+            Guid.Init();
+            DateTime.Init();
+            TimeSpan.Init();
+            ByteArray.Init();
+            Enum.Init();
+            Bool.Init();
+            Char.Init();
+            SerializedObject.Init();
+        }
+
+        public void Clear()
+        {
+            Number.Clear();
+            String.Clear();
+            Guid.Clear();
+            DateTime.Clear();
+            TimeSpan.Clear();
+            ByteArray.Clear();
+            Enum.Clear();
+            Bool.Clear();
+            Char.Clear();
+            SerializedObject.Clear();
+        }
+    }
 }

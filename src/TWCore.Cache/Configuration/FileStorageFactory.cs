@@ -39,7 +39,7 @@ namespace TWCore.Cache.Configuration
         protected override StorageBase CreateStorage(KeyValueCollection parameters)
         {
             var basePath = parameters["BasePath"];
-            var indexSerializerMimeType = parameters["IndexSerializerMimeType"] ?? "application/json";
+            var indexSerializerMimeType = parameters["IndexSerializerMimeType"] ?? SerializerMimeTypes.WBinary;
             var numberOfSubFolder = parameters["NumberOfSubFolder"].ParseTo((byte)25);
             var transactionLogThreshold = parameters["TransactionLogThreshold"].ParseTo(250);
             var slowDownWriteThreshold = parameters["SlowDownWriteThreshold"].ParseTo(1000);

@@ -478,7 +478,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefDecimalUShort:
                     return _decimalCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double? ReadDoubleNullable(BinaryReader reader)
@@ -541,7 +541,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefDoubleUShort:
                     return _doubleCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float? ReadFloatNullable(BinaryReader reader)
@@ -604,7 +604,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefFloatUShort:
                     return _floatCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long? ReadLongNullable(BinaryReader reader)
@@ -665,7 +665,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefLongUShort:
                     return _longCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong? ReadUlongNullable(BinaryReader reader)
@@ -726,7 +726,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefULongUShort:
                     return _uLongCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int? ReadIntNullable(BinaryReader reader)
@@ -787,7 +787,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefIntUShort:
                     return _intCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint? ReadUintNullable(BinaryReader reader)
@@ -848,7 +848,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefUIntUShort:
                     return _uIntCache.DeserializerGet(reader.ReadUInt16());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short? ReadShortNullable(BinaryReader reader)
@@ -907,7 +907,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefShortByte:
                     return _shortCache.DeserializerGet(reader.ReadByte());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort? ReadUshortNullable(BinaryReader reader)
@@ -966,7 +966,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.RefUShortByte:
                     return _uShortCache.DeserializerGet(reader.ReadByte());
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte? ReadByteNullable(BinaryReader reader)
@@ -1021,7 +1021,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.Byte:
                     return reader.ReadByte();
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sbyte? ReadSbyteNullable(BinaryReader reader)
@@ -1078,7 +1078,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.SByteMinusOne:
                     return -1;
             }
-            return null;
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

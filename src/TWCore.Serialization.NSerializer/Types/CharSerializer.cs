@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -49,14 +50,20 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char Read(BinaryReader reader)
-            => reader.ReadChar();
+            => ReadNullable(reader) ?? default;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char? ReadNullable(BinaryReader reader)
         {
-            var boolValue = reader.ReadByte();
-            if (boolValue == DataBytesDefinition.ValueNull) return null;
-            return reader.ReadChar();
+            var value = reader.ReadByte();
+            switch(value)
+            {
+                case DataBytesDefinition.ValueNull:
+                    return null;
+                case DataBytesDefinition.Char:
+                    return reader.ReadChar();
+            }
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

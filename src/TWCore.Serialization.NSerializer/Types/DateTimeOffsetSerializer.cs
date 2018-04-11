@@ -20,74 +20,75 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class DateTimeSerializer : ITypeSerializer
+    public class DateTimeOffsetSerializer : ITypeSerializer
     {
-        private SerializerCache<DateTime> _cache;
+        private SerializerCache<DateTimeOffset> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
-            => _cache = new SerializerCache<DateTime>();
+            => _cache = new SerializerCache<DateTimeOffset>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime value)
+        public void Write(BinaryWriter writer, DateTimeOffset value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.DateTimeDefault);
+                writer.Write(DataBytesDefinition.DateTimeOffsetDefault);
                 return;
             }
             var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
+                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
+                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
             }
             else
             {
-                var longBinary = value.ToBinary();
-                WriteHelper.WriteLong(writer, DataBytesDefinition.DateTime, longBinary);
+                var longBinary = value.ToFileTime();
+                WriteHelper.WriteLong(writer, DataBytesDefinition.DateTimeOffset, longBinary);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime? value)
+        public void Write(BinaryWriter writer, DateTimeOffset? value)
         {
             if (value == null) writer.Write(DataBytesDefinition.ValueNull);
             else Write(writer, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime Read(BinaryReader reader)
+        public DateTimeOffset Read(BinaryReader reader)
             => ReadNullable(reader) ?? default;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadNullable(BinaryReader reader)
+        public DateTimeOffset? ReadNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
-                case DataBytesDefinition.DateTimeDefault:
+                case DataBytesDefinition.DateTimeOffsetDefault:
                     return default(DateTime);
-                case DataBytesDefinition.RefDateTimeByte:
+                case DataBytesDefinition.RefDateTimeOffsetByte:
                     return _cache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefDateTimeUShort:
+                case DataBytesDefinition.RefDateTimeOffsetUShort:
                     return _cache.DeserializerGet(reader.ReadUInt16());
-                case DataBytesDefinition.DateTime:
+                case DataBytesDefinition.DateTimeOffset:
                     var longBinary = reader.ReadInt64();
-                    var cValue = DateTime.FromBinary(longBinary);
+                    var cValue = DateTimeOffset.FromFileTime(longBinary);
                     _cache.DeserializerSet(cValue);
                     return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");
         }
     }
+
 }

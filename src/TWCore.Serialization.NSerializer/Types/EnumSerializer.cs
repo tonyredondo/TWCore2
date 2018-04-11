@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -116,76 +117,54 @@ namespace TWCore.Serialization.NSerializer.Types
         public int? ReadNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
-            var intValue = 0;
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
                 case DataBytesDefinition.EnumSByteMinusOne:
-                    intValue = -1;
-                    break;
+                    return -1;
                 case DataBytesDefinition.EnumByteDefault:
-                    intValue = default;
-                    break;
+                    return default;
                 case DataBytesDefinition.EnumByte1:
-                    intValue = 1;
-                    break;
+                    return 1;
                 case DataBytesDefinition.EnumByte2:
-                    intValue = 2;
-                    break;
+                    return 2;
                 case DataBytesDefinition.EnumByte3:
-                    intValue = 3;
-                    break;
+                    return 3;
                 case DataBytesDefinition.EnumByte4:
-                    intValue = 4;
-                    break;
+                    return 4;
                 case DataBytesDefinition.EnumByte5:
-                    intValue = 5;
-                    break;
+                    return 5;
                 case DataBytesDefinition.EnumByte6:
-                    intValue = 6;
-                    break;
+                    return 6;
                 case DataBytesDefinition.EnumByte7:
-                    intValue = 7;
-                    break;
+                    return 7;
                 case DataBytesDefinition.EnumByte8:
-                    intValue = 8;
-                    break;
+                    return 8;
                 case DataBytesDefinition.EnumByte9:
-                    intValue = 9;
-                    break;
+                    return 9;
                 case DataBytesDefinition.EnumByte10:
-                    intValue = 10;
-                    break;
+                    return 10;
                 case DataBytesDefinition.EnumByte11:
-                    intValue = 11;
-                    break;
+                    return 11;
                 case DataBytesDefinition.EnumByte12:
-                    intValue = 12;
-                    break;
+                    return 12;
                 case DataBytesDefinition.EnumByte13:
-                    intValue = 13;
-                    break;
+                    return 13;
                 case DataBytesDefinition.EnumByte14:
-                    intValue = 14;
-                    break;
+                    return 14;
                 case DataBytesDefinition.EnumByte15:
-                    intValue = 15;
-                    break;
+                    return 15;
                 case DataBytesDefinition.EnumByte16:
-                    intValue = 16;
-                    break;
+                    return 16;
                 case DataBytesDefinition.EnumByte:
-                    intValue = reader.ReadByte();
-                    break;
+                    return reader.ReadByte();
                 case DataBytesDefinition.EnumUShort:
-                    intValue = reader.ReadUInt16();
-                    break;
+                    return reader.ReadUInt16();
                 case DataBytesDefinition.EnumInt:
-                    intValue = reader.ReadInt32();
-                    break;
+                    return reader.ReadInt32();
             }
-            return intValue;
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

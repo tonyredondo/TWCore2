@@ -20,45 +20,40 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public struct BooleanSerializer : ITypeSerializer
+    public struct SerializedObjectSerializer : ITypeSerializer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, bool value)
-            => writer.Write(value? DataBytesDefinition.BoolTrue : DataBytesDefinition.BoolFalse);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, bool? value)
+        public void Write(BinaryWriter writer, SerializedObject value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null)
+                writer.Write(DataBytesDefinition.SerializedObjectNull);
+            else
+            {
+                writer.Write(DataBytesDefinition.SerializedObject);
+                value.WriteTo(writer);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Read(BinaryReader reader)
-            => ReadNullable(reader) ?? default;
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool? ReadNullable(BinaryReader reader)
+        public SerializedObject Read(BinaryReader reader)
         {
-            var value = reader.ReadByte();
-            switch(value)
+            var type = reader.ReadByte();
+            switch(type)
             {
-                case DataBytesDefinition.ValueNull:
+                case DataBytesDefinition.SerializedObjectNull:
                     return null;
-                case DataBytesDefinition.BoolTrue:
-                    return true;
-                case DataBytesDefinition.BoolFalse:
-                    return false;
+                case DataBytesDefinition.SerializedObject:
+                    return SerializedObject.FromStream(reader);
             }
             throw new InvalidOperationException("Invalid type value.");
         }

@@ -72,7 +72,6 @@ namespace TWCore.Serialization.NSerializer.Types
         public Guid? ReadNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
-            var objIdx = -1;
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
@@ -80,20 +79,16 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.GuidDefault:
                     return default(Guid);
                 case DataBytesDefinition.RefGuidByte:
-                    objIdx = reader.ReadByte();
-                    break;
+                    return _cache.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefGuidUShort:
-                    objIdx = reader.ReadUInt16();
-                    break;
+                    return _cache.DeserializerGet(reader.ReadUInt16());
+                case DataBytesDefinition.Guid:
+                    var bytes = reader.ReadBytes(16);
+                    var guidValue = new Guid(bytes);
+                    _cache.DeserializerSet(guidValue);
+                    return guidValue;
             }
-
-            if (objIdx > -1)
-                return _cache.DeserializerGet(objIdx);
-
-            var bytes = reader.ReadBytes(16);
-            var guidValue = new Guid(bytes);
-            _cache.DeserializerSet(guidValue);
-            return guidValue;
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

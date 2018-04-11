@@ -126,37 +126,40 @@ namespace TWCore.Serialization.NSerializer
 		public const byte   DateTimeDefault 			= 106;
 		public const byte   RefDateTimeByte				= 107;
 		public const byte   RefDateTimeUShort			= 108;
-		public const byte   TimeSpan					= 109;
-		public const byte   TimeSpanDefault    			= 110;
-		public const byte   RefTimeSpanByte				= 111;
-		public const byte   RefTimeSpanUShort			= 112;
-   		public const byte   EnumSByteMinusOne			= 113;
-   		public const byte   EnumByte 					= 114;
-   		public const byte   EnumByteDefault				= 115;
-   		public const byte   EnumByte1   				= 116;
-   		public const byte   EnumByte2   				= 117;
-   		public const byte   EnumByte3   				= 118;
-   		public const byte   EnumByte4   				= 119;
-   		public const byte   EnumByte5   				= 120;
-   		public const byte   EnumByte6   				= 121;
-   		public const byte   EnumByte7   				= 122;
-   		public const byte   EnumByte8   				= 123;
-   		public const byte   EnumByte9   				= 124;
-   		public const byte   EnumByte10   				= 125;
-   		public const byte   EnumByte11   				= 126;
-   		public const byte   EnumByte12   				= 127;
-   		public const byte   EnumByte13   				= 128;
-   		public const byte   EnumByte14   				= 129;
-   		public const byte   EnumByte15   				= 130;
-   		public const byte   EnumByte16   				= 131;
-        public const byte   EnumUShort					= 132;
-		public const byte   EnumInt						= 133;
-        public const byte   ByteArrayNull               = 134;
-        public const byte   ByteArrayEmpty              = 135;
-        public const byte   ByteArrayLengthByte         = 136;
-        public const byte   ByteArrayLengthUShort       = 137;
-        public const byte   ByteArrayLengthInt          = 138;
-
+        public const byte   DateTimeOffset				= 109;
+		public const byte   DateTimeOffsetDefault 		= 110;
+		public const byte   RefDateTimeOffsetByte		= 111;
+		public const byte   RefDateTimeOffsetUShort		= 112;
+		public const byte   TimeSpan					= 113;
+		public const byte   TimeSpanDefault    			= 114;
+		public const byte   RefTimeSpanByte				= 115;
+		public const byte   RefTimeSpanUShort			= 116;
+   		public const byte   EnumSByteMinusOne			= 117;
+   		public const byte   EnumByte 					= 118;
+   		public const byte   EnumByteDefault				= 119;
+   		public const byte   EnumByte1   				= 120;
+   		public const byte   EnumByte2   				= 121;
+   		public const byte   EnumByte3   				= 122;
+   		public const byte   EnumByte4   				= 123;
+   		public const byte   EnumByte5   				= 124;
+   		public const byte   EnumByte6   				= 125;
+   		public const byte   EnumByte7   				= 126;
+   		public const byte   EnumByte8   				= 127;
+   		public const byte   EnumByte9   				= 128;
+   		public const byte   EnumByte10   				= 129;
+   		public const byte   EnumByte11   				= 130;
+   		public const byte   EnumByte12   				= 131;
+   		public const byte   EnumByte13   				= 132;
+   		public const byte   EnumByte14   				= 133;
+   		public const byte   EnumByte15   				= 134;
+   		public const byte   EnumByte16   				= 135;
+        public const byte   EnumUShort					= 136;
+		public const byte   EnumInt						= 137;
+        public const byte   ByteArrayNull               = 138;
+        public const byte   ByteArrayEmpty              = 139;
+        public const byte   ByteArrayLengthByte         = 140;
+        public const byte   ByteArrayLengthUShort       = 141;
+        public const byte   ByteArrayLengthInt          = 142;
 		public const byte   StringNull 					= 143;
         public const byte   StringEmpty                 = 144;
 		public const byte   StringLengthByte 			= 145;
@@ -183,25 +186,6 @@ namespace TWCore.Serialization.NSerializer
         public const byte   StringLengthUShort 			= 166;
 		public const byte   StringLengthInt 			= 167;
 
-		public const byte   RefString32Byte				= 168;
-		public const byte   RefString32Byte0			= 169;
-		public const byte   RefString32Byte1			= 170;
-		public const byte   RefString32Byte2			= 171;
-		public const byte   RefString32Byte3			= 172;
-		public const byte   RefString32Byte4			= 173;
-		public const byte   RefString32Byte5			= 174;
-		public const byte   RefString32Byte6			= 175;
-		public const byte   RefString32Byte7			= 176;
-		public const byte   RefString32Byte8			= 177;
-		public const byte   RefString32Byte9			= 178;
-		public const byte   RefString32Byte10			= 179;
-		public const byte   RefString32Byte11			= 180;
-		public const byte   RefString32Byte12			= 181;
-		public const byte   RefString32Byte13			= 182;
-		public const byte   RefString32Byte14			= 183;
-		public const byte   RefString32Byte15			= 184;
-		public const byte   RefString32UShort			= 185;
-
 		public const byte   RefString16Byte				= 186;
 		public const byte   RefString16Byte0			= 187;
 		public const byte   RefString16Byte1			= 188;
@@ -220,25 +204,6 @@ namespace TWCore.Serialization.NSerializer
 		public const byte   RefString16Byte14			= 201;
 		public const byte   RefString16Byte15			= 202;
 		public const byte   RefString16UShort			= 203;
-        
-		public const byte   RefString8Byte				= 204;
-		public const byte   RefString8Byte0			    = 205;
-		public const byte   RefString8Byte1			    = 206;
-		public const byte   RefString8Byte2			    = 207;
-		public const byte   RefString8Byte3			    = 208;
-		public const byte   RefString8Byte4			    = 209;
-		public const byte   RefString8Byte5			    = 210;
-		public const byte   RefString8Byte6			    = 211;
-		public const byte   RefString8Byte7			    = 212;
-		public const byte   RefString8Byte8			    = 213;
-		public const byte   RefString8Byte9			    = 214;
-		public const byte   RefString8Byte10			= 215;
-		public const byte   RefString8Byte11			= 216;
-		public const byte   RefString8Byte12			= 217;
-		public const byte   RefString8Byte13			= 218;
-		public const byte   RefString8Byte14			= 219;
-		public const byte   RefString8Byte15			= 220;
-		public const byte   RefString8UShort			= 221;
 
 		public const byte   RefStringByte				= 222;
 		public const byte   RefStringUShort	    		= 223;
@@ -267,7 +232,6 @@ namespace TWCore.Serialization.NSerializer
 		public const byte   RefObjectByte20				= 245;
         public const byte   RefObjectUShort				= 246;
 
-	    
         public const byte   FileStart                 = 255;
     }
 }

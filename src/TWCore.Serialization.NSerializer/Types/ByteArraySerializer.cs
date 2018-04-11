@@ -20,17 +20,17 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public struct ByteArraySerializer : ITypeSerializer
+    public class ByteArraySerializer : TypeSerializer
     {
         private static readonly byte[] EmptyBytes = new byte[0];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
         {
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
         {
         }
 
@@ -51,11 +51,11 @@ namespace TWCore.Serialization.NSerializer.Types
             #region Write Array
             var length = value.Length;
             if (length <= byte.MaxValue)
-                WriteHelper.WriteByte(writer, DataBytesDefinition.ByteArrayLengthByte, (byte)length);
+                WriteByte(writer, DataBytesDefinition.ByteArrayLengthByte, (byte)length);
             else if (length <= ushort.MaxValue)
-                WriteHelper.WriteUshort(writer, DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
+                WriteUshort(writer, DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
             else
-                WriteHelper.WriteInt(writer, DataBytesDefinition.ByteArrayLengthInt, length);
+                WriteInt(writer, DataBytesDefinition.ByteArrayLengthInt, length);
             writer.Write(value);
             #endregion
         }

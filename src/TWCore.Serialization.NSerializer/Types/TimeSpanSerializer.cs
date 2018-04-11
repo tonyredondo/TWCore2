@@ -20,16 +20,16 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class TimeSpanSerializer : ITypeSerializer
+    public class TimeSpanSerializer : TypeSerializer
     {
         private SerializerCache<TimeSpan> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
             => _cache = new SerializerCache<TimeSpan>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -45,14 +45,14 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.Ticks;
-                WriteHelper.WriteLong(writer, DataBytesDefinition.TimeSpan, longBinary);
+                WriteLong(writer, DataBytesDefinition.TimeSpan, longBinary);
                 _cache.SerializerSet(value);
             }
         }

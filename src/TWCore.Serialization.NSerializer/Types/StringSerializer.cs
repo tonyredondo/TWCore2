@@ -23,7 +23,7 @@ using System.Text;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class StringSerializer : ITypeSerializer
+    public class StringSerializer : TypeSerializer
     {
         private SerializerStringCache _cache8;
         private SerializerStringCache _cache16;
@@ -32,7 +32,7 @@ namespace TWCore.Serialization.NSerializer.Types
         private SerializerStringCache _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
         {
             _cache8 = new SerializerStringCache();
             _cache16 = new SerializerStringCache();
@@ -42,7 +42,7 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
         {
             _cache8.Clear();
             _cache16.Clear();
@@ -74,9 +74,9 @@ namespace TWCore.Serialization.NSerializer.Types
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteHelper.WriteByte(writer, DataBytesDefinition.RefString8Byte, (byte)objIdx);
+                            WriteByte(writer, DataBytesDefinition.RefString8Byte, (byte)objIdx);
                         else
-                            WriteHelper.WriteUshort(writer, DataBytesDefinition.RefString8UShort, (ushort)objIdx);
+                            WriteUshort(writer, DataBytesDefinition.RefString8UShort, (ushort)objIdx);
                         return;
                     }
                     _cache8.SerializerSet(value);
@@ -87,9 +87,9 @@ namespace TWCore.Serialization.NSerializer.Types
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteHelper.WriteByte(writer, DataBytesDefinition.RefString16Byte, (byte)objIdx);
+                            WriteByte(writer, DataBytesDefinition.RefString16Byte, (byte)objIdx);
                         else
-                            WriteHelper.WriteUshort(writer, DataBytesDefinition.RefString16UShort, (ushort)objIdx);
+                            WriteUshort(writer, DataBytesDefinition.RefString16UShort, (ushort)objIdx);
                         return;
                     }
                     _cache16.SerializerSet(value);
@@ -100,9 +100,9 @@ namespace TWCore.Serialization.NSerializer.Types
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteHelper.WriteByte(writer, DataBytesDefinition.RefString32Byte, (byte)objIdx);
+                            WriteByte(writer, DataBytesDefinition.RefString32Byte, (byte)objIdx);
                         else
-                            WriteHelper.WriteUshort(writer, DataBytesDefinition.RefString32UShort, (ushort)objIdx);
+                            WriteUshort(writer, DataBytesDefinition.RefString32UShort, (ushort)objIdx);
                         return;
                     }
                     _cache32.SerializerSet(value);
@@ -113,9 +113,9 @@ namespace TWCore.Serialization.NSerializer.Types
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteHelper.WriteByte(writer, DataBytesDefinition.RefString64Byte, (byte)objIdx);
+                            WriteByte(writer, DataBytesDefinition.RefString64Byte, (byte)objIdx);
                         else
-                            WriteHelper.WriteUshort(writer, DataBytesDefinition.RefString64UShort, (ushort)objIdx);
+                            WriteUshort(writer, DataBytesDefinition.RefString64UShort, (ushort)objIdx);
                         return;
                     }
                     _cache64.SerializerSet(value);
@@ -126,16 +126,16 @@ namespace TWCore.Serialization.NSerializer.Types
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteHelper.WriteByte(writer, DataBytesDefinition.RefStringByte, (byte)objIdx);
+                            WriteByte(writer, DataBytesDefinition.RefStringByte, (byte)objIdx);
                         else
-                            WriteHelper.WriteUshort(writer, DataBytesDefinition.RefStringUShort, (ushort)objIdx);
+                            WriteUshort(writer, DataBytesDefinition.RefStringUShort, (ushort)objIdx);
                         return;
                     }
                     _cache.SerializerSet(value);
                 }
             }
 
-            var length = Encoding.UTF8.GetByteCount(value);
+            var length = Encoding.Unicode.GetByteCount(value);
             int bytesLength;
             byte[] bytes;
 

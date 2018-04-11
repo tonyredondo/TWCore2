@@ -20,16 +20,16 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class GuidSerializer : ITypeSerializer
+    public class GuidSerializer : TypeSerializer
     {
         private SerializerCache<Guid> _cache;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
             => _cache = new SerializerCache<Guid>();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
             => _cache.Clear();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,9 +44,9 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefGuidByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefGuidByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
             }
             else
             {

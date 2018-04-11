@@ -20,16 +20,16 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class DateTimeOffsetSerializer : ITypeSerializer
+    public class DateTimeOffsetSerializer : TypeSerializer
     {
         private SerializerCache<DateTimeOffset> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
             => _cache = new SerializerCache<DateTimeOffset>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -44,14 +44,14 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.ToFileTime();
-                WriteHelper.WriteLong(writer, DataBytesDefinition.DateTimeOffset, longBinary);
+                WriteLong(writer, DataBytesDefinition.DateTimeOffset, longBinary);
                 _cache.SerializerSet(value);
             }
         }

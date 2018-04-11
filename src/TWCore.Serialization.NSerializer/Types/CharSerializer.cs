@@ -20,15 +20,15 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public struct CharSerializer : ITypeSerializer
+    public class CharSerializer : TypeSerializer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
         {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
         {
         }
 

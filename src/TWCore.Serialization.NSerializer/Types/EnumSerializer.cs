@@ -20,15 +20,15 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public struct EnumSerializer : ITypeSerializer
+    public class EnumSerializer : TypeSerializer
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
         {
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
         {
         }
 
@@ -93,11 +93,11 @@ namespace TWCore.Serialization.NSerializer.Types
                     return;
                 default:
                     if (value <= byte.MaxValue)
-                        WriteHelper.WriteByte(writer, DataBytesDefinition.EnumByte, (byte)value);
+                        WriteByte(writer, DataBytesDefinition.EnumByte, (byte)value);
                     else if (value <= ushort.MaxValue)
-                        WriteHelper.WriteUshort(writer, DataBytesDefinition.EnumUShort, (ushort)value);
+                        WriteUshort(writer, DataBytesDefinition.EnumUShort, (ushort)value);
                     else
-                        WriteHelper.WriteInt(writer, DataBytesDefinition.EnumInt, value);
+                        WriteInt(writer, DataBytesDefinition.EnumInt, value);
                     break;
             }
         }

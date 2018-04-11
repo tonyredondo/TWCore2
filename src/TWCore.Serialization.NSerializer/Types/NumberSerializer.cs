@@ -4,7 +4,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class NumberSerializer : ITypeSerializer
+    public class NumberSerializer : TypeSerializer
     {
         private SerializerCache<decimal> _decimalCache;
         private SerializerCache<double> _doubleCache;
@@ -21,7 +21,7 @@ namespace TWCore.Serialization.NSerializer.Types
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
+        public override void Init()
         {
             _decimalCache = new SerializerCache<decimal>();
             _doubleCache = new SerializerCache<double>();
@@ -38,7 +38,7 @@ namespace TWCore.Serialization.NSerializer.Types
         /// Clear serializer cache
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
+        public override void Clear()
         {
             _decimalCache?.Clear();
             _doubleCache?.Clear();
@@ -63,9 +63,9 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDecimalByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefDecimalByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
             }
             else
             {
@@ -86,13 +86,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDoubleByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefDoubleByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteDouble(writer, DataBytesDefinition.Double, value);
+                WriteDouble(writer, DataBytesDefinition.Double, value);
                 _doubleCache.SerializerSet(value);
             }
         }
@@ -108,13 +108,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefFloatByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefFloatByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteFloat(writer, DataBytesDefinition.Float, value);
+                WriteFloat(writer, DataBytesDefinition.Float, value);
                 _floatCache.SerializerSet(value);
             }
         }
@@ -196,13 +196,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefLongByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefLongByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefLongUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefLongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteLong(writer, DataBytesDefinition.Long, value);
+                WriteLong(writer, DataBytesDefinition.Long, value);
                 _longCache.SerializerSet(value);
             }
         }
@@ -281,13 +281,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefULongByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefULongByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefULongUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefULongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteULong(writer, DataBytesDefinition.ULong, value);
+                WriteULong(writer, DataBytesDefinition.ULong, value);
                 _uLongCache.SerializerSet(value);
             }
         }
@@ -370,13 +370,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefIntByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefIntByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefIntUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteInt(writer, DataBytesDefinition.Int, value);
+                WriteInt(writer, DataBytesDefinition.Int, value);
                 _intCache.SerializerSet(value);
             }
         }
@@ -456,13 +456,13 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefUIntByte, (byte)objIdx);
+                    WriteByte(writer, DataBytesDefinition.RefUIntByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
+                    WriteUshort(writer, DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteHelper.WriteUInt(writer, DataBytesDefinition.UInt, value);
+                WriteUInt(writer, DataBytesDefinition.UInt, value);
                 _uIntCache.SerializerSet(value);
             }
         }
@@ -543,10 +543,10 @@ namespace TWCore.Serialization.NSerializer.Types
 
             var objIdx = _shortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteHelper.WriteByte(writer, DataBytesDefinition.RefShortByte, (byte)objIdx);
+                WriteByte(writer, DataBytesDefinition.RefShortByte, (byte)objIdx);
             else
             {
-                WriteHelper.WriteShort(writer, DataBytesDefinition.Short, value);
+                WriteShort(writer, DataBytesDefinition.Short, value);
                 _shortCache.SerializerSet(value);
             }
         }
@@ -624,10 +624,10 @@ namespace TWCore.Serialization.NSerializer.Types
 
             var objIdx = _uShortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteHelper.WriteByte(writer, DataBytesDefinition.RefUShortByte, (byte)objIdx);
+                WriteByte(writer, DataBytesDefinition.RefUShortByte, (byte)objIdx);
             else
             {
-                WriteHelper.WriteUshort(writer, DataBytesDefinition.UShort, value);
+                WriteUshort(writer, DataBytesDefinition.UShort, value);
                 _uShortCache.SerializerSet(value);
             }
         }
@@ -703,7 +703,7 @@ namespace TWCore.Serialization.NSerializer.Types
             }
             #endregion
 
-            WriteHelper.WriteByte(writer, DataBytesDefinition.Byte, value);                
+            WriteByte(writer, DataBytesDefinition.Byte, value);                
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, sbyte value)

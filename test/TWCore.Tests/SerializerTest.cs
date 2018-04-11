@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -83,11 +84,17 @@ namespace TWCore.Tests
             var sertable = new Serialization.NSerializer.SerializersTable();
             sertable.Init();
             var mStream = new MemoryStream();
+            var bWriter = new BinaryWriter(mStream);
+            sertable.SetWriter(bWriter);
+            sertable.WriteValue(collection[0]);
+            sertable.Clear();
+            mStream.Position = 0;
+
             using (Watch.Create("NSerializer SERIALIZER"))
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    var bWriter = new BinaryWriter(mStream);
+                    bWriter = new BinaryWriter(mStream);
                     sertable.SetWriter(bWriter);
                     sertable.WriteValue(collection[0]);
                     sertable.Clear();
@@ -241,16 +248,33 @@ namespace TWCore.Tests
     }
 
     [Serializable]
-    public class STest
+    public class STest : INSerializable
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Age { get; set; }
         public STest Brother { get; set; }
+
+        void INSerializable.Serialize(SerializersTable table)
+        {
+            table.WriteProperty(nameof(FirstName), FirstName);
+            table.WriteProperty(nameof(LastName), LastName);
+            table.WriteProperty(nameof(Age), Age);
+            table.WriteProperty(nameof(Brother), Brother);
+        }
     }
     [Serializable]
-    public class STest2 : STest
+    public class STest2 : STest, INSerializable
     {
         public string New { get; set; }
+
+        void INSerializable.Serialize(SerializersTable table)
+        {
+            table.WriteProperty(nameof(FirstName), FirstName);
+            table.WriteProperty(nameof(LastName), LastName);
+            table.WriteProperty(nameof(Age), Age);
+            table.WriteProperty(nameof(Brother), Brother);
+            table.WriteProperty(nameof(New), New);
+        }
     }
 }

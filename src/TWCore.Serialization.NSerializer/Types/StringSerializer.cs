@@ -78,7 +78,9 @@ namespace TWCore.Serialization.NSerializer.Types
                     var objIdx = _cache.SerializerGet(value);
                     if (objIdx > -1)
                     {
-                        if (objIdx <= byte.MaxValue)
+                        if (objIdx < 16)
+                            writer.Write((byte)(DataBytesDefinition.RefStringByte0 + objIdx));
+                        else if (objIdx <= byte.MaxValue)
                             WriteHelper.WriteByte(writer, DataBytesDefinition.RefStringByte, (byte)objIdx);
                         else
                             WriteHelper.WriteUshort(writer, DataBytesDefinition.RefStringUShort, (ushort)objIdx);
@@ -144,8 +146,41 @@ namespace TWCore.Serialization.NSerializer.Types
                     return string.Empty;
                 case DataBytesDefinition.RefStringByte:
                     return _cache.DeserializerGet(reader.ReadByte());
+                case DataBytesDefinition.RefStringByte0:
+                    return _cache.DeserializerGet(0);
+                case DataBytesDefinition.RefStringByte1:
+                    return _cache.DeserializerGet(1);
+                case DataBytesDefinition.RefStringByte2:
+                    return _cache.DeserializerGet(2);
+                case DataBytesDefinition.RefStringByte3:
+                    return _cache.DeserializerGet(3);
+                case DataBytesDefinition.RefStringByte4:
+                    return _cache.DeserializerGet(4);
+                case DataBytesDefinition.RefStringByte5:
+                    return _cache.DeserializerGet(5);
+                case DataBytesDefinition.RefStringByte6:
+                    return _cache.DeserializerGet(6);
+                case DataBytesDefinition.RefStringByte7:
+                    return _cache.DeserializerGet(7);
+                case DataBytesDefinition.RefStringByte8:
+                    return _cache.DeserializerGet(8);
+                case DataBytesDefinition.RefStringByte9:
+                    return _cache.DeserializerGet(9);
+                case DataBytesDefinition.RefStringByte10:
+                    return _cache.DeserializerGet(10);
+                case DataBytesDefinition.RefStringByte11:
+                    return _cache.DeserializerGet(11);
+                case DataBytesDefinition.RefStringByte12:
+                    return _cache.DeserializerGet(12);
+                case DataBytesDefinition.RefStringByte13:
+                    return _cache.DeserializerGet(13);
+                case DataBytesDefinition.RefStringByte14:
+                    return _cache.DeserializerGet(14);
+                case DataBytesDefinition.RefStringByte15:
+                    return _cache.DeserializerGet(15);
                 case DataBytesDefinition.RefStringUShort:
                     return _cache.DeserializerGet(reader.ReadUInt16());
+
                 case DataBytesDefinition.RefString16Byte:
                     return _cache16.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefString16Byte0:

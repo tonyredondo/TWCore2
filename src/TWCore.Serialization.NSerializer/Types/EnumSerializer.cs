@@ -124,7 +124,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.EnumSByteMinusOne:
                     return -1;
                 case DataBytesDefinition.EnumByteDefault:
-                    return default;
+                    return default(int);
                 case DataBytesDefinition.EnumByte1:
                     return 1;
                 case DataBytesDefinition.EnumByte2:

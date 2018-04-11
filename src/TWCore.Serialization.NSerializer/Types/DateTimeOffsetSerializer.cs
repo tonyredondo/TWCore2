@@ -76,7 +76,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.ValueNull:
                     return null;
                 case DataBytesDefinition.DateTimeOffsetDefault:
-                    return default(DateTime);
+                    return default(DateTimeOffset);
                 case DataBytesDefinition.RefDateTimeOffsetByte:
                     return _cache.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefDateTimeOffsetUShort:

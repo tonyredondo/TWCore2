@@ -467,11 +467,194 @@ namespace TWCore.Serialization.NSerializer
                 case TimeSpan cValue:
                     TimeSpan.Write(_writer, cValue);
                     return;
+
+
+                case bool[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolArray, cValue.Length);
+                    for(var i = 0; i < cValue.Length; i++)
+                        Boolean.Write(_writer, cValue[i]);
+                    return;
+                case char[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.CharArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Char.Write(_writer, cValue[i]);
+                    return;
+                case DateTimeOffset[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        DateTimeOffset.Write(_writer, cValue[i]);
+                    return;
+                case DateTime[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        DateTime.Write(_writer, cValue[i]);
+                    return;
+                case Enum[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Enum.Write(_writer, Convert.ToInt32(cValue[i]));
+                    return;
+                case Guid[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Guid.Write(_writer, cValue[i]);
+                    return;
+                case decimal[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case double[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case float[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case long[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.LongArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case ulong[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case int[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.IntArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case uint[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case short[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case ushort[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case sbyte[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case string[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.StringArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        String.Write(_writer, cValue[i]);
+                    return;
+                case TimeSpan[] cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanArray, cValue.Length);
+                    for (var i = 0; i < cValue.Length; i++)
+                        TimeSpan.Write(_writer, cValue[i]);
+                    return;
+
+                case List<bool> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Boolean.Write(_writer, cValue[i]);
+                    return;
+                case List<char> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.CharList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Char.Write(_writer, cValue[i]);
+                    return;
+                case List<DateTimeOffset> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        DateTimeOffset.Write(_writer, cValue[i]);
+                    return;
+                case List<DateTime> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        DateTime.Write(_writer, cValue[i]);
+                    return;
+                case List<Enum> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Enum.Write(_writer, Convert.ToInt32(cValue[i]));
+                    return;
+                case List<Guid> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Guid.Write(_writer, cValue[i]);
+                    return;
+                case List<decimal> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<double> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<float> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<long> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.LongList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<ulong> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<int> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.IntList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<uint> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<short> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<ushort> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<sbyte> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        Number.Write(_writer, cValue[i]);
+                    return;
+                case List<string> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.StringList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        String.Write(_writer, cValue[i]);
+                    return;
+                case List<TimeSpan> cValue:
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanList, cValue.Count);
+                    for (var i = 0; i < cValue.Count; i++)
+                        TimeSpan.Write(_writer, cValue[i]);
+                    return;
             }
             #endregion
 
             var vType = value.GetType();
-            _writer.Write(DataBytesDefinition.TypeName);
+            _writer.Write(DataBytesDefinition.TypeStart);
             String.Write(_writer, vType.GetTypeName());
             if (value is INSerializable instance)
                 instance.Serialize(this);

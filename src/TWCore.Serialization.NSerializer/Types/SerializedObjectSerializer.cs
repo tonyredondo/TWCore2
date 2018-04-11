@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
@@ -33,14 +34,21 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, SerializedObject value)
+        public void Write(Stream stream, SerializedObject value)
         {
             if (value == null)
-                writer.Write(DataBytesDefinition.SerializedObjectNull);
+                stream.WriteByte(DataBytesDefinition.SerializedObjectNull);
             else
             {
-                writer.Write(DataBytesDefinition.SerializedObject);
-                value.WriteTo(writer);
+                stream.WriteByte(DataBytesDefinition.SerializedObject);
+                var dataTypeByte = !string.IsNullOrEmpty(value.DataType) ? Encoding.UTF8.GetBytes(value.DataType) : null;
+                var serializerMimeTypeByte = !string.IsNullOrEmpty(value.SerializerMimeType) ? Encoding.UTF8.GetBytes(value.SerializerMimeType) : null;
+                WriteInt(stream, dataTypeByte?.Length ?? -1);
+                if (dataTypeByte != null) stream.Write(dataTypeByte, 0, dataTypeByte.Length);
+                WriteInt(stream, serializerMimeTypeByte?.Length ?? -1);
+                if (serializerMimeTypeByte != null) stream.Write(serializerMimeTypeByte, 0, serializerMimeTypeByte.Length);
+                WriteInt(stream, value.Data?.Length ?? -1);
+                if (value.Data != null) stream.Write(value.Data, 0, value.Data.Length);
             }
         }
 

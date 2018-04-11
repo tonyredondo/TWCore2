@@ -33,35 +33,35 @@ namespace TWCore.Serialization.NSerializer.Types
             => _cache.Clear();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, Guid value)
+        public void Write(Stream stream, Guid value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.GuidDefault);
+                stream.WriteByte(DataBytesDefinition.GuidDefault);
                 return;
             }
             var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefGuidByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefGuidByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
             }
             else
             {
-                writer.Write(DataBytesDefinition.Guid);
+                stream.WriteByte(DataBytesDefinition.Guid);
                 var bytes = value.ToByteArray();
-                writer.Write(bytes, 0, bytes.Length);
+                stream.Write(bytes, 0, bytes.Length);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, Guid? value)
+        public void Write(Stream stream, Guid? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

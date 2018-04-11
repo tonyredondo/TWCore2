@@ -33,19 +33,16 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, char value)
-            => writer.Write(value);
+        public void Write(Stream stream, char value)
+            => WriteChar(stream, DataBytesDefinition.Char, value);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, char? value)
+        public void Write(Stream stream, char? value)
         {
-            if (value == null) 
-                writer.Write(DataBytesDefinition.ValueNull);
+            if (value == null)
+                stream.WriteByte(DataBytesDefinition.ValueNull);
             else
-            {
-                writer.Write(DataBytesDefinition.Char);
-                writer.Write(value.Value);
-            }
+                WriteChar(stream, DataBytesDefinition.Char, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

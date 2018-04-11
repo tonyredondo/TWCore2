@@ -84,8 +84,7 @@ namespace TWCore.Tests
             var sertable = new Serialization.NSerializer.SerializersTable();
             sertable.Init();
             var mStream = new MemoryStream();
-            var bWriter = new BinaryWriter(mStream);
-            sertable.SetWriter(bWriter);
+            sertable.SetStream(mStream);
             sertable.WriteValue(collection[0]);
             sertable.Clear();
             mStream.Position = 0;
@@ -94,8 +93,6 @@ namespace TWCore.Tests
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    bWriter = new BinaryWriter(mStream);
-                    sertable.SetWriter(bWriter);
                     sertable.WriteValue(collection[0]);
                     sertable.Clear();
                     mStream.Position = 0;

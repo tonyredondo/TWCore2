@@ -33,80 +33,80 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, int value)
+        public void Write(Stream stream, int value)
         {
             switch (value)
             {
                 case -1:
-                    writer.Write(DataBytesDefinition.EnumSByteMinusOne);
+                    stream.WriteByte(DataBytesDefinition.EnumSByteMinusOne);
                     return;
                 case 0:
-                    writer.Write(DataBytesDefinition.EnumByteDefault);
+                    stream.WriteByte(DataBytesDefinition.EnumByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.EnumByte1);
+                    stream.WriteByte(DataBytesDefinition.EnumByte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.EnumByte2);
+                    stream.WriteByte(DataBytesDefinition.EnumByte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.EnumByte3);
+                    stream.WriteByte(DataBytesDefinition.EnumByte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.EnumByte4);
+                    stream.WriteByte(DataBytesDefinition.EnumByte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.EnumByte5);
+                    stream.WriteByte(DataBytesDefinition.EnumByte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.EnumByte6);
+                    stream.WriteByte(DataBytesDefinition.EnumByte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.EnumByte7);
+                    stream.WriteByte(DataBytesDefinition.EnumByte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.EnumByte8);
+                    stream.WriteByte(DataBytesDefinition.EnumByte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.EnumByte9);
+                    stream.WriteByte(DataBytesDefinition.EnumByte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.EnumByte10);
+                    stream.WriteByte(DataBytesDefinition.EnumByte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.EnumByte11);
+                    stream.WriteByte(DataBytesDefinition.EnumByte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.EnumByte12);
+                    stream.WriteByte(DataBytesDefinition.EnumByte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.EnumByte13);
+                    stream.WriteByte(DataBytesDefinition.EnumByte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.EnumByte14);
+                    stream.WriteByte(DataBytesDefinition.EnumByte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.EnumByte15);
+                    stream.WriteByte(DataBytesDefinition.EnumByte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.EnumByte16);
+                    stream.WriteByte(DataBytesDefinition.EnumByte16);
                     return;
                 default:
                     if (value <= byte.MaxValue)
-                        WriteByte(writer, DataBytesDefinition.EnumByte, (byte)value);
+                        WriteByte(stream, DataBytesDefinition.EnumByte, (byte)value);
                     else if (value <= ushort.MaxValue)
-                        WriteUshort(writer, DataBytesDefinition.EnumUShort, (ushort)value);
+                        WriteUshort(stream, DataBytesDefinition.EnumUShort, (ushort)value);
                     else
-                        WriteInt(writer, DataBytesDefinition.EnumInt, value);
+                        WriteInt(stream, DataBytesDefinition.EnumInt, value);
                     break;
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, int? value)
+        public void Write(Stream stream, int? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

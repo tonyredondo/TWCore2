@@ -35,28 +35,28 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, byte[] value)
+        public void Write(Stream stream, byte[] value)
         {
             if (value == null)
             {
-                writer.Write(DataBytesDefinition.ByteArrayNull);
+                stream.WriteByte(DataBytesDefinition.ByteArrayNull);
                 return;
             }
             if (value.Length == 0)
             {
-                writer.Write(DataBytesDefinition.ByteArrayEmpty);
+                stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
                 return;
             }
 
             #region Write Array
             var length = value.Length;
             if (length <= byte.MaxValue)
-                WriteByte(writer, DataBytesDefinition.ByteArrayLengthByte, (byte)length);
+                WriteByte(stream, DataBytesDefinition.ByteArrayLengthByte, (byte)length);
             else if (length <= ushort.MaxValue)
-                WriteUshort(writer, DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
+                WriteUshort(stream, DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
             else
-                WriteInt(writer, DataBytesDefinition.ByteArrayLengthInt, length);
-            writer.Write(value);
+                WriteInt(stream, DataBytesDefinition.ByteArrayLengthInt, length);
+            stream.Write(value, 0, value.Length);
             #endregion
         }
 

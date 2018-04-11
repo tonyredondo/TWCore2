@@ -52,143 +52,143 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, decimal value)
+        public void Write(Stream stream, decimal value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.DecimalDefault);
+                stream.WriteByte(DataBytesDefinition.DecimalDefault);
                 return;
             }
             var objIdx = _decimalCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefDecimalByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefDecimalByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
             }
             else
             {
-                writer.Write(DataBytesDefinition.Decimal);
-                writer.Write(value);
+                stream.WriteByte(DataBytesDefinition.Decimal);
+                WriteDecimal(stream, value);
                 _decimalCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, double value)
+        public void Write(Stream stream, double value)
         {
             if (Math.Abs(value - default(double)) < 0.0000000000001)
             {
-                writer.Write(DataBytesDefinition.DoubleDefault);
+                stream.WriteByte(DataBytesDefinition.DoubleDefault);
                 return;
             }
             var objIdx = _doubleCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefDoubleByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefDoubleByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
             }
             else
             {
-                WriteDouble(writer, DataBytesDefinition.Double, value);
+                WriteDouble(stream, DataBytesDefinition.Double, value);
                 _doubleCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, float value)
+        public void Write(Stream stream, float value)
         {
             if (Math.Abs(value - default(float)) < 0.0000000000001)
             {
-                writer.Write(DataBytesDefinition.FloatDefault);
+                stream.WriteByte(DataBytesDefinition.FloatDefault);
                 return;
             }
             var objIdx = _floatCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefFloatByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefFloatByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
             }
             else
             {
-                WriteFloat(writer, DataBytesDefinition.Float, value);
+                WriteFloat(stream, DataBytesDefinition.Float, value);
                 _floatCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, long value)
+        public void Write(Stream stream, long value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -196,84 +196,84 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefLongByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefLongByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefLongUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefLongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteLong(writer, DataBytesDefinition.Long, value);
+                WriteLong(stream, DataBytesDefinition.Long, value);
                 _longCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, ulong value)
+        public void Write(Stream stream, ulong value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -281,87 +281,87 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefULongByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefULongByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefULongUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefULongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteULong(writer, DataBytesDefinition.ULong, value);
+                WriteULong(stream, DataBytesDefinition.ULong, value);
                 _uLongCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, int value)
+        public void Write(Stream stream, int value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -370,84 +370,84 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefIntByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefIntByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefIntUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteInt(writer, DataBytesDefinition.Int, value);
+                WriteInt(stream, DataBytesDefinition.Int, value);
                 _intCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, uint value)
+        public void Write(Stream stream, uint value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -456,326 +456,326 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefUIntByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefUIntByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteUInt(writer, DataBytesDefinition.UInt, value);
+                WriteUInt(stream, DataBytesDefinition.UInt, value);
                 _uIntCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, short value)
+        public void Write(Stream stream, short value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
             var objIdx = _shortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteByte(writer, DataBytesDefinition.RefShortByte, (byte)objIdx);
+                WriteByte(stream, DataBytesDefinition.RefShortByte, (byte)objIdx);
             else
             {
-                WriteShort(writer, DataBytesDefinition.Short, value);
+                WriteShort(stream, DataBytesDefinition.Short, value);
                 _shortCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, ushort value)
+        public void Write(Stream stream, ushort value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
             var objIdx = _uShortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteByte(writer, DataBytesDefinition.RefUShortByte, (byte)objIdx);
+                WriteByte(stream, DataBytesDefinition.RefUShortByte, (byte)objIdx);
             else
             {
-                WriteUshort(writer, DataBytesDefinition.UShort, value);
+                WriteUshort(stream, DataBytesDefinition.UShort, value);
                 _uShortCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, byte value)
+        public void Write(Stream stream, byte value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
-            WriteByte(writer, DataBytesDefinition.Byte, value);                
+            WriteByte(stream, DataBytesDefinition.Byte, value);                
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, sbyte value)
+        public void Write(Stream stream, sbyte value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
+                    stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
+                    stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
+                    stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
+                    stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
+                    stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
+                    stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
+                    stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
+                    stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
+                    stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
+                    stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
+                    stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
+                    stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
+                    stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
+                    stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
+                    stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
+                    stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
+                    stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
+                    stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
+                    stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
+                    stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
+                    stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -783,77 +783,77 @@ namespace TWCore.Serialization.NSerializer.Types
             switch (value)
             {
                 default:
-                    writer.Write(DataBytesDefinition.SByte);
-                    writer.Write(value);
+                    stream.WriteByte(DataBytesDefinition.SByte);
+                    WriteSByte(stream, value);
                     return;
             }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, decimal? value)
+        public void Write(Stream stream, decimal? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, double? value)
+        public void Write(Stream stream, double? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, float? value)
+        public void Write(Stream stream, float? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, long? value)
+        public void Write(Stream stream, long? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, ulong? value)
+        public void Write(Stream stream, ulong? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, int? value)
+        public void Write(Stream stream, int? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, uint? value)
+        public void Write(Stream stream, uint? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, short? value)
+        public void Write(Stream stream, short? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, ushort? value)
+        public void Write(Stream stream, ushort? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, byte? value)
+        public void Write(Stream stream, byte? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, sbyte? value)
+        public void Write(Stream stream, sbyte? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
         
         

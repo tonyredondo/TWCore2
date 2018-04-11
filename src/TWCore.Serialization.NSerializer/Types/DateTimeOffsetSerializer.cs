@@ -33,34 +33,36 @@ namespace TWCore.Serialization.NSerializer.Types
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTimeOffset value)
+        public void Write(Stream stream, DateTimeOffset value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.DateTimeOffsetDefault);
+                stream.WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
                 return;
             }
             var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.ToFileTime();
-                WriteLong(writer, DataBytesDefinition.DateTimeOffset, longBinary);
+                WriteLong(stream, DataBytesDefinition.DateTimeOffset, longBinary);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTimeOffset? value)
+        public void Write(Stream stream, DateTimeOffset? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null)
+                stream.WriteByte(DataBytesDefinition.ValueNull);
+            else
+                Write(stream, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

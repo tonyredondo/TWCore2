@@ -33,11 +33,11 @@ namespace TWCore.Serialization.NSerializer.Types
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, TimeSpan value)
+        public void Write(Stream stream, TimeSpan value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.TimeSpanDefault);
+                stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
 
@@ -45,23 +45,23 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(writer, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
+                    WriteByte(stream, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
                 else
-                    WriteUshort(writer, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
+                    WriteUshort(stream, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.Ticks;
-                WriteLong(writer, DataBytesDefinition.TimeSpan, longBinary);
+                WriteLong(stream, DataBytesDefinition.TimeSpan, longBinary);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, TimeSpan? value)
+        public void Write(Stream stream, TimeSpan? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
+            else Write(stream, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

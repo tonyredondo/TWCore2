@@ -26,7 +26,7 @@ namespace TWCore.Serialization.NSerializer.Types
         public void Init()
         {
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
@@ -34,32 +34,45 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, bool value)
-            => writer.Write(value? DataBytesDefinition.BoolTrue : DataBytesDefinition.BoolFalse);
+        {
+            if (value)
+                writer.Write(DataBytesDefinition.BoolTrue);
+            else
+                writer.Write(DataBytesDefinition.BoolFalse);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, bool? value)
         {
-            if (value == null) writer.Write(DataBytesDefinition.ValueNull);
-            else Write(writer, value.Value);
+            if (value == null)
+                writer.Write(DataBytesDefinition.ValueNull);
+            else if (value.Value)
+                writer.Write(DataBytesDefinition.BoolTrue);
+            else
+                writer.Write(DataBytesDefinition.BoolFalse);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Read(BinaryReader reader)
-            => ReadNullable(reader) ?? default;
-        
+        {
+            var value = reader.ReadByte();
+            if (value == DataBytesDefinition.BoolTrue)
+                return true;
+            if (value == DataBytesDefinition.BoolFalse)
+                return false;
+            throw new InvalidOperationException("Invalid type value.");
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool? ReadNullable(BinaryReader reader)
         {
             var value = reader.ReadByte();
-            switch(value)
-            {
-                case DataBytesDefinition.ValueNull:
-                    return null;
-                case DataBytesDefinition.BoolTrue:
-                    return true;
-                case DataBytesDefinition.BoolFalse:
-                    return false;
-            }
+            if (value == DataBytesDefinition.ValueNull)
+                return null;
+            if (value == DataBytesDefinition.BoolTrue)
+                return true;
+            if (value == DataBytesDefinition.BoolFalse)
+                return false;
             throw new InvalidOperationException("Invalid type value.");
         }
     }

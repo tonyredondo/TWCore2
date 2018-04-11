@@ -41,6 +41,7 @@ namespace TWCore.Serialization.NSerializer
         public readonly NumberSerializer Number = new NumberSerializer();
         public readonly SerializedObjectSerializer SerializedObject = new SerializedObjectSerializer();
         public readonly StringSerializer String = new StringSerializer();
+        public readonly StringSerializer Property = new StringSerializer();
         public readonly TimeSpanSerializer TimeSpan = new TimeSpanSerializer();
 
         #region Internal Methods
@@ -57,6 +58,7 @@ namespace TWCore.Serialization.NSerializer
             Number.Init();
             SerializedObject.Init();
             String.Init();
+            Property.Init();
             TimeSpan.Init();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -72,6 +74,7 @@ namespace TWCore.Serialization.NSerializer
             Number.Clear();
             SerializedObject.Clear();
             String.Clear();
+            Property.Clear();
             TimeSpan.Clear();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,238 +88,534 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, bool value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Boolean.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, bool? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Boolean.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, byte[] value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             ByteArray.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, char value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Char.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, char? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Char.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, DateTimeOffset value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             DateTimeOffset.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, DateTimeOffset? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             DateTimeOffset.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, DateTime value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             DateTime.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, DateTime? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             DateTime.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, Enum value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Enum.Write(_writer, Convert.ToInt32(value));
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, Guid value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Guid.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, Guid? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Guid.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, SerializedObject value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             SerializedObject.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, string value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             String.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, TimeSpan value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             TimeSpan.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, TimeSpan? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             TimeSpan.Write(_writer, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, decimal value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, decimal? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, double value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, double? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, float value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, float? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, long value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, long? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, ulong value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, ulong? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, int value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, int? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, uint value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, uint? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, short value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, short? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, ushort value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, ushort? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, byte value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, byte? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, sbyte value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, sbyte? value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             Number.Write(_writer, value);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty<T>(string name, T value)
+        {
+            Property.Write(_writer, name);
+            WriteValue(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, object value)
         {
-            String.Write(_writer, name);
+            Property.Write(_writer, name);
             WriteValue(value);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, bool[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Boolean.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, char[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.CharArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Char.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, DateTimeOffset[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, DateTime[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, Enum[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Enum.Write(_writer, Convert.ToInt32(value[i]));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, Guid[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Guid.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, decimal[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, double[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, float[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, long[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.LongArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, ulong[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, int[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.IntArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, uint[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, short[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, ushort[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, sbyte[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, string[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.StringArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                String.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, TimeSpan[] value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                TimeSpan.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<bool> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Boolean.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<char> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.CharList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Char.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<DateTimeOffset> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<DateTime> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<Enum> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Enum.Write(_writer, Convert.ToInt32(value[i]));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<Guid> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Guid.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<decimal> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<double> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<float> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<long> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.LongList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<ulong> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<int> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.IntList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<uint> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<short> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<ushort> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<sbyte> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<string> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.StringList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                String.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteProperty(string name, List<TimeSpan> value)
+        {
+            Property.Write(_writer, name);
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                TimeSpan.Write(_writer, value[i]);
+        }
+
         #endregion
 
         #region Write Values
@@ -396,15 +695,297 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(sbyte value) => Number.Write(_writer, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte? value) => Number.Write(_writer, value);
-        #endregion
-        
-        //
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(object value)
+        public void WriteValue(bool[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Boolean.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(char[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.CharArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Char.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(DateTimeOffset[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(DateTime[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(Enum[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Enum.Write(_writer, Convert.ToInt32(value[i]));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(Guid[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Guid.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(decimal[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(double[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(float[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(long[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.LongArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(ulong[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(int[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.IntArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(uint[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(short[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(ushort[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(sbyte[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(string[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.StringArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                String.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(TimeSpan[] value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanArray, value.Length);
+            for (var i = 0; i < value.Length; i++)
+                TimeSpan.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<bool> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Boolean.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<char> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.CharList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Char.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<DateTimeOffset> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeOffsetList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<DateTime> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DateTimeList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                DateTimeOffset.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<Enum> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.EnumList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Enum.Write(_writer, Convert.ToInt32(value[i]));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<Guid> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.GuidList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Guid.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<decimal> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DecimalList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<double> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.DoubleList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<float> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.FloatList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<long> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.LongList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<ulong> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ULongList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<int> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.IntList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<uint> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UIntList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<short> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ShortList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<ushort> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.UShortList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<sbyte> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.SByteList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                Number.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<string> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.StringList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                String.Write(_writer, value[i]);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue(List<TimeSpan> value)
+        {
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.TimeSpanList, value.Count);
+            for (var i = 0; i < value.Count; i++)
+                TimeSpan.Write(_writer, value[i]);
+        }
+        #endregion
+
+        //
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue<T>(List<T> valueList)
+        {
+            var vType = typeof(T);
+            _writer.Write(DataBytesDefinition.TypeStart);
+            Property.Write(_writer, vType.GetTypeName());
+            var count = valueList.Count;
+            WriteHelper.WriteInt(_writer, DataBytesDefinition.ListStart, count);
+            for (var i = 0; i < count; i++)
+                WriteValue(valueList[i]);
+            _writer.Write(DataBytesDefinition.TypeEnd);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteValue<T>(T value)
+        {
+            if (value == null)
+            {
+                _writer.Write(DataBytesDefinition.ValueNull);
+                return;
+            }
+            var vType = typeof(T);
+            _writer.Write(DataBytesDefinition.TypeStart);
+            Property.Write(_writer, vType.GetTypeName());
+            if (value is INSerializable instance)
+                instance.Serialize(this);
+            else
+                InternalWriteValue(value);
+            _writer.Write(DataBytesDefinition.TypeEnd);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteInnerValue(object value)
         {
             #region Values
-            switch(value)
+            switch (value)
             {
                 case null:
                     _writer.Write(DataBytesDefinition.ValueNull);
@@ -472,11 +1053,9 @@ namespace TWCore.Serialization.NSerializer
                 case TimeSpan cValue:
                     TimeSpan.Write(_writer, cValue);
                     return;
-
-
                 case bool[] cValue:
                     WriteHelper.WriteInt(_writer, DataBytesDefinition.BoolArray, cValue.Length);
-                    for(var i = 0; i < cValue.Length; i++)
+                    for (var i = 0; i < cValue.Length; i++)
                         Boolean.Write(_writer, cValue[i]);
                     return;
                 case char[] cValue:
@@ -660,7 +1239,7 @@ namespace TWCore.Serialization.NSerializer
 
             var vType = value.GetType();
             _writer.Write(DataBytesDefinition.TypeStart);
-            String.Write(_writer, vType.GetTypeName());
+            Property.Write(_writer, vType.GetTypeName());
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else
@@ -679,8 +1258,8 @@ namespace TWCore.Serialization.NSerializer
                 WriteHelper.WriteInt(_writer, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
                 foreach (var prop in descriptor.Properties)
                 {
-                    String.Write(_writer, prop.Key);
-                    WriteValue(prop.Value.GetValue(value));
+                    Property.Write(_writer, prop.Key);
+                    WriteInnerValue(prop.Value.GetValue(value));
                 }
             }
 
@@ -690,7 +1269,7 @@ namespace TWCore.Serialization.NSerializer
                 var aValue = (Array)value;
                 WriteHelper.WriteInt(_writer, DataBytesDefinition.ArrayStart, aValue.Length);
                 for (var i = 0; i < aValue.Length; i++)
-                    WriteValue(aValue.GetValue(i));
+                    WriteInnerValue(aValue.GetValue(i));
                 return;
             }
 
@@ -701,7 +1280,7 @@ namespace TWCore.Serialization.NSerializer
                 var count = iValue.Count;
                 WriteHelper.WriteInt(_writer, DataBytesDefinition.ListStart, count);
                 for (var i = 0; i < count; i++)
-                    WriteValue(iValue[i]);
+                    WriteInnerValue(iValue[i]);
                 return;
             }
 
@@ -713,8 +1292,8 @@ namespace TWCore.Serialization.NSerializer
                 WriteHelper.WriteInt(_writer, DataBytesDefinition.DictionaryStart, count);
                 foreach (DictionaryEntry item in iValue)
                 {
-                    WriteValue(item.Key);
-                    WriteValue(item.Value);
+                    WriteInnerValue(item.Key);
+                    WriteInnerValue(item.Value);
                 }
                 return;
             }
@@ -741,7 +1320,7 @@ namespace TWCore.Serialization.NSerializer
                 var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
 
                 var runtimeProperties = type.GetRuntimeProperties();
-                foreach(var prop in runtimeProperties)
+                foreach (var prop in runtimeProperties)
                 {
                     if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) continue;
                     if (prop.GetAttribute<NonSerializeAttribute>() != null) continue;

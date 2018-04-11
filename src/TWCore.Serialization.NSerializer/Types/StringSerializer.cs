@@ -25,20 +25,20 @@ namespace TWCore.Serialization.NSerializer.Types
 {
     public class StringSerializer : ITypeSerializer
     {
-        private SerializerCache<string> _cache8;
-        private SerializerCache<string> _cache16;
-        private SerializerCache<string> _cache32;
-        private SerializerCache<string> _cache64;
-        private SerializerCache<string> _cache;
+        private SerializerStringCache _cache8;
+        private SerializerStringCache _cache16;
+        private SerializerStringCache _cache32;
+        private SerializerStringCache _cache64;
+        private SerializerStringCache _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
         {
-            _cache8 = new SerializerCache<string>();
-            _cache16 = new SerializerCache<string>();
-            _cache32 = new SerializerCache<string>();
-            _cache64 = new SerializerCache<string>();
-            _cache = new SerializerCache<string>();
+            _cache8 = new SerializerStringCache();
+            _cache16 = new SerializerStringCache();
+            _cache32 = new SerializerStringCache();
+            _cache64 = new SerializerStringCache();
+            _cache = new SerializerStringCache();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

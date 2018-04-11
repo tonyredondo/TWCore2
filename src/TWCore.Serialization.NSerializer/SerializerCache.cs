@@ -67,4 +67,53 @@ namespace TWCore.Serialization.NSerializer
                 _deserializationCache.Add(_currentIndex++, value);
         }
     }
+
+    internal class SerializerStringCache
+    {
+        private readonly Dictionary<string, int> _serializationCache;
+        private readonly Dictionary<int, string> _deserializationCache;
+        private const int MaxIndex = 2047;
+        private int _currentIndex;
+
+        public int Count => _currentIndex;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public SerializerStringCache()
+        {
+            _serializationCache = new Dictionary<string, int>();
+            _deserializationCache = new Dictionary<int, string>();
+            _currentIndex = 0;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            if (_currentIndex == 0) return;
+            _currentIndex = 0;
+            _serializationCache.Clear();
+            _deserializationCache.Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int SerializerGet(string value)
+            => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void SerializerSet(string value)
+        {
+            if (_currentIndex < MaxIndex)
+                _serializationCache.Add(value, _currentIndex++);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string DeserializerGet(int index)
+            => _deserializationCache[index];
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void DeserializerSet(string value)
+        {
+            if (_currentIndex < MaxIndex)
+                _deserializationCache.Add(_currentIndex++, value);
+        }
+
+    }
 }

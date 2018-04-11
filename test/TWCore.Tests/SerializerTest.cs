@@ -152,28 +152,28 @@ namespace TWCore.Tests
             }
 
 
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("BINARY FORMATTER SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToBinFormatter(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("BINARY FORMATTER DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromBinFormatter<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Thread.Sleep(1000);
+            //using (Watch.Create("BINARY FORMATTER SERIALIZER"))
+            //{
+            //    for (var i = 0; i < 100000; i++)
+            //    {
+            //        collection[i % 10000].SerializeToBinFormatter(memStream);
+            //        memStream.Position = 0;
+            //    }
+            //}
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Thread.Sleep(1000);
+            //using (Watch.Create("BINARY FORMATTER DESERIALIZER"))
+            //{
+            //    for (var i = 0; i < 100000; i++)
+            //    {
+            //        memStream.DeserializeFromBinFormatter<List<STest>>();
+            //        memStream.Position = 0;
+            //    }
+            //}
 
             
             GC.Collect();

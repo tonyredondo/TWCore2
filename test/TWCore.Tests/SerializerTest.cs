@@ -70,13 +70,7 @@ namespace TWCore.Tests
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
-            var sertable = new TWCore.Serialization.NSerializer.SerializersTable();
-            sertable.Init();
-            var mStream = new MemoryStream();
-            var bWriter = new BinaryWriter(mStream);
-            sertable.SetWriter(bWriter);
-            sertable.WriteValue(lt);
-
+            
             var memStream = new MemoryStream();
             
             Core.Log.InfoBasic("By size:");
@@ -85,6 +79,22 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
+
+            var sertable = new Serialization.NSerializer.SerializersTable();
+            sertable.Init();
+            var mStream = new MemoryStream();
+            using (Watch.Create("NSerializer SERIALIZER"))
+            {
+                for (var i = 0; i < 100000; i++)
+                {
+                    var bWriter = new BinaryWriter(mStream);
+                    sertable.SetWriter(bWriter);
+                    sertable.WriteValue(collection[0]);
+                    sertable.Clear();
+                    mStream.Position = 0;
+                }
+            }
+            Core.Log.InfoBasic("\tNSerializer Bytes Count: {0}", mStream.Length.ToReadableBytes().Text);
             
             Core.Log.InfoBasic("By time (100000 times):");
             GC.Collect();

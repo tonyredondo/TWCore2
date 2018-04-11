@@ -664,54 +664,53 @@ namespace TWCore.Serialization.NSerializer
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else
-                InternalObjectWrite(value);
-            _writer.Write(DataBytesDefinition.TypeEnd);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InternalObjectWrite(object value)
-        {
-            var descriptor = Descriptors.GetOrAdd(value.GetType(), type => new TypeDescriptor(type));
-
-            //Write Properties
-            if (descriptor.Properties.Count > 0)
             {
-                WriteHelper.WriteInt(_writer, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
-                foreach(var prop in descriptor.Properties)
-                    WriteProperty(prop.Key, prop.Value.GetValue(value));
-            }
+                var descriptor = Descriptors.GetOrAdd(value.GetType(), type => new TypeDescriptor(type));
 
-            //Write Array if contains
-            if (descriptor.IsArray)
-            {
-                var aValue = (Array)value;
-                WriteHelper.WriteInt(_writer, DataBytesDefinition.ArrayStart, aValue.Length);
-                for (var i = 0; i < aValue.Length; i++)
-                    WriteValue(aValue.GetValue(i));
-            }
-
-            //Write List if contains
-            if (descriptor.IsList)
-            {
-                var iValue = (IList)value;
-                var count = iValue.Count;
-                WriteHelper.WriteInt(_writer, DataBytesDefinition.ListStart, count);
-                for (var i = 0; i < count; i++)
-                    WriteValue(iValue[i]);
-            }
-
-            //Write Dictionary if contains
-            if (descriptor.IsDictionary)
-            {
-                var iValue = (IDictionary)value;
-                var count = iValue.Count;
-                WriteHelper.WriteInt(_writer, DataBytesDefinition.DictionaryStart, count);
-                foreach(DictionaryEntry item in iValue)
+                //Write Properties
+                if (descriptor.Properties.Count > 0)
                 {
-                    WriteValue(item.Key);
-                    WriteValue(item.Value);
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
+                    foreach (var prop in descriptor.Properties)
+                    {
+                        String.Write(_writer, prop.Key);
+                        WriteValue(prop.Value.GetValue(value));
+                    }
+                }
+
+                //Write Array if contains
+                if (descriptor.IsArray)
+                {
+                    var aValue = (Array)value;
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ArrayStart, aValue.Length);
+                    for (var i = 0; i < aValue.Length; i++)
+                        WriteValue(aValue.GetValue(i));
+                }
+
+                //Write List if contains
+                if (descriptor.IsList)
+                {
+                    var iValue = (IList)value;
+                    var count = iValue.Count;
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.ListStart, count);
+                    for (var i = 0; i < count; i++)
+                        WriteValue(iValue[i]);
+                }
+
+                //Write Dictionary if contains
+                if (descriptor.IsDictionary)
+                {
+                    var iValue = (IDictionary)value;
+                    var count = iValue.Count;
+                    WriteHelper.WriteInt(_writer, DataBytesDefinition.DictionaryStart, count);
+                    foreach (DictionaryEntry item in iValue)
+                    {
+                        WriteValue(item.Key);
+                        WriteValue(item.Value);
+                    }
                 }
             }
+            _writer.Write(DataBytesDefinition.TypeEnd);
         }
 
         private static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
@@ -727,26 +726,31 @@ namespace TWCore.Serialization.NSerializer
 
             public TypeDescriptor(Type type)
             {
-                TypeName = type.Name;
+                TypeName = type.GetTypeName();
                 Activator = Factory.Accessors.CreateActivator(type);
                 Properties = new Dictionary<string, FastPropertyInfo>();
+                var ifaces = type.GetInterfaces();
+                var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+
                 var runtimeProperties = type.GetRuntimeProperties();
                 foreach(var prop in runtimeProperties)
                 {
                     if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) continue;
+                    if (prop.GetAttribute<NonSerializeAttribute>() != null) continue;
                     if (prop.GetIndexParameters().Length > 0) continue;
+                    if (isIList && prop.Name == "Capacity") continue;
                     var fProp = prop.GetFastPropertyInfo();
                     Properties[fProp.Name] = fProp;
                 }
                 IsArray = type.IsArray;
-                if (IsArray)
+                if (!IsArray)
                 {
-                    var ifaces = type.GetInterfaces();
-                    IsDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                    IsDictionary = isIDictionary;
                     if (IsDictionary)
                         IsList = false;
                     else
-                        IsList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                        IsList = isIList;
                 }
                 else
                 {

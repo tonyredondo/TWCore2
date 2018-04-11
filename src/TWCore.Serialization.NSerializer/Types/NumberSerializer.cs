@@ -52,83 +52,6 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool WriteStaticValues(BinaryWriter writer, int value)
-        {
-            #region Static values
-            switch (value)
-            {
-                case -1:
-                    writer.Write(DataBytesDefinition.SByteMinusOne);
-                    return true;
-                case 0:
-                    writer.Write(DataBytesDefinition.ByteDefault);
-                    return true ;
-                case 1:
-                    writer.Write(DataBytesDefinition.Byte1);
-                    return true;
-                case 2:
-                    writer.Write(DataBytesDefinition.Byte2);
-                    return true;
-                case 3:
-                    writer.Write(DataBytesDefinition.Byte3);
-                    return true;
-                case 4:
-                    writer.Write(DataBytesDefinition.Byte4);
-                    return true;
-                case 5:
-                    writer.Write(DataBytesDefinition.Byte5);
-                    return true;
-                case 6:
-                    writer.Write(DataBytesDefinition.Byte6);
-                    return true;
-                case 7:
-                    writer.Write(DataBytesDefinition.Byte7);
-                    return true;
-                case 8:
-                    writer.Write(DataBytesDefinition.Byte8);
-                    return true;
-                case 9:
-                    writer.Write(DataBytesDefinition.Byte9);
-                    return true;
-                case 10:
-                    writer.Write(DataBytesDefinition.Byte10);
-                    return true;
-                case 11:
-                    writer.Write(DataBytesDefinition.Byte11);
-                    return true;
-                case 12:
-                    writer.Write(DataBytesDefinition.Byte12);
-                    return true;
-                case 13:
-                    writer.Write(DataBytesDefinition.Byte13);
-                    return true;
-                case 14:
-                    writer.Write(DataBytesDefinition.Byte14);
-                    return true;
-                case 15:
-                    writer.Write(DataBytesDefinition.Byte15);
-                    return true;
-                case 16:
-                    writer.Write(DataBytesDefinition.Byte16);
-                    return true;
-                case 17:
-                    writer.Write(DataBytesDefinition.Byte17);
-                    return true;
-                case 18:
-                    writer.Write(DataBytesDefinition.Byte18);
-                    return true;
-                case 19:
-                    writer.Write(DataBytesDefinition.Byte19);
-                    return true;
-                case 20:
-                    writer.Write(DataBytesDefinition.Byte20);
-                    return true;
-            }
-            #endregion
-            return false;
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, decimal value)
         {
             if (value == default)
@@ -198,7 +121,77 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, long value)
         {
-            if (WriteStaticValues(writer, (int)value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case -1:
+                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    return;
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
             var objIdx = _longCache.SerializerGet(value);
             if (objIdx > -1)
             {
@@ -216,7 +209,74 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, ulong value)
         {
-            if (WriteStaticValues(writer, (int)value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
             var objIdx = _uLongCache.SerializerGet(value);
             if (objIdx > -1)
             {
@@ -234,7 +294,78 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, int value)
         {
-            if (WriteStaticValues(writer, value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case -1:
+                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    return;
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
             var objIdx = _intCache.SerializerGet(value);
             if (objIdx > -1)
             {
@@ -252,7 +383,75 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, uint value)
         {
-            if (WriteStaticValues(writer, (int) value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
             var objIdx = _uIntCache.SerializerGet(value);
             if (objIdx > -1)
             {
@@ -270,7 +469,78 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, short value)
         {
-            if (WriteStaticValues(writer, value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case -1:
+                    writer.Write(DataBytesDefinition.SByteMinusOne);
+                    return;
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
             var objIdx = _shortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
                 WriteHelper.WriteByte(writer, DataBytesDefinition.RefShortByte, (byte)objIdx);
@@ -283,7 +553,75 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, ushort value)
         {
-            if (WriteStaticValues(writer, value)) return;
+            #region Static Values
+            switch (value)
+            {
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
             var objIdx = _uShortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
                 WriteHelper.WriteByte(writer, DataBytesDefinition.RefUShortByte, (byte)objIdx);
@@ -296,18 +634,154 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, byte value)
         {
-            if (!WriteStaticValues(writer, value))
-                WriteHelper.WriteByte(writer, DataBytesDefinition.Byte, value);                
+            #region Static Values
+            switch (value)
+            {
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
+            WriteHelper.WriteByte(writer, DataBytesDefinition.Byte, value);                
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, sbyte value)
         {
-            if (WriteStaticValues(writer, value)) return;
+            #region Static Values
             switch (value)
             {
                 case -1:
                     writer.Write(DataBytesDefinition.SByteMinusOne);
                     return;
+                case 0:
+                    writer.Write(DataBytesDefinition.ByteDefault);
+                    return;
+                case 1:
+                    writer.Write(DataBytesDefinition.Byte1);
+                    return;
+                case 2:
+                    writer.Write(DataBytesDefinition.Byte2);
+                    return;
+                case 3:
+                    writer.Write(DataBytesDefinition.Byte3);
+                    return;
+                case 4:
+                    writer.Write(DataBytesDefinition.Byte4);
+                    return;
+                case 5:
+                    writer.Write(DataBytesDefinition.Byte5);
+                    return;
+                case 6:
+                    writer.Write(DataBytesDefinition.Byte6);
+                    return;
+                case 7:
+                    writer.Write(DataBytesDefinition.Byte7);
+                    return;
+                case 8:
+                    writer.Write(DataBytesDefinition.Byte8);
+                    return;
+                case 9:
+                    writer.Write(DataBytesDefinition.Byte9);
+                    return;
+                case 10:
+                    writer.Write(DataBytesDefinition.Byte10);
+                    return;
+                case 11:
+                    writer.Write(DataBytesDefinition.Byte11);
+                    return;
+                case 12:
+                    writer.Write(DataBytesDefinition.Byte12);
+                    return;
+                case 13:
+                    writer.Write(DataBytesDefinition.Byte13);
+                    return;
+                case 14:
+                    writer.Write(DataBytesDefinition.Byte14);
+                    return;
+                case 15:
+                    writer.Write(DataBytesDefinition.Byte15);
+                    return;
+                case 16:
+                    writer.Write(DataBytesDefinition.Byte16);
+                    return;
+                case 17:
+                    writer.Write(DataBytesDefinition.Byte17);
+                    return;
+                case 18:
+                    writer.Write(DataBytesDefinition.Byte18);
+                    return;
+                case 19:
+                    writer.Write(DataBytesDefinition.Byte19);
+                    return;
+                case 20:
+                    writer.Write(DataBytesDefinition.Byte20);
+                    return;
+            }
+            #endregion
+
+            switch (value)
+            {
                 default:
                     writer.Write(DataBytesDefinition.SByte);
                     writer.Write(value);

@@ -14,11 +14,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NonBlocking;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using TWCore.Reflection;
 using TWCore.Serialization.NSerializer.Types;
 
 namespace TWCore.Serialization.NSerializer
@@ -40,7 +45,7 @@ namespace TWCore.Serialization.NSerializer
 
         #region Internal Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void Init()
+        public void Init()
         {
             Boolean.Init();
             ByteArray.Init();
@@ -55,7 +60,7 @@ namespace TWCore.Serialization.NSerializer
             TimeSpan.Init();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void Clear()
+        public void Clear()
         {
             Boolean.Clear();
             ByteArray.Clear();
@@ -70,7 +75,7 @@ namespace TWCore.Serialization.NSerializer
             TimeSpan.Clear();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal void SetWriter(BinaryWriter writer)
+        public void SetWriter(BinaryWriter writer)
         {
             _writer = writer;
         }
@@ -666,7 +671,89 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void InternalObjectWrite(object value)
         {
+            var descriptor = Descriptors.GetOrAdd(value.GetType(), type => new TypeDescriptor(type));
 
+            //Write Properties
+            if (descriptor.Properties.Count > 0)
+            {
+                WriteHelper.WriteInt(_writer, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
+                foreach(var prop in descriptor.Properties)
+                    WriteProperty(prop.Key, prop.Value.GetValue(value));
+            }
+
+            //Write Array if contains
+            if (descriptor.IsArray)
+            {
+                var aValue = (Array)value;
+                WriteHelper.WriteInt(_writer, DataBytesDefinition.ArrayStart, aValue.Length);
+                for (var i = 0; i < aValue.Length; i++)
+                    WriteValue(aValue.GetValue(i));
+            }
+
+            //Write List if contains
+            if (descriptor.IsList)
+            {
+                var iValue = (IList)value;
+                var count = iValue.Count;
+                WriteHelper.WriteInt(_writer, DataBytesDefinition.ListStart, count);
+                for (var i = 0; i < count; i++)
+                    WriteValue(iValue[i]);
+            }
+
+            //Write Dictionary if contains
+            if (descriptor.IsDictionary)
+            {
+                var iValue = (IDictionary)value;
+                var count = iValue.Count;
+                WriteHelper.WriteInt(_writer, DataBytesDefinition.DictionaryStart, count);
+                foreach(DictionaryEntry item in iValue)
+                {
+                    WriteValue(item.Key);
+                    WriteValue(item.Value);
+                }
+            }
+        }
+
+        private static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
+
+        public struct TypeDescriptor
+        {
+            public string TypeName;
+            public ActivatorDelegate Activator;
+            public Dictionary<string, FastPropertyInfo> Properties;
+            public bool IsArray;
+            public bool IsList;
+            public bool IsDictionary;
+
+            public TypeDescriptor(Type type)
+            {
+                TypeName = type.Name;
+                Activator = Factory.Accessors.CreateActivator(type);
+                Properties = new Dictionary<string, FastPropertyInfo>();
+                var runtimeProperties = type.GetRuntimeProperties();
+                foreach(var prop in runtimeProperties)
+                {
+                    if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) continue;
+                    if (prop.GetIndexParameters().Length > 0) continue;
+                    var fProp = prop.GetFastPropertyInfo();
+                    Properties[fProp.Name] = fProp;
+                }
+                IsArray = type.IsArray;
+                if (IsArray)
+                {
+                    var ifaces = type.GetInterfaces();
+                    IsDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                    if (IsDictionary)
+                        IsList = false;
+                    else
+                        IsList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                }
+                else
+                {
+                    IsList = false;
+                    IsDictionary = false;
+                }
+            }
         }
     }
 }

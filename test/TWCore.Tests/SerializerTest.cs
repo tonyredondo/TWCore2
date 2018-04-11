@@ -70,6 +70,13 @@ namespace TWCore.Tests
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
+            var sertable = new TWCore.Serialization.NSerializer.SerializersTable();
+            sertable.Init();
+            var mStream = new MemoryStream();
+            var bWriter = new BinaryWriter(mStream);
+            sertable.SetWriter(bWriter);
+            sertable.WriteValue(lt);
+
             var memStream = new MemoryStream();
             
             Core.Log.InfoBasic("By size:");

@@ -975,12 +975,13 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             var vType = typeof(T);
-            _stream.WriteByte(DataBytesDefinition.TypeStart);
-            Property.Write(_stream, vType.GetTypeName());
+            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
+            WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+            _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else
-                InternalWriteValue(value);
+                InternalWriteValue(value, descriptor);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
@@ -1241,20 +1242,19 @@ namespace TWCore.Serialization.NSerializer
             #endregion
 
             var vType = value.GetType();
-            _stream.WriteByte(DataBytesDefinition.TypeStart);
-            Property.Write(_stream, vType.GetTypeName());
+            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
+            WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+            _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else
-                InternalWriteValue(value);
+                InternalWriteValue(value, descriptor);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InternalWriteValue(object value)
+        private void InternalWriteValue(object value, TypeDescriptor descriptor)
         {
-            var descriptor = Descriptors.GetOrAdd(value.GetType(), type => new TypeDescriptor(type));
-
             //Write Properties
             if (descriptor.Properties.Count > 0)
             {
@@ -1314,7 +1314,9 @@ namespace TWCore.Serialization.NSerializer
             public bool IsArray;
             public bool IsList;
             public bool IsDictionary;
+            public byte[] Definition;
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TypeDescriptor(Type type)
             {
                 TypeName = type.GetTypeName();
@@ -1348,6 +1350,8 @@ namespace TWCore.Serialization.NSerializer
                     IsList = false;
                     IsDictionary = false;
                 }
+                var defText = TypeName + ";" + Properties.Keys.Join(";");
+                Definition = Encoding.UTF8.GetBytes(defText);
             }
         }
     }

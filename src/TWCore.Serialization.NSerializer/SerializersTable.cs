@@ -166,6 +166,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, string value)
         {
+            if (value == null) return;
             Property.Write(_stream, name);
             String.Write(_stream, value);
         }
@@ -317,12 +318,14 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty<T>(string name, T value)
         {
+            if (value == null) return;
             Property.Write(_stream, name);
             WriteValue(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, object value)
         {
+            if (value == null) return;
             Property.Write(_stream, name);
             WriteValue(value);
         }
@@ -1258,8 +1261,10 @@ namespace TWCore.Serialization.NSerializer
                 WriteInt(_stream, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
                 foreach (var prop in descriptor.Properties)
                 {
+                    var pValue = prop.Value.GetValue(value);
+                    if (pValue == null) continue;
                     Property.Write(_stream, prop.Key);
-                    WriteInnerValue(prop.Value.GetValue(value));
+                    WriteInnerValue(pValue);
                 }
             }
 

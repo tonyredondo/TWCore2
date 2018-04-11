@@ -254,10 +254,15 @@ namespace TWCore.Tests
 
         void INSerializable.Serialize(SerializersTable table)
         {
-            table.WriteProperty(nameof(FirstName), FirstName);
-            table.WriteProperty(nameof(LastName), LastName);
-            table.WriteProperty(nameof(Age), Age);
-            table.WriteProperty(nameof(Brother), Brother);
+            //table.WriteProperty(nameof(FirstName), FirstName);
+            //table.WriteProperty(nameof(LastName), LastName);
+            //table.WriteProperty(nameof(Age), Age);
+            //table.WriteProperty(nameof(Brother), Brother);
+
+            table.WriteValue(FirstName);
+            table.WriteValue(LastName);
+            table.WriteValue(Age);
+            table.WriteValue(Brother);
         }
     }
     [Serializable]
@@ -267,11 +272,17 @@ namespace TWCore.Tests
 
         void INSerializable.Serialize(SerializersTable table)
         {
-            table.WriteProperty(nameof(FirstName), FirstName);
-            table.WriteProperty(nameof(LastName), LastName);
-            table.WriteProperty(nameof(Age), Age);
-            table.WriteProperty(nameof(Brother), Brother);
-            table.WriteProperty(nameof(New), New);
+            //table.WriteProperty(nameof(FirstName), FirstName);
+            //table.WriteProperty(nameof(LastName), LastName);
+            //table.WriteProperty(nameof(Age), Age);
+            //table.WriteProperty(nameof(Brother), Brother);
+            //table.WriteProperty(nameof(New), New);
+
+            table.WriteValue(FirstName);
+            table.WriteValue(LastName);
+            table.WriteValue(Age);
+            table.WriteValue(Brother);
+            table.WriteValue(New);
         }
     }
 }

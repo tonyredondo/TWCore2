@@ -404,6 +404,18 @@ namespace TWCore.Serialization.NSerializer.Types
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint ReadUint(BinaryReader reader)
             => ReadUintNullable(reader) ?? default;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short ReadShort(BinaryReader reader)
+            => ReadShortNullable(reader) ?? default;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ushort ReadUshort(BinaryReader reader)
+            => ReadUshortNullable(reader) ?? default;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte ReadByte(BinaryReader reader)
+            => ReadByteNullable(reader) ?? default;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public sbyte ReadSbyte(BinaryReader reader)
+            => ReadSbyteNullable(reader) ?? default;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public decimal? ReadDecimalNullable(BinaryReader reader)
@@ -835,6 +847,236 @@ namespace TWCore.Serialization.NSerializer.Types
                     return _uIntCache.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefUIntUShort:
                     return _uIntCache.DeserializerGet(reader.ReadUInt16());
+            }
+            return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public short? ReadShortNullable(BinaryReader reader)
+        {
+            var type = reader.ReadByte();
+            switch (type)
+            {
+                case DataBytesDefinition.ValueNull:
+                    return null;
+                case DataBytesDefinition.ByteDefault:
+                    return 0;
+                case DataBytesDefinition.Byte1:
+                    return 1;
+                case DataBytesDefinition.Byte2:
+                    return 2;
+                case DataBytesDefinition.Byte3:
+                    return 3;
+                case DataBytesDefinition.Byte4:
+                    return 4;
+                case DataBytesDefinition.Byte5:
+                    return 5;
+                case DataBytesDefinition.Byte6:
+                    return 6;
+                case DataBytesDefinition.Byte7:
+                    return 7;
+                case DataBytesDefinition.Byte8:
+                    return 8;
+                case DataBytesDefinition.Byte9:
+                    return 9;
+                case DataBytesDefinition.Byte10:
+                    return 10;
+                case DataBytesDefinition.Byte11:
+                    return 11;
+                case DataBytesDefinition.Byte12:
+                    return 12;
+                case DataBytesDefinition.Byte13:
+                    return 13;
+                case DataBytesDefinition.Byte14:
+                    return 14;
+                case DataBytesDefinition.Byte15:
+                    return 15;
+                case DataBytesDefinition.Byte16:
+                    return 16;
+                case DataBytesDefinition.Byte17:
+                    return 17;
+                case DataBytesDefinition.Byte18:
+                    return 18;
+                case DataBytesDefinition.Byte19:
+                    return 19;
+                case DataBytesDefinition.Byte20:
+                    return 20;
+                case DataBytesDefinition.Short:
+                    var v8 = reader.ReadInt16();
+                    _shortCache.DeserializerSet(v8);
+                    return v8;
+                case DataBytesDefinition.RefShortByte:
+                    return _shortCache.DeserializerGet(reader.ReadByte());
+            }
+            return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ushort? ReadUshortNullable(BinaryReader reader)
+        {
+            var type = reader.ReadByte();
+            switch (type)
+            {
+                case DataBytesDefinition.ValueNull:
+                    return null;
+                case DataBytesDefinition.ByteDefault:
+                    return 0;
+                case DataBytesDefinition.Byte1:
+                    return 1;
+                case DataBytesDefinition.Byte2:
+                    return 2;
+                case DataBytesDefinition.Byte3:
+                    return 3;
+                case DataBytesDefinition.Byte4:
+                    return 4;
+                case DataBytesDefinition.Byte5:
+                    return 5;
+                case DataBytesDefinition.Byte6:
+                    return 6;
+                case DataBytesDefinition.Byte7:
+                    return 7;
+                case DataBytesDefinition.Byte8:
+                    return 8;
+                case DataBytesDefinition.Byte9:
+                    return 9;
+                case DataBytesDefinition.Byte10:
+                    return 10;
+                case DataBytesDefinition.Byte11:
+                    return 11;
+                case DataBytesDefinition.Byte12:
+                    return 12;
+                case DataBytesDefinition.Byte13:
+                    return 13;
+                case DataBytesDefinition.Byte14:
+                    return 14;
+                case DataBytesDefinition.Byte15:
+                    return 15;
+                case DataBytesDefinition.Byte16:
+                    return 16;
+                case DataBytesDefinition.Byte17:
+                    return 17;
+                case DataBytesDefinition.Byte18:
+                    return 18;
+                case DataBytesDefinition.Byte19:
+                    return 19;
+                case DataBytesDefinition.Byte20:
+                    return 20;
+                case DataBytesDefinition.UShort:
+                    var v9 = reader.ReadUInt16();
+                    _uShortCache.DeserializerSet(v9);
+                    return v9;
+                case DataBytesDefinition.RefUShortByte:
+                    return _uShortCache.DeserializerGet(reader.ReadByte());
+            }
+            return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public byte? ReadByteNullable(BinaryReader reader)
+        {
+            var type = reader.ReadByte();
+            switch (type)
+            {
+                case DataBytesDefinition.ValueNull:
+                    return null;
+                case DataBytesDefinition.ByteDefault:
+                    return 0;
+                case DataBytesDefinition.Byte1:
+                    return 1;
+                case DataBytesDefinition.Byte2:
+                    return 2;
+                case DataBytesDefinition.Byte3:
+                    return 3;
+                case DataBytesDefinition.Byte4:
+                    return 4;
+                case DataBytesDefinition.Byte5:
+                    return 5;
+                case DataBytesDefinition.Byte6:
+                    return 6;
+                case DataBytesDefinition.Byte7:
+                    return 7;
+                case DataBytesDefinition.Byte8:
+                    return 8;
+                case DataBytesDefinition.Byte9:
+                    return 9;
+                case DataBytesDefinition.Byte10:
+                    return 10;
+                case DataBytesDefinition.Byte11:
+                    return 11;
+                case DataBytesDefinition.Byte12:
+                    return 12;
+                case DataBytesDefinition.Byte13:
+                    return 13;
+                case DataBytesDefinition.Byte14:
+                    return 14;
+                case DataBytesDefinition.Byte15:
+                    return 15;
+                case DataBytesDefinition.Byte16:
+                    return 16;
+                case DataBytesDefinition.Byte17:
+                    return 17;
+                case DataBytesDefinition.Byte18:
+                    return 18;
+                case DataBytesDefinition.Byte19:
+                    return 19;
+                case DataBytesDefinition.Byte20:
+                    return 20;
+                case DataBytesDefinition.Byte:
+                    return reader.ReadByte();
+            }
+            return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public sbyte? ReadSbyteNullable(BinaryReader reader)
+        {
+            var type = reader.ReadByte();
+            switch (type)
+            {
+                case DataBytesDefinition.ValueNull:
+                    return null;
+                case DataBytesDefinition.ByteDefault:
+                    return 0;
+                case DataBytesDefinition.Byte1:
+                    return 1;
+                case DataBytesDefinition.Byte2:
+                    return 2;
+                case DataBytesDefinition.Byte3:
+                    return 3;
+                case DataBytesDefinition.Byte4:
+                    return 4;
+                case DataBytesDefinition.Byte5:
+                    return 5;
+                case DataBytesDefinition.Byte6:
+                    return 6;
+                case DataBytesDefinition.Byte7:
+                    return 7;
+                case DataBytesDefinition.Byte8:
+                    return 8;
+                case DataBytesDefinition.Byte9:
+                    return 9;
+                case DataBytesDefinition.Byte10:
+                    return 10;
+                case DataBytesDefinition.Byte11:
+                    return 11;
+                case DataBytesDefinition.Byte12:
+                    return 12;
+                case DataBytesDefinition.Byte13:
+                    return 13;
+                case DataBytesDefinition.Byte14:
+                    return 14;
+                case DataBytesDefinition.Byte15:
+                    return 15;
+                case DataBytesDefinition.Byte16:
+                    return 16;
+                case DataBytesDefinition.Byte17:
+                    return 17;
+                case DataBytesDefinition.Byte18:
+                    return 18;
+                case DataBytesDefinition.Byte19:
+                    return 19;
+                case DataBytesDefinition.Byte20:
+                    return 20;
+                case DataBytesDefinition.SByte:
+                    return reader.ReadSByte();
+                case DataBytesDefinition.SByteMinusOne:
+                    return -1;
             }
             return null;
         }

@@ -102,7 +102,7 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteNullable(BinaryWriter writer, int? value)
+        public void Write(BinaryWriter writer, int? value)
         {
             if (value == null) writer.Write(DataBytesDefinition.ValueNull);
             else Write(writer, value.Value);
@@ -110,9 +110,8 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Read(BinaryReader reader)
-        {
-            return ReadNullable(reader) ?? 0;
-        }
+            => ReadNullable(reader) ?? 0;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int? ReadNullable(BinaryReader reader)
         {

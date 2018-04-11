@@ -20,55 +20,56 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class DateTimeSerializer : ITypeSerializer
+    public class GuidSerializer : ITypeSerializer
     {
-        private SerializerCache<DateTime> _cache;
-
+        private SerializerCache<Guid> _cache;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
-            => _cache = new SerializerCache<DateTime>();
+            => _cache = new SerializerCache<Guid>();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
             => _cache.Clear();
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime value)
+        public void Write(BinaryWriter writer, Guid value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.DateTimeDefault);
+                writer.Write(DataBytesDefinition.GuidDefault);
                 return;
             }
             var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
+                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefGuidByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
+                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
             }
             else
             {
-                var longBinary = value.ToBinary();
-                WriteHelper.WriteLong(writer, DataBytesDefinition.DateTime, longBinary);
+                writer.Write(DataBytesDefinition.Guid);
+                var bytes = value.ToByteArray();
+                writer.Write(bytes, 0, bytes.Length);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime? value)
+        public void Write(BinaryWriter writer, Guid? value)
         {
             if (value == null) writer.Write(DataBytesDefinition.ValueNull);
             else Write(writer, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime Read(BinaryReader reader)
+        public Guid Read(BinaryReader reader)
             => ReadNullable(reader) ?? default;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadNullable(BinaryReader reader)
+        public Guid? ReadNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             var objIdx = -1;
@@ -76,12 +77,12 @@ namespace TWCore.Serialization.NSerializer.Types
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
-                case DataBytesDefinition.DateTimeDefault:
-                    return default(DateTime);
-                case DataBytesDefinition.RefDateTimeByte:
+                case DataBytesDefinition.GuidDefault:
+                    return default(Guid);
+                case DataBytesDefinition.RefGuidByte:
                     objIdx = reader.ReadByte();
                     break;
-                case DataBytesDefinition.RefDateTimeUShort:
+                case DataBytesDefinition.RefGuidUShort:
                     objIdx = reader.ReadUInt16();
                     break;
             }
@@ -89,10 +90,10 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
                 return _cache.DeserializerGet(objIdx);
 
-            var longBinary = reader.ReadInt64();
-            var cValue = DateTime.FromBinary(longBinary);
-            _cache.DeserializerSet(cValue);
-            return cValue;
+            var bytes = reader.ReadBytes(16);
+            var guidValue = new Guid(bytes);
+            _cache.DeserializerSet(guidValue);
+            return guidValue;
         }
     }
 }

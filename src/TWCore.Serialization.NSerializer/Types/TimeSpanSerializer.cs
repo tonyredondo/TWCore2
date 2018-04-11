@@ -20,55 +20,56 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer.Types
 {
-    public class DateTimeSerializer : ITypeSerializer
+    public class TimeSpanSerializer : ITypeSerializer
     {
-        private SerializerCache<DateTime> _cache;
+        private SerializerCache<TimeSpan> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init()
-            => _cache = new SerializerCache<DateTime>();
+            => _cache = new SerializerCache<TimeSpan>();
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
             => _cache.Clear();
-
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime value)
+        public void Write(BinaryWriter writer, TimeSpan value)
         {
             if (value == default)
             {
-                writer.Write(DataBytesDefinition.DateTimeDefault);
+                writer.Write(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
+
             var objIdx = _cache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
+                    WriteHelper.WriteByte(writer, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
                 else
-                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
+                    WriteHelper.WriteUshort(writer, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
             }
             else
             {
-                var longBinary = value.ToBinary();
-                WriteHelper.WriteLong(writer, DataBytesDefinition.DateTime, longBinary);
+                var longBinary = value.Ticks;
+                WriteHelper.WriteLong(writer, DataBytesDefinition.TimeSpan, longBinary);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(BinaryWriter writer, DateTime? value)
+        public void Write(BinaryWriter writer, TimeSpan? value)
         {
             if (value == null) writer.Write(DataBytesDefinition.ValueNull);
             else Write(writer, value.Value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime Read(BinaryReader reader)
+        public TimeSpan Read(BinaryReader reader)
             => ReadNullable(reader) ?? default;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadNullable(BinaryReader reader)
+        public TimeSpan? ReadNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             var objIdx = -1;
@@ -76,12 +77,12 @@ namespace TWCore.Serialization.NSerializer.Types
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
-                case DataBytesDefinition.DateTimeDefault:
-                    return default(DateTime);
-                case DataBytesDefinition.RefDateTimeByte:
+                case DataBytesDefinition.TimeSpanDefault:
+                    return default(TimeSpan);
+                case DataBytesDefinition.RefTimeSpanByte:
                     objIdx = reader.ReadByte();
                     break;
-                case DataBytesDefinition.RefDateTimeUShort:
+                case DataBytesDefinition.RefTimeSpanUShort:
                     objIdx = reader.ReadUInt16();
                     break;
             }
@@ -90,7 +91,7 @@ namespace TWCore.Serialization.NSerializer.Types
                 return _cache.DeserializerGet(objIdx);
 
             var longBinary = reader.ReadInt64();
-            var cValue = DateTime.FromBinary(longBinary);
+            var cValue = TimeSpan.FromTicks(longBinary);
             _cache.DeserializerSet(cValue);
             return cValue;
         }

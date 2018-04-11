@@ -34,12 +34,10 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(BinaryWriter writer, bool value)
-        {
-            writer.Write(value? DataBytesDefinition.BoolTrue : DataBytesDefinition.BoolFalse);
-        }
+            => writer.Write(value? DataBytesDefinition.BoolTrue : DataBytesDefinition.BoolFalse);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteNullable(BinaryWriter writer, bool? value)
+        public void Write(BinaryWriter writer, bool? value)
         {
             if (value == null) writer.Write(DataBytesDefinition.ValueNull);
             else Write(writer, value.Value);
@@ -47,9 +45,8 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Read(BinaryReader reader)
-        {
-            return reader.ReadByte() == DataBytesDefinition.BoolTrue;
-        }
+            => reader.ReadByte() == DataBytesDefinition.BoolTrue;
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool? ReadNullable(BinaryReader reader)
         {

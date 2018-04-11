@@ -222,6 +222,9 @@ namespace TWCore.Serialization.NSerializer
 		public const byte   RefStringByte				= 179;
 		public const byte   RefStringUShort		    	= 180;
 
+	    public const byte   RefTypeByte					= 181;
+	    public const byte   RefTypeUShort		    	= 182;
+	    
 		public const byte   RefObjectByte				= 224;
 		public const byte   RefObjectByte0				= 225;
 		public const byte   RefObjectByte1				= 226;

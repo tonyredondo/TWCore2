@@ -31,24 +31,25 @@ namespace TWCore.Serialization.NSerializer
     public class SerializersTable : TypeSerializer
     {
         private Stream _stream;
-        public readonly BooleanSerializer Boolean = new BooleanSerializer();
-        public readonly ByteArraySerializer ByteArray = new ByteArraySerializer();
-        public readonly CharSerializer Char = new CharSerializer();
-        public readonly DateTimeOffsetSerializer DateTimeOffset = new DateTimeOffsetSerializer();
-        public readonly DateTimeSerializer DateTime = new DateTimeSerializer();
-        public readonly EnumSerializer Enum = new EnumSerializer();
-        public readonly GuidSerializer Guid = new GuidSerializer();
-        public readonly NumberSerializer Number = new NumberSerializer();
-        public readonly SerializedObjectSerializer SerializedObject = new SerializedObjectSerializer();
-        public readonly StringSerializer String = new StringSerializer();
-        public readonly StringSerializer Property = new StringSerializer();
-        public readonly TimeSpanSerializer TimeSpan = new TimeSpanSerializer();
+        private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
+        private readonly BooleanSerializer _boolean = new BooleanSerializer();
+        private readonly ByteArraySerializer ByteArray = new ByteArraySerializer();
+        private readonly CharSerializer Char = new CharSerializer();
+        private readonly DateTimeOffsetSerializer DateTimeOffset = new DateTimeOffsetSerializer();
+        private readonly DateTimeSerializer DateTime = new DateTimeSerializer();
+        private readonly EnumSerializer Enum = new EnumSerializer();
+        private readonly GuidSerializer Guid = new GuidSerializer();
+        private readonly NumberSerializer Number = new NumberSerializer();
+        private readonly SerializedObjectSerializer SerializedObject = new SerializedObjectSerializer();
+        private readonly StringSerializer String = new StringSerializer();
+        private readonly StringSerializer Property = new StringSerializer();
+        private readonly TimeSpanSerializer TimeSpan = new TimeSpanSerializer();
 
         #region Internal Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {
-            Boolean.Init();
+            _boolean.Init();
             ByteArray.Init();
             Char.Init();
             DateTimeOffset.Init();
@@ -64,7 +65,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Clear()
         {
-            Boolean.Clear();
+            _boolean.Clear();
             ByteArray.Clear();
             Char.Clear();
             DateTimeOffset.Clear();
@@ -76,6 +77,7 @@ namespace TWCore.Serialization.NSerializer
             String.Clear();
             Property.Clear();
             TimeSpan.Clear();
+            _typeCache.Clear();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetStream(Stream stream)
@@ -89,13 +91,13 @@ namespace TWCore.Serialization.NSerializer
         public void WriteProperty(string name, bool value)
         {
             Property.Write(_stream, name);
-            Boolean.Write(_stream, value);
+            _boolean.Write(_stream, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, bool? value)
         {
             Property.Write(_stream, name);
-            Boolean.Write(_stream, value);
+            _boolean.Write(_stream, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, byte[] value)
@@ -336,7 +338,7 @@ namespace TWCore.Serialization.NSerializer
             Property.Write(_stream, name);
             WriteInt(_stream, DataBytesDefinition.BoolArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Boolean.Write(_stream, value[i]);
+                _boolean.Write(_stream, value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, char[] value)
@@ -480,7 +482,7 @@ namespace TWCore.Serialization.NSerializer
             Property.Write(_stream, name);
             WriteInt(_stream, DataBytesDefinition.BoolList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Boolean.Write(_stream, value[i]);
+                _boolean.Write(_stream, value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteProperty(string name, List<char> value)
@@ -623,9 +625,9 @@ namespace TWCore.Serialization.NSerializer
 
         #region Write Values
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(bool value) => Boolean.Write(_stream, value);
+        public void WriteValue(bool value) => _boolean.Write(_stream, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(bool? value) => Boolean.Write(_stream, value);
+        public void WriteValue(bool? value) => _boolean.Write(_stream, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte[] value) => ByteArray.Write(_stream, value);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -704,7 +706,7 @@ namespace TWCore.Serialization.NSerializer
         {
             WriteInt(_stream, DataBytesDefinition.BoolArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Boolean.Write(_stream, value[i]);
+                _boolean.Write(_stream, value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char[] value)
@@ -830,7 +832,7 @@ namespace TWCore.Serialization.NSerializer
         {
             WriteInt(_stream, DataBytesDefinition.BoolList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Boolean.Write(_stream, value[i]);
+                _boolean.Write(_stream, value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<char> value)
@@ -976,8 +978,20 @@ namespace TWCore.Serialization.NSerializer
             }
             var vType = typeof(T);
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
-            _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+            var tIdx = _typeCache.SerializerGet(vType);
+            if (tIdx > -1)
+            {
+                if (tIdx <= byte.MaxValue)
+                    WriteByte(_stream, DataBytesDefinition.RefTypeByte, (byte)tIdx);
+                else
+                    WriteUshort(_stream, DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+            }
+            else
+            {
+                WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.SerializerSet(vType);
+            }
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else
@@ -995,7 +1009,7 @@ namespace TWCore.Serialization.NSerializer
                     _stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 case bool cValue:
-                    Boolean.Write(_stream, cValue);
+                    _boolean.Write(_stream, cValue);
                     return;
                 case byte[] cValue:
                     ByteArray.Write(_stream, cValue);
@@ -1060,7 +1074,7 @@ namespace TWCore.Serialization.NSerializer
                 case bool[] cValue:
                     WriteInt(_stream, DataBytesDefinition.BoolArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Boolean.Write(_stream, cValue[i]);
+                        _boolean.Write(_stream, cValue[i]);
                     return;
                 case char[] cValue:
                     WriteInt(_stream, DataBytesDefinition.CharArray, cValue.Length);
@@ -1151,7 +1165,7 @@ namespace TWCore.Serialization.NSerializer
                 case List<bool> cValue:
                     WriteInt(_stream, DataBytesDefinition.BoolList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Boolean.Write(_stream, cValue[i]);
+                        _boolean.Write(_stream, cValue[i]);
                     return;
                 case List<char> cValue:
                     WriteInt(_stream, DataBytesDefinition.CharList, cValue.Count);
@@ -1243,8 +1257,20 @@ namespace TWCore.Serialization.NSerializer
 
             var vType = value.GetType();
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
-            _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+            var tIdx = _typeCache.SerializerGet(vType);
+            if (tIdx > -1)
+            {
+                if (tIdx <= byte.MaxValue)
+                    WriteByte(_stream, DataBytesDefinition.RefTypeByte, (byte)tIdx);
+                else
+                    WriteUshort(_stream, DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+            }
+            else
+            {
+                WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.SerializerSet(vType);
+            }
             if (value is INSerializable instance)
                 instance.Serialize(this);
             else

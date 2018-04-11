@@ -34,13 +34,20 @@ namespace TWCore.Serialization.NSerializer.Types
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Stream stream, char value)
-            => WriteChar(stream, DataBytesDefinition.Char, value);
+        {
+            if (value == default(char))
+                stream.WriteByte(DataBytesDefinition.CharDefault);
+            else
+                WriteChar(stream, DataBytesDefinition.Char, value);
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(Stream stream, char? value)
         {
             if (value == null)
                 stream.WriteByte(DataBytesDefinition.ValueNull);
+            else if (value == default(char))
+                stream.WriteByte(DataBytesDefinition.CharDefault);
             else
                 WriteChar(stream, DataBytesDefinition.Char, value.Value);
         }
@@ -57,6 +64,8 @@ namespace TWCore.Serialization.NSerializer.Types
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
+                case DataBytesDefinition.CharDefault:
+                    return default(char);
                 case DataBytesDefinition.Char:
                     return reader.ReadChar();
             }

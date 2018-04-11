@@ -142,14 +142,14 @@ namespace TWCore.Serialization.NSerializer.Types
             if (length < 21)
             {
                 bytesLength = length + 1;
-                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
+                bytes = new byte[bytesLength];
                 bytes[0] = (byte)(DataBytesDefinition.StringLengthByte1 + (length - 1));
                 Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 1);
             }
             else if (length <= byte.MaxValue)
             {
                 bytesLength = length + 2;
-                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
+                bytes = new byte[bytesLength];
                 bytes[0] = DataBytesDefinition.StringLengthByte;
                 bytes[1] = (byte)length;
                 Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 2);
@@ -157,7 +157,7 @@ namespace TWCore.Serialization.NSerializer.Types
             else if (length <= ushort.MaxValue)
             {
                 bytesLength = length + 3;
-                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
+                bytes = new byte[bytesLength];
                 bytes[0] = DataBytesDefinition.StringLengthUShort;
                 bytes[1] = (byte)(ushort)length;
                 bytes[2] = (byte)(((ushort)length) >> 8);
@@ -166,7 +166,7 @@ namespace TWCore.Serialization.NSerializer.Types
             else
             {
                 bytesLength = length + 5;
-                bytes = ArrayPool<byte>.Shared.Rent(bytesLength);
+                bytes = new byte[bytesLength];
                 bytes[0] = DataBytesDefinition.StringLengthInt;
                 bytes[1] = (byte)length;
                 bytes[2] = (byte)(length >> 8);
@@ -175,7 +175,6 @@ namespace TWCore.Serialization.NSerializer.Types
                 Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
             }
             writer.Write(bytes, 0, bytesLength);
-            ArrayPool<byte>.Shared.Return(bytes);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

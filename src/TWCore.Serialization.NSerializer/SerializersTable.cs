@@ -31,11 +31,11 @@ namespace TWCore.Serialization.NSerializer
     {
         private static Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         private static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
-        protected Stream _stream;
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
         private readonly object[] _paramObj = new object[1];
+        protected Stream _stream;
 
         #region Statics
         static SerializersTable()
@@ -727,6 +727,7 @@ namespace TWCore.Serialization.NSerializer
             public bool IsDictionary;
             public bool IsINSerializable;
             public byte[] Definition;
+            public Action<object, SerializersTable> SerializeAction;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TypeDescriptor(Type type)
@@ -734,7 +735,7 @@ namespace TWCore.Serialization.NSerializer
                 var ifaces = type.GetInterfaces();
                 var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                 var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
-                var runtimeProperties = type.GetRuntimeProperties();
+                var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name);
                 var typeName = type.GetTypeName();
 
                 TypeName = typeName;
@@ -767,6 +768,9 @@ namespace TWCore.Serialization.NSerializer
 
                 var defText = typeName + ";" + Properties.Keys.Join(";");
                 Definition = Encoding.UTF8.GetBytes(defText);
+            
+                //
+                SerializeAction = null;
             }
         }
     }

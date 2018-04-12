@@ -26,20 +26,20 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(bool value)
         {
             if (value)
-                _stream.WriteByte(DataBytesDefinition.BoolTrue);
+                Stream.WriteByte(DataBytesDefinition.BoolTrue);
             else
-                _stream.WriteByte(DataBytesDefinition.BoolFalse);
+                Stream.WriteByte(DataBytesDefinition.BoolFalse);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool? value)
         {
             if (value == null)
-                _stream.WriteByte(DataBytesDefinition.ValueNull);
+                Stream.WriteByte(DataBytesDefinition.ValueNull);
             else if (value.Value)
-                _stream.WriteByte(DataBytesDefinition.BoolTrue);
+                Stream.WriteByte(DataBytesDefinition.BoolTrue);
             else
-                _stream.WriteByte(DataBytesDefinition.BoolFalse);
+                Stream.WriteByte(DataBytesDefinition.BoolFalse);
         }
     }
 

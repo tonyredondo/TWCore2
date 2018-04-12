@@ -56,12 +56,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                _stream.WriteByte(DataBytesDefinition.StringNull);
+                Stream.WriteByte(DataBytesDefinition.StringNull);
                 return;
             }
             if (value == string.Empty)
             {
-                _stream.WriteByte(DataBytesDefinition.StringEmpty);
+                Stream.WriteByte(DataBytesDefinition.StringEmpty);
                 return;
             }
 
@@ -123,7 +123,7 @@ namespace TWCore.Serialization.NSerializer
             bytes[3] = (byte)(length >> 16);
             bytes[4] = (byte)(length >> 24);
             Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
-            _stream.Write(bytes, 0, bytes.Length);
+            Stream.Write(bytes, 0, bytes.Length);
         }
     }
 

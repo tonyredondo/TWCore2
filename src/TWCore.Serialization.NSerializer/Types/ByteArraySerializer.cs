@@ -29,17 +29,17 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                _stream.WriteByte(DataBytesDefinition.ByteArrayNull);
+                Stream.WriteByte(DataBytesDefinition.ByteArrayNull);
                 return;
             }
             var length = value.Length;
             if (length == 0)
             {
-                _stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
+                Stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
                 return;
             }
             WriteDefInt(DataBytesDefinition.ByteArrayLength, length);
-            _stream.Write(value, 0, length);
+            Stream.Write(value, 0, length);
         }
     }
 

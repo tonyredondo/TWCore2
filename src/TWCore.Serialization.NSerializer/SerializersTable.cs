@@ -30,12 +30,13 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private readonly static Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
-        private readonly static MethodInfo WriteObjectValueMInfo = typeof(SerializersTable).GetMethod("WriteObjectValue");
-        private readonly static MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
-        private readonly static MethodInfo IListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
-        private readonly static PropertyInfo IListIndexProperty = typeof(IList).GetProperty("Item");
-        private readonly static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
+        private static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
+        private static readonly MethodInfo WriteObjectValueMInfo = typeof(SerializersTable).GetMethod("WriteObjectValue");
+        private static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo IListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
+        private static readonly PropertyInfo IListIndexProperty = typeof(IList).GetProperty("Item");
+        private static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
+        private static readonly ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
@@ -814,13 +815,16 @@ namespace TWCore.Serialization.NSerializer
 
                 if (IsArray)
                 {
-                    var lengthArrayGetMethod = typeof(Array).GetProperty("Length").GetMethod;
+                    var arrLength = Expression.Parameter(typeof(int), "length");
+                    varExpressions.Add(arrLength);
+                    serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
+
                     var arrByte = Expression.Constant(DataBytesDefinition.ArrayStart, typeof(byte));
-                    var arrLength = Expression.Call(instance, lengthArrayGetMethod);
                     serExpressions.Add(Expression.Call(serTable, WriteDefIntMInfo, arrByte, arrLength));
 
                     var forIdx = Expression.Parameter(typeof(int), "i");
-                    var breakLabel = Expression.Label(typeof(int));
+                    varExpressions.Add(forIdx);
+                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
                     serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
                     var loop = Expression.Loop(
                                 Expression.IfThenElse(
@@ -831,12 +835,9 @@ namespace TWCore.Serialization.NSerializer
                 }
                 else if (IsList)
                 {
-                    var lengthIListGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
-                    var indexIListProperty = typeof(IList).GetProperty("Item");
-
                     var iLength = Expression.Parameter(typeof(int), "length");
                     varExpressions.Add(iLength);
-                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, lengthIListGetMethod)));
+                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, IListLengthGetMethod)));
 
                     var iByte = Expression.Constant(DataBytesDefinition.ListStart, typeof(byte));
                     serExpressions.Add(Expression.Call(serTable, WriteDefIntMInfo, iByte, iLength));
@@ -848,7 +849,7 @@ namespace TWCore.Serialization.NSerializer
                     var loop = Expression.Loop(
                                 Expression.IfThenElse(
                                     Expression.LessThan(forIdx, iLength),
-                                    Expression.Call(serTable, WriteObjectValueMInfo, Expression.MakeIndex(instance, indexIListProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
+                                    Expression.Call(serTable, WriteObjectValueMInfo, Expression.MakeIndex(instance, IListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
                                     Expression.Break(breakLabel)), breakLabel);
                     serExpressions.Add(loop);
                 }

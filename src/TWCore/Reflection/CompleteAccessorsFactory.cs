@@ -83,8 +83,11 @@ namespace TWCore.Reflection
         public GetAccessorDelegate BuildGetAccessor(PropertyInfo property)
         {
             var method = property.GetMethod;
-            var obj = Expression.Parameter(typeof(object), "o");
-            var expr = Expression.Lambda<GetAccessorDelegate>(Expression.Convert(Expression.Call(Expression.Convert(obj, method.DeclaringType), method), typeof(object)), obj);
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var instance = Expression.Convert(obj, method.DeclaringType);
+            var call = Expression.Call(instance, method);
+            var result = Expression.Convert(call, typeof(object));
+            var expr = Expression.Lambda<GetAccessorDelegate>(result, obj);
             return expr.Compile();
         }
         /// <inheritdoc />
@@ -97,9 +100,12 @@ namespace TWCore.Reflection
         public SetAccessorDelegate BuildSetAccessor(PropertyInfo property)
         {
             var method = property.SetMethod;
-            var obj = Expression.Parameter(typeof(object), "o");
-            var value = Expression.Parameter(typeof(object));
-            var expr = Expression.Lambda<SetAccessorDelegate>(Expression.Call(Expression.Convert(obj, method.DeclaringType), method, Expression.Convert(value, method.GetParameters()[0].ParameterType)), obj, value);
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var value = Expression.Parameter(typeof(object), "value");
+            var instance = Expression.Convert(obj, method.DeclaringType);
+            var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
+            var call = Expression.Call(instance, method, castedValue);
+            var expr = Expression.Lambda<SetAccessorDelegate>(call, obj, value);
             return expr.Compile();
         }
         /// <inheritdoc />

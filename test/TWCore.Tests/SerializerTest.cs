@@ -81,24 +81,18 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
 
-            var sertable = new Serialization.NSerializer.SerializersTable();
-            sertable.Init();
-            var mStream = new MemoryStream();
-            sertable.SetStream(mStream);
-            sertable.WriteObjectValue(collection[0]);
-            sertable.Clear();
-            mStream.Position = 0;
-
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
             using (Watch.Create("NSerializer SERIALIZER"))
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    sertable.WriteObjectValue(collection[i % 10000]);
-                    sertable.Clear();
-                    mStream.Position = 0;
+                    collection[i % 10000].SerializeToNBinary(memStream);
+                    memStream.Position = 0;
                 }
             }
-            Core.Log.InfoBasic("\tNSerializer Bytes Count: {0}", mStream.Length.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tNSerializer Bytes Count: {0}", memStream.Length.ToReadableBytes().Text);
             //Core.Log.InfoDetail(mStream.TextReadToEnd());
             Console.ReadLine();
 

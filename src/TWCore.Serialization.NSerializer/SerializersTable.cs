@@ -79,6 +79,7 @@ namespace TWCore.Serialization.NSerializer
             ClearTimeSpan();
             _typeCache.Clear();
             _objectCache.Clear();
+            Stream = null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetStream(Stream stream)

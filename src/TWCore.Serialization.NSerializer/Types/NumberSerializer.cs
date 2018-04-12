@@ -257,11 +257,11 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerCache<decimal> _decimalCache;
-        private SerializerCache<double> _doubleCache;
-        private SerializerCache<float> _floatCache;
-        private SerializerCache<long> _longCache;
-        private SerializerCache<ulong> _uLongCache;
+        private DeserializerCache<decimal> _decimalCache;
+        private DeserializerCache<double> _doubleCache;
+        private DeserializerCache<float> _floatCache;
+        private DeserializerCache<long> _longCache;
+        private DeserializerCache<ulong> _uLongCache;
 
         /// <inheritdoc />
         /// <summary>
@@ -270,11 +270,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitNumber()
         {
-            _decimalCache = new SerializerCache<decimal>();
-            _doubleCache = new SerializerCache<double>();
-            _floatCache = new SerializerCache<float>();
-            _longCache = new SerializerCache<long>();
-            _uLongCache = new SerializerCache<ulong>();
+            _decimalCache = new DeserializerCache<decimal>();
+            _doubleCache = new DeserializerCache<double>();
+            _floatCache = new DeserializerCache<float>();
+            _longCache = new DeserializerCache<long>();
+            _uLongCache = new DeserializerCache<ulong>();
         }
         /// <inheritdoc />
         /// <summary>

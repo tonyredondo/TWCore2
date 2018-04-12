@@ -63,11 +63,11 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerCache<DateTimeOffset> _dateTimeOffsetCache;
+        private DeserializerCache<DateTimeOffset> _dateTimeOffsetCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitDateTimeOffset()
-            => _dateTimeOffsetCache = new SerializerCache<DateTimeOffset>();
+            => _dateTimeOffsetCache = new DeserializerCache<DateTimeOffset>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearDateTimeOffset()

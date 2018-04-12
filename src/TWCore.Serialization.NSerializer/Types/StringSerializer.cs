@@ -129,20 +129,20 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerStringCache _stringCache8;
-        private SerializerStringCache _stringCache16;
-        private SerializerStringCache _stringCache32;
-        private SerializerStringCache _stringCache64;
-        private SerializerStringCache _stringCache;
+        private DeserializerStringCache _stringCache8;
+        private DeserializerStringCache _stringCache16;
+        private DeserializerStringCache _stringCache32;
+        private DeserializerStringCache _stringCache64;
+        private DeserializerStringCache _stringCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitString()
         {
-            _stringCache8 = new SerializerStringCache();
-            _stringCache16 = new SerializerStringCache();
-            _stringCache32 = new SerializerStringCache();
-            _stringCache64 = new SerializerStringCache();
-            _stringCache = new SerializerStringCache();
+            _stringCache8 = new DeserializerStringCache();
+            _stringCache16 = new DeserializerStringCache();
+            _stringCache32 = new DeserializerStringCache();
+            _stringCache64 = new DeserializerStringCache();
+            _stringCache = new DeserializerStringCache();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

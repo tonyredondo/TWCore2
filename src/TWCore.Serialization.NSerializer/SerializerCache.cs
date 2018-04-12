@@ -23,37 +23,20 @@ namespace TWCore.Serialization.NSerializer
     internal class SerializerCache<T>
     {
         private readonly Dictionary<T, int> _serializationCache;
-        private readonly Dictionary<int, T> _deserializationCache;
-        private const int MaxIndex = 2047;
         private int _serCurrentIndex;
-        private int _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializerCache(IEqualityComparer<T> sercomparer = null, IEqualityComparer<int> descomparer = null)
+        public SerializerCache(IEqualityComparer<T> sercomparer = null)
         {
             _serializationCache = new Dictionary<T, int>(sercomparer);
-            _deserializationCache = new Dictionary<int, T>(descomparer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_serCurrentIndex > 0)
-            {
-                _serCurrentIndex = 0;
-                _serializationCache.Clear();
-                return;
-            }
-            if (_desCurrentIndex > 0)
-            {
-                _desCurrentIndex = 0;
-                _deserializationCache.Clear();
-                return;
-            }
+            if (_serCurrentIndex == 0) return;
+            _serCurrentIndex = 0;
+            _serializationCache.Clear();
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SerializerGet(T value)
-            => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SerializerTryGetValue(T value, out int index)
@@ -62,8 +45,26 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(T value)
         {
-            if (_serCurrentIndex < MaxIndex)
+            if (_serCurrentIndex < 2047)
                 _serializationCache.Add(value, _serCurrentIndex++);
+        }
+    }
+    internal class DeserializerCache<T>
+    {
+        private readonly Dictionary<int, T> _deserializationCache;
+        private int _desCurrentIndex;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DeserializerCache(IEqualityComparer<int> descomparer = null)
+        {
+            _deserializationCache = new Dictionary<int, T>(descomparer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            if (_desCurrentIndex == 0) return;
+            _desCurrentIndex = 0;
+            _deserializationCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -73,7 +74,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DeserializerSet(T value)
         {
-            if (_desCurrentIndex < MaxIndex)
+            if (_desCurrentIndex < 2047)
                 _deserializationCache.Add(_desCurrentIndex++, value);
         }
     }
@@ -82,37 +83,20 @@ namespace TWCore.Serialization.NSerializer
     internal class SerializerStringCache
     {
         private readonly Dictionary<string, int> _serializationCache;
-        private readonly Dictionary<int, string> _deserializationCache;
-        private const int MaxIndex = 2047;
         private int _serCurrentIndex;
-        private int _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerStringCache()
         {
             _serializationCache = new Dictionary<string, int>();
-            _deserializationCache = new Dictionary<int, string>();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_serCurrentIndex > 0)
-            {
-                _serCurrentIndex = 0;
-                _serializationCache.Clear();
-                return;
-            }
-            if (_desCurrentIndex > 0)
-            {
-                _desCurrentIndex = 0;
-                _deserializationCache.Clear();
-                return;
-            }
+            if (_serCurrentIndex == 0) return;
+            _serCurrentIndex = 0;
+            _serializationCache.Clear();
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int SerializerGet(string value)
-            => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SerializerTryGetValue(string value, out int index)
@@ -121,8 +105,26 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(string value)
         {
-            if (_serCurrentIndex < MaxIndex)
+            if (_serCurrentIndex < 2047)
                 _serializationCache.Add(value, _serCurrentIndex++);
+        }
+    }
+    internal class DeserializerStringCache
+    {
+        private readonly Dictionary<int, string> _deserializationCache;
+        private int _desCurrentIndex;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DeserializerStringCache()
+        {
+            _deserializationCache = new Dictionary<int, string>();
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Clear()
+        {
+            if (_desCurrentIndex == 0) return;
+            _desCurrentIndex = 0;
+            _deserializationCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -132,7 +134,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void DeserializerSet(string value)
         {
-            if (_desCurrentIndex < MaxIndex)
+            if (_desCurrentIndex < 2047)
                 _deserializationCache.Add(_desCurrentIndex++, value);
         }
     }

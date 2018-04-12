@@ -61,11 +61,11 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerCache<Guid> _guidCache;
+        private DeserializerCache<Guid> _guidCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitGuid()
-            => _guidCache = new SerializerCache<Guid>();
+            => _guidCache = new DeserializerCache<Guid>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearGuid()

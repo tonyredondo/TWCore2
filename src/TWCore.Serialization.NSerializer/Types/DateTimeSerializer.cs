@@ -61,11 +61,11 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerCache<DateTime> _dateTimeCache;
+        private DeserializerCache<DateTime> _dateTimeCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitDateTime()
-            => _dateTimeCache = new SerializerCache<DateTime>();
+            => _dateTimeCache = new DeserializerCache<DateTime>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearDateTime()

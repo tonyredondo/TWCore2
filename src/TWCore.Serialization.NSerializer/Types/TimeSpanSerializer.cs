@@ -60,11 +60,11 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private SerializerCache<TimeSpan> _cache;
+        private DeserializerCache<TimeSpan> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitTimeSpan()
-            => _cache = new SerializerCache<TimeSpan>();
+            => _cache = new DeserializerCache<TimeSpan>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearTimeSpan()

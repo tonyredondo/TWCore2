@@ -44,7 +44,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.DecimalDefault);
+                WriteByte(DataBytesDefinition.DecimalDefault);
                 return;
             }
             if (_decimalCache.TryGetValue(value, out var objIdx))
@@ -52,7 +52,7 @@ namespace TWCore.Serialization.NSerializer
                 WriteDefInt(DataBytesDefinition.RefDecimal, objIdx);
                 return;
             }
-            Stream.WriteByte(DataBytesDefinition.Decimal);
+            WriteByte(DataBytesDefinition.Decimal);
             WriteDecimal(value);
             _decimalCache.Set(value);
         }
@@ -61,7 +61,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (Math.Abs(value - default(double)) < 0.0000000000001)
             {
-                Stream.WriteByte(DataBytesDefinition.DoubleDefault);
+                WriteByte(DataBytesDefinition.DoubleDefault);
                 return;
             }
             if (_doubleCache.TryGetValue(value, out var objIdx))
@@ -77,7 +77,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (Math.Abs(value - default(float)) < 0.0000000000001)
             {
-                Stream.WriteByte(DataBytesDefinition.FloatDefault);
+                WriteByte(DataBytesDefinition.FloatDefault);
                 return;
             }
             if (_floatCache.TryGetValue(value, out var objIdx))
@@ -93,7 +93,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             if (_longCache.TryGetValue(value, out var objIdx))
@@ -109,7 +109,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             if (_uLongCache.TryGetValue(value, out var objIdx))
@@ -125,7 +125,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             WriteDefInt(DataBytesDefinition.Int, value);
@@ -135,7 +135,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             WriteDefUInt(DataBytesDefinition.UInt, value);
@@ -145,7 +145,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             WriteDefShort(DataBytesDefinition.Short, value);
@@ -155,7 +155,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             WriteDefUshort(DataBytesDefinition.UShort, value);
@@ -165,7 +165,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             WriteDefByte(DataBytesDefinition.Byte, value);
@@ -175,82 +175,82 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
             if (value == -1)
             {
-                Stream.WriteByte(DataBytesDefinition.SByteMinusOne);
+                WriteByte(DataBytesDefinition.SByteMinusOne);
                 return;
             }
-            Stream.WriteByte(DataBytesDefinition.SByte);
+            WriteByte(DataBytesDefinition.SByte);
             WriteSByte(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
     }

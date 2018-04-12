@@ -56,12 +56,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                Stream.WriteByte(DataBytesDefinition.StringNull);
+                WriteByte(DataBytesDefinition.StringNull);
                 return;
             }
             if (value == string.Empty)
             {
-                Stream.WriteByte(DataBytesDefinition.StringEmpty);
+                WriteByte(DataBytesDefinition.StringEmpty);
                 return;
             }
 

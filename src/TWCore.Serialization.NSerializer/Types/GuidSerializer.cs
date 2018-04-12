@@ -37,7 +37,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.GuidDefault);
+                WriteByte(DataBytesDefinition.GuidDefault);
                 return;
             }
             if (_guidCache.TryGetValue(value, out var objIdx))
@@ -45,7 +45,7 @@ namespace TWCore.Serialization.NSerializer
                 WriteDefInt(DataBytesDefinition.RefGuid, objIdx);
                 return;
             }
-            Stream.WriteByte(DataBytesDefinition.Guid);
+            WriteByte(DataBytesDefinition.Guid);
             var bytes = value.ToByteArray();
             Stream.Write(bytes, 0, bytes.Length);
             _guidCache.Set(value);
@@ -54,7 +54,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
     }

@@ -28,10 +28,10 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                Stream.WriteByte(DataBytesDefinition.SerializedObjectNull);
+                WriteByte(DataBytesDefinition.SerializedObjectNull);
                 return;
             }
-            Stream.WriteByte(DataBytesDefinition.SerializedObject);
+            WriteByte(DataBytesDefinition.SerializedObject);
             var dataTypeByte = !string.IsNullOrEmpty(value.DataType) ? Encoding.UTF8.GetBytes(value.DataType) : null;
             var serializerMimeTypeByte = !string.IsNullOrEmpty(value.SerializerMimeType) ? Encoding.UTF8.GetBytes(value.SerializerMimeType) : null;
             WriteInt(dataTypeByte?.Length ?? -1);

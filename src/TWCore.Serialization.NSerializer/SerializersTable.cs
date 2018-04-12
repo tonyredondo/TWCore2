@@ -91,6 +91,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.BoolArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -98,6 +103,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.CharArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -105,6 +115,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTimeOffset[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DateTimeOffsetArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -112,6 +127,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTime[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DateTimeArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -119,6 +139,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Enum[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.EnumArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -126,6 +151,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.GuidArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -133,6 +163,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DecimalArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -140,6 +175,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DoubleArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -147,6 +187,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.FloatArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -154,6 +199,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.LongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -161,6 +211,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.ULongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -168,6 +223,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.IntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -175,6 +235,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.UIntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -182,6 +247,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.ShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -189,6 +259,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.UShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -196,6 +271,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.SByteArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -203,6 +283,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(string[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.StringArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -210,6 +295,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan[] value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.TimeSpanArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -217,6 +307,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<bool> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.BoolList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -224,6 +319,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<char> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.CharList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -231,6 +331,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTimeOffset> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DateTimeOffsetList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -238,6 +343,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTime> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DateTimeList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -245,6 +355,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Enum> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.EnumList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -252,6 +367,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Guid> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.GuidList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -259,6 +379,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<decimal> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DecimalList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -266,6 +391,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<double> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.DoubleList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -273,6 +403,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<float> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.FloatList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -280,6 +415,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<long> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.LongList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -287,6 +427,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ulong> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.ULongList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -294,6 +439,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<int> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.IntList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -301,6 +451,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<uint> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.UIntList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -308,6 +463,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<short> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.ShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -315,6 +475,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ushort> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.UShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -322,6 +487,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<sbyte> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.SByteList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -329,6 +499,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<string> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.StringList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -336,74 +511,14 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<TimeSpan> value)
         {
+            if (value == null)
+            {
+                WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             WriteDefInt(DataBytesDefinition.TimeSpanList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteListValue<T>(List<T> valueList)
-        {
-            if (valueList == null)
-            {
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
-                return;
-            }
-            var vType = typeof(T);
-            if (_objectCache.TryGetValue(valueList, out var oIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
-                return;
-            }
-            _objectCache.Set(valueList);
-
-            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            if (_typeCache.TryGetValue(vType, out var tIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefType, tIdx);
-            }
-            else
-            {
-                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
-                _typeCache.Set(vType);
-            }
-            var count = valueList.Count;
-            WriteDefInt(DataBytesDefinition.ListStart, count);
-            for (var i = 0; i < count; i++)
-                WriteGenericValue(valueList[i]);
-            Stream.WriteByte(DataBytesDefinition.TypeEnd);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteGenericValue<T>(T value)
-        {
-            if (value == null)
-            {
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
-                return;
-            }
-            if (_objectCache.TryGetValue(value, out var oIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
-                return;
-            }
-            _objectCache.Set(value);
-
-            var vType = typeof(T);
-            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-
-            if (_typeCache.TryGetValue(vType, out var tIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefType, tIdx);
-            }
-            else
-            {
-                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
-                _typeCache.Set(vType);
-            }
-            if (descriptor.IsNSerializable)
-                ((INSerializable)value).Serialize(this);
-            else
-                descriptor.SerializeAction(value, this);
-            Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
         #endregion
 
@@ -412,17 +527,14 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
             var vType = value.GetType();
             if (WriteValues.TryGetValue(vType, out var mTuple))
             {
                 _paramObj[0] = value;
-                if (mTuple.Accessor != null)
-                    mTuple.Accessor(this, _paramObj);
-                else
-                    mTuple.Method.Invoke(this, _paramObj);
+                mTuple.Accessor(this, _paramObj);
                 return;
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
@@ -445,7 +557,7 @@ namespace TWCore.Serialization.NSerializer
                 ((INSerializable)value).Serialize(this);
             else
                 descriptor.SerializeAction(value, this);
-            Stream.WriteByte(DataBytesDefinition.TypeEnd);
+            WriteByte(DataBytesDefinition.TypeEnd);
         }
 
         #region Private Methods
@@ -454,7 +566,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == null)
             {
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
@@ -478,7 +590,7 @@ namespace TWCore.Serialization.NSerializer
                 ((INSerializable)value).Serialize(this);
             else
                 descriptor.SerializeAction(value, this);
-            Stream.WriteByte(DataBytesDefinition.TypeEnd);
+            WriteByte(DataBytesDefinition.TypeEnd);
         }
 
 
@@ -639,7 +751,8 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteByte(byte value)
         {
-            Stream.WriteByte(value);
+            _buffer[0] = value;
+            Stream.Write(_buffer, 0, 1);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUshort(ushort value)
@@ -752,7 +865,5 @@ namespace TWCore.Serialization.NSerializer
             Stream.Write(bytes, 0, bytes.Length);
         }
         #endregion
-
-
     }
 }

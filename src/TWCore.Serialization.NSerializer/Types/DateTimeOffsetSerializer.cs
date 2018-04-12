@@ -37,7 +37,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
+                WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
                 return;
             }
             if (_dateTimeOffsetCache.TryGetValue(value, out var objIdx))
@@ -54,7 +54,7 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(DateTimeOffset? value)
         {
             if (value == null)
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                WriteByte(DataBytesDefinition.ValueNull);
             else
                 WriteValue(value.Value);
         }

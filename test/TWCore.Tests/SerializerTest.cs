@@ -99,7 +99,7 @@ namespace TWCore.Tests
                 }
             }
             Core.Log.InfoBasic("\tNSerializer Bytes Count: {0}", mStream.Length.ToReadableBytes().Text);
-            Core.Log.InfoDetail(mStream.TextReadToEnd());
+            //Core.Log.InfoDetail(mStream.TextReadToEnd());
             Console.ReadLine();
 
             Core.Log.InfoBasic("By time (100000 times):");

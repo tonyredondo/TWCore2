@@ -37,7 +37,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                Stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
+                WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
             if (_cache.TryGetValue(value, out var objIdx))
@@ -53,7 +53,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan? value)
         {
-            if (value == null) Stream.WriteByte(DataBytesDefinition.ValueNull);
+            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
             else WriteValue(value.Value);
         }
     }

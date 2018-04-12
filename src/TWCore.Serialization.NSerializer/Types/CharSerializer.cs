@@ -26,7 +26,7 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(char value)
         {
             if (value == default(char))
-                Stream.WriteByte(DataBytesDefinition.CharDefault);
+                WriteByte(DataBytesDefinition.CharDefault);
             else
                 WriteDefChar(DataBytesDefinition.Char, value);
         }
@@ -35,9 +35,9 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(char? value)
         {
             if (value == null)
-                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                WriteByte(DataBytesDefinition.ValueNull);
             else if (value == default(char))
-                Stream.WriteByte(DataBytesDefinition.CharDefault);
+                WriteByte(DataBytesDefinition.CharDefault);
             else
                 WriteDefChar(DataBytesDefinition.Char, value.Value);
         }

@@ -42,7 +42,7 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_guidCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefGuid, objIdx);
+                WriteDefInt(DataBytesDefinition.RefGuid, objIdx);
                 return;
             }
             _stream.WriteByte(DataBytesDefinition.Guid);

@@ -42,11 +42,11 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_dateTimeCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefDateTime, objIdx);
+                WriteDefInt(DataBytesDefinition.RefDateTime, objIdx);
                 return;
             }
             var longBinary = value.ToBinary();
-            WriteLong(DataBytesDefinition.DateTime, longBinary);
+            WriteDefLong(DataBytesDefinition.DateTime, longBinary);
             _dateTimeCache.Set(value);
         }
 

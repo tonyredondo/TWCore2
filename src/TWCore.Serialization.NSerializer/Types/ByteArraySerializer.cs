@@ -38,7 +38,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
                 return;
             }
-            WriteInt(DataBytesDefinition.ByteArrayLength, length);
+            WriteDefInt(DataBytesDefinition.ByteArrayLength, length);
             _stream.Write(value, 0, length);
         }
     }

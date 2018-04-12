@@ -85,7 +85,7 @@ namespace TWCore.Tests
             sertable.Init();
             var mStream = new MemoryStream();
             sertable.SetStream(mStream);
-            sertable.WriteInnerValue(collection[0]);
+            sertable.WriteObjectValue(collection[0]);
             sertable.Clear();
             mStream.Position = 0;
 
@@ -93,7 +93,7 @@ namespace TWCore.Tests
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    sertable.WriteInnerValue(collection[i % 10000]);
+                    sertable.WriteObjectValue(collection[i % 10000]);
                     sertable.Clear();
                     mStream.Position = 0;
                 }
@@ -247,33 +247,33 @@ namespace TWCore.Tests
     }
 
     [Serializable]
-    public class STest : INSerializable
+    public class STest //: INSerializable
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Age { get; set; }
         public STest Brother { get; set; }
 
-        void INSerializable.Serialize(SerializersTable table)
-        {
-            table.WriteValue(FirstName);
-            table.WriteValue(LastName);
-            table.WriteValue(Age);
-            table.WriteValue(Brother);
-        }
+        //void INSerializable.Serialize(SerializersTable table)
+        //{
+        //    table.WriteValue(FirstName);
+        //    table.WriteValue(LastName);
+        //    table.WriteValue(Age);
+        //    table.WriteGenericValue(Brother);
+        //}
     }
     [Serializable]
-    public class STest2 : STest, INSerializable
+    public class STest2 : STest//, INSerializable
     {
         public string New { get; set; }
 
-        void INSerializable.Serialize(SerializersTable table)
-        {
-            table.WriteValue(FirstName);
-            table.WriteValue(LastName);
-            table.WriteValue(Age);
-            table.WriteValue(Brother);
-            table.WriteValue(New);
-        }
+        //void INSerializable.Serialize(SerializersTable table)
+        //{
+        //    table.WriteValue(FirstName);
+        //    table.WriteValue(LastName);
+        //    table.WriteValue(Age);
+        //    table.WriteGenericValue(Brother);
+        //    table.WriteValue(New);
+        //}
     }
 }

@@ -49,7 +49,7 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_decimalCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefDecimal, objIdx);
+                WriteDefInt(DataBytesDefinition.RefDecimal, objIdx);
                 return;
             }
             _stream.WriteByte(DataBytesDefinition.Decimal);
@@ -66,10 +66,10 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_doubleCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefDouble, objIdx);
+                WriteDefInt(DataBytesDefinition.RefDouble, objIdx);
                 return;
             }
-            WriteDouble(DataBytesDefinition.Double, value);
+            WriteDefDouble(DataBytesDefinition.Double, value);
             _doubleCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -82,10 +82,10 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_floatCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefFloat, objIdx);
+                WriteDefInt(DataBytesDefinition.RefFloat, objIdx);
                 return;
             }
-            WriteFloat(DataBytesDefinition.Float, value);
+            WriteDefFloat(DataBytesDefinition.Float, value);
             _floatCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -98,10 +98,10 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_longCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefLong, objIdx);
+                WriteDefInt(DataBytesDefinition.RefLong, objIdx);
                 return;
             }
-            WriteLong(DataBytesDefinition.Long, value);
+            WriteDefLong(DataBytesDefinition.Long, value);
             _longCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -114,10 +114,10 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_uLongCache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefULong, objIdx);
+                WriteDefInt(DataBytesDefinition.RefULong, objIdx);
                 return;
             }
-            WriteULong(DataBytesDefinition.ULong, value);
+            WriteDefULong(DataBytesDefinition.ULong, value);
             _uLongCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,7 +128,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            WriteInt(DataBytesDefinition.Int, value);
+            WriteDefInt(DataBytesDefinition.Int, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint value)
@@ -138,7 +138,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            WriteUInt(DataBytesDefinition.UInt, value);
+            WriteDefUInt(DataBytesDefinition.UInt, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short value)
@@ -148,7 +148,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            WriteShort(DataBytesDefinition.Short, value);
+            WriteDefShort(DataBytesDefinition.Short, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort value)
@@ -158,7 +158,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            WriteUshort(DataBytesDefinition.UShort, value);
+            WriteDefUshort(DataBytesDefinition.UShort, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte value)
@@ -168,7 +168,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            WriteByte(DataBytesDefinition.Byte, value);
+            WriteDefByte(DataBytesDefinition.Byte, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte value)

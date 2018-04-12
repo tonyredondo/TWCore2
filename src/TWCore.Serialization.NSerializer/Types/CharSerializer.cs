@@ -28,7 +28,7 @@ namespace TWCore.Serialization.NSerializer
             if (value == default(char))
                 _stream.WriteByte(DataBytesDefinition.CharDefault);
             else
-                WriteChar(DataBytesDefinition.Char, value);
+                WriteDefChar(DataBytesDefinition.Char, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -39,7 +39,7 @@ namespace TWCore.Serialization.NSerializer
             else if (value == default(char))
                 _stream.WriteByte(DataBytesDefinition.CharDefault);
             else
-                WriteChar(DataBytesDefinition.Char, value.Value);
+                WriteDefChar(DataBytesDefinition.Char, value.Value);
         }
     }
 

@@ -72,7 +72,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (_stringCache8.TryGetValue(value, out var objIdx))
                     {
-                        WriteInt(DataBytesDefinition.RefString8, objIdx);
+                        WriteDefInt(DataBytesDefinition.RefString8, objIdx);
                         return;
                     }
                     _stringCache8.Set(value);
@@ -81,7 +81,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (_stringCache16.TryGetValue(value, out var objIdx))
                     {
-                        WriteInt(DataBytesDefinition.RefString16, objIdx);
+                        WriteDefInt(DataBytesDefinition.RefString16, objIdx);
                         return;
                     }
                     _stringCache16.Set(value);
@@ -90,7 +90,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (_stringCache32.TryGetValue(value, out var objIdx))
                     {
-                        WriteInt(DataBytesDefinition.RefString32, objIdx);
+                        WriteDefInt(DataBytesDefinition.RefString32, objIdx);
                         return;
                     }
                     _stringCache32.Set(value);
@@ -99,7 +99,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (_stringCache64.TryGetValue(value, out var objIdx))
                     {
-                        WriteInt(DataBytesDefinition.RefString64, objIdx);
+                        WriteDefInt(DataBytesDefinition.RefString64, objIdx);
                         return;
                     }
                     _stringCache64.Set(value);
@@ -108,7 +108,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     if (_stringCache.TryGetValue(value, out var objIdx))
                     {
-                        WriteInt(DataBytesDefinition.RefString, objIdx);
+                        WriteDefInt(DataBytesDefinition.RefString, objIdx);
                         return;
                     }
                     _stringCache.Set(value);

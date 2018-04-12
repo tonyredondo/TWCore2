@@ -42,11 +42,11 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_cache.TryGetValue(value, out var objIdx))
             {
-                WriteInt(DataBytesDefinition.RefTimeSpan, objIdx);
+                WriteDefInt(DataBytesDefinition.RefTimeSpan, objIdx);
                 return;
             }
             var longBinary = value.Ticks;
-            WriteLong(DataBytesDefinition.TimeSpan, longBinary);
+            WriteDefLong(DataBytesDefinition.TimeSpan, longBinary);
             _cache.Set(value);
         }
 

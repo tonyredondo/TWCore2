@@ -32,6 +32,7 @@ namespace TWCore.Serialization.NSerializer
     {
         private static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         private static readonly MethodInfo WriteObjectValueMInfo = typeof(SerializersTable).GetMethod("WriteObjectValue");
+        private static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly MethodInfo IListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
         private static readonly PropertyInfo IListIndexProperty = typeof(IList).GetProperty("Item");
@@ -404,10 +405,8 @@ namespace TWCore.Serialization.NSerializer
             }
             if (descriptor.IsNSerializable)
                 ((INSerializable)value).Serialize(this);
-            else if (descriptor.SerializeAction != null)
-                descriptor.SerializeAction(value, this);
             else
-                InternalWriteValue(value, descriptor);
+                descriptor.SerializeAction(value, this);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
         #endregion
@@ -436,7 +435,6 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             _objectCache.Set(value);
-
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
@@ -450,59 +448,91 @@ namespace TWCore.Serialization.NSerializer
             }
             if (descriptor.IsNSerializable)
                 ((INSerializable)value).Serialize(this);
-            else if (descriptor.SerializeAction != null)
-                descriptor.SerializeAction(value, this);
             else
-                InternalWriteValue(value, descriptor);
+                descriptor.SerializeAction(value, this);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InternalWriteValue(object value, TypeDescriptor descriptor)
+        private void InternalWriteObjectValue(object value)
         {
-            //Write Properties
-            if (descriptor.Properties.Length > 0)
+            if (value == null)
             {
-                WriteDefInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Length);
-                foreach (var prop in descriptor.FastProperties)
-                    WriteObjectValue(prop.GetValue(value));
-            }
-
-            //Write Array if contains
-            if (descriptor.IsArray)
-            {
-                var aValue = (Array)value;
-                WriteDefInt(DataBytesDefinition.ArrayStart, aValue.Length);
-                for (var i = 0; i < aValue.Length; i++)
-                    WriteObjectValue(aValue.GetValue(i));
+                _stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
-
-            //Write List if contains
-            if (descriptor.IsList)
+            if (_objectCache.TryGetValue(value, out var oIdx))
             {
-                var iValue = (IList)value;
-                var count = iValue.Count;
-                WriteDefInt(DataBytesDefinition.ListStart, count);
-                for (var i = 0; i < count; i++)
-                    WriteObjectValue(iValue[i]);
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
                 return;
             }
-
-            //Write Dictionary if contains
-            if (descriptor.IsDictionary)
+            _objectCache.Set(value);
+            var vType = value.GetType();
+            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
+            if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-                var iValue = (IDictionary)value;
-                var count = iValue.Count;
-                WriteDefInt(DataBytesDefinition.DictionaryStart, count);
-                foreach (DictionaryEntry item in iValue)
-                {
-                    WriteObjectValue(item.Key);
-                    WriteObjectValue(item.Value);
-                }
-                return;
+                WriteDefInt(DataBytesDefinition.RefType, tIdx);
             }
+            else
+            {
+                WriteDefInt(DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.Set(vType);
+            }
+            if (descriptor.IsNSerializable)
+                ((INSerializable)value).Serialize(this);
+            else
+                descriptor.SerializeAction(value, this);
+            _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
+
+
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private void InternalWriteValue(object value, TypeDescriptor descriptor)
+        //{
+        //    //Write Properties
+        //    if (descriptor.Properties.Length > 0)
+        //    {
+        //        WriteDefInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Length);
+        //        foreach (var prop in descriptor.FastProperties)
+        //            WriteObjectValue(prop.GetValue(value));
+        //    }
+
+        //    //Write Array if contains
+        //    if (descriptor.IsArray)
+        //    {
+        //        var aValue = (Array)value;
+        //        WriteDefInt(DataBytesDefinition.ArrayStart, aValue.Length);
+        //        for (var i = 0; i < aValue.Length; i++)
+        //            WriteObjectValue(aValue.GetValue(i));
+        //        return;
+        //    }
+
+        //    //Write List if contains
+        //    if (descriptor.IsList)
+        //    {
+        //        var iValue = (IList)value;
+        //        var count = iValue.Count;
+        //        WriteDefInt(DataBytesDefinition.ListStart, count);
+        //        for (var i = 0; i < count; i++)
+        //            WriteObjectValue(iValue[i]);
+        //        return;
+        //    }
+
+        //    //Write Dictionary if contains
+        //    if (descriptor.IsDictionary)
+        //    {
+        //        var iValue = (IDictionary)value;
+        //        var count = iValue.Count;
+        //        WriteDefInt(DataBytesDefinition.DictionaryStart, count);
+        //        foreach (DictionaryEntry item in iValue)
+        //        {
+        //            WriteObjectValue(item.Key);
+        //            WriteObjectValue(item.Value);
+        //        }
+        //        return;
+        //    }
+        //}
 
         #region Private Write Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -791,7 +821,9 @@ namespace TWCore.Serialization.NSerializer
                         if (WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
                             serExpressions.Add(Expression.Call(serTable, wMethodTuple.Method, getExpression));
                         else
-                            serExpressions.Add(Expression.Call(serTable, WriteObjectValueMInfo, getExpression));
+                        {
+                            serExpressions.Add(Expression.Call(serTable, InternalWriteObjectValueMInfo, getExpression));
+                        }
                     }
                 }
                 //
@@ -799,10 +831,7 @@ namespace TWCore.Serialization.NSerializer
                 if (!IsArray)
                 {
                     IsDictionary = isIDictionary;
-                    if (IsDictionary)
-                        IsList = false;
-                    else
-                        IsList = isIList;
+                    IsList = !IsDictionary && isIList;
                 }
                 else
                 {
@@ -829,7 +858,7 @@ namespace TWCore.Serialization.NSerializer
                     var loop = Expression.Loop(
                                 Expression.IfThenElse(
                                     Expression.LessThan(forIdx, arrLength),
-                                    Expression.Call(serTable, WriteObjectValueMInfo, Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx))),
+                                    Expression.Call(serTable, InternalWriteObjectValueMInfo, Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx))),
                                     Expression.Break(breakLabel)), breakLabel);
                     serExpressions.Add(loop);
                 }
@@ -849,7 +878,7 @@ namespace TWCore.Serialization.NSerializer
                     var loop = Expression.Loop(
                                 Expression.IfThenElse(
                                     Expression.LessThan(forIdx, iLength),
-                                    Expression.Call(serTable, WriteObjectValueMInfo, Expression.MakeIndex(instance, IListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
+                                    Expression.Call(serTable, InternalWriteObjectValueMInfo, Expression.MakeIndex(instance, IListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
                                     Expression.Break(breakLabel)), breakLabel);
                     serExpressions.Add(loop);
                 }

@@ -115,7 +115,7 @@ namespace TWCore.Serialization.NSerializer
                 }
             }
 
-            var length = Encoding.Unicode.GetByteCount(value);
+            var length = Encoding.UTF8.GetByteCount(value);
             var bytes = new byte[length + 5];
             bytes[0] = DataBytesDefinition.StringLength;
             bytes[1] = (byte)length;

@@ -24,7 +24,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Reflection;
-using TWCore.Serialization.NSerializer.Types;
 
 namespace TWCore.Serialization.NSerializer
 {

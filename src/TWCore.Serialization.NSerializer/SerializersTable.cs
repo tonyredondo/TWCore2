@@ -32,6 +32,7 @@ namespace TWCore.Serialization.NSerializer
     {
         private Stream _stream;
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
+        private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
         private readonly BooleanSerializer _boolean = new BooleanSerializer();
         private readonly ByteArraySerializer ByteArray = new ByteArraySerializer();
         private readonly CharSerializer Char = new CharSerializer();
@@ -78,6 +79,7 @@ namespace TWCore.Serialization.NSerializer
             Property.Clear();
             TimeSpan.Clear();
             _typeCache.Clear();
+            _objectCache.Clear();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SetStream(Stream stream)
@@ -976,6 +978,17 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            var oIdx = _objectCache.SerializerGet(value);
+            if (oIdx > -1)
+            {
+                if (oIdx <= byte.MaxValue)
+                    WriteByte(_stream, DataBytesDefinition.RefObjectByte, (byte)oIdx);
+                else
+                    WriteUshort(_stream, DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                return;
+            }
+            _objectCache.SerializerSet(value);
+            
             var vType = typeof(T);
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
             var tIdx = _typeCache.SerializerGet(vType);
@@ -1254,6 +1267,17 @@ namespace TWCore.Serialization.NSerializer
                     return;
             }
             #endregion
+
+            var oIdx = _objectCache.SerializerGet(value);
+            if (oIdx > -1)
+            {
+                if (oIdx <= byte.MaxValue)
+                    WriteByte(_stream, DataBytesDefinition.RefObjectByte, (byte)oIdx);
+                else
+                    WriteUshort(_stream, DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                return;
+            }
+            _objectCache.SerializerSet(value);
 
             var vType = value.GetType();
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));

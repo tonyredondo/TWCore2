@@ -93,7 +93,7 @@ namespace TWCore.Tests
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    sertable.WriteValue(collection[0]);
+                    sertable.WriteValue(collection[i % 10000]);
                     sertable.Clear();
                     mStream.Position = 0;
                 }

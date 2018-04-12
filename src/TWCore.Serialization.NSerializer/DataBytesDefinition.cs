@@ -225,29 +225,8 @@ namespace TWCore.Serialization.NSerializer
 	    public const byte   RefTypeByte					= 181;
 	    public const byte   RefTypeUShort		    	= 182;
 	    
-		public const byte   RefObjectByte				= 224;
-		public const byte   RefObjectByte0				= 225;
-		public const byte   RefObjectByte1				= 226;
-		public const byte   RefObjectByte2				= 227;
-		public const byte   RefObjectByte3				= 228;
-		public const byte   RefObjectByte4				= 229;
-		public const byte   RefObjectByte5				= 230;
-		public const byte   RefObjectByte6				= 231;
-		public const byte   RefObjectByte7				= 232;
-		public const byte   RefObjectByte8				= 233;
-		public const byte   RefObjectByte9				= 234;
-		public const byte   RefObjectByte10				= 235;
-		public const byte   RefObjectByte11				= 236;
-		public const byte   RefObjectByte12				= 237;
-		public const byte   RefObjectByte13				= 238;
-		public const byte   RefObjectByte14				= 239;
-		public const byte   RefObjectByte15				= 240;
-		public const byte   RefObjectByte16				= 241;
-		public const byte   RefObjectByte17				= 242;
-		public const byte   RefObjectByte18				= 243;
-		public const byte   RefObjectByte19				= 244;
-		public const byte   RefObjectByte20				= 245;
-        public const byte   RefObjectUShort				= 246;
+		public const byte   RefObjectByte				= 183;
+        public const byte   RefObjectUShort				= 184;
 
         public const byte   FileStart                 = 255;
     }

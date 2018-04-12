@@ -85,7 +85,7 @@ namespace TWCore.Tests
             sertable.Init();
             var mStream = new MemoryStream();
             sertable.SetStream(mStream);
-            sertable.WriteValue(collection[0]);
+            sertable.WriteInnerValue(collection[0]);
             sertable.Clear();
             mStream.Position = 0;
 
@@ -93,7 +93,7 @@ namespace TWCore.Tests
             {
                 for (var i = 0; i < 100000; i++)
                 {
-                    sertable.WriteValue(collection[i % 10000]);
+                    sertable.WriteInnerValue(collection[i % 10000]);
                     sertable.Clear();
                     mStream.Position = 0;
                 }

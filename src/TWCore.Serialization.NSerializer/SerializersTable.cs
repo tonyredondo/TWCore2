@@ -30,6 +30,7 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable : TypeSerializer
     {
+        private static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
 
@@ -316,22 +317,39 @@ namespace TWCore.Serialization.NSerializer
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
         }
-        #endregion
-
-        //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue<T>(List<T> valueList)
         {
+            if (valueList == null)
+            {
+                _stream.WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
             var vType = typeof(T);
-            _stream.WriteByte(DataBytesDefinition.TypeStart);
-            WriteValue(vType.GetTypeName());
+            if (_objectCache.SerializerTryGetValue(valueList, out var oIdx))
+            {
+                WriteInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.SerializerSet(valueList);
+
+            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
+            if (_typeCache.SerializerTryGetValue(vType, out var tIdx))
+            {
+                WriteInt(DataBytesDefinition.RefType, tIdx);
+            }
+            else
+            {
+                WriteInt(DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.SerializerSet(vType);
+            }
             var count = valueList.Count;
             WriteInt(DataBytesDefinition.ListStart, count);
             for (var i = 0; i < count; i++)
                 WriteValue(valueList[i]);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue<T>(T value)
         {
@@ -366,6 +384,7 @@ namespace TWCore.Serialization.NSerializer
                 InternalWriteValue(value, descriptor);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
+        #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteInnerValue(object value)
@@ -439,189 +458,10 @@ namespace TWCore.Serialization.NSerializer
                 case TimeSpan cValue:
                     WriteValue(cValue);
                     return;
-                case bool[] cValue:
-                    WriteInt(DataBytesDefinition.BoolArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case char[] cValue:
-                    WriteInt(DataBytesDefinition.CharArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case DateTimeOffset[] cValue:
-                    WriteInt(DataBytesDefinition.DateTimeOffsetArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case DateTime[] cValue:
-                    WriteInt(DataBytesDefinition.DateTimeArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case Enum[] cValue:
-                    WriteInt(DataBytesDefinition.EnumArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case Guid[] cValue:
-                    WriteInt(DataBytesDefinition.GuidArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case decimal[] cValue:
-                    WriteInt(DataBytesDefinition.DecimalArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case double[] cValue:
-                    WriteInt(DataBytesDefinition.DoubleArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case float[] cValue:
-                    WriteInt(DataBytesDefinition.FloatArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case long[] cValue:
-                    WriteInt(DataBytesDefinition.LongArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case ulong[] cValue:
-                    WriteInt(DataBytesDefinition.ULongArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case int[] cValue:
-                    WriteInt(DataBytesDefinition.IntArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case uint[] cValue:
-                    WriteInt(DataBytesDefinition.UIntArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case short[] cValue:
-                    WriteInt(DataBytesDefinition.ShortArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case ushort[] cValue:
-                    WriteInt(DataBytesDefinition.UShortArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case sbyte[] cValue:
-                    WriteInt(DataBytesDefinition.SByteArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case string[] cValue:
-                    WriteInt(DataBytesDefinition.StringArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case TimeSpan[] cValue:
-                    WriteInt(DataBytesDefinition.TimeSpanArray, cValue.Length);
-                    for (var i = 0; i < cValue.Length; i++)
-                        WriteValue(cValue[i]);
-                    return;
-
-                case List<bool> cValue:
-                    WriteInt(DataBytesDefinition.BoolList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<char> cValue:
-                    WriteInt(DataBytesDefinition.CharList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<DateTimeOffset> cValue:
-                    WriteInt(DataBytesDefinition.DateTimeOffsetList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<DateTime> cValue:
-                    WriteInt(DataBytesDefinition.DateTimeList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<Enum> cValue:
-                    WriteInt(DataBytesDefinition.EnumList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<Guid> cValue:
-                    WriteInt(DataBytesDefinition.GuidList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<decimal> cValue:
-                    WriteInt(DataBytesDefinition.DecimalList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<double> cValue:
-                    WriteInt(DataBytesDefinition.DoubleList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<float> cValue:
-                    WriteInt(DataBytesDefinition.FloatList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<long> cValue:
-                    WriteInt(DataBytesDefinition.LongList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<ulong> cValue:
-                    WriteInt(DataBytesDefinition.ULongList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<int> cValue:
-                    WriteInt(DataBytesDefinition.IntList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<uint> cValue:
-                    WriteInt(DataBytesDefinition.UIntList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<short> cValue:
-                    WriteInt(DataBytesDefinition.ShortList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<ushort> cValue:
-                    WriteInt(DataBytesDefinition.UShortList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<sbyte> cValue:
-                    WriteInt(DataBytesDefinition.SByteList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<string> cValue:
-                    WriteInt(DataBytesDefinition.StringList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
-                case List<TimeSpan> cValue:
-                    WriteInt(DataBytesDefinition.TimeSpanList, cValue.Count);
-                    for (var i = 0; i < cValue.Count; i++)
-                        WriteValue(cValue[i]);
-                    return;
             }
             #endregion
+
+            var vType = value.GetType();
 
             if (_objectCache.SerializerTryGetValue(value, out var oIdx))
             {
@@ -630,7 +470,6 @@ namespace TWCore.Serialization.NSerializer
             }
             _objectCache.SerializerSet(value);
 
-            var vType = value.GetType();
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
             if (_typeCache.SerializerTryGetValue(vType, out var tIdx))
             {
@@ -696,7 +535,6 @@ namespace TWCore.Serialization.NSerializer
             }
         }
 
-        private static ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
 
         public struct TypeDescriptor
         {

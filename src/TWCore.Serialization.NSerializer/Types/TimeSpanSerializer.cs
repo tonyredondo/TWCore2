@@ -40,14 +40,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
-            if (_cache.SerializerTryGetValue(value, out var objIdx))
+            if (_cache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefTimeSpan, objIdx);
                 return;
             }
             var longBinary = value.Ticks;
             WriteLong(DataBytesDefinition.TimeSpan, longBinary);
-            _cache.SerializerSet(value);
+            _cache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -85,11 +85,11 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.TimeSpanDefault:
                     return default(TimeSpan);
                 case DataBytesDefinition.RefTimeSpan:
-                    return _cache.DeserializerGet(reader.ReadInt32());
+                    return _cache.Get(reader.ReadInt32());
                 case DataBytesDefinition.TimeSpan:
                     var longBinary = reader.ReadInt64();
                     var cValue = TimeSpan.FromTicks(longBinary);
-                    _cache.DeserializerSet(cValue);
+                    _cache.Set(cValue);
                     return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");

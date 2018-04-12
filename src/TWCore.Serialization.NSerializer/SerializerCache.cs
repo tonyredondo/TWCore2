@@ -39,11 +39,11 @@ namespace TWCore.Serialization.NSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SerializerTryGetValue(T value, out int index)
+        public bool TryGetValue(T value, out int index)
             => _serializationCache.TryGetValue(value, out index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SerializerSet(T value)
+        public void Set(T value)
         {
             if (_serCurrentIndex < 2047)
                 _serializationCache.Add(value, _serCurrentIndex++);
@@ -68,11 +68,11 @@ namespace TWCore.Serialization.NSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public T DeserializerGet(int index)
+        public T Get(int index)
             => _deserializationCache[index];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DeserializerSet(T value)
+        public void Set(T value)
         {
             if (_desCurrentIndex < 2047)
                 _deserializationCache.Add(_desCurrentIndex++, value);
@@ -99,11 +99,11 @@ namespace TWCore.Serialization.NSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool SerializerTryGetValue(string value, out int index)
+        public bool TryGetValue(string value, out int index)
             => _serializationCache.TryGetValue(value, out index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SerializerSet(string value)
+        public void Set(string value)
         {
             if (_serCurrentIndex < 2047)
                 _serializationCache.Add(value, _serCurrentIndex++);
@@ -128,11 +128,11 @@ namespace TWCore.Serialization.NSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string DeserializerGet(int index)
+        public string Get(int index)
             => _deserializationCache[index];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DeserializerSet(string value)
+        public void Set(string value)
         {
             if (_desCurrentIndex < 2047)
                 _deserializationCache.Add(_desCurrentIndex++, value);

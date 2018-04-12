@@ -70,48 +70,48 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (vLength <= 8)
                 {
-                    if (_stringCache8.SerializerTryGetValue(value, out var objIdx))
+                    if (_stringCache8.TryGetValue(value, out var objIdx))
                     {
                         WriteInt(DataBytesDefinition.RefString8, objIdx);
                         return;
                     }
-                    _stringCache8.SerializerSet(value);
+                    _stringCache8.Set(value);
                 }
                 else if (vLength <= 16)
                 {
-                    if (_stringCache16.SerializerTryGetValue(value, out var objIdx))
+                    if (_stringCache16.TryGetValue(value, out var objIdx))
                     {
                         WriteInt(DataBytesDefinition.RefString16, objIdx);
                         return;
                     }
-                    _stringCache16.SerializerSet(value);
+                    _stringCache16.Set(value);
                 }
                 else if (vLength <= 32)
                 {
-                    if (_stringCache32.SerializerTryGetValue(value, out var objIdx))
+                    if (_stringCache32.TryGetValue(value, out var objIdx))
                     {
                         WriteInt(DataBytesDefinition.RefString32, objIdx);
                         return;
                     }
-                    _stringCache32.SerializerSet(value);
+                    _stringCache32.Set(value);
                 }
                 else if (vLength <= 64)
                 {
-                    if (_stringCache64.SerializerTryGetValue(value, out var objIdx))
+                    if (_stringCache64.TryGetValue(value, out var objIdx))
                     {
                         WriteInt(DataBytesDefinition.RefString64, objIdx);
                         return;
                     }
-                    _stringCache64.SerializerSet(value);
+                    _stringCache64.Set(value);
                 }
                 else
                 {
-                    if (_stringCache.SerializerTryGetValue(value, out var objIdx))
+                    if (_stringCache.TryGetValue(value, out var objIdx))
                     {
                         WriteInt(DataBytesDefinition.RefString, objIdx);
                         return;
                     }
-                    _stringCache.SerializerSet(value);
+                    _stringCache.Set(value);
                 }
             }
 
@@ -167,15 +167,15 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.StringEmpty:
                     return string.Empty;
                 case DataBytesDefinition.RefString:
-                    return _stringCache.DeserializerGet(reader.ReadInt32());
+                    return _stringCache.Get(reader.ReadInt32());
                 case DataBytesDefinition.RefString8:
-                    return _stringCache8.DeserializerGet(reader.ReadInt32());
+                    return _stringCache8.Get(reader.ReadInt32());
                 case DataBytesDefinition.RefString16:
-                    return _stringCache16.DeserializerGet(reader.ReadInt32());
+                    return _stringCache16.Get(reader.ReadInt32());
                 case DataBytesDefinition.RefString32:
-                    return _stringCache32.DeserializerGet(reader.ReadInt32());
+                    return _stringCache32.Get(reader.ReadInt32());
                 case DataBytesDefinition.RefString64:
-                    return _stringCache64.DeserializerGet(reader.ReadInt32());
+                    return _stringCache64.Get(reader.ReadInt32());
                 case DataBytesDefinition.StringLength:
                     length = reader.ReadInt32();
                     break;
@@ -190,15 +190,15 @@ namespace TWCore.Serialization.NSerializer
 
             if (sLength <= 2) return strValue;
             if (sLength <= 8)
-                _stringCache8.DeserializerSet(strValue);
+                _stringCache8.Set(strValue);
             else if (sLength <= 16)
-                _stringCache16.DeserializerSet(strValue);
+                _stringCache16.Set(strValue);
             else if (sLength <= 32)
-                _stringCache32.DeserializerSet(strValue);
+                _stringCache32.Set(strValue);
             else if (sLength <= 64)
-                _stringCache64.DeserializerSet(strValue);
+                _stringCache64.Set(strValue);
             else
-                _stringCache.DeserializerSet(strValue);
+                _stringCache.Set(strValue);
             return strValue;
         }
     }

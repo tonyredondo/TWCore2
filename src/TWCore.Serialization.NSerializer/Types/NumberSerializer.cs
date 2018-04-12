@@ -47,14 +47,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.DecimalDefault);
                 return;
             }
-            if (_decimalCache.SerializerTryGetValue(value, out var objIdx))
+            if (_decimalCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefDecimal, objIdx);
                 return;
             }
             _stream.WriteByte(DataBytesDefinition.Decimal);
             WriteDecimal(value);
-            _decimalCache.SerializerSet(value);
+            _decimalCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double value)
@@ -64,13 +64,13 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.DoubleDefault);
                 return;
             }
-            if (_doubleCache.SerializerTryGetValue(value, out var objIdx))
+            if (_doubleCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefDouble, objIdx);
                 return;
             }
             WriteDouble(DataBytesDefinition.Double, value);
-            _doubleCache.SerializerSet(value);
+            _doubleCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float value)
@@ -80,13 +80,13 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.FloatDefault);
                 return;
             }
-            if (_floatCache.SerializerTryGetValue(value, out var objIdx))
+            if (_floatCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefFloat, objIdx);
                 return;
             }
             WriteFloat(DataBytesDefinition.Float, value);
-            _floatCache.SerializerSet(value);
+            _floatCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long value)
@@ -96,13 +96,13 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            if (_longCache.SerializerTryGetValue(value, out var objIdx))
+            if (_longCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefLong, objIdx);
                 return;
             }
             WriteLong(DataBytesDefinition.Long, value);
-            _longCache.SerializerSet(value);
+            _longCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong value)
@@ -112,13 +112,13 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.NumberDefault);
                 return;
             }
-            if (_uLongCache.SerializerTryGetValue(value, out var objIdx))
+            if (_uLongCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefULong, objIdx);
                 return;
             }
             WriteULong(DataBytesDefinition.ULong, value);
-            _uLongCache.SerializerSet(value);
+            _uLongCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int value)
@@ -336,12 +336,12 @@ namespace TWCore.Serialization.NSerializer
                     return 0;
                 case DataBytesDefinition.Decimal:
                     var v1 = reader.ReadDecimal();
-                    _decimalCache.DeserializerSet(v1);
+                    _decimalCache.Set(v1);
                     return v1;
                 case DataBytesDefinition.DecimalDefault:
                     return default(decimal);
                 case DataBytesDefinition.RefDecimal:
-                    return _decimalCache.DeserializerGet(reader.ReadInt32());
+                    return _decimalCache.Get(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -357,12 +357,12 @@ namespace TWCore.Serialization.NSerializer
                     return 0;
                 case DataBytesDefinition.Double:
                     var v2 = reader.ReadDouble();
-                    _doubleCache.DeserializerSet(v2);
+                    _doubleCache.Set(v2);
                     return v2;
                 case DataBytesDefinition.DoubleDefault:
                     return default(double);
                 case DataBytesDefinition.RefDouble:
-                    return _doubleCache.DeserializerGet(reader.ReadInt32());
+                    return _doubleCache.Get(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -378,12 +378,12 @@ namespace TWCore.Serialization.NSerializer
                     return 0;
                 case DataBytesDefinition.Float:
                     var v3 = reader.ReadSingle();
-                    _floatCache.DeserializerSet(v3);
+                    _floatCache.Set(v3);
                     return v3;
                 case DataBytesDefinition.FloatDefault:
                     return default(float);
                 case DataBytesDefinition.RefFloat:
-                    return _floatCache.DeserializerGet(reader.ReadInt32());
+                    return _floatCache.Get(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -399,10 +399,10 @@ namespace TWCore.Serialization.NSerializer
                     return 0;
                 case DataBytesDefinition.Long:
                     var v4 = reader.ReadInt64();
-                    _longCache.DeserializerSet(v4);
+                    _longCache.Set(v4);
                     return v4;
                 case DataBytesDefinition.RefLong:
-                    return _longCache.DeserializerGet(reader.ReadInt32());
+                    return _longCache.Get(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -418,10 +418,10 @@ namespace TWCore.Serialization.NSerializer
                     return 0;
                 case DataBytesDefinition.ULong:
                     var v5 = reader.ReadUInt64();
-                    _uLongCache.DeserializerSet(v5);
+                    _uLongCache.Set(v5);
                     return v5;
                 case DataBytesDefinition.RefULong:
-                    return _uLongCache.DeserializerGet(reader.ReadInt32());
+                    return _uLongCache.Get(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");
         }

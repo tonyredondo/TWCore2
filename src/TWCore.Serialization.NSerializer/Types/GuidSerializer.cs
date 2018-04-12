@@ -40,7 +40,7 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.GuidDefault);
                 return;
             }
-            if (_guidCache.SerializerTryGetValue(value, out var objIdx))
+            if (_guidCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefGuid, objIdx);
                 return;
@@ -48,7 +48,7 @@ namespace TWCore.Serialization.NSerializer
             _stream.WriteByte(DataBytesDefinition.Guid);
             var bytes = value.ToByteArray();
             _stream.Write(bytes, 0, bytes.Length);
-            _guidCache.SerializerSet(value);
+            _guidCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -86,11 +86,11 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.GuidDefault:
                     return default(Guid);
                 case DataBytesDefinition.RefGuid:
-                    return _guidCache.DeserializerGet(reader.ReadInt32());
+                    return _guidCache.Get(reader.ReadInt32());
                 case DataBytesDefinition.Guid:
                     var bytes = reader.ReadBytes(16);
                     var guidValue = new Guid(bytes);
-                    _guidCache.DeserializerSet(guidValue);
+                    _guidCache.Set(guidValue);
                     return guidValue;
             }
             throw new InvalidOperationException("Invalid type value.");

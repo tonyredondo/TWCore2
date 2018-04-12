@@ -40,14 +40,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
                 return;
             }
-            if (_dateTimeOffsetCache.SerializerTryGetValue(value, out var objIdx))
+            if (_dateTimeOffsetCache.TryGetValue(value, out var objIdx))
             {
                 WriteInt(DataBytesDefinition.RefDateTimeOffset, objIdx);
                 return;
             }
             var longBinary = value.ToFileTime();
             WriteLong(DataBytesDefinition.DateTimeOffset, longBinary);
-            _dateTimeOffsetCache.SerializerSet(value);
+            _dateTimeOffsetCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -88,11 +88,11 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.DateTimeOffsetDefault:
                     return default(DateTimeOffset);
                 case DataBytesDefinition.RefDateTimeOffset:
-                    return _dateTimeOffsetCache.DeserializerGet(reader.ReadInt32());
+                    return _dateTimeOffsetCache.Get(reader.ReadInt32());
                 case DataBytesDefinition.DateTimeOffset:
                     var longBinary = reader.ReadInt64();
                     var cValue = DateTimeOffset.FromFileTime(longBinary);
-                    _dateTimeOffsetCache.DeserializerSet(cValue);
+                    _dateTimeOffsetCache.Set(cValue);
                     return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");

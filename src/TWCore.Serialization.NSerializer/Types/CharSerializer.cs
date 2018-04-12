@@ -18,40 +18,34 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class CharSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
-        {
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, char value)
+        public void WriteValue(char value)
         {
             if (value == default(char))
-                stream.WriteByte(DataBytesDefinition.CharDefault);
+                _stream.WriteByte(DataBytesDefinition.CharDefault);
             else
-                WriteChar(stream, DataBytesDefinition.Char, value);
+                WriteChar(DataBytesDefinition.Char, value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, char? value)
+        public void WriteValue(char? value)
         {
             if (value == null)
-                stream.WriteByte(DataBytesDefinition.ValueNull);
+                _stream.WriteByte(DataBytesDefinition.ValueNull);
             else if (value == default(char))
-                stream.WriteByte(DataBytesDefinition.CharDefault);
+                _stream.WriteByte(DataBytesDefinition.CharDefault);
             else
-                WriteChar(stream, DataBytesDefinition.Char, value.Value);
+                WriteChar(DataBytesDefinition.Char, value.Value);
         }
+    }
 
+
+    public partial class DeserializersTable
+    { 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char Read(BinaryReader reader)
             => ReadNullable(reader) ?? default;

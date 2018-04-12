@@ -21,47 +21,47 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class StringSerializer : TypeSerializer
+    public partial class SerializersTable
     {
-        private SerializerStringCache _cache8;
-        private SerializerStringCache _cache16;
-        private SerializerStringCache _cache32;
-        private SerializerStringCache _cache64;
-        private SerializerStringCache _cache;
+        private SerializerStringCache _stringCache8;
+        private SerializerStringCache _stringCache16;
+        private SerializerStringCache _stringCache32;
+        private SerializerStringCache _stringCache64;
+        private SerializerStringCache _stringCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
+        public void InitString()
         {
-            _cache8 = new SerializerStringCache();
-            _cache16 = new SerializerStringCache();
-            _cache32 = new SerializerStringCache();
-            _cache64 = new SerializerStringCache();
-            _cache = new SerializerStringCache();
+            _stringCache8 = new SerializerStringCache();
+            _stringCache16 = new SerializerStringCache();
+            _stringCache32 = new SerializerStringCache();
+            _stringCache64 = new SerializerStringCache();
+            _stringCache = new SerializerStringCache();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
+        public void ClearString()
         {
-            _cache8.Clear();
-            _cache16.Clear();
-            _cache32.Clear();
-            _cache64.Clear();
-            _cache.Clear();
+            _stringCache8.Clear();
+            _stringCache16.Clear();
+            _stringCache32.Clear();
+            _stringCache64.Clear();
+            _stringCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, string value)
+        public void WriteValue(string value)
         {
             if (value == null)
             {
-                stream.WriteByte(DataBytesDefinition.StringNull);
+                _stream.WriteByte(DataBytesDefinition.StringNull);
                 return;
             }
             if (value == string.Empty)
             {
-                stream.WriteByte(DataBytesDefinition.StringEmpty);
+                _stream.WriteByte(DataBytesDefinition.StringEmpty);
                 return;
             }
 
@@ -70,68 +70,68 @@ namespace TWCore.Serialization.NSerializer.Types
             {
                 if (vLength <= 8)
                 {
-                    var objIdx = _cache8.SerializerGet(value);
+                    var objIdx = _stringCache8.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(stream, DataBytesDefinition.RefString8Byte, (byte)objIdx);
+                            WriteByte(DataBytesDefinition.RefString8Byte, (byte)objIdx);
                         else
-                            WriteUshort(stream, DataBytesDefinition.RefString8UShort, (ushort)objIdx);
+                            WriteUshort(DataBytesDefinition.RefString8UShort, (ushort)objIdx);
                         return;
                     }
-                    _cache8.SerializerSet(value);
+                    _stringCache8.SerializerSet(value);
                 }
                 else if (vLength <= 16)
                 {
-                    var objIdx = _cache16.SerializerGet(value);
+                    var objIdx = _stringCache16.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(stream, DataBytesDefinition.RefString16Byte, (byte)objIdx);
+                            WriteByte(DataBytesDefinition.RefString16Byte, (byte)objIdx);
                         else
-                            WriteUshort(stream, DataBytesDefinition.RefString16UShort, (ushort)objIdx);
+                            WriteUshort(DataBytesDefinition.RefString16UShort, (ushort)objIdx);
                         return;
                     }
-                    _cache16.SerializerSet(value);
+                    _stringCache16.SerializerSet(value);
                 }
                 else if (vLength <= 32)
                 {
-                    var objIdx = _cache32.SerializerGet(value);
+                    var objIdx = _stringCache32.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(stream, DataBytesDefinition.RefString32Byte, (byte)objIdx);
+                            WriteByte(DataBytesDefinition.RefString32Byte, (byte)objIdx);
                         else
-                            WriteUshort(stream, DataBytesDefinition.RefString32UShort, (ushort)objIdx);
+                            WriteUshort(DataBytesDefinition.RefString32UShort, (ushort)objIdx);
                         return;
                     }
-                    _cache32.SerializerSet(value);
+                    _stringCache32.SerializerSet(value);
                 }
                 else if (vLength <= 64)
                 {
-                    var objIdx = _cache64.SerializerGet(value);
+                    var objIdx = _stringCache64.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(stream, DataBytesDefinition.RefString64Byte, (byte)objIdx);
+                            WriteByte(DataBytesDefinition.RefString64Byte, (byte)objIdx);
                         else
-                            WriteUshort(stream, DataBytesDefinition.RefString64UShort, (ushort)objIdx);
+                            WriteUshort(DataBytesDefinition.RefString64UShort, (ushort)objIdx);
                         return;
                     }
-                    _cache64.SerializerSet(value);
+                    _stringCache64.SerializerSet(value);
                 }
                 else
                 {
-                    var objIdx = _cache.SerializerGet(value);
+                    var objIdx = _stringCache.SerializerGet(value);
                     if (objIdx > -1)
                     {
                         if (objIdx <= byte.MaxValue)
-                            WriteByte(stream, DataBytesDefinition.RefStringByte, (byte)objIdx);
+                            WriteByte(DataBytesDefinition.RefStringByte, (byte)objIdx);
                         else
-                            WriteUshort(stream, DataBytesDefinition.RefStringUShort, (ushort)objIdx);
+                            WriteUshort(DataBytesDefinition.RefStringUShort, (ushort)objIdx);
                         return;
                     }
-                    _cache.SerializerSet(value);
+                    _stringCache.SerializerSet(value);
                 }
             }
 
@@ -174,11 +174,40 @@ namespace TWCore.Serialization.NSerializer.Types
                 bytes[4] = (byte)(length >> 24);
                 Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
             }
-            stream.Write(bytes, 0, bytesLength);
+            _stream.Write(bytes, 0, bytesLength);
+        }
+    }
+
+    public partial class DeserializersTable
+    {
+        private SerializerStringCache _stringCache8;
+        private SerializerStringCache _stringCache16;
+        private SerializerStringCache _stringCache32;
+        private SerializerStringCache _stringCache64;
+        private SerializerStringCache _stringCache;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InitString()
+        {
+            _stringCache8 = new SerializerStringCache();
+            _stringCache16 = new SerializerStringCache();
+            _stringCache32 = new SerializerStringCache();
+            _stringCache64 = new SerializerStringCache();
+            _stringCache = new SerializerStringCache();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string Read(BinaryReader reader)
+        public void ClearString()
+        {
+            _stringCache8.Clear();
+            _stringCache16.Clear();
+            _stringCache32.Clear();
+            _stringCache64.Clear();
+            _stringCache.Clear();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string ReadString(BinaryReader reader)
         {
             var type = reader.ReadByte();
             int? length = null;
@@ -189,29 +218,29 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.StringEmpty:
                     return string.Empty;
                 case DataBytesDefinition.RefStringByte:
-                    return _cache.DeserializerGet(reader.ReadByte());
+                    return _stringCache.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefStringUShort:
-                    return _cache.DeserializerGet(reader.ReadUInt16());
+                    return _stringCache.DeserializerGet(reader.ReadUInt16());
 
                 case DataBytesDefinition.RefString8Byte:
-                    return _cache8.DeserializerGet(reader.ReadByte());
+                    return _stringCache8.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefString8UShort:
-                    return _cache8.DeserializerGet(reader.ReadUInt16());
+                    return _stringCache8.DeserializerGet(reader.ReadUInt16());
 
                 case DataBytesDefinition.RefString16Byte:
-                    return _cache16.DeserializerGet(reader.ReadByte());
+                    return _stringCache16.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefString16UShort:
-                    return _cache16.DeserializerGet(reader.ReadUInt16());
+                    return _stringCache16.DeserializerGet(reader.ReadUInt16());
 
                 case DataBytesDefinition.RefString32Byte:
-                    return _cache32.DeserializerGet(reader.ReadByte());
+                    return _stringCache32.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefString32UShort:
-                    return _cache32.DeserializerGet(reader.ReadUInt16());
+                    return _stringCache32.DeserializerGet(reader.ReadUInt16());
 
                 case DataBytesDefinition.RefString64Byte:
-                    return _cache64.DeserializerGet(reader.ReadByte());
+                    return _stringCache64.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefString64UShort:
-                    return _cache64.DeserializerGet(reader.ReadUInt16());
+                    return _stringCache64.DeserializerGet(reader.ReadUInt16());
 
                 case DataBytesDefinition.StringLengthByte:
                     length = reader.ReadByte();
@@ -293,9 +322,9 @@ namespace TWCore.Serialization.NSerializer.Types
 
             if (sLength <= 2) return strValue;
             if (sLength <= 16)
-                _cache16.DeserializerSet(strValue);
+                _stringCache16.DeserializerSet(strValue);
             else
-                _cache.DeserializerSet(strValue);
+                _stringCache.DeserializerSet(strValue);
             return strValue;
         }
     }

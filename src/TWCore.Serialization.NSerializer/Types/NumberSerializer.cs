@@ -2,9 +2,9 @@
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class NumberSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         private SerializerCache<decimal> _decimalCache;
         private SerializerCache<double> _doubleCache;
@@ -15,13 +15,13 @@ namespace TWCore.Serialization.NSerializer.Types
         private SerializerCache<uint> _uIntCache;
         private SerializerCache<short> _shortCache;
         private SerializerCache<ushort> _uShortCache;
-        
+
         /// <inheritdoc />
         /// <summary>
         /// Type serializer initialization
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
+        public void InitNumber()
         {
             _decimalCache = new SerializerCache<decimal>();
             _doubleCache = new SerializerCache<double>();
@@ -38,7 +38,7 @@ namespace TWCore.Serialization.NSerializer.Types
         /// Clear serializer cache
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
+        public void ClearNumber()
         {
             _decimalCache?.Clear();
             _doubleCache?.Clear();
@@ -52,143 +52,143 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, decimal value)
+        public void WriteValue(decimal value)
         {
             if (value == default)
             {
-                stream.WriteByte(DataBytesDefinition.DecimalDefault);
+                _stream.WriteByte(DataBytesDefinition.DecimalDefault);
                 return;
             }
             var objIdx = _decimalCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefDecimalByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefDecimalByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefDecimalUShort, (ushort)objIdx);
             }
             else
             {
-                stream.WriteByte(DataBytesDefinition.Decimal);
-                WriteDecimal(stream, value);
+                _stream.WriteByte(DataBytesDefinition.Decimal);
+                WriteDecimal(value);
                 _decimalCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, double value)
+        public void WriteValue(double value)
         {
             if (Math.Abs(value - default(double)) < 0.0000000000001)
             {
-                stream.WriteByte(DataBytesDefinition.DoubleDefault);
+                _stream.WriteByte(DataBytesDefinition.DoubleDefault);
                 return;
             }
             var objIdx = _doubleCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefDoubleByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefDoubleByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefDoubleUShort, (ushort)objIdx);
             }
             else
             {
-                WriteDouble(stream, DataBytesDefinition.Double, value);
+                WriteDouble(DataBytesDefinition.Double, value);
                 _doubleCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, float value)
+        public void WriteValue(float value)
         {
             if (Math.Abs(value - default(float)) < 0.0000000000001)
             {
-                stream.WriteByte(DataBytesDefinition.FloatDefault);
+                _stream.WriteByte(DataBytesDefinition.FloatDefault);
                 return;
             }
             var objIdx = _floatCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefFloatByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefFloatByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefFloatUShort, (ushort)objIdx);
             }
             else
             {
-                WriteFloat(stream, DataBytesDefinition.Float, value);
+                WriteFloat(DataBytesDefinition.Float, value);
                 _floatCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, long value)
+        public void WriteValue(long value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
+                    _stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -196,84 +196,84 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefLongByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefLongByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefLongUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefLongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteLong(stream, DataBytesDefinition.Long, value);
+                WriteLong(DataBytesDefinition.Long, value);
                 _longCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, ulong value)
+        public void WriteValue(ulong value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -281,87 +281,87 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefULongByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefULongByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefULongUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefULongUShort, (ushort)objIdx);
             }
             else
             {
-                WriteULong(stream, DataBytesDefinition.ULong, value);
+                WriteULong(DataBytesDefinition.ULong, value);
                 _uLongCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, int value)
+        public void WriteValue(int value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
+                    _stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -370,84 +370,84 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefIntByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefIntByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefIntUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteInt(stream, DataBytesDefinition.Int, value);
+                WriteInt(DataBytesDefinition.Int, value);
                 _intCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, uint value)
+        public void WriteValue(uint value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -456,326 +456,326 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefUIntByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefUIntByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefUIntUShort, (ushort)objIdx);
             }
             else
             {
-                WriteUInt(stream, DataBytesDefinition.UInt, value);
+                WriteUInt(DataBytesDefinition.UInt, value);
                 _uIntCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, short value)
+        public void WriteValue(short value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
+                    _stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
             var objIdx = _shortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteByte(stream, DataBytesDefinition.RefShortByte, (byte)objIdx);
+                WriteByte(DataBytesDefinition.RefShortByte, (byte)objIdx);
             else
             {
-                WriteShort(stream, DataBytesDefinition.Short, value);
+                WriteShort(DataBytesDefinition.Short, value);
                 _shortCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, ushort value)
+        public void WriteValue(ushort value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
             var objIdx = _uShortCache.SerializerGet(value);
             if (objIdx > -1 && objIdx <= byte.MaxValue)
-                WriteByte(stream, DataBytesDefinition.RefUShortByte, (byte)objIdx);
+                WriteByte(DataBytesDefinition.RefUShortByte, (byte)objIdx);
             else
             {
-                WriteUshort(stream, DataBytesDefinition.UShort, value);
+                WriteUshort(DataBytesDefinition.UShort, value);
                 _uShortCache.SerializerSet(value);
             }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, byte value)
+        public void WriteValue(byte value)
         {
             #region Static Values
             switch (value)
             {
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
 
-            WriteByte(stream, DataBytesDefinition.Byte, value);                
+            WriteByte(DataBytesDefinition.Byte, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, sbyte value)
+        public void WriteValue(sbyte value)
         {
             #region Static Values
             switch (value)
             {
                 case -1:
-                    stream.WriteByte(DataBytesDefinition.SByteMinusOne);
+                    _stream.WriteByte(DataBytesDefinition.SByteMinusOne);
                     return;
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.ByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.ByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.Byte1);
+                    _stream.WriteByte(DataBytesDefinition.Byte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.Byte2);
+                    _stream.WriteByte(DataBytesDefinition.Byte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.Byte3);
+                    _stream.WriteByte(DataBytesDefinition.Byte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.Byte4);
+                    _stream.WriteByte(DataBytesDefinition.Byte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.Byte5);
+                    _stream.WriteByte(DataBytesDefinition.Byte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.Byte6);
+                    _stream.WriteByte(DataBytesDefinition.Byte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.Byte7);
+                    _stream.WriteByte(DataBytesDefinition.Byte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.Byte8);
+                    _stream.WriteByte(DataBytesDefinition.Byte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.Byte9);
+                    _stream.WriteByte(DataBytesDefinition.Byte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.Byte10);
+                    _stream.WriteByte(DataBytesDefinition.Byte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.Byte11);
+                    _stream.WriteByte(DataBytesDefinition.Byte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.Byte12);
+                    _stream.WriteByte(DataBytesDefinition.Byte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.Byte13);
+                    _stream.WriteByte(DataBytesDefinition.Byte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.Byte14);
+                    _stream.WriteByte(DataBytesDefinition.Byte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.Byte15);
+                    _stream.WriteByte(DataBytesDefinition.Byte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.Byte16);
+                    _stream.WriteByte(DataBytesDefinition.Byte16);
                     return;
                 case 17:
-                    stream.WriteByte(DataBytesDefinition.Byte17);
+                    _stream.WriteByte(DataBytesDefinition.Byte17);
                     return;
                 case 18:
-                    stream.WriteByte(DataBytesDefinition.Byte18);
+                    _stream.WriteByte(DataBytesDefinition.Byte18);
                     return;
                 case 19:
-                    stream.WriteByte(DataBytesDefinition.Byte19);
+                    _stream.WriteByte(DataBytesDefinition.Byte19);
                     return;
                 case 20:
-                    stream.WriteByte(DataBytesDefinition.Byte20);
+                    _stream.WriteByte(DataBytesDefinition.Byte20);
                     return;
             }
             #endregion
@@ -783,80 +783,128 @@ namespace TWCore.Serialization.NSerializer.Types
             switch (value)
             {
                 default:
-                    stream.WriteByte(DataBytesDefinition.SByte);
-                    WriteSByte(stream, value);
+                    _stream.WriteByte(DataBytesDefinition.SByte);
+                    WriteSByte(value);
                     return;
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, decimal? value)
+        public void WriteValue(decimal? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, double? value)
+        public void WriteValue(double? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, float? value)
+        public void WriteValue(float? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, long? value)
+        public void WriteValue(long? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, ulong? value)
+        public void WriteValue(ulong? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, int? value)
+        public void WriteValue(int? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, uint? value)
+        public void WriteValue(uint? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, short? value)
+        public void WriteValue(short? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, ushort? value)
+        public void WriteValue(ushort? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, byte? value)
+        public void WriteValue(byte? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, sbyte? value)
+        public void WriteValue(sbyte? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
-        
-        
+
+    }
+
+    public partial class DeserializersTable
+    {
+        private SerializerCache<decimal> _decimalCache;
+        private SerializerCache<double> _doubleCache;
+        private SerializerCache<float> _floatCache;
+        private SerializerCache<long> _longCache;
+        private SerializerCache<ulong> _uLongCache;
+        private SerializerCache<int> _intCache;
+        private SerializerCache<uint> _uIntCache;
+        private SerializerCache<short> _shortCache;
+        private SerializerCache<ushort> _uShortCache;
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Type serializer initialization
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void InitNumber()
+        {
+            _decimalCache = new SerializerCache<decimal>();
+            _doubleCache = new SerializerCache<double>();
+            _floatCache = new SerializerCache<float>();
+            _longCache = new SerializerCache<long>();
+            _uLongCache = new SerializerCache<ulong>();
+            _intCache = new SerializerCache<int>();
+            _uIntCache = new SerializerCache<uint>();
+            _shortCache = new SerializerCache<short>();
+            _uShortCache = new SerializerCache<ushort>();
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Clear serializer cache
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ClearNumber()
+        {
+            _decimalCache?.Clear();
+            _doubleCache?.Clear();
+            _floatCache?.Clear();
+            _longCache?.Clear();
+            _uLongCache?.Clear();
+            _intCache?.Clear();
+            _uIntCache?.Clear();
+            _shortCache?.Clear();
+            _uShortCache?.Clear();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public decimal ReadDecimal(BinaryReader reader)
             => ReadDecimalNullable(reader) ?? default;

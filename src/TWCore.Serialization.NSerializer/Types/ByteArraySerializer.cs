@@ -18,50 +18,46 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class ByteArraySerializer : TypeSerializer
+    public partial class SerializersTable
     {
         private static readonly byte[] EmptyBytes = new byte[0];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, byte[] value)
+        public void WriteValue(byte[] value)
         {
             if (value == null)
             {
-                stream.WriteByte(DataBytesDefinition.ByteArrayNull);
+                _stream.WriteByte(DataBytesDefinition.ByteArrayNull);
                 return;
             }
             if (value.Length == 0)
             {
-                stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
+                _stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
                 return;
             }
 
             #region Write Array
             var length = value.Length;
             if (length <= byte.MaxValue)
-                WriteByte(stream, DataBytesDefinition.ByteArrayLengthByte, (byte)length);
+                WriteByte(DataBytesDefinition.ByteArrayLengthByte, (byte)length);
             else if (length <= ushort.MaxValue)
-                WriteUshort(stream, DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
+                WriteUshort(DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
             else
-                WriteInt(stream, DataBytesDefinition.ByteArrayLengthInt, length);
-            stream.Write(value, 0, value.Length);
+                WriteInt(DataBytesDefinition.ByteArrayLengthInt, length);
+            _stream.Write(value, 0, value.Length);
             #endregion
         }
+    }
+
+
+    public partial class DeserializersTable
+    {
+        private static readonly byte[] EmptyBytes = new byte[0];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] Read(BinaryReader reader)
+        public byte[] ReadByteArray(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)

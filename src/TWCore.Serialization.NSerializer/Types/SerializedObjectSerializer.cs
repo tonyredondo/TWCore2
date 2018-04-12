@@ -19,41 +19,34 @@ using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class SerializedObjectSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, SerializedObject value)
+        public void WriteValue(SerializedObject value)
         {
             if (value == null)
-                stream.WriteByte(DataBytesDefinition.SerializedObjectNull);
+                _stream.WriteByte(DataBytesDefinition.SerializedObjectNull);
             else
             {
-                stream.WriteByte(DataBytesDefinition.SerializedObject);
+                _stream.WriteByte(DataBytesDefinition.SerializedObject);
                 var dataTypeByte = !string.IsNullOrEmpty(value.DataType) ? Encoding.UTF8.GetBytes(value.DataType) : null;
                 var serializerMimeTypeByte = !string.IsNullOrEmpty(value.SerializerMimeType) ? Encoding.UTF8.GetBytes(value.SerializerMimeType) : null;
-                WriteInt(stream, dataTypeByte?.Length ?? -1);
-                if (dataTypeByte != null) stream.Write(dataTypeByte, 0, dataTypeByte.Length);
-                WriteInt(stream, serializerMimeTypeByte?.Length ?? -1);
-                if (serializerMimeTypeByte != null) stream.Write(serializerMimeTypeByte, 0, serializerMimeTypeByte.Length);
-                WriteInt(stream, value.Data?.Length ?? -1);
-                if (value.Data != null) stream.Write(value.Data, 0, value.Data.Length);
+                WriteInt(dataTypeByte?.Length ?? -1);
+                if (dataTypeByte != null) _stream.Write(dataTypeByte, 0, dataTypeByte.Length);
+                WriteInt(serializerMimeTypeByte?.Length ?? -1);
+                if (serializerMimeTypeByte != null) _stream.Write(serializerMimeTypeByte, 0, serializerMimeTypeByte.Length);
+                WriteInt(value.Data?.Length ?? -1);
+                if (value.Data != null) _stream.Write(value.Data, 0, value.Data.Length);
             }
         }
+    }
 
+    public partial class DeserializersTable
+    {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializedObject Read(BinaryReader reader)
+        public SerializedObject ReadSerializedObject(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch(type)

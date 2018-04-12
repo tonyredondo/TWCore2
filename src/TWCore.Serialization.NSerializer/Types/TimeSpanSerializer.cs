@@ -18,26 +18,26 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class TimeSpanSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         private SerializerCache<TimeSpan> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
+        public void InitTimeSpan()
             => _cache = new SerializerCache<TimeSpan>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
+        public void ClearTimeSpan()
             => _cache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, TimeSpan value)
+        public void WriteValue(TimeSpan value)
         {
             if (value == default)
             {
-                stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
+                _stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
 
@@ -45,31 +45,44 @@ namespace TWCore.Serialization.NSerializer.Types
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.Ticks;
-                WriteLong(stream, DataBytesDefinition.TimeSpan, longBinary);
+                WriteLong(DataBytesDefinition.TimeSpan, longBinary);
                 _cache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, TimeSpan? value)
+        public void WriteValue(TimeSpan? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
+    }
+
+    public partial class DeserializersTable
+    {
+        private SerializerCache<TimeSpan> _cache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TimeSpan Read(BinaryReader reader)
-            => ReadNullable(reader) ?? default;
+        public void InitTimeSpan()
+            => _cache = new SerializerCache<TimeSpan>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TimeSpan? ReadNullable(BinaryReader reader)
+        public void ClearTimeSpan()
+            => _cache.Clear();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TimeSpan ReadTimeSpan(BinaryReader reader)
+            => ReadTimeSpanNullable(reader) ?? default;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TimeSpan? ReadTimeSpanNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)

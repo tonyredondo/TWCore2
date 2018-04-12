@@ -18,57 +18,71 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class DateTimeSerializer : TypeSerializer
+    public partial class SerializersTable
     {
-        private SerializerCache<DateTime> _cache;
+        private SerializerCache<DateTime> _dateTimeCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
-            => _cache = new SerializerCache<DateTime>();
+        public void InitDateTime()
+            => _dateTimeCache = new SerializerCache<DateTime>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-            => _cache.Clear();
+        public void ClearDateTime()
+            => _dateTimeCache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, DateTime value)
+        public void WriteValue(DateTime value)
         {
             if (value == default)
             {
-                stream.WriteByte(DataBytesDefinition.DateTimeDefault);
+                _stream.WriteByte(DataBytesDefinition.DateTimeDefault);
                 return;
             }
-            var objIdx = _cache.SerializerGet(value);
+            var objIdx = _dateTimeCache.SerializerGet(value);
             if (objIdx > -1)
             {
                 if (objIdx <= byte.MaxValue)
-                    WriteByte(stream, DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
+                    WriteByte(DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
                 else
-                    WriteUshort(stream, DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
+                    WriteUshort(DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
             }
             else
             {
                 var longBinary = value.ToBinary();
-                WriteLong(stream, DataBytesDefinition.DateTime, longBinary);
-                _cache.SerializerSet(value);
+                WriteLong(DataBytesDefinition.DateTime, longBinary);
+                _dateTimeCache.SerializerSet(value);
             }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, DateTime? value)
+        public void WriteValue(DateTime? value)
         {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
+            if (value == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
+            else WriteValue(value.Value);
         }
+    }
+
+
+    public partial class DeserializersTable
+    {
+        private SerializerCache<DateTime> _dateTimeCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime Read(BinaryReader reader)
-            => ReadNullable(reader) ?? default;
+        public void InitDateTime()
+            => _dateTimeCache = new SerializerCache<DateTime>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadNullable(BinaryReader reader)
+        public void ClearDateTime()
+            => _dateTimeCache.Clear();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DateTime ReadDateTime(BinaryReader reader)
+            => ReadDateTimeNullable(reader) ?? default;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DateTime? ReadDateTimeNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)
@@ -78,13 +92,13 @@ namespace TWCore.Serialization.NSerializer.Types
                 case DataBytesDefinition.DateTimeDefault:
                     return default(DateTime);
                 case DataBytesDefinition.RefDateTimeByte:
-                    return _cache.DeserializerGet(reader.ReadByte());
+                    return _dateTimeCache.DeserializerGet(reader.ReadByte());
                 case DataBytesDefinition.RefDateTimeUShort:
-                    return _cache.DeserializerGet(reader.ReadUInt16());
+                    return _dateTimeCache.DeserializerGet(reader.ReadUInt16());
                 case DataBytesDefinition.DateTime:
                     var longBinary = reader.ReadInt64();
                     var cValue = DateTime.FromBinary(longBinary);
-                    _cache.DeserializerSet(cValue);
+                    _dateTimeCache.DeserializerSet(cValue);
                     return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");

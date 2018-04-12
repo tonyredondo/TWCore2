@@ -22,6 +22,7 @@ namespace TWCore.Serialization.NSerializer.Types
 {
     public abstract class TypeSerializer
     {
+        protected Stream _stream;
         private byte[] _buffer = new byte[9];
 
         /// <summary>
@@ -36,32 +37,32 @@ namespace TWCore.Serialization.NSerializer.Types
         public abstract void Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteByte(Stream stream, byte type, byte value)
+        public void WriteByte(byte type, byte value)
         {
             _buffer[0] = type;
             _buffer[1] = value;
-            stream.Write(_buffer, 0, 2);
+            _stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteUshort(Stream stream, byte type, ushort value)
+        public void WriteUshort(byte type, ushort value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
             _buffer[2] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 3);
+            _stream.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteInt(Stream stream, byte type, int value)
+        public void WriteInt(byte type, int value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
             _buffer[2] = (byte)(value >> 8);
             _buffer[3] = (byte)(value >> 16);
             _buffer[4] = (byte)(value >> 24);
-            stream.Write(_buffer, 0, 5);
+            _stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void WriteDouble(Stream stream, byte type, double value)
+        public unsafe void WriteDouble(byte type, double value)
         {
             var tmpValue = *(ulong*)&value;
             _buffer[0] = type;
@@ -73,10 +74,10 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[6] = (byte)(tmpValue >> 40);
             _buffer[7] = (byte)(tmpValue >> 48);
             _buffer[8] = (byte)(tmpValue >> 56);
-            stream.Write(_buffer, 0, 9);
+            _stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void WriteFloat(Stream stream, byte type, float value)
+        public unsafe void WriteFloat(byte type, float value)
         {
             var tmpValue = *(uint*)&value;
             _buffer[0] = type;
@@ -84,10 +85,10 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[2] = (byte)(tmpValue >> 8);
             _buffer[3] = (byte)(tmpValue >> 16);
             _buffer[4] = (byte)(tmpValue >> 24);
-            stream.Write(_buffer, 0, 5);
+            _stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteLong(Stream stream, byte type, long value)
+        public void WriteLong(byte type, long value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
@@ -98,10 +99,10 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[6] = (byte)(value >> 40);
             _buffer[7] = (byte)(value >> 48);
             _buffer[8] = (byte)(value >> 56);
-            stream.Write(_buffer, 0, 9);
+            _stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteULong(Stream stream, byte type, ulong value)
+        public void WriteULong(byte type, ulong value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
@@ -112,58 +113,58 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[6] = (byte)(value >> 40);
             _buffer[7] = (byte)(value >> 48);
             _buffer[8] = (byte)(value >> 56);
-            stream.Write(_buffer, 0, 9);
+            _stream.Write(_buffer, 0, 9);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteUInt(Stream stream, byte type, uint value)
+        public void WriteUInt(byte type, uint value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
             _buffer[2] = (byte)(value >> 8);
             _buffer[3] = (byte)(value >> 16);
             _buffer[4] = (byte)(value >> 24);
-            stream.Write(_buffer, 0, 5);
+            _stream.Write(_buffer, 0, 5);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteShort(Stream stream, byte type, short value)
+        public void WriteShort(byte type, short value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
             _buffer[2] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 3);
+            _stream.Write(_buffer, 0, 3);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteChar(Stream stream, byte type, char value)
+        public void WriteChar(byte type, char value)
         {
             _buffer[0] = type;
             _buffer[1] = (byte)value;
             _buffer[2] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 3);
+            _stream.Write(_buffer, 0, 3);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteByte(Stream stream, byte value)
+        public void WriteByte(byte value)
         {
-            stream.WriteByte(value);
+            _stream.WriteByte(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteUshort(Stream stream, ushort value)
+        public void WriteUshort(ushort value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 2);
+            _stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteInt(Stream stream, int value)
+        public void WriteInt(int value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
             _buffer[2] = (byte)(value >> 16);
             _buffer[3] = (byte)(value >> 24);
-            stream.Write(_buffer, 0, 4);
+            _stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void WriteDouble(Stream stream, double value)
+        public unsafe void WriteDouble(double value)
         {
             var tmpValue = *(ulong*)&value;
             _buffer[0] = (byte)tmpValue;
@@ -174,20 +175,20 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[5] = (byte)(tmpValue >> 40);
             _buffer[6] = (byte)(tmpValue >> 48);
             _buffer[7] = (byte)(tmpValue >> 56);
-            stream.Write(_buffer, 0, 8);
+            _stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void WriteFloat(Stream stream, float value)
+        public unsafe void WriteFloat(float value)
         {
             var tmpValue = *(uint*)&value;
             _buffer[0] = (byte)tmpValue;
             _buffer[1] = (byte)(tmpValue >> 8);
             _buffer[2] = (byte)(tmpValue >> 16);
             _buffer[3] = (byte)(tmpValue >> 24);
-            stream.Write(_buffer, 0, 4);
+            _stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteLong(Stream stream, long value)
+        public void WriteLong(long value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
@@ -197,10 +198,10 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[5] = (byte)(value >> 40);
             _buffer[6] = (byte)(value >> 48);
             _buffer[7] = (byte)(value >> 56);
-            stream.Write(_buffer, 0, 8);
+            _stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteULong(Stream stream, ulong value)
+        public void WriteULong(ulong value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
@@ -210,33 +211,33 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[5] = (byte)(value >> 40);
             _buffer[6] = (byte)(value >> 48);
             _buffer[7] = (byte)(value >> 56);
-            stream.Write(_buffer, 0, 8);
+            _stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteUInt(Stream stream, uint value)
+        public void WriteUInt(uint value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
             _buffer[2] = (byte)(value >> 16);
             _buffer[3] = (byte)(value >> 24);
-            stream.Write(_buffer, 0, 4);
+            _stream.Write(_buffer, 0, 4);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteShort(Stream stream, short value)
+        public void WriteShort(short value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 2);
+            _stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteChar(Stream stream, char value)
+        public void WriteChar(char value)
         {
             _buffer[0] = (byte)value;
             _buffer[1] = (byte)(value >> 8);
-            stream.Write(_buffer, 0, 2);
+            _stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe void WriteDecimal(Stream stream, decimal value)
+        public unsafe void WriteDecimal(decimal value)
         {
             var val = decimal.ToDouble(value);
             var tmpValue = *(ulong*)&val;
@@ -248,13 +249,13 @@ namespace TWCore.Serialization.NSerializer.Types
             _buffer[5] = (byte)(tmpValue >> 40);
             _buffer[6] = (byte)(tmpValue >> 48);
             _buffer[7] = (byte)(tmpValue >> 56);
-            stream.Write(_buffer, 0, 8);
+            _stream.Write(_buffer, 0, 8);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteSByte(Stream stream, sbyte value)
+        public void WriteSByte(sbyte value)
         {
             var bytes = BitConverter.GetBytes(value);
-            stream.Write(bytes, 0, bytes.Length);
+            _stream.Write(bytes, 0, bytes.Length);
         }
     }
 }

@@ -18,103 +18,93 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class EnumSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
+        public void WriteValue(Enum enumValue)
         {
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-        {
-        }
+            if (enumValue == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, int value)
-        {
+            var value = Convert.ToInt32(enumValue);
             switch (value)
             {
                 case -1:
-                    stream.WriteByte(DataBytesDefinition.EnumSByteMinusOne);
+                    _stream.WriteByte(DataBytesDefinition.EnumSByteMinusOne);
                     return;
                 case 0:
-                    stream.WriteByte(DataBytesDefinition.EnumByteDefault);
+                    _stream.WriteByte(DataBytesDefinition.EnumByteDefault);
                     return;
                 case 1:
-                    stream.WriteByte(DataBytesDefinition.EnumByte1);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte1);
                     return;
                 case 2:
-                    stream.WriteByte(DataBytesDefinition.EnumByte2);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte2);
                     return;
                 case 3:
-                    stream.WriteByte(DataBytesDefinition.EnumByte3);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte3);
                     return;
                 case 4:
-                    stream.WriteByte(DataBytesDefinition.EnumByte4);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte4);
                     return;
                 case 5:
-                    stream.WriteByte(DataBytesDefinition.EnumByte5);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte5);
                     return;
                 case 6:
-                    stream.WriteByte(DataBytesDefinition.EnumByte6);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte6);
                     return;
                 case 7:
-                    stream.WriteByte(DataBytesDefinition.EnumByte7);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte7);
                     return;
                 case 8:
-                    stream.WriteByte(DataBytesDefinition.EnumByte8);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte8);
                     return;
                 case 9:
-                    stream.WriteByte(DataBytesDefinition.EnumByte9);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte9);
                     return;
                 case 10:
-                    stream.WriteByte(DataBytesDefinition.EnumByte10);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte10);
                     return;
                 case 11:
-                    stream.WriteByte(DataBytesDefinition.EnumByte11);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte11);
                     return;
                 case 12:
-                    stream.WriteByte(DataBytesDefinition.EnumByte12);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte12);
                     return;
                 case 13:
-                    stream.WriteByte(DataBytesDefinition.EnumByte13);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte13);
                     return;
                 case 14:
-                    stream.WriteByte(DataBytesDefinition.EnumByte14);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte14);
                     return;
                 case 15:
-                    stream.WriteByte(DataBytesDefinition.EnumByte15);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte15);
                     return;
                 case 16:
-                    stream.WriteByte(DataBytesDefinition.EnumByte16);
+                    _stream.WriteByte(DataBytesDefinition.EnumByte16);
                     return;
                 default:
                     if (value <= byte.MaxValue)
-                        WriteByte(stream, DataBytesDefinition.EnumByte, (byte)value);
+                        WriteByte(DataBytesDefinition.EnumByte, (byte)value);
                     else if (value <= ushort.MaxValue)
-                        WriteUshort(stream, DataBytesDefinition.EnumUShort, (ushort)value);
+                        WriteUshort(DataBytesDefinition.EnumUShort, (ushort)value);
                     else
-                        WriteInt(stream, DataBytesDefinition.EnumInt, value);
+                        WriteInt(DataBytesDefinition.EnumInt, value);
                     break;
             }
         }
+    }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, int? value)
-        {
-            if (value == null) stream.WriteByte(DataBytesDefinition.ValueNull);
-            else Write(stream, value.Value);
-        }
 
+    public partial class DeserializersTable
+    { 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int Read(BinaryReader reader)
-            => ReadNullable(reader) ?? 0;
+        public int ReadEnum(BinaryReader reader)
+            => ReadEnumNullable(reader) ?? 0;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int? ReadNullable(BinaryReader reader)
+        public int? ReadEnumNullable(BinaryReader reader)
         {
             var type = reader.ReadByte();
             switch (type)

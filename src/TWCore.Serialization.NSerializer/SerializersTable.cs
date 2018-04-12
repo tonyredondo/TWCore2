@@ -28,56 +28,31 @@ using TWCore.Serialization.NSerializer.Types;
 
 namespace TWCore.Serialization.NSerializer
 {
-    public class SerializersTable : TypeSerializer
+    public partial class SerializersTable : TypeSerializer
     {
-        private Stream _stream;
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
-        private readonly BooleanSerializer _boolean = new BooleanSerializer();
-        private readonly ByteArraySerializer ByteArray = new ByteArraySerializer();
-        private readonly CharSerializer Char = new CharSerializer();
-        private readonly DateTimeOffsetSerializer DateTimeOffset = new DateTimeOffsetSerializer();
-        private readonly DateTimeSerializer DateTime = new DateTimeSerializer();
-        private readonly EnumSerializer Enum = new EnumSerializer();
-        private readonly GuidSerializer Guid = new GuidSerializer();
-        private readonly NumberSerializer Number = new NumberSerializer();
-        private readonly SerializedObjectSerializer SerializedObject = new SerializedObjectSerializer();
-        private readonly StringSerializer String = new StringSerializer();
-        private readonly StringSerializer Property = new StringSerializer();
-        private readonly TimeSpanSerializer TimeSpan = new TimeSpanSerializer();
 
         #region Internal Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Init()
         {
-            _boolean.Init();
-            ByteArray.Init();
-            Char.Init();
-            DateTimeOffset.Init();
-            DateTime.Init();
-            Enum.Init();
-            Guid.Init();
-            Number.Init();
-            SerializedObject.Init();
-            String.Init();
-            Property.Init();
-            TimeSpan.Init();
+            InitDateTimeOffset();
+            InitDateTime();
+            InitGuid();
+            InitNumber();
+            InitString();
+            InitTimeSpan();
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override void Clear()
         {
-            _boolean.Clear();
-            ByteArray.Clear();
-            Char.Clear();
-            DateTimeOffset.Clear();
-            DateTime.Clear();
-            Enum.Clear();
-            Guid.Clear();
-            Number.Clear();
-            SerializedObject.Clear();
-            String.Clear();
-            Property.Clear();
-            TimeSpan.Clear();
+            ClearDateTimeOffset();
+            ClearDateTime();
+            ClearGuid();
+            ClearNumber();
+            ClearString();
+            ClearTimeSpan();
             _typeCache.Clear();
             _objectCache.Clear();
         }
@@ -88,872 +63,258 @@ namespace TWCore.Serialization.NSerializer
         }
         #endregion
 
-        #region Write Properties
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, bool value)
-        {
-            Property.Write(_stream, name);
-            _boolean.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, bool? value)
-        {
-            Property.Write(_stream, name);
-            _boolean.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, byte[] value)
-        {
-            Property.Write(_stream, name);
-            ByteArray.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, char value)
-        {
-            Property.Write(_stream, name);
-            Char.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, char? value)
-        {
-            Property.Write(_stream, name);
-            Char.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTimeOffset value)
-        {
-            Property.Write(_stream, name);
-            DateTimeOffset.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTimeOffset? value)
-        {
-            Property.Write(_stream, name);
-            DateTimeOffset.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTime value)
-        {
-            Property.Write(_stream, name);
-            DateTime.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTime? value)
-        {
-            Property.Write(_stream, name);
-            DateTime.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, Enum value)
-        {
-            Property.Write(_stream, name);
-            Enum.Write(_stream, Convert.ToInt32(value));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, Guid value)
-        {
-            Property.Write(_stream, name);
-            Guid.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, Guid? value)
-        {
-            Property.Write(_stream, name);
-            Guid.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, SerializedObject value)
-        {
-            Property.Write(_stream, name);
-            SerializedObject.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, string value)
-        {
-            if (value == null) return;
-            Property.Write(_stream, name);
-            String.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, TimeSpan value)
-        {
-            Property.Write(_stream, name);
-            TimeSpan.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, TimeSpan? value)
-        {
-            Property.Write(_stream, name);
-            TimeSpan.Write(_stream, value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, decimal value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, decimal? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, double value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, double? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, float value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, float? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, long value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, long? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ulong value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ulong? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, int value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, int? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, uint value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, uint? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, short value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, short? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ushort value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ushort? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, byte value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, byte? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, sbyte value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, sbyte? value)
-        {
-            Property.Write(_stream, name);
-            Number.Write(_stream, value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty<T>(string name, T value)
-        {
-            if (value == null) return;
-            Property.Write(_stream, name);
-            WriteValue(value);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, object value)
-        {
-            if (value == null) return;
-            Property.Write(_stream, name);
-            WriteValue(value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, bool[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.BoolArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                _boolean.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, char[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.CharArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Char.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTimeOffset[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DateTimeOffsetArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                DateTimeOffset.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, DateTime[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DateTimeArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                DateTimeOffset.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, Enum[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.EnumArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Enum.Write(_stream, Convert.ToInt32(value[i]));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, Guid[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.GuidArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Guid.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, decimal[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DecimalArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, double[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DoubleArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, float[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.FloatArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, long[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.LongArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ulong[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.ULongArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, int[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.IntArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, uint[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.UIntArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, short[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.ShortArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, ushort[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.UShortArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, sbyte[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.SByteArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, string[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.StringArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                String.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, TimeSpan[] value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.TimeSpanArray, value.Length);
-            for (var i = 0; i < value.Length; i++)
-                TimeSpan.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<bool> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.BoolList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                _boolean.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<char> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.CharList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Char.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<DateTimeOffset> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DateTimeOffsetList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                DateTimeOffset.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<DateTime> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DateTimeList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                DateTimeOffset.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<Enum> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.EnumList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Enum.Write(_stream, Convert.ToInt32(value[i]));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<Guid> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.GuidList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Guid.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<decimal> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DecimalList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<double> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.DoubleList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<float> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.FloatList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<long> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.LongList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<ulong> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.ULongList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<int> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.IntList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<uint> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.UIntList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<short> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.ShortList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<ushort> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.UShortList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<sbyte> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.SByteList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<string> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.StringList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                String.Write(_stream, value[i]);
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteProperty(string name, List<TimeSpan> value)
-        {
-            Property.Write(_stream, name);
-            WriteInt(_stream, DataBytesDefinition.TimeSpanList, value.Count);
-            for (var i = 0; i < value.Count; i++)
-                TimeSpan.Write(_stream, value[i]);
-        }
-
-        #endregion
-
         #region Write Values
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(bool value) => _boolean.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(bool? value) => _boolean.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(byte[] value) => ByteArray.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(char value) => Char.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(char? value) => Char.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(DateTimeOffset value) => DateTimeOffset.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(DateTimeOffset? value) => DateTimeOffset.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(DateTime value) => DateTime.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(DateTime? value) => DateTime.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(Enum value) => Enum.Write(_stream, Convert.ToInt32(value));
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(Guid value) => Guid.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(Guid? value) => Guid.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(SerializedObject value) => SerializedObject.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(string value) => String.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(TimeSpan value) => TimeSpan.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(TimeSpan? value) => TimeSpan.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(decimal value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(decimal? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(double value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(double? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(float value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(float? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(long value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(long? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(ulong value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(ulong? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(int value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(int? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(uint value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(uint? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(short value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(short? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(ushort value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(ushort? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(byte value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(byte? value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(sbyte value) => Number.Write(_stream, value);
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteValue(sbyte? value) => Number.Write(_stream, value);
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.BoolArray, value.Length);
+            WriteInt(DataBytesDefinition.BoolArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                _boolean.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(char[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.CharArray, value.Length);
+            WriteInt(DataBytesDefinition.CharArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Char.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTimeOffset[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.DateTimeOffsetArray, value.Length);
+            WriteInt(DataBytesDefinition.DateTimeOffsetArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                DateTimeOffset.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTime[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.DateTimeArray, value.Length);
+            WriteInt(DataBytesDefinition.DateTimeArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                DateTimeOffset.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Enum[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.EnumArray, value.Length);
+            WriteInt(DataBytesDefinition.EnumArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Enum.Write(_stream, Convert.ToInt32(value[i]));
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.GuidArray, value.Length);
+            WriteInt(DataBytesDefinition.GuidArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Guid.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.DecimalArray, value.Length);
+            WriteInt(DataBytesDefinition.DecimalArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.DoubleArray, value.Length);
+            WriteInt(DataBytesDefinition.DoubleArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.FloatArray, value.Length);
+            WriteInt(DataBytesDefinition.FloatArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.LongArray, value.Length);
+            WriteInt(DataBytesDefinition.LongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.ULongArray, value.Length);
+            WriteInt(DataBytesDefinition.ULongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.IntArray, value.Length);
+            WriteInt(DataBytesDefinition.IntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.UIntArray, value.Length);
+            WriteInt(DataBytesDefinition.UIntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.ShortArray, value.Length);
+            WriteInt(DataBytesDefinition.ShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.UShortArray, value.Length);
+            WriteInt(DataBytesDefinition.UShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.SByteArray, value.Length);
+            WriteInt(DataBytesDefinition.SByteArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(string[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.StringArray, value.Length);
+            WriteInt(DataBytesDefinition.StringArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                String.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan[] value)
         {
-            WriteInt(_stream, DataBytesDefinition.TimeSpanArray, value.Length);
+            WriteInt(DataBytesDefinition.TimeSpanArray, value.Length);
             for (var i = 0; i < value.Length; i++)
-                TimeSpan.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<bool> value)
         {
-            WriteInt(_stream, DataBytesDefinition.BoolList, value.Count);
+            WriteInt(DataBytesDefinition.BoolList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                _boolean.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<char> value)
         {
-            WriteInt(_stream, DataBytesDefinition.CharList, value.Count);
+            WriteInt(DataBytesDefinition.CharList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Char.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTimeOffset> value)
         {
-            WriteInt(_stream, DataBytesDefinition.DateTimeOffsetList, value.Count);
+            WriteInt(DataBytesDefinition.DateTimeOffsetList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                DateTimeOffset.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<DateTime> value)
         {
-            WriteInt(_stream, DataBytesDefinition.DateTimeList, value.Count);
+            WriteInt(DataBytesDefinition.DateTimeList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                DateTimeOffset.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Enum> value)
         {
-            WriteInt(_stream, DataBytesDefinition.EnumList, value.Count);
+            WriteInt(DataBytesDefinition.EnumList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Enum.Write(_stream, Convert.ToInt32(value[i]));
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<Guid> value)
         {
-            WriteInt(_stream, DataBytesDefinition.GuidList, value.Count);
+            WriteInt(DataBytesDefinition.GuidList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Guid.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<decimal> value)
         {
-            WriteInt(_stream, DataBytesDefinition.DecimalList, value.Count);
+            WriteInt(DataBytesDefinition.DecimalList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<double> value)
         {
-            WriteInt(_stream, DataBytesDefinition.DoubleList, value.Count);
+            WriteInt(DataBytesDefinition.DoubleList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<float> value)
         {
-            WriteInt(_stream, DataBytesDefinition.FloatList, value.Count);
+            WriteInt(DataBytesDefinition.FloatList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<long> value)
         {
-            WriteInt(_stream, DataBytesDefinition.LongList, value.Count);
+            WriteInt(DataBytesDefinition.LongList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ulong> value)
         {
-            WriteInt(_stream, DataBytesDefinition.ULongList, value.Count);
+            WriteInt(DataBytesDefinition.ULongList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<int> value)
         {
-            WriteInt(_stream, DataBytesDefinition.IntList, value.Count);
+            WriteInt(DataBytesDefinition.IntList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<uint> value)
         {
-            WriteInt(_stream, DataBytesDefinition.UIntList, value.Count);
+            WriteInt(DataBytesDefinition.UIntList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<short> value)
         {
-            WriteInt(_stream, DataBytesDefinition.ShortList, value.Count);
+            WriteInt(DataBytesDefinition.ShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<ushort> value)
         {
-            WriteInt(_stream, DataBytesDefinition.UShortList, value.Count);
+            WriteInt(DataBytesDefinition.UShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<sbyte> value)
         {
-            WriteInt(_stream, DataBytesDefinition.SByteList, value.Count);
+            WriteInt(DataBytesDefinition.SByteList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                Number.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<string> value)
         {
-            WriteInt(_stream, DataBytesDefinition.StringList, value.Count);
+            WriteInt(DataBytesDefinition.StringList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                String.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(List<TimeSpan> value)
         {
-            WriteInt(_stream, DataBytesDefinition.TimeSpanList, value.Count);
+            WriteInt(DataBytesDefinition.TimeSpanList, value.Count);
             for (var i = 0; i < value.Count; i++)
-                TimeSpan.Write(_stream, value[i]);
+                WriteValue(value[i]);
         }
         #endregion
 
@@ -963,13 +324,14 @@ namespace TWCore.Serialization.NSerializer
         {
             var vType = typeof(T);
             _stream.WriteByte(DataBytesDefinition.TypeStart);
-            Property.Write(_stream, vType.GetTypeName());
+            WriteValue(vType.GetTypeName());
             var count = valueList.Count;
-            WriteInt(_stream, DataBytesDefinition.ListStart, count);
+            WriteInt(DataBytesDefinition.ListStart, count);
             for (var i = 0; i < count; i++)
                 WriteValue(valueList[i]);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue<T>(T value)
         {
@@ -982,9 +344,9 @@ namespace TWCore.Serialization.NSerializer
             if (oIdx > -1)
             {
                 if (oIdx <= byte.MaxValue)
-                    WriteByte(_stream, DataBytesDefinition.RefObjectByte, (byte)oIdx);
+                    WriteByte(DataBytesDefinition.RefObjectByte, (byte)oIdx);
                 else
-                    WriteUshort(_stream, DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                    WriteUshort(DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
                 return;
             }
             _objectCache.SerializerSet(value);
@@ -995,13 +357,13 @@ namespace TWCore.Serialization.NSerializer
             if (tIdx > -1)
             {
                 if (tIdx <= byte.MaxValue)
-                    WriteByte(_stream, DataBytesDefinition.RefTypeByte, (byte)tIdx);
+                    WriteByte(DataBytesDefinition.RefTypeByte, (byte)tIdx);
                 else
-                    WriteUshort(_stream, DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+                    WriteUshort(DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
             }
             else
             {
-                WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                WriteInt(DataBytesDefinition.TypeStart, descriptor.Definition.Length);
                 _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.SerializerSet(vType);
             }
@@ -1022,248 +384,248 @@ namespace TWCore.Serialization.NSerializer
                     _stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 case bool cValue:
-                    _boolean.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case byte[] cValue:
-                    ByteArray.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case char cValue:
-                    Char.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case DateTimeOffset cValue:
-                    DateTimeOffset.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case DateTime cValue:
-                    DateTime.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case Enum cValue:
-                    Enum.Write(_stream, Convert.ToInt32(cValue));
+                    WriteValue(cValue);
                     return;
                 case Guid cValue:
-                    Guid.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case decimal cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case double cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case float cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case long cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case ulong cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case int cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case uint cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case short cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case ushort cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case byte cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case sbyte cValue:
-                    Number.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case SerializedObject cValue:
-                    SerializedObject.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case string cValue:
-                    String.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case TimeSpan cValue:
-                    TimeSpan.Write(_stream, cValue);
+                    WriteValue(cValue);
                     return;
                 case bool[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.BoolArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.BoolArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        _boolean.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case char[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.CharArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.CharArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Char.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case DateTimeOffset[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.DateTimeOffsetArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.DateTimeOffsetArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        DateTimeOffset.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case DateTime[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.DateTimeArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.DateTimeArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        DateTime.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case Enum[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.EnumArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.EnumArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Enum.Write(_stream, Convert.ToInt32(cValue[i]));
+                        WriteValue(cValue[i]);
                     return;
                 case Guid[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.GuidArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.GuidArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Guid.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case decimal[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.DecimalArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.DecimalArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case double[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.DoubleArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.DoubleArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case float[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.FloatArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.FloatArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case long[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.LongArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.LongArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case ulong[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.ULongArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.ULongArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case int[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.IntArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.IntArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case uint[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.UIntArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.UIntArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case short[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.ShortArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.ShortArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case ushort[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.UShortArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.UShortArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case sbyte[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.SByteArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.SByteArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case string[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.StringArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.StringArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        String.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case TimeSpan[] cValue:
-                    WriteInt(_stream, DataBytesDefinition.TimeSpanArray, cValue.Length);
+                    WriteInt(DataBytesDefinition.TimeSpanArray, cValue.Length);
                     for (var i = 0; i < cValue.Length; i++)
-                        TimeSpan.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
 
                 case List<bool> cValue:
-                    WriteInt(_stream, DataBytesDefinition.BoolList, cValue.Count);
+                    WriteInt(DataBytesDefinition.BoolList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        _boolean.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<char> cValue:
-                    WriteInt(_stream, DataBytesDefinition.CharList, cValue.Count);
+                    WriteInt(DataBytesDefinition.CharList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Char.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<DateTimeOffset> cValue:
-                    WriteInt(_stream, DataBytesDefinition.DateTimeOffsetList, cValue.Count);
+                    WriteInt(DataBytesDefinition.DateTimeOffsetList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        DateTimeOffset.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<DateTime> cValue:
-                    WriteInt(_stream, DataBytesDefinition.DateTimeList, cValue.Count);
+                    WriteInt(DataBytesDefinition.DateTimeList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        DateTime.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<Enum> cValue:
-                    WriteInt(_stream, DataBytesDefinition.EnumList, cValue.Count);
+                    WriteInt(DataBytesDefinition.EnumList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Enum.Write(_stream, Convert.ToInt32(cValue[i]));
+                        WriteValue(cValue[i]);
                     return;
                 case List<Guid> cValue:
-                    WriteInt(_stream, DataBytesDefinition.GuidList, cValue.Count);
+                    WriteInt(DataBytesDefinition.GuidList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Guid.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<decimal> cValue:
-                    WriteInt(_stream, DataBytesDefinition.DecimalList, cValue.Count);
+                    WriteInt(DataBytesDefinition.DecimalList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<double> cValue:
-                    WriteInt(_stream, DataBytesDefinition.DoubleList, cValue.Count);
+                    WriteInt(DataBytesDefinition.DoubleList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<float> cValue:
-                    WriteInt(_stream, DataBytesDefinition.FloatList, cValue.Count);
+                    WriteInt(DataBytesDefinition.FloatList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<long> cValue:
-                    WriteInt(_stream, DataBytesDefinition.LongList, cValue.Count);
+                    WriteInt(DataBytesDefinition.LongList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<ulong> cValue:
-                    WriteInt(_stream, DataBytesDefinition.ULongList, cValue.Count);
+                    WriteInt(DataBytesDefinition.ULongList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<int> cValue:
-                    WriteInt(_stream, DataBytesDefinition.IntList, cValue.Count);
+                    WriteInt(DataBytesDefinition.IntList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<uint> cValue:
-                    WriteInt(_stream, DataBytesDefinition.UIntList, cValue.Count);
+                    WriteInt(DataBytesDefinition.UIntList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<short> cValue:
-                    WriteInt(_stream, DataBytesDefinition.ShortList, cValue.Count);
+                    WriteInt(DataBytesDefinition.ShortList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<ushort> cValue:
-                    WriteInt(_stream, DataBytesDefinition.UShortList, cValue.Count);
+                    WriteInt(DataBytesDefinition.UShortList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<sbyte> cValue:
-                    WriteInt(_stream, DataBytesDefinition.SByteList, cValue.Count);
+                    WriteInt(DataBytesDefinition.SByteList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        Number.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<string> cValue:
-                    WriteInt(_stream, DataBytesDefinition.StringList, cValue.Count);
+                    WriteInt(DataBytesDefinition.StringList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        String.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
                 case List<TimeSpan> cValue:
-                    WriteInt(_stream, DataBytesDefinition.TimeSpanList, cValue.Count);
+                    WriteInt(DataBytesDefinition.TimeSpanList, cValue.Count);
                     for (var i = 0; i < cValue.Count; i++)
-                        TimeSpan.Write(_stream, cValue[i]);
+                        WriteValue(cValue[i]);
                     return;
             }
             #endregion
@@ -1272,9 +634,9 @@ namespace TWCore.Serialization.NSerializer
             if (oIdx > -1)
             {
                 if (oIdx <= byte.MaxValue)
-                    WriteByte(_stream, DataBytesDefinition.RefObjectByte, (byte)oIdx);
+                    WriteByte(DataBytesDefinition.RefObjectByte, (byte)oIdx);
                 else
-                    WriteUshort(_stream, DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                    WriteUshort(DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
                 return;
             }
             _objectCache.SerializerSet(value);
@@ -1285,13 +647,13 @@ namespace TWCore.Serialization.NSerializer
             if (tIdx > -1)
             {
                 if (tIdx <= byte.MaxValue)
-                    WriteByte(_stream, DataBytesDefinition.RefTypeByte, (byte)tIdx);
+                    WriteByte(DataBytesDefinition.RefTypeByte, (byte)tIdx);
                 else
-                    WriteUshort(_stream, DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+                    WriteUshort(DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
             }
             else
             {
-                WriteInt(_stream, DataBytesDefinition.TypeStart, descriptor.Definition.Length);
+                WriteInt(DataBytesDefinition.TypeStart, descriptor.Definition.Length);
                 _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.SerializerSet(vType);
             }
@@ -1308,12 +670,11 @@ namespace TWCore.Serialization.NSerializer
             //Write Properties
             if (descriptor.Properties.Count > 0)
             {
-                WriteInt(_stream, DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
+                WriteInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
                 foreach (var prop in descriptor.Properties)
                 {
                     var pValue = prop.Value.GetValue(value);
                     if (pValue == null) continue;
-                    Property.Write(_stream, prop.Key);
                     WriteInnerValue(pValue);
                 }
             }
@@ -1322,7 +683,7 @@ namespace TWCore.Serialization.NSerializer
             if (descriptor.IsArray)
             {
                 var aValue = (Array)value;
-                WriteInt(_stream, DataBytesDefinition.ArrayStart, aValue.Length);
+                WriteInt(DataBytesDefinition.ArrayStart, aValue.Length);
                 for (var i = 0; i < aValue.Length; i++)
                     WriteInnerValue(aValue.GetValue(i));
                 return;
@@ -1333,7 +694,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var iValue = (IList)value;
                 var count = iValue.Count;
-                WriteInt(_stream, DataBytesDefinition.ListStart, count);
+                WriteInt(DataBytesDefinition.ListStart, count);
                 for (var i = 0; i < count; i++)
                     WriteInnerValue(iValue[i]);
                 return;
@@ -1344,7 +705,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var iValue = (IDictionary)value;
                 var count = iValue.Count;
-                WriteInt(_stream, DataBytesDefinition.DictionaryStart, count);
+                WriteInt(DataBytesDefinition.DictionaryStart, count);
                 foreach (DictionaryEntry item in iValue)
                 {
                     WriteInnerValue(item.Key);

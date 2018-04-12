@@ -18,42 +18,36 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-namespace TWCore.Serialization.NSerializer.Types
+namespace TWCore.Serialization.NSerializer
 {
-    public class BooleanSerializer : TypeSerializer
+    public partial class SerializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Init()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override void Clear()
-        {
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, bool value)
+        public void WriteValue(bool value)
         {
             if (value)
-                stream.WriteByte(DataBytesDefinition.BoolTrue);
+                _stream.WriteByte(DataBytesDefinition.BoolTrue);
             else
-                stream.WriteByte(DataBytesDefinition.BoolFalse);
+                _stream.WriteByte(DataBytesDefinition.BoolFalse);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(Stream stream, bool? value)
+        public void WriteValue(bool? value)
         {
             if (value == null)
-                stream.WriteByte(DataBytesDefinition.ValueNull);
+                _stream.WriteByte(DataBytesDefinition.ValueNull);
             else if (value.Value)
-                stream.WriteByte(DataBytesDefinition.BoolTrue);
+                _stream.WriteByte(DataBytesDefinition.BoolTrue);
             else
-                stream.WriteByte(DataBytesDefinition.BoolFalse);
+                _stream.WriteByte(DataBytesDefinition.BoolFalse);
         }
+    }
 
+
+    public partial class DeserializersTable
+    {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Read(BinaryReader reader)
+        public bool ReadBool(BinaryReader reader)
         {
             var value = reader.ReadByte();
             if (value == DataBytesDefinition.BoolTrue)
@@ -64,7 +58,7 @@ namespace TWCore.Serialization.NSerializer.Types
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool? ReadNullable(BinaryReader reader)
+        public bool? ReadBoolNullable(BinaryReader reader)
         {
             var value = reader.ReadByte();
             if (value == DataBytesDefinition.ValueNull)

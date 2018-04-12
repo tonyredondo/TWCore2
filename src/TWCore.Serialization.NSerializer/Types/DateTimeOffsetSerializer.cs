@@ -40,20 +40,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
                 return;
             }
-            var objIdx = _dateTimeOffsetCache.SerializerGet(value);
-            if (objIdx > -1)
+            if (_dateTimeOffsetCache.SerializerTryGetValue(value, out var objIdx))
             {
-                if (objIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefDateTimeOffsetByte, (byte)objIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefDateTimeOffsetUShort, (ushort)objIdx);
+                WriteInt(DataBytesDefinition.RefDateTimeOffset, objIdx);
+                return;
             }
-            else
-            {
-                var longBinary = value.ToFileTime();
-                WriteLong(DataBytesDefinition.DateTimeOffset, longBinary);
-                _dateTimeOffsetCache.SerializerSet(value);
-            }
+            var longBinary = value.ToFileTime();
+            WriteLong(DataBytesDefinition.DateTimeOffset, longBinary);
+            _dateTimeOffsetCache.SerializerSet(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -93,10 +87,8 @@ namespace TWCore.Serialization.NSerializer
                     return null;
                 case DataBytesDefinition.DateTimeOffsetDefault:
                     return default(DateTimeOffset);
-                case DataBytesDefinition.RefDateTimeOffsetByte:
-                    return _dateTimeOffsetCache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefDateTimeOffsetUShort:
-                    return _dateTimeOffsetCache.DeserializerGet(reader.ReadUInt16());
+                case DataBytesDefinition.RefDateTimeOffset:
+                    return _dateTimeOffsetCache.DeserializerGet(reader.ReadInt32());
                 case DataBytesDefinition.DateTimeOffset:
                     var longBinary = reader.ReadInt64();
                     var cValue = DateTimeOffset.FromFileTime(longBinary);

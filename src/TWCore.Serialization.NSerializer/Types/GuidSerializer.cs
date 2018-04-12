@@ -40,21 +40,15 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.GuidDefault);
                 return;
             }
-            var objIdx = _guidCache.SerializerGet(value);
-            if (objIdx > -1)
+            if (_guidCache.SerializerTryGetValue(value, out var objIdx))
             {
-                if (objIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefGuidByte, (byte)objIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefGuidUShort, (ushort)objIdx);
+                WriteInt(DataBytesDefinition.RefGuid, objIdx);
+                return;
             }
-            else
-            {
-                _stream.WriteByte(DataBytesDefinition.Guid);
-                var bytes = value.ToByteArray();
-                _stream.Write(bytes, 0, bytes.Length);
-                _guidCache.SerializerSet(value);
-            }
+            _stream.WriteByte(DataBytesDefinition.Guid);
+            var bytes = value.ToByteArray();
+            _stream.Write(bytes, 0, bytes.Length);
+            _guidCache.SerializerSet(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -80,7 +74,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid ReadGuid(BinaryReader reader)
             => ReadGuidNullable(reader) ?? default;
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid? ReadGuidNullable(BinaryReader reader)
         {
@@ -91,10 +85,8 @@ namespace TWCore.Serialization.NSerializer
                     return null;
                 case DataBytesDefinition.GuidDefault:
                     return default(Guid);
-                case DataBytesDefinition.RefGuidByte:
-                    return _guidCache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefGuidUShort:
-                    return _guidCache.DeserializerGet(reader.ReadUInt16());
+                case DataBytesDefinition.RefGuid:
+                    return _guidCache.DeserializerGet(reader.ReadInt32());
                 case DataBytesDefinition.Guid:
                     var bytes = reader.ReadBytes(16);
                     var guidValue = new Guid(bytes);

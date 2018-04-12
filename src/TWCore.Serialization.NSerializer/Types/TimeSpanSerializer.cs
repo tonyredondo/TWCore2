@@ -40,21 +40,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
-
-            var objIdx = _cache.SerializerGet(value);
-            if (objIdx > -1)
+            if (_cache.SerializerTryGetValue(value, out var objIdx))
             {
-                if (objIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefTimeSpanByte, (byte)objIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefTimeSpanUShort, (ushort)objIdx);
+                WriteInt(DataBytesDefinition.RefTimeSpan, objIdx);
+                return;
             }
-            else
-            {
-                var longBinary = value.Ticks;
-                WriteLong(DataBytesDefinition.TimeSpan, longBinary);
-                _cache.SerializerSet(value);
-            }
+            var longBinary = value.Ticks;
+            WriteLong(DataBytesDefinition.TimeSpan, longBinary);
+            _cache.SerializerSet(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,10 +84,8 @@ namespace TWCore.Serialization.NSerializer
                     return null;
                 case DataBytesDefinition.TimeSpanDefault:
                     return default(TimeSpan);
-                case DataBytesDefinition.RefTimeSpanByte:
-                    return _cache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefTimeSpanUShort:
-                    return _cache.DeserializerGet(reader.ReadUInt16());
+                case DataBytesDefinition.RefTimeSpan:
+                    return _cache.DeserializerGet(reader.ReadInt32());
                 case DataBytesDefinition.TimeSpan:
                     var longBinary = reader.ReadInt64();
                     var cValue = TimeSpan.FromTicks(longBinary);

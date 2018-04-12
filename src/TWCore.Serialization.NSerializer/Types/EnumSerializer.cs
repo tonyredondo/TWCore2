@@ -25,74 +25,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Enum enumValue)
         {
-            if (enumValue == null) _stream.WriteByte(DataBytesDefinition.ValueNull);
-
+            if (enumValue == null)
+                _stream.WriteByte(DataBytesDefinition.ValueNull);
             var value = Convert.ToInt32(enumValue);
-            switch (value)
-            {
-                case -1:
-                    _stream.WriteByte(DataBytesDefinition.EnumSByteMinusOne);
-                    return;
-                case 0:
-                    _stream.WriteByte(DataBytesDefinition.EnumByteDefault);
-                    return;
-                case 1:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte1);
-                    return;
-                case 2:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte2);
-                    return;
-                case 3:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte3);
-                    return;
-                case 4:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte4);
-                    return;
-                case 5:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte5);
-                    return;
-                case 6:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte6);
-                    return;
-                case 7:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte7);
-                    return;
-                case 8:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte8);
-                    return;
-                case 9:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte9);
-                    return;
-                case 10:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte10);
-                    return;
-                case 11:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte11);
-                    return;
-                case 12:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte12);
-                    return;
-                case 13:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte13);
-                    return;
-                case 14:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte14);
-                    return;
-                case 15:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte15);
-                    return;
-                case 16:
-                    _stream.WriteByte(DataBytesDefinition.EnumByte16);
-                    return;
-                default:
-                    if (value <= byte.MaxValue)
-                        WriteByte(DataBytesDefinition.EnumByte, (byte)value);
-                    else if (value <= ushort.MaxValue)
-                        WriteUshort(DataBytesDefinition.EnumUShort, (ushort)value);
-                    else
-                        WriteInt(DataBytesDefinition.EnumInt, value);
-                    break;
-            }
+            WriteInt(DataBytesDefinition.EnumInt, value);
         }
     }
 
@@ -111,46 +47,6 @@ namespace TWCore.Serialization.NSerializer
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
-                case DataBytesDefinition.EnumSByteMinusOne:
-                    return -1;
-                case DataBytesDefinition.EnumByteDefault:
-                    return default(int);
-                case DataBytesDefinition.EnumByte1:
-                    return 1;
-                case DataBytesDefinition.EnumByte2:
-                    return 2;
-                case DataBytesDefinition.EnumByte3:
-                    return 3;
-                case DataBytesDefinition.EnumByte4:
-                    return 4;
-                case DataBytesDefinition.EnumByte5:
-                    return 5;
-                case DataBytesDefinition.EnumByte6:
-                    return 6;
-                case DataBytesDefinition.EnumByte7:
-                    return 7;
-                case DataBytesDefinition.EnumByte8:
-                    return 8;
-                case DataBytesDefinition.EnumByte9:
-                    return 9;
-                case DataBytesDefinition.EnumByte10:
-                    return 10;
-                case DataBytesDefinition.EnumByte11:
-                    return 11;
-                case DataBytesDefinition.EnumByte12:
-                    return 12;
-                case DataBytesDefinition.EnumByte13:
-                    return 13;
-                case DataBytesDefinition.EnumByte14:
-                    return 14;
-                case DataBytesDefinition.EnumByte15:
-                    return 15;
-                case DataBytesDefinition.EnumByte16:
-                    return 16;
-                case DataBytesDefinition.EnumByte:
-                    return reader.ReadByte();
-                case DataBytesDefinition.EnumUShort:
-                    return reader.ReadUInt16();
                 case DataBytesDefinition.EnumInt:
                     return reader.ReadInt32();
             }

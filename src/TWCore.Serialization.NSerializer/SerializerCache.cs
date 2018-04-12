@@ -56,6 +56,10 @@ namespace TWCore.Serialization.NSerializer
             => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SerializerTryGetValue(T value, out int index)
+            => _serializationCache.TryGetValue(value, out index);
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(T value)
         {
             if (_serCurrentIndex < MaxIndex)
@@ -73,6 +77,7 @@ namespace TWCore.Serialization.NSerializer
                 _deserializationCache.Add(_desCurrentIndex++, value);
         }
     }
+
 
     internal class SerializerStringCache
     {
@@ -108,6 +113,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int SerializerGet(string value)
             => _serializationCache.TryGetValue(value, out var cIdx) ? cIdx : -1;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool SerializerTryGetValue(string value, out int index)
+            => _serializationCache.TryGetValue(value, out index);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void SerializerSet(string value)

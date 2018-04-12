@@ -32,22 +32,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.ByteArrayNull);
                 return;
             }
-            if (value.Length == 0)
+            var length = value.Length;
+            if (length == 0)
             {
                 _stream.WriteByte(DataBytesDefinition.ByteArrayEmpty);
                 return;
             }
-
-            #region Write Array
-            var length = value.Length;
-            if (length <= byte.MaxValue)
-                WriteByte(DataBytesDefinition.ByteArrayLengthByte, (byte)length);
-            else if (length <= ushort.MaxValue)
-                WriteUshort(DataBytesDefinition.ByteArrayLengthUShort, (ushort)length);
-            else
-                WriteInt(DataBytesDefinition.ByteArrayLengthInt, length);
-            _stream.Write(value, 0, value.Length);
-            #endregion
+            WriteInt(DataBytesDefinition.ByteArrayLength, length);
+            _stream.Write(value, 0, length);
         }
     }
 
@@ -66,11 +58,7 @@ namespace TWCore.Serialization.NSerializer
                     return null;
                 case DataBytesDefinition.ByteArrayEmpty:
                     return EmptyBytes;
-                case DataBytesDefinition.ByteArrayLengthByte:
-                    return reader.ReadBytes(reader.ReadByte());
-                case DataBytesDefinition.ByteArrayLengthUShort:
-                    return reader.ReadBytes(reader.ReadUInt16());
-                case DataBytesDefinition.ByteArrayLengthInt:
+                case DataBytesDefinition.ByteArrayLength:
                     return reader.ReadBytes(reader.ReadInt32());
             }
             throw new InvalidOperationException("Invalid type value.");

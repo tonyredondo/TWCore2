@@ -70,65 +70,45 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (vLength <= 8)
                 {
-                    var objIdx = _stringCache8.SerializerGet(value);
-                    if (objIdx > -1)
+                    if (_stringCache8.SerializerTryGetValue(value, out var objIdx))
                     {
-                        if (objIdx <= byte.MaxValue)
-                            WriteByte(DataBytesDefinition.RefString8Byte, (byte)objIdx);
-                        else
-                            WriteUshort(DataBytesDefinition.RefString8UShort, (ushort)objIdx);
+                        WriteInt(DataBytesDefinition.RefString8, objIdx);
                         return;
                     }
                     _stringCache8.SerializerSet(value);
                 }
                 else if (vLength <= 16)
                 {
-                    var objIdx = _stringCache16.SerializerGet(value);
-                    if (objIdx > -1)
+                    if (_stringCache16.SerializerTryGetValue(value, out var objIdx))
                     {
-                        if (objIdx <= byte.MaxValue)
-                            WriteByte(DataBytesDefinition.RefString16Byte, (byte)objIdx);
-                        else
-                            WriteUshort(DataBytesDefinition.RefString16UShort, (ushort)objIdx);
+                        WriteInt(DataBytesDefinition.RefString16, objIdx);
                         return;
                     }
                     _stringCache16.SerializerSet(value);
                 }
                 else if (vLength <= 32)
                 {
-                    var objIdx = _stringCache32.SerializerGet(value);
-                    if (objIdx > -1)
+                    if (_stringCache32.SerializerTryGetValue(value, out var objIdx))
                     {
-                        if (objIdx <= byte.MaxValue)
-                            WriteByte(DataBytesDefinition.RefString32Byte, (byte)objIdx);
-                        else
-                            WriteUshort(DataBytesDefinition.RefString32UShort, (ushort)objIdx);
+                        WriteInt(DataBytesDefinition.RefString32, objIdx);
                         return;
                     }
                     _stringCache32.SerializerSet(value);
                 }
                 else if (vLength <= 64)
                 {
-                    var objIdx = _stringCache64.SerializerGet(value);
-                    if (objIdx > -1)
+                    if (_stringCache64.SerializerTryGetValue(value, out var objIdx))
                     {
-                        if (objIdx <= byte.MaxValue)
-                            WriteByte(DataBytesDefinition.RefString64Byte, (byte)objIdx);
-                        else
-                            WriteUshort(DataBytesDefinition.RefString64UShort, (ushort)objIdx);
+                        WriteInt(DataBytesDefinition.RefString64, objIdx);
                         return;
                     }
                     _stringCache64.SerializerSet(value);
                 }
                 else
                 {
-                    var objIdx = _stringCache.SerializerGet(value);
-                    if (objIdx > -1)
+                    if (_stringCache.SerializerTryGetValue(value, out var objIdx))
                     {
-                        if (objIdx <= byte.MaxValue)
-                            WriteByte(DataBytesDefinition.RefStringByte, (byte)objIdx);
-                        else
-                            WriteUshort(DataBytesDefinition.RefStringUShort, (ushort)objIdx);
+                        WriteInt(DataBytesDefinition.RefString, objIdx);
                         return;
                     }
                     _stringCache.SerializerSet(value);
@@ -136,45 +116,14 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.Unicode.GetByteCount(value);
-            int bytesLength;
-            byte[] bytes;
-
-            if (length < 21)
-            {
-                bytesLength = length + 1;
-                bytes = new byte[bytesLength];
-                bytes[0] = (byte)(DataBytesDefinition.StringLengthByte1 + (length - 1));
-                Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 1);
-            }
-            else if (length <= byte.MaxValue)
-            {
-                bytesLength = length + 2;
-                bytes = new byte[bytesLength];
-                bytes[0] = DataBytesDefinition.StringLengthByte;
-                bytes[1] = (byte)length;
-                Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 2);
-            }
-            else if (length <= ushort.MaxValue)
-            {
-                bytesLength = length + 3;
-                bytes = new byte[bytesLength];
-                bytes[0] = DataBytesDefinition.StringLengthUShort;
-                bytes[1] = (byte)(ushort)length;
-                bytes[2] = (byte)(((ushort)length) >> 8);
-                Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 3);
-            }
-            else
-            {
-                bytesLength = length + 5;
-                bytes = new byte[bytesLength];
-                bytes[0] = DataBytesDefinition.StringLengthInt;
-                bytes[1] = (byte)length;
-                bytes[2] = (byte)(length >> 8);
-                bytes[3] = (byte)(length >> 16);
-                bytes[4] = (byte)(length >> 24);
-                Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
-            }
-            _stream.Write(bytes, 0, bytesLength);
+            var bytes = new byte[length + 5];
+            bytes[0] = DataBytesDefinition.StringLength;
+            bytes[1] = (byte)length;
+            bytes[2] = (byte)(length >> 8);
+            bytes[3] = (byte)(length >> 16);
+            bytes[4] = (byte)(length >> 24);
+            Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
+            _stream.Write(bytes, 0, bytes.Length);
         }
     }
 
@@ -210,119 +159,44 @@ namespace TWCore.Serialization.NSerializer
         public string ReadString(BinaryReader reader)
         {
             var type = reader.ReadByte();
-            int? length = null;
+            int length;
             switch (type)
             {
                 case DataBytesDefinition.StringNull:
                     return null;
                 case DataBytesDefinition.StringEmpty:
                     return string.Empty;
-                case DataBytesDefinition.RefStringByte:
-                    return _stringCache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefStringUShort:
-                    return _stringCache.DeserializerGet(reader.ReadUInt16());
-
-                case DataBytesDefinition.RefString8Byte:
-                    return _stringCache8.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefString8UShort:
-                    return _stringCache8.DeserializerGet(reader.ReadUInt16());
-
-                case DataBytesDefinition.RefString16Byte:
-                    return _stringCache16.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefString16UShort:
-                    return _stringCache16.DeserializerGet(reader.ReadUInt16());
-
-                case DataBytesDefinition.RefString32Byte:
-                    return _stringCache32.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefString32UShort:
-                    return _stringCache32.DeserializerGet(reader.ReadUInt16());
-
-                case DataBytesDefinition.RefString64Byte:
-                    return _stringCache64.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefString64UShort:
-                    return _stringCache64.DeserializerGet(reader.ReadUInt16());
-
-                case DataBytesDefinition.StringLengthByte:
-                    length = reader.ReadByte();
-                    break;
-                case DataBytesDefinition.StringLengthByte1:
-                    length = 1;
-                    break;
-                case DataBytesDefinition.StringLengthByte2:
-                    length = 2;
-                    break;
-                case DataBytesDefinition.StringLengthByte3:
-                    length = 3;
-                    break;
-                case DataBytesDefinition.StringLengthByte4:
-                    length = 4;
-                    break;
-                case DataBytesDefinition.StringLengthByte5:
-                    length = 5;
-                    break;
-                case DataBytesDefinition.StringLengthByte6:
-                    length = 6;
-                    break;
-                case DataBytesDefinition.StringLengthByte7:
-                    length = 7;
-                    break;
-                case DataBytesDefinition.StringLengthByte8:
-                    length = 8;
-                    break;
-                case DataBytesDefinition.StringLengthByte9:
-                    length = 9;
-                    break;
-                case DataBytesDefinition.StringLengthByte10:
-                    length = 10;
-                    break;
-                case DataBytesDefinition.StringLengthByte11:
-                    length = 11;
-                    break;
-                case DataBytesDefinition.StringLengthByte12:
-                    length = 12;
-                    break;
-                case DataBytesDefinition.StringLengthByte13:
-                    length = 13;
-                    break;
-                case DataBytesDefinition.StringLengthByte14:
-                    length = 14;
-                    break;
-                case DataBytesDefinition.StringLengthByte15:
-                    length = 15;
-                    break;
-                case DataBytesDefinition.StringLengthByte16:
-                    length = 16;
-                    break;
-                case DataBytesDefinition.StringLengthByte17:
-                    length = 17;
-                    break;
-                case DataBytesDefinition.StringLengthByte18:
-                    length = 18;
-                    break;
-                case DataBytesDefinition.StringLengthByte19:
-                    length = 19;
-                    break;
-                case DataBytesDefinition.StringLengthByte20:
-                    length = 20;
-                    break;
-                case DataBytesDefinition.StringLengthUShort:
-                    length = reader.ReadUInt16();
-                    break;
-                case DataBytesDefinition.StringLengthInt:
+                case DataBytesDefinition.RefString:
+                    return _stringCache.DeserializerGet(reader.ReadInt32());
+                case DataBytesDefinition.RefString8:
+                    return _stringCache8.DeserializerGet(reader.ReadInt32());
+                case DataBytesDefinition.RefString16:
+                    return _stringCache16.DeserializerGet(reader.ReadInt32());
+                case DataBytesDefinition.RefString32:
+                    return _stringCache32.DeserializerGet(reader.ReadInt32());
+                case DataBytesDefinition.RefString64:
+                    return _stringCache64.DeserializerGet(reader.ReadInt32());
+                case DataBytesDefinition.StringLength:
                     length = reader.ReadInt32();
                     break;
+                default:
+                    throw new InvalidOperationException("Invalid type value.");
             }
-            if (length == null) throw new InvalidOperationException("Invalid type value.");
 
-            var bytes = ArrayPool<byte>.Shared.Rent(length.Value);
-            reader.Read(bytes, 0, length.Value);
-            var strValue = Encoding.UTF8.GetString(bytes, 0, length.Value);
-            ArrayPool<byte>.Shared.Return(bytes);
+            var bytes = new byte[length];
+            reader.Read(bytes, 0, length);
+            var strValue = Encoding.UTF8.GetString(bytes, 0, length);
             var sLength = strValue.Length;
 
             if (sLength <= 2) return strValue;
-            if (sLength <= 16)
+            if (sLength <= 8)
+                _stringCache8.DeserializerSet(strValue);
+            else if (sLength <= 16)
                 _stringCache16.DeserializerSet(strValue);
+            else if (sLength <= 32)
+                _stringCache32.DeserializerSet(strValue);
+            else if (sLength <= 64)
+                _stringCache64.DeserializerSet(strValue);
             else
                 _stringCache.DeserializerSet(strValue);
             return strValue;

@@ -340,26 +340,19 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
-            var oIdx = _objectCache.SerializerGet(value);
-            if (oIdx > -1)
+            if (_objectCache.SerializerTryGetValue(value, out var oIdx))
             {
-                if (oIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefObjectByte, (byte)oIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                WriteInt(DataBytesDefinition.RefObject, oIdx);
                 return;
             }
             _objectCache.SerializerSet(value);
-            
+
             var vType = typeof(T);
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            var tIdx = _typeCache.SerializerGet(vType);
-            if (tIdx > -1)
+
+            if (_typeCache.SerializerTryGetValue(vType, out var tIdx))
             {
-                if (tIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefTypeByte, (byte)tIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+                WriteInt(DataBytesDefinition.RefType, tIdx);
             }
             else
             {
@@ -367,8 +360,8 @@ namespace TWCore.Serialization.NSerializer
                 _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.SerializerSet(vType);
             }
-            if (value is INSerializable instance)
-                instance.Serialize(this);
+            if (descriptor.IsINSerializable)
+                ((INSerializable)value).Serialize(this);
             else
                 InternalWriteValue(value, descriptor);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
@@ -630,26 +623,18 @@ namespace TWCore.Serialization.NSerializer
             }
             #endregion
 
-            var oIdx = _objectCache.SerializerGet(value);
-            if (oIdx > -1)
+            if (_objectCache.SerializerTryGetValue(value, out var oIdx))
             {
-                if (oIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefObjectByte, (byte)oIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefObjectUShort, (ushort)oIdx);
+                WriteInt(DataBytesDefinition.RefObject, oIdx);
                 return;
             }
             _objectCache.SerializerSet(value);
 
             var vType = value.GetType();
             var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            var tIdx = _typeCache.SerializerGet(vType);
-            if (tIdx > -1)
+            if (_typeCache.SerializerTryGetValue(vType, out var tIdx))
             {
-                if (tIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefTypeByte, (byte)tIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefTypeUShort, (ushort)tIdx);
+                WriteInt(DataBytesDefinition.RefType, tIdx);
             }
             else
             {
@@ -657,8 +642,8 @@ namespace TWCore.Serialization.NSerializer
                 _stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.SerializerSet(vType);
             }
-            if (value is INSerializable instance)
-                instance.Serialize(this);
+            if (descriptor.IsINSerializable)
+                ((INSerializable)value).Serialize(this);
             else
                 InternalWriteValue(value, descriptor);
             _stream.WriteByte(DataBytesDefinition.TypeEnd);
@@ -672,11 +657,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 WriteInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Count);
                 foreach (var prop in descriptor.Properties)
-                {
-                    var pValue = prop.Value.GetValue(value);
-                    if (pValue == null) continue;
-                    WriteInnerValue(pValue);
-                }
+                    WriteInnerValue(prop.Value.GetValue(value));
             }
 
             //Write Array if contains
@@ -725,6 +706,7 @@ namespace TWCore.Serialization.NSerializer
             public bool IsArray;
             public bool IsList;
             public bool IsDictionary;
+            public bool IsINSerializable;
             public byte[] Definition;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -736,7 +718,7 @@ namespace TWCore.Serialization.NSerializer
                 var ifaces = type.GetInterfaces();
                 var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                 var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
-
+                IsINSerializable = ifaces.Any(i => i == typeof(INSerializable));
                 var runtimeProperties = type.GetRuntimeProperties();
                 foreach (var prop in runtimeProperties)
                 {

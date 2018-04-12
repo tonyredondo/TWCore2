@@ -40,20 +40,14 @@ namespace TWCore.Serialization.NSerializer
                 _stream.WriteByte(DataBytesDefinition.DateTimeDefault);
                 return;
             }
-            var objIdx = _dateTimeCache.SerializerGet(value);
-            if (objIdx > -1)
+            if (_dateTimeCache.SerializerTryGetValue(value, out var objIdx))
             {
-                if (objIdx <= byte.MaxValue)
-                    WriteByte(DataBytesDefinition.RefDateTimeByte, (byte)objIdx);
-                else
-                    WriteUshort(DataBytesDefinition.RefDateTimeUShort, (ushort)objIdx);
+                WriteInt(DataBytesDefinition.RefDateTime, objIdx);
+                return;
             }
-            else
-            {
-                var longBinary = value.ToBinary();
-                WriteLong(DataBytesDefinition.DateTime, longBinary);
-                _dateTimeCache.SerializerSet(value);
-            }
+            var longBinary = value.ToBinary();
+            WriteLong(DataBytesDefinition.DateTime, longBinary);
+            _dateTimeCache.SerializerSet(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -91,10 +85,8 @@ namespace TWCore.Serialization.NSerializer
                     return null;
                 case DataBytesDefinition.DateTimeDefault:
                     return default(DateTime);
-                case DataBytesDefinition.RefDateTimeByte:
-                    return _dateTimeCache.DeserializerGet(reader.ReadByte());
-                case DataBytesDefinition.RefDateTimeUShort:
-                    return _dateTimeCache.DeserializerGet(reader.ReadUInt16());
+                case DataBytesDefinition.RefDateTime:
+                    return _dateTimeCache.DeserializerGet(reader.ReadInt32());
                 case DataBytesDefinition.DateTime:
                     var longBinary = reader.ReadInt64();
                     var cValue = DateTime.FromBinary(longBinary);

@@ -37,6 +37,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
         private readonly object[] _paramObj = new object[1];
 
+        #region Statics
         static SerializersTable()
         {
             var methods = typeof(SerializersTable).GetMethods();
@@ -49,6 +50,7 @@ namespace TWCore.Serialization.NSerializer
                 }
             }
         }
+        #endregion
 
         #region Internal Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -729,14 +731,16 @@ namespace TWCore.Serialization.NSerializer
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public TypeDescriptor(Type type)
             {
-                TypeName = type.GetTypeName();
-                Activator = Factory.Accessors.CreateActivator(type);
-                Properties = new Dictionary<string, FastPropertyInfo>();
                 var ifaces = type.GetInterfaces();
                 var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                 var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
-                IsINSerializable = ifaces.Any(i => i == typeof(INSerializable));
                 var runtimeProperties = type.GetRuntimeProperties();
+                var typeName = type.GetTypeName();
+
+                TypeName = typeName;
+                Activator = Factory.Accessors.CreateActivator(type);
+                Properties = new Dictionary<string, FastPropertyInfo>();
+                IsINSerializable = ifaces.Any(i => i == typeof(INSerializable));
                 foreach (var prop in runtimeProperties)
                 {
                     if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) continue;
@@ -760,7 +764,8 @@ namespace TWCore.Serialization.NSerializer
                     IsList = false;
                     IsDictionary = false;
                 }
-                var defText = TypeName + ";" + Properties.Keys.Join(";");
+
+                var defText = typeName + ";" + Properties.Keys.Join(";");
                 Definition = Encoding.UTF8.GetBytes(defText);
             }
         }

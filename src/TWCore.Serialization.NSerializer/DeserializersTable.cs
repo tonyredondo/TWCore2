@@ -20,6 +20,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
+using NonBlocking;
 using TWCore.Reflection;
 
 namespace TWCore.Serialization.NSerializer
@@ -27,6 +28,7 @@ namespace TWCore.Serialization.NSerializer
     public partial class DeserializersTable
     {
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
+        internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
         private static readonly byte[] EmptyBytes = new byte[0];
         private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
@@ -45,6 +47,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
+        private readonly Dictionary<Type, string[]> _propertiesByType = new Dictionary<Type, string[]>();
         protected Stream Stream;
 
         #region Attributes
@@ -66,7 +69,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var attr = method.GetAttribute<DeserializerMethodAttribute>();
                 if (attr == null) continue;
-                foreach(var byteType in attr.ByteTypes)
+                foreach (var byteType in attr.ByteTypes)
                     ReadValues[byteType] = (method, Factory.Accessors.BuildMethodAccessor(method));
             }
         }
@@ -81,6 +84,8 @@ namespace TWCore.Serialization.NSerializer
 
             ReadValue(ReadByte());
             while (ReadByte() != DataBytesDefinition.End)
+            {
+            }
 
             _dateTimeOffsetCache.Clear();
             _dateTimeCache.Clear();
@@ -95,6 +100,7 @@ namespace TWCore.Serialization.NSerializer
             _stringCache32.Clear();
             _stringCache.Clear();
             _timespanCache.Clear();
+            _propertiesByType.Clear();
             Stream = null;
             return null;
         }
@@ -110,13 +116,26 @@ namespace TWCore.Serialization.NSerializer
                 _parameters[0] = type;
                 return mTuple.Accessor(this, _parameters);
             }
+            Type valueType = null;
+            string[] properties = null;
+
             if (type == DataBytesDefinition.TypeStart)
             {
                 var length = ReadInt();
                 var typeBytes = new byte[length];
                 Stream.Read(typeBytes, 0, length);
-                var typeData = Encoding.UTF8.GetString(typeBytes, 0, length).Split(';');
+                var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
+                valueType = Core.GetType(typeData.Substring(0, typeData.IndexOf(";", StringComparison.Ordinal)));
+                properties = typeData.Substring(typeData.IndexOf(";", StringComparison.Ordinal) + 1).Split(';');
+                _propertiesByType[valueType] = properties;
             }
+            else if (type == DataBytesDefinition.RefType)
+            {
+                valueType = _typeCache.Get(ReadInt());
+                properties = _propertiesByType[valueType];
+            }
+            var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
+
             return null;
         }
 
@@ -681,5 +700,17 @@ namespace TWCore.Serialization.NSerializer
             return new Guid(_buffer);
         }
         #endregion
+    }
+
+    public struct DeserializerTypeDescriptor
+    {
+        public Type Type;
+        public ActivatorDelegate Activator;
+
+        public DeserializerTypeDescriptor(Type type)
+        {
+            Type = type;
+            Activator = Factory.Accessors.CreateActivator(type);
+        }
     }
 }

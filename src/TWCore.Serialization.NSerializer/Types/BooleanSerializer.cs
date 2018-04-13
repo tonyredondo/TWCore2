@@ -44,12 +44,13 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool ReadBool(BinaryReader reader)
+        public bool ReadBool(byte value)
         {
-            var value = reader.ReadByte();
             if (value == DataBytesDefinition.BoolTrue)
                 return true;
             if (value == DataBytesDefinition.BoolFalse)
@@ -58,9 +59,8 @@ namespace TWCore.Serialization.NSerializer
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool? ReadBoolNullable(BinaryReader reader)
+        public bool? ReadBoolNullable(byte value)
         {
-            var value = reader.ReadByte();
             if (value == DataBytesDefinition.ValueNull)
                 return null;
             if (value == DataBytesDefinition.BoolTrue)

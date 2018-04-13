@@ -96,33 +96,9 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private DeserializerStringCache _stringCache8;
-        private DeserializerStringCache _stringCache16;
-        private DeserializerStringCache _stringCache32;
-        private DeserializerStringCache _stringCache;
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitString()
+        public string ReadString(byte type)
         {
-            _stringCache8 = new DeserializerStringCache();
-            _stringCache16 = new DeserializerStringCache();
-            _stringCache32 = new DeserializerStringCache();
-            _stringCache = new DeserializerStringCache();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearString()
-        {
-            _stringCache8.Clear();
-            _stringCache16.Clear();
-            _stringCache32.Clear();
-            _stringCache.Clear();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string ReadString(BinaryReader reader)
-        {
-            var type = reader.ReadByte();
             int length;
             switch (type)
             {
@@ -131,22 +107,22 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.StringEmpty:
                     return string.Empty;
                 case DataBytesDefinition.RefString:
-                    return _stringCache.Get(reader.ReadInt32());
+                    return _stringCache.Get(ReadInt());
                 case DataBytesDefinition.RefString8:
-                    return _stringCache8.Get(reader.ReadInt32());
+                    return _stringCache8.Get(ReadInt());
                 case DataBytesDefinition.RefString16:
-                    return _stringCache16.Get(reader.ReadInt32());
+                    return _stringCache16.Get(ReadInt());
                 case DataBytesDefinition.RefString32:
-                    return _stringCache32.Get(reader.ReadInt32());
+                    return _stringCache32.Get(ReadInt());
                 case DataBytesDefinition.StringLength:
-                    length = reader.ReadInt32();
+                    length = ReadInt();
                     break;
                 default:
                     throw new InvalidOperationException("Invalid type value.");
             }
 
             var bytes = new byte[length];
-            reader.Read(bytes, 0, length);
+            Stream.Read(bytes, 0, length);
             var strValue = Encoding.UTF8.GetString(bytes, 0, length);
             var sLength = strValue.Length;
 

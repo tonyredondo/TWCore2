@@ -44,24 +44,25 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     { 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char Read(BinaryReader reader)
-            => ReadNullable(reader) ?? default;
-        
+        public char Read(byte value)
+            => ReadNullable(value) ?? default;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char? ReadNullable(BinaryReader reader)
+        public char? ReadNullable(byte value)
         {
-            var value = reader.ReadByte();
-            switch(value)
+            switch (value)
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
                 case DataBytesDefinition.CharDefault:
                     return default(char);
                 case DataBytesDefinition.Char:
-                    return reader.ReadChar();
+                    return ReadChar();
             }
             throw new InvalidOperationException("Invalid type value.");
         }

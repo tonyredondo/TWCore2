@@ -51,26 +51,17 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     {
-        private DeserializerCache<DateTimeOffset> _dateTimeOffsetCache;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DateTimeOffset ReadDateTimeOffset(byte type)
+            => ReadDateTimeOffsetNullable(type) ?? default;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitDateTimeOffset()
-            => _dateTimeOffsetCache = new DeserializerCache<DateTimeOffset>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearDateTimeOffset()
-            => _dateTimeOffsetCache.Clear();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTimeOffset ReadDateTimeOffset(BinaryReader reader)
-            => ReadDateTimeOffsetNullable(reader) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTimeOffset? ReadDateTimeOffsetNullable(BinaryReader reader)
+        public DateTimeOffset? ReadDateTimeOffsetNullable(byte type)
         {
-            var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
@@ -78,9 +69,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.DateTimeOffsetDefault:
                     return default(DateTimeOffset);
                 case DataBytesDefinition.RefDateTimeOffset:
-                    return _dateTimeOffsetCache.Get(reader.ReadInt32());
+                    return _dateTimeOffsetCache.Get(ReadInt());
                 case DataBytesDefinition.DateTimeOffset:
-                    var longBinary = reader.ReadInt64();
+                    var longBinary = ReadLong();
                     var cValue = DateTimeOffset.FromFileTime(longBinary);
                     _dateTimeOffsetCache.Set(cValue);
                     return cValue;

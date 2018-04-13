@@ -49,26 +49,17 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     {
-        private DeserializerCache<DateTime> _dateTimeCache;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DateTime ReadDateTime(byte type)
+            => ReadDateTimeNullable(type) ?? default;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitDateTime()
-            => _dateTimeCache = new DeserializerCache<DateTime>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearDateTime()
-            => _dateTimeCache.Clear();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime ReadDateTime(BinaryReader reader)
-            => ReadDateTimeNullable(reader) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadDateTimeNullable(BinaryReader reader)
+        public DateTime? ReadDateTimeNullable(byte type)
         {
-            var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
@@ -76,9 +67,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.DateTimeDefault:
                     return default(DateTime);
                 case DataBytesDefinition.RefDateTime:
-                    return _dateTimeCache.Get(reader.ReadInt32());
+                    return _dateTimeCache.Get(ReadInt());
                 case DataBytesDefinition.DateTime:
-                    var longBinary = reader.ReadInt64();
+                    var longBinary = ReadLong();
                     var cValue = DateTime.FromBinary(longBinary);
                     _dateTimeCache.Set(cValue);
                     return cValue;

@@ -43,18 +43,19 @@ namespace TWCore.Serialization.NSerializer
         }
     }
 
+
+
     public partial class DeserializersTable
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializedObject ReadSerializedObject(BinaryReader reader)
+        public SerializedObject ReadSerializedObject(byte type)
         {
-            var type = reader.ReadByte();
             switch(type)
             {
                 case DataBytesDefinition.SerializedObjectNull:
                     return null;
                 case DataBytesDefinition.SerializedObject:
-                    return SerializedObject.FromStream(reader);
+                    return SerializedObject.FromStream(Stream);
             }
             throw new InvalidOperationException("Invalid type value.");
         }

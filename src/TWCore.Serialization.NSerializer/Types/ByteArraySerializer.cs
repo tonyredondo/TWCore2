@@ -22,8 +22,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private static readonly byte[] EmptyBytes = new byte[0];
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte[] value)
         {
@@ -44,14 +42,13 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     {
-        private static readonly byte[] EmptyBytes = new byte[0];
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte[] ReadByteArray(BinaryReader reader)
+        public byte[] ReadByteArray(byte type)
         {
-            var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ByteArrayNull:
@@ -59,7 +56,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.ByteArrayEmpty:
                     return EmptyBytes;
                 case DataBytesDefinition.ByteArrayLength:
-                    return reader.ReadBytes(reader.ReadInt32());
+                    var buffer = new byte[ReadInt()];
+                    Stream.Read(buffer, 0, buffer.Length);
+                    return buffer;
             }
             throw new InvalidOperationException("Invalid type value.");
         }

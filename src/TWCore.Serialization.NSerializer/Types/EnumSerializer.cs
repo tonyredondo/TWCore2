@@ -33,22 +33,23 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
+
+
     public partial class DeserializersTable
     { 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ReadEnum(BinaryReader reader)
-            => ReadEnumNullable(reader) ?? 0;
+        public int ReadEnum(byte type)
+            => ReadEnumNullable(type) ?? 0;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int? ReadEnumNullable(BinaryReader reader)
+        public int? ReadEnumNullable(byte type)
         {
-            var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
                     return null;
                 case DataBytesDefinition.EnumInt:
-                    return reader.ReadInt32();
+                    return ReadInt();
             }
             throw new InvalidOperationException("Invalid type value.");
         }

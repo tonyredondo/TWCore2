@@ -49,26 +49,18 @@ namespace TWCore.Serialization.NSerializer
         }
     }
 
+
+
+
     public partial class DeserializersTable
     {
-        private DeserializerCache<Guid> _guidCache;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Guid ReadGuid(byte type)
+            => ReadGuidNullable(type) ?? default;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitGuid()
-            => _guidCache = new DeserializerCache<Guid>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearGuid()
-            => _guidCache.Clear();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid ReadGuid(BinaryReader reader)
-            => ReadGuidNullable(reader) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid? ReadGuidNullable(BinaryReader reader)
+        public Guid? ReadGuidNullable(byte type)
         {
-            var type = reader.ReadByte();
             switch (type)
             {
                 case DataBytesDefinition.ValueNull:
@@ -76,10 +68,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.GuidDefault:
                     return default(Guid);
                 case DataBytesDefinition.RefGuid:
-                    return _guidCache.Get(reader.ReadInt32());
+                    return _guidCache.Get(ReadInt());
                 case DataBytesDefinition.Guid:
-                    var bytes = reader.ReadBytes(16);
-                    var guidValue = new Guid(bytes);
+                    var guidValue = ReadGuid();
                     _guidCache.Set(guidValue);
                     return guidValue;
             }

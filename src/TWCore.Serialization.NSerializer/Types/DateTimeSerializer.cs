@@ -53,19 +53,14 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.DateTimeDefault, DataBytesDefinition.RefDateTime, DataBytesDefinition.DateTime)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime ReadDateTime(byte type)
-            => ReadDateTimeNullable(type) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTime? ReadDateTimeNullable(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.DateTimeDefault:
-                    return default(DateTime);
+                    return default;
                 case DataBytesDefinition.RefDateTime:
                     return _dateTimeCache.Get(ReadInt());
                 case DataBytesDefinition.DateTime:

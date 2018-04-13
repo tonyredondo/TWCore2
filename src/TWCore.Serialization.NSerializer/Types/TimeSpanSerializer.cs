@@ -52,17 +52,12 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.TimeSpanDefault, DataBytesDefinition.RefTimeSpan, DataBytesDefinition.TimeSpan)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeSpan ReadTimeSpan(byte type)
-            => ReadTimeSpanNullable(type) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TimeSpan? ReadTimeSpanNullable(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.TimeSpanDefault:
                     return default(TimeSpan);
                 case DataBytesDefinition.RefTimeSpan:

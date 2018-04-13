@@ -54,6 +54,8 @@ namespace TWCore
                 attrs = pinfo.GetCustomAttributes(true);
             else if (obj is FieldInfo finfo)
                 attrs = finfo.GetCustomAttributes(true);
+            else if (obj is MethodInfo minfo)
+                attrs = minfo.GetCustomAttributes(true);
             else
                 attrs = objTypeInfo.GetCustomAttributes(true);
             foreach (var item in attrs)

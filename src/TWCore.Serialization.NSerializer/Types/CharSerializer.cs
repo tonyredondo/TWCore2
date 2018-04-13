@@ -48,19 +48,14 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     { 
+        [DeserializerMethod(DataBytesDefinition.CharDefault, DataBytesDefinition.Char)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char Read(byte value)
-            => ReadNullable(value) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char? ReadNullable(byte value)
+        public char ReadChar(byte value)
         {
             switch (value)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.CharDefault:
-                    return default(char);
+                    return default;
                 case DataBytesDefinition.Char:
                     return ReadChar();
             }

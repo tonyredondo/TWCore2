@@ -87,6 +87,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.BoolArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -99,6 +105,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.CharArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -111,6 +123,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DateTimeOffsetArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -123,6 +141,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DateTimeArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -135,6 +159,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.EnumArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -147,6 +177,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.GuidArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -159,6 +195,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DecimalArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -171,6 +213,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DoubleArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -183,6 +231,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.FloatArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -195,6 +249,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.LongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -207,6 +267,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.ULongArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -219,6 +285,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.IntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -231,6 +303,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.UIntArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -243,6 +321,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.ShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -255,6 +339,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.UShortArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -267,6 +357,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.SByteArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -279,6 +375,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.StringArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -291,6 +393,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.TimeSpanArray, value.Length);
             for (var i = 0; i < value.Length; i++)
                 WriteValue(value[i]);
@@ -303,6 +411,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.BoolList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -315,6 +429,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.CharList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -327,6 +447,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DateTimeOffsetList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -339,6 +465,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DateTimeList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -351,6 +483,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.EnumList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -363,6 +501,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.GuidList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -375,6 +519,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DecimalList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -387,6 +537,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.DoubleList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -399,6 +555,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.FloatList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -411,6 +573,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.LongList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -423,6 +591,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.ULongList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -435,6 +609,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.IntList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -447,6 +627,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.UIntList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -459,6 +645,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.ShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -471,6 +663,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.UShortList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -483,6 +681,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.SByteList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -495,6 +699,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.StringList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -507,6 +717,12 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                return;
+            }
+            _objectCache.Set(value);
             WriteDefInt(DataBytesDefinition.TimeSpanList, value.Count);
             for (var i = 0; i < value.Count; i++)
                 WriteValue(value[i]);
@@ -602,65 +818,6 @@ namespace TWCore.Serialization.NSerializer
                 descriptor.SerializeAction(value, this);
             WriteByte(DataBytesDefinition.TypeEnd);
         }
-
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private void InternalWriteValue(object value, TypeDescriptor descriptor)
-        //{
-        //    //Write Properties
-        //    if (descriptor.Properties.Length > 0)
-        //    {
-        //        WriteDefInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Length);
-        //        foreach (var prop in descriptor.FastProperties)
-        //            InternalWriteObjectValue(prop.GetValue(value));
-        //    }
-
-        //    //Write Array if contains
-        //    if (descriptor.IsArray)
-        //    {
-        //        var aValue = (Array)value;
-        //        WriteDefInt(DataBytesDefinition.ArrayStart, aValue.Length);
-        //        for (var i = 0; i < aValue.Length; i++)
-        //            InternalWriteObjectValue(aValue.GetValue(i));
-        //        return;
-        //    }
-
-        //    //Write List if contains
-        //    if (descriptor.IsList)
-        //    {
-        //        var iValue = (IList)value;
-        //        var count = iValue.Count;
-        //        WriteDefInt(DataBytesDefinition.ListStart, count);
-        //        for (var i = 0; i < count; i++)
-        //            InternalWriteObjectValue(iValue[i]);
-        //        return;
-        //    }
-
-        //    //Write Dictionary if contains
-        //    if (descriptor.IsDictionary)
-        //    {
-        //        var iValue = (IDictionary)value;
-        //        var count = iValue.Count;
-        //        WriteDefInt(DataBytesDefinition.DictionaryStart, count);
-        //        foreach (DictionaryEntry item in iValue)
-        //        {
-        //            InternalWriteObjectValue(item.Key);
-        //            InternalWriteObjectValue(item.Value);
-        //        }
-        //        //return;
-
-        //        //
-        //        var instance = (IDictionary)value;
-        //        var length = instance.Count;
-        //        WriteDefInt(DataBytesDefinition.DictionaryStart, length);
-        //        var enumerator = instance.GetEnumerator();
-        //        while (enumerator.MoveNext())
-        //        {
-        //            InternalWriteObjectValue(enumerator.Key);
-        //            InternalWriteObjectValue(enumerator.Value);
-        //        }
-        //    }
-        //}
         #endregion
 
         #region Private Write Methods

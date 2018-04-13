@@ -226,47 +226,12 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public decimal ReadDecimal(byte type)
-            => ReadDecimalNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double ReadDouble(byte type)
-            => ReadDoubleNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float ReadFloat(byte type)
-            => ReadFloatNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long ReadLong(byte type)
-            => ReadLongNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ulong ReadULong(byte type)
-            => ReadULongNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ReadInt(byte type)
-            => ReadIntNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint ReadUInt(byte type)
-            => ReadUIntNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public short ReadShort(byte type)
-            => ReadShortNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort ReadUShort(byte type)
-            => ReadUShortNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte ReadByte(byte type)
-            => ReadByteNullable(type) ?? default;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public sbyte ReadSByte(byte type)
-            => ReadSByteNullable(type) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public decimal? ReadDecimalNullable(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Decimal:
@@ -274,19 +239,18 @@ namespace TWCore.Serialization.NSerializer
                     _decimalCache.Set(v1);
                     return v1;
                 case DataBytesDefinition.DecimalDefault:
-                    return default(decimal);
+                    return default;
                 case DataBytesDefinition.RefDecimal:
                     return _decimalCache.Get(ReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double? ReadDoubleNullable(byte type)
+        public double ReadDouble(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Double:
@@ -300,13 +264,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float? ReadFloatNullable(byte type)
+        public float ReadFloat(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Float:
@@ -320,13 +283,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Long, DataBytesDefinition.RefLong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long? ReadLongNullable(byte type)
+        public long ReadLong(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Long:
@@ -338,13 +300,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.ULong, DataBytesDefinition.RefULong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ulong? ReadULongNullable(byte type)
+        public ulong ReadULong(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.ULong:
@@ -356,13 +317,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Int)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int? ReadIntNullable(byte type)
+        public int ReadInt(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Int:
@@ -370,13 +330,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.UInt)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint? ReadUIntNullable(byte type)
+        public uint ReadUInt(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.UInt:
@@ -384,13 +343,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Short)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public short? ReadShortNullable(byte type)
+        public short ReadShort(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Short:
@@ -398,13 +356,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.UShort)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort? ReadUShortNullable(byte type)
+        public ushort ReadUShort(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.UShort:
@@ -412,13 +369,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Byte)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte? ReadByteNullable(byte type)
+        public byte ReadByte(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.Byte:
@@ -426,13 +382,12 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.SByte, DataBytesDefinition.SByteMinusOne)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public sbyte? ReadSByteNullable(byte type)
+        public sbyte ReadSByte(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.NumberDefault:
                     return 0;
                 case DataBytesDefinition.SByte:

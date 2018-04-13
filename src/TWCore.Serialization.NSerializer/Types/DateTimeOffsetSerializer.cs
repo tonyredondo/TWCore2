@@ -55,19 +55,14 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.DateTimeOffsetDefault, DataBytesDefinition.RefDateTimeOffset, DataBytesDefinition.DateTimeOffset)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTimeOffset ReadDateTimeOffset(byte type)
-            => ReadDateTimeOffsetNullable(type) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DateTimeOffset? ReadDateTimeOffsetNullable(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.DateTimeOffsetDefault:
-                    return default(DateTimeOffset);
+                    return default;
                 case DataBytesDefinition.RefDateTimeOffset:
                     return _dateTimeOffsetCache.Get(ReadInt());
                 case DataBytesDefinition.DateTimeOffset:

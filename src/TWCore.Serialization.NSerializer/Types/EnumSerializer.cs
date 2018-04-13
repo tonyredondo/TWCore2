@@ -37,20 +37,12 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     { 
+        [DeserializerMethod(DataBytesDefinition.EnumInt)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadEnum(byte type)
-            => ReadEnumNullable(type) ?? 0;
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int? ReadEnumNullable(byte type)
         {
-            switch (type)
-            {
-                case DataBytesDefinition.ValueNull:
-                    return null;
-                case DataBytesDefinition.EnumInt:
-                    return ReadInt();
-            }
+            if (type == DataBytesDefinition.EnumInt)
+                return ReadInt();
             throw new InvalidOperationException("Invalid type value.");
         }
     }

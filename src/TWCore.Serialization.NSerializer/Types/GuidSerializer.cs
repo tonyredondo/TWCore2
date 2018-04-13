@@ -54,19 +54,14 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.GuidDefault, DataBytesDefinition.RefGuid, DataBytesDefinition.Guid)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid ReadGuid(byte type)
-            => ReadGuidNullable(type) ?? default;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid? ReadGuidNullable(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.ValueNull:
-                    return null;
                 case DataBytesDefinition.GuidDefault:
-                    return default(Guid);
+                    return default;
                 case DataBytesDefinition.RefGuid:
                     return _guidCache.Get(ReadInt());
                 case DataBytesDefinition.Guid:

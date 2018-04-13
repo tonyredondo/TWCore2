@@ -47,6 +47,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.SerializedObjectNull, DataBytesDefinition.SerializedObject)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject ReadSerializedObject(byte type)
         {

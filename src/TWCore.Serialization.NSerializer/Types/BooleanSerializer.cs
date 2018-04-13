@@ -48,21 +48,10 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
+        [DeserializerMethod(DataBytesDefinition.BoolTrue, DataBytesDefinition.BoolFalse)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBool(byte value)
         {
-            if (value == DataBytesDefinition.BoolTrue)
-                return true;
-            if (value == DataBytesDefinition.BoolFalse)
-                return false;
-            throw new InvalidOperationException("Invalid type value.");
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool? ReadBoolNullable(byte value)
-        {
-            if (value == DataBytesDefinition.ValueNull)
-                return null;
             if (value == DataBytesDefinition.BoolTrue)
                 return true;
             if (value == DataBytesDefinition.BoolFalse)

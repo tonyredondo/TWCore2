@@ -67,27 +67,6 @@ namespace TWCore.Serialization.NSerializer
             //
             Properties = runtimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
-
-            //
-            if (runtimeProperties.Length > 0)
-            {
-                var propByte = Expression.Constant(DataBytesDefinition.PropertiesStart, typeof(byte));
-                var propLength = Expression.Constant(runtimeProperties.Length, typeof(int));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, propByte, propLength));
-
-                foreach (var prop in runtimeProperties)
-                {
-                    var getMethod = prop.GetMethod;
-                    var getExpression = Expression.Call(instance, getMethod);
-                    if (SerializersTable.WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
-                        serExpressions.Add(Expression.Call(serTable, wMethodTuple.Method, getExpression));
-                    else if (prop.PropertyType.IsEnum)
-                        serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum))));
-                    else
-                        serExpressions.Add(Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression));
-                }
-            }
-            //
             IsArray = type.IsArray;
             if (!IsArray)
             {
@@ -99,7 +78,7 @@ namespace TWCore.Serialization.NSerializer
                 IsList = false;
                 IsDictionary = false;
             }
-
+            //
             var typeName = type.GetTypeName();
             var defText = typeName + ";" + Properties.Join(";");
             var defBytesLength = Encoding.UTF8.GetByteCount(defText);
@@ -111,7 +90,8 @@ namespace TWCore.Serialization.NSerializer
             defBytes[4] = (byte)(defBytesLength >> 24);
             Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
             Definition = defBytes;
-
+            
+            //
             if (IsArray)
             {
                 var arrLength = Expression.Parameter(typeof(int), "length");
@@ -190,6 +170,26 @@ namespace TWCore.Serialization.NSerializer
                                 Expression.Break(breakLabel)), breakLabel);
 
                 serExpressions.Add(loop);
+            }
+            
+            //
+            if (runtimeProperties.Length > 0)
+            {
+                var propByte = Expression.Constant(DataBytesDefinition.PropertiesStart, typeof(byte));
+                var propLength = Expression.Constant(runtimeProperties.Length, typeof(int));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, propByte, propLength));
+
+                foreach (var prop in runtimeProperties)
+                {
+                    var getMethod = prop.GetMethod;
+                    var getExpression = Expression.Call(instance, getMethod);
+                    if (SerializersTable.WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
+                        serExpressions.Add(Expression.Call(serTable, wMethodTuple.Method, getExpression));
+                    else if (prop.PropertyType.IsEnum)
+                        serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum))));
+                    else
+                        serExpressions.Add(Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression));
+                }
             }
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();

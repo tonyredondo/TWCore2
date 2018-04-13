@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -64,6 +65,8 @@ namespace TWCore.Data
         protected EntityDal()
         {
             var poolKey = Settings.GetHashSHA1();
+            if (Settings?.ConnectionString == null)
+                throw new ArgumentException("The ConnectionString is null.");
             var pool = Pools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccess>(pl => OnGetDataAccess(Settings)));
 			var poolAsync = AsyncPools.GetOrAdd(poolKey, key => new ObjectPool<IDataAccessAsync>(pl => OnGetDataAccessAsync(Settings)));
             _poolItem = new DalPoolItem(pool);

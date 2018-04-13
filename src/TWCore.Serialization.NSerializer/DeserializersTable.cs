@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using TWCore.Reflection;
 
 namespace TWCore.Serialization.NSerializer
@@ -109,8 +110,13 @@ namespace TWCore.Serialization.NSerializer
                 _parameters[0] = type;
                 return mTuple.Accessor(this, _parameters);
             }
-
-            
+            if (type == DataBytesDefinition.TypeStart)
+            {
+                var length = ReadInt();
+                var typeBytes = new byte[length];
+                Stream.Read(typeBytes, 0, length);
+                var typeData = Encoding.UTF8.GetString(typeBytes, 0, length).Split(';');
+            }
             return null;
         }
 

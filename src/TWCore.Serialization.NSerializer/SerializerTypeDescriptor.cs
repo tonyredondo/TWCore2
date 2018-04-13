@@ -28,10 +28,8 @@ namespace TWCore.Serialization.NSerializer
 {
     public delegate void SerializeActionDelegate(object obj, SerializersTable table);
 
-    public struct TypeDescriptor
+    public struct SerializerTypeDescriptor
     {
-        public string TypeName;
-        public ActivatorDelegate Activator;
         public string[] Properties;
         public bool IsArray;
         public bool IsList;
@@ -41,7 +39,7 @@ namespace TWCore.Serialization.NSerializer
         public SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public TypeDescriptor(Type type)
+        public SerializerTypeDescriptor(Type type)
         {
             var ifaces = type.GetInterfaces();
             var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
@@ -54,7 +52,6 @@ namespace TWCore.Serialization.NSerializer
                 if (isIList && prop.Name == "Capacity") return false;
                 return true;
             }).ToArray();
-            var typeName = type.GetTypeName();
 
             var serExpressions = new List<Expression>();
             var varExpressions = new List<ParameterExpression>();
@@ -68,8 +65,6 @@ namespace TWCore.Serialization.NSerializer
             serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
 
             //
-            TypeName = typeName;
-            Activator = Factory.Accessors.CreateActivator(type);
             Properties = runtimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
 
@@ -105,6 +100,7 @@ namespace TWCore.Serialization.NSerializer
                 IsDictionary = false;
             }
 
+            var typeName = type.GetTypeName();
             var defText = typeName + ";" + Properties.Join(";");
             var defBytesLength = Encoding.UTF8.GetByteCount(defText);
             var defBytes = new byte[defBytesLength + 5];

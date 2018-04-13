@@ -28,7 +28,7 @@ namespace TWCore.Serialization.NSerializer
     public partial class SerializersTable
     {
         internal static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
-        internal static readonly ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
+        internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         //
@@ -752,7 +752,7 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             _objectCache.Set(value);
-            var descriptor = Descriptors.GetOrAdd(valueType, type => new TypeDescriptor(type));
+            var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(valueType, out var tIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefType, tIdx);
@@ -802,7 +802,7 @@ namespace TWCore.Serialization.NSerializer
             }
             _objectCache.Set(value);
             var vType = value.GetType();
-            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
+            var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefType, tIdx);

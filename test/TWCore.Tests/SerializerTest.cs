@@ -71,13 +71,28 @@ namespace TWCore.Tests
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
-            
+            var lt2 = new List<Test3>
+            {
+                new Test3 { Values = new List<int> {2, 3, 4, 5} },
+                new Test3 { Values = new List<int> {10, 11, 12, 13} }
+            };
+            var lt2b = lt2.SerializeToNBinary();
+
+            var dct = new Dictionary<string, int>
+            {
+                ["Value1"] = 1,
+                ["Value2"] = 2,
+                ["Value3"] = 3,
+            };
+            var bytes = dct.SerializeToNBinary();
+
             var memStream = new MemoryStream();
             
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", collection[0].SerializeToJsonBytes().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", collection[0].SerializeToMsgPack().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", collection[0].SerializeToNBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
 
@@ -92,7 +107,6 @@ namespace TWCore.Tests
                     memStream.Position = 0;
                 }
             }
-            Core.Log.InfoBasic("\tNSerializer Bytes Count: {0}", memStream.Length.ToReadableBytes().Text);
             //Core.Log.InfoDetail(mStream.TextReadToEnd());
             Console.ReadLine();
 
@@ -269,5 +283,10 @@ namespace TWCore.Tests
         //    table.WriteGenericValue(Brother);
         //    table.WriteValue(New);
         //}
+    }
+
+    public class Test3
+    {
+        public List<int> Values { get; set; }
     }
 }

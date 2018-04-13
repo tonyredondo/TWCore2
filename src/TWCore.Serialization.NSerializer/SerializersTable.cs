@@ -31,9 +31,17 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
-        internal static readonly MethodInfo ListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
+        //
+        internal static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
         internal static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
+        //
         internal static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
+        //
+        internal static readonly MethodInfo DictionaryGetEnumeratorMethod = typeof(IDictionary).GetMethod("GetEnumerator");
+        internal static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
+        internal static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
+        internal static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
+
 
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
@@ -604,7 +612,7 @@ namespace TWCore.Serialization.NSerializer
         //    {
         //        WriteDefInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Length);
         //        foreach (var prop in descriptor.FastProperties)
-        //            WriteObjectValue(prop.GetValue(value));
+        //            InternalWriteObjectValue(prop.GetValue(value));
         //    }
 
         //    //Write Array if contains
@@ -613,7 +621,7 @@ namespace TWCore.Serialization.NSerializer
         //        var aValue = (Array)value;
         //        WriteDefInt(DataBytesDefinition.ArrayStart, aValue.Length);
         //        for (var i = 0; i < aValue.Length; i++)
-        //            WriteObjectValue(aValue.GetValue(i));
+        //            InternalWriteObjectValue(aValue.GetValue(i));
         //        return;
         //    }
 
@@ -624,7 +632,7 @@ namespace TWCore.Serialization.NSerializer
         //        var count = iValue.Count;
         //        WriteDefInt(DataBytesDefinition.ListStart, count);
         //        for (var i = 0; i < count; i++)
-        //            WriteObjectValue(iValue[i]);
+        //            InternalWriteObjectValue(iValue[i]);
         //        return;
         //    }
 
@@ -636,10 +644,21 @@ namespace TWCore.Serialization.NSerializer
         //        WriteDefInt(DataBytesDefinition.DictionaryStart, count);
         //        foreach (DictionaryEntry item in iValue)
         //        {
-        //            WriteObjectValue(item.Key);
-        //            WriteObjectValue(item.Value);
+        //            InternalWriteObjectValue(item.Key);
+        //            InternalWriteObjectValue(item.Value);
         //        }
-        //        return;
+        //        //return;
+
+        //        //
+        //        var instance = (IDictionary)value;
+        //        var length = instance.Count;
+        //        WriteDefInt(DataBytesDefinition.DictionaryStart, length);
+        //        var enumerator = instance.GetEnumerator();
+        //        while (enumerator.MoveNext())
+        //        {
+        //            InternalWriteObjectValue(enumerator.Key);
+        //            InternalWriteObjectValue(enumerator.Value);
+        //        }
         //    }
         //}
         #endregion

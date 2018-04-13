@@ -142,9 +142,12 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (IsList)
             {
+                var argTypes = type.GenericTypeArguments;
+                var itemMethod = SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
+
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
-                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListLengthGetMethod)));
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
 
                 var iByte = Expression.Constant(DataBytesDefinition.ListStart, typeof(byte));
                 serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
@@ -156,16 +159,42 @@ namespace TWCore.Serialization.NSerializer
                 var loop = Expression.Loop(
                             Expression.IfThenElse(
                                 Expression.LessThan(forIdx, iLength),
-                                Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, Expression.MakeIndex(instance, SerializersTable.ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
+                                Expression.Call(serTable, itemMethod, Expression.MakeIndex(instance, SerializersTable.ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
                                 Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
             else if (IsDictionary)
             {
+                var argTypes = type.GenericTypeArguments;
+                var keyMember = SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
+                var valueMember = SerializersTable.WriteValues.TryGetValue(argTypes[1], out var wMethodTuple1) ? wMethodTuple1.Method : SerializersTable.InternalWriteObjectValueMInfo;
 
+                var iLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(iLength);
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
+
+                var iByte = Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
+
+                var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
+                varExpressions.Add(enumerator);
+                serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, SerializersTable.DictionaryGetEnumeratorMethod)));
+
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+
+                var loop = Expression.Loop(
+                            Expression.IfThenElse(
+                                Expression.Call(enumerator, SerializersTable.EnumeratorMoveNextMethod),
+                                Expression.Block(
+                                    Expression.Call(serTable, keyMember, Expression.Convert(Expression.Call(enumerator, SerializersTable.DictionaryEnumeratorKeyMethod), argTypes[0])),
+                                    Expression.Call(serTable, valueMember, Expression.Convert(Expression.Call(enumerator, SerializersTable.DictionaryEnumeratorValueMethod), argTypes[1]))
+                                ).Reduce(),
+                                Expression.Break(breakLabel)), breakLabel);
+
+                serExpressions.Add(loop);
             }
 
-            var expressionBlock = Expression.Block(varExpressions, serExpressions);
+            var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
             var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_SerializeAction", new[] { obj, serTable });
             SerializeAction = lambda.Compile();
         }

@@ -130,6 +130,7 @@ namespace TWCore.Serialization.NSerializer
                 valueType = Core.GetType(typeData.Substring(0, typeData.IndexOf(";", StringComparison.Ordinal)));
                 properties = typeData.Substring(typeData.IndexOf(";", StringComparison.Ordinal) + 1).Split(';');
                 _propertiesByType[valueType] = properties;
+                _typeCache.Set(valueType);
             }
             else if (type == DataBytesDefinition.RefType)
             {
@@ -137,25 +138,82 @@ namespace TWCore.Serialization.NSerializer
                 properties = _propertiesByType[valueType];
             }
             var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
-            var value = descriptor.Activator();
             if (descriptor.IsNSerializable)
-                ((INSerializable) value).Fill(this, properties);
-            else
-                FillObject(value, properties, ref descriptor);
-            return value;
+            {
+                var value = (INSerializable) descriptor.Activator();
+                value.Fill(this, properties);
+                return value;
+            }
+            return FillObject(ref descriptor, properties);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void FillObject(object value, string[] properties, ref DeserializerTypeDescriptor descriptor)
+        private object FillObject(ref DeserializerTypeDescriptor descriptor, string[] properties)
         {
+            object value = null;
+
+            if (!descriptor.IsArray)
+            {
+                value = descriptor.Activator();
+                _objectCache.Set(value);
+            }
+
+            var propValues = new object[properties.Length];
             if (ReadByte() == DataBytesDefinition.PropertiesStart)
             {
                 var length = ReadInt();
                 for(var i = 0; i < properties.Length; i++)
+                    propValues[i] = ReadValue(ReadByte());
+            }
+            var colFlag = ReadByte();
+            var capacity = 0;
+            if (colFlag == DataBytesDefinition.ArrayStart || colFlag == DataBytesDefinition.ListStart || colFlag == DataBytesDefinition.DictionaryStart)
+            {
+                capacity = ReadInt();
+                if (descriptor.IsArray)
                 {
-                    var propValue = ReadValue(ReadByte());
+                    value = descriptor.Activator(capacity);
+                    _objectCache.Set(value);
                 }
             }
+
+            //***************************************************************************************
+            for (var i = 0; i < properties.Length; i++)
+            {
+                var name = properties[i];
+                if (descriptor.Properties.TryGetValue(name, out var fProp))
+                {
+                    fProp.SetValue(value, propValues[i]);
+                }
+                else
+                {
+                    //Notify property not found.
+                }
+            }
+            if (descriptor.IsArray)
+            {
+                var aValue = (Array) value;
+                for (var i = 0; i < capacity; i++)
+                    aValue.SetValue(ReadValue(ReadByte()), i);
+            }
+            else if (descriptor.IsList)
+            {
+                var iValue = (IList) value;
+                for (var i = 0; i < capacity; i++)
+                    iValue[i] = ReadValue(ReadByte());
+            }
+            else if (descriptor.IsDictionary)
+            {
+                var dictio = (IDictionary) value;
+                for (var i = 0; i < capacity; i++)
+                {
+                    var dKey = ReadValue(ReadByte());
+                    var dValue = ReadValue(ReadByte());
+                    dictio[dKey] = dValue;
+                }
+            }
+
+            return value;
         }
 
         #region Read Values

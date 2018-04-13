@@ -153,13 +153,15 @@ namespace TWCore.Serialization.NSerializer
         private object FillObject(ref DeserializerTypeDescriptor descriptor, string[] properties)
         {
             object value = null;
-
+            IList iValue = null;
+            
             if (!descriptor.IsArray)
             {
                 value = descriptor.Activator();
                 _objectCache.Set(value);
+                if (descriptor.IsList)
+                    iValue = (IList) value;
             }
-
             var flag = ReadByte();
             var propValues = new object[properties.Length];
             if (flag == DataBytesDefinition.PropertiesStart)
@@ -204,7 +206,6 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (descriptor.IsList)
             {
-                var iValue = (IList) value;
                 for (var i = 0; i < capacity; i++)
                 {
                     var item = ReadValue(ReadByte());

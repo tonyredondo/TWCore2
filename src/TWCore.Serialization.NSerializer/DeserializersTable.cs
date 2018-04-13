@@ -153,76 +153,68 @@ namespace TWCore.Serialization.NSerializer
         private object FillObject(ref DeserializerTypeDescriptor descriptor, string[] properties)
         {
             object value = null;
-            IList iValue = null;
             
-            if (!descriptor.IsArray)
+            var flag = ReadByte();
+            if (flag == DataBytesDefinition.ArrayStart || flag == DataBytesDefinition.ListStart || flag == DataBytesDefinition.DictionaryStart)
+            {
+                var capacity = ReadInt();
+                value = descriptor.Activator(capacity);
+                _objectCache.Set(value);
+                
+                if (descriptor.IsArray)
+                {
+                    var aValue = (Array) value;
+                    for (var i = 0; i < capacity; i++)
+                    {
+                        var item = ReadValue(ReadByte());
+                        aValue.SetValue(item, i);
+                    }
+                }
+                else if (descriptor.IsList)
+                {
+                    var iValue = (IList) value;
+                    for (var i = 0; i < capacity; i++)
+                    {
+                        var item = ReadValue(ReadByte());
+                        iValue.Add(item);
+                    }
+                }
+                else if (descriptor.IsDictionary)
+                {
+                    var dictio = (IDictionary) value;
+                    for (var i = 0; i < capacity; i++)
+                    {
+                        var dKey = ReadValue(ReadByte());
+                        var dValue = ReadValue(ReadByte());
+                        dictio[dKey] = dValue;
+                    }
+                }
+                
+                flag = ReadByte();
+            }
+            else
             {
                 value = descriptor.Activator();
                 _objectCache.Set(value);
-                if (descriptor.IsList)
-                    iValue = (IList) value;
             }
-            var flag = ReadByte();
-            var propValues = new object[properties.Length];
+            
             if (flag == DataBytesDefinition.PropertiesStart)
             {
-                var length = ReadInt();
-                for(var i = 0; i < properties.Length; i++)
-                    propValues[i] = ReadValue(ReadByte());
-                flag = ReadByte();
-            }
-            var capacity = 0;
-            if (flag == DataBytesDefinition.ArrayStart || flag == DataBytesDefinition.ListStart || flag == DataBytesDefinition.DictionaryStart)
-            {
-                capacity = ReadInt();
-                if (descriptor.IsArray)
+                for (var i = 0; i < properties.Length; i++)
                 {
-                    value = descriptor.Activator(capacity);
-                    _objectCache.Set(value);
+                    var name = properties[i];
+                    if (descriptor.Properties.TryGetValue(name, out var fProp))
+                    {
+                        fProp.SetValue(value, ReadValue(ReadByte()));
+                    }
+                    else
+                    {
+                        //Notify property not found.
+                    }
                 }
             }
 
-            //***************************************************************************************
-            for (var i = 0; i < properties.Length; i++)
-            {
-                var name = properties[i];
-                if (descriptor.Properties.TryGetValue(name, out var fProp))
-                {
-                    fProp.SetValue(value, propValues[i]);
-                }
-                else
-                {
-                    //Notify property not found.
-                }
-            }
-            if (descriptor.IsArray)
-            {
-                var aValue = (Array) value;
-                for (var i = 0; i < capacity; i++)
-                {
-                    var item = ReadValue(ReadByte());
-                    aValue.SetValue(item, i);
-                }
-            }
-            else if (descriptor.IsList)
-            {
-                for (var i = 0; i < capacity; i++)
-                {
-                    var item = ReadValue(ReadByte());
-                    iValue.Add(item);
-                }
-            }
-            else if (descriptor.IsDictionary)
-            {
-                var dictio = (IDictionary) value;
-                for (var i = 0; i < capacity; i++)
-                {
-                    var dKey = ReadValue(ReadByte());
-                    var dValue = ReadValue(ReadByte());
-                    dictio[dKey] = dValue;
-                }
-            }
-
+            ReadByte();
             return value;
         }
 

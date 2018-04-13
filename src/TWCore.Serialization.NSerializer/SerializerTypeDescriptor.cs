@@ -176,8 +176,7 @@ namespace TWCore.Serialization.NSerializer
             if (runtimeProperties.Length > 0)
             {
                 var propByte = Expression.Constant(DataBytesDefinition.PropertiesStart, typeof(byte));
-                var propLength = Expression.Constant(runtimeProperties.Length, typeof(int));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, propByte, propLength));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, propByte));
 
                 foreach (var prop in runtimeProperties)
                 {

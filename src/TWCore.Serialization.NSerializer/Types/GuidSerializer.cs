@@ -22,16 +22,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private SerializerCache<Guid> _guidCache;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitGuid()
-            => _guidCache = new SerializerCache<Guid>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearGuid()
-            => _guidCache.Clear();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid value)
         {

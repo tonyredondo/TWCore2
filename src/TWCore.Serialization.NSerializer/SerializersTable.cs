@@ -29,16 +29,29 @@ namespace TWCore.Serialization.NSerializer
     {
         internal static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly ConcurrentDictionary<Type, TypeDescriptor> Descriptors = new ConcurrentDictionary<Type, TypeDescriptor>();
-        internal static readonly MethodInfo WriteObjectValueMInfo = typeof(SerializersTable).GetMethod("WriteObjectValue");
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
-        internal static readonly MethodInfo IListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
-        internal static readonly PropertyInfo IListIndexProperty = typeof(IList).GetProperty("Item");
+        internal static readonly MethodInfo ListLengthGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
+        internal static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
         internal static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
 
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
+        private readonly SerializerCache<DateTimeOffset> _dateTimeOffsetCache = new SerializerCache<DateTimeOffset>();
+        private readonly SerializerCache<DateTime> _dateTimeCache = new SerializerCache<DateTime>();
+        private readonly SerializerCache<Guid> _guidCache = new SerializerCache<Guid>();
+        private readonly SerializerCache<decimal> _decimalCache = new SerializerCache<decimal>();
+        private readonly SerializerCache<double> _doubleCache = new SerializerCache<double>();
+        private readonly SerializerCache<float> _floatCache = new SerializerCache<float>();
+        private readonly SerializerCache<long> _longCache = new SerializerCache<long>();
+        private readonly SerializerCache<ulong> _uLongCache = new SerializerCache<ulong>();
+        private readonly SerializerStringCache _stringCache8 = new SerializerStringCache();
+        private readonly SerializerStringCache _stringCache16 = new SerializerStringCache();
+        private readonly SerializerStringCache _stringCache32 = new SerializerStringCache();
+        private readonly SerializerStringCache _stringCache = new SerializerStringCache();
+        private readonly SerializerCache<TimeSpan> _timespanCache = new SerializerCache<TimeSpan>();
+
         private readonly object[] _paramObj = new object[1];
         protected Stream Stream;
 
@@ -54,37 +67,6 @@ namespace TWCore.Serialization.NSerializer
                     WriteValues[parameters[0].ParameterType] = (method, Factory.Accessors.BuildMethodAccessor(method));
                 }
             }
-        }
-        #endregion
-
-        #region Internal Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Init()
-        {
-            InitDateTimeOffset();
-            InitDateTime();
-            InitGuid();
-            InitNumber();
-            InitString();
-            InitTimeSpan();
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Clear()
-        {
-            ClearDateTimeOffset();
-            ClearDateTime();
-            ClearGuid();
-            ClearNumber();
-            ClearString();
-            ClearTimeSpan();
-            _typeCache.Clear();
-            _objectCache.Clear();
-            Stream = null;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void SetStream(Stream stream)
-        {
-            Stream = stream;
         }
         #endregion
 
@@ -524,15 +506,17 @@ namespace TWCore.Serialization.NSerializer
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteObjectValue(object value)
+        public void Serialize(Stream stream, object value, Type valueType)
         {
+            Stream = stream;
+            WriteByte(DataBytesDefinition.FileStart);
+
             if (value == null)
             {
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
-            var vType = value.GetType();
-            if (WriteValues.TryGetValue(vType, out var mTuple))
+            if (WriteValues.TryGetValue(valueType, out var mTuple))
             {
                 _paramObj[0] = value;
                 mTuple.Accessor(this, _paramObj);
@@ -544,21 +528,38 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             _objectCache.Set(value);
-            var descriptor = Descriptors.GetOrAdd(vType, type => new TypeDescriptor(type));
-            if (_typeCache.TryGetValue(vType, out var tIdx))
+            var descriptor = Descriptors.GetOrAdd(valueType, type => new TypeDescriptor(type));
+            if (_typeCache.TryGetValue(valueType, out var tIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefType, tIdx);
             }
             else
             {
                 Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
-                _typeCache.Set(vType);
+                _typeCache.Set(valueType);
             }
             if (descriptor.IsNSerializable)
                 ((INSerializable)value).Serialize(this);
             else
                 descriptor.SerializeAction(value, this);
             WriteByte(DataBytesDefinition.TypeEnd);
+
+            _dateTimeOffsetCache.Clear();
+            _dateTimeCache.Clear();
+            _guidCache.Clear();
+            _decimalCache.Clear();
+            _doubleCache.Clear();
+            _floatCache.Clear();
+            _longCache.Clear();
+            _uLongCache.Clear();
+            _stringCache8.Clear();
+            _stringCache16.Clear();
+            _stringCache32.Clear();
+            _stringCache.Clear();
+            _timespanCache.Clear();
+            _typeCache.Clear();
+            _objectCache.Clear();
+            Stream = null;
         }
 
         #region Private Methods

@@ -144,7 +144,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
-                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.IListLengthGetMethod)));
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListLengthGetMethod)));
 
                 var iByte = Expression.Constant(DataBytesDefinition.ListStart, typeof(byte));
                 serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
@@ -156,7 +156,7 @@ namespace TWCore.Serialization.NSerializer
                 var loop = Expression.Loop(
                             Expression.IfThenElse(
                                 Expression.LessThan(forIdx, iLength),
-                                Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, Expression.MakeIndex(instance, SerializersTable.IListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
+                                Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, Expression.MakeIndex(instance, SerializersTable.ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) })),
                                 Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
@@ -166,7 +166,7 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions);
-            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "SerializeAction", new[] { obj, serTable });
+            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_SerializeAction", new[] { obj, serTable });
             SerializeAction = lambda.Compile();
         }
     }

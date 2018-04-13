@@ -25,32 +25,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private SerializerStringCache _stringCache8;
-        private SerializerStringCache _stringCache16;
-        private SerializerStringCache _stringCache32;
-        private SerializerStringCache _stringCache64;
-        private SerializerStringCache _stringCache;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitString()
-        {
-            _stringCache8 = new SerializerStringCache();
-            _stringCache16 = new SerializerStringCache();
-            _stringCache32 = new SerializerStringCache();
-            _stringCache64 = new SerializerStringCache();
-            _stringCache = new SerializerStringCache();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearString()
-        {
-            _stringCache8.Clear();
-            _stringCache16.Clear();
-            _stringCache32.Clear();
-            _stringCache64.Clear();
-            _stringCache.Clear();
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(string value)
         {
@@ -95,15 +69,6 @@ namespace TWCore.Serialization.NSerializer
                     }
                     _stringCache32.Set(value);
                 }
-                else if (vLength <= 64)
-                {
-                    if (_stringCache64.TryGetValue(value, out var objIdx))
-                    {
-                        WriteDefInt(DataBytesDefinition.RefString64, objIdx);
-                        return;
-                    }
-                    _stringCache64.Set(value);
-                }
                 else
                 {
                     if (_stringCache.TryGetValue(value, out var objIdx))
@@ -127,12 +92,13 @@ namespace TWCore.Serialization.NSerializer
         }
     }
 
+
+
     public partial class DeserializersTable
     {
         private DeserializerStringCache _stringCache8;
         private DeserializerStringCache _stringCache16;
         private DeserializerStringCache _stringCache32;
-        private DeserializerStringCache _stringCache64;
         private DeserializerStringCache _stringCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -141,7 +107,6 @@ namespace TWCore.Serialization.NSerializer
             _stringCache8 = new DeserializerStringCache();
             _stringCache16 = new DeserializerStringCache();
             _stringCache32 = new DeserializerStringCache();
-            _stringCache64 = new DeserializerStringCache();
             _stringCache = new DeserializerStringCache();
         }
 
@@ -151,7 +116,6 @@ namespace TWCore.Serialization.NSerializer
             _stringCache8.Clear();
             _stringCache16.Clear();
             _stringCache32.Clear();
-            _stringCache64.Clear();
             _stringCache.Clear();
         }
 
@@ -174,8 +138,6 @@ namespace TWCore.Serialization.NSerializer
                     return _stringCache16.Get(reader.ReadInt32());
                 case DataBytesDefinition.RefString32:
                     return _stringCache32.Get(reader.ReadInt32());
-                case DataBytesDefinition.RefString64:
-                    return _stringCache64.Get(reader.ReadInt32());
                 case DataBytesDefinition.StringLength:
                     length = reader.ReadInt32();
                     break;
@@ -195,8 +157,6 @@ namespace TWCore.Serialization.NSerializer
                 _stringCache16.Set(strValue);
             else if (sLength <= 32)
                 _stringCache32.Set(strValue);
-            else if (sLength <= 64)
-                _stringCache64.Set(strValue);
             else
                 _stringCache.Set(strValue);
             return strValue;

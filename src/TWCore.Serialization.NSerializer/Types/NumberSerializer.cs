@@ -6,39 +6,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private SerializerCache<decimal> _decimalCache;
-        private SerializerCache<double> _doubleCache;
-        private SerializerCache<float> _floatCache;
-        private SerializerCache<long> _longCache;
-        private SerializerCache<ulong> _uLongCache;
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Type serializer initialization
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitNumber()
-        {
-            _decimalCache = new SerializerCache<decimal>();
-            _doubleCache = new SerializerCache<double>();
-            _floatCache = new SerializerCache<float>();
-            _longCache = new SerializerCache<long>();
-            _uLongCache = new SerializerCache<ulong>();
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Clear serializer cache
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearNumber()
-        {
-            _decimalCache?.Clear();
-            _doubleCache?.Clear();
-            _floatCache?.Clear();
-            _longCache?.Clear();
-            _uLongCache?.Clear();
-        }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal value)
         {
@@ -254,6 +221,8 @@ namespace TWCore.Serialization.NSerializer
             else WriteValue(value.Value);
         }
     }
+
+
 
     public partial class DeserializersTable
     {

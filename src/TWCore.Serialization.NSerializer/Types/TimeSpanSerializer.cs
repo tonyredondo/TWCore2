@@ -22,16 +22,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private SerializerCache<TimeSpan> _cache;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitTimeSpan()
-            => _cache = new SerializerCache<TimeSpan>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearTimeSpan()
-            => _cache.Clear();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(TimeSpan value)
         {
@@ -40,14 +30,14 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.TimeSpanDefault);
                 return;
             }
-            if (_cache.TryGetValue(value, out var objIdx))
+            if (_timespanCache.TryGetValue(value, out var objIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefTimeSpan, objIdx);
                 return;
             }
             var longBinary = value.Ticks;
             WriteDefLong(DataBytesDefinition.TimeSpan, longBinary);
-            _cache.Set(value);
+            _timespanCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -60,15 +50,15 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        private DeserializerCache<TimeSpan> _cache;
+        private DeserializerCache<TimeSpan> _timespanCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void InitTimeSpan()
-            => _cache = new DeserializerCache<TimeSpan>();
+            => _timespanCache = new DeserializerCache<TimeSpan>();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void ClearTimeSpan()
-            => _cache.Clear();
+            => _timespanCache.Clear();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeSpan ReadTimeSpan(BinaryReader reader)
@@ -85,11 +75,11 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.TimeSpanDefault:
                     return default(TimeSpan);
                 case DataBytesDefinition.RefTimeSpan:
-                    return _cache.Get(reader.ReadInt32());
+                    return _timespanCache.Get(reader.ReadInt32());
                 case DataBytesDefinition.TimeSpan:
                     var longBinary = reader.ReadInt64();
                     var cValue = TimeSpan.FromTicks(longBinary);
-                    _cache.Set(cValue);
+                    _timespanCache.Set(cValue);
                     return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");

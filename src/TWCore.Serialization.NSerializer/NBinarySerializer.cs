@@ -26,31 +26,9 @@ namespace TWCore.Serialization.NSerializer
     /// </summary>
     public class NBinarySerializer : BinarySerializer
     {
-        private static readonly string[] SExtensions = {".nbin"};
-        private static readonly string[] SMimeTypes = {SerializerMimeTypes.NBinary};
-        private static readonly ObjectPool<SerializersTable, SerializersTableAllocator> SerPool = new ObjectPool<SerializersTable, SerializersTableAllocator>();
-
-        #region Allocator
-
-        private struct SerializersTableAllocator : IPoolObjectLifecycle<SerializersTable>
-        {
-            public int InitialSize => 1;
-            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
-
-            public SerializersTable New()
-            {
-                var sTable = new SerializersTable();
-                sTable.Init();
-                return sTable;
-            }
-
-            public void Reset(SerializersTable value)
-            {
-                value.Clear();
-            }
-        }
-
-        #endregion
+        private static readonly string[] SExtensions = { ".nbin" };
+        private static readonly string[] SMimeTypes = { SerializerMimeTypes.NBinary };
+        private static readonly ReferencePool<SerializersTable> SerPool = new ReferencePool<SerializersTable>(1);
 
         #region Properties
 
@@ -68,7 +46,6 @@ namespace TWCore.Serialization.NSerializer
 
         #endregion
 
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
@@ -79,8 +56,7 @@ namespace TWCore.Serialization.NSerializer
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
             var ser = SerPool.New();
-            ser.SetStream(stream);
-            ser.WriteObjectValue(item);
+            ser.Serialize(stream, item, itemType);
             SerPool.Store(ser);
         }
 

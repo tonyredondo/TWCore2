@@ -115,10 +115,9 @@ namespace TWCore.Serialization.NSerializer
 		public const byte   RefString8			    	= 90;
 		public const byte   RefString16			    	= 91;
 		public const byte   RefString32			    	= 92;
-		public const byte   RefString64			    	= 93;
-		public const byte   RefString			    	= 94;
-	    public const byte   RefType					    = 95;
-		public const byte   RefObject		    		= 96;
+		public const byte   RefString			    	= 93;
+	    public const byte   RefType					    = 94;
+		public const byte   RefObject		    		= 95;
 
         public const byte   FileStart                 = 255;
     }

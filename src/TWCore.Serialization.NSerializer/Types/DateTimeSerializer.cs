@@ -22,16 +22,6 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private SerializerCache<DateTime> _dateTimeCache;
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void InitDateTime()
-            => _dateTimeCache = new SerializerCache<DateTime>();
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void ClearDateTime()
-            => _dateTimeCache.Clear();
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTime value)
         {

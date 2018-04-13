@@ -15,8 +15,10 @@ limitations under the License.
  */
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -135,8 +137,25 @@ namespace TWCore.Serialization.NSerializer
                 properties = _propertiesByType[valueType];
             }
             var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
+            var value = descriptor.Activator();
+            if (descriptor.IsNSerializable)
+                ((INSerializable) value).Fill(this, properties);
+            else
+                FillObject(value, properties, ref descriptor);
+            return value;
+        }
 
-            return null;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void FillObject(object value, string[] properties, ref DeserializerTypeDescriptor descriptor)
+        {
+            if (ReadByte() == DataBytesDefinition.PropertiesStart)
+            {
+                var length = ReadInt();
+                for(var i = 0; i < properties.Length; i++)
+                {
+                    var propValue = ReadValue(ReadByte());
+                }
+            }
         }
 
         #region Read Values
@@ -639,6 +658,12 @@ namespace TWCore.Serialization.NSerializer
             return BitConverter.ToInt32(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected (byte Type, int Value) ReadDefInt()
+        {
+            Stream.Read(_buffer, 0, 5);
+            return (_buffer[0], BitConverter.ToInt32(_buffer, 1));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected double ReadDouble()
         {
             Stream.Read(_buffer, 0, 8);
@@ -704,13 +729,44 @@ namespace TWCore.Serialization.NSerializer
 
     public struct DeserializerTypeDescriptor
     {
-        public Type Type;
         public ActivatorDelegate Activator;
+        public Dictionary<string, FastPropertyInfo> Properties;
+        public bool IsNSerializable;
+        public bool IsArray;
+        public bool IsList;
+        public bool IsDictionary;
 
         public DeserializerTypeDescriptor(Type type)
         {
-            Type = type;
+            var ifaces = type.GetInterfaces();
+            var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+            var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+            var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+            {
+                if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
+                if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
+                if (prop.GetIndexParameters().Length > 0) return false;
+                if (isIList && prop.Name == "Capacity") return false;
+                return true;
+            }).ToArray();
+
             Activator = Factory.Accessors.CreateActivator(type);
+            IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
+            Properties = new Dictionary<string, FastPropertyInfo>();
+            foreach (var prop in runtimeProperties)
+                Properties[prop.Name] = prop.GetFastPropertyInfo();
+
+            IsArray = type.IsArray;
+            if (!IsArray)
+            {
+                IsDictionary = isIDictionary;
+                IsList = !IsDictionary && isIList;
+            }
+            else
+            {
+                IsList = false;
+                IsDictionary = false;
+            }
         }
     }
 }

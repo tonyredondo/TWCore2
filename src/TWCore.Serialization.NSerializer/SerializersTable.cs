@@ -1045,3 +1045,62 @@ namespace TWCore.Serialization.NSerializer
         #endregion
     }
 }
+
+
+//[MethodImpl(MethodImplOptions.AggressiveInlining)]
+//private void InternalWriteValue(object value, TypeDescriptor descriptor)
+//{
+//    //Write Properties
+//    if (descriptor.Properties.Length > 0)
+//    {
+//        WriteDefInt(DataBytesDefinition.PropertiesStart, descriptor.Properties.Length);
+//        foreach (var prop in descriptor.FastProperties)
+//            InternalWriteObjectValue(prop.GetValue(value));
+//    }
+
+//    //Write Array if contains
+//    if (descriptor.IsArray)
+//    {
+//        var aValue = (Array)value;
+//        WriteDefInt(DataBytesDefinition.ArrayStart, aValue.Length);
+//        for (var i = 0; i < aValue.Length; i++)
+//            InternalWriteObjectValue(aValue.GetValue(i));
+//        return;
+//    }
+
+//    //Write List if contains
+//    if (descriptor.IsList)
+//    {
+//        var iValue = (IList)value;
+//        var count = iValue.Count;
+//        WriteDefInt(DataBytesDefinition.ListStart, count);
+//        for (var i = 0; i < count; i++)
+//            InternalWriteObjectValue(iValue[i]);
+//        return;
+//    }
+
+//    //Write Dictionary if contains
+//    if (descriptor.IsDictionary)
+//    {
+//        var iValue = (IDictionary)value;
+//        var count = iValue.Count;
+//        WriteDefInt(DataBytesDefinition.DictionaryStart, count);
+//        foreach (DictionaryEntry item in iValue)
+//        {
+//            InternalWriteObjectValue(item.Key);
+//            InternalWriteObjectValue(item.Value);
+//        }
+//        //return;
+
+//        //
+//        var instance = (IDictionary)value;
+//        var length = instance.Count;
+//        WriteDefInt(DataBytesDefinition.DictionaryStart, length);
+//        var enumerator = instance.GetEnumerator();
+//        while (enumerator.MoveNext())
+//        {
+//            InternalWriteObjectValue(enumerator.Key);
+//            InternalWriteObjectValue(enumerator.Value);
+//        }
+//    }
+//}

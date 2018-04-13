@@ -26,6 +26,54 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting Serializer TEST");
 
+            //
+
+            //TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
+            ////TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
+
+            //var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
+            //var sObjectValue = sObject.GetValue();
+
+            //var totalValue = 0d;
+            //var sMemValue = new MemoryStream();
+
+            //var wSer = new WBinarySerializer { Compressor = Compression.CompressorManager.GetByEncodingType("gzip") };
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Thread.Sleep(1000);
+            //using (var w = Watch.Create("WSerializer SERIALIZER"))
+            //{
+            //    for (var i = 0; i < 1000; i++)
+            //    {
+            //        wSer.Serialize(sObjectValue, sObjectValue.GetType(), sMemValue);
+            //        sMemValue.Position = 0;
+            //    }
+            //    totalValue = w.GlobalElapsedMilliseconds;
+            //}
+            //Core.Log.InfoBasic("\tWBinary Bytes Count: {0}\tAvg Time: {1}ms", sMemValue.Length.ToReadableBytes().Text, totalValue / 1000);
+
+            //sMemValue = new MemoryStream();
+            //var nSer = new NBinarySerializer { Compressor = Compression.CompressorManager.GetByEncodingType("gzip") };
+            //GC.Collect();
+            //GC.WaitForPendingFinalizers();
+            //Thread.Sleep(1000);
+            //using (var w = Watch.Create("NSerializer SERIALIZER"))
+            //{
+            //    for (var i = 0; i < 1000; i++)
+            //    {
+            //        nSer.Serialize(sObjectValue, sObjectValue.GetType(), sMemValue);
+            //        sMemValue.Position = 0;
+            //    }
+            //    totalValue = w.GlobalElapsedMilliseconds;
+            //}
+            //Core.Log.InfoBasic("\tNBinary Bytes Count: {0}\tAvg Time: {1}ms", sMemValue.Length.ToReadableBytes().Text, totalValue / 1000);
+
+            //Console.ReadLine();
+
+
+
+            //
+
             var sTest = new STest
             {
                 FirstName = "Daniel",
@@ -107,7 +155,6 @@ namespace TWCore.Tests
                     memStream.Position = 0;
                 }
             }
-            //Core.Log.InfoDetail(mStream.TextReadToEnd());
             Console.ReadLine();
 
             Core.Log.InfoBasic("By time (100000 times):");

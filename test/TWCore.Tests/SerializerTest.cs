@@ -147,6 +147,9 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
 
+            var cBytes = collection[0].SerializeToNBinary();
+            var coltmp = cBytes.DeserializeFromNBinary<object>();
+            
             GC.Collect();
             GC.WaitForPendingFinalizers();
             Thread.Sleep(1000);
@@ -155,6 +158,17 @@ namespace TWCore.Tests
                 for (var i = 0; i < 100000; i++)
                 {
                     collection[i % 10000].SerializeToNBinary(memStream);
+                    memStream.Position = 0;
+                }
+            }
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (Watch.Create("NSerializer DESERIALIZER"))
+            {
+                for (var i = 0; i < 100000; i++)
+                {
+                    memStream.DeserializeFromNBinary<List<STest>>();
                     memStream.Position = 0;
                 }
             }

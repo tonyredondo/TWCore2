@@ -84,7 +84,7 @@ namespace TWCore.Serialization.NSerializer
             if (stream.ReadByte() != DataBytesDefinition.Start)
                 throw new FormatException("The stream is not in NSerializer format.");
 
-            ReadValue(ReadByte());
+            var value = ReadValue(ReadByte());
             while (ReadByte() != DataBytesDefinition.End)
             {
             }
@@ -104,7 +104,7 @@ namespace TWCore.Serialization.NSerializer
             _timespanCache.Clear();
             _propertiesByType.Clear();
             Stream = null;
-            return null;
+            return value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -128,7 +128,7 @@ namespace TWCore.Serialization.NSerializer
                 Stream.Read(typeBytes, 0, length);
                 var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
                 valueType = Core.GetType(typeData.Substring(0, typeData.IndexOf(";", StringComparison.Ordinal)));
-                properties = typeData.Substring(typeData.IndexOf(";", StringComparison.Ordinal) + 1).Split(';');
+                properties = typeData.Substring(typeData.IndexOf(";", StringComparison.Ordinal) + 1).SplitAndTrim(';');
                 _propertiesByType[valueType] = properties;
                 _typeCache.Set(valueType);
             }
@@ -158,16 +158,17 @@ namespace TWCore.Serialization.NSerializer
                 _objectCache.Set(value);
             }
 
+            var flag = ReadByte();
             var propValues = new object[properties.Length];
-            if (ReadByte() == DataBytesDefinition.PropertiesStart)
+            if (flag == DataBytesDefinition.PropertiesStart)
             {
                 var length = ReadInt();
                 for(var i = 0; i < properties.Length; i++)
                     propValues[i] = ReadValue(ReadByte());
+                flag = ReadByte();
             }
-            var colFlag = ReadByte();
             var capacity = 0;
-            if (colFlag == DataBytesDefinition.ArrayStart || colFlag == DataBytesDefinition.ListStart || colFlag == DataBytesDefinition.DictionaryStart)
+            if (flag == DataBytesDefinition.ArrayStart || flag == DataBytesDefinition.ListStart || flag == DataBytesDefinition.DictionaryStart)
             {
                 capacity = ReadInt();
                 if (descriptor.IsArray)
@@ -194,13 +195,19 @@ namespace TWCore.Serialization.NSerializer
             {
                 var aValue = (Array) value;
                 for (var i = 0; i < capacity; i++)
-                    aValue.SetValue(ReadValue(ReadByte()), i);
+                {
+                    var item = ReadValue(ReadByte());
+                    aValue.SetValue(item, i);
+                }
             }
             else if (descriptor.IsList)
             {
                 var iValue = (IList) value;
                 for (var i = 0; i < capacity; i++)
-                    iValue[i] = ReadValue(ReadByte());
+                {
+                    var item = ReadValue(ReadByte());
+                    iValue.Add(item);
+                }
             }
             else if (descriptor.IsDictionary)
             {

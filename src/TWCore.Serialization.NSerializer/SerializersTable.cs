@@ -517,7 +517,7 @@ namespace TWCore.Serialization.NSerializer
         public void Serialize(Stream stream, object value, Type valueType)
         {
             Stream = stream;
-            WriteByte(DataBytesDefinition.FileStart);
+            WriteByte(DataBytesDefinition.Start);
 
             if (value == null)
             {
@@ -550,8 +550,8 @@ namespace TWCore.Serialization.NSerializer
                 ((INSerializable)value).Serialize(this);
             else
                 descriptor.SerializeAction(value, this);
-            WriteByte(DataBytesDefinition.TypeEnd);
 
+            WriteDefByte(DataBytesDefinition.TypeEnd, DataBytesDefinition.End);
             _dateTimeOffsetCache.Clear();
             _dateTimeCache.Clear();
             _guidCache.Clear();

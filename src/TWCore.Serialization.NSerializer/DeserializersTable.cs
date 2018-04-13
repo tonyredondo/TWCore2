@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 
@@ -45,7 +46,22 @@ namespace TWCore.Serialization.NSerializer
         public object Deserialize(Stream stream)
         {
             Stream = stream;
+            if (stream.ReadByte() != DataBytesDefinition.Start)
+                throw new FormatException("The stream is not in NSerializer format.");
 
+            var objectStack = new Stack<object>();
+            object currentObject = null;
+            byte lastByte;
+            while((lastByte = ReadByte()) != DataBytesDefinition.End)
+            {
+                switch(lastByte)
+                {
+                    case DataBytesDefinition.TypeStart:
+                        break;
+                    case DataBytesDefinition.TypeEnd:
+                        break;
+                }
+            }
 
 
             _dateTimeOffsetCache.Clear();

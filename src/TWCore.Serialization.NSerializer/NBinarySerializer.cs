@@ -29,6 +29,7 @@ namespace TWCore.Serialization.NSerializer
         private static readonly string[] SExtensions = { ".nbin" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.NBinary };
         private static readonly ReferencePool<SerializersTable> SerPool = new ReferencePool<SerializersTable>(1);
+        private static readonly ReferencePool<DeserializersTable> DeserPool = new ReferencePool<DeserializersTable>(1);
 
         #region Properties
 
@@ -49,7 +50,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            return null;
+            var des = DeserPool.New();
+            var value = des.Deserialize(stream);
+            DeserPool.Store(des);
+            return value;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

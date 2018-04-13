@@ -81,6 +81,9 @@ namespace TWCore.Tests
                 Age = 33
             };
 
+            var sTestBytes = sTest.SerializeToNBinary();
+            var value = sTestBytes.DeserializeFromNBinary<STest>();
+
             var collection = new List<List<STest>>();
             for (var i = 0; i <= 10000; i++)
             {

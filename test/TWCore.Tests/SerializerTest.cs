@@ -31,12 +31,12 @@ namespace TWCore.Tests
 
             //
 
-//            TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
-//            //TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
-//            var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
-//            var sObjectValue = sObject.GetValue();
-//
-//            RunTest(sObjectValue, 1000);
+            TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
+            //TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
+            var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
+            var sObjectValue = sObject.GetValue();
+
+            RunTest(sObjectValue, 1000);
 
             //
 
@@ -127,6 +127,7 @@ namespace TWCore.Tests
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
+            Console.ReadLine();
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -4,7 +4,9 @@ using System.IO;
 using System.Text;
 using System.Threading;
 using TWCore.Serialization;
+using TWCore.Serialization.MsgPack;
 using TWCore.Serialization.NSerializer;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -340,6 +342,70 @@ namespace TWCore.Tests
             }
 
             Console.ReadLine();
+        }
+
+
+        private void RunTest(object value, int times)
+        {
+            var vType = value?.GetType() ?? typeof(object);
+
+            Core.Log.Warning("Running Serializer Test");
+
+            Core.Log.InfoBasic("By size:");
+            Core.Log.InfoBasic("\tJson Bytes Count: {0}", value.SerializeToJsonBytes().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", value.SerializeToMsgPack().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", value.SerializeToBinFormatter().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", value.SerializeToNBinary().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", value.SerializeToWBinary().Count.ToReadableBytes().Text);
+            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", value.SerializeToPWBinary().Count.ToReadableBytes().Text);
+
+
+            var memStream = new MemoryStream();
+            var jsonSerializer = new JsonTextSerializer();
+            var msgPackSerializer = new MsgPackSerializer();
+            var binarySerializer = new BinaryFormatterSerializer();
+            var nBinarySerializer = new NBinarySerializer();
+            var wBinarySerializer = new WBinarySerializer();
+            var pwBinarySerializer = new PWBinarySerializer();
+            Core.Log.InfoBasic("By Times: {0}", times);
+            SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            SerializerProcess("MessagePack", value, vType, times, msgPackSerializer, memStream);
+            SerializerProcess("BinaryFormatter", value, vType, times, binarySerializer, memStream);
+        }
+
+        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, MemoryStream memStream)
+        {
+            double totalValue;
+            memStream.Position = 0;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (var w = Watch.Create(name + " SERIALIZER"))
+            {
+                for (var i = 0; i < times; i++)
+                {
+                    serializer.Serialize(value, valueType, memStream);
+                    memStream.Position = 0;
+                }
+
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+
+            Core.Log.InfoBasic("\t" + name + " SERIALIZER - Average Time: {0}ms", totalValue / times);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (var w = Watch.Create(name + " DESERIALIZER"))
+            {
+                for (var i = 0; i < times; i++)
+                {
+                    serializer.Deserialize(memStream, valueType);
+                    memStream.Position = 0;
+                }
+
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+            Core.Log.InfoBasic("\t"+ name + "JSON DESERIALIZAER - Average Time: {0}ms", totalValue / times);
         }
     }
 

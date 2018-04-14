@@ -50,14 +50,14 @@ namespace TWCore.Serialization.NSerializer
     { 
         [DeserializerMethod(DataBytesDefinition.CharDefault, DataBytesDefinition.Char)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public char ReadChar(byte value)
+        public char StreamReadChar(byte value)
         {
             switch (value)
             {
                 case DataBytesDefinition.CharDefault:
                     return default;
                 case DataBytesDefinition.Char:
-                    return ReadChar();
+                    return StreamReadChar();
             }
             throw new InvalidOperationException("Invalid type value.");
         }

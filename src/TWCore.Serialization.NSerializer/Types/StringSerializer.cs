@@ -115,15 +115,15 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.StringEmpty:
                     return string.Empty;
                 case DataBytesDefinition.RefString:
-                    return _stringCache.Get(ReadInt());
+                    return _stringCache.Get(StreamReadInt());
                 case DataBytesDefinition.RefString8:
-                    return _stringCache8.Get(ReadInt());
+                    return _stringCache8.Get(StreamReadInt());
                 case DataBytesDefinition.RefString16:
-                    return _stringCache16.Get(ReadInt());
+                    return _stringCache16.Get(StreamReadInt());
                 case DataBytesDefinition.RefString32:
-                    return _stringCache32.Get(ReadInt());
+                    return _stringCache32.Get(StreamReadInt());
                 case DataBytesDefinition.StringLength:
-                    length = ReadInt();
+                    length = StreamReadInt();
                     break;
                 default:
                     throw new InvalidOperationException("Invalid type value.");

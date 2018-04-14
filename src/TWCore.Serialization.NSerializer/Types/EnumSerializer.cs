@@ -42,7 +42,7 @@ namespace TWCore.Serialization.NSerializer
         public int ReadEnum(byte type)
         {
             if (type == DataBytesDefinition.EnumInt)
-                return ReadInt();
+                return StreamReadInt();
             throw new InvalidOperationException("Invalid type value.");
         }
     }

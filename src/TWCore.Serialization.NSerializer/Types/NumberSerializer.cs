@@ -228,164 +228,164 @@ namespace TWCore.Serialization.NSerializer
     {
         [DeserializerMethod(DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public decimal ReadDecimal(byte type)
+        public decimal StreamReadDecimal(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.Decimal:
-                    var v1 = ReadDecimal();
+                    var v1 = StreamReadDecimal();
                     _decimalCache.Set(v1);
                     return v1;
                 case DataBytesDefinition.DecimalDefault:
                     return default;
                 case DataBytesDefinition.RefDecimal:
-                    return _decimalCache.Get(ReadInt());
+                    return _decimalCache.Get(StreamReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public double ReadDouble(byte type)
+        public double StreamReadDouble(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.Double:
-                    var v2 = ReadDouble();
+                    var v2 = StreamReadDouble();
                     _doubleCache.Set(v2);
                     return v2;
                 case DataBytesDefinition.DoubleDefault:
                     return default;
                 case DataBytesDefinition.RefDouble:
-                    return _doubleCache.Get(ReadInt());
+                    return _doubleCache.Get(StreamReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public float ReadFloat(byte type)
+        public float StreamReadFloat(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.Float:
-                    var v3 = ReadFloat();
+                    var v3 = StreamReadFloat();
                     _floatCache.Set(v3);
                     return v3;
                 case DataBytesDefinition.FloatDefault:
                     return default;
                 case DataBytesDefinition.RefFloat:
-                    return _floatCache.Get(ReadInt());
+                    return _floatCache.Get(StreamReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Long, DataBytesDefinition.LongDefault, DataBytesDefinition.RefLong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public long ReadLong(byte type)
+        public long StreamReadLong(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.LongDefault:
                     return default;
                 case DataBytesDefinition.Long:
-                    var v4 = ReadLong();
+                    var v4 = StreamReadLong();
                     _longCache.Set(v4);
                     return v4;
                 case DataBytesDefinition.RefLong:
-                    return _longCache.Get(ReadInt());
+                    return _longCache.Get(StreamReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.ULong, DataBytesDefinition.ULongDefault, DataBytesDefinition.RefULong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ulong ReadULong(byte type)
+        public ulong StreamReadULong(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.ULongDefault:
                     return default;
                 case DataBytesDefinition.ULong:
-                    var v5 = ReadULong();
+                    var v5 = StreamReadULong();
                     _uLongCache.Set(v5);
                     return v5;
                 case DataBytesDefinition.RefULong:
-                    return _uLongCache.Get(ReadInt());
+                    return _uLongCache.Get(StreamReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Int, DataBytesDefinition.IntDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int ReadInt(byte type)
+        public int StreamReadInt(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.IntDefault:
                     return default;
                 case DataBytesDefinition.Int:
-                    return ReadInt();
+                    return StreamReadInt();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.UInt, DataBytesDefinition.UIntDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public uint ReadUInt(byte type)
+        public uint StreamReadUInt(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.UIntDefault:
                     return default;
                 case DataBytesDefinition.UInt:
-                    return ReadUInt();
+                    return StreamReadUInt();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Short, DataBytesDefinition.ShortDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public short ReadShort(byte type)
+        public short StreamReadShort(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.ShortDefault:
                     return default;
                 case DataBytesDefinition.Short:
-                    return ReadShort();
+                    return StreamReadShort();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.UShort, DataBytesDefinition.UShortDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ushort ReadUShort(byte type)
+        public ushort StreamReadUShort(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.UShortDefault:
                     return default;
                 case DataBytesDefinition.UShort:
-                    return ReadUShort();
+                    return StreamReadUShort();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.Byte, DataBytesDefinition.ByteDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public byte ReadByte(byte type)
+        public byte StreamReadByte(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.ByteDefault:
                     return default;
                 case DataBytesDefinition.Byte:
-                    return ReadByte();
+                    return StreamReadByte();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
         [DeserializerMethod(DataBytesDefinition.SByte, DataBytesDefinition.SByteDefault, DataBytesDefinition.SByteMinusOne)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public sbyte ReadSByte(byte type)
+        public sbyte StreamReadSByte(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.SByteDefault:
                     return default;
                 case DataBytesDefinition.SByte:
-                    return ReadSByte();
+                    return StreamReadSByte();
                 case DataBytesDefinition.SByteMinusOne:
                     return -1;
             }

@@ -64,9 +64,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.DateTimeOffsetDefault:
                     return default;
                 case DataBytesDefinition.RefDateTimeOffset:
-                    return _dateTimeOffsetCache.Get(ReadInt());
+                    return _dateTimeOffsetCache.Get(StreamReadInt());
                 case DataBytesDefinition.DateTimeOffset:
-                    var longBinary = ReadLong();
+                    var longBinary = StreamReadLong();
                     var cValue = DateTimeOffset.FromFileTime(longBinary);
                     _dateTimeOffsetCache.Set(cValue);
                     return cValue;

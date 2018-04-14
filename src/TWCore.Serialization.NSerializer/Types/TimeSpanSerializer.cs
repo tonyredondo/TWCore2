@@ -61,9 +61,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.TimeSpanDefault:
                     return default(TimeSpan);
                 case DataBytesDefinition.RefTimeSpan:
-                    return _timespanCache.Get(ReadInt());
+                    return _timespanCache.Get(StreamReadInt());
                 case DataBytesDefinition.TimeSpan:
-                    var longBinary = ReadLong();
+                    var longBinary = StreamReadLong();
                     var cValue = TimeSpan.FromTicks(longBinary);
                     _timespanCache.Set(cValue);
                     return cValue;

@@ -62,9 +62,9 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.DateTimeDefault:
                     return default;
                 case DataBytesDefinition.RefDateTime:
-                    return _dateTimeCache.Get(ReadInt());
+                    return _dateTimeCache.Get(StreamReadInt());
                 case DataBytesDefinition.DateTime:
-                    var longBinary = ReadLong();
+                    var longBinary = StreamReadLong();
                     var cValue = DateTime.FromBinary(longBinary);
                     _dateTimeCache.Set(cValue);
                     return cValue;

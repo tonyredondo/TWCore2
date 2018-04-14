@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -32,11 +33,13 @@ namespace TWCore.Serialization.NSerializer
     {
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
+        private static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
+        private static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly byte[] EmptyBytes = new byte[0];
         private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
+        internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<Type> _typeCache = new DeserializerCache<Type>();
-        private readonly DeserializerCache<object> _objectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<DateTimeOffset> _dateTimeOffsetCache = new DeserializerCache<DateTimeOffset>();
         private readonly DeserializerCache<DateTime> _dateTimeCache = new DeserializerCache<DateTime>();
         private readonly DeserializerCache<Guid> _guidCache = new DeserializerCache<Guid>();
@@ -85,8 +88,8 @@ namespace TWCore.Serialization.NSerializer
             if (stream.ReadByte() != DataBytesDefinition.Start)
                 throw new FormatException("The stream is not in NSerializer format.");
 
-            var value = ReadValue(ReadByte());
-            while (ReadByte() != DataBytesDefinition.End)
+            var value = ReadValue(StreamReadByte());
+            while (StreamReadByte() != DataBytesDefinition.End)
             {
             }
 
@@ -104,7 +107,7 @@ namespace TWCore.Serialization.NSerializer
             _stringCache.Clear();
             _timespanCache.Clear();
             _propertiesByType.Clear();
-            _objectCache.Clear();
+            ObjectCache.Clear();
             _typeCache.Clear();
             Stream = null;
             return value;
@@ -115,7 +118,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type == DataBytesDefinition.ValueNull) return null;
             if (type == DataBytesDefinition.RefObject)
-                return _objectCache.Get(ReadInt());
+                return ObjectCache.Get(StreamReadInt());
             if (ReadValues.TryGetValue(type, out var mTuple))
             {
                 _parameters[0] = type;
@@ -126,7 +129,7 @@ namespace TWCore.Serialization.NSerializer
 
             if (type == DataBytesDefinition.TypeStart)
             {
-                var length = ReadInt();
+                var length = StreamReadInt();
                 var typeBytes = new byte[length];
                 Stream.Read(typeBytes, 0, length);
                 var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
@@ -137,7 +140,7 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (type == DataBytesDefinition.RefType)
             {
-                valueType = _typeCache.Get(ReadInt());
+                valueType = _typeCache.Get(StreamReadInt());
                 properties = _propertiesByType[valueType];
             }
             var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
@@ -147,27 +150,26 @@ namespace TWCore.Serialization.NSerializer
                 value.Fill(this, properties);
                 return value;
             }
-            return FillObject(ref descriptor, properties);
+            return FillObject(descriptor, properties);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object FillObject(ref DeserializerTypeDescriptor descriptor, string[] properties)
+        private object FillObject(DeserializerTypeDescriptor descriptor, string[] properties)
         {
-            object value = null;
-
-            var flag = ReadByte();
+            object value;
+            var flag = StreamReadByte();
             if (flag == DataBytesDefinition.ArrayStart || flag == DataBytesDefinition.ListStart || flag == DataBytesDefinition.DictionaryStart)
             {
-                var capacity = ReadInt();
+                var capacity = StreamReadInt();
                 value = descriptor.Activator(capacity);
-                _objectCache.Set(value);
+                ObjectCache.Set(value);
                 
                 if (descriptor.IsArray)
                 {
                     var aValue = (Array) value;
                     for (var i = 0; i < capacity; i++)
                     {
-                        var item = ReadValue(ReadByte());
+                        var item = ReadValue(StreamReadByte());
                         aValue.SetValue(item, i);
                     }
                 }
@@ -176,7 +178,7 @@ namespace TWCore.Serialization.NSerializer
                     var iValue = (IList) value;
                     for (var i = 0; i < capacity; i++)
                     {
-                        var item = ReadValue(ReadByte());
+                        var item = ReadValue(StreamReadByte());
                         iValue.Add(item);
                     }
                 }
@@ -185,20 +187,20 @@ namespace TWCore.Serialization.NSerializer
                     var dictio = (IDictionary) value;
                     for (var i = 0; i < capacity; i++)
                     {
-                        var dKey = ReadValue(ReadByte());
-                        var dValue = ReadValue(ReadByte());
+                        var dKey = ReadValue(StreamReadByte());
+                        var dValue = ReadValue(StreamReadByte());
                         dictio[dKey] = dValue;
                     }
                 }
                 
-                flag = ReadByte();
+                flag = StreamReadByte();
                 if (flag == DataBytesDefinition.TypeEnd)
                     return value;
             }
             else
             {
                 value = descriptor.Activator();
-                _objectCache.Set(value);
+                ObjectCache.Set(value);
             }
             
             if (flag == DataBytesDefinition.PropertiesStart)
@@ -208,7 +210,7 @@ namespace TWCore.Serialization.NSerializer
                     var name = properties[i];
                     if (descriptor.Properties.TryGetValue(name, out var fProp))
                     {
-                        fProp.SetValue(value, ReadValue(ReadByte()));
+                        fProp.SetValue(value, ReadValue(StreamReadByte()));
                     }
                     else
                     {
@@ -216,7 +218,7 @@ namespace TWCore.Serialization.NSerializer
                     }
                 }
             }
-            flag = ReadByte();
+            flag = StreamReadByte();
             return value;
         }
 
@@ -227,12 +229,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.BoolArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (bool[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (bool[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new bool[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadBool(ReadByte());
+                value[i] = ReadBool(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.CharArray)]
@@ -241,12 +243,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.CharArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (char[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (char[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new char[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadChar(ReadByte());
+                value[i] = StreamReadChar(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeOffsetArray)]
@@ -255,12 +257,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DateTimeOffsetArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (DateTimeOffset[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (DateTimeOffset[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new DateTimeOffset[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTimeOffset(ReadByte());
+                value[i] = ReadDateTimeOffset(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeArray)]
@@ -269,12 +271,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DateTimeArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (DateTime[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (DateTime[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new DateTime[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTime(ReadByte());
+                value[i] = ReadDateTime(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.GuidArray)]
@@ -283,12 +285,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.GuidArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (Guid[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (Guid[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new Guid[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadGuid(ReadByte());
+                value[i] = StreamReadGuid(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DecimalArray)]
@@ -297,12 +299,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DecimalArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (decimal[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (decimal[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new decimal[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDecimal(ReadByte());
+                value[i] = StreamReadDecimal(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DoubleArray)]
@@ -311,12 +313,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DoubleArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (double[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (double[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new double[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDouble(ReadByte());
+                value[i] = StreamReadDouble(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.FloatArray)]
@@ -325,12 +327,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.FloatArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (float[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (float[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new float[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadFloat(ReadByte());
+                value[i] = StreamReadFloat(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.LongArray)]
@@ -339,12 +341,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.LongArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (long[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (long[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new long[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadLong(ReadByte());
+                value[i] = StreamReadLong(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ULongArray)]
@@ -353,12 +355,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.ULongArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (ulong[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (ulong[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new ulong[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadULong(ReadByte());
+                value[i] = StreamReadULong(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.IntArray)]
@@ -367,12 +369,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.IntArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (int[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (int[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new int[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadInt(ReadByte());
+                value[i] = StreamReadInt(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UIntArray)]
@@ -381,12 +383,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.UIntArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (uint[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (uint[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new uint[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadUInt(ReadByte());
+                value[i] = StreamReadUInt(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ShortArray)]
@@ -395,12 +397,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.ShortArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (short[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (short[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new short[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadShort(ReadByte());
+                value[i] = StreamReadShort(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UShortArray)]
@@ -409,12 +411,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.UShortArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (ushort[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (ushort[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new ushort[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadUShort(ReadByte());
+                value[i] = StreamReadUShort(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.SByteArray)]
@@ -423,12 +425,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.SByteArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (sbyte[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (sbyte[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new sbyte[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadSByte(ReadByte());
+                value[i] = StreamReadSByte(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.StringArray)]
@@ -437,12 +439,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.StringArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (string[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (string[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new string[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadString(ReadByte());
+                value[i] = ReadString(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.TimeSpanArray)]
@@ -451,12 +453,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.TimeSpanArray) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (TimeSpan[])_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (TimeSpan[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new TimeSpan[length];
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadTimeSpan(ReadByte());
+                value[i] = ReadTimeSpan(StreamReadByte());
             return value;
         }
 
@@ -466,12 +468,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.BoolList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<bool>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<bool>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<bool>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadBool(ReadByte());
+                value[i] = ReadBool(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.CharList)]
@@ -480,12 +482,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.CharList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<char>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<char>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<char>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadChar(ReadByte());
+                value[i] = StreamReadChar(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeOffsetList)]
@@ -494,12 +496,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DateTimeOffsetList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<DateTimeOffset>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<DateTimeOffset>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<DateTimeOffset>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTimeOffset(ReadByte());
+                value[i] = ReadDateTimeOffset(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeList)]
@@ -508,12 +510,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DateTimeList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<DateTime>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<DateTime>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<DateTime>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTime(ReadByte());
+                value[i] = ReadDateTime(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.GuidList)]
@@ -522,12 +524,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.GuidList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<Guid>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<Guid>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<Guid>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadGuid(ReadByte());
+                value[i] = StreamReadGuid(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DecimalList)]
@@ -536,12 +538,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DecimalList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<decimal>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<decimal>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<decimal>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDecimal(ReadByte());
+                value[i] = StreamReadDecimal(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DoubleList)]
@@ -550,12 +552,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.DoubleList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<double>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<double>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<double>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDouble(ReadByte());
+                value[i] = StreamReadDouble(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.FloatList)]
@@ -564,12 +566,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.FloatList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<float>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<float>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<float>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadFloat(ReadByte());
+                value[i] = StreamReadFloat(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.LongList)]
@@ -578,12 +580,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.LongList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<long>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<long>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<long>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadLong(ReadByte());
+                value[i] = StreamReadLong(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ULongList)]
@@ -592,12 +594,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.ULongList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<ulong>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<ulong>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<ulong>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadULong(ReadByte());
+                value[i] = StreamReadULong(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.IntList)]
@@ -606,12 +608,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.IntList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<int>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<int>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<int>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadInt(ReadByte());
+                value[i] = StreamReadInt(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UIntList)]
@@ -620,12 +622,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.UIntList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<uint>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<uint>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<uint>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadUInt(ReadByte());
+                value[i] = StreamReadUInt(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ShortList)]
@@ -634,12 +636,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.ShortList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<short>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<short>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<short>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadShort(ReadByte());
+                value[i] = StreamReadShort(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UShortList)]
@@ -648,12 +650,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.UShortList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<ushort>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<ushort>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<ushort>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadUShort(ReadByte());
+                value[i] = StreamReadUShort(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.SByteList)]
@@ -662,12 +664,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.SByteList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<sbyte>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<sbyte>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<sbyte>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadSByte(ReadByte());
+                value[i] = StreamReadSByte(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.StringList)]
@@ -676,12 +678,12 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.StringList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<string>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<string>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<string>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadString(ReadByte());
+                value[i] = ReadString(StreamReadByte());
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.TimeSpanList)]
@@ -690,98 +692,92 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type != DataBytesDefinition.TimeSpanList) throw new FormatException();
             if (type == DataBytesDefinition.RefObject)
-                return (List<TimeSpan>)_objectCache.Get(ReadInt());
-            var length = ReadInt();
+                return (List<TimeSpan>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
             var value = new List<TimeSpan>(length);
-            _objectCache.Set(value);
+            ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadTimeSpan(ReadByte());
+                value[i] = ReadTimeSpan(StreamReadByte());
             return value;
         }
         #endregion
 
         #region Private Read Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected byte ReadByte()
+        protected byte StreamReadByte()
         {
             Stream.Read(_buffer, 0, 1);
             return _buffer[0];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ushort ReadUShort()
+        protected ushort StreamReadUShort()
         {
             Stream.Read(_buffer, 0, 2);
             return BitConverter.ToUInt16(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected int ReadInt()
+        protected int StreamReadInt()
         {
             Stream.Read(_buffer, 0, 4);
             return BitConverter.ToInt32(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected (byte Type, int Value) ReadDefInt()
-        {
-            Stream.Read(_buffer, 0, 5);
-            return (_buffer[0], BitConverter.ToInt32(_buffer, 1));
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected double ReadDouble()
+        protected double StreamReadDouble()
         {
             Stream.Read(_buffer, 0, 8);
             return BitConverter.ToDouble(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected float ReadFloat()
+        protected float StreamReadFloat()
         {
             Stream.Read(_buffer, 0, 4);
             return BitConverter.ToSingle(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected long ReadLong()
+        protected long StreamReadLong()
         {
             Stream.Read(_buffer, 0, 8);
             return BitConverter.ToInt64(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ulong ReadULong()
+        protected ulong StreamReadULong()
         {
             Stream.Read(_buffer, 0, 8);
             return BitConverter.ToUInt64(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected uint ReadUInt()
+        protected uint StreamReadUInt()
         {
             Stream.Read(_buffer, 0, 4);
             return BitConverter.ToUInt32(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected short ReadShort()
+        protected short StreamReadShort()
         {
             Stream.Read(_buffer, 0, 2);
             return BitConverter.ToInt16(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected char ReadChar()
+        protected char StreamReadChar()
         {
             Stream.Read(_buffer, 0, 2);
             return BitConverter.ToChar(_buffer, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected decimal ReadDecimal()
+        protected decimal StreamReadDecimal()
         {
             Stream.Read(_buffer, 0, 8);
             var val = BitConverter.ToDouble(_buffer, 0);
             return new decimal(val);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected sbyte ReadSByte()
+        protected sbyte StreamReadSByte()
         {
             Stream.Read(_buffer, 0, 1);
             return (sbyte)_buffer[0];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected Guid ReadGuid()
+        protected Guid StreamReadGuid()
         {
             Stream.Read(_buffer, 0, 16);
             return new Guid(_buffer);
@@ -831,6 +827,18 @@ namespace TWCore.Serialization.NSerializer
                 IsList = false;
                 IsDictionary = false;
             }
+            
+            //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
+            //
+            var table = Expression.Parameter(typeof(DeserializersTable), "table");
+            var descriptor = Expression.Parameter(typeof(DeserializerTypeDescriptor), "descriptor");
+            var properties = Expression.Parameter(typeof(string[]), "properties");
+            var flag = Expression.Parameter(typeof(byte), "flag");
+            
         }
+
+        public delegate object DeserializeDelegate(DeserializersTable table, DeserializerTypeDescriptor descriptor, string[] parameters);
     }
 }

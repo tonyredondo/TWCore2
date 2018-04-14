@@ -56,16 +56,16 @@ namespace TWCore.Serialization.NSerializer
     {
         [DeserializerMethod(DataBytesDefinition.GuidDefault, DataBytesDefinition.RefGuid, DataBytesDefinition.Guid)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Guid ReadGuid(byte type)
+        public Guid StreamReadGuid(byte type)
         {
             switch (type)
             {
                 case DataBytesDefinition.GuidDefault:
                     return default;
                 case DataBytesDefinition.RefGuid:
-                    return _guidCache.Get(ReadInt());
+                    return _guidCache.Get(StreamReadInt());
                 case DataBytesDefinition.Guid:
-                    var guidValue = ReadGuid();
+                    var guidValue = StreamReadGuid();
                     _guidCache.Set(guidValue);
                     return guidValue;
             }

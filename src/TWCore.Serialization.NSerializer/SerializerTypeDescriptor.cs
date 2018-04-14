@@ -54,17 +54,6 @@ namespace TWCore.Serialization.NSerializer
                 return true;
             }).ToArray();
 
-            var serExpressions = new List<Expression>();
-            var varExpressions = new List<ParameterExpression>();
-
-            //
-            var obj = Expression.Parameter(typeof(object), "obj");
-            var serTable = Expression.Parameter(typeof(SerializersTable), "table");
-
-            var instance = Expression.Parameter(type, "instance");
-            varExpressions.Add(instance);
-            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
-
             //
             Properties = runtimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
@@ -93,6 +82,16 @@ namespace TWCore.Serialization.NSerializer
             Definition = defBytes;
             
             //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
+            //
+            var obj = Expression.Parameter(typeof(object), "obj");
+            var serTable = Expression.Parameter(typeof(SerializersTable), "table");
+
+            var instance = Expression.Parameter(type, "instance");
+            varExpressions.Add(instance);
+            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
+
             if (IsArray)
             {
                 var arrLength = Expression.Parameter(typeof(int), "length");

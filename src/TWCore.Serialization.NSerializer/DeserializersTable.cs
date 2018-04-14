@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -153,7 +154,7 @@ namespace TWCore.Serialization.NSerializer
         private object FillObject(ref DeserializerTypeDescriptor descriptor, string[] properties)
         {
             object value = null;
-            
+
             var flag = ReadByte();
             if (flag == DataBytesDefinition.ArrayStart || flag == DataBytesDefinition.ListStart || flag == DataBytesDefinition.DictionaryStart)
             {
@@ -191,6 +192,8 @@ namespace TWCore.Serialization.NSerializer
                 }
                 
                 flag = ReadByte();
+                if (flag == DataBytesDefinition.TypeEnd)
+                    return value;
             }
             else
             {
@@ -213,8 +216,7 @@ namespace TWCore.Serialization.NSerializer
                     }
                 }
             }
-
-            ReadByte();
+            flag = ReadByte();
             return value;
         }
 
@@ -789,6 +791,7 @@ namespace TWCore.Serialization.NSerializer
 
     public struct DeserializerTypeDescriptor
     {
+        public Type Type;
         public ActivatorDelegate Activator;
         public Dictionary<string, FastPropertyInfo> Properties;
         public bool IsNSerializable;
@@ -798,6 +801,7 @@ namespace TWCore.Serialization.NSerializer
 
         public DeserializerTypeDescriptor(Type type)
         {
+            Type = type;
             var ifaces = type.GetInterfaces();
             var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
             var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));

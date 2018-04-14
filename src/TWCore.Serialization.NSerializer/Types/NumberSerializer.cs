@@ -60,7 +60,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.LongDefault);
                 return;
             }
             if (_longCache.TryGetValue(value, out var objIdx))
@@ -76,7 +76,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.ULongDefault);
                 return;
             }
             if (_uLongCache.TryGetValue(value, out var objIdx))
@@ -92,7 +92,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.IntDefault);
                 return;
             }
             WriteDefInt(DataBytesDefinition.Int, value);
@@ -102,7 +102,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.UIntDefault);
                 return;
             }
             WriteDefUInt(DataBytesDefinition.UInt, value);
@@ -112,7 +112,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.ShortDefault);
                 return;
             }
             WriteDefShort(DataBytesDefinition.Short, value);
@@ -122,7 +122,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.UShortDefault);
                 return;
             }
             WriteDefUshort(DataBytesDefinition.UShort, value);
@@ -132,7 +132,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.ByteDefault);
                 return;
             }
             WriteDefByte(DataBytesDefinition.Byte, value);
@@ -142,7 +142,7 @@ namespace TWCore.Serialization.NSerializer
         {
             if (value == default)
             {
-                WriteByte(DataBytesDefinition.NumberDefault);
+                WriteByte(DataBytesDefinition.SByteDefault);
                 return;
             }
             if (value == -1)
@@ -226,14 +226,12 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal)]
+        [DeserializerMethod(DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public decimal ReadDecimal(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
                 case DataBytesDefinition.Decimal:
                     var v1 = ReadDecimal();
                     _decimalCache.Set(v1);
@@ -245,52 +243,48 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble)]
+        [DeserializerMethod(DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double ReadDouble(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
                 case DataBytesDefinition.Double:
                     var v2 = ReadDouble();
                     _doubleCache.Set(v2);
                     return v2;
                 case DataBytesDefinition.DoubleDefault:
-                    return default(double);
+                    return default;
                 case DataBytesDefinition.RefDouble:
                     return _doubleCache.Get(ReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat)]
+        [DeserializerMethod(DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float ReadFloat(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
                 case DataBytesDefinition.Float:
                     var v3 = ReadFloat();
                     _floatCache.Set(v3);
                     return v3;
                 case DataBytesDefinition.FloatDefault:
-                    return default(float);
+                    return default;
                 case DataBytesDefinition.RefFloat:
                     return _floatCache.Get(ReadInt());
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Long, DataBytesDefinition.RefLong)]
+        [DeserializerMethod(DataBytesDefinition.Long, DataBytesDefinition.LongDefault, DataBytesDefinition.RefLong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long ReadLong(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.LongDefault:
+                    return default;
                 case DataBytesDefinition.Long:
                     var v4 = ReadLong();
                     _longCache.Set(v4);
@@ -300,14 +294,14 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.ULong, DataBytesDefinition.RefULong)]
+        [DeserializerMethod(DataBytesDefinition.ULong, DataBytesDefinition.ULongDefault, DataBytesDefinition.RefULong)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong ReadULong(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.ULongDefault:
+                    return default;
                 case DataBytesDefinition.ULong:
                     var v5 = ReadULong();
                     _uLongCache.Set(v5);
@@ -317,79 +311,79 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Int)]
+        [DeserializerMethod(DataBytesDefinition.Int, DataBytesDefinition.IntDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadInt(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.IntDefault:
+                    return default;
                 case DataBytesDefinition.Int:
                     return ReadInt();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.UInt)]
+        [DeserializerMethod(DataBytesDefinition.UInt, DataBytesDefinition.UIntDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint ReadUInt(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.UIntDefault:
+                    return default;
                 case DataBytesDefinition.UInt:
                     return ReadUInt();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Short)]
+        [DeserializerMethod(DataBytesDefinition.Short, DataBytesDefinition.ShortDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short ReadShort(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.ShortDefault:
+                    return default;
                 case DataBytesDefinition.Short:
                     return ReadShort();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.UShort)]
+        [DeserializerMethod(DataBytesDefinition.UShort, DataBytesDefinition.UShortDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort ReadUShort(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.UShortDefault:
+                    return default;
                 case DataBytesDefinition.UShort:
                     return ReadUShort();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.Byte)]
+        [DeserializerMethod(DataBytesDefinition.Byte, DataBytesDefinition.ByteDefault)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte ReadByte(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.ByteDefault:
+                    return default;
                 case DataBytesDefinition.Byte:
                     return ReadByte();
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.NumberDefault, DataBytesDefinition.SByte, DataBytesDefinition.SByteMinusOne)]
+        [DeserializerMethod(DataBytesDefinition.SByte, DataBytesDefinition.SByteDefault, DataBytesDefinition.SByteMinusOne)]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sbyte ReadSByte(byte type)
         {
             switch (type)
             {
-                case DataBytesDefinition.NumberDefault:
-                    return 0;
+                case DataBytesDefinition.SByteDefault:
+                    return default;
                 case DataBytesDefinition.SByte:
                     return ReadSByte();
                 case DataBytesDefinition.SByteMinusOne:

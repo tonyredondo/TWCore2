@@ -37,33 +37,33 @@ namespace TWCore.Tests
             var totalValue = 0d;
             var sMemValue = new MemoryStream();
 
-            //var wSer = new WBinarySerializer { Compressor = Compression.CompressorManager.GetByEncodingType("gzip") };
-            //GC.Collect();
-            //GC.WaitForPendingFinalizers();
-            //Thread.Sleep(1000);
-            //using (var w = Watch.Create("WSerializer SERIALIZER"))
-            //{
-            //    for (var i = 0; i < 1000; i++)
-            //    {
-            //        wSer.Serialize(sObjectValue, sObjectValue.GetType(), sMemValue);
-            //        sMemValue.Position = 0;
-            //    }
-            //    totalValue = w.GlobalElapsedMilliseconds;
-            //}
-            //Core.Log.InfoBasic("\tWBinary Bytes Count: {0}\tAvg Time: {1}ms", sMemValue.Length.ToReadableBytes().Text, totalValue / 1000);
-            //GC.Collect();
-            //GC.WaitForPendingFinalizers();
-            //Thread.Sleep(1000);
-            //using (var w = Watch.Create("WSerializer DESERIALIZER"))
-            //{
-            //    for (var i = 0; i < 1000; i++)
-            //    {
-            //        wSer.Deserialize<object>(sMemValue);
-            //        sMemValue.Position = 0;
-            //    }
-            //    totalValue = w.GlobalElapsedMilliseconds;
-            //}
-            //Core.Log.InfoBasic("\tWBinary Deserialize Avg Time: {0}ms", totalValue / 1000);
+            var wSer = new WBinarySerializer { Compressor = Compression.CompressorManager.GetByEncodingType("gzip") };
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (var w = Watch.Create("WSerializer SERIALIZER"))
+            {
+                for (var i = 0; i < 1000; i++)
+                {
+                    wSer.Serialize(sObjectValue, sObjectValue.GetType(), sMemValue);
+                    sMemValue.Position = 0;
+                }
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}\tAvg Time: {1}ms", sMemValue.Length.ToReadableBytes().Text, totalValue / 1000);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1000);
+            using (var w = Watch.Create("WSerializer DESERIALIZER"))
+            {
+                for (var i = 0; i < 1000; i++)
+                {
+                    wSer.Deserialize<object>(sMemValue);
+                    sMemValue.Position = 0;
+                }
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+            Core.Log.InfoBasic("\tWBinary Deserialize Avg Time: {0}ms", totalValue / 1000);
 
             sMemValue = new MemoryStream();
             var nSer = new NBinarySerializer { Compressor = Compression.CompressorManager.GetByEncodingType("gzip") };
@@ -87,7 +87,7 @@ namespace TWCore.Tests
             {
                 for (var i = 0; i < 1000; i++)
                 {
-                    nSer.Deserialize<object>(sMemValue);
+                    var obj = nSer.Deserialize<object>(sMemValue);
                     sMemValue.Position = 0;
                 }
                 totalValue = w.GlobalElapsedMilliseconds;

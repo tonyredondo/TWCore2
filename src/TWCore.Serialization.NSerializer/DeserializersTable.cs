@@ -33,8 +33,8 @@ namespace TWCore.Serialization.NSerializer
     {
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
-        private static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly byte[] EmptyBytes = new byte[0];
         private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
@@ -835,7 +835,20 @@ namespace TWCore.Serialization.NSerializer
             var table = Expression.Parameter(typeof(DeserializersTable), "table");
             var descriptor = Expression.Parameter(typeof(DeserializerTypeDescriptor), "descriptor");
             var properties = Expression.Parameter(typeof(string[]), "properties");
+
+            var value = Expression.Parameter(typeof(object), "value");
             var flag = Expression.Parameter(typeof(byte), "flag");
+            varExpressions.Add(value);
+            varExpressions.Add(flag);
+            
+            serExpressions.Add(Expression.Assign(flag, Expression.Call(table, DeserializersTable.StreamReadByteMethod)));
+
+            var arrayOrListIf = Expression.Or(
+                Expression.Equal(flag, Expression.Constant(DataBytesDefinition.ArrayStart, typeof(byte))),
+                Expression.Equal(flag, Expression.Constant(DataBytesDefinition.ListStart, typeof(byte))));
+            var dictionaryIf = Expression.Equal(flag, Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte)));
+
+            var comparerExpression = Expression.Or(arrayOrListIf, dictionaryIf);
             
         }
 

@@ -828,7 +828,7 @@ namespace TWCore.Serialization.NSerializer
                 IsDictionary = false;
             }
             
-            //
+            //*** Expressions
             var serExpressions = new List<Expression>();
             var varExpressions = new List<ParameterExpression>();
             //
@@ -841,15 +841,16 @@ namespace TWCore.Serialization.NSerializer
             varExpressions.Add(value);
             varExpressions.Add(flag);
             
+            //load next flag
             serExpressions.Add(Expression.Assign(flag, Expression.Call(table, DeserializersTable.StreamReadByteMethod)));
 
             var arrayOrListIf = Expression.Or(
                 Expression.Equal(flag, Expression.Constant(DataBytesDefinition.ArrayStart, typeof(byte))),
                 Expression.Equal(flag, Expression.Constant(DataBytesDefinition.ListStart, typeof(byte))));
-            var dictionaryIf = Expression.Equal(flag, Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte)));
+            var dictionaryIf = Expression.Equal(flag, 
+                Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte)));
 
             var comparerExpression = Expression.Or(arrayOrListIf, dictionaryIf);
-            
         }
 
         public delegate object DeserializeDelegate(DeserializersTable table, DeserializerTypeDescriptor descriptor, string[] parameters);

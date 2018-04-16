@@ -31,15 +31,12 @@ namespace TWCore.Tests
             Core.Log.Warning("Starting Serializer TEST");
 
             //
-
             TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
             //TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
             var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
             var sObjectValue = sObject.GetValue();
-
-            RunTest(sObjectValue, 1000, false);
-            RunTest(sObjectValue, 1000, true);
-
+            RunTest(sObjectValue, 500, false);
+            RunTest(sObjectValue, 500, true);
             //
 
             var sTest = new STest
@@ -100,28 +97,27 @@ namespace TWCore.Tests
             };
 
             RunTest(collection[0], 100_000, false);
-
-            Console.ReadLine();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RunTest(object value, int times, bool useGZip)
         {
             var vType = value?.GetType() ?? typeof(object);
-            Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
-            Core.Log.WriteEmptyLine();
-            Core.Log.InfoBasic("By size:");
-            Core.Log.InfoBasic("\tJson Bytes Count: {0}", value.SerializeToJsonBytes().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", value.SerializeToNBinary().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", value.SerializeToWBinary().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", value.SerializeToPWBinary().Count.ToReadableBytes().Text);
-            Core.Log.WriteEmptyLine();
-            ICompressor compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
+            var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
+
+            Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
+            Core.Log.WriteEmptyLine();
+            Core.Log.InfoBasic("By size:");
+            Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
+            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
+            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
+            Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
             SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
@@ -130,6 +126,13 @@ namespace TWCore.Tests
             Console.ReadLine();
         }
         
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string SerializerSizeProcess(object value, Type valueType, ISerializer serializer)
+        {
+            var memStream = new MemoryStream();
+            serializer.Serialize(value, valueType, memStream);
+            return memStream.Length.ToReadableBytes().Text;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, MemoryStream memStream)
         {

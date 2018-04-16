@@ -1,0 +1,14 @@
+﻿{
+  "appSettings": {
+    "key": "value",
+    "Core.DebugMode": true
+  },
+  "Core": {
+    "environmentName": "DEV",
+    "machineName": null,
+    "applicationName": "TWCore Test",
+    "applicationDisplayName": "TWCore Test App",
+    "settingsFile": "",
+    "injectorFile": ""
+  }
+}

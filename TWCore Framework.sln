@@ -13,85 +13,87 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore", "src\TWCore\TWCore.csproj", "{90B27D63-8183-4A1D-8B02-E9883B0D2537}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore", "src\TWCore\TWCore.csproj", "{90B27D63-8183-4A1D-8B02-E9883B0D2537}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Bot", "src\TWCore.Bot\TWCore.Bot.csproj", "{979FEFCD-138C-4C44-8F7B-9BD8A10B1CD2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Bot", "src\TWCore.Bot\TWCore.Bot.csproj", "{979FEFCD-138C-4C44-8F7B-9BD8A10B1CD2}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Bot.Telegram", "src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj", "{A6976039-047F-427E-92BC-C65E641569B1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Bot.Telegram", "src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj", "{A6976039-047F-427E-92BC-C65E641569B1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Triggers", "src\TWCore.Triggers\TWCore.Triggers.csproj", "{78B31E9B-EED7-41E4-896C-CBC53E3F53D5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Triggers", "src\TWCore.Triggers\TWCore.Triggers.csproj", "{78B31E9B-EED7-41E4-896C-CBC53E3F53D5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.WSerializer", "src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj", "{61AB6B30-242B-41FB-9E7E-87F3F8093A23}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.WSerializer", "src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj", "{61AB6B30-242B-41FB-9E7E-87F3F8093A23}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.PWSerializer", "src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj", "{705A32B5-CBCB-45E4-A6B4-1BDDAA427E51}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.PWSerializer", "src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj", "{705A32B5-CBCB-45E4-A6B4-1BDDAA427E51}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Numerics", "src\TWCore.Numerics\TWCore.Numerics.csproj", "{ADC3974A-1A2E-483F-A19E-3117746135E4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Numerics", "src\TWCore.Numerics\TWCore.Numerics.csproj", "{ADC3974A-1A2E-483F-A19E-3117746135E4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Collections", "src\TWCore.Collections\TWCore.Collections.csproj", "{33545DBF-015F-4D28-B309-2153CC533348}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Collections", "src\TWCore.Collections\TWCore.Collections.csproj", "{33545DBF-015F-4D28-B309-2153CC533348}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Data", "src\TWCore.Data\TWCore.Data.csproj", "{26727C2D-58A1-40EA-8218-F74794E8958D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data", "src\TWCore.Data\TWCore.Data.csproj", "{26727C2D-58A1-40EA-8218-F74794E8958D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Geo", "src\TWCore.Geo\TWCore.Geo.csproj", "{8E07C9C2-2274-447D-BDC6-B66BDB597870}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Geo", "src\TWCore.Geo\TWCore.Geo.csproj", "{8E07C9C2-2274-447D-BDC6-B66BDB597870}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging", "src\TWCore.Messaging\TWCore.Messaging.csproj", "{EC6B6366-06E2-4052-B353-91CBF0BCAB62}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging", "src\TWCore.Messaging\TWCore.Messaging.csproj", "{EC6B6366-06E2-4052-B353-91CBF0BCAB62}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Browser", "src\TWCore.Net.Browser\TWCore.Net.Browser.csproj", "{4F47447E-82DA-4DC8-A2C6-7D3378A1942E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Browser", "src\TWCore.Net.Browser\TWCore.Net.Browser.csproj", "{4F47447E-82DA-4DC8-A2C6-7D3378A1942E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.HttpServer", "src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj", "{F13AF665-CAD1-42B0-8FCC-B474E9538B13}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.HttpServer", "src\TWCore.Net.HttpServer\TWCore.Net.HttpServer.csproj", "{F13AF665-CAD1-42B0-8FCC-B474E9538B13}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Rpc", "src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj", "{89395E35-4675-480D-8C63-06B7F2FE899E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc", "src\TWCore.Net.Rpc\TWCore.Net.Rpc.csproj", "{89395E35-4675-480D-8C63-06B7F2FE899E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache", "src\TWCore.Cache\TWCore.Cache.csproj", "{88BAF82B-ECF0-4CC3-935F-8A656261DD5E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Cache", "src\TWCore.Cache\TWCore.Cache.csproj", "{88BAF82B-ECF0-4CC3-935F-8A656261DD5E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache.Client", "src\TWCore.Cache.Client\TWCore.Cache.Client.csproj", "{6BEFE186-9433-45E0-8AC4-A5DDE9D31220}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Cache.Client", "src\TWCore.Cache.Client\TWCore.Cache.Client.csproj", "{6BEFE186-9433-45E0-8AC4-A5DDE9D31220}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Cache.Server", "src\TWCore.Cache.Server\TWCore.Cache.Server.csproj", "{9CA6AE08-92A3-4513-AB40-1091B60A1441}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Cache.Server", "src\TWCore.Cache.Server\TWCore.Cache.Server.csproj", "{9CA6AE08-92A3-4513-AB40-1091B60A1441}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Tests", "test\TWCore.Tests\TWCore.Tests.csproj", "{9F46C08E-F99D-4CC7-93E0-D9C5BF65AE01}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Tests", "test\TWCore.Tests\TWCore.Tests.csproj", "{9F46C08E-F99D-4CC7-93E0-D9C5BF65AE01}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Test.Core", "test\TWCore.Test.Core\TWCore.Test.Core.csproj", "{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Test.Core", "test\TWCore.Test.Core\TWCore.Test.Core.csproj", "{C07C0FEC-8255-4D15-BBE4-B6622515F0AF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Test.Net47", "test\TWCore.Test.Net47\TWCore.Test.Net47.csproj", "{1326280C-26FA-4A83-95AF-BB7C1CB6C9BF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Rpc.Http", "src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj", "{B86E8D00-6D3D-416A-89F7-AE82302C17F4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc.Http", "src\TWCore.Net.Rpc.Http\TWCore.Net.Rpc.Http.csproj", "{B86E8D00-6D3D-416A-89F7-AE82302C17F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Data.SqlServer", "src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj", "{432BF34B-6929-44D2-AC4B-3189D708B3BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.SqlServer", "src\TWCore.Data.SqlServer\TWCore.Data.SqlServer.csproj", "{432BF34B-6929-44D2-AC4B-3189D708B3BE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Data.PostgreSQL", "src\TWCore.Data.PostgreSQL\TWCore.Data.PostgreSQL.csproj", "{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.PostgreSQL", "src\TWCore.Data.PostgreSQL\TWCore.Data.PostgreSQL.csproj", "{394CFD8E-4F8C-4CD9-AC8B-46EB08DFB36E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Data.MySql", "src\TWCore.Data.MySql\TWCore.Data.MySql.csproj", "{88D3EB37-AF9B-4416-850A-278D84719EC5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.MySql", "src\TWCore.Data.MySql\TWCore.Data.MySql.csproj", "{88D3EB37-AF9B-4416-850A-278D84719EC5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Data.SQLite", "src\TWCore.Data.SQLite\TWCore.Data.SQLite.csproj", "{BE1F6EF2-FD84-4873-979C-14ED17AC1727}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Data.SQLite", "src\TWCore.Data.SQLite\TWCore.Data.SQLite.csproj", "{BE1F6EF2-FD84-4873-979C-14ED17AC1727}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.RabbitMQ", "src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj", "{41C559FD-04E1-4F75-880D-585EC5392620}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.RabbitMQ", "src\TWCore.Messaging.RabbitMQ\TWCore.Messaging.RabbitMQ.csproj", "{41C559FD-04E1-4F75-880D-585EC5392620}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Web", "src\TWCore.Web\TWCore.Web.csproj", "{EE79F165-6E14-48E7-B994-9D7D7A7F2092}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Web", "src\TWCore.Web\TWCore.Web.csproj", "{EE79F165-6E14-48E7-B994-9D7D7A7F2092}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.NSQ", "src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj", "{75DA5FFE-02E4-44A6-95FB-D2FEECC4C38A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.NSQ", "src\TWCore.Messaging.NSQ\TWCore.Messaging.NSQ.csproj", "{75DA5FFE-02E4-44A6-95FB-D2FEECC4C38A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.MsgPack", "src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj", "{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.MsgPack", "src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj", "{F3A2D508-4DEA-4D19-9D47-3B4DE2D81149}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Object", "src\TWCore.Object\TWCore.Object.csproj", "{D81F8595-9EC2-40E5-ADE8-3B40F4D28AD4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Object", "src\TWCore.Object\TWCore.Object.csproj", "{D81F8595-9EC2-40E5-ADE8-3B40F4D28AD4}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{B83306E0-118A-4F00-B7ED-2D8EF4F9ECE8}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Object.Api", "tools\TWCore.Object.Api\TWCore.Object.Api.csproj", "{34C2763E-D060-44FC-88D6-743D68D4DA0D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Object.Api", "tools\TWCore.Object.Api\TWCore.Object.Api.csproj", "{34C2763E-D060-44FC-88D6-743D68D4DA0D}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Services", "src\TWCore.Services\TWCore.Services.csproj", "{D801A072-159C-48D8-8180-9120F2F343EF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Services", "src\TWCore.Services\TWCore.Services.csproj", "{D801A072-159C-48D8-8180-9120F2F343EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Net.Rpc.Messaging", "src\TWCore.Net.Rpc.Messaging\TWCore.Net.Rpc.Messaging.csproj", "{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Net.Rpc.Messaging", "src\TWCore.Net.Rpc.Messaging\TWCore.Net.Rpc.Messaging.csproj", "{3809EE42-6144-4B99-8A39-AEE9DF31BC0E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Diagnostics.Api", "tools\TWCore.Diagnostics.Api\TWCore.Diagnostics.Api.csproj", "{8BFD262D-E755-4C4D-813E-ECFB44C54884}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Diagnostics.Api", "tools\TWCore.Diagnostics.Api\TWCore.Diagnostics.Api.csproj", "{8BFD262D-E755-4C4D-813E-ECFB44C54884}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Diagnostics.Api.Models", "tools\TWCore.Diagnostics.Api.Models\TWCore.Diagnostics.Api.Models.csproj", "{3B821E18-1C5B-4DAD-9CE9-D3DD1C096914}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Diagnostics.Api.Models", "tools\TWCore.Diagnostics.Api.Models\TWCore.Diagnostics.Api.Models.csproj", "{3B821E18-1C5B-4DAD-9CE9-D3DD1C096914}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.NATS", "src\TWCore.Messaging.NATS\TWCore.Messaging.NATS.csproj", "{34F217BF-01D9-4125-A639-6454305B5564}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Messaging.NATS", "src\TWCore.Messaging.NATS\TWCore.Messaging.NATS.csproj", "{34F217BF-01D9-4125-A639-6454305B5564}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Reflection", "src\TWCore.Reflection\TWCore.Reflection.csproj", "{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Reflection", "src\TWCore.Reflection\TWCore.Reflection.csproj", "{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.NSerializer", "src\TWCore.Serialization.NSerializer\TWCore.Serialization.NSerializer.csproj", "{B43D6F91-F848-43F0-A210-31E61C08A58D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Test.Mono", "test\TWCore.Test.Mono\TWCore.Test.Mono.csproj", "{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD}"
 EndProject
 Global
 	GlobalSection(Performance) = preSolution
@@ -254,6 +256,10 @@ Global
 		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -297,6 +303,7 @@ Global
 		{34F217BF-01D9-4125-A639-6454305B5564} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{B43D6F91-F848-43F0-A210-31E61C08A58D} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{C97A1D60-19B2-47E4-8BE2-3C6E7FFAD3DD} = {0B35804A-2C5F-4D3F-B370-F0EC3D5FBA47}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

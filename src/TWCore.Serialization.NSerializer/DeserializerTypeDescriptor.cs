@@ -40,8 +40,10 @@ namespace TWCore.Serialization.NSerializer
         {
             Type = type;
             var ifaces = type.GetInterfaces();
-            var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
-            var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+            var iListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var isIList = iListType != null;
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIDictionary = iDictionaryType != null;
             var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
             {
                 if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
@@ -117,8 +119,7 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
                 //serExpressions.Add(Expression.Call(coreLogProp, infoBasicMethod, Expression.Call(capacity, "ToString", Type.EmptyTypes)));
 
-                var addMethod = type.GetMethod("Add");
-                var addParameters = addMethod.GetParameters();
+                var addMethod = type.GetMethod("Add", iListType.GenericTypeArguments);
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -128,7 +129,7 @@ namespace TWCore.Serialization.NSerializer
                     Expression.IfThenElse(
                         Expression.LessThan(forIdx, capacity),
                         Expression.Block(
-                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), addParameters[0].ParameterType)),
+                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iListType.GenericTypeArguments[0])),
                             Expression.PostIncrementAssign(forIdx)
                         ),
                         Expression.Break(breakLabel)), breakLabel);
@@ -140,8 +141,7 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Assign(value, Expression.New(type)));
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
-                var addMethod = type.GetMethod("Add");
-                var addParameters = addMethod.GetParameters();
+                var addMethod = type.GetMethod("Add", iDictionaryType.GenericTypeArguments);
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -152,8 +152,8 @@ namespace TWCore.Serialization.NSerializer
                         Expression.LessThan(forIdx, capacity),
                         Expression.Block(
                             Expression.Call(value, addMethod,
-                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), addParameters[0].ParameterType),
-                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), addParameters[1].ParameterType)),
+                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iDictionaryType.GenericTypeArguments[0]),
+                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iDictionaryType.GenericTypeArguments[1])),
                             Expression.PostIncrementAssign(forIdx)
                         ),
                         Expression.Break(breakLabel)), breakLabel);

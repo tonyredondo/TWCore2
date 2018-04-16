@@ -24,6 +24,7 @@ using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Server.Transports;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -37,7 +38,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class CacheAsyncRpcTest : ContainerParameterServiceAsync
     {
-        private static BinarySerializer GlobalSerializer = new WBinarySerializer();
+        private static BinarySerializer GlobalSerializer = new NBinarySerializer();
 
 		public CacheAsyncRpcTest() : base("cacheasyncrpcTest", "Cache Async Test") { }
         protected override async Task OnHandlerAsync(ParameterHandlerInfo info)

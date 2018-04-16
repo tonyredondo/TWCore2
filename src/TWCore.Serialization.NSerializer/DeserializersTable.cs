@@ -173,57 +173,6 @@ namespace TWCore.Serialization.NSerializer
                 return descriptor.DeserializeFunc(this);
             return FillObject(descriptor, metadata);
         }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object InnerReadValue(byte type)
-        {
-            if (type == DataBytesDefinition.ValueNull) return null;
-            if (type == DataBytesDefinition.RefObject)
-                return ObjectCache.Get(StreamReadInt());
-
-            Type valueType = null;
-            DeserializerMetaDataOfType metadata = default;
-
-            if (type == DataBytesDefinition.TypeStart)
-            {
-                var length = StreamReadInt();
-                var typeBytes = new byte[length];
-                Stream.Read(typeBytes, 0, length);
-                var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
-                var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
-                var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
-                var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
-                var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
-                var vTypeString = typeData.Substring(0, fsCol1);
-                var isArrayString = typeData.Substring(fsCol1 + 1, 1);
-                var isListString = typeData.Substring(fsCol2 + 1, 1);
-                var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
-                var propertiesString = typeData.Substring(fsCol4 + 1);
-
-                valueType = Core.GetType(vTypeString);
-                var isArray = isArrayString == "1";
-                var isList = isListString == "1";
-                var isDictionary = isDictionaryString == "1";
-                var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
-                metadata = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
-                _metadataInTypes[valueType] = metadata;
-                _typeCache.Set(valueType);
-            }
-            else if (type == DataBytesDefinition.RefType)
-            {
-                valueType = _typeCache.Get(StreamReadInt());
-                metadata = _metadataInTypes[valueType];
-            }
-            var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
-            if (descriptor.IsNSerializable)
-            {
-                var value = (INSerializable)descriptor.Activator();
-                value.Fill(this, metadata);
-                return value;
-            }
-            if (descriptor.Metadata == metadata)
-                return descriptor.DeserializeFunc(this);
-            return FillObject(descriptor, metadata);
-        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object FillObject(DeserializerTypeDescriptor descriptor, DeserializerMetaDataOfType metadata)

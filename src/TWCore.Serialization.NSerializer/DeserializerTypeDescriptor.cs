@@ -105,8 +105,8 @@ namespace TWCore.Serialization.NSerializer
                 var loop = Expression.Loop(
                     Expression.IfThenElse(
                         Expression.LessThan(forIdx, capacity),
-                        Expression.Assign(Expression.ArrayIndex(value, Expression.PostIncrementAssign(forIdx)),
-                            Expression.Convert(Expression.Call(table, "InnerReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), elementType)),
+                        Expression.Assign(Expression.ArrayAccess(value, Expression.PostIncrementAssign(forIdx)),
+                            Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), elementType)),
                         Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
@@ -128,7 +128,7 @@ namespace TWCore.Serialization.NSerializer
                     Expression.IfThenElse(
                         Expression.LessThan(forIdx, capacity),
                         Expression.Block(
-                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, "InnerReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), addParameters[0].ParameterType)),
+                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), addParameters[0].ParameterType)),
                             Expression.PostIncrementAssign(forIdx)
                         ),
                         Expression.Break(breakLabel)), breakLabel);
@@ -172,7 +172,7 @@ namespace TWCore.Serialization.NSerializer
                 else if (prop.PropertyType.IsEnum)
                     serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
                 else
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, "InnerReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
             }
 
             serExpressions.Add(Expression.Call(table, "StreamReadByte", Type.EmptyTypes));

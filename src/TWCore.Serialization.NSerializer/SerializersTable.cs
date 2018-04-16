@@ -801,13 +801,19 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            var vType = value.GetType();
+            if (WriteValues.TryGetValue(vType, out var mTuple))
+            {
+                _paramObj[0] = value;
+                mTuple.Accessor(this, _paramObj);
+                return;
+            }
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefObject, oIdx);
                 return;
             }
             _objectCache.Set(value);
-            var vType = value.GetType();
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {

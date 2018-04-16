@@ -25,6 +25,7 @@ using TWCore.Net.RPC.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports.Default;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Services;
 // ReSharper disable ArrangeTypeMemberModifiers
@@ -48,7 +49,7 @@ namespace TWCore.Tests
         {
             Core.Log.Warning("Starting RPC TEST");
 
-            var serializer = new PWBinarySerializer();
+            var serializer = new NBinarySerializer();
             var service = new MyService();
 
             Core.Log.InfoBasic("Setting RPC Server");

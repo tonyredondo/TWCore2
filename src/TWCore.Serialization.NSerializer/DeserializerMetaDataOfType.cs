@@ -87,19 +87,4 @@ namespace TWCore.Serialization.NSerializer
             => meta1.Equals(meta2);
         #endregion
     }
-
-    public struct DeserializerMetadataOfTypeRuntime
-    {
-        public DeserializerMetaDataOfType MetaDataOfType;
-        public bool EqualToDefinition;
-        
-        #region .ctor
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DeserializerMetadataOfTypeRuntime(DeserializerMetaDataOfType metaDataOfType, bool equalToDefinition)
-        {
-            MetaDataOfType = metaDataOfType;
-            EqualToDefinition = equalToDefinition;
-        }
-        #endregion
-    }
 }

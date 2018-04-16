@@ -94,7 +94,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Default Binary Serializer MimeTypes Load array
         /// </summary>
-        public static string[] DefaultBinarySerializerMimeTypes = { SerializerMimeTypes.WBinary, SerializerMimeTypes.PWBinary, SerializerMimeTypes.BinaryFormatter };
+        public static string[] DefaultBinarySerializerMimeTypes = { SerializerMimeTypes.NBinary, SerializerMimeTypes.WBinary, SerializerMimeTypes.PWBinary, SerializerMimeTypes.BinaryFormatter };
         /// <summary>
         /// Default Text Serializer MimeTypes Load array
         /// </summary>

@@ -36,7 +36,7 @@ namespace TWCore.Tests
             var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
             var sObjectValue = sObject.GetValue();
 
-            RunTest(sObjectValue, 10);
+            RunTest(sObjectValue, 1000);
 
             //
 

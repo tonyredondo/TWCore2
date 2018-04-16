@@ -58,5 +58,13 @@ namespace TWCore.Serialization.NSerializer
                 return false;
             throw new InvalidOperationException("Invalid type value.");
         }
+
+        [DeserializerMethod(ReturnType = typeof(bool?))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool? ReadBoolNullable(byte value)
+        {
+            if (value == DataBytesDefinition.ValueNull) return null;
+            return ReadBool(value);
+        }
     }
 }

@@ -73,6 +73,14 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+
+        [DeserializerMethod(ReturnType = typeof(DateTimeOffset?))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public DateTimeOffset? ReadDateTimeOffsetNullable(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            return ReadDateTimeOffset(type);
+        }
     }
 
 }

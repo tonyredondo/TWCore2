@@ -70,5 +70,13 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+
+        [DeserializerMethod(ReturnType = typeof(TimeSpan?))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TimeSpan? ReadTimeSpanNullable(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            return ReadTimeSpan(type);
+        }
     }
 }

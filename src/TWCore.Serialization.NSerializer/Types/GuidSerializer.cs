@@ -71,5 +71,13 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+
+        [DeserializerMethod(ReturnType = typeof(Guid?))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Guid? StreamReadGuidNullable(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            return StreamReadGuid(type);
+        }
     }
 }

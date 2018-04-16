@@ -61,5 +61,13 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
+
+        [DeserializerMethod(ReturnType = typeof(char?))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public char? StreamReadCharNullable(byte value)
+        {
+            if (value == DataBytesDefinition.ValueNull) return null;
+            return StreamReadChar(value);
+        }
     }
 }

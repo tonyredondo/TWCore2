@@ -84,7 +84,7 @@ namespace TWCore.Serialization
             SerializedObjects.TryAdd(Data, data);
         }
 
-        private SerializedObject(byte[] data, string dataType, string serializerMimeType)
+        public SerializedObject(byte[] data, string dataType, string serializerMimeType)
         {
             Data = data;
             DataType = dataType;

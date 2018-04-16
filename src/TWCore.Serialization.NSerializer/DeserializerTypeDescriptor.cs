@@ -33,7 +33,7 @@ namespace TWCore.Serialization.NSerializer
         public bool IsNSerializable;
         public DeserializerMetaDataOfType Metadata;
         public DeserializeDelegate DeserializeFunc;
-        public Expression<DeserializeDelegate> Lambda;
+        //public Expression<DeserializeDelegate> Lambda;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerTypeDescriptor(Type type)
@@ -182,8 +182,8 @@ namespace TWCore.Serialization.NSerializer
             serExpressions.Add(Expression.Label(returnTarget, value));
 
             var block = Expression.Block(varExpressions, serExpressions).Reduce();
-            var lambda = Expression.Lambda<DeserializeDelegate>(block, type.Name + "_DeserializeFunc", new[] { table });
-            Lambda = lambda;
+            var lambda = Expression.Lambda<DeserializeDelegate>(block, type.Name + "_Deserializer", new[] { table });
+            //Lambda = lambda;
             DeserializeFunc = lambda.Compile();
         }
 

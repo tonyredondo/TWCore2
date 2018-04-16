@@ -51,14 +51,24 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject ReadSerializedObject(byte type)
         {
-            switch(type)
-            {
-                case DataBytesDefinition.SerializedObjectNull:
-                    return null;
-                case DataBytesDefinition.SerializedObject:
-                    return SerializedObject.FromStream(Reader);
-            }
-            throw new InvalidOperationException("Invalid type value.");
+            if (type == DataBytesDefinition.SerializedObjectNull) return null;
+            if (type != DataBytesDefinition.SerializedObject) throw new InvalidOperationException("Invalid type value.");
+
+            var dataTypeByteLength = Reader.ReadInt32();
+            if (dataTypeByteLength < -1) return null;
+            var dataTypeByte = dataTypeByteLength != -1 ? Reader.ReadBytes(dataTypeByteLength) : null;
+
+            var serializerMimeTypeByteLength = Reader.ReadInt32();
+            if (serializerMimeTypeByteLength < -1) return null;
+            var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? Reader.ReadBytes(serializerMimeTypeByteLength) : null;
+
+            var dataLength = Reader.ReadInt32();
+            if (dataLength < -1) return null;
+            var data = dataLength != -1 ? Reader.ReadBytes(dataLength) : null;
+
+            return new SerializedObject(data,
+                dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
         }
     }
 }

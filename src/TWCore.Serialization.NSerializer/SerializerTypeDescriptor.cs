@@ -37,7 +37,7 @@ namespace TWCore.Serialization.NSerializer
         public bool IsDictionary;
         public bool IsNSerializable;
         public byte[] Definition;
-        public Expression<SerializeActionDelegate> Lambda;
+        //public Expression<SerializeActionDelegate> Lambda;
         public SerializeActionDelegate SerializeAction;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,8 +197,8 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
-            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_SerializeAction", new[] { obj, serTable });
-            Lambda = lambda;
+            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_Serializer", new[] { obj, serTable });
+            //Lambda = lambda;
             SerializeAction = lambda.Compile();
         }
     }

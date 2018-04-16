@@ -53,7 +53,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.DateTimeDefault, DataBytesDefinition.RefDateTime, DataBytesDefinition.DateTime)]
+        [DeserializerMethod(DataBytesDefinition.DateTimeDefault, DataBytesDefinition.RefDateTime, DataBytesDefinition.DateTime, ReturnType = typeof(DateTime))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime ReadDateTime(byte type)
         {

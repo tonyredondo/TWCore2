@@ -54,7 +54,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.GuidDefault, DataBytesDefinition.RefGuid, DataBytesDefinition.Guid)]
+        [DeserializerMethod(DataBytesDefinition.GuidDefault, DataBytesDefinition.RefGuid, DataBytesDefinition.Guid, ReturnType = typeof(Guid))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid StreamReadGuid(byte type)
         {

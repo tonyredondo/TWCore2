@@ -47,7 +47,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.SerializedObjectNull, DataBytesDefinition.SerializedObject)]
+        [DeserializerMethod(DataBytesDefinition.SerializedObjectNull, DataBytesDefinition.SerializedObject, ReturnType = typeof(SerializedObject))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject ReadSerializedObject(byte type)
         {
@@ -56,7 +56,7 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.SerializedObjectNull:
                     return null;
                 case DataBytesDefinition.SerializedObject:
-                    return SerializedObject.FromStream(Stream);
+                    return SerializedObject.FromStream(Reader);
             }
             throw new InvalidOperationException("Invalid type value.");
         }

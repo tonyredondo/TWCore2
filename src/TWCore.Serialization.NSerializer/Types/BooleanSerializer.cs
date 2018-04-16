@@ -48,7 +48,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.BoolTrue, DataBytesDefinition.BoolFalse)]
+        [DeserializerMethod(DataBytesDefinition.BoolTrue, DataBytesDefinition.BoolFalse, ReturnType = typeof(bool))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ReadBool(byte value)
         {

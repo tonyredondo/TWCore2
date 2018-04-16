@@ -37,7 +37,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     { 
-        [DeserializerMethod(DataBytesDefinition.EnumInt)]
+        [DeserializerMethod(DataBytesDefinition.EnumInt, ReturnType = typeof(Enum))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int ReadEnum(byte type)
         {

@@ -20,6 +20,6 @@ namespace TWCore.Serialization.NSerializer
     public interface INSerializable
     {
         void Serialize(SerializersTable table);
-        void Fill(DeserializersTable table, string[] properties);
+        void Fill(DeserializersTable table, DeserializerMetaDataOfType metadata);
     }
 }

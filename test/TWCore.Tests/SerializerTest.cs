@@ -36,7 +36,7 @@ namespace TWCore.Tests
             var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
             var sObjectValue = sObject.GetValue();
 
-            RunTest(sObjectValue, 1000);
+            RunTest(sObjectValue, 10);
 
             //
 
@@ -122,7 +122,7 @@ namespace TWCore.Tests
             var wBinarySerializer = new WBinarySerializer();
             var pwBinarySerializer = new PWBinarySerializer();
             Core.Log.InfoBasic("By Times: {0}", times);
-            SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            //SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             //SerializerProcess("MessagePack", value, vType, times, msgPackSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
@@ -160,7 +160,7 @@ namespace TWCore.Tests
                 }
                 totalValue = w.GlobalElapsedMilliseconds;
             }
-            Core.Log.InfoBasic("\t"+ name + " DESERIALIZAER - Average Time: {0}ms", totalValue / times);
+            Core.Log.InfoBasic("\t"+ name + " DESERIALIZER - Average Time: {0}ms", totalValue / times);
             Thread.Sleep(1000);
             Core.Log.WriteEmptyLine();
         }

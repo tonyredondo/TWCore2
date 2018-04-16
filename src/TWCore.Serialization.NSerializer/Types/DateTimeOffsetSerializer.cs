@@ -55,7 +55,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.DateTimeOffsetDefault, DataBytesDefinition.RefDateTimeOffset, DataBytesDefinition.DateTimeOffset)]
+        [DeserializerMethod(DataBytesDefinition.DateTimeOffsetDefault, DataBytesDefinition.RefDateTimeOffset, DataBytesDefinition.DateTimeOffset, ReturnType = typeof(DateTimeOffset))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTimeOffset ReadDateTimeOffset(byte type)
         {

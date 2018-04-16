@@ -52,7 +52,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.TimeSpanDefault, DataBytesDefinition.RefTimeSpan, DataBytesDefinition.TimeSpan)]
+        [DeserializerMethod(DataBytesDefinition.TimeSpanDefault, DataBytesDefinition.RefTimeSpan, DataBytesDefinition.TimeSpan, ReturnType = typeof(TimeSpan))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public TimeSpan ReadTimeSpan(byte type)
         {

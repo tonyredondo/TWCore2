@@ -21,6 +21,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Text;
 using TWCore.Reflection;
 
 namespace TWCore.Serialization.NSerializer
@@ -32,6 +33,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
         //
         internal static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
         internal static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
@@ -63,6 +65,7 @@ namespace TWCore.Serialization.NSerializer
 
         private readonly object[] _paramObj = new object[1];
         protected Stream Stream;
+        protected BinaryWriter Writer;
 
         #region Statics
         static SerializersTable()
@@ -734,6 +737,7 @@ namespace TWCore.Serialization.NSerializer
         public void Serialize(Stream stream, object value, Type valueType)
         {
             Stream = stream;
+            Writer = new BinaryWriter(stream, Encoding.UTF8, true);
             WriteByte(DataBytesDefinition.Start);
 
             if (value == null)
@@ -785,6 +789,7 @@ namespace TWCore.Serialization.NSerializer
             _typeCache.Clear();
             _objectCache.Clear();
             Stream = null;
+            Writer = null;
         }
 
         #region Private Methods
@@ -1023,19 +1028,9 @@ namespace TWCore.Serialization.NSerializer
             Stream.Write(_buffer, 0, 2);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDecimal(decimal value)
+        protected void WriteDecimal(decimal value)
         {
-            var val = decimal.ToDouble(value);
-            var tmpValue = *(ulong*)&val;
-            _buffer[0] = (byte)tmpValue;
-            _buffer[1] = (byte)(tmpValue >> 8);
-            _buffer[2] = (byte)(tmpValue >> 16);
-            _buffer[3] = (byte)(tmpValue >> 24);
-            _buffer[4] = (byte)(tmpValue >> 32);
-            _buffer[5] = (byte)(tmpValue >> 40);
-            _buffer[6] = (byte)(tmpValue >> 48);
-            _buffer[7] = (byte)(tmpValue >> 56);
-            Stream.Write(_buffer, 0, 8);
+            Writer.Write(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteSByte(sbyte value)

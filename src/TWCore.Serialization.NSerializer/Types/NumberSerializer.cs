@@ -226,7 +226,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     {
-        [DeserializerMethod(DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal)]
+        [DeserializerMethod(DataBytesDefinition.Decimal, DataBytesDefinition.DecimalDefault, DataBytesDefinition.RefDecimal, ReturnType = typeof(decimal))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public decimal StreamReadDecimal(byte type)
         {
@@ -243,7 +243,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble)]
+        [DeserializerMethod(DataBytesDefinition.Double, DataBytesDefinition.DoubleDefault, DataBytesDefinition.RefDouble, ReturnType = typeof(double))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public double StreamReadDouble(byte type)
         {
@@ -260,7 +260,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat)]
+        [DeserializerMethod(DataBytesDefinition.Float, DataBytesDefinition.FloatDefault, DataBytesDefinition.RefFloat, ReturnType = typeof(float))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public float StreamReadFloat(byte type)
         {
@@ -277,7 +277,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Long, DataBytesDefinition.LongDefault, DataBytesDefinition.RefLong)]
+        [DeserializerMethod(DataBytesDefinition.Long, DataBytesDefinition.LongDefault, DataBytesDefinition.RefLong, ReturnType = typeof(long))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public long StreamReadLong(byte type)
         {
@@ -294,7 +294,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.ULong, DataBytesDefinition.ULongDefault, DataBytesDefinition.RefULong)]
+        [DeserializerMethod(DataBytesDefinition.ULong, DataBytesDefinition.ULongDefault, DataBytesDefinition.RefULong, ReturnType = typeof(ulong))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ulong StreamReadULong(byte type)
         {
@@ -311,7 +311,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Int, DataBytesDefinition.IntDefault)]
+        [DeserializerMethod(DataBytesDefinition.Int, DataBytesDefinition.IntDefault, ReturnType = typeof(int))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int StreamReadInt(byte type)
         {
@@ -324,7 +324,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.UInt, DataBytesDefinition.UIntDefault)]
+        [DeserializerMethod(DataBytesDefinition.UInt, DataBytesDefinition.UIntDefault, ReturnType = typeof(uint))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public uint StreamReadUInt(byte type)
         {
@@ -337,7 +337,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Short, DataBytesDefinition.ShortDefault)]
+        [DeserializerMethod(DataBytesDefinition.Short, DataBytesDefinition.ShortDefault, ReturnType = typeof(short))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public short StreamReadShort(byte type)
         {
@@ -350,7 +350,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.UShort, DataBytesDefinition.UShortDefault)]
+        [DeserializerMethod(DataBytesDefinition.UShort, DataBytesDefinition.UShortDefault, ReturnType = typeof(ushort))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public ushort StreamReadUShort(byte type)
         {
@@ -363,7 +363,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.Byte, DataBytesDefinition.ByteDefault)]
+        [DeserializerMethod(DataBytesDefinition.Byte, DataBytesDefinition.ByteDefault, ReturnType = typeof(byte))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public byte StreamReadByte(byte type)
         {
@@ -376,7 +376,7 @@ namespace TWCore.Serialization.NSerializer
             }
             throw new InvalidOperationException("Invalid type value.");
         }
-        [DeserializerMethod(DataBytesDefinition.SByte, DataBytesDefinition.SByteDefault, DataBytesDefinition.SByteMinusOne)]
+        [DeserializerMethod(DataBytesDefinition.SByte, DataBytesDefinition.SByteDefault, DataBytesDefinition.SByteMinusOne, ReturnType = typeof(sbyte))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public sbyte StreamReadSByte(byte type)
         {

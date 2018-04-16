@@ -48,7 +48,7 @@ namespace TWCore.Serialization.NSerializer
 
     public partial class DeserializersTable
     { 
-        [DeserializerMethod(DataBytesDefinition.CharDefault, DataBytesDefinition.Char)]
+        [DeserializerMethod(DataBytesDefinition.CharDefault, DataBytesDefinition.Char, ReturnType = typeof(char))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char StreamReadChar(byte value)
         {

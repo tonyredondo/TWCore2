@@ -103,7 +103,7 @@ namespace TWCore.Serialization.NSerializer
             DataBytesDefinition.RefString8, 
             DataBytesDefinition.RefString16, 
             DataBytesDefinition.RefString32, 
-            DataBytesDefinition.StringLength)]
+            DataBytesDefinition.StringLength, ReturnType = typeof(string))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ReadString(byte type)
         {

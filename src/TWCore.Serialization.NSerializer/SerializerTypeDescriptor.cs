@@ -70,7 +70,7 @@ namespace TWCore.Serialization.NSerializer
             }
             //
             var typeName = type.GetTypeName();
-            var defText = typeName + ";" + Properties.Join(";");
+            var defText = typeName + ";" + (IsArray ? "1" : "0") + ";" + (IsList ? "1" : "0") + ";" + (IsDictionary ? "1" : "0") + ";" + Properties.Join(";");
             var defBytesLength = Encoding.UTF8.GetByteCount(defText);
             var defBytes = new byte[defBytesLength + 5];
             defBytes[0] = DataBytesDefinition.TypeStart;
@@ -98,8 +98,9 @@ namespace TWCore.Serialization.NSerializer
                 varExpressions.Add(arrLength);
                 serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, SerializersTable.ArrayLengthGetMethod)));
 
-                var arrByte = Expression.Constant(DataBytesDefinition.ArrayStart, typeof(byte));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, arrByte, arrLength));
+                //var arrByte = Expression.Constant(DataBytesDefinition.ArrayStart, typeof(byte));
+                //serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, arrByte, arrLength));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteIntMethodInfo, arrLength));
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -123,8 +124,9 @@ namespace TWCore.Serialization.NSerializer
                 varExpressions.Add(iLength);
                 serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
 
-                var iByte = Expression.Constant(DataBytesDefinition.ListStart, typeof(byte));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
+                //var iByte = Expression.Constant(DataBytesDefinition.ListStart, typeof(byte));
+                //serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteIntMethodInfo, iLength));
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -151,8 +153,9 @@ namespace TWCore.Serialization.NSerializer
                 varExpressions.Add(iLength);
                 serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, SerializersTable.ListCountGetMethod)));
 
-                var iByte = Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
+                //var iByte = Expression.Constant(DataBytesDefinition.DictionaryStart, typeof(byte));
+                //serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteDefIntMInfo, iByte, iLength));
+                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteIntMethodInfo, iLength));
 
                 var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
                 varExpressions.Add(enumerator);
@@ -175,9 +178,8 @@ namespace TWCore.Serialization.NSerializer
             //
             if (runtimeProperties.Length > 0)
             {
-                var propByte = Expression.Constant(DataBytesDefinition.PropertiesStart, typeof(byte));
-                serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, propByte));
-
+                //var propByte = Expression.Constant(DataBytesDefinition.PropertiesStart, typeof(byte));
+                //serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteByteMethodInfo, propByte));
                 foreach (var prop in runtimeProperties)
                 {
                     var getMethod = prop.GetMethod;

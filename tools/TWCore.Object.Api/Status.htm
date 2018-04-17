@@ -1,0 +1,686 @@
+﻿<html>
+    <head>
+        <title>Status</title>
+        <script   src="https://code.jquery.com/jquery-1.12.3.min.js"   integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ="   crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/moment.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.12.0/locale/en-gb.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/1.0.2/Chart.js"></script>
+        <style>
+            html, body {
+                margin: 0px;
+                padding: 0px;
+                font-family: sans-serif;
+                background: #222222;
+                font-size: 1em;
+            }
+            h2 {
+                font-size: 1.2em;
+                padding:0px;
+                margin:0px;
+            }
+            h3 {
+                font-size: 0.8em;
+                padding:0px;
+                margin:0px;
+                padding: 0.2em;
+                cursor: pointer;
+                font-weight:normal;
+            }
+            .head {
+                /*background: rgba(63, 81, 181, 0.04);
+                background: #616161;*/
+                padding: 0.4em 1em;
+                color: #ffffff;
+                font-size:0.9em;
+            }
+
+            .head h2 { float:left; }
+            .head h3 { float:left; padding-top: 0.4em;}
+            .head h3 input { margin:0px; }
+            .timestamp {  }
+            .headLeft { float:left;}
+            #envMachine {
+                font-size: 0.8em;
+                color: #03a9f4;
+            }
+            .headRight { float:right;}
+            .clear { clear: both; }
+            .body {
+                padding:0px;
+                position: absolute;
+                top:244px;
+                left:0px;
+                right:0px;
+                bottom:0px;
+                overflow-y:auto;
+                font-size:1.2em;
+            }
+            .statusItem {
+                padding-bottom: 0px;
+            }
+            .statusItem h2 {
+                font-size: 0.7em;
+                background: rgb(54, 54, 54);
+                padding: 6px 10px;
+                cursor: pointer;
+                color: #eaeaea;
+                border-bottom: 1px solid #222222;
+                font-weight: normal;
+            }
+            .statusItem #count {
+                float:right;
+                padding-right:0.5em;
+            }
+            .statusItem table {
+                font-size: 0.6em;
+                table-layout: fixed;
+                word-wrap: break-word;
+                padding: 0em;
+                letter-spacing: 0.3px;
+            }
+            .statusItem tr:nth-child(odd) {
+                background-color: #2d2d2d;
+                color: #ccc;
+            }
+            .statusItem tr:nth-child(even) {
+                background-color: #272727;
+                color: #ccc;
+            }
+            .statusItem th {
+                background: #f5f5f5;
+            }
+            .statusItem .thKey {
+                width:30%
+            }
+            .statusItem td {
+                padding: 5px 10px;
+                height: 30px;
+                border-bottom: solid 1px #222222;
+                width: 100%;
+            }
+            .statusItem .tdKey {
+                background-color: #24303c;
+                color: #ccc !important;
+                border-bottom: solid 1px #222222;
+                border-right: solid 1px #222222;
+                padding: 5px 20px 5px 5px;
+                width:200px;
+            }
+            .statusItem .good {
+                color: #13d013;
+                font-weight: bold;
+            }
+            .statusItem .ugly {
+                color: #bb2525;
+                font-weight: bold;
+            }
+            .statusItem .bad {
+                color: #DEC927;
+                font-weight: bold;
+            }
+            .statusItem .diff {
+                padding-left:0.5em;
+                padding-right:0.5em;
+            }
+            .statusItem .children {
+                /*margin:5px 0px 10px;*/
+                padding-top: 5px;
+            }
+            .indent {
+                /*margin: 0px 7px 4px 7px;*/
+                border: solid 1px #363636;
+                margin-top: 5px;
+            }
+            .indent h2 {
+                border-bottom: 0px;
+                font-size:0.65em;
+                color: #0faaf2;
+            }
+            .innerStatus {
+                /*padding: 4px 7px;*/
+            }
+            .charts {
+                padding: 0px;
+                border-top: 4px solid #616161;
+                /*border-bottom: 4px solid #616161;*/
+            }
+            .chartsInner {
+                padding: 5px 10px;
+            }
+            #chartvar{
+                height: 235px;
+                overflow-y: auto;
+            }
+            #chartvarOutter {
+                height: 235px;
+                width: 35%;
+                float: left;
+                background: #616161;
+                overflow-x: hidden;
+                overflow-y: hidden;
+                font-size: 15px;
+            }
+            .chartTitle {
+                font-size: 12px;
+                font-weight: bold;
+                color: #222;
+                white-space: nowrap;
+            }
+            .chartTitle h3 {
+                background: #222222;
+                color: #01b0df;
+                font-size: 10px;
+                padding: 5px;
+                cursor: default;
+            }
+            .chartOption {
+                padding: 5px 7px;
+                /*display:none;*/
+                font-size: 10px;
+                color: #111;
+            }
+            .chartOption input {
+                float:left;
+            }
+            .chartOption label {
+                display:block;
+                float:left;
+                padding:0px 5px;
+            }
+            #myChart {
+                width: 100%;
+                max-width: 100%;
+                height: 150px;
+                max-height: 178px;
+            }
+            .tableBtn {
+                font-size: 0.6em;
+                cursor: pointer;
+                color: #01b0df;
+                padding: 5px 5px 2px;
+            }
+            .wrapStatus {
+                display: none;
+                padding: 10px;
+            }
+            .children .wrapStatus {
+
+            }
+            input[type="radio"] {
+                margin:0px;
+            }
+            #chartTitle {
+                text-align: center;
+                font-size: 12px;
+                color: #01b0df;
+                padding: 5px 0px 7px 0px;
+                background:#363636;
+            }
+
+
+            [type="radio"]:checked,
+            [type="radio"]:not(:checked) {
+                position: absolute;
+                left: -9999px;
+            }
+            [type="radio"]:checked + label,
+            [type="radio"]:not(:checked) + label
+            {
+                position: relative;
+                padding-left: 24px !important;
+                cursor: pointer;
+                line-height: 18px;
+                display: inline-block;
+            }
+            [type="radio"]:checked + label:before,
+            [type="radio"]:not(:checked) + label:before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 16px;
+                height: 16px;
+                border: 1px solid #ddd;
+                border-radius: 100%;
+                background: #222222;
+            }
+            [type="radio"]:checked + label:after,
+            [type="radio"]:not(:checked) + label:after {
+                content: '';
+                width: 12px;
+                height: 12px;
+                background: #03a9f4;
+                position: absolute;
+                top: 3px;
+                left: 3px;
+                border-radius: 100%;
+            }
+            [type="radio"]:not(:checked) + label:after {
+                opacity: 0;
+            }
+            [type="radio"]:checked + label:after {
+                opacity: 1;
+            }
+            .MultiValue {
+                font-size: 1em !important;
+                float: left !important;
+                background: #222;
+                margin: 2px -2px;
+                padding: 1px !important;
+            }
+            .MultiValue tr {
+                background: transparent !important;
+            }
+            .MultiValue th {
+                height: 24px !important;
+                background: #25303c !important;
+                padding: 0px 20px !important;
+                color: #ccc;
+            }
+            .MultiValue td {
+                height: 24px !important;
+                padding: 5px 10px !important;
+                text-align: center !important;
+                font-weight: bold;
+            }
+            .MultiValue label {
+                padding-left: 0px;
+            }
+            label {
+                padding-left: 24px;
+                font-weight: normal;
+                word-wrap: initial;
+                white-space: pre;
+            }
+        </style>
+        <script>
+            //var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="tableBtn">Show or Hide values</div><div class="innerStatus"></div><div class="children"></div></div></div>';
+            var statusItem = '<div id="{{ItemId}}" class="statusItem"><h2 id="name"></h2><div class="wrapStatus"><div class="innerStatus"></div><div class="children"></div></div></div>';
+            var tableItem = '<table cellspacing="0">{{Item.Values}}</table>';
+            var valueItem = '<tr><td class="tdKey">{{Radio}}{{Key}}</td><td class="{{status}}">{{Value}}</td></tr>';
+            var innerValueItem = '<table cellspacing="0" class="MultiValue"><tr><th>{{Radio}}{{Key}}</th></tr><tr><td class="{{status}}">{{Value}}</td></tr></table>';
+            var tout = null;
+            var plotData = {};
+            var chartValueId = "";
+            var statuses = [null, null];
+
+            function getItemById(items, id) {
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].id == id)
+                            return items[i];
+                    }
+                }
+            }
+            function getValueById(item, id) {
+                if (item && item.values)
+                    for (var i = 0; i < item.values.length; i++)
+                        if (item.values[i].id == id)
+                            return item.values[i];
+            }
+            function findItemById(items, id) {
+                if (items) {
+                    for (var i = 0; i < items.length; i++) {
+                        if (items[i].id == id) {
+                            return items[i];
+                        } else if (items[i].children.length > 0) {
+                            var value = findItemById(items[i].children);
+                            if (value != null)
+                                return value;
+                        }
+                    }
+                }
+                return null;
+            }
+            function removeOldItems(oldItems, newItems) {
+                if (oldItems == null || oldItems === undefined)
+                    oldItems = statuses[0] ? statuses[0].items : null;
+                if (newItems == null || newItems === undefined)
+                    newItems = statuses[1] ? statuses[1].items : null;
+                if (oldItems && newItems) {
+                    for (var i = 0; i < oldItems.length; i++) {
+                        var oldItem = oldItems[i];
+                        var newItem = findItemById(newItems, oldItem.id);
+                        if (newItem == null) {
+                            $("#" + oldItem.id).remove();
+                        } else if (oldItem.children && newItem.children) {
+                            removeOldItems(oldItem.children, newItem.children);
+                        }
+                    }
+                }
+            }
+            
+            function addItems(parentElement, items, depth, itemidx, oldItems)
+            {
+                depth++;
+                if (items) {
+                    var i;
+                    for (i = 0; i < items.length; i++) {
+                        var item = items[i];
+                        var oldItem = getItemById(oldItems, item.id);
+
+                        //Configure Item element
+                        var element = parentElement.children("#" + item.id);
+                        if (element.length === 0) {
+                            parentElement.append(statusItem.replace("{{ItemId}}", item.id));
+                            element = parentElement.children("#" + item.id);
+                            $(element).children("h2").on("click", function (sEvt) {
+                                $(sEvt.currentTarget).parent().children(".wrapStatus").toggle();
+                            });
+                        }
+                        if (depth == 0)
+                            element.removeClass("indent");
+                        else
+                            element.addClass("indent");
+                        element.find("#name").html(item.name);
+                        //***
+
+                        var htmlValues = [];
+                        for (var j = 0; j < item.values.length; j++) {
+                            var val = item.values[j];
+                            var oldVal = getValueById(oldItem, val.id);
+                            var status = "";
+                            switch (val.status) {
+                                case 1:
+                                    status = "good";
+                                    break;
+                                case 2:
+                                    status = "bad";
+                                    break;
+                                case 3:
+                                    status = "ugly";
+                                    break;
+                            }
+
+                            var htmlValue = "";
+                            if (val.value) {
+                                if (val.type == 1) {
+                                    htmlValue = val.value;
+                                    var nValue = parseFloat(val.value);
+                                    if (oldVal != null) {
+                                        var oValue = parseFloat(oldVal.value);
+                                        if (oValue != nValue) {
+                                            var diff = (nValue - oValue).toFixed(2);
+                                            if (diff < 0)
+                                                diff = '<span class="diff ugly">&nbsp;(' + diff + ')</span>';
+                                            else if (diff > 0)
+                                                diff = '<span class="diff good">&nbsp;(+' + diff + ')</span>';
+                                            htmlValue += diff;
+                                        }
+                                    }
+                                }
+                                else {
+                                    htmlValue = val.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                }
+                            } else if (val.type == 4 && val.values) {
+                                var htmlInnerValues = [];
+                                for (var k = 0; k < val.values.length; k++) {
+                                    var innerValue = val.values[k];
+                                    if (innerValue) {
+                                        var htmlInnerValue = "";
+                                        var innerStatus = "";
+                                        switch (innerValue.status) {
+                                            case 1:
+                                                innerStatus = "good";
+                                                break;
+                                            case 2:
+                                                innerStatus = "bad";
+                                                break;
+                                            case 3:
+                                                innerStatus = "ugly";
+                                                break;
+                                        }
+                                        if (innerValue.type == 1) {
+                                            htmlInnerValue = innerValue.value;
+                                            var nValue = parseFloat(innerValue.value);
+                                            if (oldVal && oldVal.values) {
+                                                var oldValValue = getValueById(oldVal, innerValue.id);
+                                                if (oldValValue) {
+                                                    var oValue = parseFloat(oldValValue.value);
+                                                    if (oValue != nValue) {
+                                                        var diff = (nValue - oValue).toFixed(2);
+                                                        if (diff < 0)
+                                                            diff = '<span class="diff ugly">&nbsp;(' + diff + ')</span>';
+                                                        else if (diff > 0)
+                                                            diff = '<span class="diff good">&nbsp;(+' + diff + ')</span>';
+                                                        htmlInnerValue += diff;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            if (innerValue.value)
+                                                htmlInnerValue = innerValue.value.replace(/(?:\r\n|\r|\n)/g, '<br />');
+                                            else
+                                                htmlInnerValue = "(null)";
+                                        }
+                                        htmlInnerValues.push(innerValueItem
+                                            .replace("{{Radio}}", innerValue.plot ? "<input type='radio' id='" + innerValue.id + "' name='chartValue' value='" + innerValue.name + "' />" : "")
+                                            .replace("{{Key}}", "<label for='" + innerValue.id + "'>" + innerValue.name + "</label>")
+                                            .replace("{{Value}}", htmlInnerValue)
+                                            .replace("{{status}}", innerStatus)
+                                        );
+                                    }
+                                }
+                                htmlValue = htmlInnerValues.join("");
+                            }
+                            else {
+                                htmlValue = "(null)";
+                            }
+
+                            htmlValues.push(valueItem
+                                .replace("{{Radio}}", val.plot ? "<input type='radio' id='" + val.id + "' name='chartValue' value='" + val.key + "' />" : "")
+                                .replace("{{Key}}", "<label for='" + val.id + "'>" + val.key + "</label>")
+                                .replace("{{Value}}", htmlValue)
+                                .replace("{{status}}", status)
+                            );
+                        }
+
+                        if (item.values.length > 0) {
+                            element.children(".wrapStatus").children(".innerStatus").html(tableItem.replace("{{Item.Values}}", htmlValues.join("")));
+                            $(element).children(".wrapStatus").children(".tableBtn").prop('onclick', null).off('click');
+                            $(element).children(".wrapStatus").children(".tableBtn").click(function (sEvt) {
+                                $(sEvt.currentTarget).parent().children(".innerStatus").toggle();
+                            });
+                        }
+
+                        if (item.children)
+                        {
+                            if (item.children.length == 0 || item.values.length == 0)
+                                $(element).children(".wrapStatus").children(".tableBtn").remove();
+                            else if (!$(element).children(".wrapStatus").children(".innerStatus").data("init")) {
+                                $(element).children(".wrapStatus").children(".innerStatus").show();
+                                $(element).children(".wrapStatus").children(".innerStatus").data("init", true);
+                            }
+
+                            if (item.children.length == 0 && item.values.length == 0) {
+                                $(element).children("h2").off("click");
+                                $(element).children("h2").css("cursor", "default");
+                                $(element).children("h2").css("background-color", "#222222");
+                                $(element).children("h2").css("font-size", "0.6em");
+                                $(element).children("h2").css("font-weight", "normal");
+                                $(element).children("h2").css("color", "#848484");
+                                $(element).children("h2").css("border-bottom", "0px");
+                                $(element).children("h2").css("font-style", "italic");
+                            }
+
+                            addItems(element.children(".wrapStatus").children(".children"), item.children, depth, itemidx + "_" + i, oldItem ? oldItem.children : null);
+                        }
+                        else
+                            $(element).children(".wrapStatus").children(".tableBtn").remove();
+                    }
+                }
+            }
+
+
+            function displayChart() {
+                if (chartValueId) {
+                    var plotValue = plotData[chartValueId];
+                    $("#chartTitle").text(plotValue.name);
+                    var cValues = plotValue.values;
+                    mChartData.labels = [];
+                    mChartData.datasets[0].data = null;
+                    var initial = 0;
+                    if (cValues.length > 0) initial = cValues[0];
+                    if (cValues.length < 50)
+                        cValues = new Array(50 - cValues.length).fill(initial).concat(cValues);
+                    for (var i = 0; i < cValues.length; i++) {
+                        mChartData.labels.push(parseInt(cValues[i]));
+                    }
+                    mChartData.datasets[0].data = cValues;
+                    $("#myChart").attr("style", "");
+                    myNewChart = new Chart(ctx).Line(mChartData, { });
+                }
+            }
+            function getPlotValues(items) {
+                if (items) {
+                    for (var j = 0; j < items.length; j++) {
+                        var item = items[j];
+                        getItemPlotValues(item, null);
+                    }
+                }
+            }
+            function getItemPlotValues(item, prevName) {
+                if (item) {
+                    var currentName = item.name;
+                    if (prevName)
+                        currentName = prevName + " - " + currentName;
+
+                    if (item.values) {
+                        for (var j = 0; j < item.values.length; j++) {
+                            var value = item.values[j];
+                            var valueName = currentName + " - " + value.key;
+                            if (value.plot) {
+                                var valueVal = parseFloat(value.value);
+                                if (plotData[value.id]) {
+                                    plotData[value.id].values.push(valueVal);
+                                    if (plotData[value.id].values.length == 50)
+                                        plotData[value.id].values.shift();
+                                }
+                                else
+                                    plotData[value.id] = { name: valueName, values: [valueVal] };
+
+                            } else if (value.values) {
+                                for (var x = 0; x < value.values.length; x++) {
+                                    var itemValue = value.values[x];
+                                    if (itemValue.plot) {
+                                        var itemValueVal = parseFloat(itemValue.value);
+                                        if (plotData[itemValue.id]) {
+                                            plotData[itemValue.id].values.push(itemValueVal);
+                                            if (plotData[itemValue.id].values.length == 50)
+                                                plotData[itemValue.id].values.shift();
+                                        }
+                                        else
+                                            plotData[itemValue.id] = { name: valueName + " - " + itemValue.name, values: [itemValueVal] };
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    if (item.children) {
+                        for (var j = 0; j < item.children.length; j++) {
+                            var child = item.children[j];
+                            getItemPlotValues(child, currentName);
+                        }
+                    }
+                }
+            }
+            function retrieveData() {
+                $.ajax({ url: '$JSONURL$', cache: false }).done(function (data) {
+                    statuses[0] = statuses[1];
+                    statuses[1] = data;
+                    getPlotValues(data.items);
+                    removeOldItems();
+
+                    if (data.applicationDisplayName) {
+                        $("#appName").html(data.applicationDisplayName + " (" + data.applicationName + ")");
+                        document.title = "Status: " + data.applicationDisplayName + " (" + data.applicationName + ")";
+                    } else {
+                        $("#appName").html(data.applicationName);
+                        document.title = "Status: " + data.applicationName;
+                    }
+                    $("#envMachine").html(data.environmentName + " - " + data.machineName);
+
+                    var date = moment(new Date(data.timestamp));
+                    $(".timestamp").html(date.format('dddd, D MMMM YYYY HH:mm:ss'));
+                    
+                    addItems($(".body"), data.items, -1, "", statuses[0] ? statuses[0].items : null);
+
+                    $("input[name='chartValue']").click(function (sEvt) {
+                        var target = $(sEvt.currentTarget);
+                        chartValueId = target.attr("id");
+                        displayChart();
+                    });
+
+                    if (chartValueId)
+                        $("[id='" + chartValueId + "']").click();
+                    else
+                        $("input[name='chartValue']").first().click();
+                }).always(function () {
+                    if (tout)
+                        clearTimeout(tout);
+                    if ($("#chkRefresh").prop("checked"))
+                        tout = setTimeout(retrieveData, 10000);
+                });
+            }
+            $(function () {
+                $("#btnReload").click(retrieveData);
+                $("#chkRefresh").click(function() {
+                    if ($("#chkRefresh").prop("checked"))
+                        retrieveData();
+                    else
+                        if (tout)
+                            clearTimeout(tout);
+                });
+            });
+            retrieveData();
+        </script>
+    </head>
+    <body>
+        <div class="head">
+            <div class="headLeft">
+                <h2 id="appName">Test</h2>
+                <div id="envMachine" class="clear">Test</div>
+            </div>
+            <div class="headRight">
+                <div class="timestamp"></div>
+                <h3 id="btnReload">Reload data </h3>
+                <h3>|</h3>
+                <h3><input type="checkbox" id="chkRefresh" value="1" checked/><label for="chkRefresh">&nbsp;Automatic Update</label></h3>
+            </div>
+            <div class="clear"></div>
+        </div>
+        <div class="charts">
+            <div id="chartTitle">WorkingSet</div>
+            <div class="chartsInner">
+                <canvas id="myChart"></canvas>
+            </div>
+            <div class="clear"></div>
+        </div>
+        <div class="body">
+        </div>
+        <script>
+            var ctx = document.getElementById("myChart").getContext("2d");
+            var mChartData = {
+                labels: [],
+                datasets: [
+                    {
+                        fillColor: "rgba(79, 177, 255, 0.25)",
+                        strokeColor: "#03a9f4",
+                        pointColor: "#01b0df",
+                        pointStrokeColor: "#fff",
+                        pointHighlightFill: "#fff",
+                        pointHighlightStroke: "rgba(151,187,205,1)",
+                        data: []
+                    }
+                ]
+            };
+            Chart.defaults.global.animation = false;
+            Chart.defaults.global.showTooltips = false;
+            //Chart.defaults.global.scaleBeginAtZero = true;
+            //Chart.defaults.global.scaleLabel = "";
+            var myNewChart = new Chart(ctx).Line(mChartData, { pointDot: false, datasetStroke: false });
+        </script>
+    </body>
+</html>

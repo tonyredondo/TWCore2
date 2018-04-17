@@ -86,7 +86,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            object value;
+            object value = null;
             try
             {
                 Stream = stream;
@@ -94,10 +94,13 @@ namespace TWCore.Serialization.NSerializer
                 if (stream.ReadByte() != DataBytesDefinition.Start)
                     throw new FormatException("The stream is not in NSerializer format.");
                 value = ReadValue(StreamReadByte());
+                while (StreamReadByte() != DataBytesDefinition.End)
+                {
+                }
             }
             catch(IOException)
             {
-                return null;
+                return value;
             }
             catch (Exception)
             {

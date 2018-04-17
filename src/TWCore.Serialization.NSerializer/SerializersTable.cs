@@ -763,6 +763,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     _paramObj[0] = value;
                     mTuple.Accessor(this, _paramObj);
+                    WriteByte(DataBytesDefinition.End);
                     return;
                 }
                 _objectCache.Set(value);

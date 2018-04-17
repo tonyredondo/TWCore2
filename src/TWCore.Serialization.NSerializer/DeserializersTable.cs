@@ -38,7 +38,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
         internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
-        private readonly DeserializerCache<Type> _typeCache = new DeserializerCache<Type>();
+        private readonly DeserializerCache<DeserializerMetadataOfTypeRuntime> _typeCache = new DeserializerCache<DeserializerMetadataOfTypeRuntime>();
         private readonly DeserializerCache<DateTimeOffset> _dateTimeOffsetCache = new DeserializerCache<DateTimeOffset>();
         private readonly DeserializerCache<DateTime> _dateTimeCache = new DeserializerCache<DateTime>();
         private readonly DeserializerCache<Guid> _guidCache = new DeserializerCache<Guid>();
@@ -52,7 +52,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
-        private readonly Dictionary<Type, DeserializerMetadataOfTypeRuntime> _metadataInTypes = new Dictionary<Type, DeserializerMetadataOfTypeRuntime>();
+        //private readonly Dictionary<Type, DeserializerMetadataOfTypeRuntime> _metadataInTypes = new Dictionary<Type, DeserializerMetadataOfTypeRuntime>();
         protected Stream Stream;
         protected BinaryReader Reader;
 
@@ -109,7 +109,6 @@ namespace TWCore.Serialization.NSerializer
             _stringCache32.Clear();
             _stringCache.Clear();
             _timespanCache.Clear();
-            _metadataInTypes.Clear();
             ObjectCache.Clear();
             _typeCache.Clear();
             Stream = null;
@@ -155,13 +154,11 @@ namespace TWCore.Serialization.NSerializer
                 var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                 var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                 metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-                _metadataInTypes[valueType] = metadata;
-                _typeCache.Set(valueType);
+                _typeCache.Set(metadata);
             }
             else if (type == DataBytesDefinition.RefType)
             {
-                var valueType = _typeCache.Get(StreamReadInt());
-                metadata = _metadataInTypes[valueType];
+                metadata = _typeCache.Get(StreamReadInt());
             }
             if (metadata.Descriptor.IsNSerializable)
             {
@@ -207,13 +204,11 @@ namespace TWCore.Serialization.NSerializer
                 var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                 var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                 metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-                _metadataInTypes[valueType] = metadata;
-                _typeCache.Set(valueType);
+                _typeCache.Set(metadata);
             }
             else if (type == DataBytesDefinition.RefType)
             {
-                var valueType = _typeCache.Get(StreamReadInt());
-                metadata = _metadataInTypes[valueType];
+                metadata = _typeCache.Get(StreamReadInt());
             }
             if (metadata.Descriptor.IsNSerializable)
             {

@@ -20,15 +20,17 @@ namespace TWCore.Serialization.NSerializer
 {
     public struct DeserializerMetadataOfTypeRuntime
     {
-        public DeserializerMetaDataOfType MetaDataOfType;
-        public bool EqualToDefinition;
+        public readonly DeserializerMetaDataOfType MetaDataOfType;
+        public readonly DeserializerTypeDescriptor Descriptor;
+        public readonly bool EqualToDefinition;
         
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DeserializerMetadataOfTypeRuntime(DeserializerMetaDataOfType metaDataOfType, bool equalToDefinition)
+        public DeserializerMetadataOfTypeRuntime(DeserializerMetaDataOfType metaDataOfType, DeserializerTypeDescriptor descriptor)
         {
             MetaDataOfType = metaDataOfType;
-            EqualToDefinition = equalToDefinition;
+            Descriptor = descriptor;
+            EqualToDefinition = metaDataOfType == descriptor.Metadata;
         }
         #endregion
     }

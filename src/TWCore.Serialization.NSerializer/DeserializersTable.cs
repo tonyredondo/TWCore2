@@ -52,7 +52,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
-        private readonly Dictionary<Type, DeserializerMetaDataOfType> _metadataInTypes = new Dictionary<Type, DeserializerMetaDataOfType>();
+        private readonly Dictionary<Type, DeserializerMetadataOfTypeRuntime> _metadataInTypes = new Dictionary<Type, DeserializerMetadataOfTypeRuntime>();
         protected Stream Stream;
         protected BinaryReader Reader;
 
@@ -129,8 +129,7 @@ namespace TWCore.Serialization.NSerializer
                 return mTuple.Accessor(this, _parameters);
             }
 
-            Type valueType = null;
-            DeserializerMetaDataOfType metadata = default;
+            DeserializerMetadataOfTypeRuntime metadata = default;
 
             if (type == DataBytesDefinition.TypeStart)
             {
@@ -148,30 +147,31 @@ namespace TWCore.Serialization.NSerializer
                 var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
                 var propertiesString = typeData.Substring(fsCol4 + 1);
 
-                valueType = Core.GetType(vTypeString);
+                var valueType = Core.GetType(vTypeString);
                 var isArray = isArrayString == "1";
                 var isList = isListString == "1";
                 var isDictionary = isDictionaryString == "1";
                 var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
-                metadata = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
+                var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
+                var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
+                metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
                 _metadataInTypes[valueType] = metadata;
                 _typeCache.Set(valueType);
             }
             else if (type == DataBytesDefinition.RefType)
             {
-                valueType = _typeCache.Get(StreamReadInt());
+                var valueType = _typeCache.Get(StreamReadInt());
                 metadata = _metadataInTypes[valueType];
             }
-            var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
-            if (descriptor.IsNSerializable)
+            if (metadata.Descriptor.IsNSerializable)
             {
-                var value = (INSerializable)descriptor.Activator();
-                value.Fill(this, metadata);
+                var value = (INSerializable)metadata.Descriptor.Activator();
+                value.Fill(this, metadata.MetaDataOfType);
                 return value;
             }
-            if (descriptor.Metadata == metadata)
-                return descriptor.DeserializeFunc(this);
-            return FillObject(descriptor, metadata);
+            if (metadata.EqualToDefinition)
+                return metadata.Descriptor.DeserializeFunc(this);
+            return FillObject(metadata.Descriptor, metadata.MetaDataOfType);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

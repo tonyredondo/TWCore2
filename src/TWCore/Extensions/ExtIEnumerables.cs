@@ -416,10 +416,10 @@ namespace TWCore
         public static IEnumerable Enumerate(this IEnumerable linqExpression)
         {
             if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
-            var bType = linqExpression.GetType().GetTypeInfo().BaseType;
-            if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
-                return (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
-            return linqExpression;
+            var lqType = linqExpression.GetType();
+            if (lqType.ReflectedType != typeof(Enumerable)) return linqExpression;
+            var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+            return (IList) Activator.CreateInstance(type, linqExpression);
         }
         /// <summary>
         /// Enumerate the Linq expression to a IList
@@ -431,10 +431,10 @@ namespace TWCore
         public static IEnumerable<T> Enumerate<T>(this IEnumerable<T> linqExpression)
         {
             if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
-            var bType = linqExpression.GetType().GetTypeInfo().BaseType;
-            if (bType != null && bType.Namespace == "System.Linq" && bType.Name == "Iterator`1")
-                return (IList<T>)Activator.CreateInstance(typeof(List<>).MakeGenericType(bType.GenericTypeArguments[0]), linqExpression);
-            return linqExpression;
+            var lqType = linqExpression.GetType();
+            if (lqType.ReflectedType != typeof(Enumerable)) return linqExpression;
+            var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+            return (IList<T>)Activator.CreateInstance(type, linqExpression);
         }
         #endregion
 

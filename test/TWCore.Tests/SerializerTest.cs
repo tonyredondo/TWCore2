@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
@@ -31,12 +32,12 @@ namespace TWCore.Tests
             Core.Log.Warning("Starting Serializer TEST");
 
             //
-            TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
-            //TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
-            var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
-            var sObjectValue = sObject.GetValue();
-            RunTest(sObjectValue, 500, false);
-            RunTest(sObjectValue, 500, true);
+            //TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
+            ////TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
+            //var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
+            //var sObjectValue = sObject.GetValue();
+            //RunTest(sObjectValue, 500, false);
+            //RunTest(sObjectValue, 500, true);
             //
 
             var sTest = new STest
@@ -95,6 +96,10 @@ namespace TWCore.Tests
                 ["Value2"] = 2,
                 ["Value3"] = 3,
             };
+
+            var valSer = collection.Where((item, i) => i % 2 == 0);
+            var valSerData = valSer.SerializeToNBinary();
+            var valSer2 = valSerData.DeserializeFromNBinary<object>();
 
             RunTest(collection[0], 100_000, false);
         }

@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -747,6 +748,16 @@ namespace TWCore.Serialization.NSerializer
                     WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
+                if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
+                {
+                    var lqType = value.GetType();
+                    if (lqType.ReflectedType == typeof(Enumerable))
+                    {
+                        var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+                        value = (IList) Activator.CreateInstance(type, iEValue);
+                        valueType = value.GetType();
+                    }
+                }
                 if (WriteValues.TryGetValue(valueType, out var mTuple))
                 {
                     _paramObj[0] = value;
@@ -800,6 +811,15 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
+            {
+                var lqType = value.GetType();
+                if (lqType.ReflectedType == typeof(Enumerable))
+                {
+                    var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+                    value = (IList)Activator.CreateInstance(type, iEValue);
+                }
+            }
             var vType = value.GetType();
             if (WriteValues.TryGetValue(vType, out var mTuple))
             {
@@ -829,6 +849,7 @@ namespace TWCore.Serialization.NSerializer
                 descriptor.SerializeAction(value, this);
             WriteByte(DataBytesDefinition.TypeEnd);
         }
+
         #endregion
 
         #region Private Write Methods

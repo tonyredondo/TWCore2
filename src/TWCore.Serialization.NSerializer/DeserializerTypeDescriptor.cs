@@ -35,7 +35,6 @@ namespace TWCore.Serialization.NSerializer
         public bool IsNSerializable;
         public DeserializerMetaDataOfType Metadata;
         public DeserializeDelegate DeserializeFunc;
-        //public Expression<DeserializeDelegate> Lambda;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerTypeDescriptor(Type type)
@@ -77,11 +76,6 @@ namespace TWCore.Serialization.NSerializer
             var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ?? ctors[0];
 
             var serExpressions = new List<Expression>();
-
-            //var infoBasicMethod = typeof(Diagnostics.Log.ILogEngine).GetMethod("InfoBasic", new[] {typeof(string)});
-            //var coreLogProp = Expression.Property(null, typeof(Core), "Log");
-            //serExpressions.Add(Expression.Call(coreLogProp, infoBasicMethod, Expression.Constant("START - " + type.FullName)));
-
             var varExpressions = new List<ParameterExpression>();
             //
             var table = Expression.Parameter(typeof(DeserializersTable), "table");
@@ -101,7 +95,6 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
                 var elementType = type.GetElementType();
-                //var methodName = "ReadValue";
                 var methodName = "InnerReadValue";
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
                     methodName = propMethod.Name;
@@ -127,11 +120,9 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Assign(capacity, Expression.Call(table, DeserializersTable.StreamReadIntMethod)));
                 serExpressions.Add(Expression.Assign(value, Expression.New(type)));
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
-                //serExpressions.Add(Expression.Call(coreLogProp, infoBasicMethod, Expression.Call(capacity, "ToString", Type.EmptyTypes)));
 
                 var addMethod = type.GetMethod("Add", iListType.GenericTypeArguments);
                 var elementType = iListType.GenericTypeArguments[0];
-                //var methodName = "ReadValue";
                 var methodName = "InnerReadValue";
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
                     methodName = propMethod.Name;
@@ -213,8 +204,6 @@ namespace TWCore.Serialization.NSerializer
             }
 
             serExpressions.Add(Expression.Call(table, "StreamReadByte", Type.EmptyTypes));
-            //serExpressions.Add(Expression.Call(coreLogProp, infoBasicMethod, Expression.Constant("END - " + type.FullName)));
-
             serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
             serExpressions.Add(Expression.Label(returnTarget, value));
 

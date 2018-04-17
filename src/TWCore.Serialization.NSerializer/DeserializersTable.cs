@@ -93,11 +93,7 @@ namespace TWCore.Serialization.NSerializer
                 Reader = new BinaryReader(stream, Encoding.UTF8, true);
                 if (stream.ReadByte() != DataBytesDefinition.Start)
                     throw new FormatException("The stream is not in NSerializer format.");
-
                 value = ReadValue(StreamReadByte());
-                while (StreamReadByte() != DataBytesDefinition.End)
-                {
-                }
             }
             catch(IOException)
             {
@@ -550,7 +546,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<bool>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadBool(StreamReadByte());
+                value.Add(ReadBool(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.CharList, ReturnType = typeof(List<char>))]
@@ -564,7 +560,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<char>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadChar(StreamReadByte());
+                value.Add(StreamReadChar(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeOffsetList, ReturnType = typeof(List<DateTimeOffset>))]
@@ -578,7 +574,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<DateTimeOffset>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTimeOffset(StreamReadByte());
+                value.Add(ReadDateTimeOffset(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DateTimeList, ReturnType = typeof(List<DateTime>))]
@@ -592,7 +588,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<DateTime>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadDateTime(StreamReadByte());
+                value.Add(ReadDateTime(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.GuidList, ReturnType = typeof(List<Guid>))]
@@ -606,7 +602,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<Guid>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadGuid(StreamReadByte());
+                value.Add(StreamReadGuid(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DecimalList, ReturnType = typeof(List<decimal>))]
@@ -620,7 +616,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<decimal>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadDecimal(StreamReadByte());
+                value.Add(StreamReadDecimal(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.DoubleList, ReturnType = typeof(List<double>))]
@@ -634,7 +630,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<double>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadDouble(StreamReadByte());
+                value.Add(StreamReadDouble(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.FloatList, ReturnType = typeof(List<float>))]
@@ -648,7 +644,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<float>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadFloat(StreamReadByte());
+                value.Add(StreamReadFloat(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.LongList, ReturnType = typeof(List<long>))]
@@ -662,7 +658,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<long>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadLong(StreamReadByte());
+                value.Add(StreamReadLong(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ULongList, ReturnType = typeof(List<ulong>))]
@@ -676,7 +672,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<ulong>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadULong(StreamReadByte());
+                value.Add(StreamReadULong(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.IntList, ReturnType = typeof(List<int>))]
@@ -690,7 +686,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<int>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadInt(StreamReadByte());
+                value.Add(StreamReadInt(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UIntList, ReturnType = typeof(List<uint>))]
@@ -704,7 +700,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<uint>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadUInt(StreamReadByte());
+                value.Add(StreamReadUInt(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.ShortList, ReturnType = typeof(List<short>))]
@@ -718,7 +714,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<short>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadShort(StreamReadByte());
+                value.Add(StreamReadShort(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.UShortList, ReturnType = typeof(List<ushort>))]
@@ -732,7 +728,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<ushort>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadUShort(StreamReadByte());
+                value.Add(StreamReadUShort(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.SByteList, ReturnType = typeof(List<sbyte>))]
@@ -746,7 +742,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<sbyte>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = StreamReadSByte(StreamReadByte());
+                value.Add(StreamReadSByte(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.StringList, ReturnType = typeof(List<string>))]
@@ -760,7 +756,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<string>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadString(StreamReadByte());
+                value.Add(ReadString(StreamReadByte()));
             return value;
         }
         [DeserializerMethod(DataBytesDefinition.TimeSpanList, ReturnType = typeof(List<TimeSpan>))]
@@ -774,7 +770,7 @@ namespace TWCore.Serialization.NSerializer
             var value = new List<TimeSpan>(length);
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
-                value[i] = ReadTimeSpan(StreamReadByte());
+                value.Add(ReadTimeSpan(StreamReadByte()));
             return value;
         }
         #endregion

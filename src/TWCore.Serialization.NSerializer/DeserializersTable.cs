@@ -86,33 +86,44 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(Stream stream)
         {
-            Stream = stream;
-            Reader = new BinaryReader(stream, Encoding.UTF8, true);
-            if (stream.ReadByte() != DataBytesDefinition.Start)
-                throw new FormatException("The stream is not in NSerializer format.");
-
-            var value = ReadValue(StreamReadByte());
-            while (StreamReadByte() != DataBytesDefinition.End)
+            object value;
+            try
             {
-            }
+                Stream = stream;
+                Reader = new BinaryReader(stream, Encoding.UTF8, true);
+                if (stream.ReadByte() != DataBytesDefinition.Start)
+                    throw new FormatException("The stream is not in NSerializer format.");
 
-            _dateTimeOffsetCache.Clear();
-            _dateTimeCache.Clear();
-            _guidCache.Clear();
-            _decimalCache.Clear();
-            _doubleCache.Clear();
-            _floatCache.Clear();
-            _longCache.Clear();
-            _uLongCache.Clear();
-            _stringCache8.Clear();
-            _stringCache16.Clear();
-            _stringCache32.Clear();
-            _stringCache.Clear();
-            _timespanCache.Clear();
-            ObjectCache.Clear();
-            _typeCache.Clear();
-            Stream = null;
-            Reader = null;
+                value = ReadValue(StreamReadByte());
+                while (StreamReadByte() != DataBytesDefinition.End)
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+            finally
+            {
+                _dateTimeOffsetCache.Clear();
+                _dateTimeCache.Clear();
+                _guidCache.Clear();
+                _decimalCache.Clear();
+                _doubleCache.Clear();
+                _floatCache.Clear();
+                _longCache.Clear();
+                _uLongCache.Clear();
+                _stringCache8.Clear();
+                _stringCache16.Clear();
+                _stringCache32.Clear();
+                _stringCache.Clear();
+                _timespanCache.Clear();
+                ObjectCache.Clear();
+                _typeCache.Clear();
+                Stream = null;
+                Reader = null;
+            }
             return value;
         }
 

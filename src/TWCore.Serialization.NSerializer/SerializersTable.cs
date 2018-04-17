@@ -46,7 +46,6 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
         internal static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
 
-        private readonly object locker = new object();
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
@@ -737,21 +736,17 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(Stream stream, object value, Type valueType)
         {
-            lock (locker)
+            try
             {
                 Stream = stream;
                 Writer = new BinaryWriter(stream, Encoding.UTF8, true);
                 WriteByte(DataBytesDefinition.Start);
-
-                if (_objectCache.Count > 0)
-                    Debugger.Break();
 
                 if (value == null)
                 {
                     WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
-
                 if (WriteValues.TryGetValue(valueType, out var mTuple))
                 {
                     _paramObj[0] = value;
@@ -768,6 +763,14 @@ namespace TWCore.Serialization.NSerializer
                     descriptor.SerializeAction(value, this);
 
                 WriteDefByte(DataBytesDefinition.TypeEnd, DataBytesDefinition.End);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+            finally
+            {
                 _dateTimeOffsetCache.Clear();
                 _dateTimeCache.Clear();
                 _guidCache.Clear();

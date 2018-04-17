@@ -106,7 +106,7 @@ namespace TWCore.Tests
             var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
-            var binaryformatterSerializer = new BinaryFormatterSerializer { Compressor = compressor };
+            //var binaryformatterSerializer = new BinaryFormatterSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
@@ -115,14 +115,14 @@ namespace TWCore.Tests
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
-            Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binaryformatterSerializer));
+            //Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binaryformatterSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
             SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
-            SerializerProcess("BinaryFormatter", value, vType, times, binaryformatterSerializer, memStream);
+            //SerializerProcess("BinaryFormatter", value, vType, times, binaryformatterSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);

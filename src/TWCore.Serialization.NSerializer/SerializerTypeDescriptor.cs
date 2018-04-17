@@ -43,8 +43,10 @@ namespace TWCore.Serialization.NSerializer
         public SerializerTypeDescriptor(Type type)
         {
             var ifaces = type.GetInterfaces();
-            var isIList = ifaces.Any(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
-            var isIDictionary = ifaces.Any(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+            var iListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIList = iListType != null;
+            var isIDictionary = iDictionaryType != null;
             var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
             {
                 if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
@@ -112,7 +114,7 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (IsList)
             {
-                var argTypes = type.GenericTypeArguments;
+                var argTypes = iListType.GenericTypeArguments;
                 var itemMethod = !type.IsGenericType ? 
                     SerializersTable.InternalWriteObjectValueMInfo : 
                     SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
@@ -135,7 +137,7 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (IsDictionary)
             {
-                var argTypes = type.GenericTypeArguments;
+                var argTypes = iDictionaryType.GenericTypeArguments;
                 var keyMember = !type.IsGenericType ? 
                     SerializersTable.InternalWriteObjectValueMInfo : 
                     SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;

@@ -101,6 +101,9 @@ namespace TWCore.Tests
             var valSerData = valSer.SerializeToNBinary();
             var valSer2 = valSerData.DeserializeFromNBinary<object>();
 
+            var valSerData2 = valSer.SerializeToWBinary();
+            var valSer3 = valSerData2.DeserializeFromWBinary<object>();
+
             RunTest(collection[0], 100_000, false);
         }
 

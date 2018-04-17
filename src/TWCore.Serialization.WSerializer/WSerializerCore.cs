@@ -171,287 +171,380 @@ namespace TWCore.Serialization.WSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(Stream stream, object value, Type type = null)
         {
-            if (value != null)
+            SerializersTable serializersTable = null;
+            Stack<SerializerScope> scopeStack = null;
+            try
             {
-                value = ResolveLinqEnumerables(value);
-                type = value?.GetType();
-            }
-            var serializersTable = SerializersTable.GetTable(Mode);
-            var stringSerializer = serializersTable.StringSerializer;
-            var numberSerializer = serializersTable.NumberSerializer;
-            var cacheTuple = CachePool.New();
-            var typesCache = cacheTuple.TypeCache;
-            var objectCache = cacheTuple.ObjectCache;
-
-            var plan = GetSerializerPlan(serializersTable, type);
-            var scopeStack = StackPool.New();
-            var scope = new SerializerScope(plan, value);
-            scopeStack.Push(scope);
-
-            var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
-            bw.Write(DataType.FileStart);
-            bw.Write((byte)_mode);
-            do
-            {
-                #region Get the Current Scope
-                if (scope.Index >= scope.PlanLength)
+                if (value != null)
                 {
-                    scopeStack.Pop();
-                    scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
-                    continue;
+                    value = ResolveLinqEnumerables(value);
+                    type = value?.GetType();
                 }
-                #endregion
 
-                var item = scope.Next();
-                //var tab = new string(' ', _scopeStack.Count * 4);
-                //Core.Log.Verbose(tab + "PlanType: " + item.PlanType);
+                serializersTable = SerializersTable.GetTable(Mode);
+                var stringSerializer = serializersTable.StringSerializer;
+                var numberSerializer = serializersTable.NumberSerializer;
+                var cacheTuple = CachePool.New();
+                var typesCache = cacheTuple.TypeCache;
+                var objectCache = cacheTuple.ObjectCache;
 
-                #region Switch Plan Type
+                var plan = GetSerializerPlan(serializersTable, type);
+                scopeStack = StackPool.New();
+                var scope = new SerializerScope(plan, value);
+                scopeStack.Push(scope);
 
-                switch (item.PlanType)
+                var bw = new BinaryWriter(stream, DefaultUtf8Encoding, true);
+                bw.Write(DataType.FileStart);
+                bw.Write((byte) _mode);
+                do
                 {
-                    #region WriteBytes
+                    #region Get the Current Scope
 
-                    case SerializerPlanItemType.WriteBytes:
-                        var bValues = item.ValueBytes;
-                        //debugText += " = " + bValue;
-                        bw.Write(bValues);
+                    if (scope.Index >= scope.PlanLength)
+                    {
+                        scopeStack.Pop();
+                        scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                         continue;
+                    }
 
                     #endregion
 
-                    #region TypeStart
+                    var item = scope.Next();
+                    //var tab = new string(' ', _scopeStack.Count * 4);
+                    //Core.Log.Verbose(tab + "PlanType: " + item.PlanType);
 
-                    case SerializerPlanItemType.TypeStart:
-                        var oidx = objectCache.SerializerGet(scope.Value);
-                        if (oidx > -1)
-                        {
-                            //debugText += " = Write ObjReference " + _oidx;
-                            #region Object Reference
-                            switch (oidx)
-                            {
-                                case 0:
-                                    bw.Write(DataType.RefObjectByte0);
-                                    break;
-                                case 1:
-                                    bw.Write(DataType.RefObjectByte1);
-                                    break;
-                                case 2:
-                                    bw.Write(DataType.RefObjectByte2);
-                                    break;
-                                case 3:
-                                    bw.Write(DataType.RefObjectByte3);
-                                    break;
-                                case 4:
-                                    bw.Write(DataType.RefObjectByte4);
-                                    break;
-                                case 5:
-                                    bw.Write(DataType.RefObjectByte5);
-                                    break;
-                                case 6:
-                                    bw.Write(DataType.RefObjectByte6);
-                                    break;
-                                case 7:
-                                    bw.Write(DataType.RefObjectByte7);
-                                    break;
-                                case 8:
-                                    bw.Write(DataType.RefObjectByte8);
-                                    break;
-                                case 9:
-                                    bw.Write(DataType.RefObjectByte9);
-                                    break;
-                                case 10:
-                                    bw.Write(DataType.RefObjectByte10);
-                                    break;
-                                case 11:
-                                    bw.Write(DataType.RefObjectByte11);
-                                    break;
-                                case 12:
-                                    bw.Write(DataType.RefObjectByte12);
-                                    break;
-                                case 13:
-                                    bw.Write(DataType.RefObjectByte13);
-                                    break;
-                                case 14:
-                                    bw.Write(DataType.RefObjectByte14);
-                                    break;
-                                case 15:
-                                    bw.Write(DataType.RefObjectByte15);
-                                    break;
-                                case 16:
-                                    bw.Write(DataType.RefObjectByte16);
-                                    break;
-                                default:
-                                    if (oidx <= byte.MaxValue)
-                                        Write(bw, DataType.RefObjectByte, (byte) oidx);
-                                    else
-                                        Write(bw, DataType.RefObjectUShort, (ushort) oidx);
-                                    break;
-                            }
-                            #endregion
-                            scopeStack.Pop();
-                            scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
-                        }
-                        else
-                        {
-                            var tStartItem = (SerializerPlanItem.TypeStart)item;
-                            if (!tStartItem.IsArray)
-                                objectCache.SerializerSet(scope.Value);
+                    #region Switch Plan Type
 
-                            var typeIdx = typesCache.SerializerGet(tStartItem.Type);
-                            if (typeIdx < 0)
+                    switch (item.PlanType)
+                    {
+                        #region WriteBytes
+
+                        case SerializerPlanItemType.WriteBytes:
+                            var bValues = item.ValueBytes;
+                            //debugText += " = " + bValue;
+                            bw.Write(bValues);
+                            continue;
+
+                        #endregion
+
+                        #region TypeStart
+
+                        case SerializerPlanItemType.TypeStart:
+                            var oidx = objectCache.SerializerGet(scope.Value);
+                            if (oidx > -1)
                             {
-                                if (_knownTypes.Contains(tStartItem.Type))
+                                //debugText += " = Write ObjReference " + _oidx;
+
+                                #region Object Reference
+
+                                switch (oidx)
                                 {
-                                    bw.Write(DataType.KnownType);
-                                    bw.Write(GlobalKnownTypes[tStartItem.Type]);
+                                    case 0:
+                                        bw.Write(DataType.RefObjectByte0);
+                                        break;
+                                    case 1:
+                                        bw.Write(DataType.RefObjectByte1);
+                                        break;
+                                    case 2:
+                                        bw.Write(DataType.RefObjectByte2);
+                                        break;
+                                    case 3:
+                                        bw.Write(DataType.RefObjectByte3);
+                                        break;
+                                    case 4:
+                                        bw.Write(DataType.RefObjectByte4);
+                                        break;
+                                    case 5:
+                                        bw.Write(DataType.RefObjectByte5);
+                                        break;
+                                    case 6:
+                                        bw.Write(DataType.RefObjectByte6);
+                                        break;
+                                    case 7:
+                                        bw.Write(DataType.RefObjectByte7);
+                                        break;
+                                    case 8:
+                                        bw.Write(DataType.RefObjectByte8);
+                                        break;
+                                    case 9:
+                                        bw.Write(DataType.RefObjectByte9);
+                                        break;
+                                    case 10:
+                                        bw.Write(DataType.RefObjectByte10);
+                                        break;
+                                    case 11:
+                                        bw.Write(DataType.RefObjectByte11);
+                                        break;
+                                    case 12:
+                                        bw.Write(DataType.RefObjectByte12);
+                                        break;
+                                    case 13:
+                                        bw.Write(DataType.RefObjectByte13);
+                                        break;
+                                    case 14:
+                                        bw.Write(DataType.RefObjectByte14);
+                                        break;
+                                    case 15:
+                                        bw.Write(DataType.RefObjectByte15);
+                                        break;
+                                    case 16:
+                                        bw.Write(DataType.RefObjectByte16);
+                                        break;
+                                    default:
+                                        if (oidx <= byte.MaxValue)
+                                            Write(bw, DataType.RefObjectByte, (byte) oidx);
+                                        else
+                                            Write(bw, DataType.RefObjectUShort, (ushort) oidx);
+                                        break;
                                 }
-                                else
-                                {
-                                    #region TypeStart write
-                                    bw.Write(DataType.TypeStart);
-                                    stringSerializer.WriteValue(bw, tStartItem.TypeAssembly);
-                                    stringSerializer.WriteValue(bw, tStartItem.TypeNamespace);
-                                    stringSerializer.WriteValue(bw, tStartItem.TypeName);
-                                    numberSerializer.WriteValue(bw, tStartItem.Quantity);
-                                    for (var i = 0; i < tStartItem.Quantity; i++)
-                                    {
-                                        switch (tStartItem.DTypes[i])
-                                        {
-                                            case DataType.Unknown:
-                                                stringSerializer.WriteValue(bw, tStartItem.TypeAssemblies[i]);
-                                                stringSerializer.WriteValue(bw, tStartItem.TypeNamespaces[i]);
-                                                stringSerializer.WriteValue(bw, tStartItem.TypeNames[i]);
-                                                break;
-                                            default:
-                                                bw.Write(tStartItem.DTypes[i]);
-                                                break;
-                                        }
-                                    }
-                                    numberSerializer.WriteValue(bw, tStartItem.Properties.Length);
-                                    for (var i = 0; i < tStartItem.Properties.Length; i++)
-                                        stringSerializer.WriteValue(bw, tStartItem.Properties[i]);
-                                    #endregion
-                                }
-                                typesCache.SerializerSet(tStartItem.Type);
+
+                                #endregion
+
+                                scopeStack.Pop();
+                                scope = (scopeStack.Count > 0) ? scopeStack.Peek() : null;
                             }
                             else
                             {
-                                switch (typeIdx)
+                                var tStartItem = (SerializerPlanItem.TypeStart) item;
+                                if (!tStartItem.IsArray)
+                                    objectCache.SerializerSet(scope.Value);
+
+                                var typeIdx = typesCache.SerializerGet(tStartItem.Type);
+                                if (typeIdx < 0)
                                 {
-                                    case 0: bw.Write(DataType.TypeRefByte0); break;
-                                    case 1: bw.Write(DataType.TypeRefByte1); break;
-                                    case 2: bw.Write(DataType.TypeRefByte2); break;
-                                    case 3: bw.Write(DataType.TypeRefByte3); break;
-                                    case 4: bw.Write(DataType.TypeRefByte4); break;
-                                    case 5: bw.Write(DataType.TypeRefByte5); break;
-                                    case 6: bw.Write(DataType.TypeRefByte6); break;
-                                    case 7: bw.Write(DataType.TypeRefByte7); break;
-                                    case 8: bw.Write(DataType.TypeRefByte8); break;
-                                    case 9: bw.Write(DataType.TypeRefByte9); break;
-                                    case 10: bw.Write(DataType.TypeRefByte10); break;
-                                    case 11: bw.Write(DataType.TypeRefByte11); break;
-                                    case 12: bw.Write(DataType.TypeRefByte12); break;
-                                    case 13: bw.Write(DataType.TypeRefByte13); break;
-                                    case 14: bw.Write(DataType.TypeRefByte14); break;
-                                    case 15: bw.Write(DataType.TypeRefByte15); break;
-                                    case 16: bw.Write(DataType.TypeRefByte16); break;
-                                    case 17: bw.Write(DataType.TypeRefByte17); break;
-                                    case 18: bw.Write(DataType.TypeRefByte18); break;
-                                    case 19: bw.Write(DataType.TypeRefByte19); break;
-                                    case 20: bw.Write(DataType.TypeRefByte20); break;
-                                    case 21: bw.Write(DataType.TypeRefByte21); break;
-                                    case 22: bw.Write(DataType.TypeRefByte22); break;
-                                    case 23: bw.Write(DataType.TypeRefByte23); break;
-                                    case 24: bw.Write(DataType.TypeRefByte24); break;
-                                    default:
-                                        if (typeIdx <= byte.MaxValue)
-                                            Write(bw, DataType.TypeRefByte, (byte) typeIdx);
-                                        else
-                                            Write(bw, DataType.TypeRefUShort, (ushort) typeIdx);
-                                        break;
-                                }
-                            }
-                            //debugText += " = {0} {1},{2} [{3}]".ApplyFormat(tStartItem.TypeNamespace, tStartItem.TypeName, tStartItem.TypeAssembly, tStartItem.TypeNames.Join(","));
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region ListStart
-
-                    case SerializerPlanItemType.ListStart:
-                        if (scope.Value != null)
-                        {
-                            var lType = (SerializerPlanItem.ListStart)item;
-                            var iList = (IList)scope.Value;
-                            var iListCount = iList.Count;
-                            if (iListCount > 0)
-                            {
-                                bw.Write(DataType.ListStart);
-                                var valueTypeSerializer = serializersTable.GetSerializerByValueType(lType.InnerType);
-                                if (valueTypeSerializer != null)
-                                {
-                                    for (var i = 0; i < iListCount; i++)
+                                    if (_knownTypes.Contains(tStartItem.Type))
                                     {
-                                        var itemList = iList[i];
-                                        if (itemList == null)
-                                            bw.Write(DataType.ValueNull);
-                                        else
-                                            valueTypeSerializer.Write(bw, itemList);
+                                        bw.Write(DataType.KnownType);
+                                        bw.Write(GlobalKnownTypes[tStartItem.Type]);
                                     }
-                                }
-                                else if (iListCount == 1)
-                                {
-                                    if (iList[0] == null)
-                                        bw.Write(DataType.ValueNull);
                                     else
                                     {
-                                        var itemList = iList[0];
-                                        valueTypeSerializer = serializersTable.GetSerializerByValueType(itemList.GetType());
-                                        if (valueTypeSerializer != null)
+                                        #region TypeStart write
+
+                                        bw.Write(DataType.TypeStart);
+                                        stringSerializer.WriteValue(bw, tStartItem.TypeAssembly);
+                                        stringSerializer.WriteValue(bw, tStartItem.TypeNamespace);
+                                        stringSerializer.WriteValue(bw, tStartItem.TypeName);
+                                        numberSerializer.WriteValue(bw, tStartItem.Quantity);
+                                        for (var i = 0; i < tStartItem.Quantity; i++)
                                         {
-                                            valueTypeSerializer.Write(bw, itemList);
+                                            switch (tStartItem.DTypes[i])
+                                            {
+                                                case DataType.Unknown:
+                                                    stringSerializer.WriteValue(bw, tStartItem.TypeAssemblies[i]);
+                                                    stringSerializer.WriteValue(bw, tStartItem.TypeNamespaces[i]);
+                                                    stringSerializer.WriteValue(bw, tStartItem.TypeNames[i]);
+                                                    break;
+                                                default:
+                                                    bw.Write(tStartItem.DTypes[i]);
+                                                    break;
+                                            }
                                         }
-                                        else
-                                        {
-                                            var aPlan = new SerializerPlanItem.RuntimeValue[1];
-                                            itemList = ResolveLinqEnumerables(itemList);
-                                            var itemType = itemList?.GetType() ?? lType.InnerType;
-                                            aPlan[0] = new SerializerPlanItem.RuntimeValue(itemType, itemType != lType.InnerType ? serializersTable.GetSerializerByValueType(itemType)?.GetType() : null, itemList);
-                                            scope = new SerializerScope(aPlan, scope.Type);
-                                            scopeStack.Push(scope);
-                                        }
+
+                                        numberSerializer.WriteValue(bw, tStartItem.Properties.Length);
+                                        for (var i = 0; i < tStartItem.Properties.Length; i++)
+                                            stringSerializer.WriteValue(bw, tStartItem.Properties[i]);
+
+                                        #endregion
                                     }
+
+                                    typesCache.SerializerSet(tStartItem.Type);
                                 }
                                 else
                                 {
-                                    if (lType.InnerType == typeof(object) && iList[0] != null)
+                                    switch (typeIdx)
                                     {
-                                        var canValueType = true;
-                                        var vType = iList[0].GetType();
-                                        valueTypeSerializer = serializersTable.GetSerializerByValueType(vType);
-                                        if (valueTypeSerializer != null)
+                                        case 0:
+                                            bw.Write(DataType.TypeRefByte0);
+                                            break;
+                                        case 1:
+                                            bw.Write(DataType.TypeRefByte1);
+                                            break;
+                                        case 2:
+                                            bw.Write(DataType.TypeRefByte2);
+                                            break;
+                                        case 3:
+                                            bw.Write(DataType.TypeRefByte3);
+                                            break;
+                                        case 4:
+                                            bw.Write(DataType.TypeRefByte4);
+                                            break;
+                                        case 5:
+                                            bw.Write(DataType.TypeRefByte5);
+                                            break;
+                                        case 6:
+                                            bw.Write(DataType.TypeRefByte6);
+                                            break;
+                                        case 7:
+                                            bw.Write(DataType.TypeRefByte7);
+                                            break;
+                                        case 8:
+                                            bw.Write(DataType.TypeRefByte8);
+                                            break;
+                                        case 9:
+                                            bw.Write(DataType.TypeRefByte9);
+                                            break;
+                                        case 10:
+                                            bw.Write(DataType.TypeRefByte10);
+                                            break;
+                                        case 11:
+                                            bw.Write(DataType.TypeRefByte11);
+                                            break;
+                                        case 12:
+                                            bw.Write(DataType.TypeRefByte12);
+                                            break;
+                                        case 13:
+                                            bw.Write(DataType.TypeRefByte13);
+                                            break;
+                                        case 14:
+                                            bw.Write(DataType.TypeRefByte14);
+                                            break;
+                                        case 15:
+                                            bw.Write(DataType.TypeRefByte15);
+                                            break;
+                                        case 16:
+                                            bw.Write(DataType.TypeRefByte16);
+                                            break;
+                                        case 17:
+                                            bw.Write(DataType.TypeRefByte17);
+                                            break;
+                                        case 18:
+                                            bw.Write(DataType.TypeRefByte18);
+                                            break;
+                                        case 19:
+                                            bw.Write(DataType.TypeRefByte19);
+                                            break;
+                                        case 20:
+                                            bw.Write(DataType.TypeRefByte20);
+                                            break;
+                                        case 21:
+                                            bw.Write(DataType.TypeRefByte21);
+                                            break;
+                                        case 22:
+                                            bw.Write(DataType.TypeRefByte22);
+                                            break;
+                                        case 23:
+                                            bw.Write(DataType.TypeRefByte23);
+                                            break;
+                                        case 24:
+                                            bw.Write(DataType.TypeRefByte24);
+                                            break;
+                                        default:
+                                            if (typeIdx <= byte.MaxValue)
+                                                Write(bw, DataType.TypeRefByte, (byte) typeIdx);
+                                            else
+                                                Write(bw, DataType.TypeRefUShort, (ushort) typeIdx);
+                                            break;
+                                    }
+                                }
+
+                                //debugText += " = {0} {1},{2} [{3}]".ApplyFormat(tStartItem.TypeNamespace, tStartItem.TypeName, tStartItem.TypeAssembly, tStartItem.TypeNames.Join(","));
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region ListStart
+
+                        case SerializerPlanItemType.ListStart:
+                            if (scope.Value != null)
+                            {
+                                var lType = (SerializerPlanItem.ListStart) item;
+                                var iList = (IList) scope.Value;
+                                var iListCount = iList.Count;
+                                if (iListCount > 0)
+                                {
+                                    bw.Write(DataType.ListStart);
+                                    var valueTypeSerializer =
+                                        serializersTable.GetSerializerByValueType(lType.InnerType);
+                                    if (valueTypeSerializer != null)
+                                    {
+                                        for (var i = 0; i < iListCount; i++)
                                         {
-                                            for (var i = 1; i < iListCount; i++)
+                                            var itemList = iList[i];
+                                            if (itemList == null)
+                                                bw.Write(DataType.ValueNull);
+                                            else
+                                                valueTypeSerializer.Write(bw, itemList);
+                                        }
+                                    }
+                                    else if (iListCount == 1)
+                                    {
+                                        if (iList[0] == null)
+                                            bw.Write(DataType.ValueNull);
+                                        else
+                                        {
+                                            var itemList = iList[0];
+                                            valueTypeSerializer =
+                                                serializersTable.GetSerializerByValueType(itemList.GetType());
+                                            if (valueTypeSerializer != null)
                                             {
-                                                var itemList = iList[i];
-                                                if (itemList != null && itemList.GetType() == vType) continue;
-                                                canValueType = false;
-                                                break;
+                                                valueTypeSerializer.Write(bw, itemList);
+                                            }
+                                            else
+                                            {
+                                                var aPlan = new SerializerPlanItem.RuntimeValue[1];
+                                                itemList = ResolveLinqEnumerables(itemList);
+                                                var itemType = itemList?.GetType() ?? lType.InnerType;
+                                                aPlan[0] = new SerializerPlanItem.RuntimeValue(itemType,
+                                                    itemType != lType.InnerType
+                                                        ? serializersTable.GetSerializerByValueType(itemType)?.GetType()
+                                                        : null, itemList);
+                                                scope = new SerializerScope(aPlan, scope.Type);
+                                                scopeStack.Push(scope);
                                             }
                                         }
-                                        else
-                                            canValueType = false;
-                                        if (canValueType)
+                                    }
+                                    else
+                                    {
+                                        if (lType.InnerType == typeof(object) && iList[0] != null)
                                         {
-                                            for (var i = 0; i < iListCount; i++)
+                                            var canValueType = true;
+                                            var vType = iList[0].GetType();
+                                            valueTypeSerializer = serializersTable.GetSerializerByValueType(vType);
+                                            if (valueTypeSerializer != null)
                                             {
-                                                var itemList = iList[i];
-                                                if (itemList == null)
-                                                    bw.Write(DataType.ValueNull);
-                                                else
-                                                    valueTypeSerializer.Write(bw, itemList);
+                                                for (var i = 1; i < iListCount; i++)
+                                                {
+                                                    var itemList = iList[i];
+                                                    if (itemList != null && itemList.GetType() == vType) continue;
+                                                    canValueType = false;
+                                                    break;
+                                                }
+                                            }
+                                            else
+                                                canValueType = false;
+
+                                            if (canValueType)
+                                            {
+                                                for (var i = 0; i < iListCount; i++)
+                                                {
+                                                    var itemList = iList[i];
+                                                    if (itemList == null)
+                                                        bw.Write(DataType.ValueNull);
+                                                    else
+                                                        valueTypeSerializer.Write(bw, itemList);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
+                                                for (var i = 0; i < iListCount; i++)
+                                                {
+                                                    var itemList = iList[i];
+                                                    if (itemList != null)
+                                                        itemList = ResolveLinqEnumerables(itemList);
+                                                    var itemType = itemList?.GetType() ?? lType.InnerType;
+                                                    aPlan[i] = new SerializerPlanItem.RuntimeValue(itemType,
+                                                        itemType != lType.InnerType
+                                                            ? serializersTable.GetSerializerByValueType(itemType)
+                                                                ?.GetType()
+                                                            : null, itemList);
+                                                }
+
+                                                scope = new SerializerScope(aPlan, scope.Type);
+                                                scopeStack.Push(scope);
                                             }
                                         }
                                         else
@@ -473,223 +566,233 @@ namespace TWCore.Serialization.WSerializer
                                             scopeStack.Push(scope);
                                         }
                                     }
+                                }
+                                else
+                                {
+                                    scope.ChangeScopePlan(EndPlan);
+                                }
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region DictionaryStart
+
+                        case SerializerPlanItemType.DictionaryStart:
+                            if (scope.Value != null)
+                            {
+                                var dictioItem = (SerializerPlanItem.DictionaryStart) item;
+                                var iDictio = (IDictionary) scope.Value;
+                                if (iDictio.Count > 0)
+                                {
+                                    bw.Write(DataType.DictionaryStart);
+                                    if (dictioItem.KeySerializerType != null && dictioItem.ValueSerializerType != null)
+                                    {
+                                        foreach (var keyValue in iDictio.Keys)
+                                        {
+                                            if (keyValue == null)
+                                                bw.Write(DataType.ValueNull);
+                                            else
+                                                serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
+
+                                            var valueValue = iDictio[keyValue];
+                                            if (valueValue == null)
+                                                bw.Write(DataType.ValueNull);
+                                            else
+                                                serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
+                                        }
+                                    }
                                     else
                                     {
-                                        var aPlan = new SerializerPlanItem.RuntimeValue[iListCount];
-                                        for (var i = 0; i < iListCount; i++)
+                                        var aPlan = new SerializerPlanItem.RuntimeValue[iDictio.Count * 2];
+                                        var aIdx = 0;
+                                        foreach (var keyValue in iDictio.Keys)
                                         {
-                                            var itemList = iList[i];
-                                            if (itemList != null)
-                                                itemList = ResolveLinqEnumerables(itemList);
-                                            var itemType = itemList?.GetType() ?? lType.InnerType;
-                                            aPlan[i] = new SerializerPlanItem.RuntimeValue(itemType,
-                                                itemType != lType.InnerType
-                                                    ? serializersTable.GetSerializerByValueType(itemType)?.GetType()
-                                                    : null, itemList);
+                                            var kv = ResolveLinqEnumerables(keyValue);
+                                            var valueValue = iDictio[keyValue];
+                                            valueValue = ResolveLinqEnumerables(valueValue);
+                                            aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(
+                                                kv?.GetType() ?? dictioItem.KeyType, dictioItem.KeySerializerType, kv);
+                                            aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(
+                                                valueValue?.GetType() ?? dictioItem.ValueType,
+                                                dictioItem.ValueSerializerType, valueValue);
                                         }
 
                                         scope = new SerializerScope(aPlan, scope.Type);
                                         scopeStack.Push(scope);
                                     }
                                 }
-                            }
-                            else
-                            {
-                                scope.ChangeScopePlan(EndPlan);
-                            }
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region DictionaryStart
-
-                    case SerializerPlanItemType.DictionaryStart:
-                        if (scope.Value != null)
-                        {
-                            var dictioItem = (SerializerPlanItem.DictionaryStart)item;
-                            var iDictio = (IDictionary)scope.Value;
-                            if (iDictio.Count > 0)
-                            {
-                                bw.Write(DataType.DictionaryStart);
-                                if (dictioItem.KeySerializerType != null && dictioItem.ValueSerializerType != null)
-                                {
-                                    foreach (var keyValue in iDictio.Keys)
-                                    {
-                                        if (keyValue == null)
-                                            bw.Write(DataType.ValueNull);
-                                        else
-                                            serializersTable.Write(dictioItem.KeySerializerType, bw, keyValue);
-
-                                        var valueValue = iDictio[keyValue];
-                                        if (valueValue == null)
-                                            bw.Write(DataType.ValueNull);
-                                        else
-                                            serializersTable.Write(dictioItem.ValueSerializerType, bw, valueValue);
-                                    }
-                                }
                                 else
                                 {
-                                    var aPlan = new SerializerPlanItem.RuntimeValue[iDictio.Count * 2];
-                                    var aIdx = 0;
-                                    foreach (var keyValue in iDictio.Keys)
-                                    {
-                                        var kv = ResolveLinqEnumerables(keyValue);
-                                        var valueValue = iDictio[keyValue];
-                                        valueValue = ResolveLinqEnumerables(valueValue);
-                                        aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(kv?.GetType() ?? dictioItem.KeyType, dictioItem.KeySerializerType, kv);
-                                        aPlan[aIdx++] = new SerializerPlanItem.RuntimeValue(
-                                            valueValue?.GetType() ?? dictioItem.ValueType,dictioItem.ValueSerializerType, valueValue);
-                                    }
-
-                                    scope = new SerializerScope(aPlan, scope.Type);
-                                    scopeStack.Push(scope);
+                                    scope.ChangeScopePlan(EndPlan);
                                 }
                             }
-                            else
-                            {
-                                scope.ChangeScopePlan(EndPlan);
-                            }
-                        }
-                        continue;
 
-                    #endregion
-
-                    #region KeyValueStart
-
-                    case SerializerPlanItemType.KeyValueStart:
-                        if (scope.Value != null)
-                        {
-                            var kvpItem = (SerializerPlanItem.KeyValueStart)item;
-                            bw.Write(DataType.KeyValueStart);
-                            if (kvpItem.KeyDType != DataType.Unknown)
-                                bw.Write(kvpItem.KeyDType);
-                            else
-                            {
-                                stringSerializer.WriteValue(bw, kvpItem.KeyTypeAssembly);
-                                stringSerializer.WriteValue(bw, kvpItem.KeyTypeNamespace);
-                                stringSerializer.WriteValue(bw, kvpItem.KeyTypeName);
-                            }
-                            if (kvpItem.ValueDType != DataType.Unknown)
-                                bw.Write(kvpItem.ValueDType);
-                            else
-                            {
-                                stringSerializer.WriteValue(bw, kvpItem.ValueTypeAssembly);
-                                stringSerializer.WriteValue(bw, kvpItem.ValueTypeNamespace);
-                                stringSerializer.WriteValue(bw, kvpItem.ValueTypeName);
-                            }
-                            //debugText += " = {0},{1} | {2},{3}".ApplyFormat(kvpItem.KeyTypeName, kvpItem.KeyTypeAssembly, kvpItem.ValueTypeName, kvpItem.ValueTypeAssembly);
-                            var keyVal = kvpItem.Key.GetValue(scope.Value);
-                            var valueVal = kvpItem.Value.GetValue(scope.Value);
-                            keyVal = ResolveLinqEnumerables(keyVal);
-                            valueVal = ResolveLinqEnumerables(valueVal);
-                            var aPlan = new SerializerPlanItem.RuntimeValue[2];
-                            aPlan[0] = new SerializerPlanItem.RuntimeValue(keyVal?.GetType() ?? kvpItem.KeyType, kvpItem.KeySerializerType, keyVal);
-                            aPlan[1] = new SerializerPlanItem.RuntimeValue(valueVal?.GetType() ?? kvpItem.ValueType, kvpItem.ValueSerializerType, valueVal);
-                            scope = new SerializerScope(aPlan, scope.Type);
-                            scopeStack.Push(scope);
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region TupleStart
-
-                    case SerializerPlanItemType.TupleStart:
-                        if (scope.Value != null)
-                        {
-                            var tupleItem = (SerializerPlanItem.TupleStart)item;
-                            var length = tupleItem.Quantity;
-                            bw.Write(DataType.TupleStart);
-                            var aPlan = new SerializerPlanItem.RuntimeValue[length];
-                            for (var i = 0; i < length; i++)
-                            {
-                                var val = tupleItem.Props[i].GetValue(scope.Value);
-                                val = ResolveLinqEnumerables(val);
-                                var ser = tupleItem.SerializerTypes[i];
-                                aPlan[i] = new SerializerPlanItem.RuntimeValue(val?.GetType() ?? tupleItem.Types[i], ser, val);
-                            }
-                            scope = new SerializerScope(aPlan, scope.Type);
-                            scopeStack.Push(scope);
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region PropertyValue
-
-                    case SerializerPlanItemType.PropertyValue:
-                        var cItem = (SerializerPlanItem.PropertyValue)item;
-                        //debugText += " = " + cItem.Name + ", " + cItem.Type;
-                        var pVal = cItem.Property.GetValue(scope.Value);
-                        if (pVal == cItem.DefaultValue)
-                            bw.Write(DataType.ValueNull);
-                        else
-                            serializersTable.Write(cItem.SerializerType, bw, pVal);
-                        continue;
-
-                    #endregion
-
-                    #region PropertyReference
-
-                    case SerializerPlanItemType.PropertyReference:
-                        var rItem = (SerializerPlanItem.PropertyReference)item;
-                        //debugText += " = " + rItem.Name;
-                        var rVal = rItem.Property.GetValue(scope.Value);
-                        if (rVal == null)
-                            bw.Write(DataType.ValueNull);
-                        else
-                        {
-                            rVal = ResolveLinqEnumerables(rVal);
-                            scope = new SerializerScope(GetSerializerPlan(serializersTable, rVal?.GetType() ?? rItem.Type), rVal);
-                            scopeStack.Push(scope);
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region Value
-
-                    case SerializerPlanItemType.Value:
-                        var vItem = (SerializerPlanItem.ValueItem)item;
-                        //debugText += " (" + vItem.Type + ")";
-                        if (scope.Value == null)
-                            bw.Write(DataType.ValueNull);
-                        else if (vItem.SerializerType != null)
-                            serializersTable.Write(vItem.SerializerType, bw, scope.Value);
-                        else
-                        {
-                            scope = new SerializerScope(GetSerializerPlan(serializersTable, scope.Value?.GetType() ?? vItem.Type), scope.Value);
-                            scopeStack.Push(scope);
-                        }
-                        continue;
-
-                    #endregion
-
-                    #region RuntimeValue
-
-                    case SerializerPlanItemType.RuntimeValue:
-                        var rvItem = (SerializerPlanItem.RuntimeValue)item;
-                        //debugText += " (" + rvItem.Type + ")";
-                        if (rvItem.Value == null)
-                            bw.Write(DataType.ValueNull);
-                        else if (rvItem.SerializerType != null)
-                            serializersTable.Write(rvItem.SerializerType, bw, rvItem.Value);
-                        else
-                        {
-                            scope = new SerializerScope(GetSerializerPlan(serializersTable, rvItem.Value?.GetType() ?? rvItem.Type), rvItem.Value);
-                            scopeStack.Push(scope);
-                        }
-                        continue;
+                            continue;
 
                         #endregion
-                }
 
-                #endregion
+                        #region KeyValueStart
 
-            } while (scope != null);
-            SerializersTable.ReturnTable(serializersTable);
-            StackPool.Store(scopeStack);
+                        case SerializerPlanItemType.KeyValueStart:
+                            if (scope.Value != null)
+                            {
+                                var kvpItem = (SerializerPlanItem.KeyValueStart) item;
+                                bw.Write(DataType.KeyValueStart);
+                                if (kvpItem.KeyDType != DataType.Unknown)
+                                    bw.Write(kvpItem.KeyDType);
+                                else
+                                {
+                                    stringSerializer.WriteValue(bw, kvpItem.KeyTypeAssembly);
+                                    stringSerializer.WriteValue(bw, kvpItem.KeyTypeNamespace);
+                                    stringSerializer.WriteValue(bw, kvpItem.KeyTypeName);
+                                }
+
+                                if (kvpItem.ValueDType != DataType.Unknown)
+                                    bw.Write(kvpItem.ValueDType);
+                                else
+                                {
+                                    stringSerializer.WriteValue(bw, kvpItem.ValueTypeAssembly);
+                                    stringSerializer.WriteValue(bw, kvpItem.ValueTypeNamespace);
+                                    stringSerializer.WriteValue(bw, kvpItem.ValueTypeName);
+                                }
+
+                                //debugText += " = {0},{1} | {2},{3}".ApplyFormat(kvpItem.KeyTypeName, kvpItem.KeyTypeAssembly, kvpItem.ValueTypeName, kvpItem.ValueTypeAssembly);
+                                var keyVal = kvpItem.Key.GetValue(scope.Value);
+                                var valueVal = kvpItem.Value.GetValue(scope.Value);
+                                keyVal = ResolveLinqEnumerables(keyVal);
+                                valueVal = ResolveLinqEnumerables(valueVal);
+                                var aPlan = new SerializerPlanItem.RuntimeValue[2];
+                                aPlan[0] = new SerializerPlanItem.RuntimeValue(keyVal?.GetType() ?? kvpItem.KeyType,
+                                    kvpItem.KeySerializerType, keyVal);
+                                aPlan[1] = new SerializerPlanItem.RuntimeValue(valueVal?.GetType() ?? kvpItem.ValueType,
+                                    kvpItem.ValueSerializerType, valueVal);
+                                scope = new SerializerScope(aPlan, scope.Type);
+                                scopeStack.Push(scope);
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region TupleStart
+
+                        case SerializerPlanItemType.TupleStart:
+                            if (scope.Value != null)
+                            {
+                                var tupleItem = (SerializerPlanItem.TupleStart) item;
+                                var length = tupleItem.Quantity;
+                                bw.Write(DataType.TupleStart);
+                                var aPlan = new SerializerPlanItem.RuntimeValue[length];
+                                for (var i = 0; i < length; i++)
+                                {
+                                    var val = tupleItem.Props[i].GetValue(scope.Value);
+                                    val = ResolveLinqEnumerables(val);
+                                    var ser = tupleItem.SerializerTypes[i];
+                                    aPlan[i] = new SerializerPlanItem.RuntimeValue(val?.GetType() ?? tupleItem.Types[i],
+                                        ser, val);
+                                }
+
+                                scope = new SerializerScope(aPlan, scope.Type);
+                                scopeStack.Push(scope);
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region PropertyValue
+
+                        case SerializerPlanItemType.PropertyValue:
+                            var cItem = (SerializerPlanItem.PropertyValue) item;
+                            //debugText += " = " + cItem.Name + ", " + cItem.Type;
+                            var pVal = cItem.Property.GetValue(scope.Value);
+                            if (pVal == cItem.DefaultValue)
+                                bw.Write(DataType.ValueNull);
+                            else
+                                serializersTable.Write(cItem.SerializerType, bw, pVal);
+                            continue;
+
+                        #endregion
+
+                        #region PropertyReference
+
+                        case SerializerPlanItemType.PropertyReference:
+                            var rItem = (SerializerPlanItem.PropertyReference) item;
+                            //debugText += " = " + rItem.Name;
+                            var rVal = rItem.Property.GetValue(scope.Value);
+                            if (rVal == null)
+                                bw.Write(DataType.ValueNull);
+                            else
+                            {
+                                rVal = ResolveLinqEnumerables(rVal);
+                                scope = new SerializerScope(
+                                    GetSerializerPlan(serializersTable, rVal?.GetType() ?? rItem.Type), rVal);
+                                scopeStack.Push(scope);
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region Value
+
+                        case SerializerPlanItemType.Value:
+                            var vItem = (SerializerPlanItem.ValueItem) item;
+                            //debugText += " (" + vItem.Type + ")";
+                            if (scope.Value == null)
+                                bw.Write(DataType.ValueNull);
+                            else if (vItem.SerializerType != null)
+                                serializersTable.Write(vItem.SerializerType, bw, scope.Value);
+                            else
+                            {
+                                scope = new SerializerScope(
+                                    GetSerializerPlan(serializersTable, scope.Value?.GetType() ?? vItem.Type),
+                                    scope.Value);
+                                scopeStack.Push(scope);
+                            }
+
+                            continue;
+
+                        #endregion
+
+                        #region RuntimeValue
+
+                        case SerializerPlanItemType.RuntimeValue:
+                            var rvItem = (SerializerPlanItem.RuntimeValue) item;
+                            //debugText += " (" + rvItem.Type + ")";
+                            if (rvItem.Value == null)
+                                bw.Write(DataType.ValueNull);
+                            else if (rvItem.SerializerType != null)
+                                serializersTable.Write(rvItem.SerializerType, bw, rvItem.Value);
+                            else
+                            {
+                                scope = new SerializerScope(
+                                    GetSerializerPlan(serializersTable, rvItem.Value?.GetType() ?? rvItem.Type),
+                                    rvItem.Value);
+                                scopeStack.Push(scope);
+                            }
+
+                            continue;
+
+                        #endregion
+                    }
+
+                    #endregion
+
+                } while (scope != null);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+            finally
+            {
+                SerializersTable.ReturnTable(serializersTable);
+                StackPool.Store(scopeStack);
+            }
         }
         #endregion
 
@@ -828,7 +931,7 @@ namespace TWCore.Serialization.WSerializer
                     if (isIList)
                     {
                         var ifaces = typeInfo.ImplementedInterfaces;
-                        var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                        var ilist = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
                         if (ilist != null)
                         {
                             Type innerType = null;
@@ -860,7 +963,7 @@ namespace TWCore.Serialization.WSerializer
                     if (isIDictionary)
                     {
                         var ifaces = typeInfo.ImplementedInterfaces;
-                        var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                        var idictio = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                         if (idictio != null)
                         {
                             //KeyValye Type
@@ -1396,7 +1499,7 @@ namespace TWCore.Serialization.WSerializer
                 var ifaces = typeInfo.ImplementedInterfaces.ToArray();
 
 
-                var ilist = ifaces.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                var ilist = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
                 if (ilist != null)
                 {
                     Type innerType = null;
@@ -1420,7 +1523,7 @@ namespace TWCore.Serialization.WSerializer
                     tinfo.InnerTypes = new[] { innerType };
                 }
 
-                var idictio = ifaces.FirstOrDefault(i => i == typeof(IDictionary) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>)));
+                var idictio = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                 if (idictio != null)
                 {
                     tinfo.IsIDictionary = true;

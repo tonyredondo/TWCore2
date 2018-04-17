@@ -4,6 +4,7 @@ using TWCore.Cache.Storages.IO;
 using TWCore.Net.RPC.Server.Transports;
 using TWCore.Net.RPC.Server.Transports.Default;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
@@ -16,7 +17,7 @@ namespace TWCore.Tests
     /// <inheritdoc />
     public class CacheServerTest : ContainerParameterService
     {
-        private static ISerializer GlobalSerializer = new WBinarySerializer();
+        private static ISerializer GlobalSerializer = new NBinarySerializer();
 
         public CacheServerTest() : base("cacheservertest", "Cache server test")
         {

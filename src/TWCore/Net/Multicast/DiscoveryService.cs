@@ -278,45 +278,53 @@ namespace TWCore.Net.Multicast
         #region Private Methods
         private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
-            var serObj = SerializedObject.FromSubArray(e.Data);
-            if (!(serObj?.GetValue() is List<RegisteredService> lstRegisteredService)) return;
-            if (lstRegisteredService == null) return;
-
-            foreach (var rService in lstRegisteredService)
+            try
             {
-                try
-                {
-                    var received = new ReceivedService
-                    {
-                        ServiceId = rService.ServiceId,
-                        Category = rService.Category,
-                        Name = rService.Name,
-                        Description = rService.Description,
-                        MachineName = rService.MachineName,
-                        ApplicationName = rService.ApplicationName,
-                        FrameworkVersion = rService.FrameworkVersion,
-                        EnvironmentName = rService.EnvironmentName,
-                        Data = rService.Data,
-                        Addresses = new[] { e.Address }
-                    };
-                    bool exist;
-                    lock (ReceivedServices)
-                    {
-                        exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
-                        if (exist)
-                            received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct().ToArray();
-                        ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
-                    }
+                var serObj = SerializedObject.FromSubArray(e.Data);
+                if (serObj == null) return;
+                if (!(serObj.GetValue() is List<RegisteredService> lstRegisteredService)) return;
 
-                    var eArgs = new EventArgs<ReceivedService>(received);
-                    if (!exist)
-                        OnNewServiceReceived?.Invoke(sender, eArgs);
-                    OnServiceReceived?.Invoke(sender, eArgs);
-                }
-                catch (Exception)
+                foreach (var rService in lstRegisteredService)
                 {
-                    //
+                    try
+                    {
+                        var received = new ReceivedService
+                        {
+                            ServiceId = rService.ServiceId,
+                            Category = rService.Category,
+                            Name = rService.Name,
+                            Description = rService.Description,
+                            MachineName = rService.MachineName,
+                            ApplicationName = rService.ApplicationName,
+                            FrameworkVersion = rService.FrameworkVersion,
+                            EnvironmentName = rService.EnvironmentName,
+                            Data = rService.Data,
+                            Addresses = new[] {e.Address}
+                        };
+                        bool exist;
+                        lock (ReceivedServices)
+                        {
+                            exist = ReceivedServices.TryRemove(received.ServiceId, out var oldReceived);
+                            if (exist)
+                                received.Addresses = received.Addresses.Concat(oldReceived.Addresses).Distinct()
+                                    .ToArray();
+                            ReceivedServices.TryAdd(received.ServiceId, received, ServiceTimeout);
+                        }
+
+                        var eArgs = new EventArgs<ReceivedService>(received);
+                        if (!exist)
+                            OnNewServiceReceived?.Invoke(sender, eArgs);
+                        OnServiceReceived?.Invoke(sender, eArgs);
+                    }
+                    catch (Exception)
+                    {
+                        //
+                    }
                 }
+            }
+            catch(Exception)
+            {
+                //
             }
         }
         private static async Task SendThreadAsync()

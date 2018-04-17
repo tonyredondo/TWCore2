@@ -24,6 +24,7 @@ using TWCore.Diagnostics.Status.Transports;
 using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -37,7 +38,7 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
-            SerializerManager.DefaultBinarySerializer = new WBinarySerializer();
+            SerializerManager.DefaultBinarySerializer = new NBinarySerializer();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>

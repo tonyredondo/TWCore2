@@ -91,10 +91,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Messaging.NATS", "sr
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Reflection", "src\TWCore.Reflection\TWCore.Reflection.csproj", "{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.NSerializer", "src\TWCore.Serialization.NSerializer\TWCore.Serialization.NSerializer.csproj", "{B43D6F91-F848-43F0-A210-31E61C08A58D}"
+EndProject
 Global
-	GlobalSection(Performance) = preSolution
-		HasPerformanceSessions = true
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -248,6 +247,10 @@ Global
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B43D6F91-F848-43F0-A210-31E61C08A58D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -290,9 +293,13 @@ Global
 		{3B821E18-1C5B-4DAD-9CE9-D3DD1C096914} = {B83306E0-118A-4F00-B7ED-2D8EF4F9ECE8}
 		{34F217BF-01D9-4125-A639-6454305B5564} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{B43D6F91-F848-43F0-A210-31E61C08A58D} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}
+	EndGlobalSection
+	GlobalSection(Performance) = preSolution
+		HasPerformanceSessions = true
 	EndGlobalSection
 	GlobalSection(Performance) = preSolution
 		HasPerformanceSessions = true

@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
+using TWCore.Compression;
 using TWCore.Serialization;
+using TWCore.Serialization.MsgPack;
+using TWCore.Serialization.NSerializer;
+using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -24,6 +29,15 @@ namespace TWCore.Tests
         protected override void OnHandler(ParameterHandlerInfo info)
         {
             Core.Log.Warning("Starting Serializer TEST");
+
+            //
+            TWCore.Reflection.AssemblyResolverManager.RegisterDomain(new[] { @"C:\AGSW_GIT\Travel\build\Agsw\Engines\Offer\Service" });
+            //TWCore.Reflection.AssemblyResolverManager.GetAssemblyResolver().app
+            var sObject = SerializedObject.FromFileAsync("c:\\temp\\test.sobj").WaitAndResults();
+            var sObjectValue = sObject.GetValue();
+            RunTest(sObjectValue, 500, false);
+            RunTest(sObjectValue, 500, true);
+            //
 
             var sTest = new STest
             {
@@ -63,177 +77,136 @@ namespace TWCore.Tests
                 collection.Add(colSTest);
             }
 
-
             var lt = new List<STest>
             {
                 new STest { FirstName = "Name1" , LastName = "LName1" , Age = 11 },
                 new STest2 { FirstName = "Name2" , LastName = "LName2", Age = 20, New = "This is a test" }
             };
 
+            var lt2 = new List<Test3>
+            {
+                new Test3 { Values = new List<int> {2, 3, 4, 5} },
+                new Test3 { Values = new List<int> {10, 11, 12, 13} }
+            };
+
+            var dct = new Dictionary<string, int>
+            {
+                ["Value1"] = 1,
+                ["Value2"] = 2,
+                ["Value3"] = 3,
+            };
+
+            RunTest(collection[0], 100_000, false);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void RunTest(object value, int times, bool useGZip)
+        {
+            var vType = value?.GetType() ?? typeof(object);
+            var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
-            
+            var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
+            //var binaryformatterSerializer = new BinaryFormatterSerializer { Compressor = compressor };
+            var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
+            var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
+
+            Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
+            Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
-            Core.Log.InfoBasic("\tJson Bytes Count: {0}", collection[0].SerializeToJsonBytes().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tMsgPack Bytes Count: {0}", collection[0].SerializeToMsgPack().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tBinary Formatter Bytes Count: {0}", collection[0].SerializeToBinFormatter().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", collection[0].SerializeToWBinary().Count.ToReadableBytes().Text);
-            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", collection[0].SerializeToPWBinary().Count.ToReadableBytes().Text);
-            
-            Core.Log.InfoBasic("By time (100000 times):");
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("JSON SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToJson(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("JSON DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromJson<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
-
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("MESSAGEPACK SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToMsgPack(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("MESSAGEPACK DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromMsgPack<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
-
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("BINARY FORMATTER SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToBinFormatter(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("BINARY FORMATTER DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromBinFormatter<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
-
-            
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("WBinary SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToWBinary(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("WBinary DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromWBinary<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
-
-            
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("Portable WBinary SERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    collection[i % 10000].SerializeToPWBinary(memStream);
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("Portable WBinary DESERIALIZER"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromPWBinary<List<STest>>();
-                    memStream.Position = 0;
-                }
-            }
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("Portable WBinary DESERIALIZER (WITH NO MODEL)"))
-            {
-                for (var i = 0; i < 100000; i++)
-                {
-                    memStream.DeserializeFromPWBinary(null);
-                    memStream.Position = 0;
-                }
-            }
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Thread.Sleep(1000);
-            using (Watch.Create("Object Cloner"))
-            {
-                for (var i = 0; i < 100000; i++)
-                    collection[i % 10000].DeepClone();
-            }
-
+            Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
+            //Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binaryformatterSerializer));
+            Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
+            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
+            Core.Log.WriteEmptyLine();
+            Core.Log.InfoBasic("By Times: {0}", times);
+            SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            //SerializerProcess("BinaryFormatter", value, vType, times, binaryformatterSerializer, memStream);
+            SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
+            SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
+            SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
             Console.ReadLine();
+        }
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string SerializerSizeProcess(object value, Type valueType, ISerializer serializer)
+        {
+            var memStream = new MemoryStream();
+            serializer.Serialize(value, valueType, memStream);
+            memStream.Position = 0;
+            var obj = serializer.Deserialize(memStream, valueType);
+            return memStream.Length.ToReadableBytes().Text;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void SerializerProcess(string name, object value, Type valueType, int times, ISerializer serializer, MemoryStream memStream)
+        {
+            double totalValue;
+            memStream.Position = 0;
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1500);
+            using (var w = Watch.Create(name + " SERIALIZER"))
+            {
+                for (var i = 0; i < times; i++)
+                {
+                    serializer.Serialize(value, valueType, memStream);
+                    memStream.Position = 0;
+                }
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+            Core.Log.InfoBasic("\t" + name + " SERIALIZER - Average Time: {0}ms", totalValue / times);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Thread.Sleep(1500);
+            using (var w = Watch.Create(name + " DESERIALIZER"))
+            {
+                for (var i = 0; i < times; i++)
+                {
+                    serializer.Deserialize(memStream, valueType);
+                    memStream.Position = 0;
+                }
+                totalValue = w.GlobalElapsedMilliseconds;
+            }
+            Core.Log.InfoBasic("\t"+ name + " DESERIALIZER - Average Time: {0}ms", totalValue / times);
+            Thread.Sleep(1000);
+            Core.Log.WriteEmptyLine();
         }
     }
 
     [Serializable]
-    public class STest
+    public class STest //: INSerializable
     {
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Age { get; set; }
         public STest Brother { get; set; }
+
+        //void INSerializable.Serialize(SerializersTable table)
+        //{
+        //    table.WriteValue(FirstName);
+        //    table.WriteValue(LastName);
+        //    table.WriteValue(Age);
+        //    table.WriteGenericValue(Brother);
+        //}
     }
     [Serializable]
-    public class STest2 : STest
+    public class STest2 : STest//, INSerializable
     {
         public string New { get; set; }
+
+        //void INSerializable.Serialize(SerializersTable table)
+        //{
+        //    table.WriteValue(FirstName);
+        //    table.WriteValue(LastName);
+        //    table.WriteValue(Age);
+        //    table.WriteGenericValue(Brother);
+        //    table.WriteValue(New);
+        //}
+    }
+
+    public class Test3
+    {
+        public List<int> Values { get; set; }
     }
 }

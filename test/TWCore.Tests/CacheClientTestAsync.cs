@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using TWCore.Cache.Client;
 using TWCore.Net.RPC.Client.Transports.Default;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable InconsistentNaming
@@ -30,7 +31,7 @@ namespace TWCore.Tests
 {
     public class CacheClientTestAsync : ContainerParameterServiceAsync
     {
-        private static ISerializer GlobalSerializer = new WBinarySerializer();
+        private static ISerializer GlobalSerializer = new NBinarySerializer();
 
 
         public CacheClientTestAsync() : base("cacheclienttest", "Cache Client test")

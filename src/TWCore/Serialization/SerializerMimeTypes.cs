@@ -43,5 +43,9 @@ namespace TWCore.Serialization
         /// Json mime type
         /// </summary>
         public const string Json = "application/json";
+        /// <summary>
+        /// NSerializer binary mime type
+        /// </summary>
+        public const string NBinary = "application/n-binary";
     }
 }

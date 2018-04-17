@@ -434,6 +434,10 @@
       <Project>{f3a2d508-4dea-4d19-9d47-3b4de2d81149}</Project>
       <Name>TWCore.Serialization.MsgPack</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\src\TWCore.Serialization.NSerializer\TWCore.Serialization.NSerializer.csproj">
+      <Project>{b43d6f91-f848-43f0-a210-31e61c08a58d}</Project>
+      <Name>TWCore.Serialization.NSerializer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj">
       <Project>{705a32b5-cbcb-45e4-a6b4-1bddaa427e51}</Project>
       <Name>TWCore.Serialization.PWSerializer</Name>

@@ -262,6 +262,7 @@ namespace TWCore.Net.Multicast
                         return;
                     var udpReceiveResult = ((Task<UdpReceiveResult>) whenAnyTask).Result;
                     var rcvEndpoint = udpReceiveResult.RemoteEndPoint;
+                    if (rcvEndpoint == null) continue;
                     var datagram = udpReceiveResult.Buffer;
                     if (datagram.Length < 22)
                         continue;

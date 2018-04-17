@@ -174,6 +174,7 @@ namespace TWCore.Serialization.PWSerializer.Types.ValueTypes
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool CanRead(byte type)
             => ReadTypes.Contains(type);
+        
         /// <inheritdoc />
         /// <summary>
         /// Writes the serialized value to the binary stream.

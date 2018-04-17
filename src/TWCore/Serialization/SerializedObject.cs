@@ -84,7 +84,7 @@ namespace TWCore.Serialization
             SerializedObjects.TryAdd(Data, data);
         }
 
-        private SerializedObject(byte[] data, string dataType, string serializerMimeType)
+        public SerializedObject(byte[] data, string dataType, string serializerMimeType)
         {
             Data = data;
             DataType = dataType;
@@ -110,6 +110,8 @@ namespace TWCore.Serialization
             var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
             var serializer = SerializerManager.GetByMimeType(serMime);
+            if (serializer == null)
+                throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
             if (!string.IsNullOrWhiteSpace(serComp))
                 serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
             value = serializer.Deserialize(Data, type);
@@ -205,6 +207,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromSubArray(SubArray<byte> byteArray)
         {
+            if (byteArray.Count == 0) return null;
             using(var ms = byteArray.ToMemoryStream())
             using (var br = new BinaryReader(ms))
             {

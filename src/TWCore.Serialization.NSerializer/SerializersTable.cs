@@ -18,6 +18,7 @@ using NonBlocking;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -45,7 +46,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
         internal static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
 
-
+        private readonly object locker = new object();
         private readonly byte[] _buffer = new byte[9];
         private readonly SerializerCache<Type> _typeCache = new SerializerCache<Type>();
         private readonly SerializerCache<object> _objectCache = new SerializerCache<object>();
@@ -736,60 +737,55 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Serialize(Stream stream, object value, Type valueType)
         {
-            Stream = stream;
-            Writer = new BinaryWriter(stream, Encoding.UTF8, true);
-            WriteByte(DataBytesDefinition.Start);
+            lock (locker)
+            {
+                Stream = stream;
+                Writer = new BinaryWriter(stream, Encoding.UTF8, true);
+                WriteByte(DataBytesDefinition.Start);
 
-            if (value == null)
-            {
-                WriteByte(DataBytesDefinition.ValueNull);
-                return;
-            }
-            if (WriteValues.TryGetValue(valueType, out var mTuple))
-            {
-                _paramObj[0] = value;
-                mTuple.Accessor(this, _paramObj);
-                return;
-            }
-            if (_objectCache.TryGetValue(value, out var oIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
-                return;
-            }
-            _objectCache.Set(value);
-            var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
-            if (_typeCache.TryGetValue(valueType, out var tIdx))
-            {
-                WriteDefInt(DataBytesDefinition.RefType, tIdx);
-            }
-            else
-            {
+                if (_objectCache.Count > 0)
+                    Debugger.Break();
+
+                if (value == null)
+                {
+                    WriteByte(DataBytesDefinition.ValueNull);
+                    return;
+                }
+
+                if (WriteValues.TryGetValue(valueType, out var mTuple))
+                {
+                    _paramObj[0] = value;
+                    mTuple.Accessor(this, _paramObj);
+                    return;
+                }
+                _objectCache.Set(value);
+                var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
                 Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.Set(valueType);
-            }
-            if (descriptor.IsNSerializable)
-                ((INSerializable)value).Serialize(this);
-            else
-                descriptor.SerializeAction(value, this);
+                if (descriptor.IsNSerializable)
+                    ((INSerializable) value).Serialize(this);
+                else
+                    descriptor.SerializeAction(value, this);
 
-            WriteDefByte(DataBytesDefinition.TypeEnd, DataBytesDefinition.End);
-            _dateTimeOffsetCache.Clear();
-            _dateTimeCache.Clear();
-            _guidCache.Clear();
-            _decimalCache.Clear();
-            _doubleCache.Clear();
-            _floatCache.Clear();
-            _longCache.Clear();
-            _uLongCache.Clear();
-            _stringCache8.Clear();
-            _stringCache16.Clear();
-            _stringCache32.Clear();
-            _stringCache.Clear();
-            _timespanCache.Clear();
-            _typeCache.Clear();
-            _objectCache.Clear();
-            Stream = null;
-            Writer = null;
+                WriteDefByte(DataBytesDefinition.TypeEnd, DataBytesDefinition.End);
+                _dateTimeOffsetCache.Clear();
+                _dateTimeCache.Clear();
+                _guidCache.Clear();
+                _decimalCache.Clear();
+                _doubleCache.Clear();
+                _floatCache.Clear();
+                _longCache.Clear();
+                _uLongCache.Clear();
+                _stringCache8.Clear();
+                _stringCache16.Clear();
+                _stringCache32.Clear();
+                _stringCache.Clear();
+                _timespanCache.Clear();
+                _typeCache.Clear();
+                _objectCache.Clear();
+                Stream = null;
+                Writer = null;
+            }
         }
 
         #region Private Methods

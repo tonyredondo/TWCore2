@@ -101,6 +101,14 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
                 var elementType = type.GetElementType();
+                //var methodName = "ReadValue";
+                var methodName = "InnerReadValue";
+                if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
+                    methodName = propMethod.Name;
+                else if (elementType.IsEnum)
+                    methodName = DeserializersTable.ReadValuesFromType[typeof(Enum)].Name;
+                else if (elementType == typeof(object))
+                    methodName = "ReadValue";
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -110,7 +118,7 @@ namespace TWCore.Serialization.NSerializer
                     Expression.IfThenElse(
                         Expression.LessThan(forIdx, capacity),
                         Expression.Assign(Expression.ArrayAccess(value, Expression.PostIncrementAssign(forIdx)),
-                            Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), elementType)),
+                            Expression.Convert(Expression.Call(table, methodName, Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), elementType)),
                         Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }
@@ -122,6 +130,15 @@ namespace TWCore.Serialization.NSerializer
                 //serExpressions.Add(Expression.Call(coreLogProp, infoBasicMethod, Expression.Call(capacity, "ToString", Type.EmptyTypes)));
 
                 var addMethod = type.GetMethod("Add", iListType.GenericTypeArguments);
+                var elementType = iListType.GenericTypeArguments[0];
+                //var methodName = "ReadValue";
+                var methodName = "InnerReadValue";
+                if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
+                    methodName = propMethod.Name;
+                else if (elementType.IsEnum)
+                    methodName = DeserializersTable.ReadValuesFromType[typeof(Enum)].Name;
+                else if (elementType == typeof(object))
+                    methodName = "ReadValue";
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -131,7 +148,7 @@ namespace TWCore.Serialization.NSerializer
                     Expression.IfThenElse(
                         Expression.LessThan(forIdx, capacity),
                         Expression.Block(
-                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iListType.GenericTypeArguments[0])),
+                            Expression.Call(value, addMethod, Expression.Convert(Expression.Call(table, methodName, Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), elementType)),
                             Expression.PostIncrementAssign(forIdx)
                         ),
                         Expression.Break(breakLabel)), breakLabel);
@@ -144,6 +161,24 @@ namespace TWCore.Serialization.NSerializer
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
                 var addMethod = type.GetMethod("Add", iDictionaryType.GenericTypeArguments);
+                var keyElementType = iDictionaryType.GenericTypeArguments[0];
+                var valueElementType = iDictionaryType.GenericTypeArguments[1];
+
+                var keyMethodName = "InnerReadValue";
+                if (DeserializersTable.ReadValuesFromType.TryGetValue(keyElementType, out var keyPropMethod))
+                    keyMethodName = keyPropMethod.Name;
+                else if (keyElementType.IsEnum)
+                    keyMethodName = DeserializersTable.ReadValuesFromType[typeof(Enum)].Name;
+                else if (keyElementType == typeof(object))
+                    keyMethodName = "ReadValue";
+
+                var valueMethodName = "InnerReadValue";
+                if (DeserializersTable.ReadValuesFromType.TryGetValue(valueElementType, out var valuePropMethod))
+                    valueMethodName = valuePropMethod.Name;
+                else if (keyElementType.IsEnum)
+                    valueMethodName = DeserializersTable.ReadValuesFromType[typeof(Enum)].Name;
+                else if (keyElementType == typeof(object))
+                    valueMethodName = "ReadValue";
 
                 var forIdx = Expression.Parameter(typeof(int), "i");
                 varExpressions.Add(forIdx);
@@ -154,8 +189,8 @@ namespace TWCore.Serialization.NSerializer
                         Expression.LessThan(forIdx, capacity),
                         Expression.Block(
                             Expression.Call(value, addMethod,
-                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iDictionaryType.GenericTypeArguments[0]),
-                                Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), iDictionaryType.GenericTypeArguments[1])),
+                                Expression.Convert(Expression.Call(table, keyMethodName, Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), keyElementType),
+                                Expression.Convert(Expression.Call(table, valueMethodName, Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), valueElementType)),
                             Expression.PostIncrementAssign(forIdx)
                         ),
                         Expression.Break(breakLabel)), breakLabel);

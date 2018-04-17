@@ -119,7 +119,7 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
-            SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            //SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
@@ -131,6 +131,8 @@ namespace TWCore.Tests
         {
             var memStream = new MemoryStream();
             serializer.Serialize(value, valueType, memStream);
+            memStream.Position = 0;
+            serializer.Deserialize(memStream, valueType);
             return memStream.Length.ToReadableBytes().Text;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -121,7 +121,10 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type == DataBytesDefinition.ValueNull) return null;
             if (type == DataBytesDefinition.RefObject)
-                return ObjectCache.Get(StreamReadInt());
+            {
+                var idx = StreamReadInt();
+                return ObjectCache.Get(idx);
+            }
             if (ReadValues.TryGetValue(type, out var mTuple))
             {
                 _parameters[0] = type;
@@ -176,8 +179,11 @@ namespace TWCore.Serialization.NSerializer
         {
             if (type == DataBytesDefinition.ValueNull) return null;
             if (type == DataBytesDefinition.RefObject)
-                return ObjectCache.Get(StreamReadInt());
-            
+            {
+                var idx = StreamReadInt();
+                return ObjectCache.Get(idx);
+            }
+
             DeserializerMetadataOfTypeRuntime metadata = default;
 
             if (type == DataBytesDefinition.TypeStart)

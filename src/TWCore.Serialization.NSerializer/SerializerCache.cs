@@ -25,6 +25,8 @@ namespace TWCore.Serialization.NSerializer
         private readonly Dictionary<T, int> _serializationCache;
         private int _serCurrentIndex;
 
+        public int Count => _serCurrentIndex;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerCache(IEqualityComparer<T> sercomparer = null)
         {
@@ -53,6 +55,8 @@ namespace TWCore.Serialization.NSerializer
     {
         private readonly Dictionary<int, T> _deserializationCache;
         private int _desCurrentIndex;
+
+        public int Count => _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerCache(IEqualityComparer<int> descomparer = null)
@@ -85,6 +89,8 @@ namespace TWCore.Serialization.NSerializer
         private readonly Dictionary<string, int> _serializationCache;
         private int _serCurrentIndex;
 
+        public int Count => _serCurrentIndex;
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerStringCache()
         {
@@ -113,6 +119,8 @@ namespace TWCore.Serialization.NSerializer
     {
         private readonly Dictionary<int, string> _deserializationCache;
         private int _desCurrentIndex;
+
+        public int Count => _desCurrentIndex;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DeserializerStringCache()

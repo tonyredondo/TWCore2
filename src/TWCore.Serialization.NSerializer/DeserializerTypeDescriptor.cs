@@ -25,6 +25,8 @@ using TWCore.Reflection;
 
 namespace TWCore.Serialization.NSerializer
 {
+    public delegate object DeserializeDelegate(DeserializersTable table);
+
     public struct DeserializerTypeDescriptor
     {
         public Type Type;
@@ -186,7 +188,5 @@ namespace TWCore.Serialization.NSerializer
             //Lambda = lambda;
             DeserializeFunc = lambda.Compile();
         }
-
-        public delegate object DeserializeDelegate(DeserializersTable table);
     }
 }

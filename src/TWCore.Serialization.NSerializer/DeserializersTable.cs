@@ -99,9 +99,12 @@ namespace TWCore.Serialization.NSerializer
                 {
                 }
             }
+            catch(IOException)
+            {
+                return null;
+            }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 throw;
             }
             finally

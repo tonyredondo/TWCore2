@@ -279,8 +279,8 @@ namespace TWCore.Net.Multicast
         private static void PeerConnection_OnReceive(object sender, PeerConnectionMessageReceivedEventArgs e)
         {
             var serObj = SerializedObject.FromSubArray(e.Data);
-            if (!(serObj?.GetValue() is List<RegisteredService> lstRegisteredService)) return;
-            if (lstRegisteredService == null) return;
+            if (serObj == null) return;
+            if (!(serObj.GetValue() is List<RegisteredService> lstRegisteredService)) return;
 
             foreach (var rService in lstRegisteredService)
             {

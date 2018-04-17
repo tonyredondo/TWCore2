@@ -205,6 +205,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromSubArray(SubArray<byte> byteArray)
         {
+            if (byteArray.Count == 0) return null;
             using(var ms = byteArray.ToMemoryStream())
             using (var br = new BinaryReader(ms))
             {

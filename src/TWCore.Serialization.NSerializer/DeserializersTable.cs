@@ -103,7 +103,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 return null;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 throw;
             }

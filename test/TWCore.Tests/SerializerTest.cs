@@ -97,7 +97,7 @@ namespace TWCore.Tests
                 ["Value3"] = 3,
             };
 
-            var valSer = collection.Where((item, i) => i % 2 == 0);
+            var valSer = collection.Where((item, i) => i % 2 == 0).SelectMany(i => i).OrderBy(i => i.FirstName).Select(i => i.Age);
             var valSerData = valSer.SerializeToNBinary();
             var valSer2 = valSerData.DeserializeFromNBinary<object>();
 

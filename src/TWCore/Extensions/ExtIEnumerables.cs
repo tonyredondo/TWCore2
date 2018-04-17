@@ -417,8 +417,10 @@ namespace TWCore
         {
             if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
-            if (lqType.ReflectedType != typeof(Enumerable)) return linqExpression;
-            var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+            if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
+            var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            if (ienumerable == null) return linqExpression;
+            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
             return (IList) Activator.CreateInstance(type, linqExpression);
         }
         /// <summary>
@@ -432,8 +434,10 @@ namespace TWCore
         {
             if (linqExpression == null || linqExpression is IList || linqExpression is string || linqExpression is IDictionary) return linqExpression;
             var lqType = linqExpression.GetType();
-            if (lqType.ReflectedType != typeof(Enumerable)) return linqExpression;
-            var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+            if (lqType.ReflectedType != typeof(Enumerable) && lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) == -1) return linqExpression;
+            var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+            if (ienumerable == null) return linqExpression;
+            var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
             return (IList<T>)Activator.CreateInstance(type, linqExpression);
         }
         #endregion

@@ -751,9 +751,10 @@ namespace TWCore.Serialization.NSerializer
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
                 {
                     var lqType = value.GetType();
-                    if (lqType.ReflectedType == typeof(Enumerable))
+                    if (lqType.ReflectedType == typeof(Enumerable) || lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                     {
-                        var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
+                        var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                        var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
                         value = (IList) Activator.CreateInstance(type, iEValue);
                         valueType = value.GetType();
                     }
@@ -814,10 +815,11 @@ namespace TWCore.Serialization.NSerializer
             if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
             {
                 var lqType = value.GetType();
-                if (lqType.ReflectedType == typeof(Enumerable))
+                if (lqType.ReflectedType == typeof(Enumerable) || lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                 {
-                    var type = typeof(List<>).MakeGenericType(lqType.GenericTypeArguments[0]);
-                    value = (IList)Activator.CreateInstance(type, iEValue);
+                    var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
+                    value = (IList) Activator.CreateInstance(type, iEValue);
                 }
             }
             var vType = value.GetType();

@@ -438,7 +438,7 @@ namespace TWCore.Object.Api.Controllers
                 var traceFilesServices = DiscoveryService.GetLocalRegisteredServices("TRACE.FILE");
                 var statusHttpServices = DiscoveryService.GetLocalRegisteredServices("STATUS.HTTP");
                 var statusFilesServices = DiscoveryService.GetLocalRegisteredServices("STATUS.FILE");
-
+                
                 var appNames = traceFilesServices.Select(ts => ts.ApplicationName).ToArray();
 
                 var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");

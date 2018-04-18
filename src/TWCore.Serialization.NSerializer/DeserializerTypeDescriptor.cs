@@ -166,9 +166,9 @@ namespace TWCore.Serialization.NSerializer
                 var valueMethodName = "InnerReadValue";
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(valueElementType, out var valuePropMethod))
                     valueMethodName = valuePropMethod.Name;
-                else if (keyElementType.IsEnum)
+                else if (valueElementType.IsEnum)
                     valueMethodName = DeserializersTable.ReadValuesFromType[typeof(Enum)].Name;
-                else if (keyElementType == typeof(object))
+                else if (valueElementType == typeof(object))
                     valueMethodName = "ReadValue";
 
                 var forIdx = Expression.Parameter(typeof(int), "i");

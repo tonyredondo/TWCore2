@@ -285,9 +285,6 @@ namespace TWCore.Serialization.NSerializer
                 ObjectCache.Set(value);
             }
 
-            if (value == null)
-                throw new Exception("Object value is null. Type = " + (metadata.Type?.FullName ?? "(null)"));
-            
             for (var i = 0; i < metadata.Properties.Length; i++)
             {
                 var name = metadata.Properties[i];

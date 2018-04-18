@@ -56,7 +56,7 @@ namespace TWCore.Reflection
                 expArr[i] = argExpConverted;
             }
             var newExp = Expression.New(ctor, expArr);
-            var lambda = Expression.Lambda<ActivatorDelegate>(newExp, paramExp);
+            var lambda = Expression.Lambda<ActivatorDelegate>(newExp, "New+" + ctor.Name, new []{ paramExp });
             return lambda.Compile();
         }
         /// <inheritdoc />
@@ -87,7 +87,7 @@ namespace TWCore.Reflection
             var instance = Expression.Convert(obj, method.DeclaringType);
             var call = Expression.Call(instance, method);
             var result = Expression.Convert(call, typeof(object));
-            var expr = Expression.Lambda<GetAccessorDelegate>(result, obj);
+            var expr = Expression.Lambda<GetAccessorDelegate>(result, "Get+" +  property.Name, new[] { obj });
             return expr.Compile();
         }
         /// <inheritdoc />
@@ -105,7 +105,7 @@ namespace TWCore.Reflection
             var instance = Expression.Convert(obj, method.DeclaringType);
             var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
             var call = Expression.Call(instance, method, castedValue);
-            var expr = Expression.Lambda<SetAccessorDelegate>(call, obj, value);
+            var expr = Expression.Lambda<SetAccessorDelegate>(call, "Set+" + property.Name, new []{ obj, value });
             return expr.Compile();
         }
         /// <inheritdoc />
@@ -147,7 +147,7 @@ namespace TWCore.Reflection
                 callExpression = Expression.Convert(callExpression, typeof(object));
             else
                 callExpression = Expression.Block(callExpression, Expression.Constant(null, typeof(object)));
-            return Expression.Lambda<MethodAccessorDelegate>(callExpression, "Dynamic+" + method.Name, new[] { obj, paramExp }).Compile();
+            return Expression.Lambda<MethodAccessorDelegate>(callExpression, "Call+" + method.Name, new[] { obj, paramExp }).Compile();
         }
 
         private static object ChangeType(object value, Type conversionType)

@@ -285,12 +285,16 @@ namespace TWCore.Serialization.NSerializer
                 ObjectCache.Set(value);
             }
 
+            if (value == null)
+                throw new Exception("Object value is null. Type = " + (metadata.Type?.FullName ?? "(null)"));
+            
             for (var i = 0; i < metadata.Properties.Length; i++)
             {
                 var name = metadata.Properties[i];
                 if (descriptor.Properties.TryGetValue(name, out var fProp))
                 {
-                    fProp.SetValue(value, ReadValue(StreamReadByte()));
+                    var propValue = ReadValue(StreamReadByte());
+                    fProp.SetValue(value, propValue);
                 }
             }
 

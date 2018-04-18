@@ -291,11 +291,21 @@ namespace TWCore.Serialization.NSerializer
             for (var i = 0; i < metadata.Properties.Length; i++)
             {
                 var name = metadata.Properties[i];
+                var propValue = ReadValue(StreamReadByte());
+
                 if (descriptor.Properties.TryGetValue(name, out var fProp))
                 {
-                    var propValue = ReadValue(StreamReadByte());
-                    fProp.SetValue(value, propValue);
+                    try
+                    {
+                        fProp.SetValue(value, propValue);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
                 }
+                else
+                    Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
             }
 
             StreamReadByte();

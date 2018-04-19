@@ -111,7 +111,10 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             Serializer = Serializer ?? SerializerManager.DefaultBinarySerializer.DeepClone();
             Core.Status.Attach(collection =>
             {
-                collection.Add("Sessions Count", _sessions.Count, true);
+                lock (_locker)
+                {
+                    collection.Add("Sessions Count", _sessions.Count, true);
+                }
             });
         }
         /// <inheritdoc />
@@ -209,7 +212,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     case RPCMessageScope.Session:
                         RpcServerClient client;
                         lock (_locker)
+                        {
                             client = _sessions.Find(s => s.OnSession && s.SessionId == clientId);
+                        }
                         if (client != null)
                         {
                             await client.SendRpcMessageAsync(eventMessage).ConfigureAwait(false);
@@ -220,7 +225,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                         var hubName = eventAttribute.HubName;
                         RpcServerClient[] clients;
                         lock (_locker)
+                        {
                             clients = _sessions.Where((s, mHubName) => s.OnSession && s.Hub == mHubName, hubName).ToArray();
+                        }
                         if (clients.Length > 0)
                         {
                             await Task.WhenAll(clients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
@@ -230,7 +237,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
                     case RPCMessageScope.Global:
                         RpcServerClient[] gClients;
                         lock (_locker)
+                        {
                             gClients = _sessions.Where(s => s.OnSession).ToArray();
+                        }
                         if (gClients.Length > 0)
                         {
                             await Task.WhenAll(gClients.Select((s, eMessage) => s.SendRpcMessageAsync(eMessage), eventMessage)).ConfigureAwait(false);
@@ -271,7 +280,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             serverClient.OnDisconnect += ServerClient_OnDisconnect;
             serverClient.OnMessageReceived += ServerClient_OnMessageReceived;
             lock (_locker)
+            {
                 _sessions.Add(serverClient);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -341,7 +352,9 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             rpcServerClient.OnDisconnect -= ServerClient_OnDisconnect;
             rpcServerClient.OnMessageReceived -= ServerClient_OnMessageReceived;
             lock (_locker)
+            {
                 _sessions.Remove(rpcServerClient);
+            }
         }
         #endregion
 

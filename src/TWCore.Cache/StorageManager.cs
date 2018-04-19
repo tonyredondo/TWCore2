@@ -31,9 +31,9 @@ namespace TWCore.Cache
     {
 	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
 	    private IStorage[] _storages;
-        private delegate TR RefFunc<TArg, TR>(ref TArg arg1);
-        private delegate TR RefFunc<TArg, TArg2, TR>(ref TArg arg1, ref TArg2 arg2);
-        private delegate TR RefFunc<TArg, TArg2, TArg3, TR>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
+        private delegate TR RefFunc<TArg, out TR>(ref TArg arg1);
+        private delegate TR RefFunc<TArg, TArg2, out TR>(ref TArg arg1, ref TArg2 arg2);
+        private delegate TR RefFunc<TArg, TArg2, TArg3, out TR>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
         private delegate void RefAction<TArg, TArg2>(ref TArg arg1, ref TArg2 arg2);
         private delegate void RefAction<TArg, TArg2, TArg3>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
@@ -109,6 +109,8 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TR ReturnFromStack<TR, TA1>(ref TA1 arg1, RefFunc<IStorage, TA1, TR> functionValueToLook, RefAction<IStorage, TA1, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, in TR defaultValue = default)
 		{
+		    if (_storages == null) throw new Exception("There are not storages on the stack");
+		    if (functionValueToLook == null) throw new ArgumentException("The function to compare value is null");
 			ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			var actionToPrevious = actionOnPreviousStorages != null;
@@ -122,7 +124,12 @@ namespace TWCore.Cache
             for(var i = 0; i < _storages.Length; i++)
 			{
                 var storage = _storages[i];
-				if (!storage.IsEnabled() || !storage.IsReady()) continue;
+			    if (storage == null)
+			    {
+			        Core.Log.Warning("A Storage in the stack is null.");
+			        continue;
+			    }
+			    if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(ref storage, ref arg1);
 				var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
 				if (bCondition)
@@ -131,10 +138,15 @@ namespace TWCore.Cache
 					found = true;
 					break;
 				}
-				if (actionToPrevious) 
-					noDataStack.Push(storage);
+			    if (actionToPrevious)
+			    {
+			        if (noDataStack == null)
+			            throw new Exception("The data stack is null.");
+			        noDataStack.Push(storage);
+			    }
 			}
-			if (!actionToPrevious) return response;
+			if (!actionToPrevious)
+			    return response;
 			if (found)
 			{
 				while (noDataStack.Count > 0) 
@@ -158,7 +170,9 @@ namespace TWCore.Cache
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private TR ReturnFromStack<TR, TA1, TA2>(ref TA1 arg1, ref TA2 arg2, RefFunc<IStorage, TA1, TA2, TR> functionValueToLook, RefAction<IStorage, TA1, TA2, TR> actionOnPreviousStorages = null, RefFunc<TR, bool> breakCondition = null, in TR defaultValue = default)
 		{
-			ReferencePool<Stack<IStorage>> refPool = null;
+		    if (_storages == null) throw new Exception("There are not storages on the stack");
+		    if (functionValueToLook == null) throw new ArgumentException("The function to compare value is null");
+            ReferencePool<Stack<IStorage>> refPool = null;
 			Stack<IStorage> noDataStack = null;
 			var actionToPrevious = actionOnPreviousStorages != null;
 			if (actionToPrevious)
@@ -171,6 +185,11 @@ namespace TWCore.Cache
             for (var i = 0; i < _storages.Length; i++)
             {
                 var storage = _storages[i];
+                if (storage == null)
+                {
+                    Core.Log.Warning("A Storage in the stack is null.");
+                    continue;
+                }
                 if (!storage.IsEnabled() || !storage.IsReady()) continue;
 				var functionResponse = functionValueToLook(ref storage, ref arg1, ref arg2);
 				var bCondition = breakCondition?.Invoke(ref functionResponse) ?? !EqualityComparer<TR>.Default.Equals(functionResponse, defaultValue);
@@ -180,10 +199,15 @@ namespace TWCore.Cache
 					found = true;
 					break;
 				}
-				if (actionToPrevious)
-					noDataStack.Push(storage);
-			}
-			if (!actionToPrevious) return response;
+                if (actionToPrevious)
+                {
+                    if (noDataStack == null)
+                        throw new Exception("The data stack is null.");
+                    noDataStack.Push(storage);
+                }
+            }
+			if (!actionToPrevious)
+			    return response;
 			if (found)
 			{
 				while (noDataStack.Count > 0) 

@@ -85,6 +85,7 @@ namespace TWCore.Diagnostics.Status.Transports
         /// <param name="triggers">Triggers</param>
         public FileStatusTransport(string filenameFormat, string path, ISerializer serializer, params TriggerBase[] triggers) : this(triggers)
         {
+            path = Factory.ResolveLowLowPath(path);
             FileNameFormat = filenameFormat;
             Path = path;
             Serializer = serializer;

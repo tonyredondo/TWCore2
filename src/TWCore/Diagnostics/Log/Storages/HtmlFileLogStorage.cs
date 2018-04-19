@@ -348,6 +348,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HtmlFileLogStorage(string fileName, bool createByDay, bool useMaxLength, long maxLength)
         {
+            fileName = Factory.ResolveLowLowPath(fileName);
             FileName = fileName;
             CreateByDay = createByDay;
             UseMaxLength = useMaxLength;

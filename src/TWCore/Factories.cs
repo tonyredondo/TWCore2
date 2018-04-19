@@ -199,12 +199,12 @@ namespace TWCore
             return lowlowPath;
         }
         /// <summary>
-        /// Get the absolute folder path from a low low folder path
+        /// Get the absolute path from a low low path
         /// </summary>
-        /// <param name="lowlowPath">Low low folder path</param>
-        /// <returns>Absolute folder path</returns>
+        /// <param name="lowlowPath">Low low path</param>
+        /// <returns>Absolute path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string ResolveLowLowFolderPath(string lowlowPath)
+        public virtual string ResolveLowLowPath(string lowlowPath)
         {
             // "<</" or "<<(Name)/"
             if (lowlowPath.StartsWith("<</", StringComparison.Ordinal))
@@ -214,7 +214,8 @@ namespace TWCore
                 do
                 {
                     var nPath = Path.Combine(currentDirectory.FullName, lPath);
-                    if (Directory.Exists(nPath))
+                    var nfolder = Path.GetDirectoryName(nPath);
+                    if (Directory.Exists(nfolder))
                         return Path.GetFullPath(nPath);
                     currentDirectory = currentDirectory.Parent;
                 } while (currentDirectory != null);

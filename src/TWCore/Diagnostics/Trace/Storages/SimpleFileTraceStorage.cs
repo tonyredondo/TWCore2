@@ -97,6 +97,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SimpleFileTraceStorage(string basePath, ISerializer serializer, bool createByDay)
         {
+            basePath = Factory.ResolveLowLowPath(basePath);
             BasePath = basePath;
             FileName = Path.Combine(basePath, "Trace.txt");
             Serializer = serializer;

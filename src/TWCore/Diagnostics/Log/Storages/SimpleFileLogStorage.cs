@@ -114,6 +114,7 @@ namespace TWCore.Diagnostics.Log.Storages
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SimpleFileLogStorage(string fileName, bool createByDay, bool useMaxLength, long maxLength)
         {
+            fileName = Factory.ResolveLowLowPath(fileName);
             FileName = fileName;
             CreateByDay = createByDay;
             UseMaxLength = useMaxLength;

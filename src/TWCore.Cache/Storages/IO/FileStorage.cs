@@ -75,6 +75,7 @@ namespace TWCore.Cache.Storages.IO
         /// </summary>
         public FileStorage(string basePath)
         {
+            basePath = Factory.ResolveLowLowPath(basePath);
             BasePath = basePath;
             Core.Status.Attach(collection =>
             {

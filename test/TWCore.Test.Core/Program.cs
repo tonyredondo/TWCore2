@@ -49,6 +49,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Trace.AddSimpleFileStorage("./traces");
 
                 var path = Factory.ResolveLowLowFilePath("<</temp/copyright.txt");
+                var folder = Factory.ResolveLowLowFolderPath("<<(GitHub)/logs");
 
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;

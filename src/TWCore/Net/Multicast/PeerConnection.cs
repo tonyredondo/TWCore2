@@ -172,8 +172,22 @@ namespace TWCore.Net.Multicast
             Task.WaitAll(_clientsReceiveTasks.ToArray());
             foreach (var client in _clients)
             {
-                client.DropMulticastGroup(_multicastIp);
-                client.Client.Close();
+                try
+                {
+                    client.DropMulticastGroup(_multicastIp);
+                }
+                catch
+                {
+                    //
+                }
+                try
+                {
+                    client.Client.Close();
+                }
+                catch
+                {
+                    //
+                }
             }
             _clients.Clear();
             _sendClients.Clear();

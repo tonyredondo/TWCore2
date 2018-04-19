@@ -110,6 +110,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string GetRelativePath(string absolutePath, string basePath = null) => _factories?.GetRelativePath(absolutePath, basePath) ?? throw new FrameworkNotInitializedException();
         /// <summary>
+        /// Get the absolute path from a low low path
+        /// </summary>
+        /// <param name="lowlowPath">Low low path</param>
+        /// <returns>Absolute path</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ResolveLowLowPath(string lowlowPath) => _factories?.ResolveLowLowPath(lowlowPath) ?? throw new FrameworkNotInitializedException();
+        /// <summary>
         /// Compare for equality two byte arrays
         /// </summary>
         /// <returns>True if the arrays are equals; otherwise, false.</returns>

@@ -257,7 +257,7 @@ namespace TWCore
                    assemblyName.StartsWith("Runtime.", StringComparison.OrdinalIgnoreCase);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool LoadConfigFile(string configFile, List<string> args)
+        private bool LoadConfigFile(string configFile, List<string> args)
         {
             ServiceContainer.RegisterParametersHandler("environment=[Environment]",
                 "Force an environment to run the application.",
@@ -283,6 +283,8 @@ namespace TWCore
             if (mnameConfigFile.IsNotNullOrWhitespace())
                 Core.MachineName = mnameConfigFile;
 
+            configFile = ResolveLowLowPath(configFile);
+
             if (!File.Exists(configFile))
             {
                 return false;
@@ -304,7 +306,7 @@ namespace TWCore
                     if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
                         Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
                     if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
-                        Core.LoadSettings(fSettings.Core.SettingsFile);
+                        Core.LoadSettings(ResolveLowLowPath(fSettings.Core.SettingsFile));
                 }
 
                 if (fSettings.AppSettings != null)
@@ -333,7 +335,7 @@ namespace TWCore
                 Core.RebindSettings();
 
                 if (fSettings.Core != null && fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
-                    Core.LoadInjector(fSettings.Core.InjectorFile);
+                    Core.LoadInjector(ResolveLowLowPath(fSettings.Core.InjectorFile));
 
                 return true;
             }

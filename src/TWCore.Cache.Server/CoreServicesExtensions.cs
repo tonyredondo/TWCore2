@@ -32,8 +32,9 @@ namespace TWCore.Services
     /// </summary>
     public static class CoreServicesExtensions
     {
-        private static CacheConfiguration _cacheConfiguration;
-        private static ServerOptions _serverOptions;
+        private static CacheSettings _serverCacheSettings;
+        private static CacheConfiguration _defaultCacheConfiguration;
+        private static ServerOptions _defaultServerOptions;
         private static bool _init;
 
 		#region Init
@@ -51,29 +52,29 @@ namespace TWCore.Services
             cachesConfigFile = cachesConfigFile.Replace("{EnvironmentName}", Core.EnvironmentName);
             cachesConfigFile = cachesConfigFile.Replace("{MachineName}", Core.MachineName);
             cachesConfigFile = cachesConfigFile.Replace("{ApplicationName}", Core.ApplicationName);
+            cachesConfigFile = Factory.ResolveLowLowPath(cachesConfigFile);
             Core.Log.InfoBasic("Loading cache server configuration: {0}", cachesConfigFile);
 
-            CacheSettings serverCacheSettings;
             try
             {
                 var value = cachesConfigFile.ReadTextFromFile();
                 value = Core.ReplaceSettingsTemplate(value);
                 var serializer = SerializerManager.GetByFileName<ITextSerializer>(cachesConfigFile);
-                serverCacheSettings = serializer.DeserializeFromString<CacheSettings>(value);
+                _serverCacheSettings = serializer.DeserializeFromString<CacheSettings>(value);
             }
             catch (Exception ex)
             {
                 throw new Exception($"The Cache config file: {cachesConfigFile} can't be deserialized.", ex);
             }
 
-            if (serverCacheSettings == null)
+            if (_serverCacheSettings == null)
             {
                 Core.Log.Warning("The Cache configuration file is null or empty.");
                 return;
             }
 
-            _cacheConfiguration = serverCacheSettings.Caches?.FirstOrDefault((c, cSettings) => c.Name == (cSettings.ServerName ?? Core.ApplicationName), cacheSettings);
-            _serverOptions = _cacheConfiguration?.ServerOptionsList?.FirstOf(
+            _defaultCacheConfiguration = _serverCacheSettings.Caches?.FirstOrDefault((c, cSettings) => c.Name == (cSettings.ServerName ?? Core.ApplicationName), cacheSettings);
+            _defaultServerOptions = _defaultCacheConfiguration?.ServerOptionsList?.FirstOf(
                 c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
                 c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
                 c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
@@ -85,11 +86,12 @@ namespace TWCore.Services
         /// <summary>
         /// Gets the cache server configuration loaded from config
         /// </summary>
+        /// <param name="services">CoreServices instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static CacheConfiguration GetDefaultCacheServerConfiguration(this CoreServices services)
         {
             Init();
-            return _cacheConfiguration;
+            return _defaultCacheConfiguration;
         }
         /// <summary>
         /// Sets the default cache server configuration
@@ -100,7 +102,18 @@ namespace TWCore.Services
         public static void SetDefaultCacheServerConfiguration(this CoreServices services, CacheConfiguration configuration)
         {
             _init = true;
-            _cacheConfiguration = configuration;
+            _defaultCacheConfiguration = configuration;
+        }
+        /// <summary>
+        /// Gets the cache server configuration loaded from config
+        /// </summary>
+        /// <param name="services">CoreServices instance</param>
+        /// <param name="name">Name of cache configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheConfiguration GetCacheServerConfiguration(this CoreServices services, string name)
+        {
+            Init();
+            return _serverCacheSettings.Caches?.FirstOrDefault((c, mName) => c.Name == mName, name);
         }
         #endregion
 
@@ -108,11 +121,12 @@ namespace TWCore.Services
         /// <summary>
         /// Gets the cache server options loaded from config
         /// </summary>
+        /// <param name="services">CoreServices instance</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ServerOptions GetDefaultCacheServerOptions(this CoreServices services)
         {
             Init();
-            return _serverOptions;
+            return _defaultServerOptions;
         }
         /// <summary>
         /// Sets the default cache server options
@@ -123,7 +137,23 @@ namespace TWCore.Services
         public static void SetDefaultCacheServerOptions(this CoreServices services, ServerOptions options)
         {
             _init = true;
-            _serverOptions = options;
+            _defaultServerOptions = options;
+        }
+        /// <summary>
+        /// Gets the cache server options loaded from config
+        /// </summary>
+        /// <param name="services">CoreServices instance</param>
+        /// <param name="name">Name of cache configuration</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ServerOptions GetCacheServerOptions(this CoreServices services, string name)
+        {
+            Init();
+            var cConfig = _serverCacheSettings.Caches?.FirstOrDefault((c, mName) => c.Name == mName, name);
+            return cConfig?.ServerOptionsList?.FirstOf(
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true && c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName?.SplitAndTrim(",").Contains(Core.EnvironmentName) == true,
+                c => c.MachineName?.SplitAndTrim(",").Contains(Core.MachineName) == true,
+                c => c.EnvironmentName.IsNullOrWhitespace());
         }
         #endregion
 

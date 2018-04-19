@@ -161,6 +161,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string ResolveLowLowFilePath(string lowlowPath)
         {
+            // "<</" or "<<(Name)/"
             if (!lowlowPath.StartsWith("<</", StringComparison.Ordinal)) return lowlowPath;
             var lPath = "." + lowlowPath.Substring(2);
             var currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);
@@ -181,6 +182,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual string ResolveLowLowFolderPath(string lowlowPath)
         {
+            // "<</" or "<<(Name)/"
             if (!lowlowPath.StartsWith("<</", StringComparison.Ordinal)) return lowlowPath;
             var lPath = "." + lowlowPath.Substring(2);
             var currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);

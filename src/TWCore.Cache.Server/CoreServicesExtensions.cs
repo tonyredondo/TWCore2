@@ -52,7 +52,7 @@ namespace TWCore.Services
             cachesConfigFile = cachesConfigFile.Replace("{EnvironmentName}", Core.EnvironmentName);
             cachesConfigFile = cachesConfigFile.Replace("{MachineName}", Core.MachineName);
             cachesConfigFile = cachesConfigFile.Replace("{ApplicationName}", Core.ApplicationName);
-            cachesConfigFile = Factory.ResolveLowLowPath(cachesConfigFile);
+            cachesConfigFile = Factory.ResolveLowLowFilePath(cachesConfigFile);
             Core.Log.InfoBasic("Loading cache server configuration: {0}", cachesConfigFile);
 
             try

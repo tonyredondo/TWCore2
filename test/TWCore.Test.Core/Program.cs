@@ -48,7 +48,7 @@ namespace TWCore.Test.Core
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
                 TWCore.Core.Trace.AddSimpleFileStorage("./traces");
 
-                var path = Factory.ResolveLowLowPath("<</temp/copyright.txt");
+                var path = Factory.ResolveLowLowFilePath("<</temp/copyright.txt");
 
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;

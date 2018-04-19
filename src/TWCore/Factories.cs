@@ -154,12 +154,12 @@ namespace TWCore
             return referenceUri.MakeRelativeUri(fileUri).ToString();
         }
         /// <summary>
-        /// Get the absolute path from a low low path
+        /// Get the absolute file path from a low low filepath
         /// </summary>
-        /// <param name="lowlowPath">Low low path</param>
-        /// <returns>Absolute path</returns>
+        /// <param name="lowlowPath">Low low file path</param>
+        /// <returns>Absolute file path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string ResolveLowLowPath(string lowlowPath)
+        public virtual string ResolveLowLowFilePath(string lowlowPath)
         {
             if (!lowlowPath.StartsWith("<</", StringComparison.Ordinal)) return lowlowPath;
             var lPath = "." + lowlowPath.Substring(2);
@@ -168,6 +168,26 @@ namespace TWCore
             {
                 var nPath = Path.Combine(currentDirectory.FullName, lPath);
                 if (File.Exists(nPath))
+                    return Path.GetFullPath(nPath);
+                currentDirectory = currentDirectory.Parent;
+            } while (currentDirectory != null);
+            return null;
+        }
+        /// <summary>
+        /// Get the absolute folder path from a low low folder path
+        /// </summary>
+        /// <param name="lowlowPath">Low low folder path</param>
+        /// <returns>Absolute folder path</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public virtual string ResolveLowLowFolderPath(string lowlowPath)
+        {
+            if (!lowlowPath.StartsWith("<</", StringComparison.Ordinal)) return lowlowPath;
+            var lPath = "." + lowlowPath.Substring(2);
+            var currentDirectory = new DirectoryInfo(Environment.CurrentDirectory);
+            do
+            {
+                var nPath = Path.Combine(currentDirectory.FullName, lPath);
+                if (Directory.Exists(nPath))
                     return Path.GetFullPath(nPath);
                 currentDirectory = currentDirectory.Parent;
             } while (currentDirectory != null);

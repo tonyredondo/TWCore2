@@ -283,7 +283,7 @@ namespace TWCore
             if (mnameConfigFile.IsNotNullOrWhitespace())
                 Core.MachineName = mnameConfigFile;
 
-            configFile = ResolveLowLowPath(configFile);
+            configFile = ResolveLowLowFilePath(configFile);
 
             if (!File.Exists(configFile))
             {
@@ -306,7 +306,7 @@ namespace TWCore
                     if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
                         Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
                     if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
-                        Core.LoadSettings(ResolveLowLowPath(fSettings.Core.SettingsFile));
+                        Core.LoadSettings(ResolveLowLowFilePath(fSettings.Core.SettingsFile));
                 }
 
                 if (fSettings.AppSettings != null)
@@ -335,7 +335,7 @@ namespace TWCore
                 Core.RebindSettings();
 
                 if (fSettings.Core != null && fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
-                    Core.LoadInjector(ResolveLowLowPath(fSettings.Core.InjectorFile));
+                    Core.LoadInjector(ResolveLowLowFilePath(fSettings.Core.InjectorFile));
 
                 return true;
             }

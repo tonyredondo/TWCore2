@@ -54,7 +54,7 @@ namespace TWCore.Services
             queuesConfigFile = queuesConfigFile?.Replace("{EnvironmentName}", Core.EnvironmentName);
             queuesConfigFile = queuesConfigFile?.Replace("{MachineName}", Core.MachineName);
             queuesConfigFile = queuesConfigFile?.Replace("{ApplicationName}", Core.ApplicationName);
-            queuesConfigFile = Factory.ResolveLowLowPath(queuesConfigFile);
+            queuesConfigFile = Factory.ResolveLowLowFilePath(queuesConfigFile);
             Core.Log.InfoBasic("Loading queues configuration: {0}", queuesConfigFile);
 
             try

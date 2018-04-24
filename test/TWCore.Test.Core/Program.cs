@@ -50,7 +50,7 @@ namespace TWCore.Test.Core
 
                 var path = Factory.ResolveLowLowFilePath("<</temp/copyright.txt");
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
-                var folder2 = Factory.ResolveLowLowPath("<<(GitHub)/logs");
+                var folder2 = Factory.ResolveLowLowPath("<<(Github)/logs");
 
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;

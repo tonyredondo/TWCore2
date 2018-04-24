@@ -115,14 +115,22 @@ namespace TWCore
         /// <param name="lowlowPath">Low low file path</param>
         /// <returns>Absolute file path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ResolveLowLowFilePath(string lowlowPath) => _factories?.ResolveLowLowFilePath(lowlowPath) ?? throw new FrameworkNotInitializedException();
+        public static string ResolveLowLowFilePath(string lowlowPath)
+        {
+            if (_factories == null) throw new FrameworkNotInitializedException();
+            return _factories.ResolveLowLowFilePath(lowlowPath);
+        }
         /// <summary>
         /// Get the absolute path from a low low path
         /// </summary>
         /// <param name="lowlowPath">Low low path</param>
         /// <returns>Absolute path</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ResolveLowLowPath(string lowlowPath) => _factories?.ResolveLowLowPath(lowlowPath) ?? throw new FrameworkNotInitializedException();
+        public static string ResolveLowLowPath(string lowlowPath)
+        {
+            if (_factories == null) throw new FrameworkNotInitializedException();
+            return _factories.ResolveLowLowPath(lowlowPath);
+        }
         /// <summary>
         /// Compare for equality two byte arrays
         /// </summary>

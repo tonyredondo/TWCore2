@@ -60,7 +60,7 @@ namespace TWCore.Diagnostics.Log.Storages
         .displaywrap::-webkit-scrollbar-thumb { border-radius: 5px; -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3); background-color: #505050; }
         .displaywrap {
             position: absolute;
-            overflow: overlay;
+            overflow: scroll;
             top: 0px; bottom: 0px; left: 0px; right: 0px;
             border: 0px solid #333; border-radius: 0px;
             background: #000; color: #fff;
@@ -205,7 +205,7 @@ namespace TWCore.Diagnostics.Log.Storages
         };
         var starts = { 
             data : [],
-            goTo : function(index) { S('.displaywrap').scrollTop(this.data[index][1].offset().top - this.data[index][1].parent().position().top); },
+            goTo : function(index) { S('.displaywrap').scrollTop(this.data[index][1].offset().top - S('.display').position().top) },
             goToEnd : function() {S('.displaywrap').scrollTop(S('.display').height()); }
         };
         $(function() {

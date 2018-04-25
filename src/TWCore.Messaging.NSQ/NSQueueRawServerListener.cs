@@ -162,7 +162,8 @@ namespace TWCore.Messaging.NSQ
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
-					}
+					    Core.Log.Warning("The listener has been resumed.");
+                    }
 
 					if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
 					{
@@ -175,6 +176,7 @@ namespace TWCore.Messaging.NSQ
                         _receiver = new Consumer(Connection.Name, Connection.Name);
                         _receiver.AddHandler(new NSQMessageHandler(this));
                         _receiver.ConnectToNsqd(Connection.Route);
+					    Core.Log.Warning("The listener has been resumed.");
                     }
 
 					await Task.Delay(100, _token).ConfigureAwait(false);

@@ -153,6 +153,7 @@ namespace TWCore.Messaging.NATS
                         _receiver.Unsubscribe();
                         _connection = _factory.CreateConnection(Connection.Route);
                         _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
                     if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
@@ -167,6 +168,7 @@ namespace TWCore.Messaging.NATS
                         _receiver.Unsubscribe();
                         _connection = _factory.CreateConnection(Connection.Route);
                         _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
                     await Task.Delay(100, _token).ConfigureAwait(false);

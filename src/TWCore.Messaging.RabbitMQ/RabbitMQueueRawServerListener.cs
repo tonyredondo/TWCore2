@@ -140,6 +140,7 @@ namespace TWCore.Messaging.RabbitMQ
                         lock (_lock)
                             _exceptionSleep = false;
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
                     if (Counters.CurrentMessages >= Config.RequestOptions.ServerReceiverOptions.MaxSimultaneousMessagesPerQueue)
@@ -152,6 +153,7 @@ namespace TWCore.Messaging.RabbitMQ
                             await Task.Delay(500, _token).ConfigureAwait(false);
 
                         _receiverConsumerTag = _receiver.Channel.BasicConsume(_receiver.Name, false, _receiverConsumer);
+                        Core.Log.Warning("The listener has been resumed.");
                     }
 
                     await Task.Delay(1000, _token).ConfigureAwait(false);

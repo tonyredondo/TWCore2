@@ -162,6 +162,7 @@ namespace TWCore
         public virtual string ResolveLowLowFilePath(string lowlowPath)
         {
             // "<</" or "<<(Name)/"
+            if (lowlowPath == null) return null;
             if (lowlowPath.StartsWith("<</", StringComparison.Ordinal))
             {
                 var lPath = "." + lowlowPath.Substring(2);
@@ -173,7 +174,7 @@ namespace TWCore
                         return Path.GetFullPath(nPath);
                     currentDirectory = currentDirectory.Parent;
                 } while (currentDirectory != null);
-
+                Core.Log.Warning("The Path: {0} wasn't found.", lowlowPath);
                 return null;
             }
             if (lowlowPath.StartsWith("<<(", StringComparison.Ordinal))
@@ -194,6 +195,7 @@ namespace TWCore
                     var nPath = Path.Combine(currentDirectory.FullName, lPath);
                     return Path.GetFullPath(nPath);
                 }
+                Core.Log.Warning("The Path: {0} wasn't found.", lowlowPath);
                 return null;
             }
             return lowlowPath;
@@ -207,6 +209,7 @@ namespace TWCore
         public virtual string ResolveLowLowPath(string lowlowPath)
         {
             // "<</" or "<<(Name)/"
+            if (lowlowPath == null) return null;
             if (lowlowPath.StartsWith("<</", StringComparison.Ordinal))
             {
                 var lPath = "." + lowlowPath.Substring(2);
@@ -219,7 +222,7 @@ namespace TWCore
                         return Path.GetFullPath(nPath);
                     currentDirectory = currentDirectory.Parent;
                 } while (currentDirectory != null);
-
+                Core.Log.Warning("The Path: {0} wasn't found.", lowlowPath);
                 return null;
             }
             if (lowlowPath.StartsWith("<<(", StringComparison.Ordinal))
@@ -240,6 +243,7 @@ namespace TWCore
                     var nPath = Path.Combine(currentDirectory.FullName, lPath);
                     return Path.GetFullPath(nPath);
                 }
+                Core.Log.Warning("The Path: {0} wasn't found.", lowlowPath);
                 return null;
             }
             return lowlowPath;

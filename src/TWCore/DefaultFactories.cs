@@ -515,10 +515,10 @@ namespace TWCore
             private readonly CpuUsageTimer _cpuLast10Minutes;
             private readonly CpuUsageTimer _cpuLast30Minutes;
 
-            public double? Last30Seconds => _cpuLast30Seconds.Percentage;
-            public double? LastMinute => _cpuLastMinute.Percentage;
-            public double? Last10Minutes => _cpuLast10Minutes.Percentage;
-            public double? Last30Minutes => _cpuLast30Minutes.Percentage;
+            public double Last30Seconds => _cpuLast30Seconds.Percentage;
+            public double LastMinute => _cpuLastMinute.Percentage;
+            public double Last10Minutes => _cpuLast10Minutes.Percentage;
+            public double Last30Minutes => _cpuLast30Minutes.Percentage;
 
             public CpuUsage(Process process)
             {
@@ -536,7 +536,7 @@ namespace TWCore
                 private DateTime _monitorTime;
                 private TimeSpan _cpuTime;
 
-                public double? Percentage { get; private set; }
+                public double Percentage { get; private set; }
 
                 public CpuUsageTimer(Process process, TimeSpan frequency)
                 {

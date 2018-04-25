@@ -46,6 +46,7 @@ namespace TWCore
         private const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
         private Assembly[] _assemblies;
         private bool _usedResolver;
+        private static CpuUsage _cpuUsage;
 
         [DllImport("rpcrt4.dll", SetLastError = true)]
         private static extern int UuidCreateSequential(out Guid guid);
@@ -348,6 +349,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()
         {
+            _cpuUsage = new CpuUsage(Process.GetCurrentProcess());
             Core.Status.Attach(() =>
             {
                 using (var process = Process.GetCurrentProcess())
@@ -389,6 +391,13 @@ namespace TWCore
                             process.PrivilegedProcessorTime),
                         new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime)
                     );
+
+                    sItem.Values.Add("Process Usages",
+                        new StatusItemValueItem("30 Seconds Usage in %", _cpuUsage.Last30Seconds, true),
+                        new StatusItemValueItem("1 Minute Usage in %", _cpuUsage.LastMinute, true),
+                        new StatusItemValueItem("10 Minutes Usage in %", _cpuUsage.Last10Minutes, true),
+                        new StatusItemValueItem("30 Minutes Usage in %", _cpuUsage.Last30Minutes, true));
+
                     sItem.Values.Add("Process Memory",
                         new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)",
                             Environment.WorkingSet.ToMegabytes(), true),
@@ -494,6 +503,58 @@ namespace TWCore
                 public string SettingsFile { get; set; }
                 [DataMember]
                 public string InjectorFile { get; set; }
+            }
+        }
+        #endregion
+
+        #region CPU Usage
+        private class CpuUsage
+        {
+            private readonly CpuUsageTimer _cpuLast30Seconds;
+            private readonly CpuUsageTimer _cpuLastMinute;
+            private readonly CpuUsageTimer _cpuLast10Minutes;
+            private readonly CpuUsageTimer _cpuLast30Minutes;
+
+            public double? Last30Seconds => _cpuLast30Seconds.Percentage;
+            public double? LastMinute => _cpuLastMinute.Percentage;
+            public double? Last10Minutes => _cpuLast10Minutes.Percentage;
+            public double? Last30Minutes => _cpuLast30Minutes.Percentage;
+
+            public CpuUsage(Process process)
+            {
+                _cpuLast30Seconds = new CpuUsageTimer(process, TimeSpan.FromSeconds(30));
+                _cpuLastMinute = new CpuUsageTimer(process, TimeSpan.FromMinutes(1));
+                _cpuLast10Minutes = new CpuUsageTimer(process, TimeSpan.FromMinutes(10));
+                _cpuLast30Minutes = new CpuUsageTimer(process, TimeSpan.FromMinutes(30));
+            }
+            
+            private class CpuUsageTimer
+            {
+                private readonly Process _process;
+                private readonly TimeSpan _startCpuTime;
+                private Timer _timer;
+                private DateTime _monitorTime;
+                private TimeSpan _cpuTime;
+
+                public double? Percentage { get; private set; }
+
+                public CpuUsageTimer(Process process, TimeSpan frequency)
+                {
+                    _process = process;
+                    _startCpuTime = process.TotalProcessorTime;
+                    _monitorTime = DateTime.UtcNow;
+                    _timer = new Timer(TimerCallback, this, frequency, frequency);
+                }
+
+                private void TimerCallback(object state)
+                {
+                    var newCpuTime = _process.TotalProcessorTime - _startCpuTime;
+                    var usage = ((double)(newCpuTime - _cpuTime).Ticks) /
+                                ((double)Environment.ProcessorCount * DateTime.UtcNow.Subtract(_monitorTime).Ticks);
+                    _cpuTime = newCpuTime;
+                    _monitorTime = DateTime.UtcNow;
+                    Percentage = Math.Round((double)usage * 100, 2);
+                }
             }
         }
         #endregion

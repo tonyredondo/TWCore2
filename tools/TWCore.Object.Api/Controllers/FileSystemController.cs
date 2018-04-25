@@ -419,6 +419,7 @@ namespace TWCore.Object.Api.Controllers
             var entries = rootPaths.Concat(servicesPathEntries.Values)
                 //rootPaths.Concat(logFilesPaths).Concat(logHttpPaths).Concat(traceFilesPath)
                 .DistinctBy(p => p.Path)
+                .OrderBy(i => i.Name)
                 .ToArray();
             
             return new PathEntryCollection

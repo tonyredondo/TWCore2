@@ -30,7 +30,7 @@ namespace TWCore.Net.RPC.Client
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<string, string> NameCache = new NonBlocking.ConcurrentDictionary<string, string>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<string, (string Name, bool IsAsync)> NameCache = new NonBlocking.ConcurrentDictionary<string, (string Name, bool IsAsync)>();
 
         /// <inheritdoc />
         /// <summary>
@@ -56,14 +56,11 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            var binderName = binder.Name;
-            if (binderName.Length > 5)
-            {
-                var name = NameCache.GetOrAdd(binderName, bName => bName.EndsWith("Async", StringComparison.Ordinal) ? bName.Substring(0, binderName.Length - 5) : bName);
+            var (name, isAsync) = NameCache.GetOrAdd(binder.Name, bName => bName.EndsWith("Async", StringComparison.Ordinal) ? (bName.Substring(0, bName.Length - 5), true) : (bName, false));
+            if (isAsync)
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args);
-            }
             else
-                result = _client.ServerInvokeAsync(_descriptor.Name, binderName, args).WaitAndResults();
+                result = _client.ServerInvokeAsync(_descriptor.Name, name, args).WaitAndResults();
             return true;
         }
     }

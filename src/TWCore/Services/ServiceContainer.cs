@@ -414,8 +414,11 @@ namespace TWCore.Services
             {
                 Core.Log.Write(ex);
                 Core.Log.Warning("Error when trying to use Console input. Changing to ProcessExit detection.");
-                ServiceStartNoConsole();
-                return;
+                var mres = new ManualResetEventSlim(false);
+                AppDomain.CurrentDomain.ProcessExit += (s, e) => mres.Set();
+                Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit for AppDomain to Stop.");
+                Core.Log.InfoBasic("**************************************************************************************");
+                mres.Wait();
             }
 
             Core.Log.InfoBasic("*** Stopping Service ***");

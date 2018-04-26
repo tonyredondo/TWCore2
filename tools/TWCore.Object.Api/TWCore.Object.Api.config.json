@@ -3,7 +3,8 @@
     "Core.DebugMode": true,
     "FileSystem.RootPaths": "",
     "WebService.Urls": "http://*:50999",
-    "AssemblyResolverManager.Paths" :  "./assemblies"
+    "AssemblyResolverManager.Paths" :  "./assemblies",
+    "ImportRemoteAssemblies" : false
   },
   "Core": {
     "environmentName": "DEV",

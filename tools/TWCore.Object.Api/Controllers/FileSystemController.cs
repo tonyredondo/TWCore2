@@ -442,14 +442,17 @@ namespace TWCore.Object.Api.Controllers
                 
                 var appNames = traceFilesServices.Select(ts => ts.ApplicationName).ToArray();
 
-                var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");
-                var folderServicesData = folderServices
-                    .Where((s, names) => names.Contains(s.ApplicationName) && s.ApplicationName != Core.ApplicationName, appNames)
-                    .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
-                    .ToArray();
+                if (Core.Settings["ImportRemoteAssemblies"].ParseTo(false))
+                {
+                    var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");
+                    var folderServicesData = folderServices
+                        .Where((s, names) => names.Contains(s.ApplicationName) && s.ApplicationName != Core.ApplicationName, appNames)
+                        .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
+                        .ToArray();
 
-                var asmResolver = AssemblyResolverManager.GetAssemblyResolver();
-                asmResolver?.AppendPath(folderServicesData);
+                    var asmResolver = AssemblyResolverManager.GetAssemblyResolver();
+                    asmResolver?.AppendPath(folderServicesData);
+                }
 
                 var servicesPathEntries = new Dictionary<string, PathEntry>();
     

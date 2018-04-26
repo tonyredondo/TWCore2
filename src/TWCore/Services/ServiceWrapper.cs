@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 // ReSharper disable MemberCanBeProtected.Global
 // ReSharper disable IntroduceOptionalParameters.Global
@@ -122,14 +123,14 @@ namespace TWCore.Services
                 _serviceStatus = ServiceStatus.Starting;
                 _args = args;
                 Service.OnStart(args);
+                _serviceStatus = ServiceStatus.Running;
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
-            }
-            finally
-            {
-                _serviceStatus = ServiceStatus.Running;
+                _serviceStatus = ServiceStatus.Stopping;
+                Task.Delay(1000).WaitAsync();
+                Environment.FailFast(ex.Message, ex);
             }
         }
         /// <inheritdoc />
@@ -146,6 +147,8 @@ namespace TWCore.Services
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
+                Task.Delay(1000).WaitAsync();
+                Environment.FailFast(ex.Message, ex);
             }
             finally
             {
@@ -162,14 +165,14 @@ namespace TWCore.Services
             {
                 _serviceStatus = ServiceStatus.Continuing;
                 Service.OnContinue();
+                _serviceStatus = ServiceStatus.Running;
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
-            }
-            finally
-            {
-                _serviceStatus = ServiceStatus.Running;
+                _serviceStatus = ServiceStatus.Stopping;
+                Task.Delay(1000).WaitAsync();
+                Environment.FailFast(ex.Message, ex);
             }
         }
         /// <inheritdoc />
@@ -186,6 +189,9 @@ namespace TWCore.Services
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
+                _serviceStatus = ServiceStatus.Stopping;
+                Task.Delay(1000).WaitAsync();
+                Environment.FailFast(ex.Message, ex);
             }
             finally
             {
@@ -206,6 +212,8 @@ namespace TWCore.Services
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
+                Task.Delay(1000).WaitAsync();
+                Environment.FailFast(ex.Message, ex);
             }
             finally
             {

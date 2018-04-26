@@ -44,6 +44,9 @@ namespace TWCore
     public sealed class DefaultFactories : Factories
     {
         private const string EnvironmentVariableName = "TWCORE_ENVIRONMENT";
+        private const string MachineVariableName = "TWCORE_MACHINE";
+        private const string ForceEnvironmentVariableName = "TWCORE_FORCE_ENVIRONMENT";
+        private const string ForceMachineVariableName = "TWCORE_FORCE_MACHINE";
         private Assembly[] _assemblies;
         private bool _usedResolver;
         private static CpuUsage _cpuUsage;
@@ -107,7 +110,7 @@ namespace TWCore
 
             Core.Log.ItemFactory = Factory.CreateLogItem;
             Core.Trace.ItemFactory = Factory.CreateTraceItem;
-            Core.MachineName = Environment.MachineName;
+            Core.MachineName = Environment.GetEnvironmentVariable(MachineVariableName) ?? Environment.MachineName;
             Core.ApplicationName = Assembly.GetEntryAssembly().GetName().Name;
             Core.ApplicationDisplayName = Core.ApplicationName;
             Core.EnvironmentName = Environment.GetEnvironmentVariable(EnvironmentVariableName);
@@ -124,14 +127,12 @@ namespace TWCore
             {
                 argConfigFile = argConfigFile.Substring(11).Replace("'", string.Empty).Trim();
                 if (!LoadConfigFile(argConfigFile, cleanArguments))
-                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded. CommandLine: {1}",
-                        argConfigFile, argumentLine));
+                    throw new FileNotFoundException($"Configuration file: '{argConfigFile}' couldn't be loaded. CommandLine: {argumentLine}");
             }
             else if (ConfigurationFile != null)
             {
                 if (!LoadConfigFile(ConfigurationFile, cleanArguments))
-                    throw new FileNotFoundException(string.Format("Configuration file: '{0}' couldn't be loaded.",
-                        ConfigurationFile));
+                    throw new FileNotFoundException($"Configuration file: '{ConfigurationFile}' couldn't be loaded.");
             }
             else if (!LoadConfigFile($"{Core.ApplicationName}.config.json", cleanArguments))
             {
@@ -271,10 +272,10 @@ namespace TWCore
                 obj => { obj.ShouldEndExecution = false; });
 
             var envConfigFile = args?.FirstOrDefault(a => a.StartsWith("environment=", StringComparison.OrdinalIgnoreCase));
-            envConfigFile = envConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
+            envConfigFile = envConfigFile?.Substring(12).Replace("'", string.Empty).Trim();
 
             var mnameConfigFile = args?.FirstOrDefault(a => a.StartsWith("machinename=", StringComparison.OrdinalIgnoreCase));
-            mnameConfigFile = mnameConfigFile?.Substring(12)?.Replace("'", string.Empty).Trim();
+            mnameConfigFile = mnameConfigFile?.Substring(12).Replace("'", string.Empty).Trim();
 
             if (args?.Any(a => string.Equals(a, "noconsole", StringComparison.Ordinal)) == true)
                 ServiceContainer.HasConsole = false;
@@ -283,8 +284,6 @@ namespace TWCore
                 Core.EnvironmentName = envConfigFile;
             if (mnameConfigFile.IsNotNullOrWhitespace())
                 Core.MachineName = mnameConfigFile;
-
-            configFile = ResolveLowLowFilePath(configFile);
 
             if (!File.Exists(configFile))
             {
@@ -306,10 +305,29 @@ namespace TWCore
                         Core.ApplicationName = fSettings.Core.ApplicationName;
                     if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
                         Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
-                    if (fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
-                        Core.LoadSettings(ResolveLowLowFilePath(fSettings.Core.SettingsFile));
                 }
 
+                var forcedEnvironmentVariable = Environment.GetEnvironmentVariable(ForceEnvironmentVariableName);
+                if (forcedEnvironmentVariable != null && envConfigFile.IsNullOrWhitespace())
+                {
+                    Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName, forcedEnvironmentVariable);
+                    Core.EnvironmentName = forcedEnvironmentVariable;
+                }
+                var forcedMachineVariable = Environment.GetEnvironmentVariable(ForceMachineVariableName);
+                if (forcedMachineVariable != null && mnameConfigFile.IsNullOrWhitespace())
+                {
+                    Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName, forcedMachineVariable);
+                    Core.MachineName = forcedMachineVariable;
+                }
+
+                if (fSettings.Core != null && fSettings.Core.SettingsFile.IsNotNullOrWhitespace())
+                {
+                    var settingsFile = ResolveLowLowFilePath(fSettings.Core.SettingsFile);
+                    if (settingsFile == null)
+                        throw new FileNotFoundException("The settings file: " + fSettings.Core.SettingsFile + " was not found.");
+                    Core.LoadSettings(settingsFile);
+                }
+                
                 if (fSettings.AppSettings != null)
                 {
                     foreach (var item in fSettings.AppSettings)
@@ -336,7 +354,12 @@ namespace TWCore
                 Core.RebindSettings();
 
                 if (fSettings.Core != null && fSettings.Core.InjectorFile.IsNotNullOrWhitespace())
-                    Core.LoadInjector(ResolveLowLowFilePath(fSettings.Core.InjectorFile));
+                {
+                    var injectorFile = ResolveLowLowFilePath(fSettings.Core.InjectorFile);
+                    if (injectorFile == null)
+                        throw new FileNotFoundException("The injector file: " + fSettings.Core.InjectorFile + " was not found.");
+                    Core.LoadInjector(injectorFile);
+                }
 
                 return true;
             }

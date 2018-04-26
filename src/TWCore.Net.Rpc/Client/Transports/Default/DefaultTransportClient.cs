@@ -217,13 +217,24 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         #endregion
 
         #region Interface Methods
+
         /// <inheritdoc />
         /// <summary>
         /// Initialize the Transport client
         /// </summary>
         /// <returns>Task of the method execution</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task InitAsync() => ConnectAsync();
+        public async Task InitAsync()
+        {
+            try
+            {
+                await ConnectAsync().ConfigureAwait(false);
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Error(ex.Message);
+            }
+        }
         /// <inheritdoc />
         /// <summary>
         /// Gets the descriptors for the RPC service

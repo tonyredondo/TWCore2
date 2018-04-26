@@ -190,7 +190,7 @@ namespace TWCore.Cache.Client
                     }
                     catch (Exception ex)
                     {
-                        Core.Log.Write(ex);
+                        Core.Log.Error("Ping Error on {0}: {1}", Name, ex.InnerException?.Message ?? ex.Message);
                         Enabled = false;
                         if (PingFailure == int.MaxValue) PingFailure = 15;
                         if (PingConsecutiveFailure == int.MaxValue) PingConsecutiveFailure = 15;
@@ -203,7 +203,10 @@ namespace TWCore.Cache.Client
                         EnabledChanged?.Invoke(this, Enabled);
                     Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
 
-                    await Task.Delay(PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay, _token).ConfigureAwait(false);
+                    var waitDelay = PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay;
+                    if (Enabled == false)
+                        Core.Log.Warning("{0} is Disabled due connection issues, Trying a new ping on: {1}ms", Name, waitDelay);
+                    await Task.Delay(waitDelay, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)
                 {

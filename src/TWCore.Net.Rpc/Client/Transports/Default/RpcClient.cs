@@ -178,8 +178,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _onSession = false;
                 _client.Close();
                 _client = null;
-                _readStream.Dispose();
-                _writeStream.Dispose();
+                _readStream?.Dispose();
+                _writeStream?.Dispose();
                 _networkStream = null;
                 _readStream = null;
                 _writeStream = null;

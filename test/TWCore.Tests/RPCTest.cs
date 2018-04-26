@@ -132,6 +132,8 @@ namespace TWCore.Tests
             var sTime = sw.Elapsed;
             Console.ReadLine();
             Core.Log.Warning("All Rpc Requests on: {0}", sTime);
+            rpcClient.Dispose();
+            await rpcServer.StopAsync().ConfigureAwait(false);
             Core.Log.InfoBasic("Test End.");
         }
     }

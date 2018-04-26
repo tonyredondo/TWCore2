@@ -52,17 +52,25 @@ namespace TWCore.Tests
             var hClient = await rpcClient.CreateDynamicProxyAsync<ISampleProvider>().ConfigureAwait(false);
             var client = hClient.ActAs<ISampleProvider>();
 
+            Core.Log.InfoBasic("GetSampleAsync");
             var sampleTsk = await client.GetSampleAsync().ConfigureAwait(false);
+            Core.Log.InfoBasic("DelayTestAsync");
             await client.DelayTestAsync().ConfigureAwait(false);
+            Core.Log.InfoBasic("GetSample");
             var sample = client.GetSample();
+            Core.Log.InfoBasic("GetSample as Async");
             var sampleSimAsync = ((dynamic) hClient).GetSample2Async().Result;
 
             var pClient = await rpcClient.CreateProxyAsync<SampleProxy>().ConfigureAwait(false);
-
+            Core.Log.InfoBasic("GetSampleAsync");
             var sampleTsk2 = await pClient.GetSampleAsync().ConfigureAwait(false);
+            Core.Log.InfoBasic("DelayTestAsync");
             await pClient.DelayTestAsync().ConfigureAwait(false);
+            Core.Log.InfoBasic("GetSample");
             var sample2 = pClient.GetSample();
 
+            rpcClient.Dispose();
+            await rpcServer.StopAsync().ConfigureAwait(false);
         }
 
 

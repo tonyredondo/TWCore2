@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Attributes;
 using TWCore.Net.RPC.Descriptors;
 using TWCore.Net.RPC.Server.Transports;
+using TWCore.Reflection;
 
 // ReSharper disable InconsistentNaming
 // ReSharper disable MemberCanBePrivate.Local
@@ -209,6 +210,7 @@ namespace TWCore.Net.RPC.Server
         #region Nested ServiceItem Class
         private class ServiceItem
         {
+            public static readonly NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo> TaskResultsProperties = new NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo>();
             private readonly RPCServer _server;
             private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
 
@@ -309,7 +311,21 @@ namespace TWCore.Net.RPC.Server
                 {
 					lock (_threadClientId) _threadClientId[Environment.CurrentManagedThreadId] = clientId;
                     ConnectionCancellationToken = cancellationToken;
-                    response.ReturnValue = mDesc.Method(ServiceInstance, request.Parameters);
+                    var results = mDesc.Method(ServiceInstance, request.Parameters);
+                    if (results is Task resultTask)
+                    {
+                        resultTask.WaitAsync();
+                        var type = results.GetType();
+                        if (type.GenericTypeArguments.Length > 0)
+                        {
+                            var resultProperty = TaskResultsProperties.GetOrAdd(results.GetType(), mType => mType.GetProperty("Result").GetFastPropertyInfo());
+                            response.ReturnValue = resultProperty.GetValue(resultTask);
+                        }
+                        else
+                            response.ReturnValue = null;
+                    }
+                    else
+                        response.ReturnValue = results;
                 }
                 catch (TargetInvocationException ex)
                 {

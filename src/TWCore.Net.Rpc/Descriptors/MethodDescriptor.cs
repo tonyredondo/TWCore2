@@ -54,5 +54,10 @@ namespace TWCore.Net.RPC.Descriptors
         /// </summary>
         [XmlIgnore, NonSerialize]
         public MethodAccessorDelegate Method { get; internal set; }
+        /// <summary>
+        /// Type of ReturnType
+        /// </summary>
+        [XmlIgnore, NonSerialize]
+        public Type TypeOfReturnType { get; internal set; }
     }
 }

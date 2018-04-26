@@ -236,8 +236,8 @@ namespace TWCore.Tests
         public SimplePerson GetSimplePersona(Guid simplePersonaId) => InvokeArgs<Guid, SimplePerson>(simplePersonaId);
         public SimplePerson GetSimplePersona(string name, string apellido) => InvokeArgs<string, string, SimplePerson>(name, apellido);
 
-        public Task<List<SimplePerson>> GetAllAsync() => InvokeArgsAsync<List<SimplePerson>>();
+        public Task<List<SimplePerson>> GetAllAsync() => InvokeArgsAsAsync<List<SimplePerson>>();
     }
-    #endregion
 
+#endregion
 }

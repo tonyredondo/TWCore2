@@ -120,46 +120,48 @@ namespace TWCore.Net.RPC.Client
 			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5).WaitAndResults();
         #endregion
 
+
+
         #region InvokeAsync Generic
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName));
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<T> InvokeAsync<T>(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+			=> _client.ServerInvokeAsync<T>(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
         #endregion
 
         #region InvokeAsync 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync([CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName));
+			=> _client.ServerInvokeAsync(_serviceName, memberName);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3, arg4);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<object> InvokeAsync(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "") 
-			=> _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+			=> _client.ServerInvokeAsync(_serviceName, memberName, arg1, arg2, arg3, arg4, arg5);
         #endregion
 
         #region Alternative Invokes
@@ -168,36 +170,100 @@ namespace TWCore.Net.RPC.Client
             => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, memberName).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<TResult> InvokeArgsAsync<TResult>([CallerMemberName]string memberName = "")
-            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, GetMemberName(memberName));
+            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, memberName);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected TResult InvokeArgs<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
             => _client.ServerInvokeAsync<TArg1, TResult>(_serviceName, memberName, arg1).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<TResult> InvokeArgsAsync<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1,TResult>(_serviceName, GetMemberName(memberName), arg1);
+            => _client.ServerInvokeAsync<TArg1,TResult>(_serviceName, memberName, arg1);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected TResult InvokeArgs<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
             => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, memberName, arg1, arg2).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2);
+            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, memberName, arg1, arg2);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected TResult InvokeArgs<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
             => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, memberName, arg1, arg2, arg3).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
-            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, memberName, arg1, arg2, arg3);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected TResult InvokeArgs<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
             => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, memberName, arg1, arg2, arg3, arg4).WaitAndResults();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Task<TResult> InvokeArgsAsync<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, memberName, arg1, arg2, arg3, arg4);
+        #endregion
+
+
+
+        #region InvokeAsAsync Generic
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>([CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>(object arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<T> InvokeAsAsync<T>(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<T>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+        #endregion
+
+        #region InvokeAsAsync 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync([CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync(object arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync(object arg1, object arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, object arg4, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<object> InvokeAsAsync(object arg1, object arg2, object arg3, object arg4, object arg5, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4, arg5);
+        #endregion
+
+        #region Alternative InvokesWithAsync
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<TResult> InvokeArgsAsAsync<TResult>([CallerMemberName]string memberName = "")
+            => _client.ServerInvokeNoArgumentsAsync<TResult>(_serviceName, GetMemberName(memberName));
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<TResult> InvokeArgsAsAsync<TArg1, TResult>(TArg1 arg1, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TResult>(_serviceName, GetMemberName(memberName), arg1);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TResult>(TArg1 arg1, TArg2 arg2, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TArg3, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, [CallerMemberName]string memberName = "")
+            => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected Task<TResult> InvokeArgsAsAsync<TArg1, TArg2, TArg3, TArg4, TResult>(TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, [CallerMemberName]string memberName = "")
             => _client.ServerInvokeAsync<TArg1, TArg2, TArg3, TArg4, TResult>(_serviceName, GetMemberName(memberName), arg1, arg2, arg3, arg4);
         #endregion
+
+
 
         /// <summary>
         /// Dispose all resource

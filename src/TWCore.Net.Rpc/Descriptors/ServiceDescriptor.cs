@@ -81,7 +81,8 @@ namespace TWCore.Net.RPC.Descriptors
                 {
                     Method = mInfo.GetMethodAccessor(),
                     Name = mInfo.Name,
-                    ReturnType = GetTypeName(mInfo.ReturnType)
+                    ReturnType = GetTypeName(mInfo.ReturnType),
+                    TypeOfReturnType = mInfo.ReturnType
                 };
                 RegisterServiceDescriptorType(descriptor, mInfo.ReturnType);
 

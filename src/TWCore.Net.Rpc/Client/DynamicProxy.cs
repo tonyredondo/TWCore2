@@ -17,7 +17,9 @@ limitations under the License.
 using System;
 using System.Diagnostics;
 using System.Dynamic;
+using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Net.RPC.Descriptors;
 
 namespace TWCore.Net.RPC.Client
@@ -30,7 +32,8 @@ namespace TWCore.Net.RPC.Client
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly RPCClient _client;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly ServiceDescriptor _descriptor;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<string, (string Name, bool IsAsync)> NameCache = new NonBlocking.ConcurrentDictionary<string, (string Name, bool IsAsync)>();
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly object[] _taskArgument = new object[1];
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly NonBlocking.ConcurrentDictionary<Type, MethodInfo> TaskFromResultsMethods = new NonBlocking.ConcurrentDictionary<Type, MethodInfo>();
 
         /// <inheritdoc />
         /// <summary>
@@ -56,8 +59,34 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
         {
-            var (name, isAsync) = NameCache.GetOrAdd(binder.Name, bName => bName.EndsWith("Async", StringComparison.Ordinal) ? (bName.Substring(0, bName.Length - 5), true) : (bName, false));
+            var name = binder.Name;
+            var descriptor = _client.GetMethodDescriptor(_descriptor.Name, name, args);
+            var asyncAdapter = false;
+            if (descriptor == null && name.EndsWith("Async", StringComparison.Ordinal))
+            {
+                name = name.Substring(0, name.Length - 5);
+                descriptor = _client.GetMethodDescriptor(_descriptor.Name, name, args);
+                asyncAdapter = true;
+            }
+            if (descriptor == null)
+                throw new Exception("Method not found");
+
+            var returnType = descriptor.TypeOfReturnType;
+            var isAsync = returnType == typeof(Task) || returnType.BaseType == typeof(Task);
             if (isAsync)
+            {
+                var res = _client.ServerInvokeAsync(_descriptor.Name, name, args).WaitAndResults();
+                if (returnType.GenericTypeArguments.Length > 0)
+                {
+                    var taskCreator = TaskFromResultsMethods.GetOrAdd(returnType.GenericTypeArguments[0], type => typeof(Task).GetMethod("FromResult").MakeGenericMethod(type));
+                    _taskArgument[0] = res;
+                    result = taskCreator.Invoke(null, _taskArgument);
+                    _taskArgument[0] = null;
+                }
+                else
+                    result = Task.CompletedTask;
+            }
+            else if (asyncAdapter)
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args);
             else
                 result = _client.ServerInvokeAsync(_descriptor.Name, name, args).WaitAndResults();

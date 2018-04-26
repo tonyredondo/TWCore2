@@ -61,19 +61,19 @@ namespace TWCore.Net.RPC.Client.Grid
         /// Gets if node is available to process.
         /// </summary>
         /// <returns>true if the node is ready; otherwise, false.</returns>
-        public Task<bool> GetIsReadyAsync() => InvokeAsync<bool>();
+        public Task<bool> GetIsReadyAsync() => InvokeAsAsync<bool>();
         /// <summary>
         /// Node Init Method
         /// </summary>
         /// <param name="args">Arguments</param>
         /// <returns>Output object</returns>
-		public Task<object> InitAsync(params object[] args) => InvokeAsync(args);
+		public Task<object> InitAsync(params object[] args) => InvokeAsAsync(args);
         /// <summary>
         /// Start the process execution
         /// </summary>
         /// <param name="args">Arguments</param>
         /// <returns>Response object</returns>
-		public Task<object> ProcessAsync(params object[] args) => InvokeAsync(args);
+		public Task<object> ProcessAsync(params object[] args) => InvokeAsAsync(args);
 
     }
 }

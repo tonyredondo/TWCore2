@@ -251,6 +251,13 @@ namespace TWCore.Net.RPC.Client
         #endregion
 
         #region Alternative ServerInvoke Async
+        /// <summary>
+        /// Invokes a Server RPC method with no arguments
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Server method name</param>
+        /// <param name="cancellationToken">Cancellation Token instance</param>
+        /// <returns>Server method return value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeNoArgumentsAsync<TReturn>(string serviceName, string method, CancellationToken? cancellationToken = null)
         {
@@ -317,7 +324,6 @@ namespace TWCore.Net.RPC.Client
             {
             }
         }
-
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<TReturn> ServerInvokeAsync<TArg1, TReturn>(string serviceName, string method, TArg1 arg1, CancellationToken? cancellationToken = null)
@@ -420,6 +426,34 @@ namespace TWCore.Net.RPC.Client
             if (response.Exception != null)
                 throw response.Exception.GetException();
             return (TReturn)response.ReturnValue;
+        }
+
+        /// <summary>
+        /// Get Method Descriptor
+        /// </summary>
+        /// <param name="serviceName">Service name</param>
+        /// <param name="method">Server method name</param>
+        /// <param name="args">Server method arguments</param>
+        /// <returns>Method descriptor</returns>
+        public MethodDescriptor GetMethodDescriptor(string serviceName, string method, object[] args)
+        {
+            Type[] types = null;
+            if (args != null)
+            {
+                types = new Type[args.Length];
+                for (var i = 0; i < args.Length; i++)
+                {
+                    if (args[i] != null)
+                        types[i] = args[i].GetType();
+                }
+            }
+            var key = (serviceName, method, types);
+            if (!_methodDescriptorCache.TryGetValue(key, out var mDesc))
+            {
+                var methodDescriptorCreator = new MethodDescriptorCreator(args, Descriptors);
+                mDesc = _methodDescriptorCache.GetOrAdd(key, methodDescriptorCreator.Create);
+            }
+            return mDesc;
         }
         #endregion
 

@@ -286,9 +286,14 @@ namespace TWCore.Reflection
             }
             return null;
         }
-
+        
+        /// <summary>
+        /// Is Excluded Assembly
+        /// </summary>
+        /// <param name="assemblyName">Assembly name</param>
+        /// <returns>true if the assembly should be excluded; otherwise, false</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool IsExcludedAssembly(string assemblyName)
+        public static bool IsExcludedAssembly(string assemblyName)
         {
             return assemblyName.StartsWith("Microsoft", StringComparison.OrdinalIgnoreCase) ||
                    assemblyName.StartsWith("Libuv", StringComparison.OrdinalIgnoreCase) ||

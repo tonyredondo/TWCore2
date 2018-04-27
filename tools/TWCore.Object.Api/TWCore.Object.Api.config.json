@@ -4,7 +4,8 @@
     "FileSystem.RootPaths": "",
     "WebService.Urls": "http://*:50999",
     "AssemblyResolverManager.Paths" :  "./assemblies",
-    "ImportRemoteAssemblies" : false
+    "ImportRemoteAssemblies": true,
+    "ImportRemoteAssembliesPath" :  "./assemblies"
   },
   "Core": {
     "environmentName": "DEV",

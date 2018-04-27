@@ -19,6 +19,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
@@ -442,7 +443,7 @@ namespace TWCore.Object.Api.Controllers
                 
                 var appNames = traceFilesServices.Select(ts => ts.ApplicationName).ToArray();
 
-                if (Core.Settings["ImportRemoteAssemblies"].ParseTo(false))
+                if (Core.Settings["ImportRemoteAssemblies"].ParseTo(false) && Core.Settings["ImportRemoteAssembliesPath"] != null)
                 {
                     var folderServices = DiscoveryService.GetLocalRegisteredServices("FOLDERS");
                     var folderServicesData = folderServices
@@ -450,8 +451,35 @@ namespace TWCore.Object.Api.Controllers
                         .Select(s => s.Data.GetValue() is string[] strArray ? strArray[0] : null)
                         .ToArray();
 
+                    var destinationPath = Core.Settings["ImportRemoteAssembliesPath"];
+                    foreach (var path in folderServicesData)
+                    {
+                        var localExeFiles = Directory.EnumerateFiles(path, "*.exe", SearchOption.AllDirectories);
+                        var localDllFiles = Directory.EnumerateFiles(path, "*.dll", SearchOption.AllDirectories);
+                        var localFiles = localExeFiles.Concat(localDllFiles);
+                        foreach (var file in localFiles)
+                        {
+                            try
+                            {
+                                var name = AssemblyName.GetAssemblyName(file);
+                                if (AssemblyResolver.IsExcludedAssembly(name.Name)) continue;
+                                var destinationFile = Path.Combine(destinationPath, Path.GetFileName(file));
+                                if (!System.IO.File.Exists(destinationFile))
+                                    System.IO.File.Copy(file, destinationFile);
+                            }
+                            catch (BadImageFormatException)
+                            {
+                                //
+                            }
+                            catch (Exception)
+                            {
+                                //
+                            }
+                        }
+                    }
+
                     var asmResolver = AssemblyResolverManager.GetAssemblyResolver();
-                    asmResolver?.AppendPath(folderServicesData);
+                    asmResolver?.AppendPath(destinationPath);
                 }
 
                 var servicesPathEntries = new Dictionary<string, PathEntry>();

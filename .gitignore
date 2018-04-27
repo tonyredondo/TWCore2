@@ -118,3 +118,4 @@ cachedViews/*
 /tools/TWCore.Diagnostics.Api/traces
 .idea/
 *.userprefs
+/tools/TWCore.Object.Api/assemblies

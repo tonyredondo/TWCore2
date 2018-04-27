@@ -252,6 +252,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         _client?.Close();
                     }
                 }
+                catch (SocketException ex)
+                {
+                    Core.Log.Error(ex.Message);
+                    OnMessageReceived?.Invoke(this, new RPCError() { Exception = new SerializableException(ex) });
+                    break;
+                }
                 catch (Exception ex)
                 {
                     Core.Log.Write(ex);

@@ -206,6 +206,8 @@ namespace TWCore.Cache.Client
                     var waitDelay = PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay;
                     if (Enabled == false)
                         Core.Log.Warning("{0} is Disabled due connection issues, Trying a new ping on: {1}ms", Name, waitDelay);
+                    if (!lastEnabled && Enabled)
+                        Core.Log.InfoBasic("{0} is connected.", Name);
                     await Task.Delay(waitDelay, _token).ConfigureAwait(false);
                 }
                 catch (TaskCanceledException)

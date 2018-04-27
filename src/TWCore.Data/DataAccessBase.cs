@@ -336,7 +336,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -535,7 +534,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -656,7 +654,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -743,7 +740,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -848,7 +844,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1066,7 +1061,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1246,7 +1240,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1430,7 +1423,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1574,7 +1566,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1682,7 +1673,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1769,7 +1759,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -1878,7 +1867,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -2080,7 +2068,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }
@@ -2242,7 +2229,6 @@ namespace TWCore.Data
             }
             catch (Exception ex)
             {
-                Core.Log.Write(ex);
                 FireOnError(ex);
                 throw;
             }

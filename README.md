@@ -9,7 +9,7 @@ A multipurpose framework library for netstandard 2, used to create microservices
 - A bot subsystem to create bot services on Telegram and Slack
 - Extensions methods for objects, strings, and IEnumerables.
 - Aspnet Core object viewer and compiler developer tool.
-- Fast and lower allocations.
+- Fast and fewer allocations.
 
 
 

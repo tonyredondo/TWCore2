@@ -85,6 +85,16 @@ namespace TWCore.Bot.Slack
             var user = obj.user != null ? _client.UserLookup[obj.user] : null;
             if (channel == null)
             {
+                var channels = GetChannelListAsync().WaitAndResults();
+                channel = channels.channels.FirstOrDefault((i, c) => i.id == c, obj.channel);
+            }
+            if (user == null)
+            {
+                var users = GetUserListAsync().WaitAndResults();
+                user = users.members.FirstOrDefault((i, c) => i.id == c, obj.user);
+            }
+            if (channel == null)
+            {
                 Core.Log.Warning("Channel can't be found");
                 channel = new Channel
                 {

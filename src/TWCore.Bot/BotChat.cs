@@ -41,5 +41,10 @@ namespace TWCore.Bot
         /// </summary>
         [XmlAttribute, DataMember]
         public string Name { get; set; }
+        /// <summary>
+        /// Chat state
+        /// </summary>
+        [DataMember]
+        public object State { get; set; }
     }
 }

@@ -306,8 +306,14 @@ namespace TWCore.Bot
             if (sCommands.Any())
             {
                 #region Get Chat
-                if (!Chats.Contains(message.Chat.Id))
+                if (Chats.TryGet(message.Chat.Id, out var storedChat))
+                {
+                    message.Chat.State = storedChat.State;
+                }
+                else
+                {
                     Chats.Add(message.Chat);
+                }
                 #endregion
 
                 #region Get User
@@ -333,8 +339,14 @@ namespace TWCore.Bot
             var message = e.Item1;
 
             #region Get Chat
-            if (!Chats.Contains(message.Chat.Id))
+            if (Chats.TryGet(message.Chat.Id, out var storedChat))
+            {
+                message.Chat.State = storedChat.State;
+            }
+            else
+            {
                 Chats.Add(message.Chat);
+            }
             #endregion
 
             #region Get User

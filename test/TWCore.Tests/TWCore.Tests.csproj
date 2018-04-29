@@ -1,18 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Version>0.2.0-alpha</Version>
   </PropertyGroup>
-
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
-  
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Bot.Slack\TWCore.Bot.Slack.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Bot.Telegram\TWCore.Bot.Telegram.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Bot\TWCore.Bot.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Cache.Client\TWCore.Cache.Client.csproj" />
@@ -45,5 +43,4 @@
     <ProjectReference Include="..\..\src\TWCore.Triggers\TWCore.Triggers.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
   </ItemGroup>
-
 </Project>

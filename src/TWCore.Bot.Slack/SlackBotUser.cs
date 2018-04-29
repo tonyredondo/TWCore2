@@ -13,38 +13,47 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 
-namespace TWCore.Bot
+namespace TWCore.Bot.Slack
 {
+    /// <inheritdoc />
     /// <summary>
-    /// Bot chat definition
+    /// Slack bot user
     /// </summary>
-    [DataContract]
-    public class BotChat
+    public class SlackBotUser : BotUser
     {
         /// <summary>
-        /// Chat id
+        /// User color
         /// </summary>
-        [XmlAttribute, DataMember]
-        public string Id { get; set; }
+        public string Color { get; set; }
         /// <summary>
-        /// Chat type
+        /// User presence
         /// </summary>
-        [XmlAttribute, DataMember]
-        public BotChatType ChatType { get; set; }
+        public string Presence { get; set; }
         /// <summary>
-        /// Chat name
+        /// User email
         /// </summary>
-        [XmlAttribute, DataMember]
-        public string Name { get; set; }
+        public string Email { get; set; }
         /// <summary>
-        /// Chat state
+        /// User firstname
         /// </summary>
-        [DataMember]
-        public object State { get; set; }
+        public string FirstName { get; set; }
+        /// <summary>
+        /// User lastname
+        /// </summary>
+        public string LastName { get; set; }
+        /// <summary>
+        /// User real name
+        /// </summary>
+        public string RealName { get; set; }
+        /// <summary>
+        /// User skype contact
+        /// </summary>
+        public string Skype { get; set; }
+        /// <summary>
+        /// User phone
+        /// </summary>
+        public string Phone { get; set; }
     }
 }

@@ -81,87 +81,88 @@ namespace TWCore.Bot.Slack
         #region Private Methods
         private void ClientOnOnMessageReceived(NewMessage obj)
         {
-            var channel = obj.channel != null ? _client.ChannelLookup[obj.channel] : null;
-            var user = obj.user != null ? _client.UserLookup[obj.user] : null;
-            if (channel == null)
+            try
             {
-                var channels = GetChannelListAsync().WaitAndResults();
-                channel = channels.channels.FirstOrDefault((i, c) => i.id == c, obj.channel);
-            }
-            if (user == null)
-            {
-                var users = GetUserListAsync().WaitAndResults();
-                user = users.members.FirstOrDefault((i, c) => i.id == c, obj.user);
-            }
-            if (channel == null)
-            {
-                Core.Log.Warning("Channel can't be found");
-                channel = new Channel
+                _client.ConversationLookup.TryGetValue(obj.channel, out var conversation);
+                _client.UserLookup.TryGetValue(obj.user, out var user);
+
+                var chatType = BotChatType.Channel;
+                var chatId = obj.channel;
+                var chatName = obj.channel;
+
+                if (conversation is Channel cnn)
                 {
-                    id = obj.channel,
-                    name = obj.channel
-                };
-            }
-            if (user == null)
-            {
-                Core.Log.Warning("User can't be found");
-                user = new User
-                {
-                    id = obj.user,
-                    name = obj.user
-                };
-            }
-            var message = new BotTextMessage
-            {
-                Id = obj.id.ToString(),
-                Date = obj.ts,
-                Text = obj.text,
-                Chat = new BotChat
-                {
-                    ChatType = BotChatType.Channel,
-                    Id = channel.id,
-                    Name = channel.name
-                },
-                User = new SlackBotUser
-                {
-                    Id = user.id,
-                    Name = user.name,
-                    Color = user.color,
-                    Presence = user.presence,
-                    Email = user.profile?.email,
-                    FirstName = user.profile?.first_name,
-                    LastName = user.profile?.last_name,
-                    RealName = user.profile?.real_name,
-                    Skype = user.profile?.skype,
-                    Phone = user.profile?.phone
+                    chatType = cnn.is_group ? BotChatType.Group : BotChatType.Channel;
+                    chatName = cnn.name;
                 }
-            };
-            TextMessageReceived?.Invoke(this, new EventArgs<BotTextMessage>(message));
+                else if (conversation is DirectMessageConversation dmc)
+                {
+                    chatType = BotChatType.Private;
+                    if (_client.UserLookup.TryGetValue(dmc.user, out var privateUser))
+                        chatName = privateUser.name;
+                    else
+                        chatName = dmc.user;
+                }
+
+                var message = new BotTextMessage
+                {
+                    Id = obj.id.ToString(),
+                    Date = obj.ts,
+                    Text = obj.text,
+                    Chat = new BotChat
+                    {
+                        ChatType = chatType,
+                        Id = chatId,
+                        Name = chatName
+                    },
+                    User = new SlackBotUser
+                    {
+                        Id = user?.id ?? obj.user,
+                        Name = user?.name ?? obj.user,
+                        Color = user?.color,
+                        Presence = user?.presence,
+                        Email = user?.profile?.email,
+                        FirstName = user?.profile?.first_name,
+                        LastName = user?.profile?.last_name,
+                        RealName = user?.profile?.real_name,
+                        Skype = user?.profile?.skype,
+                        Phone = user?.profile?.phone
+                    }
+                };
+                TextMessageReceived?.Invoke(this, new EventArgs<BotTextMessage>(message));
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
         private Task<LoginResponse> ConnectClientAsync()
         {
-            var tskSource = new TaskCompletionSource<LoginResponse>();
+            var tskSource = new TaskCompletionSource<LoginResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             IsConnected = false;
+            Core.Log.LibDebug("Starting connection...");
             _client.Connect(connected =>
             {
                 // This is called once the client has emitted the RTM start command
+                Core.Log.LibDebug("RTM started.");
                 IsConnected = true;
                 tskSource.TrySetResult(connected);
             }, () =>
             {
                 // This is called once the RTM client has connected to the end point
+                Core.Log.LibDebug("Socket connected, waiting for RTM start.");
             });
             return tskSource.Task;
         }
         private Task<ChannelListResponse> GetChannelListAsync()
         {
-            var tskSource = new TaskCompletionSource<ChannelListResponse>();
+            var tskSource = new TaskCompletionSource<ChannelListResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             _client.GetChannelList(response => tskSource.TrySetResult(response));
             return tskSource.Task;
         }
         private Task<UserListResponse> GetUserListAsync()
         {
-            var tskSource = new TaskCompletionSource<UserListResponse>();
+            var tskSource = new TaskCompletionSource<UserListResponse>(TaskCreationOptions.RunContinuationsAsynchronously);
             _client.GetUserList(response => tskSource.TrySetResult(response));
             return tskSource.Task;
         }
@@ -178,9 +179,13 @@ namespace TWCore.Bot.Slack
             if (_client != null && _client.IsConnected) return;
             _client = new SlackSocketClient(Token);
             _client.OnMessageReceived += ClientOnOnMessageReceived;
+            Core.Log.LibDebug("Connecting...");
             var loginResponse = await ConnectClientAsync().ConfigureAwait(false);
+            Core.Log.LibDebug("Connected, getting channels list...");
             var channelList = await GetChannelListAsync().ConfigureAwait(false);
+            Core.Log.LibDebug("Getting users list...");
             var userList = await GetUserListAsync().ConfigureAwait(false);
+            Core.Log.LibDebug("Connection done.");
         }
         /// <inheritdoc />
         /// <summary>
@@ -192,7 +197,7 @@ namespace TWCore.Bot.Slack
         /// <returns>Async task</returns>
         public Task SendTextMessageAsync(BotChat chat, string message, MessageParseMode parseMode = MessageParseMode.Default)
         {
-            var taskSource = new TaskCompletionSource<bool>();
+            var taskSource = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             _client.SendMessage(received => taskSource.TrySetResult(true), chat.Id, message);
             return taskSource.Task;
         }

@@ -110,10 +110,10 @@ namespace TWCore
 
             Core.Log.ItemFactory = Factory.CreateLogItem;
             Core.Trace.ItemFactory = Factory.CreateTraceItem;
-            Core.MachineName = Environment.GetEnvironmentVariable(MachineVariableName) ?? Environment.MachineName;
+            Core.MachineName = GetValueFromEnvironment(MachineVariableName) ?? Environment.MachineName;
             Core.ApplicationName = Assembly.GetEntryAssembly().GetName().Name;
             Core.ApplicationDisplayName = Core.ApplicationName;
-            Core.EnvironmentName = Environment.GetEnvironmentVariable(EnvironmentVariableName);
+            Core.EnvironmentName = GetValueFromEnvironment(EnvironmentVariableName);
 
             Task.Run(() => AttachStatus());
 
@@ -307,13 +307,13 @@ namespace TWCore
                         Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
                 }
 
-                var forcedEnvironmentVariable = Environment.GetEnvironmentVariable(ForceEnvironmentVariableName);
+                var forcedEnvironmentVariable = GetValueFromEnvironment(ForceEnvironmentVariableName);
                 if (forcedEnvironmentVariable != null && envConfigFile.IsNullOrWhitespace())
                 {
                     Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName, forcedEnvironmentVariable);
                     Core.EnvironmentName = forcedEnvironmentVariable;
                 }
-                var forcedMachineVariable = Environment.GetEnvironmentVariable(ForceMachineVariableName);
+                var forcedMachineVariable = GetValueFromEnvironment(ForceMachineVariableName);
                 if (forcedMachineVariable != null && mnameConfigFile.IsNullOrWhitespace())
                 {
                     Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName, forcedMachineVariable);
@@ -368,6 +368,24 @@ namespace TWCore
                 Core.Log.Write(ex);
                 return false;
             }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string GetValueFromEnvironment(string environmentName)
+        {
+            var environmentFile = ResolveLowLowFilePath("<</" + environmentName);
+            if (environmentFile != null)
+            {
+                try
+                {
+                    var environmentValue = File.ReadAllText(environmentFile).Trim();
+                    return environmentValue;
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Warning(ex.Message);
+                }
+            }
+            return Environment.GetEnvironmentVariable(environmentName);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()

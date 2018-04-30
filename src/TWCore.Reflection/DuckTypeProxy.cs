@@ -381,7 +381,7 @@ namespace TWCore.Reflection
 								gen.Emit(OpCodes.Ldarg_S, j + 1);
 								break;
 						}
-						if (iMethod.ReturnType.IsValueType)
+						if (parameters[j].ParameterType.IsValueType)
 							gen.Emit(OpCodes.Box, parameters[j].ParameterType);
 						gen.Emit(OpCodes.Stelem_Ref);
 					}

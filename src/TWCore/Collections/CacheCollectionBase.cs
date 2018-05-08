@@ -97,15 +97,22 @@ namespace TWCore.Collections
         #endregion
 
         #region Events
+		/// <inheritdoc />
         /// <summary>
         /// Node Hitted event
         /// </summary>
         public event CacheNodeEventDelegate<TKey, TValue> NodeHitted;
-        /// <inheritdoc />
+		/// <inheritdoc />
         /// <summary>
         /// Node Removed event
         /// </summary>
         public event CacheNodeEventDelegate<TKey, TValue> NodeRemoved;
+		/// <inheritdoc />
+		/// <summary>
+		/// Node Removed By Paging event
+		/// </summary>
+		public event CacheNodeEventDelegate<TKey, TValue> NodeRemovedByPaging;
+		/// <inheritdoc />
         /// <summary>
         /// Node Inserted event
         /// </summary>
@@ -158,6 +165,7 @@ namespace TWCore.Collections
             Interlocked.CompareExchange(ref _deletes, 0, int.MaxValue);
             Interlocked.Increment(ref _deletes);
             NodeRemoved?.Invoke(key, value);
+			NodeRemovedByPaging?.Invoke(key, value);
         }
         /// <summary>
         /// Increment inserts value

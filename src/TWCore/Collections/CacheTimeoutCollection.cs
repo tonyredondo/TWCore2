@@ -93,7 +93,7 @@ namespace TWCore.Collections
 		public CacheTimeoutCollection()
 		{
 			_collection = new LRU2QCollection<TKey, TimeoutStruct>();
-			_collection.NodeRemoved += Collection_NodeRemoved;
+			_collection.NodeRemovedByPaging += Collection_NodeRemovedByPaging;
 		}
 		/// <summary>
 		/// Cache Timeout collection, a cache collection which items are saved and deleted using a timeout. 
@@ -103,7 +103,7 @@ namespace TWCore.Collections
 		public CacheTimeoutCollection(int capacity)
 		{
 			_collection = new LRU2QCollection<TKey, TimeoutStruct>(capacity);
-			_collection.NodeRemoved += Collection_NodeRemoved;
+			_collection.NodeRemovedByPaging += Collection_NodeRemovedByPaging;
 		}
         /// <summary>
         /// Cache Timeout collection, a cache collection which items are saved and deleted using a timeout
@@ -112,10 +112,10 @@ namespace TWCore.Collections
 		public CacheTimeoutCollection(ICacheCollection<TKey, TimeoutStruct> cacheCollection)
         {
             _collection = cacheCollection;
-			_collection.NodeRemoved += Collection_NodeRemoved;
+			_collection.NodeRemovedByPaging += Collection_NodeRemovedByPaging;
         }
 
-		private void Collection_NodeRemoved(TKey key, TimeoutStruct value)
+		private void Collection_NodeRemovedByPaging(TKey key, TimeoutStruct value)
 		{
 			OnRemovedByPaging?.Invoke(key, value.Value);
 		}

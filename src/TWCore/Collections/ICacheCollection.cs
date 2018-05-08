@@ -84,10 +84,22 @@ namespace TWCore.Collections
         /// Gets the collection of Values
         /// </summary>
         ICollection<TValue> Values { get; }
-        /// <summary>
-        /// Removed by capacity event
-        /// </summary>
-        event CacheNodeEventDelegate<TKey,TValue> NodeRemoved;
+		/// <summary>
+		/// Node Hitted event
+		/// </summary>
+		event CacheNodeEventDelegate<TKey, TValue> NodeHitted;
+		/// <summary>
+		/// Node Removed event
+		/// </summary>
+		event CacheNodeEventDelegate<TKey, TValue> NodeRemoved;
+		/// <summary>
+		/// Node Removed By Paging event
+		/// </summary>
+		event CacheNodeEventDelegate<TKey, TValue> NodeRemovedByPaging;
+		/// <summary>
+		/// Node Inserted event
+		/// </summary>
+		event CacheNodeEventDelegate<TKey, TValue> NodeInserted;
         /// <summary>
         /// Adds a key/value pair to the Collection if the key does not already exist, or updates a key/value pair in the Collection 
         /// by using the specified function if the key already exists.

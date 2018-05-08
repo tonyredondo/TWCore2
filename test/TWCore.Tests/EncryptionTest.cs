@@ -5,8 +5,8 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    /// <inheritdoc />
-    public class EncryptionTest : ContainerParameterService
+	/// <inheritdoc />
+	public class EncryptionTest : ContainerParameterService
     {
         public EncryptionTest() : base("encryptiontest", "Encryption Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)

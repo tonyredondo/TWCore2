@@ -48,7 +48,11 @@
   </Global>
   <InjectorSettings EnvironmentName="" ApplicationName="TWCore.Diagnostics.Api">
     <Interfaces>
-      
+
+      <!--Messages Handlers-->
+      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticMessagesHandler, TWCore.Diagnostics.Api.Models">
+        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDbMessagesHandler, TWCore.Diagnostics.Api" />
+      </Interface>
       
     </Interfaces>
   </InjectorSettings>

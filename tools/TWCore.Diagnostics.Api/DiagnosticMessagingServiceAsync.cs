@@ -14,6 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
+using TWCore.Diagnostics.Api.Models;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 
@@ -21,10 +23,16 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticMessagingServiceAsync : BusinessMessagesServiceAsync<DiagnosticMessagingBusinessAsync>
     {
+        public static IDiagnosticMessagesHandler[] Handlers;
+
         protected override void OnInit(string[] args)
         {
             EnableMessagesTrace = false;
             base.OnInit(args);
+            
+            Handlers = Core.Injector.GetAllInstances<IDiagnosticMessagesHandler>();
+            if (Handlers == null)
+                throw new Exception("Handlers are not defined.");
         }
     }
 }

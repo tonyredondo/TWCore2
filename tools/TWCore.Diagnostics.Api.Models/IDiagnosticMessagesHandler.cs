@@ -8,9 +8,9 @@ using TWCore.Diagnostics.Trace.Storages;
 namespace TWCore.Diagnostics.Api.Models
 {
     /// <summary>
-    /// Message diagnostic handler interface
+    /// Diagnostic messages handler interface
     /// </summary>
-    public interface IMessageDiagnosticHandler
+    public interface IDiagnosticMessagesHandler
     {
         /// <summary>
         /// Process LogItems message

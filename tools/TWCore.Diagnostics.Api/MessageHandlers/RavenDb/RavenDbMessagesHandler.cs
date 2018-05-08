@@ -11,7 +11,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
 // ReSharper disable UnusedMember.Global
 
-namespace TWCore.Diagnostics.Api.MessageHandlers
+namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {

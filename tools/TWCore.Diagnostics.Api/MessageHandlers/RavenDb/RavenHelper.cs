@@ -19,7 +19,7 @@ using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using TWCore.Settings;
 
-namespace TWCore.Diagnostics.Api.MessageHandlers
+namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public static class RavenHelper
     {

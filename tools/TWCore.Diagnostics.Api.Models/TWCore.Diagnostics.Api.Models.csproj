@@ -9,6 +9,7 @@
     <LangVersion>7.2</LangVersion>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />
     <ProjectReference Include="..\..\src\TWCore\TWCore.csproj" />
   </ItemGroup>
 </Project>

@@ -663,31 +663,43 @@ namespace TWCore
         /// <summary>
         /// Load injector
         /// </summary>
-        /// <param name="settingsFilePath">Global injector settings file path</param>
+        /// <param name="injectorFilePath">Global injector settings file path</param>
         /// <param name="environmentName">Environment name</param>
         /// <param name="machineName">Machine name</param>
         /// <param name="applicationName">Application name</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void LoadInjector(string settingsFilePath, string environmentName = null, string machineName = null, string applicationName = null)
+        public static void LoadInjector(string injectorFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
+            if (injectorFilePath == null)
+                throw new NullReferenceException("The injector file path is null.");
+
             environmentName = environmentName ?? EnvironmentName;
             machineName = machineName ?? MachineName;
             applicationName = applicationName ?? ApplicationName;
 
-            settingsFilePath = settingsFilePath?.Replace("{EnvironmentName}", environmentName);
-            settingsFilePath = settingsFilePath?.Replace("{MachineName}", machineName);
-            settingsFilePath = settingsFilePath?.Replace("{ApplicationName}", applicationName);
-            Ensure.ExistFile(settingsFilePath);
-            var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(settingsFilePath));
-            Ensure.ReferenceNotNull(serializer, $"A serializer for file '{settingsFilePath}' was not found");
+            injectorFilePath = injectorFilePath?.Replace("{EnvironmentName}", environmentName);
+            injectorFilePath = injectorFilePath?.Replace("{MachineName}", machineName);
+            injectorFilePath = injectorFilePath?.Replace("{ApplicationName}", applicationName);
+            Ensure.ExistFile(injectorFilePath);
+            var serializer = SerializerManager.GetByFileExtension(Path.GetExtension(injectorFilePath));
+            Ensure.ReferenceNotNull(serializer, $"A serializer for file '{injectorFilePath}' was not found");
             InjectorGlobalSettings globalSettings;
             try
             {
-                globalSettings = serializer.DeserializeFromFile<InjectorGlobalSettings>(settingsFilePath);
+                if (serializer is ITextSerializer txtSerializer)
+                {
+                    var fileContent = File.ReadAllText(injectorFilePath);
+                    fileContent = ReplaceEnvironmentTemplate(fileContent);
+                    globalSettings = txtSerializer.DeserializeFromString<InjectorGlobalSettings>(fileContent);
+                }
+                else
+                {
+                    globalSettings = serializer.DeserializeFromFile<InjectorGlobalSettings>(injectorFilePath);
+                }
             }
             catch (Exception ex)
             {
-                throw new Exception($"The Injector settings file: {settingsFilePath} can't be deserialized.", ex);
+                throw new Exception($"The Injector settings file: {injectorFilePath} can't be deserialized.", ex);
             }
             try
             {

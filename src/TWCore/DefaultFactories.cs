@@ -310,13 +310,13 @@ namespace TWCore
                 var forcedEnvironmentVariable = GetValueFromEnvironment(ForceEnvironmentVariableName);
                 if (forcedEnvironmentVariable != null && envConfigFile.IsNullOrWhitespace())
                 {
-                    Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName, forcedEnvironmentVariable);
+					Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName ?? "(null)", forcedEnvironmentVariable);
                     Core.EnvironmentName = forcedEnvironmentVariable;
                 }
                 var forcedMachineVariable = GetValueFromEnvironment(ForceMachineVariableName);
                 if (forcedMachineVariable != null && mnameConfigFile.IsNullOrWhitespace())
                 {
-                    Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName, forcedMachineVariable);
+					Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName ?? "(null)", forcedMachineVariable);
                     Core.MachineName = forcedMachineVariable;
                 }
 

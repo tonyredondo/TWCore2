@@ -53,7 +53,7 @@ namespace TWCore.Services
             {
                 try
                 {
-                    return _hasConsole ?? (_hasConsole = Console.WindowHeight > 0) ?? false;
+                    return _hasConsole ?? (_hasConsole = true) ?? true;
                 }
                 catch
                 {
@@ -360,7 +360,20 @@ namespace TWCore.Services
             }
             ShowFullHeader();
 
-            if (HasConsole)
+			var hasStdIn = !Console.IsInputRedirected;
+			if (hasStdIn)
+			{
+				try
+				{
+					var keyAvailble = Console.KeyAvailable;
+				}
+				catch
+				{
+					hasStdIn = false;
+				}
+			}
+
+            if (HasConsole && hasStdIn)
                 ServiceStartWithConsole();
             else
                 ServiceStartNoConsole();

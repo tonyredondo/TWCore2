@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -51,6 +52,7 @@ namespace TWCore
     public static class Core
     {
         private const string SettingsTemplateFormat = "{{Settings:{0}}}";
+        private static readonly Regex EnvironmentTemplateFormatRegex = new Regex("{Env:([A-Za-z_ ]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly NonBlocking.ConcurrentDictionary<Type, SettingsBase> SettingsCache = new NonBlocking.ConcurrentDictionary<Type, SettingsBase>();
         private static readonly NonBlocking.ConcurrentDictionary<string, Type> TypesCache = new NonBlocking.ConcurrentDictionary<string, Type>();
         private static CoreSettings _globalSettings;
@@ -588,6 +590,9 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void LoadSettings(string settingsFilePath, string environmentName = null, string machineName = null, string applicationName = null)
         {
+            if (settingsFilePath == null)
+                throw new NullReferenceException("The settings file path is null.");
+
             environmentName = environmentName ?? EnvironmentName;
             machineName = machineName ?? MachineName;
             applicationName = applicationName ?? ApplicationName;
@@ -601,7 +606,16 @@ namespace TWCore
             GlobalSettings globalSettings;
             try
             {
-                globalSettings = serializer.DeserializeFromFile<GlobalSettings>(settingsFilePath);
+                if (serializer is ITextSerializer txtSerializer)
+                {
+                    var fileContent = File.ReadAllText(settingsFilePath);
+                    fileContent = ReplaceEnvironmentTemplate(fileContent);
+                    globalSettings = txtSerializer.DeserializeFromString<GlobalSettings>(fileContent);
+                }
+                else
+                {
+                    globalSettings = serializer.DeserializeFromFile<GlobalSettings>(settingsFilePath);
+                }
             }
             catch (Exception ex)
             {
@@ -624,18 +638,6 @@ namespace TWCore
                     LoadSettings(settingsFilePath, environmentName, machineName, applicationName);
                 });
             }
-        }
-        /// <summary>
-        /// Replace settings template on source string
-        /// </summary>
-        /// <param name="source">Source string to replace the settings template</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static string ReplaceSettingsTemplate(string source)
-        {
-            var sb = new StringBuilder(source, source.Length * 2);
-            foreach (var setting in Settings)
-                sb = sb.Replace(SettingsTemplateFormat.ApplyFormat(setting.Key), setting.Value);
-            return sb.ToString();
         }
         /// <summary>
         /// Rebind loaded application Settings
@@ -782,7 +784,7 @@ namespace TWCore
             if (string.IsNullOrEmpty(typeName))
             {
                 if (throwOnError)
-                    throw new ArgumentNullException("The TypeName is null");
+                    throw new ArgumentNullException(nameof(typeName));
                 return null;
             }
             var type = TypesCache.GetOrAdd(typeName, tName =>
@@ -801,6 +803,36 @@ namespace TWCore
             if (type == null)
                 Log.Warning("The type '{0}' couldn't be found or loaded, this could lead to exceptions.", typeName);
             return type;
+        }
+        /// <summary>
+        /// Replace settings template on source string
+        /// </summary>
+        /// <param name="source">Source string to replace the settings template</param>
+        /// <returns>Result of the replacement</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReplaceSettingsTemplate(string source)
+        {
+            var sb = new StringBuilder(source, source.Length * 2);
+            foreach (var setting in Settings)
+                sb = sb.Replace(SettingsTemplateFormat.ApplyFormat(setting.Key), setting.Value);
+            return sb.ToString();
+        }
+        /// <summary>
+        /// Replace environment template on source string
+        /// </summary>
+        /// <param name="source">Source string to replace the environment template</param>
+        /// <returns>Result of the replacement</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReplaceEnvironmentTemplate(string source)
+        {
+            if (source == null) return null;
+            if (source.IndexOf("{Env:", StringComparison.Ordinal) == -1) return source;
+            var result = EnvironmentTemplateFormatRegex.Replace(source, match =>
+            {
+                
+                return match.Value;
+            });
+            return result;
         }
         #endregion
 

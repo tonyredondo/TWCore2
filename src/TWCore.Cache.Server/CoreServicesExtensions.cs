@@ -59,6 +59,7 @@ namespace TWCore.Services
             {
                 var value = cachesConfigFile.ReadTextFromFile();
                 value = Core.ReplaceSettingsTemplate(value);
+                value = Core.ReplaceEnvironmentTemplate(value);
                 var serializer = SerializerManager.GetByFileName<ITextSerializer>(cachesConfigFile);
                 _serverCacheSettings = serializer.DeserializeFromString<CacheSettings>(value);
             }

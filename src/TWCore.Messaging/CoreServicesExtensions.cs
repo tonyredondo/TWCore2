@@ -61,6 +61,7 @@ namespace TWCore.Services
             {
                 var value = queuesConfigFile.ReadTextFromFile();
                 value = Core.ReplaceSettingsTemplate(value);
+                value = Core.ReplaceEnvironmentTemplate(value);
                 var serializer = SerializerManager.GetByFileName<ITextSerializer>(queuesConfigFile);
                 _queues = serializer.DeserializeFromString<MQueuesConfiguration>(value);
             }

@@ -829,8 +829,10 @@ namespace TWCore
             if (source.IndexOf("{Env:", StringComparison.Ordinal) == -1) return source;
             var result = EnvironmentTemplateFormatRegex.Replace(source, match =>
             {
-                
-                return match.Value;
+                if (match.Groups.Count < 2) return match.Value;
+                var key = match.Groups[1].Value;
+                var value = Environment.GetEnvironmentVariable(key);
+                return value;
             });
             return result;
         }

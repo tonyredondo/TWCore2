@@ -52,6 +52,9 @@ namespace TWCore.Test.Core
                 var folder = Factory.ResolveLowLowPath("<</temp/copyright.txt");
                 var folder2 = Factory.ResolveLowLowPath("<<(Github)/logs");
 
+                var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
+                matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
+
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;

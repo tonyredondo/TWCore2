@@ -41,7 +41,7 @@ namespace TWCore.Services
         protected static readonly NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler> ParametersHandlers = new NonBlocking.ConcurrentDictionary<string, ContainerParameterHandler>();
         private static string[] _currentArgs;
         private static volatile bool _serviceEndAfterStart;
-        private static bool? _hasConsole;
+        private static bool _hasConsole = true;
 
         /// <summary>
         /// Gets if the Console is available
@@ -49,17 +49,7 @@ namespace TWCore.Services
         public static bool HasConsole
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get
-            {
-                try
-                {
-                    return _hasConsole ?? (_hasConsole = true) ?? true;
-                }
-                catch
-                {
-                    return false;
-                }
-            }
+            get => _hasConsole;
             internal set => _hasConsole = value;
         }
         /// <summary>

@@ -478,9 +478,9 @@ namespace TWCore.Services
                         serializer = SerializerManager.DefaultBinarySerializer;
                     }
                 }
-
                 try
                 {
+                    DiscoveryService.Serializer = serializer;
                     DiscoveryService.Connect(Core.GlobalSettings.DiscoveryMulticastIp, Core.GlobalSettings.DiscoveryPort);
                     DiscoveryService.RegisterService(DiscoveryService.FrameworkCategory, "FOLDERS", "Folders for the services.", new SerializedObject(new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }));
                 }

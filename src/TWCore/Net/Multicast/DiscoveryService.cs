@@ -85,6 +85,10 @@ namespace TWCore.Net.Multicast
                     return LocalServices.Count > 0;
             }
         }
+        /// <summary>
+        /// Serializer used to send the data
+        /// </summary>
+        public static ISerializer Serializer { get; set; } = SerializerManager.DefaultBinarySerializer;
         #endregion
 
         #region .ctor
@@ -341,7 +345,7 @@ namespace TWCore.Net.Multicast
                         srv.Data = srv.GetDataFunc();
                 }
 
-                var sObj = new SerializedObject(tmpList);
+                var sObj = new SerializedObject(tmpList, Serializer);
                 var sObjArr = sObj.ToSubArray();
                 await PeerConnection.SendAsync(sObjArr).ConfigureAwait(false);
                 await Task.Delay(10000, _token).ConfigureAwait(false);

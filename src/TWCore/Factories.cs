@@ -29,6 +29,8 @@ using TWCore.Threading;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable VirtualMemberNeverOverridden.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
+// ReSharper disable UnusedAutoPropertyAccessor.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
 {
@@ -84,7 +86,24 @@ namespace TWCore
             {
                 if (_platformType != PlatformType.Unknown) return _platformType;
                 if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+                {
                     _platformType = PlatformType.Linux;
+
+                    //Tries to detect a docker container.
+                    try
+                    {
+                        if (File.Exists("/proc/1/cgroup"))
+                        {
+                            var fileContent = File.ReadAllText("/proc/1/cgroup");
+                            if (fileContent.Contains("/docker/"))
+                                RunningAsContainer = true;
+                        }
+                    }
+                    catch
+                    {
+                        //
+                    }
+                }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
                     _platformType = PlatformType.Mac;
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -96,6 +115,10 @@ namespace TWCore
                 _platformType = value;
             }
         }
+        /// <summary>
+        /// Gets if the process is running inside a container
+        /// </summary>
+        public bool RunningAsContainer { get; protected set; }
         /// <summary>
         /// Sequential Guid Generator
         /// </summary>

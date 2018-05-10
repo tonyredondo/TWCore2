@@ -102,7 +102,7 @@ namespace TWCore
 
             if (SetDirectoryToBaseAssembly || cleanArguments.Contains("service-run", StringComparer.OrdinalIgnoreCase))
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
-            if (SetDirectoryToConfigurationFilePath && (Path.IsPathRooted(ConfigurationFile) || !string.IsNullOrEmpty(Path.GetDirectoryName(ConfigurationFile))))
+            if (SetDirectoryToConfigurationFilePath && ConfigurationFile != null && (Path.IsPathRooted(ConfigurationFile) || !string.IsNullOrEmpty(Path.GetDirectoryName(ConfigurationFile))))
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(ConfigurationFile));
             
             if (Factory.PlatformType == PlatformType.Windows)
@@ -294,7 +294,7 @@ namespace TWCore
                 var jser = JsonSerializer.CreateDefault();
                 var fSettings = jser.Deserialize<FactorySettings>(new JsonTextReader(new StreamReader(configFile)));
                 if (fSettings == null) return true;
-
+                Core.DefaultEnvironmentVariables = fSettings.EnvironmentDefaults ?? new Dictionary<string, string>();
                 if (fSettings.Core != null)
                 {
                     if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace() && envConfigFile.IsNullOrWhitespace())
@@ -385,7 +385,10 @@ namespace TWCore
                     Core.Log.Warning(ex.Message);
                 }
             }
-            return Environment.GetEnvironmentVariable(environmentName);
+            string defaultValue = null;
+            if (Core.DefaultEnvironmentVariables != null)
+                Core.DefaultEnvironmentVariables.TryGetValue(environmentName, out defaultValue);
+            return Environment.GetEnvironmentVariable(environmentName) ?? defaultValue;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()
@@ -526,6 +529,8 @@ namespace TWCore
         {
             [DataMember]
             public Dictionary<string, string> AppSettings { get; set; }
+            [DataMember]
+            public Dictionary<string, string> EnvironmentDefaults { get; set; }
             [DataMember]
             public InnerSettings Core { get; set; }
 

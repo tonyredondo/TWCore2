@@ -62,6 +62,7 @@ namespace TWCore
         private static AsyncLocal<Dictionary<object, object>> _taskObjectData;
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
+        internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
 
         #region Properties
         /// <summary>
@@ -844,6 +845,20 @@ namespace TWCore
                 if (match.Groups.Count < 2) return match.Value;
                 var key = match.Groups[1].Value;
                 var value = Environment.GetEnvironmentVariable(key);
+                if (string.IsNullOrEmpty(value))
+                {
+                    string defaultValue = null;
+                    DefaultEnvironmentVariables?.TryGetValue(key, out defaultValue);
+                    if (defaultValue == null)
+                    {
+                        Log.Warning("The environment variable '{0}' was not setted.", key);
+                    }
+                    else
+                    {
+                        Log.Warning("The environment variable '{0}' was not found, using default value '{1}'.", key, defaultValue);
+                        return defaultValue;
+                    }
+                }
                 return value;
             });
             return result;

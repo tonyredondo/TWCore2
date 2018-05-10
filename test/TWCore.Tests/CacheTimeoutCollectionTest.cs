@@ -15,7 +15,7 @@ namespace TWCore.Tests
 		{
 			Core.Log.Warning("Starting Cache Timeout Collection Test");
 
-			var cacheTimeoutCollection = new CacheTimeoutCollection<string, object>(100);
+			var cacheTimeoutCollection = CacheTimeoutCollection<string, object>.CreateFromLRU2Q(100);
 			cacheTimeoutCollection.OnItemTimeout += CacheTimeoutCollection_OnItemTimeout;
 			cacheTimeoutCollection.OnRemovedByPaging += CacheTimeoutCollection_OnRemovedByPaging;
 			for (var i = 0; i < 1000; i++)

@@ -24,6 +24,7 @@ using System.Threading;
 using System.Threading.Tasks;
 // ReSharper disable UnusedMethodReturnValue.Global
 // ReSharper disable UnusedMember.Global
+// ReSharper disable InconsistentNaming
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 #pragma warning disable 414
@@ -85,26 +86,6 @@ namespace TWCore.Collections
         #endregion
 
         #region .ctor
-		/// <summary>
-		/// Cache Timeout collection, a cache collection which items are saved and deleted using a timeout. 
-		/// By default uses a LRU2Q Collection algorithm
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CacheTimeoutCollection()
-		{
-			_collection = new LRU2QCollection<TKey, TimeoutStruct>();
-			_collection.NodeRemovedByPaging += Collection_NodeRemovedByPaging;
-		}
-		/// <summary>
-		/// Cache Timeout collection, a cache collection which items are saved and deleted using a timeout. 
-		/// By default uses a LRU2Q Collection algorithm
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public CacheTimeoutCollection(int capacity)
-		{
-			_collection = new LRU2QCollection<TKey, TimeoutStruct>(capacity);
-			_collection.NodeRemovedByPaging += Collection_NodeRemovedByPaging;
-		}
         /// <summary>
         /// Cache Timeout collection, a cache collection which items are saved and deleted using a timeout
         /// </summary>
@@ -119,6 +100,75 @@ namespace TWCore.Collections
 		{
 			OnRemovedByPaging?.Invoke(key, value.Value);
 		}
+        #endregion
+        
+        #region Statics
+
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU2Q algorithm
+        /// </summary>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU2Q()
+            => new CacheTimeoutCollection<TKey, TValue>(new LRU2QCollection<TKey, TimeoutStruct>());
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU2Q algorithm
+        /// </summary>
+        /// <param name="capacity">Capacity</param>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU2Q(int capacity)
+            => new CacheTimeoutCollection<TKey, TValue>(new LRU2QCollection<TKey, TimeoutStruct>(capacity));
+        
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU algorithm
+        /// </summary>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU()
+            => new CacheTimeoutCollection<TKey, TValue>(new LRUCollection<TKey, TimeoutStruct>());
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU algorithm
+        /// </summary>
+        /// <param name="capacity">Capacity</param>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU(int capacity)
+            => new CacheTimeoutCollection<TKey, TValue>(new LRUCollection<TKey, TimeoutStruct>(capacity));
+        
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LFU algorithm
+        /// </summary>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLFU()
+            => new CacheTimeoutCollection<TKey, TValue>(new LFUCollection<TKey, TimeoutStruct>());
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LFU algorithm
+        /// </summary>
+        /// <param name="capacity">Capacity</param>
+        /// <param name="agePolicy">Age policy</param>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLFU(int capacity, int agePolicy = -1)
+            => new CacheTimeoutCollection<TKey, TValue>(new LFUCollection<TKey, TimeoutStruct>(capacity, agePolicy));
+        
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU2QSimple algorithm
+        /// </summary>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU2QSimple()
+            => new CacheTimeoutCollection<TKey, TValue>(new LRU2QSimpleCollection<TKey, TimeoutStruct>());
+        /// <summary>
+        /// Creates a new CacheTimeoutCollection using the LRU2QSimple algorithm
+        /// </summary>
+        /// <param name="capacity">Capacity</param>
+        /// <returns>CacheTimeoutCollection instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static CacheTimeoutCollection<TKey, TValue> CreateFromLRU2QSimple(int capacity)
+            => new CacheTimeoutCollection<TKey, TValue>(new LRU2QSimpleCollection<TKey, TimeoutStruct>(capacity));
+        
         #endregion
 
         #region ConcurrentDictionary Implementation

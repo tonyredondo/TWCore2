@@ -43,6 +43,10 @@ namespace TWCore.Cache.Client
         public event EventHandler<bool> EnabledChanged;
 
         /// <summary>
+        /// Pool Item index
+        /// </summary>
+        public int Index { get; private set; }
+        /// <summary>
         /// Pool Item Name
         /// </summary>
         public string Name { get; private set; }
@@ -89,13 +93,15 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Cache pool item
         /// </summary>
+        /// <param name="index">Item index</param>
         /// <param name="name">Pool item name</param>
         /// <param name="storage">Storage instance</param>
         /// <param name="mode">Storage mode inside the pool</param>
         /// <param name="pingDelay">Delays between ping tries in milliseconds</param>
         /// <param name="pingDelayOnError">Delay after a ping error for next try</param>
-        public PoolAsyncItem(string name, IStorageAsync storage, StorageItemMode mode, int pingDelay = 5000, int pingDelayOnError = 30000)
+        public PoolAsyncItem(int index, string name, IStorageAsync storage, StorageItemMode mode, int pingDelay = 5000, int pingDelayOnError = 30000)
         {
+            Index = index;
             Storage = storage;
             Mode = mode;
             PingTime = 0;

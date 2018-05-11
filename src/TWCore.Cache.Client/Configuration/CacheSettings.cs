@@ -59,7 +59,6 @@ namespace TWCore.Cache.Client.Configuration
             var readMode = cConfig.Pool.ReadMode;
             var writeMode = cConfig.Pool.WriteMode;
             var selectionOrder = cConfig.Pool.SelectionOrder;
-            var indexOrder = cConfig.Pool.IndexOrder;
             var forceNetworkItem = cConfig.Pool.ForceAtLeastOneNetworkItemEnabled;
             ISerializer serializer;
             if (cConfig.Pool.SerializerMimeType.IsNotNullOrEmpty())
@@ -71,7 +70,7 @@ namespace TWCore.Cache.Client.Configuration
             }
             else
                 serializer = SerializerManager.DefaultBinarySerializer;
-            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder)
+            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder)
             {
                 Serializer = serializer,
                 ForceAtLeastOneNetworkItemEnabled = forceNetworkItem

@@ -32,6 +32,7 @@ namespace TWCore.Cache.Client
     {
         private readonly PoolAsyncItemCollection _pool;
         private readonly CacheClientPoolCounters _counters;
+        private int _poolItemsCount;
 
         #region Properties
         /// <summary>
@@ -68,11 +69,10 @@ namespace TWCore.Cache.Client
         /// <param name="readMode">Cache pool Read Mode</param>
         /// <param name="writeMode">Cache pool Write Mode</param>
         /// <param name="selectionOrder">Pool item selection order for Read and Write</param>
-        /// <param name="indexOrder">Index order</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheClientPoolAsync(int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime, string indexOrder = null)
+        public CacheClientPoolAsync(int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime)
         {
-            _pool = new PoolAsyncItemCollection(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder, indexOrder);
+            _pool = new PoolAsyncItemCollection(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder);
             _counters = new CacheClientPoolCounters();
             Core.Log.LibVerbose("CachePool.PingDelay = {0}", pingDelay);
             Core.Log.LibVerbose("CachePool.PingDelayOnError = {0}", pingDelayOnError);
@@ -97,7 +97,7 @@ namespace TWCore.Cache.Client
         public void Add(string name, IStorageAsync storage, StorageItemMode mode = StorageItemMode.ReadAndWrite)
         {
             Core.Log.LibVerbose("Creating Cache Connection: {0}", name);
-            var pItem = new PoolAsyncItem(name, storage, mode, _pool.PingDelay, _pool.PingDelayOnError);
+            var pItem = new PoolAsyncItem(_poolItemsCount++, name, storage, mode, _pool.PingDelay, _pool.PingDelayOnError);
             Core.Log.LibVerbose("\tName = {0}, Mode = {1}, Type = {2}", name, pItem.Mode, pItem.Storage.Type);
             _pool.Add(pItem);
         }
@@ -121,7 +121,7 @@ namespace TWCore.Cache.Client
         public void Add(string name, IStorage storage, StorageItemMode mode = StorageItemMode.ReadAndWrite)
         {
             Core.Log.LibVerbose("Creating Cache Connection: {0}", name);
-            var pItem = new PoolAsyncItem(name, new AsyncAdapter(storage), mode, _pool.PingDelay, _pool.PingDelayOnError);
+            var pItem = new PoolAsyncItem(_poolItemsCount++, name, new AsyncAdapter(storage), mode, _pool.PingDelay, _pool.PingDelayOnError);
             Core.Log.LibVerbose("\tName = {0}, Mode = {1}, Type = {2}", name, pItem.Mode, pItem.Storage.Type);
             _pool.Add(pItem);
         }

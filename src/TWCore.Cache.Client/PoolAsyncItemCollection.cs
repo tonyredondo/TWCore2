@@ -20,6 +20,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Threading;
+
 // ReSharper disable ConvertToAutoPropertyWhenPossible
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
@@ -80,7 +82,7 @@ namespace TWCore.Cache.Client
         internal readonly List<PoolAsyncItem> Items;
         internal readonly HashSet<PoolAsyncItem> EnabledItems;
         internal readonly NonBlocking.ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]> ItemsCache = new NonBlocking.ConcurrentDictionary<(StorageItemMode, bool), PoolAsyncItem[]>();
-
+        
         #region Properties
         /// <summary>
         /// Delays between ping tries in milliseconds
@@ -102,10 +104,6 @@ namespace TWCore.Cache.Client
         /// Pool item selection order for Read and Write
         /// </summary>
         public PoolOrder SelectionOrder { get; set; }
-        /// <summary>
-        /// Index Order
-        /// </summary>
-        public int[] IndexOrder { get; set; }
         /// <summary>
         /// Force at least one network item enabled
         /// </summary>
@@ -139,15 +137,13 @@ namespace TWCore.Cache.Client
         /// <param name="readMode">Cache pool Read Mode</param>
         /// <param name="writeMode">Cache pool Write Mode</param>
         /// <param name="selectionOrder">Algorithm to select the first item on the collection</param>
-        /// <param name="indexOrder">Index order</param>
-        public PoolAsyncItemCollection(int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime, string indexOrder = null)
+        public PoolAsyncItemCollection(int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime)
         {
             PingDelay = pingDelay;
             PingDelayOnError = pingDelayOnError;
             WriteMode = writeMode;
             ReadMode = readMode;
             SelectionOrder = selectionOrder;
-            IndexOrder = indexOrder?.SplitAndTrim(",")?.Select(s => s.ParseTo(-1)).Where(s => s > 0).Distinct().ToArray();
             _worker = new ActionWorker();
             Items = new List<PoolAsyncItem>();
             EnabledItems = new HashSet<PoolAsyncItem>();
@@ -159,7 +155,6 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(ReadMode), ReadMode);
                 collection.Add(nameof(WriteMode), WriteMode);
                 collection.Add(nameof(SelectionOrder), SelectionOrder);
-                collection.Add(nameof(IndexOrder), IndexOrder?.Join(","));
                 collection.Add(nameof(ForceAtLeastOneNetworkItemEnabled), ForceAtLeastOneNetworkItemEnabled);
                 Core.Status.AttachChild(_worker, this);
                 if (Items == null) return;
@@ -238,7 +233,10 @@ namespace TWCore.Cache.Client
         {
             if (ItemsCache.TryGetValue((mode, onlyMemoryStorages), out var poolItems))
             {
-                Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                if (SelectionOrder == PoolOrder.PingTime)
+                    Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                else if (SelectionOrder == PoolOrder.Index)
+                    Array.Sort(poolItems, (a, b) => a.Index.CompareTo(b.Index));
                 return poolItems;
             }
 
@@ -257,7 +255,10 @@ namespace TWCore.Cache.Client
                 {
                     if (!ForceAtLeastOneNetworkItemEnabled)
                     {
-                        Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        if (SelectionOrder == PoolOrder.PingTime)
+                            Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        else if (SelectionOrder == PoolOrder.Index)
+                            Array.Sort(poolItems, (a, b) => a.Index.CompareTo(b.Index));
                         ItemsCache.TryAdd((mode, onlyMemoryStorages), poolItems);
                         return poolItems;
                     }
@@ -265,14 +266,20 @@ namespace TWCore.Cache.Client
                     if (ForceAtLeastOneNetworkItemEnabled &&
                         Array.FindIndex(poolItems, i => i.Storage.Type != StorageType.Memory) > -1)
                     {
-                        Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        if (SelectionOrder == PoolOrder.PingTime)
+                            Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        else if (SelectionOrder == PoolOrder.Index)
+                            Array.Sort(poolItems, (a, b) => a.Index.CompareTo(b.Index));
                         ItemsCache.TryAdd((mode, onlyMemoryStorages), poolItems);
                         return poolItems;
                     }
 
                     if (onlyMemoryStorages)
                     {
-                        Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        if (SelectionOrder == PoolOrder.PingTime)
+                            Array.Sort(poolItems, (a, b) => a.PingTime.CompareTo(b.PingTime));
+                        else if (SelectionOrder == PoolOrder.Index)
+                            Array.Sort(poolItems, (a, b) => a.Index.CompareTo(b.Index));
                         ItemsCache.TryAdd((mode, true), poolItems);
                         return poolItems;
                     }

@@ -71,11 +71,6 @@ namespace TWCore.Cache.Client.Configuration
         [XmlAttribute, DataMember]
         public PoolOrder SelectionOrder { get; set; } = PoolOrder.PingTime;
         /// <summary>
-        /// Custom index order
-        /// </summary>
-        [XmlAttribute, DataMember]
-        public string IndexOrder { get; set; } = null;
-        /// <summary>
         /// Cache pool items collection
         /// </summary>
         [XmlElement("PoolItem"), DataMember]

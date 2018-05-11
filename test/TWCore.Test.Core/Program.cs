@@ -55,6 +55,10 @@ namespace TWCore.Test.Core
                 var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
 
+                var sKeyProvider = new TWCore.Security.SymmetricKeyProvider();
+                var guid = Guid.NewGuid().ToString();
+                var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
+
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;

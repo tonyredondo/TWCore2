@@ -295,6 +295,7 @@ namespace TWCore
                 var fSettings = jser.Deserialize<FactorySettings>(new JsonTextReader(new StreamReader(configFile)));
                 if (fSettings == null) return true;
                 Core.DefaultEnvironmentVariables = fSettings.EnvironmentDefaults ?? new Dictionary<string, string>();
+                Core.EncryptionKey = "daba6a48-ad1f-4904-81be-e6293cf5db75";
                 if (fSettings.Core != null)
                 {
                     if (fSettings.Core.EnvironmentName.IsNotNullOrWhitespace() && envConfigFile.IsNullOrWhitespace())
@@ -305,6 +306,7 @@ namespace TWCore
                         Core.ApplicationName = fSettings.Core.ApplicationName;
                     if (fSettings.Core.ApplicationDisplayName.IsNotNullOrWhitespace())
                         Core.ApplicationDisplayName = fSettings.Core.ApplicationDisplayName;
+                    Core.EncryptionKey = fSettings.Core.EncriptionKey ?? Core.EncryptionKey;
                 }
 
                 var forcedEnvironmentVariable = GetValueFromEnvironment(ForceEnvironmentVariableName);
@@ -550,6 +552,8 @@ namespace TWCore
                 public string SettingsFile { get; set; }
                 [DataMember]
                 public string InjectorFile { get; set; }
+                [DataMember]
+                public string EncriptionKey { get; set; }
             }
         }
         #endregion

@@ -31,11 +31,19 @@ namespace TWCore.Messaging.Configuration
     public class MQConnection
     {
         private string _key;
+        private string _route;
         /// <summary>
         /// Message queue route (path or url)
         /// </summary>
         [XmlAttribute, DataMember]
-        public string Route { get; set; }
+        public string Route
+        {
+            get => _route;
+            set
+            {
+                _route = Core.ReplaceEncriptionTemplate(value);
+            }
+        }
         /// <summary>
         /// Message queue name
         /// </summary>

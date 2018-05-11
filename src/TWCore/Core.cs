@@ -33,6 +33,7 @@ using TWCore.Diagnostics.Trace;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Injector;
 using TWCore.Reflection;
+using TWCore.Security;
 using TWCore.Serialization;
 using TWCore.Services;
 using TWCore.Settings;
@@ -52,7 +53,9 @@ namespace TWCore
     public static class Core
     {
         private const string SettingsTemplateFormat = "{{Settings:{0}}}";
+        private static readonly SymmetricKeyProvider SymmetricProvider = new SymmetricKeyProvider();
         private static readonly Regex EnvironmentTemplateFormatRegex = new Regex("{Env:([A-Za-z_ ]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex EncriptionTemplateFormatRegex = new Regex(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly NonBlocking.ConcurrentDictionary<Type, SettingsBase> SettingsCache = new NonBlocking.ConcurrentDictionary<Type, SettingsBase>();
         private static readonly NonBlocking.ConcurrentDictionary<string, Type> TypesCache = new NonBlocking.ConcurrentDictionary<string, Type>();
         private static CoreSettings _globalSettings;
@@ -63,6 +66,7 @@ namespace TWCore
         private static volatile bool _initialized;
         private static readonly Queue<Action> OninitActions = new Queue<Action>();
         internal static Dictionary<string, string> DefaultEnvironmentVariables = null;
+        internal static string EncryptionKey = null;
 
         #region Properties
         /// <summary>
@@ -849,20 +853,46 @@ namespace TWCore
                 {
                     string defaultValue = null;
                     DefaultEnvironmentVariables?.TryGetValue(key, out defaultValue);
-                    if (defaultValue == null)
-                    {
-                        Log.Warning("The environment variable '{0}' was not setted.", key);
-                    }
-                    else
-                    {
-                        Log.Warning("The environment variable '{0}' was not found, using default value '{1}'.", key, defaultValue);
+                    if (defaultValue != null)
                         return defaultValue;
-                    }
                 }
                 return value;
             });
             return result;
         }
+        /// <summary>
+        /// Replace encription template on source string
+        /// </summary>
+        /// <param name="source">Source string to replace the environment template</param>
+        /// <returns>Result of the replacement</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static string ReplaceEncriptionTemplate(string source)
+        {
+            if (source == null) return null;
+            if (source.IndexOf("{Encripted:", StringComparison.Ordinal) == -1) return source;
+            var result = EncriptionTemplateFormatRegex.Replace(source, match =>
+            {
+                if (match.Groups.Count < 2) return match.Value;
+                var encValue = match.Groups[1].Value;
+                return SymmetricProvider.Decrypt(encValue, EncryptionKey);
+            });
+            return result;
+        }
+
+        ///// <summary>
+        ///// Encrypt a value with the default encryption key
+        ///// </summary>
+        ///// <param name="value">Value to encrypt</param>
+        ///// <returns>Encrypted value</returns>
+        //public static string EncryptValue(string value)
+        //    => SymmetricProvider.Encrypt(value, EncryptionKey);
+        ///// <summary>
+        ///// Decrypt a value with the default encryption key
+        ///// </summary>
+        ///// <param name="value">Value to decrypt</param>
+        ///// <returns>Encrypted value</returns>
+        //public static string DecryptValue(string value)
+        //    => SymmetricProvider.Decrypt(value, EncryptionKey);
         #endregion
 
         #region Dispose

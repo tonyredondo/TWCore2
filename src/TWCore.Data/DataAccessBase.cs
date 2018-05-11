@@ -45,6 +45,7 @@ namespace TWCore.Data
     {
         private static readonly TimeoutDictionary<string, Dictionary<string, int>> ColumnsByNameOrQuery = new TimeoutDictionary<string, Dictionary<string, int>>();
         private static readonly DataAccessSettings Settings = Core.GetSettings<DataAccessSettings>();
+        private string _connectionString;
 
         #region Properties
         /// <summary>
@@ -70,7 +71,14 @@ namespace TWCore.Data
         /// <summary>;
         /// Data access connection string
         /// </summary>
-        public string ConnectionString { get; set; }
+        public string ConnectionString
+        {
+            get => _connectionString;
+            set
+            {
+                _connectionString = Core.ReplaceEncriptionTemplate(value);
+            }
+        }
         /// <summary>
         /// String to append before every parameter
         /// </summary>

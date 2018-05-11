@@ -441,7 +441,7 @@ namespace TWCore.Services
             var mres = new ManualResetEventSlim(false);
             AppDomain.CurrentDomain.ProcessExit += (s, e) => mres.Set();
             if (Factory.RunningAsContainer)
-                Core.Log.InfoBasic("Running inside a Container, , Capturing the ProcessExit event to Stop.");
+                Core.Log.InfoBasic("Running inside a Container, Capturing the ProcessExit event to Stop.");
             else
                 Core.Log.InfoBasic("Running without a Console, Capturing the ProcessExit event to Stop.");
             Core.Log.InfoBasic("**************************************************************************************");

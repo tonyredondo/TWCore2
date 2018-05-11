@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 // ReSharper disable InconsistentNaming
@@ -28,6 +29,11 @@ namespace TWCore.Messaging.Configuration
     [DataContract, Serializable]
     public class MQServerQueues
     {
+        private List<MQConnection> _recvQueues;
+        private bool _recvQueuesProcessed;
+        private List<MQConnection> _additionalSendQueues;
+        private bool _additionalSendQueuesProcessed;
+
         /// <summary>
         /// Environment name
         /// </summary>
@@ -42,11 +48,71 @@ namespace TWCore.Messaging.Configuration
         /// Message queue connections wich the request message will be read
         /// </summary>
         [XmlElement("RecvQueue"), DataMember]
-        public List<MQConnection> RecvQueues { get; set; } = new List<MQConnection>();
+        public List<MQConnection> RecvQueues
+        {
+            get
+            {
+                if (_recvQueues == null) _recvQueues = new List<MQConnection>();
+                if (!_recvQueuesProcessed)
+                {
+                    _recvQueuesProcessed = true;
+                    if (_recvQueues.Any(i => i.IsSkippingRoute()))
+                    {
+                        var newQueues = new List<MQConnection>();
+                        foreach (var queue in _recvQueues)
+                        {
+                            if (queue.IsSkippingRoute())
+                            {
+                                Core.Log.Warning("Skipping server receiving queue by route skip value");
+                                continue;
+                            }
+                            newQueues.Add(queue);
+                        }
+                        _recvQueues = newQueues;
+                    }
+                }
+                return _recvQueues;
+            }
+            set
+            {
+                _recvQueues = value;
+                _recvQueuesProcessed = false;
+            }
+        }
         /// <summary>
         /// Additionals message queue connections where the response message will be sent
         /// </summary>
         [XmlElement("AdditionalSendQueue"), DataMember]
-        public List<MQConnection> AdditionalSendQueues { get; set; } = new List<MQConnection>();
+        public List<MQConnection> AdditionalSendQueues
+        {
+            get
+            {
+                if (_additionalSendQueues == null) _additionalSendQueues = new List<MQConnection>();
+                if (!_additionalSendQueuesProcessed)
+                {
+                    _additionalSendQueuesProcessed = true;
+                    if (_additionalSendQueues.Any(i => i.IsSkippingRoute()))
+                    {
+                        var newQueues = new List<MQConnection>();
+                        foreach (var queue in _additionalSendQueues)
+                        {
+                            if (queue.IsSkippingRoute())
+                            {
+                                Core.Log.Warning("Skipping additional send queue by route skip value");
+                                continue;
+                            }
+                            newQueues.Add(queue);
+                        }
+                        _additionalSendQueues = newQueues;
+                    }
+                }
+                return _additionalSendQueues;
+            }
+            set
+            {
+                _additionalSendQueues = value;
+                _additionalSendQueuesProcessed = false;
+            }
+        }
     }
 }

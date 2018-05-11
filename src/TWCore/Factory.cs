@@ -30,6 +30,11 @@ namespace TWCore
     public static class Factory
     {
         private static Factories _factories;
+        
+        /// <summary>
+        /// Skip instance value
+        /// </summary>
+        public const string SkipInstanceValue = "$SKIP$";
 
         #region Properties
         /// <summary>
@@ -70,6 +75,10 @@ namespace TWCore
         /// Gets the platform type
         /// </summary>
         public static PlatformType PlatformType => _factories?.PlatformType ?? PlatformType.Unknown;
+        /// <summary>
+        /// Gets if the process is running inside a container
+        /// </summary>
+        public static bool RunningAsContainer => _factories?.RunningAsContainer ?? false;
         /// <summary>
         /// Sequential Guid Generator
         /// </summary>

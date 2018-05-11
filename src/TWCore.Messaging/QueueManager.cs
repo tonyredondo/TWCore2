@@ -128,6 +128,7 @@ namespace TWCore.Messaging
         public bool ExistQueue(MQConnection queue)
         {
             var exist = _admin.Exist(queue);
+            if (queue.IsSkippingRoute()) return false;
             if (!exist)
                 Core.Log.Warning("The queue Route={0}, Name={1} doesn't exist.", queue.Route, queue.Name);
             return exist;
@@ -192,6 +193,7 @@ namespace TWCore.Messaging
         public bool CreateQueue(MQConnection queue)
         {
             if (_admin == null) return true;
+            if (queue.IsSkippingRoute()) return false;
             var exist = _admin.Exist(queue);
             if (!exist)
             {
@@ -283,6 +285,8 @@ namespace TWCore.Messaging
         public bool DeleteQueue(MQConnection queue)
         {
             var exist = _admin.Exist(queue);
+            if (queue.IsSkippingRoute()) return false;
+
             if (!exist) return true;
             try
             {
@@ -348,6 +352,8 @@ namespace TWCore.Messaging
         public void PurgeQueue(MQConnection queue)
         {
             var exist = _admin.Exist(queue);
+            if (queue.IsSkippingRoute()) return;
+
             if (!exist) return;
             try
             {

@@ -75,5 +75,15 @@ namespace TWCore.Messaging.Configuration
         {
             return _key ?? (_key = Route + Name + Parameters?.Select(i => i.Key + i.Value));
         }
+
+        /// <summary>
+        /// Is Skipping Route Value
+        /// </summary>
+        /// <returns>True if the route value is skip; otherwise false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool IsSkippingRoute()
+        {
+            return Route == null || Route == Factory.SkipInstanceValue;
+        }
     }
 }

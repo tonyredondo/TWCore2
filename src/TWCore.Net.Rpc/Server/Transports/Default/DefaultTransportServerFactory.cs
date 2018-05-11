@@ -36,7 +36,13 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override ITransportServer CreateTransport(KeyValueCollection parameters)
         {
-            var port = parameters["Port"].ParseTo(0);
+            var strPort = parameters["Port"];
+            if (strPort == null || strPort == Factory.SkipInstanceValue)
+            {
+                Core.Log.Warning("Skipping transport instance by Port value.");
+                return null;
+            }
+            var port = strPort.ParseTo(0);
             var serializerMimeType = parameters["SerializerMimeType"];
             var compressorEncoding = parameters["CompressorEncoding"];
             var serializer = SerializerManager.GetByMimeType(serializerMimeType);

@@ -91,6 +91,8 @@ namespace TWCore.Cache.Client.Configuration
                 {
                     case ITransportClient transport:
                     {
+                        if (transport == null)
+                            Core.Log.Warning("The transport definition for the pool item is null, skipping pool item.");
                         var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
                         var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 

@@ -404,6 +404,7 @@ namespace TWCore
 
                     sItem.Values.Add("Operating System",
                         new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
+                        new StatusItemValueItem(nameof(Factory.RunningAsContainer), Factory.RunningAsContainer),
                         new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
                         new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
                         new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture),

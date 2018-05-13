@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
@@ -38,7 +39,10 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
-
+	    //
+	    private LRU2QCollection<string, List<string>> _indexes = new LRU2QCollection<string, List<string>>();
+	    //
+	    
 	    #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -975,6 +979,21 @@ namespace TWCore.Cache
         }
         #endregion
 
+	    #region Index Methods
+	    private List<string> GetFromIndex(string tag)
+	    {
+		    return null;
+	    }
+	    private void ReportAddToIndex(string[] tags, string index)
+	    {
+		    
+	    }
+	    private void ReportDeleteToIndex(string[] tags, string index)
+	    {
+		    
+	    }
+	    #endregion
+	    
         #region IDisposable Support
         private bool _disposedValue; // To detect redundant calls
         /// <summary>

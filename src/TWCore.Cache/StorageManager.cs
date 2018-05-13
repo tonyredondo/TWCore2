@@ -40,7 +40,9 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
 	    //
-	    private LRU2QCollection<string, List<string>> _indexes = new LRU2QCollection<string, List<string>>();
+	    private LRU2QCollection<string, List<string>> _indexes = new LRU2QCollection<string, List<string>>(250);
+	    //
+	    //private event EventHandler<> 
 	    //
 	    
 	    #region Properties

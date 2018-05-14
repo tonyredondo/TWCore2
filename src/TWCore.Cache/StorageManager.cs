@@ -14,10 +14,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NonBlocking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
@@ -40,12 +42,28 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
 	    //
-	    private LRU2QCollection<string, List<string>> _indexes = new LRU2QCollection<string, List<string>>(250);
-	    //
-	    //private event EventHandler<> 
-	    //
-	    
-	    #region Properties
+	    private LRU2QCollection<string, ConcurrentDictionary<string, object>> _indexes = new LRU2QCollection<string, ConcurrentDictionary<string, object>>(100);
+
+        #region Events
+        /// <summary>
+        /// On set event
+        /// </summary>
+        public event EventHandler<StorageItemMeta> OnSet;
+        /// <summary>
+        /// On update event
+        /// </summary>
+        public event EventHandler<string> OnUpdate;
+        /// <summary>
+        /// On remove event
+        /// </summary>
+        public event EventHandler<string> OnRemove;
+        // <summary>
+        /// On copy event
+        /// </summary>
+        public event EventHandler<(string SourceKey, string TargetKey)> OnCopy;
+        #endregion
+
+        #region Properties
         /// <inheritdoc />
         /// <summary>
         /// Gets the Storage Type
@@ -526,11 +544,20 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItemMeta[] GetMetaByTag(string[] tags, bool containingAll)
         {
-            var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetMetaByTag(arg1, arg2))
-                .SelectMany(a => a)
-                .DistinctBy(i => i.Key)
-                .ToArray();
-            return res;
+            var keys = IndexGetKeys(tags, containingAll);
+            if (keys != null)
+            {
+                return keys.Select(i => GetMeta(i)).ToArray();
+            }
+            else
+            {
+                IndexCreate(tags);
+                var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetMetaByTag(arg1, arg2))
+                    .SelectMany(a => a)
+                    .DistinctBy(i => i.Key)
+                    .ToArray();
+                return res;
+            }
         }
         #endregion
 
@@ -596,11 +623,20 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StorageItem[] GetByTag(string[] tags, bool containingAll)
         {
-            var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetByTag(arg1, arg2))
-                .SelectMany(a => a)
-                .DistinctBy(i => i.Meta.Key)
-                .ToArray();
-            return res;
+            var keys = IndexGetKeys(tags, containingAll);
+            if (keys != null)
+            {
+                return keys.Select(i => Get(i)).ToArray();
+            }
+            else
+            {
+                IndexCreate(tags);
+                var res = ExecuteInAllStackAndReturn(tags, containingAll, (sto, arg1, arg2) => sto.GetByTag(arg1, arg2))
+                    .SelectMany(a => a)
+                    .DistinctBy(i => i.Meta.Key)
+                    .ToArray();
+                return res;
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -687,38 +723,60 @@ namespace TWCore.Cache
 		    return meta;
 	    }
 
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="item">Item</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(StorageItem item)
-	    	=> ExecuteInAllStack(ref item, SetAction);
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="meta">Item Meta</param>
-	    /// <param name="data">Item Data</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Set(StorageItemMeta meta, SerializedObject data)
-		    => ExecuteInAllStack(ref meta, ref data, SetAction);
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Sets and create a new StorageItem with the given data
-	    /// </summary>
-	    /// <param name="key">Item Key</param>
-	    /// <param name="data">Item Data</param>
-	    /// <returns>true if the data could be save; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets a new StorageItem with the given data
+        /// </summary>
+        /// <param name="item">Item</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(StorageItem item)
+        {
+            var res = ExecuteInAllStack(ref item, SetAction);
+            if (res)
+            {
+                IndexReportSet(item.Meta);
+                OnSet?.Invoke(this, item.Meta);
+            }
+            return res;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="meta">Item Meta</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Set(StorageItemMeta meta, SerializedObject data)
+        {
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Sets and create a new StorageItem with the given data
+        /// </summary>
+        /// <param name="key">Item Key</param>
+        /// <param name="data">Item Data</param>
+        /// <returns>true if the data could be save; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 	    public bool Set(string key, SerializedObject data)
 	    {
 		    var meta = CreateStorageItemMeta(key, null, null);
-		    return ExecuteInAllStack(ref meta, ref data, SetAction);
-	    }
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
 	    /// <inheritdoc />
 	    /// <summary>
 	    /// Sets and create a new StorageItem with the given data
@@ -731,9 +789,14 @@ namespace TWCore.Cache
 	    public bool Set(string key, SerializedObject data, TimeSpan expirationDate)
 	    {
 		    var meta = CreateStorageItemMeta(key, Core.Now.Add(expirationDate), null);
-		    return ExecuteInAllStack(ref meta, ref data, SetAction);
-	    }
-
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
 	    /// <inheritdoc />
 	    /// <summary>
 	    /// Sets and create a new StorageItem with the given data
@@ -747,8 +810,14 @@ namespace TWCore.Cache
 	    public bool Set(string key, SerializedObject data, TimeSpan? expirationDate, string[] tags)
 	    {
 		    var meta = CreateStorageItemMeta(key, expirationDate != null ? Core.Now.Add(expirationDate.Value) : (DateTime?)null, tags);
-		    return ExecuteInAllStack(ref meta, ref data, SetAction);
-	    }
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
 
 	    /// <inheritdoc />
 	    /// <summary>
@@ -762,8 +831,14 @@ namespace TWCore.Cache
 	    public bool Set(string key, SerializedObject data, DateTime expirationDate)
 	    {
 		    var meta = CreateStorageItemMeta(key, expirationDate, null);
-		    return ExecuteInAllStack(ref meta, ref data, SetAction);
-	    }
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
 	    /// <inheritdoc />
 	    /// <summary>
 	    /// Sets and create a new StorageItem with the given data
@@ -777,8 +852,14 @@ namespace TWCore.Cache
 	    public bool Set(string key, SerializedObject data, DateTime? expirationDate, string[] tags)
 	    {
 		    var meta = CreateStorageItemMeta(key, expirationDate, tags);
-		    return ExecuteInAllStack(ref meta, ref data, SetAction);
-	    }
+            var res = ExecuteInAllStack(ref meta, ref data, SetAction);
+            if (res)
+            {
+                IndexReportSet(meta);
+                OnSet?.Invoke(this, meta);
+            }
+            return res;
+        }
         #endregion
 
         #region Set Multi-Key Data
@@ -793,7 +874,18 @@ namespace TWCore.Cache
         /// <returns>true if the data could be save; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool SetMulti(StorageItem[] items)
-            => ExecuteInAllStack(ref items, SetMultiAction);
+        { 
+            var res = ExecuteInAllStack(ref items, SetMultiAction);
+            if (res && items != null && items.Length > 0 )
+            {
+                foreach (var item in items)
+                {
+                    IndexReportSet(item.Meta);
+                    OnSet?.Invoke(this, item.Meta);
+                }
+            }
+            return res;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Sets and create a new StorageItem with the given data
@@ -902,7 +994,12 @@ namespace TWCore.Cache
         /// <returns>true if the data could be updated; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool UpdateData(string key, SerializedObject data)
-            => ExecuteInAllStack(ref key, ref data, UpdateDataAction);
+        {
+            var res = ExecuteInAllStack(ref key, ref data, UpdateDataAction);
+            if (res && OnUpdate != null)
+                OnUpdate(this, key);
+            return res;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Removes a StorageItem with the Key specified.
@@ -911,7 +1008,16 @@ namespace TWCore.Cache
         /// <returns>true if the data could be removed; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Remove(string key)
-            => ExecuteInAllStack(ref key, RemoveAction);
+        {
+            var meta = GetMeta(key);
+            var res = ExecuteInAllStack(ref key, RemoveAction);
+            if (res)
+            {
+                IndexReportRemove(meta);
+                OnRemove?.Invoke(this, key);
+            }
+            return res;
+        }
         /// <inheritdoc />
         /// <summary>
         /// Removes a series of StorageItems with the given tags.
@@ -935,18 +1041,33 @@ namespace TWCore.Cache
 				.SelectMany(a => a)
 				.Distinct()
 				.ToArray();
+            if (res != null && res.Length > 0)
+            {
+                IndexReportRemoveTags(tags);
+                foreach (var str in res)
+                    OnRemove?.Invoke(this, str);
+            }
 			return res;
         }
-	    /// <inheritdoc />
-	    /// <summary>
-	    /// Copies an item to a new key.
-	    /// </summary>
-	    /// <param name="key">Key of an existing item</param>
-	    /// <param name="newKey">New key value</param>
-	    /// <returns>true if the copy was successful; otherwise, false.</returns>
-	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-	    public bool Copy(string key, string newKey)
-	    	=> ExecuteInAllStack(ref key, ref newKey, CopyAction);
+        /// <inheritdoc />
+        /// <summary>
+        /// Copies an item to a new key.
+        /// </summary>
+        /// <param name="key">Key of an existing item</param>
+        /// <param name="newKey">New key value</param>
+        /// <returns>true if the copy was successful; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Copy(string key, string newKey)
+        {
+            var res = ExecuteInAllStack(ref key, ref newKey, CopyAction);
+            if (res)
+            {
+                var meta = GetMeta(newKey);
+                IndexReportSet(meta);
+                OnCopy?.Invoke(this, (key, newKey));
+            }
+            return res;
+        }
         #endregion
 
         /// <inheritdoc />
@@ -981,21 +1102,110 @@ namespace TWCore.Cache
         }
         #endregion
 
-	    #region Index Methods
-	    private List<string> GetFromIndex(string tag)
-	    {
-		    return null;
-	    }
-	    private void ReportAddToIndex(string[] tags, string index)
-	    {
-		    
-	    }
-	    private void ReportDeleteToIndex(string[] tags, string index)
-	    {
-		    
-	    }
-	    #endregion
-	    
+        #region Indexes methods
+        private ConcurrentDictionary<string, object> _processingTag = new ConcurrentDictionary<string, object>();
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private string[] IndexGetKeys(string[] tags, bool containingAll)
+        {
+            if (tags == null || tags.Length == 0) return null;
+            if (tags.Length == 1 && _indexes.TryGetValue(tags[0], out var tagIndexes))
+                return tagIndexes.Keys.ToArray();
+
+            var lstIndexes = new List<(string Tag, ConcurrentDictionary<string, object> Keys)>();
+            foreach(var tag in tags)
+            {
+                if (!_indexes.TryGetValue(tag, out var keys)) return null;
+                lstIndexes.Add((tag, keys));
+            }
+
+            if (containingAll)
+            {
+                var dct = new Dictionary<string, List<string>>();
+                foreach (var (tag, keys) in lstIndexes)
+                {
+                    foreach (var key in keys.Keys)
+                    {
+                        if (!dct.TryGetValue(key, out var lstTag))
+                        {
+                            lstTag = new List<string>();
+                            dct[key] = lstTag;
+                        }
+                        lstTag.Add(tag);
+                    }
+                }
+                return dct.Where(d => d.Value.Count == tags.Length).Select(i => i.Key).ToArray();
+            }
+            else
+            {
+                var hset = new HashSet<string>();
+                foreach (var (tag, keys) in lstIndexes)
+                {
+                    foreach (var key in keys.Keys)
+                        hset.Add(key);
+                }
+                return hset.ToArray();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void IndexCreate(string[] tags)
+        {
+            Task.Run(() =>
+            {
+                if (tags == null) return;
+                if (tags.Length == 0) return;
+                foreach(var tag in tags)
+                {
+                    if (_processingTag.TryGetValue(tag, out _)) continue;
+                    _processingTag.TryAdd(tag, null);
+                    var res = ExecuteInAllStackAndReturn(tag, false, (sto, arg1, arg2) => sto.GetMetaByTag(new[] { arg1 }, arg2))?.FirstOrDefault();
+                    if (res != null)
+                    {
+                        var cValue = new ConcurrentDictionary<string, object>();
+                        foreach(var item in res)
+                            cValue.TryAdd(item.Key, null);
+                        _indexes.TryAdd(tag, cValue);
+                    }
+                    _processingTag.TryRemove(tag, out _);
+                }
+            });
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void IndexReportSet(StorageItemMeta meta)
+        {
+            if (meta?.Tags != null && meta.Tags.Count > 0)
+            {
+                foreach(var tag in meta.Tags)
+                {
+                    if (!_indexes.TryGetValue(tag, out var keyList)) continue;
+                    keyList.TryAdd(meta.Key, null);
+                }
+            }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void IndexReportRemove(StorageItemMeta meta)
+        {
+            if (meta?.Tags != null && meta.Tags.Count > 0)
+            {
+                foreach (var tag in meta.Tags)
+                {
+                    if (!_indexes.TryGetValue(tag, out var keyList)) continue;
+                    keyList.TryRemove(meta.Key, out _);
+                }
+            }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void IndexReportRemoveTags(string[] tags)
+        {
+            if (tags != null && tags.Length > 0)
+            {
+                foreach (var tag in tags)
+                    _indexes.TryRemove(tag, out _);
+            }
+        }
+        #endregion
+
         #region IDisposable Support
         private bool _disposedValue; // To detect redundant calls
         /// <summary>

@@ -29,7 +29,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client RPC Proxy
     /// </summary>
-    public class CacheClientProxy : RPCProxy, IStorage, IStorageAsync
+    public class CacheClientProxy : RPCProxy, IStorageWithExtensionExecution, IStorageWithExtensionExecutionAsync
     {
         /// <summary>
         /// Gets the Storage Type
@@ -689,7 +689,33 @@ namespace TWCore.Cache.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> IsReadyAsync() => InvokeArgsAsAsync<bool>();
         #endregion
-        
+
+        //
+        #region IStorageWithExtensionExecution
+        /// <summary>
+        /// Execute an extension command
+        /// </summary>
+        /// <param name="extensionName">Extension name</param>
+        /// <param name="command">Command to execute</param>
+        /// <param name="args">Arguments of the command</param>
+        /// <returns>Command response</returns>
+        public object ExecuteExtension(string extensionName, string command, object[] args)
+            => InvokeArgs<string, string, object[], object>(extensionName, command, args);
+        #endregion
+
+        #region IStorageWithExtensionExecutionAsync
+        /// <summary>
+        /// Execute an extension command
+        /// </summary>
+        /// <param name="extensionName">Extension name</param>
+        /// <param name="command">Command to execute</param>
+        /// <param name="args">Arguments of the command</param>
+        /// <returns>Command response</returns>
+        public Task<object> ExecuteExtensionAsync(string extensionName, string command, object[] args)
+            => InvokeArgsAsAsync<string, string, object[], object>(extensionName, command, args);
+        #endregion
+        //
+
         #region Static Methods
         /// <summary>
         /// Get cache proxy client from a rpc transport client

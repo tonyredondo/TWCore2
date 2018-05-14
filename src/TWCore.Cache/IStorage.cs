@@ -16,16 +16,15 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using TWCore.Serialization;
 
 namespace TWCore.Cache
 {
-	/// <inheritdoc />
-	/// <summary>
-	/// Defines a cache storage
-	/// </summary>
-	public interface IStorage : IDisposable
+    /// <inheritdoc />
+    /// <summary>
+    /// Defines a cache storage
+    /// </summary>
+    public interface IStorage : IDisposable
     {
 		#region Properties
 		/// <summary>
@@ -309,7 +308,7 @@ namespace TWCore.Cache
 	    /// <returns>true if the copy was successful; otherwise, false.</returns>
 	    bool Copy(string key, string newKey);
         #endregion
-        
+
         /// <summary>
         /// Gets if the Storage is enabled.
         /// </summary>

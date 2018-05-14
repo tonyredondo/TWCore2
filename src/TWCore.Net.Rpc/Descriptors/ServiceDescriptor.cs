@@ -71,7 +71,7 @@ namespace TWCore.Net.RPC.Descriptors
                 Name = serviceType.FullName
             };
             var isInterface = serviceType.GetTypeInfo().IsInterface;
-            var methodsInfo = serviceType.GetRuntimeMethods().OrderBy(i => i.Name + "[" + i.GetParameters()?.Select(p => p.Name).Join(", ") + "]");
+            var methodsInfo = serviceType.AllMethods().OrderBy(i => i.Name + "[" + i.GetParameters()?.Select(p => p.Name).Join(", ") + "]");
             foreach (var mInfo in methodsInfo)
             {
                 if (!mInfo.IsPublic || mInfo.IsSpecialName) continue;

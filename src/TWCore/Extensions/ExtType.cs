@@ -152,10 +152,10 @@ namespace TWCore
             var allTypes = target.AllInterfaces().ToList();
             allTypes.Add(target);
 
-            return from type in allTypes
+            return (from type in allTypes
                    from method in type.GetTypeInfo().DeclaredMethods
                    where method.IsSpecialName == false
-                   select method;
+                   select method).Distinct();
         }
         /// <summary>
         /// Get Type name (short version for AssemblyQualifiedName)

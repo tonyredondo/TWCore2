@@ -78,6 +78,7 @@ namespace TWCore.Services
                 server = new RPCServer(transport);
             }
             server.AddService(typeof(IStorage), Manager);
+            server.AddService(typeof(IStorageWithExtensionExecution), Manager);
             return server;
         }
         /// <inheritdoc />

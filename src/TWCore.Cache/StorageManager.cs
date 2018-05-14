@@ -31,7 +31,7 @@ namespace TWCore.Cache
     /// <summary>
     /// Storage Manager
     /// </summary>
-    public class StorageManager : IStorage
+    public class StorageManager : IStorageWithExtensionExecution
     {
 	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();
 	    private IStorage[] _storages;
@@ -42,8 +42,8 @@ namespace TWCore.Cache
         private delegate void RefAction<TArg, TArg2, TArg3>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4);
         private delegate void RefAction<TArg, TArg2, TArg3, TArg4, TArg5>(ref TArg arg1, ref TArg2 arg2, ref TArg3 arg3, ref TArg4 arg4, ref TArg5 arg5);
-	    //
 	    private LRU2QCollection<string, ConcurrentDictionary<string, object>> _indexes = new LRU2QCollection<string, ConcurrentDictionary<string, object>>(128);
+        private ConcurrentDictionary<string, IStorageExtension> _extensions = new ConcurrentDictionary<string, IStorageExtension>();
 
         #region Events
         /// <summary>
@@ -97,6 +97,7 @@ namespace TWCore.Cache
         public StorageManager()
         {
             BindStatusHandlers();
+            LoadExtensions();
         }
         /// <summary>
         /// Storage Manager
@@ -108,6 +109,7 @@ namespace TWCore.Cache
 			_storageStack = new Stack<IStorage>(storages.RemoveNulls());
             _storages = _storageStack.ToArray();
             BindStatusHandlers();
+            LoadExtensions();
         }
         /// <summary>
         /// Storage destructor
@@ -125,8 +127,29 @@ namespace TWCore.Cache
             {
                 collection.AddOk("Stack Count", _storageStack.Count);
                 collection.AddOk("Stack", _storageStack.Select(s => s.ToString()).Join(", "));
+                collection.AddOk("Loaded extensions", _extensions.Count);
                 _storageStack.Each(s => Core.Status.AttachChild(s, this));
             });
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void LoadExtensions()
+        {
+            var sampleExtension = new SampleStorageExtension();
+            var extensions = Core.Injector.GetAllInstances<IStorageExtension>();
+            if (extensions == null || extensions.Length == 0)
+            {
+                _extensions.TryAdd(sampleExtension.ExtensionName.ToLowerInvariant(), sampleExtension);
+                return;
+            }
+            foreach (var ext in extensions)
+            {
+                if (ext.ExtensionName == null) continue;
+                var extName = ext.ExtensionName.ToLowerInvariant();
+                Core.Log.InfoBasic("Adding Extension: {0}", extName);
+                ext.Init(this);
+                _extensions.TryAdd(extName, ext);
+            }
+            _extensions.TryAdd(sampleExtension.ExtensionName.ToLowerInvariant(), sampleExtension);
         }
 		#endregion
 
@@ -1115,6 +1138,25 @@ namespace TWCore.Cache
         }
         #endregion
 
+        #region IStorageWithExtensionExecution
+        /// <summary>
+        /// Execute an extension command
+        /// </summary>
+        /// <param name="extensionName">Extension name</param>
+        /// <param name="command">Command to execute</param>
+        /// <param name="args">Arguments of the command</param>
+        /// <returns>Command response</returns>
+        public object ExecuteExtension(string extensionName, string command, object[] args)
+        {
+            if (extensionName == null) return null;
+            var extName = extensionName.ToLowerInvariant();
+            if (_extensions.TryGetValue(extName, out var extension))
+                return extension.Execute(command, args);
+            Core.Log.Error("Extension '{0}' was not found, the call returns null.", extensionName);
+            return null;
+        }
+        #endregion
+
         #region Indexes methods
         private ConcurrentDictionary<string, object> _processingTag = new ConcurrentDictionary<string, object>();
 
@@ -1259,6 +1301,12 @@ namespace TWCore.Cache
 			        var sM = s as StorageBase;
 			        sM?.Dispose();
 		        });
+                lock (_extensions)
+                {
+                    foreach (var ext in _extensions)
+                        ext.Value.Dispose();
+                    _extensions.Clear();
+                }
 		        _storageStack.Clear();
 	        }
 	        _disposedValue = true;

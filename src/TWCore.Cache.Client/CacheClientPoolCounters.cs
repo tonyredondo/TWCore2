@@ -27,7 +27,7 @@ namespace TWCore.Cache.Client
     /// </summary>
     public class CacheClientPoolCounters
     {
-        private readonly double?[] _times = new double?[15];
+        private readonly double?[] _times = new double?[16];
 
         #region Calls methods
         /// <summary>
@@ -90,6 +90,10 @@ namespace TWCore.Cache.Client
         /// Calls to set multi method
         /// </summary>
         public long SetMultiCalls;
+        /// <summary>
+        /// Calls to Execute extension
+        /// </summary>
+        public long ExecuteExtensionCalls;
         #endregion
 
         #region Average time methods
@@ -153,6 +157,10 @@ namespace TWCore.Cache.Client
         /// Average time on milliseconds of Set multi execution
         /// </summary>
         public double SetMultiAverageTime => _times[14] ?? 0;
+        /// <summary>
+        /// Average time on milliseconds of Execute extension
+        /// </summary>
+        public double ExecuteExtensionAverageTime => _times[15] ?? 0;
         #endregion
 
         #region .ctor
@@ -181,6 +189,7 @@ namespace TWCore.Cache.Client
                 collection.Add("Update Method", new StatusItemValueItem("Calls", UpdateDataCalls, true), new StatusItemValueItem("Average time (ms)", UpdateDataAverageTime, true));
                 collection.Add("Copy Method", new StatusItemValueItem("Calls", CopyCalls, true), new StatusItemValueItem("Average time (ms)", CopyAverageTime, true));
                 collection.Add("Set Multi Method", new StatusItemValueItem("Calls", SetMultiCalls, true), new StatusItemValueItem("Average time (ms)", SetMultiAverageTime, true));
+                collection.Add("Execute Extension Method", new StatusItemValueItem("Calls", ExecuteExtensionCalls, true), new StatusItemValueItem("Average time (ms)", ExecuteExtensionAverageTime, true));
             });
         }
         #endregion
@@ -335,6 +344,16 @@ namespace TWCore.Cache.Client
         {
             Interlocked.Increment(ref SetMultiCalls);
             IncrementQueue(14, executionTime);
+        }
+        /// <summary>
+        /// Increment the value
+        /// </summary>
+        /// <param name="executionTime">Execution Time</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void IncrementExecuteExtension(double executionTime)
+        {
+            Interlocked.Increment(ref ExecuteExtensionCalls);
+            IncrementQueue(15, executionTime);
         }
         #endregion
 

@@ -130,7 +130,12 @@ namespace TWCore.Messaging.NATS
                         _senders.Add((queue, new ObjectPool<IConnection>(pool =>
                         {
                             Core.Log.LibVerbose("New Producer from QueueClient");
-                            return _factory.CreateConnection(queue.Route);
+                            IConnection connection = null;
+                            Extensions.InvokeWithRetry(() =>
+                            {
+                                connection = _factory.CreateConnection(queue.Route);
+                            }, 5000, int.MaxValue).WaitAsync();
+                            return connection;
                         }, null, 1)));
                     }
                 }
@@ -139,7 +144,10 @@ namespace TWCore.Messaging.NATS
                     _receiverConnection = _clientQueues.RecvQueue;
                     if (UseSingleResponseQueue)
                     {
-                        _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                        Extensions.InvokeWithRetry(() =>
+                        {
+                            _receiverNASTConnection = _factory.CreateConnection(_receiverConnection.Route);
+                        }, 5000, int.MaxValue).WaitAsync();
                         _receiver = _receiverNASTConnection.SubscribeAsync(_receiverConnection.Name, MessageHandler);
                     }
                 }

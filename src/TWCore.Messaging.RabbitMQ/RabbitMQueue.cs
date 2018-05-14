@@ -90,24 +90,31 @@ namespace TWCore.Messaging.RabbitMQ
         {
             try
             {
-                lock (this)
-                {
-                    Core.Log.LibVerbose("Creating channel for: {0}", Name);
-                    if (Channel != null) return true;
-                    Factory = new ConnectionFactory 
-                    { 
-                        Uri = new Uri(Route),
-                        UseBackgroundThreadsForIO = true
-                    };
-                    Connection = Factory.CreateConnection();
-                    Channel = Connection.CreateModel();
-                    return true;
-                }
+                if (Channel != null) return true;
+                Extensions.InvokeWithRetry((Action)InternalConnection, 5000, int.MaxValue).WaitAsync();
+                return true;
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
                 return false;
+            }
+
+            void InternalConnection()
+            {
+                lock (this)
+                {
+                    Core.Log.LibVerbose("Creating channel for: {0}", Name);
+                    if (Channel != null) return;
+                    Factory = new ConnectionFactory
+                    {
+                        Uri = new Uri(Route),
+                        UseBackgroundThreadsForIO = true,
+                        AutomaticRecoveryEnabled = true,
+                    };
+                    Connection = Factory.CreateConnection();
+                    Channel = Connection.CreateModel();
+                }
             }
         }
         /// <summary>

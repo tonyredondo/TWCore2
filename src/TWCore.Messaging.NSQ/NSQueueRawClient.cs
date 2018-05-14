@@ -147,7 +147,10 @@ namespace TWCore.Messaging.NSQ
                     if (UseSingleResponseQueue)
                     {
                         _receiver.AddHandler(MessageHandler);
-                        _receiver.ConnectToNsqd(_receiverConnection.Route);
+                        Extensions.InvokeWithRetry(() =>
+                        {
+                            _receiver.ConnectToNsqd(_receiverConnection.Route);
+                        }, 5000, int.MaxValue).WaitAsync();
                     }
                 }
             }

@@ -112,7 +112,10 @@ namespace TWCore.Messaging.NSQ
 			_token = token;
             _receiver = new Consumer(Connection.Name, Connection.Name);
             _receiver.AddHandler(new NSQMessageHandler(this));
-            _receiver.ConnectToNsqd(Connection.Route);
+            await Extensions.InvokeWithRetry(() =>
+            {
+                _receiver.ConnectToNsqd(Connection.Route);
+            }, 5000, int.MaxValue).ConfigureAwait(false);
             _monitorTask = Task.Run(MonitorProcess, _token);
 			await token.WhenCanceledAsync().ConfigureAwait(false);
 			OnDispose();

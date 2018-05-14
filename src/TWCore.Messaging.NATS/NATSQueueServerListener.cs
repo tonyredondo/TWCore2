@@ -104,7 +104,10 @@ namespace TWCore.Messaging.NATS
         protected override async Task OnListenerTaskStartAsync(CancellationToken token)
         {
             _token = token;
-            _connection = _factory.CreateConnection(Connection.Route);
+            await Extensions.InvokeWithRetry(() =>
+            {
+                _connection = _factory.CreateConnection(Connection.Route);
+            }, 5000, int.MaxValue).ConfigureAwait(false);
             _receiver = _connection.SubscribeAsync(Connection.Name, MessageHandler);
             _monitorTask = Task.Run(MonitorProcess, _token);
             await token.WhenCanceledAsync().ConfigureAwait(false);

@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 // ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable MemberCanBePrivate.Global
@@ -31,12 +32,20 @@ namespace TWCore.Cache
         /// Storage item key
         /// </summary>
         public string Key { get; }
+        /// <summary>
+        /// Storage item tags
+        /// </summary>
+        public List<string> Tags { get; }
         /// <inheritdoc />
         /// <summary>
         /// Event args of the event when an Item has been removed from the storage
         /// </summary>
         /// <param name="key">Key of the removed item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ItemRemovedEventArgs(string key) => Key = key;
+        public ItemRemovedEventArgs(string key, List<string> tags)
+        {
+            Key = key;
+            Tags = tags;
+        }
     }
 }

@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore;
 using TWCore.Collections;
 using TWCore.Serialization;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
@@ -387,6 +388,10 @@ namespace TWCore.Cache
         public IStorage Pop()
         {
             var pop = _storageStack.Pop();
+            if (pop is StorageBase sBase)
+            {
+                sBase.ItemRemoved -= SBase_ItemRemoved;
+            }
             _storages = _storageStack.ToArray();
             return pop;
         }
@@ -400,6 +405,14 @@ namespace TWCore.Cache
 			if (item == null) return;
             _storageStack.Push(item);
             _storages = _storageStack.ToArray();
+            if (item is StorageBase sBase)
+            {
+                sBase.ItemRemoved += SBase_ItemRemoved;
+            }
+        }
+        private void SBase_ItemRemoved(object sender, ItemRemovedEventArgs e)
+        {
+            IndexReportRemove(e.Key, e.Tags);
         }
         #endregion
 
@@ -408,7 +421,7 @@ namespace TWCore.Cache
         /// <summary>
         /// Init this storage
         /// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Init() => _storages?.Each(s => s.Init());
 
         #region Exist Key / Get Keys
@@ -547,7 +560,7 @@ namespace TWCore.Cache
             var keys = IndexGetKeys(tags, containingAll);
             if (keys != null)
             {
-                return keys.Select(i => GetMeta(i)).ToArray();
+                return keys.Select(i => GetMeta(i)).RemoveNulls().ToArray();
             }
             else
             {
@@ -626,7 +639,7 @@ namespace TWCore.Cache
             var keys = IndexGetKeys(tags, containingAll);
             if (keys != null)
             {
-                return keys.Select(i => Get(i)).ToArray();
+                return keys.Select(i => Get(i)).RemoveNulls().ToArray();
             }
             else
             {
@@ -1110,7 +1123,10 @@ namespace TWCore.Cache
         {
             if (tags == null || tags.Length == 0) return null;
             if (tags.Length == 1 && _indexes.TryGetValue(tags[0], out var tagIndexes))
+            {
+                Core.Log.LibVerbose("Getting keys from indexed tags");
                 return tagIndexes.Keys.ToArray();
+            }
 
             var lstIndexes = new List<(string Tag, ConcurrentDictionary<string, object> Keys)>();
             foreach(var tag in tags)
@@ -1118,6 +1134,8 @@ namespace TWCore.Cache
                 if (!_indexes.TryGetValue(tag, out var keys)) return null;
                 lstIndexes.Add((tag, keys));
             }
+
+            Core.Log.LibVerbose("Getting keys from indexed tags");
 
             if (containingAll)
             {
@@ -1147,7 +1165,6 @@ namespace TWCore.Cache
                 return hset.ToArray();
             }
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void IndexCreate(string[] tags)
         {
@@ -1158,6 +1175,7 @@ namespace TWCore.Cache
                 foreach(var tag in tags)
                 {
                     if (_processingTag.TryGetValue(tag, out _)) continue;
+                    Core.Log.LibVerbose("Creating index for tag: '{0}'", tag);
                     _processingTag.TryAdd(tag, null);
                     var res = ExecuteInAllStackAndReturn(tag, false, (sto, arg1, arg2) => sto.GetMetaByTag(new[] { arg1 }, arg2))?.FirstOrDefault();
                     if (res != null)
@@ -1167,6 +1185,7 @@ namespace TWCore.Cache
                             cValue.TryAdd(item.Key, null);
                         _indexes.TryAdd(tag, cValue);
                     }
+                    Core.Log.LibVerbose("Index for tag: '{0}' was created.", tag);
                     _processingTag.TryRemove(tag, out _);
                 }
             });
@@ -1179,6 +1198,7 @@ namespace TWCore.Cache
                 foreach(var tag in meta.Tags)
                 {
                     if (!_indexes.TryGetValue(tag, out var keyList)) continue;
+                    Core.Log.LibVerbose("Refreshing index for tag: '{0}'", tag);
                     keyList.TryAdd(meta.Key, null);
                 }
             }
@@ -1191,7 +1211,21 @@ namespace TWCore.Cache
                 foreach (var tag in meta.Tags)
                 {
                     if (!_indexes.TryGetValue(tag, out var keyList)) continue;
+                    Core.Log.LibVerbose("Refreshing index for tag: '{0}'", tag);
                     keyList.TryRemove(meta.Key, out _);
+                }
+            }
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void IndexReportRemove(string key, List<string> tags)
+        {
+            if (tags != null && tags.Count > 0)
+            {
+                foreach (var tag in tags)
+                {
+                    if (!_indexes.TryGetValue(tag, out var keyList)) continue;
+                    if (keyList.TryRemove(key, out _))
+                        Core.Log.LibVerbose("Refreshing index for tag: '{0}'", tag);
                 }
             }
         }
@@ -1201,7 +1235,10 @@ namespace TWCore.Cache
             if (tags != null && tags.Length > 0)
             {
                 foreach (var tag in tags)
+                {
+                    Core.Log.LibVerbose("Removing index for tag: '{0}'", tag);
                     _indexes.TryRemove(tag, out _);
+                }
             }
         }
         #endregion

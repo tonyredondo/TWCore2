@@ -147,7 +147,7 @@ namespace TWCore.Cache
                     if (!OnRemove(key, out var meta) || initial) continue;
                     if (meta != null)
                         meta.OnExpire -= OnItemExpire;
-                    ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
+                    ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key, meta?.Tags));
                     meta?.Dispose();
                 }
             }
@@ -783,7 +783,7 @@ namespace TWCore.Cache
             if (!OnRemove(key, out var meta)) return false;
             if (meta != null)
                 meta.OnExpire -= OnItemExpire;
-            ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key));
+            ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(key, meta?.Tags));
             meta?.Dispose();
             return true;
         }
@@ -814,7 +814,7 @@ namespace TWCore.Cache
                 if (!OnRemove(s.Key, out var meta)) return null;
                 if (meta != null)
                     meta.OnExpire -= OnItemExpire;
-                ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(s.Key));
+                ItemRemoved?.Invoke(this, new ItemRemovedEventArgs(s.Key, meta?.Tags));
                 meta?.Dispose();
                 return s.Key;
             }).RemoveNulls().ToArray();

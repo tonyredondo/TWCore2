@@ -80,7 +80,12 @@ namespace TWCore.Tests
                 Console.ReadLine();
 
                 var tagValue1 = await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+                await Task.Delay(600).ConfigureAwait(false);
                 var tagValue2 = await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+                await Task.Delay(600).ConfigureAwait(false);
+                await cachePool.SetAsync("expTest2", "testData2", TimeSpan.FromMinutes(1), new[] { "test" }).ConfigureAwait(false);
+                await Task.Delay(600).ConfigureAwait(false);
+                var tagValue3 = await cachePool.GetByTagAsync(new[] { "test" }).ConfigureAwait(false);
 
                 Console.ReadLine();
 

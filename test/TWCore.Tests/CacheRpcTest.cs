@@ -55,7 +55,7 @@ namespace TWCore.Tests
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);
 
-				await cachePool.SetAsync("expTest", "testData", TimeSpan.FromSeconds(20)).ConfigureAwait(false);
+				await cachePool.SetAsync("expTest", "testData", TimeSpan.FromSeconds(20), new[] { "test" }).ConfigureAwait(false);
 
 				Console.ReadLine();
 
@@ -79,8 +79,8 @@ namespace TWCore.Tests
 
                 Console.ReadLine();
 
-                await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
-                await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+                var tagValue1 = await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
+                var tagValue2 = await cachePool.GetByTagAsync(new [] {"test"}).ConfigureAwait(false);
 
                 Console.ReadLine();
 

@@ -54,7 +54,7 @@ namespace TWCore
     {
         private const string SettingsTemplateFormat = "{{Settings:{0}}}";
         private static readonly SymmetricKeyProvider SymmetricProvider = new SymmetricKeyProvider();
-        private static readonly Regex EnvironmentTemplateFormatRegex = new Regex("{Env:([A-Za-z_ ]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
+        private static readonly Regex EnvironmentTemplateFormatRegex = new Regex(@"{Env:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly Regex EncriptionTemplateFormatRegex = new Regex(@"{Encripted:([A-Za-z0-9_ |+-\\*/_!""$% &\(\) = '?¡¿.:,;<>]*)}", RegexOptions.Compiled | RegexOptions.Multiline);
         private static readonly NonBlocking.ConcurrentDictionary<Type, SettingsBase> SettingsCache = new NonBlocking.ConcurrentDictionary<Type, SettingsBase>();
         private static readonly NonBlocking.ConcurrentDictionary<string, Type> TypesCache = new NonBlocking.ConcurrentDictionary<string, Type>();

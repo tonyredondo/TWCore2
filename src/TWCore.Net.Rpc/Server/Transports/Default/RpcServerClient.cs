@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -66,6 +67,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private string _hub;
         private Guid _sessionId;
         private CancellationTokenSource _tokenSource;
+        private string _clientIp;
         #endregion
 
         #region Properties
@@ -122,6 +124,16 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             _writeStream = new BufferedStream(_networkStream);
             _tokenSource = new CancellationTokenSource();
             BindBackgroundTasks();
+            try
+            {
+                if (client.Client.RemoteEndPoint is IPEndPoint remoteIp)
+                    _clientIp = remoteIp.Address.ToString();
+            }
+            catch
+            {
+                //
+            }
+            Core.Log.InfoBasic("RPC connection started with: {0}", _clientIp);
         }
         #endregion
 
@@ -235,6 +247,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         {
             try
             {
+                Core.Log.InfoBasic("RPC connection stopped with: {0}", _clientIp);
                 _isDisposing = true;
                 _client?.Dispose();
                 _readStream?.Dispose();

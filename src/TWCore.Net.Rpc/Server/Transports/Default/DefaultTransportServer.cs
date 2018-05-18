@@ -284,6 +284,15 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             {
                 _sessions.Add(serverClient);
             }
+            try
+            {
+                if (client.Client.RemoteEndPoint is IPEndPoint remoteIp)
+                    Core.Log.InfoBasic("Client Connected from: {0}", remoteIp.Address.ToString());
+            }
+            catch
+            {
+                //
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

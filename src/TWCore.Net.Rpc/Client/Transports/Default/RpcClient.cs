@@ -155,11 +155,13 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     _connectionCancellationTokenSource = new CancellationTokenSource();
                     _connectionCancellationToken = _connectionCancellationTokenSource.Token;
                 }
+                Core.Log.InfoBasic("Connected to server: {0}:{1}", _host, _port);
                 BindBackgroundTasks();
                 _serializer.Serialize(new RPCSessionRequestMessage { Hub = _hub, SessionId = _sessionId }, _writeStream);
                 await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
                 await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
                 OnConnect?.Invoke(this, EventArgs.Empty);
+                Core.Log.InfoBasic("RPC connection started with: {0}:{1}", _host, _port);
             }
         }
         /// <summary>
@@ -176,6 +178,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _shouldBeConnected = false;
                 _connectionCancellationTokenSource?.Cancel();
                 _onSession = false;
+                Core.Log.InfoBasic("RPC connection stopped with: {0}:{1}", _host, _port);
+
                 _client.Close();
                 _client = null;
                 _readStream?.Dispose();

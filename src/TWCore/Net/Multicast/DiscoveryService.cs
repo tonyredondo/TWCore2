@@ -39,7 +39,7 @@ namespace TWCore.Net.Multicast
         private static readonly PeerConnection PeerConnection;
         private static readonly List<RegisteredService> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
-        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(30);
+        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(60);
         private static Task _sendThread;
         private static CancellationTokenSource _tokenSource;
         private static CancellationToken _token;
@@ -348,7 +348,7 @@ namespace TWCore.Net.Multicast
                 var sObj = new SerializedObject(tmpList, Serializer);
                 var sObjArr = sObj.ToSubArray();
                 await PeerConnection.SendAsync(sObjArr).ConfigureAwait(false);
-                await Task.Delay(10000, _token).ConfigureAwait(false);
+                await Task.Delay(30000, _token).ConfigureAwait(false);
             }
         }
         #endregion

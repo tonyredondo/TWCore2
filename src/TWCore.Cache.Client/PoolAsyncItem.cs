@@ -209,7 +209,7 @@ namespace TWCore.Cache.Client
                         EnabledChanged?.Invoke(this, Enabled);
                     Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
 
-                    var waitDelay = PingConsecutiveFailure > 15 ? PingDelayOnError : PingDelay;
+                    var waitDelay = PingConsecutiveFailure < 15 ? PingDelayOnError : PingDelay;
                     if (Enabled == false)
                         Core.Log.Warning("{0} is Disabled due connection issues, Trying a new ping on: {1}ms", Name, waitDelay);
                     if (!lastEnabled && Enabled)

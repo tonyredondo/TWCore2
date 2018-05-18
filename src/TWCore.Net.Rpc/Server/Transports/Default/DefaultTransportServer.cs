@@ -275,15 +275,6 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         private void ConnectionReceived(object objTcpClient)
         {
             var client = (TcpClient)objTcpClient;
-            var serverClient = new RpcServerClient(client, (BinarySerializer)Serializer);
-            serverClient.OnSessionMessageReceived += ServerClient_OnSessionMessageReceived;
-            serverClient.OnConnect += ServerClient_OnConnect;
-            serverClient.OnDisconnect += ServerClient_OnDisconnect;
-            serverClient.OnMessageReceived += ServerClient_OnMessageReceived;
-            lock (_locker)
-            {
-                _sessions.Add(serverClient);
-            }
             try
             {
                 if (client.Client.RemoteEndPoint is IPEndPoint remoteIp)
@@ -292,6 +283,15 @@ namespace TWCore.Net.RPC.Server.Transports.Default
             catch
             {
                 //
+            }
+            var serverClient = new RpcServerClient(client, (BinarySerializer)Serializer);
+            serverClient.OnSessionMessageReceived += ServerClient_OnSessionMessageReceived;
+            serverClient.OnConnect += ServerClient_OnConnect;
+            serverClient.OnDisconnect += ServerClient_OnDisconnect;
+            serverClient.OnMessageReceived += ServerClient_OnMessageReceived;
+            lock (_locker)
+            {
+                _sessions.Add(serverClient);
             }
         }
 

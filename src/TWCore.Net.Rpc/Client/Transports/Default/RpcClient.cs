@@ -131,12 +131,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task ConnectAsync()
+        public async Task<bool> ConnectAsync()
         {
-            if (_client?.Connected == true) return;
+            if (_client?.Connected == true) return false;
             using (await _connectionLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client?.Connected == true) return;
+                if (_client?.Connected == true) return false;
                 _client?.Close();
                 _shouldBeConnected = true;
                 _onSession = false;
@@ -162,6 +162,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 await _sessionEvent.WaitAsync(_connectionCancellationToken).ConfigureAwait(false);
                 OnConnect?.Invoke(this, EventArgs.Empty);
                 Core.Log.InfoBasic("RPC connection started with: {0}:{1}", _host, _port);
+                return true;
             }
         }
         /// <summary>
@@ -169,12 +170,12 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// </summary>
         /// <returns></returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task DisconnectAsync()
+        public async Task<bool> DisconnectAsync()
         {
-            if (_client == null || !_client.Connected) return;
+            if (_client == null || !_client.Connected) return false;
             using (await _connectionLocker.LockAsync().ConfigureAwait(false))
             {
-                if (_client == null || !_client.Connected) return;
+                if (_client == null || !_client.Connected) return false;
                 _shouldBeConnected = false;
                 _connectionCancellationTokenSource?.Cancel();
                 _onSession = false;
@@ -187,6 +188,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 _networkStream = null;
                 _readStream = null;
                 _writeStream = null;
+                return true;
             }
         }
         #endregion
@@ -198,22 +200,23 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <param name="message">RpcMessage instance</param>
         /// <returns>Completation task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task SendRpcMessageAsync(RPCMessage message)
+        public async Task<bool> SendRpcMessageAsync(RPCMessage message)
         {
             if (_connectionCancellationToken.IsCancellationRequested)
-                return;
+                return false;
             using (await _sendLocker.LockAsync().ConfigureAwait(false))
             {
                 if (_connectionCancellationToken.IsCancellationRequested)
-                    return;
+                    return false;
                 if (_client == null || !_client.Connected)
                 {
                     OnDisconnect?.Invoke(this, EventArgs.Empty);
                     await ConnectAsync().ConfigureAwait(false);
                 }
-                if (!_onSession) return;
+                if (!_onSession) return false;
                 _serializer.Serialize(message, _writeStream);
                 await _writeStream.FlushAsync(_connectionCancellationToken).ConfigureAwait(false);
+                return true;
             }
         }
         #endregion

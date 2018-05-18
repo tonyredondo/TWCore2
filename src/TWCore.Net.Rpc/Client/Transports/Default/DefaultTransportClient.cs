@@ -185,7 +185,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                         _clients = new RpcClient[_socketsPerClient];
                         for (var i = 0; i < _clients.Length; i++)
                         {
-                            var client = new RpcClient(Host, Port, (BinarySerializer) Serializer);
+                            var client = new RpcClient(Host, Port, (BinarySerializer)Serializer);
                             client.OnMessageReceived += ClientOnOnMessageReceived;
                             _clients[i] = client;
                         }
@@ -230,7 +230,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             {
                 await ConnectAsync().ConfigureAwait(false);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Error(ex.Message);
             }
@@ -262,8 +262,24 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             var handler = new RpcMessageHandler();
             _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
             if (_currentIndex > ResetIndex) _currentIndex = -1;
-			var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
-            await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
+            bool sent;
+            do
+            {
+                var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
+                sent = await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
+                if (!sent)
+                {
+                    try
+                    {
+                        await client.DisconnectAsync();
+                        await client.ConnectAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            } while (!sent);
             await handler.Event.WaitAsync(InvokeMethodTimeout, _connectionCancellationToken).ConfigureAwait(false);
             if (handler.Event.IsSet)
                 return handler.Message;
@@ -286,12 +302,30 @@ namespace TWCore.Net.RPC.Client.Transports.Default
             var handler = new RpcMessageHandler();
             _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
             if (_currentIndex > ResetIndex) _currentIndex = -1;
-            var client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
+            bool sent;
+            RpcClient client;
             using (var linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(_connectionCancellationToken, cancellationToken))
             {
-                await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
+                do
+                {
+                    client = _clients[Interlocked.Increment(ref _currentIndex) % _socketsPerClient];
+                    sent = await client.SendRpcMessageAsync(messageRq).ConfigureAwait(false);
+                    if (!sent)
+                    {
+                        try
+                        {
+                            await client.DisconnectAsync();
+                            await client.ConnectAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                    }
+                } while (!sent);
                 await handler.Event.WaitAsync(InvokeMethodTimeout, linkedTokenSource.Token).ConfigureAwait(false);
             }
+
             if (handler.Event.IsSet)
                 return handler.Message;
             _connectionCancellationToken.ThrowIfCancellationRequested();
@@ -341,7 +375,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                     });
                     break;
                 case RPCError errorMessage:
-                    var respMsg = new RPCResponseMessage {Exception = errorMessage.Exception};
+                    var respMsg = new RPCResponseMessage { Exception = errorMessage.Exception };
                     foreach (var mHandler in _messageResponsesHandlers.ToArray())
                     {
                         mHandler.Value.Message = respMsg;

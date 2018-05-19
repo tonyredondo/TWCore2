@@ -91,7 +91,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Reflection", "src\TW
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.NSerializer", "src\TWCore.Serialization.NSerializer\TWCore.Serialization.NSerializer.csproj", "{B43D6F91-F848-43F0-A210-31E61C08A58D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Bot.Slack", "src\TWCore.Bot.Slack\TWCore.Bot.Slack.csproj", "{7D503B8C-524A-4A54-9D36-219C93F283E5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Bot.Slack", "src\TWCore.Bot.Slack\TWCore.Bot.Slack.csproj", "{7D503B8C-524A-4A54-9D36-219C93F283E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.Utf8Json", "src\TWCore.Serialization.Utf8Json\TWCore.Serialization.Utf8Json.csproj", "{23E21872-6306-40D9-BD45-1763BC1DB70B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -251,6 +253,10 @@ Global
 		{7D503B8C-524A-4A54-9D36-219C93F283E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7D503B8C-524A-4A54-9D36-219C93F283E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7D503B8C-524A-4A54-9D36-219C93F283E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{23E21872-6306-40D9-BD45-1763BC1DB70B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{23E21872-6306-40D9-BD45-1763BC1DB70B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{23E21872-6306-40D9-BD45-1763BC1DB70B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{23E21872-6306-40D9-BD45-1763BC1DB70B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -294,6 +300,7 @@ Global
 		{93DD9BD4-2AE6-40BF-BD47-9E8914E4C374} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{B43D6F91-F848-43F0-A210-31E61C08A58D} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 		{7D503B8C-524A-4A54-9D36-219C93F283E5} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
+		{23E21872-6306-40D9-BD45-1763BC1DB70B} = {9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9A65F642-8BA2-43FF-A9EB-AC3321FB5D21}

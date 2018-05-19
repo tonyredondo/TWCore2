@@ -11,6 +11,7 @@ using TWCore.Serialization.MsgPack;
 using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
+using TWCore.Serialization.Utf8Json;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
@@ -114,15 +115,17 @@ namespace TWCore.Tests
             var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
+            var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             //var binaryformatterSerializer = new BinaryFormatterSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
-
+            
             Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
+            Core.Log.InfoBasic("\tUtf8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
             //Core.Log.InfoBasic("\tBinaryFormatter Bytes Count: {0}", SerializerSizeProcess(value, vType, binaryformatterSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
@@ -130,6 +133,7 @@ namespace TWCore.Tests
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
             SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            SerializerProcess("Utf8Json", value, vType, times, ut8JsonSerializer, memStream);
             //SerializerProcess("BinaryFormatter", value, vType, times, binaryformatterSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);

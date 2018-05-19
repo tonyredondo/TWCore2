@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Buffers;
 using System.IO;
 using System.Runtime.CompilerServices;
@@ -58,7 +59,7 @@ namespace TWCore
         /// Reads the data from a stream a returns the bytes array
         /// </summary>
         /// <param name="stream">Stream source</param>
-        /// <returns>Bytes array</returns>
+        /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SubArray<byte> ReadBytes(this Stream stream)
         {
@@ -72,8 +73,36 @@ namespace TWCore
         /// Reads the data from a stream a returns the bytes array
         /// </summary>
         /// <param name="stream">Stream source</param>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> ReadBytesAsSpan(this Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.AsSpan();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Memory<byte> ReadBytesAsMemory(this Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms);
+                return ms.AsMemory();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
         /// <param name="bufferSize">Buffer size</param>
-        /// <returns>Bytes array</returns>
+        /// <returns>SubArray instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SubArray<byte> ReadBytes(this Stream stream, int bufferSize)
         {
@@ -81,6 +110,36 @@ namespace TWCore
             {
                 stream.CopyTo(ms, bufferSize);
                 return ms.ToSubArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Span instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Span<byte> ReadBytesAsSpan(this Stream stream, int bufferSize)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms, bufferSize);
+                return ms.AsSpan();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Memory<byte> ReadBytesAsMemory(this Stream stream, int bufferSize)
+        {
+            using (var ms = new MemoryStream())
+            {
+                stream.CopyTo(ms, bufferSize);
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -101,6 +160,20 @@ namespace TWCore
         /// Reads the data from a stream a returns the bytes array
         /// </summary>
         /// <param name="stream">Stream source</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<Memory<byte>> ReadBytesAsMemoryAsync(this Stream stream)
+        {
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms).ConfigureAwait(false);
+                return ms.AsMemory();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,6 +183,21 @@ namespace TWCore
             {
                 await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
                 return ms.ToArray();
+            }
+        }
+        /// <summary>
+        /// Reads the data from a stream a returns the bytes array
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="bufferSize">Buffer size</param>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task<Memory<byte>> ReadBytesAsMemoryAsync(this Stream stream, int bufferSize)
+        {
+            using (var ms = new MemoryStream())
+            {
+                await stream.CopyToAsync(ms, bufferSize).ConfigureAwait(false);
+                return ms.AsMemory();
             }
         }
         /// <summary>
@@ -245,7 +333,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteBytes(this Stream stream, SubArray<byte> value, bool flush = true)
         {
-            stream.Write(value.Array, value.Offset, value.Count);
+            stream.Write(value);
             if (flush)
                 stream.Flush();
         }
@@ -271,7 +359,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task WriteBytesAsync(this Stream stream, SubArray<byte> value, bool flush = true)
         {
-            await stream.WriteAsync(value.Array, value.Offset, value.Count).ConfigureAwait(false);
+            await stream.WriteAsync(value).ConfigureAwait(false);
             if (flush)
                 await stream.FlushAsync().ConfigureAwait(false);
         }

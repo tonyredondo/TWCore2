@@ -129,7 +129,7 @@ namespace TWCore
         public static void WriteToFile(this SubArray<byte> value, string path)
         {
             using (var fs = File.OpenWrite(path))
-                fs.Write(value.Array, value.Offset, value.Count);
+                fs.Write(value);
         }
 
         /// <summary>

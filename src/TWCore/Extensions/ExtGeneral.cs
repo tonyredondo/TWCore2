@@ -596,7 +596,7 @@ namespace TWCore
         /// <param name="subArray">Byte array with the bytes to decode</param>
         /// <returns>A string value with the result of the encoding</returns>
         public static string GetString(this Encoding encoding, SubArray<byte> subArray)
-            => encoding.GetString(subArray.Array, subArray.Offset, subArray.Count);
+            => encoding.GetString(subArray);
         /// <summary>
         /// Gets the Timespan format of the DateTime object.
         /// </summary>

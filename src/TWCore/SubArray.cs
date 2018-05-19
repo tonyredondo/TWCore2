@@ -230,6 +230,42 @@ namespace TWCore
             return temp;
         }
         /// <summary>
+        /// As Span
+        /// </summary>
+        /// <returns>Span struct</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Span<T> AsSpan()
+        {
+            return new Span<T>(_array, _offset, _count);
+        }
+        /// <summary>
+        /// As ReadOnlySpan
+        /// </summary>
+        /// <returns>ReadOnlySpan struct</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlySpan<T> AsReadOnlySpan()
+        {
+            return new ReadOnlySpan<T>(_array, _offset, _count);
+        }
+        /// <summary>
+        /// As Memory
+        /// </summary>
+        /// <returns>Memory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public Memory<T> AsMemory()
+        {
+            return new Memory<T>(_array, _offset, _count);
+        }
+        /// <summary>
+        /// As ReadOnlyMemory
+        /// </summary>
+        /// <returns>ReadOnlyMemory instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ReadOnlyMemory<T> AsReadOnlyMemory()
+        {
+            return new ReadOnlyMemory<T>(_array, _offset, _count);
+        }
+        /// <summary>
         /// Get the String representation of the instance.
         /// </summary>
         /// <returns>String value</returns>
@@ -288,8 +324,17 @@ namespace TWCore
         public static implicit operator SubArray<T>(T[] array) => new SubArray<T>(array);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator SubArray<T>(ArraySegment<T> arraySegment) => new SubArray<T>(arraySegment);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static implicit operator ArraySegment<T>(SubArray<T> subArray) => new ArraySegment<T>(subArray.Array, subArray.Offset, subArray.Count);
-		#endregion
-	}
+        public static implicit operator ArraySegment<T>(SubArray<T> subArray) => new ArraySegment<T>(subArray._array, subArray._offset, subArray._count);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Span<T>(SubArray<T> subArray) => new Span<T>(subArray._array, subArray._offset, subArray._count);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ReadOnlySpan<T>(SubArray<T> subArray) => new ReadOnlySpan<T>(subArray._array, subArray._offset, subArray._count);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator Memory<T>(SubArray<T> subArray) => new Memory<T>(subArray._array, subArray._offset, subArray._count);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator ReadOnlyMemory<T>(SubArray<T> subArray) => new ReadOnlyMemory<T>(subArray._array, subArray._offset, subArray._count);
+        #endregion
+    }
 }

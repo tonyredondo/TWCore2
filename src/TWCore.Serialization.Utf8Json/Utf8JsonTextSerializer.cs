@@ -130,9 +130,8 @@ namespace TWCore.Serialization.Utf8Json
         /// <returns>Object instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
-        {
-            return JsonSerializer.NonGeneric.Deserialize(itemType, stream, _resolver);
-        }
+            => JsonSerializer.NonGeneric.Deserialize(itemType, stream, _resolver);
+
         /// <inheritdoc />
         /// <summary>
         /// Serialize an object and writes it to the stream
@@ -143,10 +142,8 @@ namespace TWCore.Serialization.Utf8Json
         /// <returns>Deserialized byte array value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
-        {
-            JsonSerializer.NonGeneric.Serialize(itemType, stream, item, _resolver);
-        }
-        
+            => JsonSerializer.NonGeneric.Serialize(itemType, stream, item, _resolver);
+
         /// <inheritdoc />
         /// <summary>
         /// Make a deep clone of the object

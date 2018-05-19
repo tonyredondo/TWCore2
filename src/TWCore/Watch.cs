@@ -353,7 +353,7 @@ namespace TWCore
             #endregion
 
             #region Nested Types
-            private struct LogStatItem
+            private class LogStatItem
             {
                 public readonly int Id;
                 public readonly double GlobalTicks;

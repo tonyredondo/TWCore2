@@ -137,21 +137,23 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object New(Type type, string name = null)
         {
-            var tmpObj = OnTypeInstanceResolve?.Invoke(type, name);
-            if (tmpObj != null)
-                return tmpObj;
+            if (OnTypeInstanceResolve != null)
+            {
+                var tmpObj = OnTypeInstanceResolve(type, name);
+                if (tmpObj != null)
+                    return tmpObj;
+            }
             if (_registeredDelegates.TryGetValue((type, name), out var regValue))
             {
                 if (!regValue.Singleton)
                     return regValue.Delegate();
                 return regValue.SingletonValue ?? (regValue.SingletonValue = regValue.Delegate());
             }
-            var typeInfo = type.GetTypeInfo();
-            if (typeInfo.IsInterface)
+            if (type.IsInterface)
                 return CreateInterfaceInstance(type.AssemblyQualifiedName, name);
-            if (typeInfo.IsAbstract)
+            if (type.IsAbstract)
                 return CreateAbstractInstance(type.AssemblyQualifiedName, name);
-            if (typeInfo.IsClass)
+            if (type.IsClass)
                 return CreateClassInstance(type.AssemblyQualifiedName, name) ?? Activator.CreateInstance(type);
             return null;
         }

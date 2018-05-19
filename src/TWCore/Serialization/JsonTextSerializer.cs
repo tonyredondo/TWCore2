@@ -35,6 +35,12 @@ namespace TWCore.Serialization
         private static readonly NonBlocking.ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer> SerializerSettings = new NonBlocking.ConcurrentDictionary<(bool, bool, TypeNameHandling, bool, bool, bool), JsonSerializer>();
         private static readonly string[] SExtensions = { ".json" };
         private static readonly string[] SMimeTypes = { SerializerMimeTypes.Json, "text/json" };
+        private JsonSerializer _serializer;
+        private bool _indent;
+        private bool _useCamelCase;
+        private bool _ignoreNullValues;
+        private TypeNameHandling _nameHandling = TypeNameHandling.Auto;
+        private bool _enumsAsStrings;
 
         #region Default Values
         /// <summary>
@@ -57,23 +63,63 @@ namespace TWCore.Serialization
         /// <summary>
         /// Gets or sets if the serialized json result should be indented
         /// </summary>
-        public bool Indent { get; set; }
+        public bool Indent
+        {
+            get => _indent;
+            set
+            {
+                _indent = value;
+                UpdateSerializer();
+            }
+        }
         /// <summary>
         /// Gets or sets if the properties should be serialized in CammelCase, false if is PascalCase
         /// </summary>
-        public bool UseCamelCase { get; set; }
+        public bool UseCamelCase
+        {
+            get => _useCamelCase;
+            set
+            {
+                _useCamelCase = value;
+                UpdateSerializer();
+            }
+        }
         /// <summary>
         /// Ignore Null Values
         /// </summary>
-        public bool IgnoreNullValues { get; set; } = false;
+        public bool IgnoreNullValues
+        {
+            get => _ignoreNullValues;
+            set
+            {
+                _ignoreNullValues = value;
+                UpdateSerializer();
+            }
+        }
         /// <summary>
         /// Gets or sets the name handling for types
         /// </summary>
-		public TypeNameHandling NameHandling { get; set; } = TypeNameHandling.Auto;
+		public TypeNameHandling NameHandling
+        {
+            get => _nameHandling;
+            set
+            {
+                _nameHandling = value;
+                UpdateSerializer();
+            }
+        }
 		/// <summary>
 		/// Gets or sets the setting for serializing Enums as integer or as string.
 		/// </summary>
-		public bool EnumsAsStrings { get; set; }
+		public bool EnumsAsStrings
+        {
+            get => _enumsAsStrings;
+            set
+            {
+                _enumsAsStrings = value;
+                UpdateSerializer();
+            }
+        }
         #endregion
 
         #region .ctor
@@ -85,28 +131,26 @@ namespace TWCore.Serialization
         public JsonTextSerializer()
         {
             Encoding = DefaultEncoding;
+            UpdateSerializer();
         }
         #endregion
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private JsonSerializer GetSerializer()
+        private void UpdateSerializer()
         {
-            return SerializerSettings.GetOrAdd((Indent, UseCamelCase, NameHandling, IgnoreNullValues, EnumsAsStrings, true), tpl =>
+            var ser = new JsonSerializerSettings
             {
-                var ser = new JsonSerializerSettings
-                {
-                    Formatting = tpl.Item1 ? Formatting.Indented : Formatting.None,
-                    ContractResolver = tpl.Item2 ? new CamelCasePropertyNamesContractResolver() : new DefaultContractResolver(),
-                    TypeNameHandling = tpl.Item3,
-                    NullValueHandling = tpl.Item4 ? NullValueHandling.Ignore : NullValueHandling.Include,
-                    CheckAdditionalContent = tpl.Item6
-                };
-                if (tpl.Item5)
-                    ser.Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() };
-                return JsonSerializer.Create(ser);
-            });
+                Formatting = Indent ? Formatting.Indented : Formatting.None,
+                ContractResolver = UseCamelCase ? new CamelCasePropertyNamesContractResolver() : new DefaultContractResolver(),
+                TypeNameHandling = NameHandling,
+                NullValueHandling = IgnoreNullValues ? NullValueHandling.Ignore : NullValueHandling.Include,
+                CheckAdditionalContent = true
+            };
+            if (EnumsAsStrings)
+                ser.Converters = new JsonConverter[] { new Newtonsoft.Json.Converters.StringEnumConverter() };
+            _serializer = JsonSerializer.Create(ser);
         }
-
+        
         /// <inheritdoc />
         /// <summary>
         /// Gets the object instance deserialized from a stream
@@ -117,9 +161,8 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            var ser = GetSerializer();
-            using (var sr = new StreamReader(stream, Encoding, true, 1024, true))
-                return ser.Deserialize(sr, itemType);
+            using (var sr = new StreamReader(stream, Encoding, true, 4096, true))
+                return _serializer.Deserialize(sr, itemType);
         }
         /// <inheritdoc />
         /// <summary>
@@ -132,9 +175,8 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            var ser = GetSerializer();
-            using (var sw = new StreamWriter(stream, Encoding, 1024, true))
-                ser.Serialize(sw, item, itemType);
+            using (var sw = new StreamWriter(stream, Encoding, 4096, true))
+                _serializer.Serialize(sw, item, itemType);
         }
 
         /// <inheritdoc />

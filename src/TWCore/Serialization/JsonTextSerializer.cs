@@ -161,8 +161,13 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override object OnDeserialize(Stream stream, Type itemType)
         {
-            using (var sr = new StreamReader(stream, Encoding, true, 4096, true))
-                return _serializer.Deserialize(sr, itemType);
+            using (var streamReader = new StreamReader(stream, Encoding, true, 4096, true))
+            {
+                using (var jsonReader = new JsonTextReader(streamReader))
+                {
+                    return _serializer.Deserialize(jsonReader, itemType);
+                }
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -175,8 +180,13 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnSerialize(Stream stream, object item, Type itemType)
         {
-            using (var sw = new StreamWriter(stream, Encoding, 4096, true))
-                _serializer.Serialize(sw, item, itemType);
+            using (var streamWriter = new StreamWriter(stream, Encoding, 4096, true))
+            {
+                using (var jsonWriter = new JsonTextWriter(streamWriter))
+                {
+                    _serializer.Serialize(jsonWriter, item, itemType);
+                }
+            }
         }
 
         /// <inheritdoc />

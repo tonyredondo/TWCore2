@@ -120,7 +120,7 @@ namespace TWCore.Tests
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
-
+            
             Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");

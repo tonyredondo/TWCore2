@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NonBlocking;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -32,6 +33,12 @@ namespace TWCore.Injector
     [XmlRoot("InjectorSettings"), DataContract]
     public class InjectorSettings
     {
+        private ConcurrentDictionary<string, NonInstantiable> _interfaceDefinitionCache = new ConcurrentDictionary<string, NonInstantiable>();
+        private ConcurrentDictionary<string, NonInstantiable> _abstractDefinitionCache = new ConcurrentDictionary<string, NonInstantiable>();
+        private ConcurrentDictionary<string, Instantiable[]> _classDefinitionCache = new ConcurrentDictionary<string, Instantiable[]>();
+        private ConcurrentDictionary<(string Type, string Name), Instantiable> _interfaceInstanceDefinitionCache = new ConcurrentDictionary<(string Type, string Name), Instantiable>();
+        private ConcurrentDictionary<(string Type, string Name), Instantiable> _abstractInstanceDefinitionCache = new ConcurrentDictionary<(string Type, string Name), Instantiable>();
+
         /// <summary>
         /// Collection of argument values
         /// </summary>
@@ -61,7 +68,7 @@ namespace TWCore.Injector
         /// <returns>Argument instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Argument GetArgument(string name)
-            => Arguments.Contains(name) ? Arguments[name] : null;
+            => Arguments.TryGet(name, out var value) ? value : null;
         /// <summary>
         /// Get an interface definition
         /// </summary>
@@ -70,15 +77,18 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetInterfaceDefinition(string type)
         {
-            return Interfaces.FirstOrDefault((i, mType) =>
+            return _interfaceDefinitionCache.GetOrAdd(type, cType =>
             {
-                if (mType.Length == i.Type.Length)
-                    return mType == i.Type;
-                
-                var tArr = mType.Split(',');
-                var iArr = i.Type.Split(',');
-                return tArr[0] == iArr[0];
-            }, type);
+                return Interfaces.FirstOrDefault((i, mType) =>
+                {
+                    if (mType.Length == i.Type.Length)
+                        return mType == i.Type;
+
+                    var tArr = mType.Split(',');
+                    var iArr = i.Type.Split(',');
+                    return tArr[0] == iArr[0];
+                }, cType);
+            });
         }
         /// <summary>
         /// Get an abstract definition
@@ -88,15 +98,18 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetAbstractDefinition(string type)
         {
-            return Abstracts.FirstOrDefault((i, mType) =>
+            return _abstractDefinitionCache.GetOrAdd(type, cType =>
             {
-                if (mType.Length == i.Type.Length)
-                    return mType == i.Type;
-                
-                var tArr = mType.Split(',');
-                var iArr = i.Type.Split(',');
-                return tArr[0] == iArr[0];
-            }, type);
+                return Abstracts.FirstOrDefault((i, mType) =>
+                {
+                    if (mType.Length == i.Type.Length)
+                        return mType == i.Type;
+
+                    var tArr = mType.Split(',');
+                    var iArr = i.Type.Split(',');
+                    return tArr[0] == iArr[0];
+                }, cType);
+            });
         }
         /// <summary>
         /// Get an instantiable class definition
@@ -106,15 +119,18 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<Instantiable> GetInstantiableClassDefinition(string type)
         {
-            return InstantiableClasses.Where((i, mType) =>
+            return _classDefinitionCache.GetOrAdd(type, cType =>
             {
-                if (mType.Length == i.Type.Length)
-                    return mType == i.Type;
-                
-                var tArr = mType.Split(',');
-                var iArr = i.Type.Split(',');
-                return tArr[0] == iArr[0];
-            }, type);
+                return InstantiableClasses.Where((i, mType) =>
+                {
+                    if (mType.Length == i.Type.Length)
+                        return mType == i.Type;
+
+                    var tArr = mType.Split(',');
+                    var iArr = i.Type.Split(',');
+                    return tArr[0] == iArr[0];
+                }, cType).ToArray();
+            });
         }
         /// <summary>
         /// Get an interface implementation definition
@@ -125,11 +141,14 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Instantiable GetInterfaceInstanceDefinition(string type, string name = null)
         {
-            var interfaceType = GetInterfaceDefinition(type);
-            if (interfaceType == null)
-                throw new KeyNotFoundException($"The Interface type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
-            var className = name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
-            return interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+            return _interfaceInstanceDefinitionCache.GetOrAdd((type, name), tuple =>
+            {
+                var interfaceType = GetInterfaceDefinition(tuple.Type);
+                if (interfaceType == null)
+                    throw new KeyNotFoundException($"The Interface type: {tuple.Type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={tuple.Type}, Name={tuple.Name}]");
+                var className = tuple.Name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
+                return interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+            });
         }
         /// <summary>
         /// Get an abstract implementation definition
@@ -140,11 +159,14 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Instantiable GetAbstractInstanceDefinition(string type, string name = null)
         {
-            var abstractType = GetAbstractDefinition(type);
-            if (abstractType == null)
-                throw new KeyNotFoundException($"The Abstract type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
-            var className = name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
-            return abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+            return _abstractInstanceDefinitionCache.GetOrAdd((type, name), tuple =>
+            {
+                var abstractType = GetAbstractDefinition(tuple.Type);
+                if (abstractType == null)
+                    throw new KeyNotFoundException($"The Abstract type: {tuple.Type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={tuple.Type}, Name={tuple.Name}]");
+                var className = tuple.Name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
+                return abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+            });
         }
         /// <summary>
         /// Preload all declared types

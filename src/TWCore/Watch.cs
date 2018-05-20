@@ -282,9 +282,6 @@ namespace TWCore
                 double cTime;
                 string indent = null;
                 string gValue;
-                var method = item.Frame?.GetMethod();
-                var assemblyName = method?.DeclaringType.Assembly.FullName;
-                var typeName = method?.DeclaringType.Name;
                 if (string.IsNullOrEmpty(item.Group))
                 {
                     gValue = string.Format("{0:00}", item.Id);
@@ -298,7 +295,7 @@ namespace TWCore
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Write(item.Level, null, indent + "[" + gValue + "-START] " + item.Message, null, assemblyName: assemblyName, typeName: typeName);
+                        Core.Log.Write(item.Level, indent + "[" + gValue + "-START] " + item.Message);
                         break;
                     case 1:
                         cTime = item.LastTapTicks * FrequencyTime;
@@ -306,11 +303,11 @@ namespace TWCore
                         if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.00001)
                         {
                             gTime = item.GlobalTicks * FrequencyTime;
-                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), null, assemblyName: assemblyName, typeName: typeName);
+                            Core.Log.Write(item.Level, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
                         }
                         else
                         {
-                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms] {2}", gValue, cTime, item.Message), null, assemblyName: assemblyName, typeName: typeName);
+                            Core.Log.Write(item.Level, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms] {2}", gValue, cTime, item.Message));
                         }
                         break;
                     case 2:
@@ -318,9 +315,9 @@ namespace TWCore
                         gTime = item.GlobalTicks * FrequencyTime;
                         item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, gTime);
                         if (Math.Abs(cTime - gTime) > 0.00001)
-                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), null, assemblyName: assemblyName, typeName: typeName);
+                            Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
                         else
-                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message), null, assemblyName: assemblyName, typeName: typeName);
+                            Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message));
                         break;
                 }
             }
@@ -366,10 +363,9 @@ namespace TWCore
                 public readonly LogLevel Level;
                 public readonly string Group;
                 public readonly StatusCounter Counter;
-                public readonly StackFrame Frame;
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, StatusCounter counter, int type, StackFrame frame)
+                public LogStatItem(int id, LogLevel level, double globalTicks, double lastTapTicks, string message, string group, StatusCounter counter, int type)
                 {
                     Id = id;
                     Level = level;
@@ -379,7 +375,6 @@ namespace TWCore
                     Counter = counter;
                     Type = type;
                     Group = group;
-                    Frame = frame;
                 }
             }
             #endregion

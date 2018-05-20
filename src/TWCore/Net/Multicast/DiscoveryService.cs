@@ -169,7 +169,7 @@ namespace TWCore.Net.Multicast
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
                     var sObj = new SerializedObject(service, Serializer);
-                    var sObjArr = (byte[])sObj.ToSubArray();
+                    var sObjArr = sObj.ToSubArray();
                     LocalServices.Add(new RegisteredServiceContainer(service, Serializer, sObjArr));
                 }
             }
@@ -338,7 +338,7 @@ namespace TWCore.Net.Multicast
         {
             while (!_token.IsCancellationRequested)
             {
-                var servicesBytes = new List<byte[]>();
+                var servicesBytes = new List<SubArray<byte>>();
                 lock (LocalServices)
                 {
                     foreach (var srv in LocalServices)
@@ -347,7 +347,7 @@ namespace TWCore.Net.Multicast
                         {
                             if (srv.Serializer != Serializer)
                             {
-                                srv.DataToSend = (byte[]) new SerializedObject(srv.Service, Serializer).ToSubArray();
+                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToSubArray();
                                 srv.Serializer = Serializer;
                             }
                             servicesBytes.Add(srv.DataToSend);
@@ -355,7 +355,7 @@ namespace TWCore.Net.Multicast
                         else if (srv.Service.GetDataFunc != null)
                         {
                             srv.Service.Data = srv.Service.GetDataFunc();
-                            servicesBytes.Add((byte[])new SerializedObject(srv.Service, Serializer).ToSubArray());
+                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToSubArray());
                         }
                     }
                 }
@@ -371,9 +371,9 @@ namespace TWCore.Net.Multicast
         {
             public RegisteredService Service;
             public ISerializer Serializer;
-            public byte[] DataToSend;
+            public SubArray<byte> DataToSend;
 
-            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, byte[] dataToSend)
+            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, SubArray<byte> dataToSend)
             {
                 Service = service;
                 Serializer = serializer;

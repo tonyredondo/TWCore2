@@ -750,13 +750,11 @@ namespace TWCore.Serialization.NSerializer
                 }
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
                 {
-                    var lqType = value.GetType();
-                    if (lqType.ReflectedType == typeof(Enumerable) || lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
+                    if (valueType.ReflectedType == typeof(Enumerable) || valueType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                     {
-                        var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-                        var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
-                        value = (IList) Activator.CreateInstance(type, iEValue);
-                        valueType = value.GetType();
+                        var ienumerable = valueType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                        valueType = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
+                        value = (IList)Activator.CreateInstance(valueType, iEValue);
                     }
                 }
                 if (WriteValues.TryGetValue(valueType, out var mTuple))
@@ -771,7 +769,7 @@ namespace TWCore.Serialization.NSerializer
                 Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.Set(valueType);
                 if (descriptor.IsNSerializable)
-                    ((INSerializable) value).Serialize(this);
+                    ((INSerializable)value).Serialize(this);
                 else
                     descriptor.SerializeAction(value, this);
 
@@ -813,17 +811,16 @@ namespace TWCore.Serialization.NSerializer
                 WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
+            var vType = value.GetType();
             if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
             {
-                var lqType = value.GetType();
-                if (lqType.ReflectedType == typeof(Enumerable) || lqType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
+                if (vType.ReflectedType == typeof(Enumerable) || vType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)
                 {
-                    var ienumerable = lqType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
-                    var type = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
-                    value = (IList) Activator.CreateInstance(type, iEValue);
+                    var ienumerable = vType.AllInterfaces().FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                    vType = typeof(List<>).MakeGenericType(ienumerable.GenericTypeArguments[0]);
+                    value = (IList)Activator.CreateInstance(vType, iEValue);
                 }
             }
-            var vType = value.GetType();
             if (WriteValues.TryGetValue(vType, out var mTuple))
             {
                 _paramObj[0] = value;

@@ -21,16 +21,16 @@ namespace TWCore
 {
     /// <inheritdoc />
     /// <summary>
-    /// Byte array comparer
+    /// Byte SubArray Comparer
     /// </summary>
-    public class ByteArrayComparer : IEqualityComparer<byte[]>
+    public class SubArrayBytesComparer : IEqualityComparer<SubArray<byte>>
     {
         /// <summary>
-        /// Byte Array comparer instace
+        /// Byte SubArray comparer instace
         /// </summary>
-        public static ByteArrayComparer Instance = new ByteArrayComparer();
+        public static SubArrayBytesComparer Instance = new SubArrayBytesComparer();
 
-        private ByteArrayComparer()
+        private SubArrayBytesComparer()
         {
         }
 
@@ -42,15 +42,18 @@ namespace TWCore
         /// <param name="y">Byte array to compare</param>
         /// <returns>true if both arrays has the same items; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public unsafe bool Equals(byte[] x, byte[] y)
+        public unsafe bool Equals(SubArray<byte> x, SubArray<byte> y)
         {
             if (x == y)
                 return true;
-            if (x == null || y == null || x.Length != y.Length)
+            if (x == null || y == null || x.Count != y.Count)
                 return false;
-            fixed (byte* bytes1 = x, bytes2 = y)
+
+            fixed (byte* tmpb1 = x.Array, tmpb2 = y.Array)
             {
-                var len = x.Length;
+                byte* bytes1 = (byte*)x.GetPointer();
+                byte* bytes2 = (byte*)y.GetPointer();
+                var len = x.Count;
                 var rem = len % (sizeof(long) * 16);
                 var b1 = (long*)bytes1;
                 var b2 = (long*)bytes2;
@@ -84,11 +87,11 @@ namespace TWCore
         /// <param name="data">Byte array to get the hash code</param>
         /// <returns>Byte array hash value</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int GetHashCode(byte[] data)
+        public int GetHashCode(SubArray<byte> data)
         {
             var res = 0x2D2816FE;
-            var step = (data.Length / 64) + 1;
-            for (var i = 0; i < data.Length; i += step)
+            var step = (data.Count / 64) + 1;
+            for (var i = 0; i < data.Count; i += step)
                 res = res * 31 + data[i];
             return res;
         }

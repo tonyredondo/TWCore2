@@ -38,10 +38,9 @@ namespace TWCore.Serialization.WSerializer
     public class WSerializerCore
     {
         private static readonly Encoding DefaultUtf8Encoding = new UTF8Encoding(false);
-        private static readonly ByteArrayComparer ByteComparer = new ByteArrayComparer();
         private static readonly DeserializerTypeDefinitionComparer TypeDefinitionComparer = new DeserializerTypeDefinitionComparer();
         private static readonly NonBlocking.ConcurrentDictionary<Type, byte[]> GlobalKnownTypes = new NonBlocking.ConcurrentDictionary<Type, byte[]>();
-        private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteComparer);
+        private static readonly NonBlocking.ConcurrentDictionary<byte[], Type> GlobalKnownTypesValues = new NonBlocking.ConcurrentDictionary<byte[], Type>(ByteArrayComparer.Instance);
         private static readonly IHash Hash = HashManager.Get("SHA1");
         private static readonly SerializerPlanItem[] EndPlan = { new SerializerPlanItem.WriteBytes(new[] { DataType.TypeEnd }) };
         

@@ -81,14 +81,15 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            var bytes = new byte[length + 5];
+            var bytes = ArrayPool<byte>.Shared.Rent(length + 5);
             bytes[0] = DataBytesDefinition.StringLength;
             bytes[1] = (byte)length;
             bytes[2] = (byte)(length >> 8);
             bytes[3] = (byte)(length >> 16);
             bytes[4] = (byte)(length >> 24);
             Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
-            Stream.Write(bytes, 0, bytes.Length);
+            Stream.Write(bytes, 0, length + 5);
+            ArrayPool<byte>.Shared.Return(bytes);
         }
     }
 
@@ -129,9 +130,10 @@ namespace TWCore.Serialization.NSerializer
                     throw new InvalidOperationException("Invalid type value.");
             }
 
-            var bytes = new byte[length];
+            var bytes = ArrayPool<byte>.Shared.Rent(length);
             Stream.Read(bytes, 0, length);
             var strValue = Encoding.UTF8.GetString(bytes, 0, length);
+            ArrayPool<byte>.Shared.Return(bytes);
             var sLength = strValue.Length;
 
             if (sLength <= 2) return strValue;

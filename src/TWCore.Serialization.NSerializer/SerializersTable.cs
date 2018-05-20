@@ -741,11 +741,11 @@ namespace TWCore.Serialization.NSerializer
             {
                 Stream = stream;
                 Writer = new BinaryWriter(stream, Encoding.UTF8, true);
-                WriteByte(DataBytesDefinition.Start);
+                Stream.WriteByte(DataBytesDefinition.Start);
 
                 if (value == null)
                 {
-                    WriteByte(DataBytesDefinition.ValueNull);
+                    Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
@@ -761,7 +761,7 @@ namespace TWCore.Serialization.NSerializer
                 {
                     _paramObj[0] = value;
                     mTuple.Accessor(this, _paramObj);
-                    WriteByte(DataBytesDefinition.End);
+                    Stream.WriteByte(DataBytesDefinition.End);
                     return;
                 }
                 _objectCache.Set(value);
@@ -773,7 +773,9 @@ namespace TWCore.Serialization.NSerializer
                 else
                     descriptor.SerializeAction(value, this);
 
-                WriteDefByte(DataBytesDefinition.TypeEnd, DataBytesDefinition.End);
+                _buffer[0] = DataBytesDefinition.TypeEnd;
+                _buffer[1] = DataBytesDefinition.End;
+                Stream.Write(_buffer, 0, 2);
             }
             catch (Exception ex)
             {
@@ -804,11 +806,11 @@ namespace TWCore.Serialization.NSerializer
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void InternalWriteObjectValue(object value)
+        private unsafe void InternalWriteObjectValue(object value)
         {
             if (value == null)
             {
-                WriteByte(DataBytesDefinition.ValueNull);
+                Stream.WriteByte(DataBytesDefinition.ValueNull);
                 return;
             }
             var vType = value.GetType();
@@ -829,14 +831,24 @@ namespace TWCore.Serialization.NSerializer
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
             {
-                WriteDefInt(DataBytesDefinition.RefObject, oIdx);
+                _buffer[0] = DataBytesDefinition.RefObject;
+                _buffer[1] = (byte)oIdx;
+                _buffer[2] = (byte)(oIdx >> 8);
+                _buffer[3] = (byte)(oIdx >> 16);
+                _buffer[4] = (byte)(oIdx >> 24);
+                Stream.Write(_buffer, 0, 5);
                 return;
             }
             _objectCache.Set(value);
             var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
-                WriteDefInt(DataBytesDefinition.RefType, tIdx);
+                _buffer[0] = DataBytesDefinition.RefType;
+                _buffer[1] = (byte)tIdx;
+                _buffer[2] = (byte)(tIdx >> 8);
+                _buffer[3] = (byte)(tIdx >> 16);
+                _buffer[4] = (byte)(tIdx >> 24);
+                Stream.Write(_buffer, 0, 5);
             }
             else
             {
@@ -847,7 +859,7 @@ namespace TWCore.Serialization.NSerializer
                 ((INSerializable)value).Serialize(this);
             else
                 descriptor.SerializeAction(value, this);
-            WriteByte(DataBytesDefinition.TypeEnd);
+            Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
 
         #endregion

@@ -30,8 +30,8 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        internal static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
-        internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
+        internal static readonly ConcurrentDictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor, SerializerTypeDescriptor Descriptor)> TypeValues = new ConcurrentDictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor, SerializerTypeDescriptor Descriptor)>();
+
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -77,7 +77,7 @@ namespace TWCore.Serialization.NSerializer
                 if (method.Name == nameof(WriteValue))
                 {
                     var parameters = method.GetParameters();
-                    WriteValues[parameters[0].ParameterType] = (method, Factory.Accessors.BuildMethodAccessor(method));
+                    TypeValues.TryAdd(parameters[0].ParameterType, (method, Factory.Accessors.BuildMethodAccessor(method), default));
                 }
             }
         }
@@ -757,15 +757,15 @@ namespace TWCore.Serialization.NSerializer
                         value = (IList)Activator.CreateInstance(valueType, iEValue);
                     }
                 }
-                if (WriteValues.TryGetValue(valueType, out var mTuple))
+                var (_, accessor, descriptor) = TypeValues.GetOrAdd(valueType, mType => (null, null, new SerializerTypeDescriptor(mType)));
+                if (accessor != null)
                 {
                     _paramObj[0] = value;
-                    mTuple.Accessor(this, _paramObj);
+                    accessor(this, _paramObj);
                     WriteByte(DataBytesDefinition.End);
                     return;
                 }
                 _objectCache.Set(value);
-                var descriptor = Descriptors.GetOrAdd(valueType, type => new SerializerTypeDescriptor(type));
                 Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
                 _typeCache.Set(valueType);
                 if (descriptor.IsNSerializable)
@@ -821,10 +821,11 @@ namespace TWCore.Serialization.NSerializer
                     value = (IList)Activator.CreateInstance(vType, iEValue);
                 }
             }
-            if (WriteValues.TryGetValue(vType, out var mTuple))
+            var (_, accessor, descriptor) = TypeValues.GetOrAdd(vType, mType => (null, null, new SerializerTypeDescriptor(mType)));
+            if (accessor != null)
             {
                 _paramObj[0] = value;
-                mTuple.Accessor(this, _paramObj);
+                accessor(this, _paramObj);
                 return;
             }
             if (_objectCache.TryGetValue(value, out var oIdx))
@@ -833,7 +834,6 @@ namespace TWCore.Serialization.NSerializer
                 return;
             }
             _objectCache.Set(value);
-            var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
             if (_typeCache.TryGetValue(vType, out var tIdx))
             {
                 WriteDefInt(DataBytesDefinition.RefType, tIdx);

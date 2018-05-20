@@ -32,6 +32,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)> ReadValues = new Dictionary<byte, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly Dictionary<Type, MethodInfo> ReadValuesFromType = new Dictionary<Type, MethodInfo>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
+        internal static readonly ConcurrentDictionary<byte[], DeserializerMetadataOfTypeRuntime> BytesMetadata = new ConcurrentDictionary<byte[], DeserializerMetadataOfTypeRuntime>(ByteArrayComparer.Instance);
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly byte[] EmptyBytes = new byte[0];
@@ -151,25 +152,28 @@ namespace TWCore.Serialization.NSerializer
                 var length = StreamReadInt();
                 var typeBytes = new byte[length];
                 Stream.Read(typeBytes, 0, length);
-                var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
-                var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
-                var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
-                var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
-                var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
-                var vTypeString = typeData.Substring(0, fsCol1);
-                var isArrayString = typeData.Substring(fsCol1 + 1, 1);
-                var isListString = typeData.Substring(fsCol2 + 1, 1);
-                var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
-                var propertiesString = typeData.Substring(fsCol4 + 1);
+                metadata = BytesMetadata.GetOrAdd(typeBytes, bytes =>
+                {
+                    var typeData = Encoding.UTF8.GetString(bytes, 0, length);
+                    var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
+                    var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
+                    var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
+                    var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
+                    var vTypeString = typeData.Substring(0, fsCol1);
+                    var isArrayString = typeData.Substring(fsCol1 + 1, 1);
+                    var isListString = typeData.Substring(fsCol2 + 1, 1);
+                    var isDictionaryString = typeData.Substring(fsCol3 + 1, 1);
+                    var propertiesString = typeData.Substring(fsCol4 + 1);
 
-                var valueType = Core.GetType(vTypeString);
-                var isArray = isArrayString == "1";
-                var isList = isListString == "1";
-                var isDictionary = isDictionaryString == "1";
-                var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
-                var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
-                var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
-                metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
+                    var valueType = Core.GetType(vTypeString);
+                    var isArray = isArrayString == "1";
+                    var isList = isListString == "1";
+                    var isDictionary = isDictionaryString == "1";
+                    var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
+                    var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
+                    var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
+                    return new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
+                });
                 _typeCache.Set(metadata);
             }
             else if (type == DataBytesDefinition.RefType)

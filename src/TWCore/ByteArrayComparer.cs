@@ -25,6 +25,11 @@ namespace TWCore
     /// </summary>
     public class ByteArrayComparer : IEqualityComparer<byte[]>
     {
+        /// <summary>
+        /// Byte Array comparer instace
+        /// </summary>
+        public static ByteArrayComparer Instance = new ByteArrayComparer();
+
         /// <inheritdoc />
         /// <summary>
         /// Determines whether the specified objects are equal.

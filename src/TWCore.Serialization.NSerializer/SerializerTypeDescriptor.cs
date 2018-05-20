@@ -82,7 +82,7 @@ namespace TWCore.Serialization.NSerializer
             defBytes[4] = (byte)(defBytesLength >> 24);
             Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
             Definition = defBytes;
-            
+
             //
             var serExpressions = new List<Expression>();
             var varExpressions = new List<ParameterExpression>();
@@ -115,9 +115,9 @@ namespace TWCore.Serialization.NSerializer
             else if (IsList)
             {
                 var argTypes = iListType.GenericTypeArguments;
-                var itemMethod = !type.IsGenericType ? 
-                    SerializersTable.InternalWriteObjectValueMInfo : 
-                    SerializersTable.TypeValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
+                var itemMethod = !type.IsGenericType ?
+                    SerializersTable.InternalWriteObjectValueMInfo :
+                    SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
 
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
@@ -138,12 +138,12 @@ namespace TWCore.Serialization.NSerializer
             else if (IsDictionary)
             {
                 var argTypes = iDictionaryType.GenericTypeArguments;
-                var keyMember = !type.IsGenericType ? 
-                    SerializersTable.InternalWriteObjectValueMInfo : 
-                    SerializersTable.TypeValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
+                var keyMember = !type.IsGenericType ?
+                    SerializersTable.InternalWriteObjectValueMInfo :
+                    SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
                 var valueMember = !type.IsGenericType ?
-                    SerializersTable.InternalWriteObjectValueMInfo : 
-                    SerializersTable.TypeValues.TryGetValue(argTypes[1], out var wMethodTuple1) ? wMethodTuple1.Method : SerializersTable.InternalWriteObjectValueMInfo;
+                    SerializersTable.InternalWriteObjectValueMInfo :
+                    SerializersTable.WriteValues.TryGetValue(argTypes[1], out var wMethodTuple1) ? wMethodTuple1.Method : SerializersTable.InternalWriteObjectValueMInfo;
 
                 var iLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(iLength);
@@ -167,7 +167,7 @@ namespace TWCore.Serialization.NSerializer
 
                 serExpressions.Add(loop);
             }
-            
+
             //
             if (runtimeProperties.Length > 0)
             {
@@ -175,10 +175,10 @@ namespace TWCore.Serialization.NSerializer
                 {
                     var getMethod = prop.GetMethod;
                     var getExpression = Expression.Call(instance, getMethod);
-                    if (SerializersTable.TypeValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
+                    if (SerializersTable.WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
                         serExpressions.Add(Expression.Call(serTable, wMethodTuple.Method, getExpression));
                     else if (prop.PropertyType.IsEnum)
-                        serExpressions.Add(Expression.Call(serTable, SerializersTable.TypeValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum))));
+                        serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum))));
                     else
                         serExpressions.Add(Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression));
                 }

@@ -364,6 +364,9 @@ namespace TWCore
                             }
                             #endregion
 
+                            if (actualType.AssemblyQualifiedName.Contains("System.Private")) return DefaultMValue;
+                            if (actualType.AssemblyQualifiedName.Contains("mscorlib")) return DefaultMValue;
+
                             assemblyName = actualType.Assembly.FullName;
                             typeName = actualType.Name;
                             if (actualType.ReflectedType != null && typeName?.Contains("<") == true)

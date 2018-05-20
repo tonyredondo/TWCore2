@@ -505,7 +505,7 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 1, new StackFrame(1)));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 1));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -518,7 +518,7 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 0, new StackFrame(3)));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 0));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -531,7 +531,7 @@ namespace TWCore
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
                 if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 2, new StackFrame(3)));
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 2));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>

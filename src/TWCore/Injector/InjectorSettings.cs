@@ -77,18 +77,23 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetInterfaceDefinition(string type)
         {
-            return _interfaceDefinitionCache.GetOrAdd(type, cType =>
-            {
-                return Interfaces.FirstOrDefault((i, mType) =>
-                {
-                    if (mType.Length == i.Type.Length)
-                        return mType == i.Type;
+            if (_interfaceDefinitionCache.TryGetValue(type, out var value))
+                return value;
 
-                    var tArr = mType.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }, cType);
-            });
+            value = Interfaces.FirstOrDefault((i, mType) =>
+            {
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
+
+                var tArr = mType.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
+            }, type);
+
+            if (value != null)
+                _interfaceDefinitionCache.TryAdd(type, value);
+
+            return value;
         }
         /// <summary>
         /// Get an abstract definition
@@ -98,18 +103,23 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public NonInstantiable GetAbstractDefinition(string type)
         {
-            return _abstractDefinitionCache.GetOrAdd(type, cType =>
-            {
-                return Abstracts.FirstOrDefault((i, mType) =>
-                {
-                    if (mType.Length == i.Type.Length)
-                        return mType == i.Type;
+            if (_abstractDefinitionCache.TryGetValue(type, out var value))
+                return value;
 
-                    var tArr = mType.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }, cType);
-            });
+            value = Abstracts.FirstOrDefault((i, mType) =>
+            {
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
+
+                var tArr = mType.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
+            }, type);
+
+            if (value != null)
+                _abstractDefinitionCache.TryAdd(type, value);
+
+            return value;
         }
         /// <summary>
         /// Get an instantiable class definition
@@ -119,18 +129,23 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public IEnumerable<Instantiable> GetInstantiableClassDefinition(string type)
         {
-            return _classDefinitionCache.GetOrAdd(type, cType =>
-            {
-                return InstantiableClasses.Where((i, mType) =>
-                {
-                    if (mType.Length == i.Type.Length)
-                        return mType == i.Type;
+            if (_classDefinitionCache.TryGetValue(type, out var value))
+                return value;
 
-                    var tArr = mType.Split(',');
-                    var iArr = i.Type.Split(',');
-                    return tArr[0] == iArr[0];
-                }, cType).ToArray();
-            });
+            value = InstantiableClasses.Where((i, mType) =>
+            {
+                if (mType.Length == i.Type.Length)
+                    return mType == i.Type;
+
+                var tArr = mType.Split(',');
+                var iArr = i.Type.Split(',');
+                return tArr[0] == iArr[0];
+            }, type).ToArray();
+
+            if (value != null)
+                _classDefinitionCache.TryAdd(type, value);
+
+            return value;
         }
         /// <summary>
         /// Get an interface implementation definition
@@ -141,14 +156,19 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Instantiable GetInterfaceInstanceDefinition(string type, string name = null)
         {
-            return _interfaceInstanceDefinitionCache.GetOrAdd((type, name), tuple =>
-            {
-                var interfaceType = GetInterfaceDefinition(tuple.Type);
-                if (interfaceType == null)
-                    throw new KeyNotFoundException($"The Interface type: {tuple.Type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={tuple.Type}, Name={tuple.Name}]");
-                var className = tuple.Name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
-                return interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
-            });
+            if (_interfaceInstanceDefinitionCache.TryGetValue((type, name), out var value))
+                return value;
+
+            var interfaceType = GetInterfaceDefinition(type);
+            if (interfaceType == null)
+                throw new KeyNotFoundException($"The Interface type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
+            var className = name ?? interfaceType.DefaultClassName ?? interfaceType.ClassDefinitions.FirstOrDefault()?.Name;
+            value = interfaceType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+
+            if (value != null)
+                _interfaceInstanceDefinitionCache.TryAdd((type, name), value);
+
+            return value;
         }
         /// <summary>
         /// Get an abstract implementation definition
@@ -159,14 +179,19 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Instantiable GetAbstractInstanceDefinition(string type, string name = null)
         {
-            return _abstractInstanceDefinitionCache.GetOrAdd((type, name), tuple =>
-            {
-                var abstractType = GetAbstractDefinition(tuple.Type);
-                if (abstractType == null)
-                    throw new KeyNotFoundException($"The Abstract type: {tuple.Type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={tuple.Type}, Name={tuple.Name}]");
-                var className = tuple.Name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
-                return abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
-            });
+            if (_abstractInstanceDefinitionCache.TryGetValue((type, name), out var value))
+                return value;
+
+            var abstractType = GetAbstractDefinition(type);
+            if (abstractType == null)
+                throw new KeyNotFoundException($"The Abstract type: {type} couldn't be found in the settings definition. Please check if some configuration or a dal registration is missing. [Interface={type}, Name={name}]");
+            var className = name ?? abstractType.DefaultClassName ?? abstractType.ClassDefinitions.FirstOrDefault()?.Name;
+            value = abstractType.ClassDefinitions.FirstOrDefault((i, cName) => i.Name == cName, className);
+
+            if (value != null)
+                _abstractInstanceDefinitionCache.TryAdd((type, name), value);
+
+            return value;
         }
         /// <summary>
         /// Preload all declared types
@@ -203,6 +228,18 @@ namespace TWCore.Injector
             }
             return lst.AsReadOnly();
         }
+        /// <summary>
+        /// Clear all settings cache
+        /// </summary>
+        public void ClearCache()
+        {
+            _interfaceDefinitionCache.Clear();
+            _abstractDefinitionCache.Clear();
+            _classDefinitionCache.Clear();
+            _interfaceInstanceDefinitionCache.Clear();
+            _abstractInstanceDefinitionCache.Clear();
+        }
+
         /// <summary>
         /// Type Load Result
         /// </summary>

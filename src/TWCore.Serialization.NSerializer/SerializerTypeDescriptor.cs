@@ -96,6 +96,26 @@ namespace TWCore.Serialization.NSerializer
 
             if (IsArray)
             {
+                //var elementType = iListType.GetElementType();
+                //var itemMethod = !type. ?
+                //    SerializersTable.InternalWriteObjectValueMInfo :
+                //    SerializersTable.WriteValues.TryGetValue(elementType, out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
+
+
+                var elementType = type.GetElementType();
+                var itemSpecMethod = false;
+                var itemMethod = SerializersTable.InternalWriteObjectValueMInfo;
+                if (SerializersTable.WriteValues.TryGetValue(elementType, out var propMethod))
+                {
+                    itemMethod = propMethod.Method;
+                    itemSpecMethod = true;
+                }
+                else if (elementType.IsEnum)
+                {
+                    itemMethod = SerializersTable.WriteValues[typeof(Enum)].Method;
+                    itemSpecMethod = true;
+                }
+
                 var arrLength = Expression.Parameter(typeof(int), "length");
                 varExpressions.Add(arrLength);
                 serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, SerializersTable.ArrayLengthGetMethod)));
@@ -108,7 +128,11 @@ namespace TWCore.Serialization.NSerializer
                 var loop = Expression.Loop(
                             Expression.IfThenElse(
                                 Expression.LessThan(forIdx, arrLength),
-                                Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx))),
+                                itemSpecMethod ?
+                                    elementType.IsEnum ? 
+                                        Expression.Call(serTable, itemMethod, Expression.Convert(Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx)), typeof(Enum))) :
+                                        Expression.Call(serTable, itemMethod, Expression.Convert(Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx)), elementType)) :
+                                    Expression.Call(serTable, itemMethod, Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx))),
                                 Expression.Break(breakLabel)), breakLabel);
                 serExpressions.Add(loop);
             }

@@ -35,6 +35,14 @@ namespace TWCore.Test.Core
 {
     internal class Program
     {
+
+        public enum VarEnum
+        {
+            Value1,
+            Value2
+        }
+
+
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
@@ -58,6 +66,13 @@ namespace TWCore.Test.Core
                 var sKeyProvider = new TWCore.Security.SymmetricKeyProvider();
                 var guid = Guid.NewGuid().ToString();
                 var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
+
+                var enumArray = new VarEnum[] { VarEnum.Value1, VarEnum.Value1, VarEnum.Value2 };
+
+                var enumArraySer = enumArray.SerializeToNBinary();
+
+                var enumArrayObject = enumArraySer.DeserializeFromNBinary<VarEnum[]>();
+
 
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;

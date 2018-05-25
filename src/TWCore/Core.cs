@@ -843,7 +843,9 @@ namespace TWCore
         public static string ReplaceEnvironmentTemplate(string source)
         {
             if (source == null) return null;
-            if (source.IndexOf("{Env:", StringComparison.Ordinal) == -1) return source;
+            if (source.IndexOf("{Env:", StringComparison.Ordinal) == -1 
+                && source.IndexOf("{MACHINENAME}", StringComparison.Ordinal) == -1) return source;
+            source = source.Replace("{MACHINENAME}", MachineName);
             var result = EnvironmentTemplateFormatRegex.Replace(source, match =>
             {
                 if (match.Groups.Count < 2) return match.Value;

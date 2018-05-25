@@ -748,6 +748,7 @@ namespace TWCore.Serialization.NSerializer
                     Stream.WriteByte(DataBytesDefinition.ValueNull);
                     return;
                 }
+                //bool isEnumArray, isEnumList;
                 if (value is IEnumerable iEValue && (!(iEValue is IList || iEValue is string || iEValue is IDictionary)))
                 {
                     if (valueType.ReflectedType == typeof(Enumerable) || valueType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1)

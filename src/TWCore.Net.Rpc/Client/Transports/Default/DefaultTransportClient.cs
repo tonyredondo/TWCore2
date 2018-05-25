@@ -260,7 +260,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
-            _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
+            while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
+                await Task.Delay(1).ConfigureAwait(false);
             if (_currentIndex > ResetIndex) _currentIndex = -1;
             bool sent;
             do
@@ -300,7 +301,8 @@ namespace TWCore.Net.RPC.Client.Transports.Default
                 await ConnectAsync().ConfigureAwait(false);
             if (_connectionCancellationToken.IsCancellationRequested) return null;
             var handler = new RpcMessageHandler();
-            _messageResponsesHandlers.TryAdd(messageRq.MessageId, handler);
+            while (!_messageResponsesHandlers.TryAdd(messageRq.MessageId, handler))
+                await Task.Delay(1).ConfigureAwait(false);
             if (_currentIndex > ResetIndex) _currentIndex = -1;
             bool sent;
             RpcClient client;

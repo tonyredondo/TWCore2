@@ -970,6 +970,81 @@ namespace TWCore
         /// <returns>A string that consists of the members of <paramref name="enumerable"/> delimited by the <paramref name="separator"/> string. If values has no members, the method returns null.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Join<T>(this IEnumerable<T> enumerable, string separator) => enumerable == null ? null : string.Join(separator, enumerable);
+        /// <summary>
+        /// Compare two IEnumerables with the same type sequentially using a key selector
+        /// </summary>
+        /// <typeparam name="TSource">Type of the IEnumerable</typeparam>
+        /// <typeparam name="TSourceKey">Type of the key</typeparam>
+        /// <param name="first">First enumerable</param>
+        /// <param name="second">Second enumerable</param>
+        /// <param name="keySelector">Key selector used in the enumerables</param>
+        /// <returns>True if both enumerables has the same count and keys</returns>
+        public static bool SequenceEqual<TSource, TSourceKey>(this IEnumerable<TSource> first, IEnumerable<TSource> second, Func<TSource, TSourceKey> keySelector)
+        {
+            var comparer = new SequenceEqualFuncComparer<TSource, TSourceKey>(keySelector);
+            return Enumerable.SequenceEqual(first, second, comparer);
+        }
+        /// <summary>
+        /// Compare two IEnumerables with different types sequentially using key selectors
+        /// </summary>
+        /// <typeparam name="TSourceFirst">Type of the first enumerable</typeparam>
+        /// <typeparam name="TSourceSecond">Type of the second enumerable</typeparam>
+        /// <typeparam name="TSourceKey">Type of the key</typeparam>
+        /// <param name="first">First enumerable</param>
+        /// <param name="second">Second enumerable</param>
+        /// <param name="firstKeySelector">Key selector for the first enumerable</param>
+        /// <param name="secondKeySelector">Key selector for the second enumerable</param>
+        /// <returns>True if both enumerables has the same count and keys</returns>
+        public static bool SequenceEqual<TSourceFirst, TSourceSecond, TSourceKey>(this IEnumerable<TSourceFirst> first, IEnumerable<TSourceSecond> second, 
+            Func<TSourceFirst, TSourceKey> firstKeySelector, Func<TSourceSecond, TSourceKey> secondKeySelector)
+        {
+            var firstEnumerator = first.GetEnumerator();
+            var secondEnumerator = second.GetEnumerator();
+            while(true)
+            {
+                var fbool = firstEnumerator.MoveNext();
+                var sbool = secondEnumerator.MoveNext();
+
+                if (fbool != sbool) return false;
+                if (!fbool) break;
+
+                var firstItem = firstEnumerator.Current;
+                var secondItem = secondEnumerator.Current;
+
+                var firstKeyValue = firstKeySelector(firstItem);
+                var secondKeyValue = secondKeySelector(secondItem);
+
+                var result = EqualityComparer<TSourceKey>.Default.Equals(firstKeyValue, secondKeyValue);
+                if (!result)
+                    return false;
+            }
+            return true;
+        }
+
+        private struct SequenceEqualFuncComparer<TSource, TSourceKey> : IEqualityComparer<TSource>
+        {
+            private readonly Func<TSource, TSourceKey> _keySelector;
+
+            #region .ctor
+            public SequenceEqualFuncComparer(Func<TSource, TSourceKey> keySelector)
+            {
+                _keySelector = keySelector;
+            }
+            #endregion
+
+            #region Public Methods
+            public bool Equals(TSource x, TSource y)
+            {
+                var xKey = _keySelector(x);
+                var yKey = _keySelector(y);
+                return EqualityComparer<TSourceKey>.Default.Equals(xKey, yKey);
+            }
+            public int GetHashCode(TSource obj)
+            {
+                return _keySelector(obj)?.GetHashCode() ?? -1;
+            }
+            #endregion
+        }
         #endregion
 
         #region GetCombination

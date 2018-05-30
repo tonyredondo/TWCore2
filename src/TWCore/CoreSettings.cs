@@ -123,6 +123,10 @@ namespace TWCore
         /// Trace compressor type
         /// </summary>
         public Type TraceCompressorType => Core.GetType(TraceCompressor);
+        /// <summary>
+        /// Trace queue limit
+        /// </summary>
+        public int TraceQueueLimit { get; set; } = 100;
 
         //Injector
         /// <summary>

@@ -31,6 +31,7 @@ namespace TWCore.Diagnostics.Trace
     {
         #region Private fields
         private readonly Worker<TraceItem> _itemsWorker;
+        private volatile bool _disposed;
         #endregion
 
         #region Properties
@@ -65,7 +66,7 @@ namespace TWCore.Diagnostics.Trace
             if (itemFactory != null)
                 ItemFactory = itemFactory;
 
-            _itemsWorker = new Worker<TraceItem>(() => Storage?.Count > 0, async item =>
+            _itemsWorker = new Worker<TraceItem>(() => !_disposed && Storage.Count > 0, async item =>
             {
                 if (item == null) return;
                 try
@@ -98,8 +99,20 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(TraceItem item)
         {
-            if (Enabled && item != null)
-                _itemsWorker?.Enqueue(item);
+            if (_disposed) return;
+            if (!Enabled || item == null) return;
+            if (Storage.Count == 0)
+            {
+                Core.Log.Warning("There are any trace storage defined. The item can't be traced.");
+                return;
+            }
+            if (_itemsWorker.Count > Core.GlobalSettings.TraceQueueLimit)
+            {
+                Core.Log.Warning("The trace queue has reached the limit ({0} items), check the configuration to " +
+                    "increase the limit or change the trace storage to a faster one. This item will be skipped.", Core.GlobalSettings.TraceQueueLimit);
+                return;
+            }
+            _itemsWorker.Enqueue(item);
         }
         /// <inheritdoc />
         /// <summary>
@@ -111,6 +124,7 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(string groupName, string traceName, object traceObject)
         {
+            if (_disposed) return;
             if (!Enabled) return;
             var item = ItemFactory(groupName, traceName, traceObject);
             Write(item);
@@ -137,6 +151,8 @@ namespace TWCore.Diagnostics.Trace
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
             _itemsWorker?.StopAsync(50).WaitAsync();
             _itemsWorker?.Clear();
             Storage?.Clear();

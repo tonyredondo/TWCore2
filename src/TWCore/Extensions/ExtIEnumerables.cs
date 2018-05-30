@@ -971,6 +971,34 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Join<T>(this IEnumerable<T> enumerable, string separator) => enumerable == null ? null : string.Join(separator, enumerable);
         /// <summary>
+        /// Yields an object to a IEnumerable
+        /// </summary>
+        /// <typeparam name="T">Type of IEnumerable</typeparam>
+        /// <param name="obj">Object instance</param>
+        /// <returns>IEnumerable with the object</returns>
+        public static IEnumerable<T> Yield<T>(this T obj)
+        {
+            yield return obj;
+        }
+        /// <summary>
+        /// Append an item to the enumerable
+        /// </summary>
+        /// <typeparam name="T">Type of the enumerable</typeparam>
+        /// <param name="enumerable">Enumerable instance</param>
+        /// <param name="item">Item to append</param>
+        /// <returns>IEnumerable of items</returns>
+        public static IEnumerable<T> Append<T>(this IEnumerable<T> enumerable, T item) 
+            => enumerable.Concat(item.Yield());
+        /// <summary>
+        /// Prepend an item to the enumerable
+        /// </summary>
+        /// <typeparam name="T">Type of the enumerable</typeparam>
+        /// <param name="enumerable">Enumerable instance</param>
+        /// <param name="item">Item to prepend</param>
+        /// <returns>IEnumerable of items</returns>
+        public static IEnumerable<T> Prepend<T>(this IEnumerable<T> enumerable, T item)
+            => item.Yield().Concat(enumerable);
+        /// <summary>
         /// Compare two IEnumerables with the same type sequentially using a key selector
         /// </summary>
         /// <typeparam name="TSource">Type of the IEnumerable</typeparam>
@@ -1020,7 +1048,6 @@ namespace TWCore
             }
             return true;
         }
-
         private struct SequenceEqualFuncComparer<TSource, TSourceKey> : IEqualityComparer<TSource>
         {
             private readonly Func<TSource, TSourceKey> _keySelector;

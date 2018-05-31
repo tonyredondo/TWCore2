@@ -987,8 +987,20 @@ namespace TWCore
         /// <param name="enumerable">Enumerable instance</param>
         /// <param name="item">Item to append</param>
         /// <returns>IEnumerable of items</returns>
-        public static IEnumerable<T> Append<T>(this IEnumerable<T> enumerable, T item) 
-            => enumerable.Concat(item.Yield());
+        public static IEnumerable<T> Append<T>(this IEnumerable<T> enumerable, T item)
+        {
+            if (enumerable == null)
+                throw new ArgumentNullException("enumerable");
+
+            return InternalAppend(enumerable, item);
+
+            IEnumerable<T> InternalAppend(IEnumerable<T> innerEnum, T innerItem)
+            {
+                foreach (var eItem in innerEnum)
+                    yield return eItem;
+                yield return innerItem;
+            }
+        }
         /// <summary>
         /// Prepend an item to the enumerable
         /// </summary>
@@ -997,7 +1009,19 @@ namespace TWCore
         /// <param name="item">Item to prepend</param>
         /// <returns>IEnumerable of items</returns>
         public static IEnumerable<T> Prepend<T>(this IEnumerable<T> enumerable, T item)
-            => item.Yield().Concat(enumerable);
+        {
+            if (enumerable == null)
+                throw new ArgumentNullException("enumerable");
+
+            return InternalPrepend(enumerable, item);
+
+            IEnumerable<T> InternalPrepend(IEnumerable<T> innerEnum, T innerItem)
+            {
+                yield return innerItem;
+                foreach (var eItem in innerEnum)
+                    yield return eItem;
+            }
+        }
         /// <summary>
         /// Compare two IEnumerables with the same type sequentially using a key selector
         /// </summary>
@@ -1009,6 +1033,8 @@ namespace TWCore
         /// <returns>True if both enumerables has the same count and keys</returns>
         public static bool SequenceEqual<TSource, TSourceKey>(this IEnumerable<TSource> first, IEnumerable<TSource> second, Func<TSource, TSourceKey> keySelector)
         {
+            if (keySelector == null)
+                throw new ArgumentNullException("keySelector");
             var comparer = new SequenceEqualFuncComparer<TSource, TSourceKey>(keySelector);
             return Enumerable.SequenceEqual(first, second, comparer);
         }
@@ -1026,6 +1052,15 @@ namespace TWCore
         public static bool SequenceEqual<TSourceFirst, TSourceSecond, TSourceKey>(this IEnumerable<TSourceFirst> first, IEnumerable<TSourceSecond> second, 
             Func<TSourceFirst, TSourceKey> firstKeySelector, Func<TSourceSecond, TSourceKey> secondKeySelector)
         {
+            if (first == null)
+                throw new ArgumentNullException("first");
+            if (second == null)
+                throw new ArgumentNullException("second");
+            if (firstKeySelector == null)
+                throw new ArgumentNullException("firstKeySelector");
+            if (secondKeySelector == null)
+                throw new ArgumentNullException("secondKeySelector");
+
             var firstEnumerator = first.GetEnumerator();
             var secondEnumerator = second.GetEnumerator();
             while(true)

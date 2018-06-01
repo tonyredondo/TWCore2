@@ -35,6 +35,10 @@ namespace TWCore.Diagnostics.Api
             if (Handlers == null)
                 throw new Exception("Handlers are not defined.");
 
+			var handler = Handlers[0];
+
+			//var logs = handler.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+
 			Task.Delay(2000).ContinueWith(async _ =>
 			{
 				while (true)

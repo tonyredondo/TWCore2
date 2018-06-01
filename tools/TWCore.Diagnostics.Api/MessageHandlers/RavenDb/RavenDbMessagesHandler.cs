@@ -35,7 +35,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 	{
 		#region Public Methods - IDiagnosticMessageHandler
 
-		public async Task ProcessLogItemsMessage(List<LogItem> message)
+		public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
 		{
 			Core.Log.InfoBasic("Storing LogItem messages...");
 
@@ -65,7 +65,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			}).ConfigureAwait(false);
 		}
 
-		public async Task ProcessTraceItemsMessage(List<MessagingTraceItem> message)
+		public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
 		{
 			Core.Log.InfoBasic("Storing TraceItem messages...");
 
@@ -101,7 +101,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			}).ConfigureAwait(false);
 		}
 
-		public async Task ProcessStatusMessage(StatusItemCollection message)
+		public async Task ProcessStatusMessageAsync(StatusItemCollection message)
 		{
 			Core.Log.InfoBasic("Storing StatusCollection message...");
 			await RavenHelper.ExecuteAsync(async session =>

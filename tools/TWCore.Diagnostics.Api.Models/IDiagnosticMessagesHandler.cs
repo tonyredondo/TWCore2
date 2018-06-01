@@ -33,18 +33,18 @@ namespace TWCore.Diagnostics.Api.Models
         /// </summary>
         /// <param name="message">Message to handle</param>
         /// <returns>Process task</returns>
-        Task ProcessLogItemsMessage(List<LogItem> message);
+        Task ProcessLogItemsMessageAsync(List<LogItem> message);
         /// <summary>
         /// Process TraceItems message
         /// </summary>
         /// <param name="message">Message to handle</param>
         /// <returns>Process task</returns>
-        Task ProcessTraceItemsMessage(List<MessagingTraceItem> message);
+		Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message);
         /// <summary>
         /// Process Status message
         /// </summary>
         /// <param name="message">Message to handle</param>
         /// <returns>Process task</returns>
-        Task ProcessStatusMessage(StatusItemCollection message);
+		Task ProcessStatusMessageAsync(StatusItemCollection message);
     }
 }

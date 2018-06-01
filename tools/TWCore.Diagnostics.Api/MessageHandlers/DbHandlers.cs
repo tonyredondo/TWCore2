@@ -27,6 +27,7 @@ using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
+// ReSharper disable ClassNeverInstantiated.Global
 
 namespace TWCore.Diagnostics.Api
 {
@@ -34,7 +35,7 @@ namespace TWCore.Diagnostics.Api
 	{
 		public static IDiagnosticHandler Instance => Singleton<DbHandlers>.Instance;
 
-		private IDiagnosticHandler[] _handlers;
+		private readonly IDiagnosticHandler[] _handlers;
 
 		#region Public Methods
 		public IDiagnosticMessagesHandler Messages { get; } 
@@ -50,15 +51,18 @@ namespace TWCore.Diagnostics.Api
 			Query = new QueryHandler(this);
 		}
 
+		#region Nested Types
+		
 		private class MessagesHandler : IDiagnosticMessagesHandler
 		{
-			private DbHandlers _parent;
+			private readonly DbHandlers _parent;
 
 			internal MessagesHandler(DbHandlers parent)
 			{
 				_parent = parent;
 			}
 
+			#region IDiagnosticMessagesHandler
 			public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
 			{
 				foreach (var item in _parent._handlers)
@@ -74,16 +78,18 @@ namespace TWCore.Diagnostics.Api
 				foreach (var item in _parent._handlers)
 					await item.Messages.ProcessStatusMessageAsync(message).ConfigureAwait(false);
 			}
+			#endregion
 		}
 		private class QueryHandler : IDiagnosticQueryHandler
 		{
-			private DbHandlers _parent;
+			private readonly DbHandlers _parent;
 
 			internal QueryHandler(DbHandlers parent)
 			{
 				_parent = parent;
 			}
 
+			#region IDiagnosticQueryHandler
 			public async Task<List<NodeLogItem>> GetLogsByGroup(string group, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeLogItem>();
@@ -160,6 +166,9 @@ namespace TWCore.Diagnostics.Api
 				lst = lst.DistinctBy(x => x.Timestamp + x.Environment + x.Machine + x.Application + x.Date).ToList();
 				return lst;
 			}
+			#endregion
 		}
+		
+		#endregion
 	}
 }

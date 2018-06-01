@@ -42,7 +42,7 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<NodeLogItem[]> GetLogs(string search, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeLogItem>> GetLogs(string search, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Get the los from a query
 		/// </summary>
@@ -52,7 +52,7 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="level">Log level</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<NodeLogItem[]> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
+		Task<List<NodeLogItem>> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Get the traces form a query
 		/// </summary>
@@ -61,7 +61,7 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<NodeTraceItem[]> GetTraces(string search, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeTraceItem>> GetTraces(string search, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Gets the traces by group.
 		/// </summary>
@@ -70,7 +70,7 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<NodeTraceItem[]> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeTraceItem>> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Gets the statuses
 		/// </summary>
@@ -80,6 +80,6 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<NodeStatusItem[]> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeStatusItem>> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate);
 	}
 }

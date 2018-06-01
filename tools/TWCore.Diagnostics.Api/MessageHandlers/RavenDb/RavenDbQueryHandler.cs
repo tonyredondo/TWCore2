@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -35,11 +36,23 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		public async Task<NodeLogItem[]> GetLogs(string search, string application, DateTime fromDate, DateTime toDate)
+		public async Task<List<NodeLogItem>> GetLogs(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<NodeLogItem[]>(session =>
+			return await RavenHelper.ExecuteAndReturnAsync<List<NodeLogItem>>(async session =>
 			{
-				return null;
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
+				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				if (!string.IsNullOrWhiteSpace(search))
+					query = query
+						.Search(x => x.Message, "*" + search + "*")
+						.Search(x => x.Group, "*" + search + "*")
+						.Search(x => x.Code, "*" + search + "*");
+
+				return await query.ToListAsync().ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
 		/// <summary>
@@ -51,11 +64,26 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="level">Log level</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		public async Task<NodeLogItem[]> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
+		public async Task<List<NodeLogItem>> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<NodeLogItem[]>(session =>
+			return await RavenHelper.ExecuteAndReturnAsync<List<NodeLogItem>>(async session =>
 			{
-				return null;
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
+				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
+
+				query = query.WhereEquals(x => x.Level, level);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				if (!string.IsNullOrWhiteSpace(search))
+					query = query
+						.Search(x => x.Message, "*" + search + "*")
+						.Search(x => x.Group, "*" + search + "*")
+						.Search(x => x.Code, "*" + search + "*");
+
+				return await query.ToListAsync().ConfigureAwait(false);
+
 			}).ConfigureAwait(false);
 		}
 		/// <summary>
@@ -66,11 +94,23 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		public async Task<NodeTraceItem[]> GetTraces(string search, string application, DateTime fromDate, DateTime toDate)
+		public async Task<List<NodeTraceItem>> GetTraces(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<NodeTraceItem[]>(session =>
+			return await RavenHelper.ExecuteAndReturnAsync<List<NodeTraceItem>>(async session =>
 			{
-				return null;
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
+				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				if (!string.IsNullOrWhiteSpace(search))
+					query = query
+						.Search(x => x.Group, "*" + search + "*")
+						.Search(x => x.Name, "*" + search + "*");
+
+				return await query.ToListAsync().ConfigureAwait(false);
+
 			}).ConfigureAwait(false);
 		}
 		/// <summary>
@@ -81,11 +121,22 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		public async Task<NodeTraceItem[]> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate)
+		public async Task<List<NodeTraceItem>> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<NodeTraceItem[]>(session =>
+			return await RavenHelper.ExecuteAndReturnAsync<List<NodeTraceItem>>(async session =>
 			{
-				return null;
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
+				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				if (!string.IsNullOrWhiteSpace(group))
+					query = query
+						.Search(x => x.Group, "*" + group + "*");
+
+				return await query.ToListAsync().ConfigureAwait(false);
+
 			}).ConfigureAwait(false);
 		}
 		/// <summary>
@@ -97,11 +148,24 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		public async Task<NodeStatusItem[]> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
+		public async Task<List<NodeStatusItem>> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<NodeStatusItem[]>(session =>
+			return await RavenHelper.ExecuteAndReturnAsync<List<NodeStatusItem>>(async session =>
 			{
-				return null;
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
+				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
+
+				if (!string.IsNullOrWhiteSpace(environment))
+					query = query.WhereEquals(x => x.Environment, environment);
+
+				if (!string.IsNullOrWhiteSpace(machine))
+					query = query.WhereEquals(x => x.Machine, machine);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				return await query.ToListAsync().ConfigureAwait(false);
+
 			}).ConfigureAwait(false);
 		}
 	}

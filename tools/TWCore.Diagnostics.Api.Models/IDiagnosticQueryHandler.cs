@@ -16,15 +16,20 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Api.Models;
+using TWCore.Diagnostics.Api.Models.Log;
+using TWCore.Diagnostics.Api.Models.Status;
+using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
+using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.Models
 {
 	public interface IDiagnosticQueryHandler
 	{
-
+		Task<NodeLogItem[]> GetLogItems();
 	}
 }

@@ -1,12 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <LangVersion>7.2</LangVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <LangVersion>7.2</LangVersion>
+    <Title>TWCore.Diagnostics.Api.Models</Title>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\TWCore.Messaging\TWCore.Messaging.csproj" />

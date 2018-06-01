@@ -1,0 +1,21 @@
+<Project>
+  <Import Project="version.props" />
+  <PropertyGroup>
+    <Product>TWCore</Product>
+    <VersionSuffix Condition="'$(VersionSuffix)'!='' AND '$(BuildNumber)' != ''">$(VersionSuffix)-$(BuildNumber)</VersionSuffix>
+    <Authors>Daniel Redondo</Authors>
+    <Company />
+    <Description>TWCore Framework.
+A multipurpose framework library for .net core</Description>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/tonyredondo/TWCore2</RepositoryUrl>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <PackageTags>TWCore, Tony, Wanhjör, Daniel Redondo, Framework</PackageTags>
+    <Copyright>Daniel Redondo</Copyright>
+    <PackageLicenseUrl>https://www.apache.org/licenses/LICENSE-2.0</PackageLicenseUrl>
+    <PackageProjectUrl>https://github.com/tonyredondo/TWCore2</PackageProjectUrl>
+    <IncludeSymbols>True</IncludeSymbols>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <LangVersion>7.2</LangVersion>
+  </PropertyGroup>
+</Project>

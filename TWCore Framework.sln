@@ -7,8 +7,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "root", "root", "{E688CE9E-0
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		common.props = common.props
+		global.json = global.json
 		LICENSE = LICENSE
 		README.md = README.md
+		version.props = version.props
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9CB09EFB-6C89-4FE1-B31F-398FDC0CAD33}"
@@ -95,7 +98,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.NSeria
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Bot.Slack", "src\TWCore.Bot.Slack\TWCore.Bot.Slack.csproj", "{7D503B8C-524A-4A54-9D36-219C93F283E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TWCore.Serialization.Utf8Json", "src\TWCore.Serialization.Utf8Json\TWCore.Serialization.Utf8Json.csproj", "{23E21872-6306-40D9-BD45-1763BC1DB70B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TWCore.Serialization.Utf8Json", "src\TWCore.Serialization.Utf8Json\TWCore.Serialization.Utf8Json.csproj", "{23E21872-6306-40D9-BD45-1763BC1DB70B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

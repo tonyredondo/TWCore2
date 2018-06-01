@@ -81,6 +81,12 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="toDate">To date and time</param>
 		Task<List<NodeTraceItem>> GetTracesByGroupAsync(string group, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
+		/// Gets the Trace object
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="item">Trace item to retrieve the trace object</param>
+		Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item);
+		/// <summary>
 		/// Gets the statuses
 		/// </summary>
 		/// <returns>The statuses from the query</returns>

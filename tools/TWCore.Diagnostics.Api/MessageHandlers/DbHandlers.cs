@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
+using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api
@@ -137,6 +138,16 @@ namespace TWCore.Diagnostics.Api
 				}
 				lst = lst.DistinctBy(x => x.TraceId).ToList();
 				return lst;
+			}
+			public async Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item)
+			{
+				foreach (var handler in _parent._handlers)
+				{
+					var res = await handler.Query.GetTraceObjectAsync(item).ConfigureAwait(false);
+					if (res != null)
+						return res;
+				}
+				return null;
 			}
 			public async Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
 			{

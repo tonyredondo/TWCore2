@@ -22,6 +22,7 @@ using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
+using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
@@ -160,6 +161,21 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Group, "*" + group + "*");
 
 				return await query.ToListAsync().ConfigureAwait(false);
+
+			}).ConfigureAwait(false);
+		}
+		/// <summary>
+		/// Gets the Trace object
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="item">Trace item to retrieve the trace object</param>
+		public async Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item)
+		{
+			return await RavenHelper.ExecuteAndReturnAsync<SerializedObject>(async session =>
+			{
+				var attachment = await session.Advanced.Attachments.GetAsync(item.Id, "Trace").ConfigureAwait(false);
+				var traceObject = attachment.Stream.DeserializeFromNBinary<object>();
+				return (SerializedObject)traceObject;
 
 			}).ConfigureAwait(false);
 		}

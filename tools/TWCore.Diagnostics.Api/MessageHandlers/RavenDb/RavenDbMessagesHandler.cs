@@ -1,4 +1,21 @@
-﻿using System.Collections.Generic;
+﻿/*
+Copyright 2015-2018 Daniel Adrian Redondo Suarez
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -9,24 +26,25 @@ using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
+using TWCore.Threading;
+using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {
-        private readonly object _locker = new object();
+        private readonly AsyncLock _lock = new AsyncLock();
 
-        public Task ProcessLogItemsMessage(List<LogItem> message)
+        public async Task ProcessLogItemsMessage(List<LogItem> message)
         {
             Core.Log.InfoBasic("Storing Log Info...");
             foreach (var logItem in message)
             {
-                RavenHelper.Execute(session =>
-                {
+                await RavenHelper.ExecuteAsync(async session => {
 
                     NodeInfo nodeInfo;
-                    lock (_locker)
+                    using (await _lock.LockAsync().ConfigureAwait(false))
                     {
                         nodeInfo = (from node in session.Query<NodeInfo>()
                                     where node.Date == logItem.Timestamp.Date &&
@@ -44,8 +62,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 Machine = logItem.MachineName,
                                 Date = logItem.Timestamp.Date
                             };
-                            session.Store(nodeInfo);
-                            session.SaveChanges();
+                            await session.StoreAsync(nodeInfo).ConfigureAwait(false);
+                            await session.SaveChangesAsync().ConfigureAwait(false);
                         }
                     }
 
@@ -61,23 +79,22 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Exception = logItem.Exception,
                         Timestamp = logItem.Timestamp
                     };
-                    session.Store(logInfo);
-                    session.SaveChanges();
-                });
-            }
+                    await session.StoreAsync(logInfo).ConfigureAwait(false);
+                    await session.SaveChangesAsync().ConfigureAwait(false);
 
-            return Task.CompletedTask;
+                }).ConfigureAwait(false);
+            }
         }
 
-        public Task ProcessTraceItemsMessage(List<MessagingTraceItem> message)
+        public async Task ProcessTraceItemsMessage(List<MessagingTraceItem> message)
         {
             Core.Log.InfoBasic("Storing Trace Info...");
             foreach (var traceItem in message)
             {
-                RavenHelper.Execute(session =>
+                await RavenHelper.ExecuteAsync(async session =>
                 {
                     NodeInfo nodeInfo;
-                    lock (_locker)
+                    using (await _lock.LockAsync().ConfigureAwait(false))
                     {
                         nodeInfo = (from node in session.Query<NodeInfo>()
                             where node.Date == traceItem.Timestamp.Date &&
@@ -95,8 +112,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                 Machine = traceItem.MachineName,
                                 Date = traceItem.Timestamp.Date
                             };
-                            session.Store(nodeInfo);
-                            session.SaveChanges();
+                            await session.StoreAsync(nodeInfo).ConfigureAwait(false);
+                            await session.SaveChangesAsync().ConfigureAwait(false);
                         }
                     }
 
@@ -106,23 +123,34 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         NodeInfoId = nodeInfo.Id,
                         Group = traceItem.GroupName,
                         Name = traceItem.TraceName,
-                        TraceObject = traceItem.TraceObject,
+                        //TraceObject = traceItem.TraceObject,
                         Timestamp = traceItem.Timestamp
                     };
-                    session.Store(traceInfo);
-                    session.SaveChanges();
-                });
+                    await session.StoreAsync(traceInfo).ConfigureAwait(false);
+
+                    using (var ms = new MemoryStream())
+                    {
+                        if (traceItem.TraceObject != null) 
+                        {
+                            traceItem.TraceObject.SerializeToNBinary(ms);
+                            ms.Position = 0;
+                        }
+                        session.Advanced.Attachments.Store(traceInfo.Id, "Trace", ms, traceItem.TraceObject?.GetType().FullName);
+
+                        await session.SaveChangesAsync().ConfigureAwait(false);
+                    }                    
+
+                }).ConfigureAwait(false);
             }
-            return Task.CompletedTask;
         }
 
-        public Task ProcessStatusMessage(StatusItemCollection message)
+        public async Task ProcessStatusMessage(StatusItemCollection message)
         {
             Core.Log.InfoBasic("Storing Status Info...");
-            RavenHelper.Execute(session =>
+            await RavenHelper.ExecuteAsync(async session =>
             {
                 NodeInfo nodeInfo;
-                lock (_locker)
+                using (await _lock.LockAsync().ConfigureAwait(false))
                 {
                     nodeInfo = (from node in session.Query<NodeInfo>()
                                 where node.Date == message.Timestamp.Date &&
@@ -140,8 +168,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             Machine = message.MachineName,
                             Date = message.Timestamp.Date
                         };
-                        session.Store(nodeInfo);
-                        session.SaveChanges();
+                        await session.StoreAsync(nodeInfo).ConfigureAwait(false);
+                        await session.SaveChangesAsync().ConfigureAwait(false);
                     }
                 }
 
@@ -161,16 +189,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Timestamp = message.Timestamp,
                         Children = message.Items?.Select(GetNodeStatusChild).ToList()
                     };
-                    session.Store(newStatus);
+                    await session.StoreAsync(newStatus).ConfigureAwait(false);
                 }
                 else
                 {
                     nodeStatus.Timestamp = message.Timestamp;
                     nodeStatus.Children = message.Items?.Select(GetNodeStatusChild).ToList();
                 }
-                session.SaveChanges();
-            });
-            return Task.CompletedTask;
+                await session.SaveChangesAsync().ConfigureAwait(false);
+
+            }).ConfigureAwait(false);
         }
         
 

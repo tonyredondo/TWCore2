@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Threading.Tasks;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using TWCore.Settings;
@@ -44,6 +45,24 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }
         }
 
+        public static async Task ExecuteAsync(Func<IAsyncDocumentSession, Task> sessionFunc)
+        {
+            using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
+            {
+                store.Initialize();
+                using (var session = store.OpenAsyncSession())
+                {
+                    try
+                    {
+                        await sessionFunc(session).ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Core.Log.Write(ex);
+                    }
+                }
+            }
+        }
 
         public class RavenDbSettings : SettingsBase
         {

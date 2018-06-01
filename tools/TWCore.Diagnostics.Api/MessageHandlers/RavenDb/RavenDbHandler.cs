@@ -22,6 +22,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 	public class RavenDbHandler : IDiagnosticHandler
 	{
 		public IDiagnosticMessagesHandler Messages { get; } = new RavenDbMessagesHandler();
-		public IDiagnosticQueryHandler Query { get; } = null;
+		public IDiagnosticQueryHandler Query { get; } =  new RavenDbQueryHandler();
 	}
 }

@@ -28,8 +28,7 @@ namespace TWCore.Diagnostics.Api
         {
             EnableMessagesTrace = false;
             base.OnInit(args);
-            
-
+			/*
 			var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 			var logs2 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 			var logs3 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
@@ -42,6 +41,7 @@ namespace TWCore.Diagnostics.Api
 					await Task.Delay(2000).ConfigureAwait(false);
 				}
 			});
+			*/
         }
     }
 }

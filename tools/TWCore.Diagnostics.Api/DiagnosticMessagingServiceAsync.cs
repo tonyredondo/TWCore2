@@ -24,20 +24,13 @@ namespace TWCore.Diagnostics.Api
 {
     public class DiagnosticMessagingServiceAsync : BusinessMessagesServiceAsync<DiagnosticMessagingBusinessAsync>
     {
-		public static IDiagnosticHandler[] Handlers;
-
         protected override void OnInit(string[] args)
         {
             EnableMessagesTrace = false;
             base.OnInit(args);
             
-			Handlers = Core.Injector.GetAllInstances<IDiagnosticHandler>();
-            if (Handlers == null)
-                throw new Exception("Handlers are not defined.");
 
-			var handler = Handlers[0];
-
-			//var logs = handler.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+			//var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 
 			Task.Delay(2000).ContinueWith(async _ =>
 			{

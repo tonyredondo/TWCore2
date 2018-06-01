@@ -29,9 +29,6 @@ namespace TWCore.Diagnostics.Api.Models.Status
         public string Group { get; set; }
         [XmlAttribute, DataMember]
         public string Name { get; set; }
-        [XmlIgnore]
-        [IgnoreParameter]
-        public object TraceObject { get; set; }
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
     }

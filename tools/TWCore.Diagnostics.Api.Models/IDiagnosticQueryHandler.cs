@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
@@ -28,8 +29,57 @@ using TWCore.Serialization;
 
 namespace TWCore.Diagnostics.Api.Models
 {
+	/// <summary>
+	/// Diagnostic query handler interface
+	/// </summary>
 	public interface IDiagnosticQueryHandler
 	{
-		Task<NodeLogItem[]> GetLogItems();
+		/// <summary>
+		/// Get the los from a query
+		/// </summary>
+		/// <returns>Logs instance</returns>
+		/// <param name="search">Search term</param>
+		/// <param name="application">Application name or null</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		Task<NodeLogItem[]> GetLogs(string search, string application, DateTime fromDate, DateTime toDate);
+		/// <summary>
+		/// Get the los from a query
+		/// </summary>
+		/// <returns>Logs instance</returns>
+		/// <param name="search">Search term</param>
+		/// <param name="application">Application name or null</param>
+		/// <param name="level">Log level</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		Task<NodeLogItem[]> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
+		/// <summary>
+		/// Get the traces form a query
+		/// </summary>
+		/// <returns>Traces instance</returns>
+		/// <param name="search">Search term</param>
+		/// <param name="application">Application name or null</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		Task<NodeTraceItem[]> GetTraces(string search, string application, DateTime fromDate, DateTime toDate);
+		/// <summary>
+		/// Gets the traces by group.
+		/// </summary>
+		/// <returns>The traces by group.</returns>
+		/// <param name="group">Group name</param>
+		/// <param name="application">Application name or null</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		Task<NodeTraceItem[]> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate);
+		/// <summary>
+		/// Gets the statuses
+		/// </summary>
+		/// <returns>The statuses from the query</returns>
+		/// <param name="environment">Environment name or null</param>
+		/// <param name="machine">Machine name or null</param>
+		/// <param name="application">Application name or null</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		Task<NodeStatusItem[]> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate);
 	}
 }

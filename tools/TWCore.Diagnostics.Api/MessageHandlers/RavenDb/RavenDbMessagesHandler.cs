@@ -81,7 +81,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						TraceId = traceItem.Id,
 						Group = traceItem.GroupName,
 						Name = traceItem.TraceName,
-						//TraceObject = traceItem.TraceObject,
 						Timestamp = traceItem.Timestamp
 					};
 					await session.StoreAsync(traceInfo).ConfigureAwait(false);

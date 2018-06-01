@@ -39,6 +39,7 @@ namespace TWCore.Diagnostics.Log.Storages
         private readonly Timer _timer;
 		private readonly BlockingCollection<LogItem> _logItems;
 		private IMQueueClient _queueClient;
+		private IPool<List<LogItem>> _pool;
 
         #region .ctor
         /// <summary>
@@ -51,6 +52,7 @@ namespace TWCore.Diagnostics.Log.Storages
             _queueName = queueName;
 			_logItems = new BlockingCollection<LogItem>();
 			_queueClient = Core.Services.GetQueueClient(_queueName);
+			_pool = new ReferencePool<List<LogItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
@@ -69,7 +71,24 @@ namespace TWCore.Diagnostics.Log.Storages
         public Task WriteAsync(ILogItem item)
         {
 			if (item is LogItem logItem)
-				_logItems.Add(logItem.DeepClone());
+				_logItems.Add(new LogItem
+				{
+					Id = logItem.Id,
+					EnvironmentName = logItem.EnvironmentName,
+					MachineName = logItem.MachineName,
+					ApplicationName = logItem.ApplicationName,
+					ProcessId = logItem.ProcessId,
+					ProcessName = logItem.ProcessName,
+					AssemblyName = logItem.AssemblyName,
+					TypeName = logItem.TypeName,
+					GroupName = logItem.GroupName,
+					Code = logItem.Code,
+					Exception = logItem.Exception,
+					Level = logItem.Level,
+					LineNumber = logItem.LineNumber,
+					Message = logItem.Message,
+					Timestamp = logItem.Timestamp
+				});
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -90,19 +109,24 @@ namespace TWCore.Diagnostics.Log.Storages
             TimerCallback(this);
 			_queueClient.Dispose();
         }
-        #endregion
-        
-        #region Private methods
+		#endregion
+
+		#region Private methods
         private void TimerCallback(object state)
         {
             try
             {
-				var itemsToSend = new List<LogItem>();
-				while (itemsToSend.Count < 500 && _logItems.TryTake(out var item, 10))
+				if (_logItems.Count == 0) return;
+
+				var itemsToSend = _pool.New();
+				while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))
 					itemsToSend.Add(item);
 
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
+
+				itemsToSend.Clear();
+				_pool.Store(itemsToSend);
             }
             catch
             {

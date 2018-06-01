@@ -15,10 +15,12 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Messaging.Client;
 using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable CheckNamespace
@@ -34,12 +36,14 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// </summary>
     public class MessagingTraceStorage : ITraceStorage
     {
-        private readonly object _locker = new object();
         private readonly string _queueName;
         private readonly Timer _timer;
         private readonly bool _sendCompleteTrace;
-        private readonly List<TraceItem> _traceItems;
-        
+		private readonly BlockingCollection<MessagingTraceItem> _traceItems;
+		private IMQueueClient _queueClient;
+		private IPool<List<MessagingTraceItem>> _pool;
+
+
         #region .ctor
         /// <summary>
         /// Messaging trace storage
@@ -50,11 +54,17 @@ namespace TWCore.Diagnostics.Trace.Storages
         public MessagingTraceStorage(string queueName, int periodInSeconds, bool sendCompleteTrace)
         {
             _queueName = queueName;
-            _traceItems = new List<TraceItem>();
+			_traceItems = new BlockingCollection<MessagingTraceItem>();
             _sendCompleteTrace = sendCompleteTrace;
+			_queueClient = Core.Services.GetQueueClient(_queueName);
+			_pool = new ReferencePool<List<MessagingTraceItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
+		~MessagingTraceStorage()
+		{
+			Dispose();
+		}
         #endregion
         
         #region Public methods
@@ -65,10 +75,17 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="item">Trace item</param>
         public Task WriteAsync(TraceItem item)
         {
-            lock (_locker)
-            {
-                _traceItems.Add(item);
-            }
+			_traceItems.Add(new MessagingTraceItem
+			{
+				EnvironmentName = Core.EnvironmentName,
+				MachineName = Core.MachineName,
+				ApplicationName = Core.ApplicationName,
+				GroupName = item.GroupName,
+				Id = item.Id,
+				Timestamp = item.Timestamp,
+				TraceName = item.TraceName,
+				TraceObject = _sendCompleteTrace ? new SerializedObject(item.TraceObject) : null
+			});
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -79,36 +96,25 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             _timer.Dispose();
             TimerCallback(this);
+			_queueClient.Dispose();
         }
         #endregion
         
         #region Private methods
-        private static void TimerCallback(object state)
+        private void TimerCallback(object state)
         {
             try
             {
-                var mStatus = (MessagingTraceStorage) state;
-                List<MessagingTraceItem> itemsToSend;
-                lock (mStatus._locker)
-                {
-                    if (mStatus._traceItems.Count == 0) return;
-                    itemsToSend = new List<MessagingTraceItem>(mStatus._traceItems.Select((i, aStatus) => new MessagingTraceItem
-                    {
-                        EnvironmentName = Core.EnvironmentName,
-                        MachineName = Core.MachineName,
-                        ApplicationName = Core.ApplicationName,
-                        GroupName = i.GroupName,
-                        Id = i.Id,
-                        Timestamp = i.Timestamp,
-                        TraceName = i.TraceName,
-                        TraceObject = aStatus._sendCompleteTrace ? new SerializedObject(i.TraceObject) : null
-                    }, mStatus));
-                    mStatus._traceItems.Clear();
-                }
+				if (_traceItems.Count == 0) return;
+				var itemsToSend = _pool.New();
+				while (itemsToSend.Count < 2048 && _traceItems.TryTake(out var item, 10))
+					itemsToSend.Add(item);
+
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
-                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
-                queueClient.SendAsync(itemsToSend).WaitAndResults();
-                queueClient.Dispose();
+                _queueClient.SendAsync(itemsToSend).WaitAndResults();
+
+				itemsToSend.Clear();
+				_pool.Store(itemsToSend);
             }
             catch (Exception ex)
             {

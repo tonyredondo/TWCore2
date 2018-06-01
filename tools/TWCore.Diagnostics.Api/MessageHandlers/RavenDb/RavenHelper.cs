@@ -26,43 +26,25 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
     {
         public static readonly RavenDbSettings Settings = Core.GetSettings<RavenDbSettings>();
 
-        public static void Execute(Action<IDocumentSession> sessionAction)
-        {
-            using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
-            {
-                store.Initialize();
-                using (var session = store.OpenSession())
-                {
-                    try
-                    {
-                        sessionAction(session);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                }
-            }
-        }
-
         public static async Task ExecuteAsync(Func<IAsyncDocumentSession, Task> sessionFunc)
         {
             using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
             {
                 store.Initialize();
                 using (var session = store.OpenAsyncSession())
-                {
-                    try
-                    {
-                        await sessionFunc(session).ConfigureAwait(false);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
-                    }
-                }
+					await sessionFunc(session).ConfigureAwait(false);
             }
         }
+
+		public static async Task<T> ExecuteAndReturnAsync<T>(Func<IAsyncDocumentSession, Task<T>> sessionFunc)
+		{
+			using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
+			{
+				store.Initialize();
+				using (var session = store.OpenAsyncSession())
+					return await sessionFunc(session).ConfigureAwait(false);
+			}
+		}
 
         public class RavenDbSettings : SettingsBase
         {

@@ -37,7 +37,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<NodeLogItem[]> GetLogs(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return null;
+			return await RavenHelper.ExecuteAndReturnAsync<NodeLogItem[]>(session =>
+			{
+				return null;
+			}).ConfigureAwait(false);
 		}
 		/// <summary>
 		/// Get the los from a query
@@ -50,7 +53,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<NodeLogItem[]> GetLogs(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
 		{
-			return null;
+			return await RavenHelper.ExecuteAndReturnAsync<NodeLogItem[]>(session =>
+			{
+				return null;
+			}).ConfigureAwait(false);
 		}
 		/// <summary>
 		/// Get the traces form a query
@@ -62,7 +68,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<NodeTraceItem[]> GetTraces(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return null;
+			return await RavenHelper.ExecuteAndReturnAsync<NodeTraceItem[]>(session =>
+			{
+				return null;
+			}).ConfigureAwait(false);
 		}
 		/// <summary>
 		/// Gets the traces by group.
@@ -74,7 +83,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<NodeTraceItem[]> GetTracesByGroup(string group, string application, DateTime fromDate, DateTime toDate)
 		{
-			return null;
+			return await RavenHelper.ExecuteAndReturnAsync<NodeTraceItem[]>(session =>
+			{
+				return null;
+			}).ConfigureAwait(false);
 		}
 		/// <summary>
 		/// Gets the statuses
@@ -87,7 +99,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<NodeStatusItem[]> GetStatuses(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
 		{
-			return null;
+			return await RavenHelper.ExecuteAndReturnAsync<NodeStatusItem[]>(session =>
+			{
+				return null;
+			}).ConfigureAwait(false);
 		}
 	}
 }

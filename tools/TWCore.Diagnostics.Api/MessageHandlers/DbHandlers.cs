@@ -92,7 +92,7 @@ namespace TWCore.Diagnostics.Api
 					var res = await item.Query.GetLogsByGroup(group, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
-				lst = lst.DistinctBy(x => x.Message + x.Timestamp).ToList();
+				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
 			public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, DateTime fromDate, DateTime toDate)
@@ -103,7 +103,7 @@ namespace TWCore.Diagnostics.Api
 					var res = await item.Query.GetLogsAsync(search, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
-				lst = lst.DistinctBy(x => x.Message + x.Timestamp).ToList();
+				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
 			public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
@@ -114,7 +114,7 @@ namespace TWCore.Diagnostics.Api
 					var res = await item.Query.GetLogsAsync(search, application, level, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
-				lst = lst.DistinctBy(x => x.Message + x.Timestamp).ToList();
+				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
 			public async Task<List<NodeTraceItem>> GetTracesAsync(string search, string application, DateTime fromDate, DateTime toDate)

@@ -24,6 +24,8 @@ namespace TWCore.Diagnostics.Api.Models.Log
     [DataContract]
 	public class NodeLogItem : NodeInfo
     {
+		[XmlAttribute, DataMember]
+		public Guid LogId { get; set; }
         [XmlAttribute, DataMember]
         public string Assembly { get; set; }
         [XmlAttribute, DataMember]

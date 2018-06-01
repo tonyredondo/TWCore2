@@ -48,6 +48,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						Environment = logItem.EnvironmentName,
 						Machine = logItem.MachineName,
 						Application = logItem.ApplicationName,
+						LogId = logItem.Id,
 						Assembly = logItem.AssemblyName,
 						Code = logItem.Code,
 						Group = logItem.GroupName,

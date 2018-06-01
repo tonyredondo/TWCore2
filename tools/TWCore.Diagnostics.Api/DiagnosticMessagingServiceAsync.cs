@@ -30,7 +30,9 @@ namespace TWCore.Diagnostics.Api
             base.OnInit(args);
             
 
-			//var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+			var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+			var logs2 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+			var logs3 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 
 			Task.Delay(2000).ContinueWith(async _ =>
 			{

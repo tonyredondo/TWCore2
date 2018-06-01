@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable CheckNamespace
 // ReSharper disable InconsistentlySynchronizedField
@@ -100,7 +101,7 @@ namespace TWCore.Diagnostics.Trace.Storages
                         Id = i.Id,
                         Timestamp = i.Timestamp,
                         TraceName = i.TraceName,
-                        TraceObject = aStatus._sendCompleteTrace ? i.TraceObject : null
+                        TraceObject = aStatus._sendCompleteTrace ? new SerializedObject(i.TraceObject) : null
                     }, mStatus));
                     mStatus._traceItems.Clear();
                 }

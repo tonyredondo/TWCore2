@@ -51,8 +51,8 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-                        SendQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) },
-                        RecvQueue = new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RS", null)
+                        SendQueues = new List<MQConnection> { new MQConnection("amqp://agsw:agsw@127.0.0.1:5672/", "TEST_RQ", null) },
+                        RecvQueue = new MQConnection("amqp://agsw:agsw@127.0.0.1:5672/", "TEST_RS", null)
                     }
                 },
                 ServerQueues = new List<MQServerQueues>
@@ -61,7 +61,7 @@ namespace TWCore.Tests
                     {
                         EnvironmentName = "",
                         MachineName = "",
-                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://cdr:cdr@127.0.0.1:5672/", "TEST_RQ", null) }
+                        RecvQueues = new List<MQConnection> { new MQConnection("amqp://agsw:agsw@127.0.0.1:5672/", "TEST_RQ", null) }
                     }
                 },
                 RequestOptions = new MQRequestOptions

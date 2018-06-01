@@ -38,7 +38,7 @@ namespace TWCore.Diagnostics.Api
 			if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
 
 	        foreach (var handler in DiagnosticMessagingServiceAsync.Handlers)
-		        await handler.ProcessLogItemsMessage(message).ConfigureAwait(false);
+		        await handler.Messages.ProcessLogItemsMessage(message).ConfigureAwait(false);
 	        
 			return ResponseMessage.NoResponse;
         }
@@ -49,7 +49,7 @@ namespace TWCore.Diagnostics.Api
 	        if (message == null || message.Count == 0) return ResponseMessage.NoResponse;
 
 	        foreach (var handler in DiagnosticMessagingServiceAsync.Handlers)
-		        await handler.ProcessTraceItemsMessage(message).ConfigureAwait(false);
+		        await handler.Messages.ProcessTraceItemsMessage(message).ConfigureAwait(false);
 	        
 	        return ResponseMessage.NoResponse;
         }
@@ -60,7 +60,7 @@ namespace TWCore.Diagnostics.Api
 			if (message == null) return ResponseMessage.NoResponse;
 
 	        foreach (var handler in DiagnosticMessagingServiceAsync.Handlers)
-		        await handler.ProcessStatusMessage(message).ConfigureAwait(false);
+		        await handler.Messages.ProcessStatusMessage(message).ConfigureAwait(false);
             
             return ResponseMessage.NoResponse;
         }

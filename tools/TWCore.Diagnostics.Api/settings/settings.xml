@@ -10,7 +10,8 @@
       <Item Key="Core.Log.Storage.Console.Enabled" Value="true" />
       <Item Key="Core.Log.Storage.Console.LogLevel" Value="1023" />
       <Item Key="Core.Log.Storage.Messages.Enabled" Value="true" />
-
+      <Item Key="Core.Log.Storage.Messages.LogLevel" Value="1023" />
+      
       <!--Trace Settings-->
       <Item Key="Core.Trace.UseAbsolutePath" Value="false" />
       <Item Key="Core.Trace.Serializer" Value="TWCore.Serialization.WSerializer.WBinarySerializer, TWCore.Serialization.WSerializer" />
@@ -37,7 +38,7 @@
       <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
 
       <Item Key="RavenDb.Database" Value="Diagnostics" />
-      <Item Key="RavenDb.Urls" Value="http://10.10.1.50:8080" />
+      <Item Key="RavenDb.Urls" Value="http://127.0.0.1:8080" />
     </Items>
     <Overwrite EnvironmentName="DEV" MachineName="">
     </Overwrite>

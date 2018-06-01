@@ -15,9 +15,13 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Messaging.Client;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
 // ReSharper disable CheckNamespace
@@ -31,10 +35,10 @@ namespace TWCore.Diagnostics.Log.Storages
     /// </summary>
     public class MessagingLogStorage : ILogStorage
     {
-        private readonly object _locker = new object();
         private readonly string _queueName;
         private readonly Timer _timer;
-        private readonly List<LogItem> _logItems;
+		private readonly BlockingCollection<LogItem> _logItems;
+		private IMQueueClient _queueClient;
 
         #region .ctor
         /// <summary>
@@ -45,10 +49,15 @@ namespace TWCore.Diagnostics.Log.Storages
         public MessagingLogStorage(string queueName, int periodInSeconds)
         {
             _queueName = queueName;
-            _logItems = new List<LogItem>();
+			_logItems = new BlockingCollection<LogItem>();
+			_queueClient = Core.Services.GetQueueClient(_queueName);
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
+		~MessagingLogStorage()
+		{
+			Dispose();
+		}
         #endregion
         
         #region Public methods
@@ -59,11 +68,8 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="item">Log Item</param>
         public Task WriteAsync(ILogItem item)
         {
-            lock (_locker)
-            {
-                if (item is LogItem logItem) 
-                    _logItems.Add(logItem);
-            }
+			if (item is LogItem logItem)
+				_logItems.Add(logItem.DeepClone());
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -82,30 +88,25 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             _timer.Dispose();
             TimerCallback(this);
+			_queueClient.Dispose();
         }
         #endregion
         
         #region Private methods
-        private static void TimerCallback(object state)
+        private void TimerCallback(object state)
         {
             try
             {
-                var mStatus = (MessagingLogStorage) state;
-                List<LogItem> itemsToSend;
-                lock (mStatus._locker)
-                {
-                    if (mStatus._logItems.Count == 0) return;
-                    itemsToSend = new List<LogItem>(mStatus._logItems);
-                    mStatus._logItems.Clear();
-                }
+				var itemsToSend = new List<LogItem>();
+				while (itemsToSend.Count < 500 && _logItems.TryTake(out var item, 10))
+					itemsToSend.Add(item);
+
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
-                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
-                queueClient.SendAsync(itemsToSend).WaitAndResults();
-                queueClient.Dispose();
+                _queueClient.SendAsync(itemsToSend).WaitAndResults();
             }
-            catch (Exception ex)
+            catch
             {
-                Core.Log.Write(ex);
+				//
             }
         }
         #endregion

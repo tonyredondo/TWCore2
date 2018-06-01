@@ -21,12 +21,8 @@ using System.Xml.Serialization;
 namespace TWCore.Diagnostics.Api.Models.Status
 {
     [DataContract]
-    public class NodeTraceItem
+	public class NodeTraceItem : NodeInfo
     {
-        [XmlAttribute, DataMember]
-        public string Id { get; set; }
-        [XmlAttribute, DataMember]
-        public string NodeInfoId { get; set; }
         [XmlAttribute, DataMember]
         public Guid TraceId { get; set; }
         [XmlAttribute, DataMember]

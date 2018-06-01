@@ -21,7 +21,7 @@ using System.Xml.Serialization;
 namespace TWCore.Diagnostics.Api.Models
 {
     [DataContract]
-    public class NodeInfo
+    public abstract class NodeInfo
     {
         [XmlAttribute, DataMember]
         public string Id { get; set; }
@@ -31,7 +31,5 @@ namespace TWCore.Diagnostics.Api.Models
         public string Environment { get; set; }
         [XmlAttribute, DataMember]
         public string Application { get; set; }
-        [XmlAttribute, DataMember]
-        public DateTime Date { get; set; } 
     }
 }

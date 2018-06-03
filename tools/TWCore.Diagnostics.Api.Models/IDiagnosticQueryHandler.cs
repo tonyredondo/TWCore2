@@ -35,6 +35,11 @@ namespace TWCore.Diagnostics.Api.Models
 	public interface IDiagnosticQueryHandler
 	{
 		/// <summary>
+		/// Gets the environments and apps list
+		/// </summary>
+		/// <returns>List of BasicInfo</returns>
+		Task<List<BasicInfo>> GetEnvironmentsAndApps();
+		/// <summary>
 		/// Get the logs by group
 		/// </summary>
 		/// <returns>Logs instance</returns>

@@ -21,15 +21,9 @@ using System.Xml.Serialization;
 namespace TWCore.Diagnostics.Api.Models
 {
     [DataContract]
-    public abstract class NodeInfo
+    public abstract class NodeInfo : BasicInfo
     {
         [XmlAttribute, DataMember]
         public string Id { get; set; }
-        [XmlAttribute, DataMember]
-        public string Machine { get; set; }
-        [XmlAttribute, DataMember]
-        public string Environment { get; set; }
-        [XmlAttribute, DataMember]
-        public string Application { get; set; }
     }
 }

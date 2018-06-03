@@ -90,6 +90,17 @@ namespace TWCore.Diagnostics.Api
 			}
 
 			#region IDiagnosticQueryHandler
+			public async Task<List<BasicInfo>> GetEnvironmentsAndApps()
+			{
+				var lst = new List<BasicInfo>();
+				foreach (var item in _parent._handlers)
+				{
+					var res = await item.Query.GetEnvironmentsAndApps().ConfigureAwait(false);
+					lst.AddRange(res);
+				}
+				lst = lst.DistinctBy(x => x.Environment + x.Machine + x.Application).ToList();
+				return lst;
+			}
 			public async Task<List<NodeLogItem>> GetLogsByGroup(string group, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeLogItem>();

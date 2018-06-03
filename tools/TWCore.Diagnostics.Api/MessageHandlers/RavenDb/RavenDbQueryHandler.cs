@@ -16,7 +16,10 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using RabbitMQ.Client.Impl;
+using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
@@ -29,6 +32,32 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
 	public class RavenDbQueryHandler : IDiagnosticQueryHandler
 	{
+		/// <inheritdoc />
+		/// <summary>
+		/// Gets the environments and apps list
+		/// </summary>
+		/// <returns>List of BasicInfo</returns>
+		public async Task<List<BasicInfo>> GetEnvironmentsAndApps()
+		{
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
+			{
+				var results = session.Query<NodeLogItem>()
+					.GroupBy(x => new
+					{
+						x.Environment,
+						x.Machine,
+						x.Application
+					})
+					.Select(x => new BasicInfo
+					{
+						Environment = x.Key.Environment,
+						Machine = x.Key.Machine,
+						Application = x.Key.Application
+					});
+				return await results.ToListAsync().ConfigureAwait(false);
+			}).ConfigureAwait(false);
+		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Get the logs by group
 		/// </summary>
@@ -39,7 +68,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeLogItem>> GetLogsByGroup(string group, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeLogItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
@@ -53,6 +82,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				return await query.ToListAsync().ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
@@ -63,7 +93,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeLogItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
@@ -80,6 +110,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				return await query.ToListAsync().ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
@@ -91,7 +122,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeLogItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
@@ -111,6 +142,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Get the traces form a query
 		/// </summary>
@@ -121,7 +153,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeTraceItem>> GetTracesAsync(string search, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeTraceItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
@@ -138,6 +170,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the traces by group.
 		/// </summary>
@@ -148,7 +181,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeTraceItem>> GetTracesByGroupAsync(string group, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeTraceItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);
@@ -164,6 +197,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the Trace object
 		/// </summary>
@@ -171,7 +205,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="item">Trace item to retrieve the trace object</param>
 		public async Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<SerializedObject>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var attachment = await session.Advanced.Attachments.GetAsync(item.Id, "Trace").ConfigureAwait(false);
 				var traceObject = attachment.Stream.DeserializeFromNBinary<object>();
@@ -179,6 +213,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
+		/// <inheritdoc />
 		/// <summary>
 		/// Gets the statuses
 		/// </summary>
@@ -190,7 +225,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 		/// <param name="toDate">To date and time</param>
 		public async Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
 		{
-			return await RavenHelper.ExecuteAndReturnAsync<List<NodeStatusItem>>(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
 				var query = documentQuery.WhereBetween(x => x.Timestamp, fromDate, toDate);

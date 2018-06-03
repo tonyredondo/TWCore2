@@ -28,20 +28,24 @@ namespace TWCore.Diagnostics.Api
         {
             EnableMessagesTrace = false;
             base.OnInit(args);
-			/*
-			var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
-			var logs2 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
-			var logs3 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 
-			Task.Delay(2000).ContinueWith(async _ =>
-			{
-				while (true)
-				{
-					Core.Log.ErrorGroup(new Exception("Test de Error"), Guid.NewGuid().ToString(), "Reporte de error.");
-					await Task.Delay(2000).ConfigureAwait(false);
-				}
-			});
-			*/
+	        var data = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        /*
+	        var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+	        var logs2 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+	        var logs3 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
+
+	        Task.Delay(2000).ContinueWith(async _ =>
+	        {
+		        while (true)
+		        {
+			        Core.Log.ErrorGroup(new Exception("Test de Error"), Guid.NewGuid().ToString(), "Reporte de error.");
+			        await Task.Delay(2000).ConfigureAwait(false);
+		        }
+	        });
+	        */
         }
     }
 }

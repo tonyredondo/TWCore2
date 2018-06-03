@@ -37,7 +37,6 @@ namespace TWCore.Services
         /// </summary>
         public static WebServiceSettings Settings { get; } = Core.GetSettings<WebServiceSettings>();
 
-
         private readonly Func<string[], IWebHost> _webHostFactory;
 
         #region .ctor

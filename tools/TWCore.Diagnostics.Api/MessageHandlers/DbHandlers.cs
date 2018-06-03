@@ -101,66 +101,66 @@ namespace TWCore.Diagnostics.Api
 				lst = lst.DistinctBy(x => x.Environment + x.Machine + x.Application).ToList();
 				return lst;
 			}
-			public async Task<List<NodeLogItem>> GetLogsByGroup(string group, string application, DateTime fromDate, DateTime toDate)
+			public async Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeLogItem>();
 				foreach (var item in _parent._handlers)
 				{
-					var res = await item.Query.GetLogsByGroup(group, application, fromDate, toDate).ConfigureAwait(false);
+					var res = await item.Query.GetLogsByGroup(environment, group, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
 				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
-			public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, DateTime fromDate, DateTime toDate)
+			public async Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeLogItem>();
 				foreach (var item in _parent._handlers)
 				{
-					var res = await item.Query.GetLogsAsync(search, application, fromDate, toDate).ConfigureAwait(false);
+					var res = await item.Query.GetLogsAsync(environment, search, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
 				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
-			public async Task<List<NodeLogItem>> GetLogsAsync(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
+			public async Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeLogItem>();
 				foreach (var item in _parent._handlers)
 				{
-					var res = await item.Query.GetLogsAsync(search, application, level, fromDate, toDate).ConfigureAwait(false);
+					var res = await item.Query.GetLogsAsync(environment, search, application, level, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
 				lst = lst.DistinctBy(x => x.LogId).ToList();
 				return lst;
 			}
-			public async Task<List<NodeTraceItem>> GetTracesAsync(string search, string application, DateTime fromDate, DateTime toDate)
+			public async Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeTraceItem>();
 				foreach (var item in _parent._handlers)
 				{
-					var res = await item.Query.GetTracesAsync(search, application, fromDate, toDate).ConfigureAwait(false);
+					var res = await item.Query.GetTracesAsync(environment, search, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
 				lst = lst.DistinctBy(x => x.TraceId).ToList();
 				return lst;
 			}
-			public async Task<List<NodeTraceItem>> GetTracesByGroupAsync(string group, string application, DateTime fromDate, DateTime toDate)
+			public async Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate)
 			{
 				var lst = new List<NodeTraceItem>();
 				foreach (var item in _parent._handlers)
 				{
-					var res = await item.Query.GetTracesByGroupAsync(group, application, fromDate, toDate).ConfigureAwait(false);
+					var res = await item.Query.GetTracesByGroupAsync(environment, group, application, fromDate, toDate).ConfigureAwait(false);
 					lst.AddRange(res);
 				}
 				lst = lst.DistinctBy(x => x.TraceId).ToList();
 				return lst;
 			}
-			public async Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item)
+			public async Task<SerializedObject> GetTraceObjectAsync(string id)
 			{
 				foreach (var handler in _parent._handlers)
 				{
-					var res = await handler.Query.GetTraceObjectAsync(item).ConfigureAwait(false);
+					var res = await handler.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
 					if (res != null)
 						return res;
 				}

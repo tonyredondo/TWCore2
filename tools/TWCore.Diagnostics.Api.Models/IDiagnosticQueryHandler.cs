@@ -43,59 +43,64 @@ namespace TWCore.Diagnostics.Api.Models
 		/// Get the logs by group
 		/// </summary>
 		/// <returns>Logs instance</returns>
+		/// <param name="environment">Environment name</param>
 		/// <param name="group">Group</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsByGroup(string group, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
 		/// <returns>Logs instance</returns>
+		/// <param name="environment">Environment name</param>
 		/// <param name="search">Search term</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsAsync(string search, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
 		/// <returns>Logs instance</returns>
+		/// <param name="environment">Environment name</param>
 		/// <param name="search">Search term</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="level">Log level</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsAsync(string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
+		Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Get the traces form a query
 		/// </summary>
 		/// <returns>Traces instance</returns>
+		/// <param name="environment">Environment name</param>
 		/// <param name="search">Search term</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeTraceItem>> GetTracesAsync(string search, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Gets the traces by group.
 		/// </summary>
 		/// <returns>The traces by group.</returns>
+		/// <param name="environment">Environment name</param>
 		/// <param name="group">Group name</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeTraceItem>> GetTracesByGroupAsync(string group, string application, DateTime fromDate, DateTime toDate);
+		Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate);
 		/// <summary>
 		/// Gets the Trace object
 		/// </summary>
 		/// <returns>The trace object</returns>
-		/// <param name="item">Trace item to retrieve the trace object</param>
-		Task<SerializedObject> GetTraceObjectAsync(NodeTraceItem item);
+		/// <param name="id">Trace object id</param>
+		Task<SerializedObject> GetTraceObjectAsync(string id);
 		/// <summary>
 		/// Gets the statuses
 		/// </summary>
 		/// <returns>The statuses from the query</returns>
-		/// <param name="environment">Environment name or null</param>
+		/// <param name="environment">Environment name</param>
 		/// <param name="machine">Machine name or null</param>
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>

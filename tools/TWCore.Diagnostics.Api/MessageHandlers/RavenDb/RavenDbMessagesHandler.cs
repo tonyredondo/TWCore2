@@ -26,213 +26,154 @@ using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
-using TWCore.Threading;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
-    public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
-    {
-        private readonly AsyncLock _lock = new AsyncLock();
+	public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
+	{
+		#region Public Methods - IDiagnosticMessageHandler
 
-        public async Task ProcessLogItemsMessage(List<LogItem> message)
-        {
-            Core.Log.InfoBasic("Storing Log Info...");
-            foreach (var logItem in message)
-            {
-                await RavenHelper.ExecuteAsync(async session => {
+		public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
+		{
+			Core.Log.InfoBasic("Storing LogItem messages...");
 
-                    NodeInfo nodeInfo;
-                    using (await _lock.LockAsync().ConfigureAwait(false))
-                    {
-                        nodeInfo = (from node in session.Query<NodeInfo>()
-                                    where node.Date == logItem.Timestamp.Date &&
-                                          node.Machine == logItem.MachineName &&
-                                          node.Environment == logItem.EnvironmentName &&
-                                          node.Application == logItem.ApplicationName
-                                    select node).FirstOrDefault();
+			await RavenHelper.ExecuteAsync(async session =>
+			{
+				foreach (var logItem in message)
+				{
+					var logInfo = new NodeLogItem
+					{
+						Environment = logItem.EnvironmentName,
+						Machine = logItem.MachineName,
+						Application = logItem.ApplicationName,
+						LogId = logItem.Id,
+						Assembly = logItem.AssemblyName,
+						Code = logItem.Code,
+						Group = logItem.GroupName,
+						Level = logItem.Level,
+						Message = logItem.Message,
+						Type = logItem.TypeName,
+						Exception = logItem.Exception,
+						Timestamp = logItem.Timestamp
+					};
+					await session.StoreAsync(logInfo).ConfigureAwait(false);
+				}
 
-                        if (nodeInfo == null)
-                        {
-                            nodeInfo = new NodeInfo
-                            {
-                                Application = logItem.ApplicationName,
-                                Environment = logItem.EnvironmentName,
-                                Machine = logItem.MachineName,
-                                Date = logItem.Timestamp.Date
-                            };
-                            await session.StoreAsync(nodeInfo).ConfigureAwait(false);
-                            await session.SaveChangesAsync().ConfigureAwait(false);
-                        }
-                    }
+				await session.SaveChangesAsync().ConfigureAwait(false);
 
-                    var logInfo = new NodeLogItem
-                    {
-                        NodeInfoId = nodeInfo.Id,
-                        Assembly = logItem.AssemblyName,
-                        Code = logItem.Code,
-                        Group = logItem.GroupName,
-                        Level = logItem.Level,
-                        Message = logItem.Message,
-                        Type = logItem.TypeName,
-                        Exception = logItem.Exception,
-                        Timestamp = logItem.Timestamp
-                    };
-                    await session.StoreAsync(logInfo).ConfigureAwait(false);
-                    await session.SaveChangesAsync().ConfigureAwait(false);
+			}).ConfigureAwait(false);
+		}
 
-                }).ConfigureAwait(false);
-            }
-        }
+		public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
+		{
+			Core.Log.InfoBasic("Storing TraceItem messages...");
 
-        public async Task ProcessTraceItemsMessage(List<MessagingTraceItem> message)
-        {
-            Core.Log.InfoBasic("Storing Trace Info...");
-            foreach (var traceItem in message)
-            {
-                await RavenHelper.ExecuteAsync(async session =>
-                {
-                    NodeInfo nodeInfo;
-                    using (await _lock.LockAsync().ConfigureAwait(false))
-                    {
-                        nodeInfo = (from node in session.Query<NodeInfo>()
-                            where node.Date == traceItem.Timestamp.Date &&
-                                  node.Machine == traceItem.MachineName &&
-                                  node.Environment == traceItem.EnvironmentName &&
-                                  node.Application == traceItem.ApplicationName
-                            select node).FirstOrDefault();
+			await RavenHelper.ExecuteAsync(async session =>
+			{
+				foreach (var traceItem in message)
+				{
+					var traceInfo = new NodeTraceItem
+					{
+						Environment = traceItem.EnvironmentName,
+						Machine = traceItem.MachineName,
+						Application = traceItem.ApplicationName,
+						TraceId = traceItem.Id,
+						Group = traceItem.GroupName,
+						Name = traceItem.TraceName,
+						Timestamp = traceItem.Timestamp
+					};
+					await session.StoreAsync(traceInfo).ConfigureAwait(false);
 
-                        if (nodeInfo == null)
-                        {
-                            nodeInfo = new NodeInfo
-                            {
-                                Application = traceItem.ApplicationName,
-                                Environment = traceItem.EnvironmentName,
-                                Machine = traceItem.MachineName,
-                                Date = traceItem.Timestamp.Date
-                            };
-                            await session.StoreAsync(nodeInfo).ConfigureAwait(false);
-                            await session.SaveChangesAsync().ConfigureAwait(false);
-                        }
-                    }
+					using (var ms = new MemoryStream())
+					{
+						if (traceItem.TraceObject != null)
+						{
+							traceItem.TraceObject.SerializeToNBinary(ms);
+							ms.Position = 0;
+						}
+						session.Advanced.Attachments.Store(traceInfo.Id, "Trace", ms, traceItem.TraceObject?.GetType().FullName);
 
-                    var traceInfo = new NodeTraceItem
-                    {
-                        TraceId = traceItem.Id,
-                        NodeInfoId = nodeInfo.Id,
-                        Group = traceItem.GroupName,
-                        Name = traceItem.TraceName,
-                        //TraceObject = traceItem.TraceObject,
-                        Timestamp = traceItem.Timestamp
-                    };
-                    await session.StoreAsync(traceInfo).ConfigureAwait(false);
+						await session.SaveChangesAsync().ConfigureAwait(false);
+					}
+				}
 
-                    using (var ms = new MemoryStream())
-                    {
-                        if (traceItem.TraceObject != null) 
-                        {
-                            traceItem.TraceObject.SerializeToNBinary(ms);
-                            ms.Position = 0;
-                        }
-                        session.Advanced.Attachments.Store(traceInfo.Id, "Trace", ms, traceItem.TraceObject?.GetType().FullName);
+			}).ConfigureAwait(false);
+		}
 
-                        await session.SaveChangesAsync().ConfigureAwait(false);
-                    }                    
+		public async Task ProcessStatusMessageAsync(StatusItemCollection message)
+		{
+			Core.Log.InfoBasic("Storing StatusCollection message...");
+			await RavenHelper.ExecuteAsync(async session =>
+			{
+				var nodeStatus = (from node in session.Query<NodeStatusItem>()
+				                  where node.Environment == message.EnvironmentName &&
+				                  		node.Machine == message.MachineName &&
+				                  		node.Application == message.ApplicationName &&
+										node.Date == message.Timestamp.Date &&
+										node.StartTime == message.StartTime
+								  select node).FirstOrDefault();
 
-                }).ConfigureAwait(false);
-            }
-        }
+				if (nodeStatus == null)
+				{
+					var newStatus = new NodeStatusItem
+					{
+						Environment = message.EnvironmentName,
+						Machine = message.MachineName,
+						Application = message.ApplicationName,
+						Date = message.Timestamp.Date,
+						StartTime = message.StartTime,
+						Timestamp = message.Timestamp,
+						Children = message.Items?.Select(GetNodeStatusChild).ToList()
+					};
+					await session.StoreAsync(newStatus).ConfigureAwait(false);
+				}
+				else
+				{
+					nodeStatus.Timestamp = message.Timestamp;
+					nodeStatus.Children = message.Items?.Select(GetNodeStatusChild).ToList();
+				}
+				await session.SaveChangesAsync().ConfigureAwait(false);
 
-        public async Task ProcessStatusMessage(StatusItemCollection message)
-        {
-            Core.Log.InfoBasic("Storing Status Info...");
-            await RavenHelper.ExecuteAsync(async session =>
-            {
-                NodeInfo nodeInfo;
-                using (await _lock.LockAsync().ConfigureAwait(false))
-                {
-                    nodeInfo = (from node in session.Query<NodeInfo>()
-                                where node.Date == message.Timestamp.Date &&
-                                      node.Machine == message.MachineName &&
-                                      node.Environment == message.EnvironmentName &&
-                                      node.Application == message.ApplicationName
-                                select node).FirstOrDefault();
+			}).ConfigureAwait(false);
+		}
 
-                    if (nodeInfo == null)
-                    {
-                        nodeInfo = new NodeInfo
-                        {
-                            Application = message.ApplicationName,
-                            Environment = message.EnvironmentName,
-                            Machine = message.MachineName,
-                            Date = message.Timestamp.Date
-                        };
-                        await session.StoreAsync(nodeInfo).ConfigureAwait(false);
-                        await session.SaveChangesAsync().ConfigureAwait(false);
-                    }
-                }
+		#endregion
 
-                var nodeStatus = (from node in session.Query<NodeStatusItem>()
-                                  where node.NodeInfoId == nodeInfo.Id &&
-                                        node.Date == message.Timestamp.Date &&
-                                        node.StartTime == message.StartTime
-                                  select node).FirstOrDefault();
+		#region Private Methods
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static NodeStatusChildItem GetNodeStatusChild(StatusItem item)
+		{
+			return new NodeStatusChildItem
+			{
+				Id = item.Id,
+				Name = item.Name,
+				Values = item.Values?.Select(GetNodeStatusValue).ToList(),
+				Children = item.Children?.Select(GetNodeStatusChild).ToList()
+			};
+		}
 
-                if (nodeStatus == null)
-                {
-                    var newStatus = new NodeStatusItem
-                    {
-                        NodeInfoId = nodeInfo.Id,
-                        Date = message.Timestamp.Date,
-                        StartTime = message.StartTime,
-                        Timestamp = message.Timestamp,
-                        Children = message.Items?.Select(GetNodeStatusChild).ToList()
-                    };
-                    await session.StoreAsync(newStatus).ConfigureAwait(false);
-                }
-                else
-                {
-                    nodeStatus.Timestamp = message.Timestamp;
-                    nodeStatus.Children = message.Items?.Select(GetNodeStatusChild).ToList();
-                }
-                await session.SaveChangesAsync().ConfigureAwait(false);
-
-            }).ConfigureAwait(false);
-        }
-        
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static NodeStatusChildItem GetNodeStatusChild(StatusItem item)
-        {
-            return new NodeStatusChildItem
-            {
-                Id = item.Id,
-                Name = item.Name,
-                Values = item.Values?.Select(GetNodeStatusValue).ToList(),
-                Children = item.Children?.Select(GetNodeStatusChild).ToList()
-            };
-        }
-        
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static NodeStatusChildValue GetNodeStatusValue(StatusItemValue value)
-        {
-            return new NodeStatusChildValue
-            {
-                Id = value.Id,
-                Key = value.Key,
-                Value = value.Value,
-                Type = value.Type,
-                Status = value.Status,
-                Values = value.Values?.Select(i => new NodeStatusChildValue
-                {
-                    Id = i.Id,
-                    Key = i.Name,
-                    Value = i.Value,
-                    Type = i.Type,
-                    Status = i.Status
-                }).ToList()
-            };
-        }
-    }
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		private static NodeStatusChildValue GetNodeStatusValue(StatusItemValue value)
+		{
+			return new NodeStatusChildValue
+			{
+				Id = value.Id,
+				Key = value.Key,
+				Value = value.Value,
+				Type = value.Type,
+				Status = value.Status,
+				Values = value.Values?.Select(i => new NodeStatusChildValue
+				{
+					Id = i.Id,
+					Key = i.Name,
+					Value = i.Value,
+					Type = i.Type,
+					Status = i.Status
+				}).ToList()
+			};
+		}
+		#endregion
+	}
 }

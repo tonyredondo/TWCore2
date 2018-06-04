@@ -12,11 +12,11 @@
               Admin="TWCore.Messaging.RabbitMQ.RabbitMQueueAdmin, TWCore.Messaging.RabbitMQ" />
 
     <ClientQueues EnvironmentName="" MachineName="">
-      <SendQueue Route="amqp://test:test@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
+      <SendQueue Route="amqp://agsw:agsw@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
     </ClientQueues>
 
     <ServerQueues EnvironmentName="" MachineName="">
-      <RecvQueue Route="amqp://test:test@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
+      <RecvQueue Route="amqp://agsw:agsw@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
     </ServerQueues>
 
     <RequestOptions SerializerMimeType="application/w-binary" CompressorEncodingType="gzip">

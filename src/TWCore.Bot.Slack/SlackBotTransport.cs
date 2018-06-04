@@ -24,6 +24,7 @@ using SlackAPI.WebSocketMessages;
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable UnusedVariable
 // ReSharper disable UnusedMember.Global
+#pragma warning disable CS0067
 
 namespace TWCore.Bot.Slack
 {

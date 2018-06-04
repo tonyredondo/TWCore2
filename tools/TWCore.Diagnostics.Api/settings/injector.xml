@@ -29,7 +29,7 @@
           <Class Name="Messages" Type="TWCore.Diagnostics.Trace.Storages.MessagingTraceStorage, TWCore.Messaging">
               <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
               <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
-              <Parameter Name="sendCompleteTrace" Type="Raw" Value="false" />
+              <Parameter Name="sendCompleteTrace" Type="Raw" Value="true" />
           </Class>
       </Interface>
       
@@ -49,9 +49,9 @@
   <InjectorSettings EnvironmentName="" ApplicationName="TWCore.Diagnostics.Api">
     <Interfaces>
 
-      <!--Messages Handlers-->
-      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticMessagesHandler, TWCore.Diagnostics.Api.Models">
-        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDb.RavenDbMessagesHandler, TWCore.Diagnostics.Api" />
+      <!-- Handlers -->
+      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticHandler, TWCore.Diagnostics.Api.Models">
+        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDb.RavenDbHandler, TWCore.Diagnostics.Api" />
       </Interface>
       
     </Interfaces>

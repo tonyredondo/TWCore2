@@ -14,16 +14,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using System;
-using System.Runtime.Serialization;
-using System.Xml.Serialization;
+using TWCore.Diagnostics.Api.Models;
+// ReSharper disable UnusedMember.Global
 
-namespace TWCore.Diagnostics.Api.Models
+namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
-    [DataContract]
-    public abstract class NodeInfo : BasicInfo
-    {
-        [XmlAttribute, DataMember]
-        public string Id { get; set; }
-    }
+	public class RavenDbHandler : IDiagnosticHandler
+	{
+		public IDiagnosticMessagesHandler Messages { get; } = new RavenDbMessagesHandler();
+		public IDiagnosticQueryHandler Query { get; } =  new RavenDbQueryHandler();
+	}
 }

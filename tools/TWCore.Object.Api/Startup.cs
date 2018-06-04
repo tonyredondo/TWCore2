@@ -79,6 +79,7 @@ namespace TWCore.Object.Api
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseResponseCompression();
             app.UseStaticFiles();
             app.UseMvc(routes =>
             {

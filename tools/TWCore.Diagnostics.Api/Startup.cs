@@ -74,7 +74,7 @@ namespace TWCore.Diagnostics.Api
             {
                 app.UseDeveloperExceptionPage();
             }
-
+            app.UseResponseCompression();
             app.UseStaticFiles();
             app.UseMvc(routes =>
             {

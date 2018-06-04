@@ -21,6 +21,8 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+
 // ReSharper disable UnusedMember.Global
 // ReSharper disable CheckNamespace
 
@@ -36,7 +38,6 @@ namespace TWCore.Services
         /// Web Service Default Settings
         /// </summary>
         public static WebServiceSettings Settings { get; } = Core.GetSettings<WebServiceSettings>();
-
 
         private readonly Func<string[], IWebHost> _webHostFactory;
 

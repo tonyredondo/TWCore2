@@ -22,12 +22,10 @@ using TWCore.Diagnostics.Log;
 namespace TWCore.Diagnostics.Api.Models.Log
 {
     [DataContract]
-    public class NodeLogItem
+	public class NodeLogItem : NodeInfo
     {
-        [XmlAttribute, DataMember]
-        public string Id { get; set; }
-        [XmlAttribute, DataMember]
-        public string NodeInfoId { get; set; }
+		[XmlAttribute, DataMember]
+		public Guid LogId { get; set; }
         [XmlAttribute, DataMember]
         public string Assembly { get; set; }
         [XmlAttribute, DataMember]

@@ -51,7 +51,6 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             _queueName = queueName;
 			_logItems = new BlockingCollection<LogItem>();
-			_queueClient = Core.Services.GetQueueClient(_queueName);
 			_pool = new ReferencePool<List<LogItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
@@ -107,7 +106,7 @@ namespace TWCore.Diagnostics.Log.Storages
         {
             _timer.Dispose();
             TimerCallback(this);
-			_queueClient.Dispose();
+			_queueClient?.Dispose();
         }
 		#endregion
 
@@ -118,11 +117,12 @@ namespace TWCore.Diagnostics.Log.Storages
             {
 				if (_logItems.Count == 0) return;
 
-				var itemsToSend = _pool.New();
+                var itemsToSend = _pool.New();
 				while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))
 					itemsToSend.Add(item);
 
                 Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
+                _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
 				itemsToSend.Clear();

@@ -56,7 +56,6 @@ namespace TWCore.Diagnostics.Trace.Storages
             _queueName = queueName;
 			_traceItems = new BlockingCollection<MessagingTraceItem>();
             _sendCompleteTrace = sendCompleteTrace;
-			_queueClient = Core.Services.GetQueueClient(_queueName);
 			_pool = new ReferencePool<List<MessagingTraceItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
@@ -96,7 +95,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             _timer.Dispose();
             TimerCallback(this);
-			_queueClient.Dispose();
+			_queueClient?.Dispose();
         }
         #endregion
         
@@ -106,11 +105,13 @@ namespace TWCore.Diagnostics.Trace.Storages
             try
             {
 				if (_traceItems.Count == 0) return;
-				var itemsToSend = _pool.New();
+
+                var itemsToSend = _pool.New();
 				while (itemsToSend.Count < 2048 && _traceItems.TryTake(out var item, 10))
 					itemsToSend.Add(item);
 
                 Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
+                _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
 				itemsToSend.Clear();

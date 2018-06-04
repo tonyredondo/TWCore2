@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using TWCore.Messaging.Client;
 using TWCore.Services;
 
 // ReSharper disable UnusedMember.Global
@@ -32,7 +33,8 @@ namespace TWCore.Diagnostics.Status.Transports
     {
         private readonly string _queueName;
         private readonly Timer _timer;
-        
+		private IMQueueClient _queueClient;
+
         #region Events
         /// <inheritdoc />
         /// <summary>
@@ -53,20 +55,22 @@ namespace TWCore.Diagnostics.Status.Transports
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
         }
+        ~MessagingStatusTransport()
+        {
+            Dispose();
+        }
         #endregion
 
         #region Private methods
-        private static void TimerCallback(object state)
+        private void TimerCallback(object state)
         {
             try
             {
-                var mStatus = (MessagingStatusTransport) state;
-                var statusData = mStatus.OnFetchStatus?.Invoke();
+                var statusData = OnFetchStatus?.Invoke();
                 if (statusData == null) return;
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
-                var queueClient = Core.Services.GetQueueClient(mStatus._queueName);
-                queueClient.SendAsync(statusData).WaitAndResults();
-                queueClient.Dispose();
+                _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
+                _queueClient.SendAsync(statusData).WaitAndResults();
             }
             catch (Exception ex)
             {
@@ -83,6 +87,7 @@ namespace TWCore.Diagnostics.Status.Transports
         public void Dispose()
         {
             _timer.Dispose();
+            _queueClient?.Dispose();
         }
         #endregion
     }

@@ -9,6 +9,6 @@
     "applicationName": "TWCore Test",
     "applicationDisplayName": "TWCore Test App",
     "settingsFile": "",
-    "injectorFile": ""
+    "injectorFile": "Injector.xml"
   }
 }

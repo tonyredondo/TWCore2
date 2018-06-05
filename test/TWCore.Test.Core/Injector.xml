@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<InjectorGlobalSettings>
+  <Global>
+    <Interfaces>
+      
+      <!--Injector Test-->
+      <Interface Type="TWCore.Tests.IInjectTestA, TWCore.Tests">
+        <Class Name="Default" Type="TWCore.Tests.InjectTestA, TWCore.Tests">
+          <Parameter Name="bInstance" Type="Interface" Value="TWCore.Tests.IInjectTestB, TWCore.Tests" />
+        </Class>
+      </Interface>
+      <Interface Type="TWCore.Tests.IInjectTestB, TWCore.Tests">
+        <Class Name="Default" Type="TWCore.Tests.InjectTestB, TWCore.Tests" />
+      </Interface>
+      
+    </Interfaces>
+  </Global>
+</InjectorGlobalSettings>

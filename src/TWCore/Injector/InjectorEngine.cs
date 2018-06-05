@@ -475,48 +475,12 @@ namespace TWCore.Injector
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object CreateInstance(Instantiable instanceDefinition)
         {
-            var activatorItem = _instantiableCache.GetOrAdd(instanceDefinition, definition =>
+            if (!_instantiableCache.TryGetValue(instanceDefinition, out var activatorItem))
             {
-                var type = Core.GetType(definition.Type, ThrowExceptionOnInstanceCreationError);
-                if (type == null) return null;
-                var typeInfo = type.GetTypeInfo();
-                if (definition.Parameters?.Any() == true)
-                {
-                    var parameters = definition.Parameters;
-                    foreach (var ctor in typeInfo.DeclaredConstructors)
-                    {
-                        var ctorArgs = ctor.GetParameters().ToArray();
-                        if (ctorArgs.Length != parameters.Count)
-                            ctorArgs = ctor.GetParameters().Where(p => !p.HasDefaultValue).ToArray();
-                        
-                        if (ctorArgs.Length != parameters.Count) continue;
-                        
-                        var ctorArgsNames = ctorArgs.Select(c => c.Name).Join(", ").ToLowerInvariant();
-                        var paramsNames = parameters.Select(c => c.Name).Join(", ").ToLowerInvariant();
-                        if (ctorArgsNames != paramsNames) continue;
-                            
-                        var argsLst = new List<object>();
-
-                        #region Create and parsing Parameters
-                        for (var i = 0; i < ctorArgs.Length; i++)
-                        {
-                            var parameter = parameters[i];
-                            argsLst.Add(parameter.ArgumentName.IsNotNullOrWhitespace()
-                                ? GetArgumentValue(parameter.ArgumentName, ctorArgs[i].ParameterType)
-                                : GetArgumentValue(parameter, ctorArgs[i].ParameterType));
-                        }
-                        #endregion
-
-                        return new ActivatorItem { Type = type, Arguments = argsLst.ToArray() };
-                    }
-
-                    if (ThrowExceptionOnInstanceCreationError)
-                        throw new EntryPointNotFoundException("A valid constructor can't be found for the type: " + type.AssemblyQualifiedName);
-                }
-                else
-                    return new ActivatorItem { Type = type };
-                return null;
-            });
+                activatorItem = GetActivatorItem(instanceDefinition);
+                if (activatorItem == null || activatorItem.EnableCache)
+                    _instantiableCache.TryAdd(instanceDefinition, activatorItem);
+            }
             if (activatorItem == null) return null;
             
             var response = activatorItem.CreateInstance();
@@ -527,22 +491,66 @@ namespace TWCore.Injector
                     var valueType = response.GetMemberObjectType(set.Name);
                     if (valueType == null) continue;
                     var value = set.ArgumentName.IsNotNullOrEmpty() ? 
-                        GetArgumentValue(set.ArgumentName, valueType) : 
+                        GetArgumentValue(GetArgument(set.ArgumentName), valueType) : 
                         GetArgumentValue(set, valueType);
                     response.SetMemberObjectValue(set.Name, value);
                 }
             }
             if (instanceDefinition.Singleton)
+            {
                 activatorItem.SingletonValue = response;
+                _instantiableCache.TryAdd(instanceDefinition, activatorItem);
+            }
             return response;
         }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private object GetArgumentValue(string name, Type valueType)
+        private ActivatorItem GetActivatorItem(Instantiable definition)
+        {
+            var type = Core.GetType(definition.Type, ThrowExceptionOnInstanceCreationError);
+            if (type == null) return null;
+            var typeInfo = type.GetTypeInfo();
+            if (definition.Parameters == null || definition.Parameters.Count == 0)
+                return new ActivatorItem { Type = type, EnableCache = true };
+
+            var parameters = definition.Parameters;
+            foreach (var ctor in typeInfo.DeclaredConstructors)
+            {
+                var ctorArgs = ctor.GetParameters();
+                if (ctorArgs.Length != parameters.Count)
+                    ctorArgs = ctorArgs.Where(p => !p.HasDefaultValue).ToArray();
+                if (ctorArgs.Length != parameters.Count) continue;
+                if (!ctorArgs.SequenceEqual(parameters, p => p.Name, p => p.Name)) continue;
+                
+                var argsLst = new List<object>();
+                var enableCache = true;
+
+                #region Create and parsing Parameters
+                for (var i = 0; i < ctorArgs.Length; i++)
+                {
+                    var parameter = parameters[i];
+                    if (parameter.Type != ArgumentType.Raw && parameter.Type != ArgumentType.Settings)
+                        enableCache = false;
+                    argsLst.Add(parameter.ArgumentName.IsNotNullOrWhitespace()
+                        ? GetArgumentValue(GetArgument(parameter.ArgumentName), ctorArgs[i].ParameterType)
+                        : GetArgumentValue(parameter, ctorArgs[i].ParameterType));
+                }
+                #endregion
+
+                return new ActivatorItem { Type = type, Arguments = argsLst.ToArray(), EnableCache = enableCache };
+            }
+
+            if (ThrowExceptionOnInstanceCreationError)
+                throw new EntryPointNotFoundException("A valid constructor can't be found for the type: " + type.AssemblyQualifiedName);
+
+            return null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Argument GetArgument(string name)
         {
             if (!Settings.Arguments.Contains(name)) 
                 throw new ArgumentNullException(name);
-            var argument = Settings.Arguments[name];
-            return GetArgumentValue(argument, valueType);
+            return Settings.Arguments[name];
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object GetArgumentValue(Argument argument, Type valueType)
@@ -578,6 +586,7 @@ namespace TWCore.Injector
             public Type Type;
             public object[] Arguments;
             public object SingletonValue;
+            public bool EnableCache;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public object CreateInstance()

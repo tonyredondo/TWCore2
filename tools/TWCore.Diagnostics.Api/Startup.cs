@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using Swashbuckle.AspNetCore.Swagger;
 using System;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -64,6 +65,22 @@ namespace TWCore.Diagnostics.Api
             {
                 options.Filters.Add(new CorsAuthorizationFilterFactory("AllowAllOrigins"));
             });
+            
+            
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new Info
+                {
+                    Version = "v1",
+                    Title = "TWCore Diagnostics Api",
+                    Description = "TWCore diagnostics api",
+                    Contact = new Contact
+                    {
+                        Name = "TWCore2",
+                        Url = "https://github.com/tonyredondo/TWCore2"
+                    }
+                });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -75,6 +92,14 @@ namespace TWCore.Diagnostics.Api
                 app.UseDeveloperExceptionPage();
             }
             app.UseResponseCompression();
+            
+            
+            app.UseSwagger();
+            app.UseSwaggerUI(c =>
+            {
+                c.SwaggerEndpoint("/swagger/v1/swagger.json", "TWCore Diagnostics Api");
+            });
+            
             app.UseStaticFiles();
             app.UseMvc(routes =>
             {

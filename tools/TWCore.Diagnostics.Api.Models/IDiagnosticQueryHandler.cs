@@ -48,7 +48,9 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
@@ -58,7 +60,9 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>
@@ -69,7 +73,9 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="level">Log level</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Get the traces form a query
 		/// </summary>
@@ -79,7 +85,9 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Gets the traces by group.
 		/// </summary>
@@ -89,7 +97,9 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Gets the Trace object
 		/// </summary>
@@ -105,6 +115,8 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="application">Application name or null</param>
 		/// <param name="fromDate">From date and time</param>
 		/// <param name="toDate">To date and time</param>
-		Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate);
+		/// <param name="page">Page number</param>
+		/// <param name="pageSize">Page size</param>
+		Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 	}
 }

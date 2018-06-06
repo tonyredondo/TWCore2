@@ -19,24 +19,24 @@ namespace TWCore.Diagnostics.Api.Controllers
             => DbHandlers.Instance.Query.GetEnvironmentsAndApps();
 
         [HttpGet("{environment}/logs/group/{group}/{application?}")]
-        public Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetLogsByGroup(environment, group, application, fromDate, toDate);
+        public Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetLogsByGroup(environment, group, application, fromDate, toDate, page, pageSize);
 
         [HttpGet("{environment}/logs/search/{search?}")]
-        public Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, fromDate, toDate);
+        public Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, fromDate, toDate, page, pageSize);
 
         [HttpGet("{environment}/logs/level/{level}/{search?}")]
-        public Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, level, fromDate, toDate);
+        public Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, level, fromDate, toDate, page, pageSize);
 
         [HttpGet("{environment}/traces/group/{group}/{application?}")]
-        public Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetTracesByGroupAsync(environment, group, application, fromDate, toDate);
+        public Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetTracesByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
         
         [HttpGet("{environment}/traces/search/{search?}")]
-        public Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetTracesAsync(environment, search, application, fromDate, toDate);
+        public Task<PagedList<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetTracesAsync(environment, search, application, fromDate, toDate, page, pageSize);
 
         [HttpGet("{environment}/traces/raw/{id}")]
         public Task<SerializedObject> GetTraceObjectAsync(string id)
@@ -50,7 +50,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         }
 
         [HttpGet("{environment}/status/")]
-        public Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
-            => DbHandlers.Instance.Query.GetStatusesAsync(environment, machine, application, fromDate, toDate);
+        public Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+            => DbHandlers.Instance.Query.GetStatusesAsync(environment, machine, application, fromDate, toDate, page, pageSize);
     }
 }

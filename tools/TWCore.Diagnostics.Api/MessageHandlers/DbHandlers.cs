@@ -36,7 +36,6 @@ namespace TWCore.Diagnostics.Api
 		public static IDiagnosticHandler Instance => Singleton<DbHandlers>.Instance;
 
 		private readonly IDiagnosticMessagesHandler[] _messageHandlers;
-		private readonly IDiagnosticQueryHandler _queryHandler;
 
 		#region Public Methods
 		public IDiagnosticMessagesHandler Messages { get; } 
@@ -46,15 +45,14 @@ namespace TWCore.Diagnostics.Api
 		private DbHandlers()
 		{
 			_messageHandlers = Core.Injector.GetAllInstances<IDiagnosticMessagesHandler>();
-			_queryHandler = Core.Injector.New<IDiagnosticQueryHandler>();
+			Query = Core.Injector.New<IDiagnosticQueryHandler>();
 			
 			if (_messageHandlers == null)
 				throw new Exception("Messages handlers are not defined.");
-			if (_queryHandler == null)
+			if (Query == null)
 				throw new Exception("Query handler are not defined.");
 			
 			Messages = new MessagesHandler(this);
-			Query = new QueryHandler(this);
 		}
 
 		#region Nested Types
@@ -86,51 +84,6 @@ namespace TWCore.Diagnostics.Api
 			}
 			#endregion
 		}
-		private class QueryHandler : IDiagnosticQueryHandler
-		{
-			private readonly DbHandlers _parent;
-
-			internal QueryHandler(DbHandlers parent)
-			{
-				_parent = parent;
-			}
-
-			#region IDiagnosticQueryHandler
-			public Task<List<BasicInfo>> GetEnvironmentsAndApps()
-			{
-				return _parent._queryHandler.GetEnvironmentsAndApps();
-			}
-			public Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetLogsByGroup(environment, group, application, fromDate, toDate);
-			}
-			public Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetLogsAsync(environment, search, application, fromDate, toDate);
-			}
-			public Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetLogsAsync(environment, search, application, level, fromDate, toDate);
-			}
-			public Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetTracesAsync(environment, search, application, fromDate, toDate);
-			}
-			public Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetTracesByGroupAsync(environment, group, application, fromDate, toDate);
-			}
-			public Task<SerializedObject> GetTraceObjectAsync(string id)
-			{
-				return _parent._queryHandler.GetTraceObjectAsync(id);
-			}
-			public Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
-			{
-				return _parent._queryHandler.GetStatusesAsync(environment, machine, application, fromDate, toDate);
-			}
-			#endregion
-		}
-		
 		#endregion
 	}
 }

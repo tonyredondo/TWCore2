@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Diagnostics.Api.Models.Trace
 {
@@ -25,12 +26,88 @@ namespace TWCore.Diagnostics.Api.Models.Trace
 	public class NodeStatusItem : NodeInfo
     {
         [XmlAttribute, DataMember]
+        public string ApplicationDisplayName { get; set; }
+        [XmlAttribute, DataMember]
+        public double ElapsedMilliseconds { get; set; }
+        [XmlAttribute, DataMember]
         public DateTime Date { get; set; }
         [XmlAttribute, DataMember]
         public DateTime StartTime { get; set; }
         [XmlAttribute, DataMember]
         public DateTime Timestamp { get; set; }
-        [XmlElement("Child"), DataMember]
-        public List<NodeStatusChildItem> Children { get; set; }
+        [XmlElement("Value"), DataMember]
+        public List<NodeStatusItemValue> Values { get; set; }
+
+
+        public static NodeStatusItem Create(StatusItemCollection collection)
+        {
+            if (collection == null) return null;
+            var newStatus = new NodeStatusItem
+            {
+                Environment = collection.EnvironmentName,
+                Machine = collection.MachineName,
+                Application = collection.ApplicationName,
+                InstanceId = collection.InstanceId,
+                ApplicationDisplayName = collection.ApplicationDisplayName,
+                ElapsedMilliseconds = collection.ElapsedMilliseconds,
+                Date = collection.Timestamp.Date,
+                StartTime = collection.StartTime,
+                Timestamp = collection.Timestamp,
+            };
+            newStatus.FillValues(collection);
+            return newStatus;
+        }
+
+        public void FillValues(StatusItemCollection collection)
+        {
+            if (collection == null) return;
+            if (Values == null)
+                Values = new List<NodeStatusItemValue>();
+            else
+                Values.Clear();
+
+            InnerFillValues(null, collection.Items);
+
+            void InnerFillValues(string keyPrefix, List<StatusItem> children)
+            {
+                if (children == null) return;
+                foreach (var item in children)
+                {
+                    var key = string.IsNullOrEmpty(keyPrefix) ? item.Name : keyPrefix + "\\" + item.Name;
+                    if (item.Values != null)
+                    {
+                        foreach (var itemValue in item.Values)
+                        {
+                            var vKey = key + "\\" + itemValue.Key;
+
+                            if (itemValue.RawValue != null)
+                            {
+                                Values.Add(new NodeStatusItemValue
+                                {
+                                    Key = vKey,
+                                    Type = itemValue.Type,
+                                    Value = itemValue.RawValue
+                                });
+                            }
+                            if (itemValue.Values != null && itemValue.Values.Length > 0)
+                            {
+                                foreach(var itemValueValue in itemValue.Values)
+                                {
+                                    var vvKey = vKey + "\\" + itemValueValue.Name;
+                                    Values.Add(new NodeStatusItemValue
+                                    {
+                                        Key = vvKey,
+                                        Type = itemValueValue.Type,
+                                        Value = itemValueValue.RawValue
+                                    });
+                                }
+                            }
+                        }
+                    }
+                    if (item.Children != null)
+                        InnerFillValues(key, item.Children);
+                }
+            }
+        }
     }
 }

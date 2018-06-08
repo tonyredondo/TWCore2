@@ -115,64 +115,19 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                 if (nodeStatus == null)
                 {
-                    var newStatus = new NodeStatusItem
-                    {
-                        Environment = message.EnvironmentName,
-                        Machine = message.MachineName,
-                        Application = message.ApplicationName,
-                        InstanceId = message.InstanceId,
-                        Date = message.Timestamp.Date,
-                        StartTime = message.StartTime,
-                        Timestamp = message.Timestamp,
-                        Children = message.Items?.Select(GetNodeStatusChild).ToList()
-                    };
+                    var newStatus = NodeStatusItem.Create(message);
                     await session.StoreAsync(newStatus).ConfigureAwait(false);
                 }
                 else
                 {
                     nodeStatus.Timestamp = message.Timestamp;
-                    nodeStatus.Children = message.Items?.Select(GetNodeStatusChild).ToList();
+                    nodeStatus.FillValues(message);
                 }
                 await session.SaveChangesAsync().ConfigureAwait(false);
 
             }).ConfigureAwait(false);
         }
 
-        #endregion
-
-        #region Private Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static NodeStatusChildItem GetNodeStatusChild(StatusItem item)
-        {
-            return new NodeStatusChildItem
-            {
-                Id = item.Id,
-                Name = item.Name,
-                Values = item.Values?.Select(GetNodeStatusValue).ToList(),
-                Children = item.Children?.Select(GetNodeStatusChild).ToList()
-            };
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static NodeStatusChildValue GetNodeStatusValue(StatusItemValue value)
-        {
-            return new NodeStatusChildValue
-            {
-                Id = value.Id,
-                Key = value.Key,
-                Value = value.Value,
-                Type = value.Type,
-                Status = value.Status,
-                Values = value.Values?.Select(i => new NodeStatusChildValue
-                {
-                    Id = i.Id,
-                    Key = i.Name,
-                    Value = i.Value,
-                    Type = i.Type,
-                    Status = i.Status
-                }).ToList()
-            };
-        }
         #endregion
     }
 }

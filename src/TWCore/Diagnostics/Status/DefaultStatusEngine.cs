@@ -226,6 +226,7 @@ namespace TWCore.Diagnostics.Status
             var items = _statusCollection.GetStatus();
             return new StatusItemCollection
             {
+                InstanceId = Core.InstanceId,
                 Timestamp = Core.Now,
                 EnvironmentName = Core.EnvironmentName,
                 MachineName = Core.MachineName,

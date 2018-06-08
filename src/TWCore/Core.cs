@@ -167,6 +167,10 @@ namespace TWCore
 		/// </summary>
 		/// <value>The service container factory.</value>
 		public static ServiceContainerFactoryDelegate ServiceContainerFactory { get; set; } = (service, initAction) => new ServiceContainer(service, initAction);
+        /// <summary>
+        /// Instance identifier
+        /// </summary>
+        public static Guid InstanceId { get; } = Guid.NewGuid();
 		#endregion
 
 		#region Init

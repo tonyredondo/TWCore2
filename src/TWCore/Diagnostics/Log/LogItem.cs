@@ -33,6 +33,12 @@ namespace TWCore.Diagnostics.Log
         #region Properties
         /// <inheritdoc />
         /// <summary>
+        /// Instance identifier
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public Guid InstanceId { get; set; }
+        /// <inheritdoc />
+        /// <summary>
         /// Item unique identifier
         /// </summary>
         [XmlAttribute, DataMember]

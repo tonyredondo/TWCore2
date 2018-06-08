@@ -397,6 +397,7 @@ namespace TWCore
                 return null;
 
             var lItem = LogItem.Retrieve();
+            lItem.InstanceId = Core.InstanceId;
             lItem.Id = Guid.NewGuid();
             lItem.EnvironmentName = Core.EnvironmentName;
             lItem.MachineName = Core.MachineName;
@@ -416,6 +417,7 @@ namespace TWCore
         {
             return new TraceItem
             {
+                InstanceId = Core.InstanceId,
                 Id = Factory.NewGuid(),
                 Timestamp = Core.Now,
                 GroupName = groupName,

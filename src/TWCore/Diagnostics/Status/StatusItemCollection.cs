@@ -29,6 +29,11 @@ namespace TWCore.Diagnostics.Status
     public class StatusItemCollection
     {
         /// <summary>
+        /// Instance Identifier
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public Guid InstanceId { get; set; }
+        /// <summary>
         /// Environment Name
         /// </summary>
         [XmlAttribute, DataMember]

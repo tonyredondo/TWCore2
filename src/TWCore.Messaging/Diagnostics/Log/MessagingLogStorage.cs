@@ -72,6 +72,7 @@ namespace TWCore.Diagnostics.Log.Storages
 			if (item is LogItem logItem)
 				_logItems.Add(new LogItem
 				{
+                    InstanceId = Core.InstanceId,
 					Id = logItem.Id,
 					EnvironmentName = logItem.EnvironmentName,
 					MachineName = logItem.MachineName,

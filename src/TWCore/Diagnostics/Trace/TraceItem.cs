@@ -28,6 +28,11 @@ namespace TWCore.Diagnostics.Trace
     public class TraceItem
     {
         /// <summary>
+        /// Instance Identifier
+        /// </summary>
+        [XmlAttribute, DataMember]
+        public Guid InstanceId { get; set; }
+        /// <summary>
         /// Item unique identifier
         /// </summary>
         [XmlAttribute, DataMember]

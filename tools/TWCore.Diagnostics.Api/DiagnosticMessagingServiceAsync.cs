@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
+using TWCore.Serialization;
 using TWCore.Services;
 // ReSharper disable UnusedMember.Global
 
@@ -27,12 +28,27 @@ namespace TWCore.Diagnostics.Api
         protected override void OnInit(string[] args)
         {
             EnableMessagesTrace = false;
+            SerializerManager.SupressFileExtensionWarning = true;
             base.OnInit(args);
 
 	        var data = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 	        var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 	        var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
-	        /*
+
+
+            Task.Delay(5000).ContinueWith(async _ =>
+            {
+                while (true)
+                {
+
+                    Core.Trace.Write("Hola Mundo");
+
+                    await Task.Delay(5000).ConfigureAwait(false);
+                }
+            });
+
+
+            /*
 	        var logs = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 	        var logs2 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();
 	        var logs3 = DbHandlers.Instance.Query.GetLogsAsync("Processing message", null, DateTime.MinValue, DateTime.Now).WaitAndResults();

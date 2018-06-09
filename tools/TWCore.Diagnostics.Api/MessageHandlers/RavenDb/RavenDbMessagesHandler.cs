@@ -33,8 +33,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {
-        #region Public Methods - IDiagnosticMessageHandler
-
         public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
         {
             Core.Log.InfoBasic("Storing LogItem messages...");
@@ -127,7 +125,5 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
             }).ConfigureAwait(false);
         }
-
-        #endregion
     }
 }

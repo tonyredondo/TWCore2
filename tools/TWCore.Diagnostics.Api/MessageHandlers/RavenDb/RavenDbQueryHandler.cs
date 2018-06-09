@@ -254,5 +254,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
+
+		public async Task GetCurrentStatus()
+		{
+			return;
+		}
 	}
 }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -257,7 +258,14 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 		public async Task GetCurrentStatus()
 		{
-			return;
+			await RavenHelper.ExecuteAndReturnAsync<object>(async session =>
+			{
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
+
+				
+				
+				return new object();
+			}).ConfigureAwait(false);
 		}
 	}
 }

@@ -31,11 +31,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
 	public class RavenDbQueryHandler : IDiagnosticQueryHandler
 	{
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the environments and apps list
-		/// </summary>
-		/// <returns>List of BasicInfo</returns>
 		public async Task<List<BasicInfo>> GetEnvironmentsAndApps()
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -56,18 +51,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				return await results.ToListAsync().ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs by group
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+
+		
 		public async Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -96,18 +81,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				};
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+
 		public async Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -139,19 +113,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				};
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="level">Log level</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+		
 		public async Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -186,18 +148,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the traces form a query
-		/// </summary>
-		/// <returns>Traces instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+		
+		
 		public async Task<PagedList<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -229,18 +181,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the traces by group.
-		/// </summary>
-		/// <returns>The traces by group.</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group name</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+		
 		public async Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -271,12 +212,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the Trace object
-		/// </summary>
-		/// <returns>The trace object</returns>
-		/// <param name="id">Trace object id</param>
+		
 		public async Task<SerializedObject> GetTraceObjectAsync(string id)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -287,18 +223,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the statuses
-		/// </summary>
-		/// <returns>The statuses from the query</returns>
-		/// <param name="environment">Environment name or null</param>
-		/// <param name="machine">Machine name or null</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
+		
+		
 		public async Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>

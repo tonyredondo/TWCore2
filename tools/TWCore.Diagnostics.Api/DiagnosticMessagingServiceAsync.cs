@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Api.MessageHandlers.RavenDb;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Serialization;
 using TWCore.Services;
@@ -35,6 +36,8 @@ namespace TWCore.Diagnostics.Api
 	        var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 	        var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 
+	        var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("DEV", null, null);
+	        
 
             Task.Delay(5000).ContinueWith(async _ =>
             {

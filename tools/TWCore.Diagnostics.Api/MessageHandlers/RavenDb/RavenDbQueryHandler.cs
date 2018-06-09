@@ -256,16 +256,24 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			}).ConfigureAwait(false);
 		}
 
-		public async Task GetCurrentStatus(string environment)
+		public async Task GetCurrentStatus(string environment, string machine, string application)
 		{
-			await RavenHelper.ExecuteAndReturnAsync<object>(async session =>
+			await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
 				var query = documentQuery
-					.WhereEquals(x => x.Environment, environment)
+					.WhereEquals(x => x.Environment, environment);
+
+				if (!string.IsNullOrWhiteSpace(machine))
+					query = query.WhereEquals(x => x.Machine, machine);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				query = query
 					.WhereGreaterThanOrEqual(i => i.Timestamp, DateTime.Now.AddMinutes(-5))
 					.OrderByDescending(i => i.Timestamp);
-
+				
 				var data = await query.ToListAsync().ConfigureAwait(false);
 				var rData = data
 					.GroupBy(i => new {i.Environment, i.Machine, i.Application})

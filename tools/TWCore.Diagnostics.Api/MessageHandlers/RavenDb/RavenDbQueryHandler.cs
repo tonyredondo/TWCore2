@@ -261,9 +261,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			await RavenHelper.ExecuteAndReturnAsync<object>(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
-
-				
-				
+				var query = documentQuery
+					.WhereGreaterThanOrEqual(i => i.Timestamp, DateTime.Now.AddMinutes(-5))
+					.OrderByDescending(i => i.Timestamp);
+					
 				return new object();
 			}).ConfigureAwait(false);
 		}

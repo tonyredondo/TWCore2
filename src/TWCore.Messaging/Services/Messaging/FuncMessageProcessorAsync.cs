@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging;
 // ReSharper disable CheckNamespace
 
@@ -28,6 +29,7 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Process messages using different Func delegates for each message type async version
     /// </summary>
+    [StatusName("Func Processor")]
     public class FuncMessageProcessorAsync : IMessageProcessorAsync
     {
         /// <summary>

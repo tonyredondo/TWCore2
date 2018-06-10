@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Server;
@@ -30,6 +31,7 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Business message processor
     /// </summary>
+    [StatusName("Business Processor")]
     public class BusinessMessageProcessorAsync : IMessageProcessorAsync
     {
         private static readonly BusinessMessageProcessorSettings Settings = Core.GetSettings<BusinessMessageProcessorSettings>();

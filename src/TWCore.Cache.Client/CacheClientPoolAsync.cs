@@ -38,6 +38,10 @@ namespace TWCore.Cache.Client
 
         #region Properties
         /// <summary>
+        /// Client name
+        /// </summary>
+        public string Name { get; }
+        /// <summary>
         /// Data Serializer
         /// </summary>
         public ISerializer Serializer { get; set; } = SerializerManager.DefaultBinarySerializer;
@@ -66,14 +70,16 @@ namespace TWCore.Cache.Client
         /// <summary>
         /// Cache client connection pool
         /// </summary>
+        /// <param name="name">Client name</param>
         /// <param name="pingDelay">Delays between ping tries in milliseconds</param>
         /// <param name="pingDelayOnError">Delay after a ping error for next try</param>
         /// <param name="readMode">Cache pool Read Mode</param>
         /// <param name="writeMode">Cache pool Write Mode</param>
         /// <param name="selectionOrder">Pool item selection order for Read and Write</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public CacheClientPoolAsync(int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime)
+        public CacheClientPoolAsync(string name, int pingDelay = 5000, int pingDelayOnError = 30000, PoolReadMode readMode = PoolReadMode.NormalRead, PoolWriteMode writeMode = PoolWriteMode.WritesFirstAndThenAsync, PoolOrder selectionOrder = PoolOrder.PingTime)
         {
+            Name = name;
             _pool = new PoolAsyncItemCollection(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder);
             _counters = new CacheClientPoolCounters();
             Core.Log.LibVerbose("CachePool.PingDelay = {0}", pingDelay);
@@ -82,6 +88,7 @@ namespace TWCore.Cache.Client
             Core.Log.LibVerbose("CachePool.WriteMode = {0}", writeMode);
             Core.Status.Attach(col =>
             {
+                col.Add(nameof(Name), Name);
                 col.Add(nameof(WriteNetworkItemsToMemoryOnGet), WriteNetworkItemsToMemoryOnGet);
                 Core.Status.AttachChild(_pool, this);
                 Core.Status.AttachChild(_counters, this);

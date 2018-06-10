@@ -18,10 +18,12 @@ using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using TWCore.Diagnostics.Status;
 
 // ReSharper disable UnusedMember.Global
 // ReSharper disable CheckNamespace
@@ -32,6 +34,7 @@ namespace TWCore.Services
     /// <summary>
     /// AspNet Web Service
     /// </summary>
+    [StatusName("Web Service")]
     public class WebService : SimpleServiceAsync
     {
         /// <summary>
@@ -40,6 +43,8 @@ namespace TWCore.Services
         public static WebServiceSettings Settings { get; } = Core.GetSettings<WebServiceSettings>();
 
         private readonly Func<string[], IWebHost> _webHostFactory;
+        private IHostingEnvironment _hostingEnvironment;
+        private ICollection<string> _serverAddresses;
 
         #region .ctor
         /// <inheritdoc />
@@ -50,6 +55,17 @@ namespace TWCore.Services
         public WebService(Func<string[], IWebHost> webHostFactory)
         {
             _webHostFactory = webHostFactory;
+            Core.Status.Attach(collections =>
+            {
+                if (_hostingEnvironment != null)
+                {
+                    collections.Add("Environment Name", _hostingEnvironment.EnvironmentName);
+                    collections.Add("Content Root Path", _hostingEnvironment.ContentRootPath);
+                    collections.Add("Web Root Path", _hostingEnvironment.WebRootPath);
+                }
+                if (_serverAddresses != null)
+                    collections.Add("Addresses", _serverAddresses.Join(", "));
+            }, this);
         }
         #endregion
 
@@ -76,13 +92,14 @@ namespace TWCore.Services
         {
             var webHost = _webHostFactory(StartArguments);
             await webHost.StartAsync(token).ConfigureAwait(false);
-            var hostingEnvironment = (IHostingEnvironment)webHost.Services.GetService(typeof(IHostingEnvironment));
+            _hostingEnvironment = (IHostingEnvironment)webHost.Services.GetService(typeof(IHostingEnvironment));
             //var applicationLifetime = (IApplicationLifetime)webHost.Services.GetService(typeof(IApplicationLifetime));
-            Core.Log.InfoBasic($"WebService Hosting environment: {hostingEnvironment.EnvironmentName}");
-            Core.Log.InfoBasic($"WebService Content root path: {hostingEnvironment.ContentRootPath}");
-            var serverAddresses = webHost.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
-            if (serverAddresses != null)
-                foreach (var address in serverAddresses)
+            Core.Log.InfoBasic($"WebService Hosting environment: {_hostingEnvironment.EnvironmentName}");
+            Core.Log.InfoBasic($"WebService Content root path: {_hostingEnvironment.ContentRootPath}");
+            Core.Log.InfoBasic($"WebService Web root path: {_hostingEnvironment.WebRootPath}");
+            _serverAddresses = webHost.ServerFeatures.Get<IServerAddressesFeature>()?.Addresses;
+            if (_serverAddresses != null)
+                foreach (var address in _serverAddresses)
                     Core.Log.InfoBasic($"WebService is Listening on: {address}");
         }
     }

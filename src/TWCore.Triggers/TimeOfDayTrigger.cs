@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Triggers
 {
@@ -23,6 +24,7 @@ namespace TWCore.Triggers
     /// <summary>
     /// Time of Day Update Trigger
     /// </summary>
+    [StatusName("Time of day Trigger")]
 	public class TimeOfDayTrigger : TriggerBase
     {
         /// <summary>

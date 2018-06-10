@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Triggers
 {
@@ -23,6 +24,7 @@ namespace TWCore.Triggers
     /// <summary>
     /// Date Update Trigger
     /// </summary>
+    [StatusName("DateTime Trigger")]
     public class DateTimeTrigger : TriggerBase
     {
         /// <summary>

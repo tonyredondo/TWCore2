@@ -19,31 +19,39 @@ using System.Threading.Tasks;
 using Raven.Client.Documents;
 using Raven.Client.Documents.Session;
 using TWCore.Settings;
+using TWCore.Threading;
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public static class RavenHelper
     {
         public static readonly RavenDbSettings Settings = Core.GetSettings<RavenDbSettings>();
-
+        private static readonly AsyncLock Locker = new AsyncLock();
+        
         public static async Task ExecuteAsync(Func<IAsyncDocumentSession, Task> sessionFunc)
         {
-            using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
+            using (await Locker.LockAsync().ConfigureAwait(false))
             {
-                store.Initialize();
-                using (var session = store.OpenAsyncSession())
-					await sessionFunc(session).ConfigureAwait(false);
+                using (var store = new DocumentStore {Urls = Settings.Urls, Database = Settings.Database})
+                {
+                    store.Initialize();
+                    using (var session = store.OpenAsyncSession())
+                        await sessionFunc(session).ConfigureAwait(false);
+                }
             }
         }
 
 		public static async Task<T> ExecuteAndReturnAsync<T>(Func<IAsyncDocumentSession, Task<T>> sessionFunc)
 		{
-			using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
-			{
-				store.Initialize();
-				using (var session = store.OpenAsyncSession())
-					return await sessionFunc(session).ConfigureAwait(false);
-			}
+		    using (await Locker.LockAsync().ConfigureAwait(false))
+		    {
+		        using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
+                {
+                    store.Initialize();
+                    using (var session = store.OpenAsyncSession())
+                        return await sessionFunc(session).ConfigureAwait(false);
+                }
+		    }
 		}
 
         public class RavenDbSettings : SettingsBase

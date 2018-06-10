@@ -185,6 +185,7 @@ namespace TWCore.Cache.Storages.IO
         #endregion
 
         #region Inner Types
+        [StatusName("Folder Handler")]
         private sealed class FolderHandler : IDisposable
         {
             private static readonly byte[] BytesEmpty = new byte[0];

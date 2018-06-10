@@ -30,6 +30,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache pool item
     /// </summary>
+    [StatusName("Pool Item")]
     public class PoolAsyncItem : IDisposable
     {
         private CancellationTokenSource _tokenSource;

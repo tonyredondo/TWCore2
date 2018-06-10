@@ -19,6 +19,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Cache;
+using TWCore.Diagnostics.Status;
 using TWCore.Net.RPC.Server;
 using TWCore.Net.RPC.Server.Transports;
 
@@ -30,6 +31,7 @@ namespace TWCore.Services
     /// <summary>
     /// Cache RPC Service
     /// </summary>
+    [StatusName("Cache Service")]
     public abstract class CacheService : RPCService
     {
         #region Properties

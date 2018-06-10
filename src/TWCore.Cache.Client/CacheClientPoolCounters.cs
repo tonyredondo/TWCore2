@@ -25,6 +25,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client Pool counters
     /// </summary>
+    [StatusName("Counters")]
     public class CacheClientPoolCounters
     {
         private readonly double?[] _times = new double?[16];

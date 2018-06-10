@@ -29,7 +29,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client connection pool
     /// </summary>
-    [StatusName("Cache Client Pool")]
+    [StatusName("Cache Client")]
     public class CacheClientPoolAsync : IStorageWithExtensionExecutionAsync
     {
         private readonly PoolAsyncItemCollection _pool;
@@ -82,6 +82,7 @@ namespace TWCore.Cache.Client
             Core.Log.LibVerbose("CachePool.WriteMode = {0}", writeMode);
             Core.Status.Attach(col =>
             {
+                col.Add(nameof(WriteNetworkItemsToMemoryOnGet), WriteNetworkItemsToMemoryOnGet);
                 Core.Status.AttachChild(_pool, this);
                 Core.Status.AttachChild(_counters, this);
             }, this);

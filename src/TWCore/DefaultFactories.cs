@@ -598,12 +598,18 @@ namespace TWCore
 
                 private void TimerCallback(object state)
                 {
+                    var lastNow = DateTime.UtcNow;
+                    
                     var newCpuTime = _process.TotalProcessorTime - _startCpuTime;
-                    var usage = ((double)(newCpuTime - _cpuTime).Ticks) /
-                                ((double)Environment.ProcessorCount * DateTime.UtcNow.Subtract(_monitorTime).Ticks);
+                    var diffCpuTime = (double)(newCpuTime - _cpuTime).Ticks;
+                    var diffTime = (double)lastNow.Subtract(_monitorTime).Ticks;
+                    
+                    var usage = diffCpuTime / diffTime;
+                    usage *= 1d / Environment.ProcessorCount;
+                    
                     _cpuTime = newCpuTime;
-                    _monitorTime = DateTime.UtcNow;
-                    Percentage = Math.Round((double)usage * 100, 2);
+                    _monitorTime = lastNow;
+                    Percentage = Math.Round(usage * 100, 2);
                 }
             }
         }

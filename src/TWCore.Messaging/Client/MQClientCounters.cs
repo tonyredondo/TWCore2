@@ -30,7 +30,6 @@ namespace TWCore.Messaging.Client
 	public class MQClientCounters
 	{
 		private Timer _timerTen;
-		private Timer _timerTwenty;
 		private Timer _timerThirty;
 		private Timer _timerHour;
 
@@ -43,10 +42,6 @@ namespace TWCore.Messaging.Client
 		/// Number of messages sent in the last ten minutes
 		/// </summary>
 		public long LastTenMinutesMessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last twenty minutes
-		/// </summary>
-		public long LastTwentyMinutesMessagesSent { get; private set; }
 		/// <summary>
 		/// Number of messages sent in the last thirty minutes
 		/// </summary>
@@ -64,10 +59,6 @@ namespace TWCore.Messaging.Client
 		/// Number of messages received in the last ten minutes
 		/// </summary>
 		public long LastTenMinutesMessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last twenty minutes
-		/// </summary>
-		public long LastTwentyMinutesMessagesReceived { get; private set; }
 		/// <summary>
 		/// Number of messages received in the last thirty minutes
 		/// </summary>
@@ -100,12 +91,6 @@ namespace TWCore.Messaging.Client
 				LastTenMinutesMessagesReceived = 0;
 			}, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
-			_timerTwenty = new Timer(state =>
-			{
-				LastTwentyMinutesMessagesSent = 0;
-				LastTwentyMinutesMessagesReceived = 0;
-			}, this, TimeSpan.FromMinutes(20), TimeSpan.FromMinutes(20));
-
 			_timerThirty = new Timer(state =>
 			{
 				LastThirtyMinutesMessagesSent = 0;
@@ -122,14 +107,12 @@ namespace TWCore.Messaging.Client
 			{
 				collection.Add("Number of messages sent",
 					new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesSent, true),
-					new StatusItemValueItem("Last 20 Minutes", LastTwentyMinutesMessagesSent, true),
 					new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesSent, true),
 					new StatusItemValueItem("Last Hour", LastHourMessagesSent, true),
 					new StatusItemValueItem("Total", MessagesSent, true));
 
 				collection.Add("Number of messages received",
 					new StatusItemValueItem("Last 10 Minutes", LastTenMinutesMessagesReceived, true),
-					new StatusItemValueItem("Last 20 Minutes", LastTwentyMinutesMessagesReceived, true),
 					new StatusItemValueItem("Last 30 Minutes", LastThirtyMinutesMessagesReceived, true),
 					new StatusItemValueItem("Last Hour", LastHourMessagesReceived, true),
 					new StatusItemValueItem("Total", MessagesReceived, true));
@@ -168,7 +151,6 @@ namespace TWCore.Messaging.Client
 		{
 			MessagesSent++;
 			LastTenMinutesMessagesSent++;
-			LastTwentyMinutesMessagesSent++;
 			LastThirtyMinutesMessagesSent++;
 			LastHourMessagesSent++;
 		}
@@ -180,7 +162,6 @@ namespace TWCore.Messaging.Client
 		{
 			MessagesReceived++;
 			LastTenMinutesMessagesReceived++;
-			LastTwentyMinutesMessagesReceived++;
 			LastThirtyMinutesMessagesReceived++;
 			LastHourMessagesReceived++;
 		}

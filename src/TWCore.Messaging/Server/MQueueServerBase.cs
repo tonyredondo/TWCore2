@@ -267,15 +267,14 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_RequestReceived(object sender, RequestReceivedEventArgs e)
 		{
-            Counters.IncrementMessages();
+            var iMessages = Counters.IncrementMessages();
             try
             {
                 Counters.IncrementReceivingTime(e.Request.Header.TotalTime);
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
                 e.Response.Header.Response.Label = Config.ResponseOptions.ServerSenderOptions.Label;
-                var pThreads = Counters.IncrementProcessingThreads();
-                Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, pThreads);
+                Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.Request.CorrelationId, iMessages);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 e.Response.Header.Response.Label = string.IsNullOrEmpty(e.Response.Header.Response.Label) ? e.Response.Body?.ToString() ?? typeof(ResponseMessage).FullName : e.Response.Header.Response.Label;
@@ -312,14 +311,12 @@ namespace TWCore.Messaging.Server
                     else
                         Core.Log.Warning("The message couldn't be sent.");
                 }
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception)
             {
                 Counters.IncrementTotalExceptions();
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 throw;
             }
@@ -327,24 +324,21 @@ namespace TWCore.Messaging.Server
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_ResponseReceived(object sender, ResponseReceivedEventArgs e)
 		{
-            Counters.IncrementMessages();
+            var iMessages = Counters.IncrementMessages();
             try
             {
                 Counters.IncrementReceivingTime(e.Message.Header.Response.TotalTime);
-                var pThreads = Counters.IncrementProcessingThreads();
-                Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, pThreads);
+                Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.Message.CorrelationId, iMessages);
                 if (ResponseReceived != null)
                     await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueServerEvents.ResponseReceived != null)
                     await MQueueServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception)
             {
                 Counters.IncrementTotalExceptions();
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 throw;
             }

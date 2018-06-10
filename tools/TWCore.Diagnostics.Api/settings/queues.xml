@@ -19,7 +19,7 @@
       <RecvQueue Route="amqp://test:test@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
     </ServerQueues>
 
-    <RequestOptions SerializerMimeType="application/w-binary" CompressorEncodingType="gzip">
+    <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="gzip">
       <ClientSenderOptions MessageExpirationInSec="30" MessagePriority="Normal" UseDeadLetter="true" Recoverable="false" Label="DIAGNOSTICS REQUEST" />
       <ServerReceiverOptions ProcessingWaitOnFinalizeInSec="10" MaxSimultaneousMessagesPerQueue="200" SleepOnExceptionInSec="2" />
     </RequestOptions>

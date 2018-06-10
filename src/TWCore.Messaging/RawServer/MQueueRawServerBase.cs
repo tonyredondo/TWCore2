@@ -35,6 +35,7 @@ namespace TWCore.Messaging.RawServer
 	/// <summary>
 	/// Message Queue server base
 	/// </summary>
+	[StatusName("Raw Queue Server")]
 	public abstract class MQueueRawServerBase : IMQueueRawServer
 	{
 		private readonly List<Task> _listenerTasks = new List<Task>();

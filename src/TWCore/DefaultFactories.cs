@@ -416,8 +416,6 @@ namespace TWCore
                     );
                     sItem.Values.Add("User",
                         new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
-                        new StatusItemValueItem(nameof(Environment.UserDomainName), Environment.UserDomainName),
-                        new StatusItemValueItem(nameof(Environment.UserInteractive), Environment.UserInteractive),
                         new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
                     );
                     sItem.Values.Add("Process Information",
@@ -473,6 +471,7 @@ namespace TWCore
                         new StatusItemValueItem("Debug Mode", Core.DebugMode),
                         new StatusItemValueItem("Environment", Core.EnvironmentName),
                         new StatusItemValueItem("MachineName", Core.MachineName),
+                        new StatusItemValueItem("InstanceId", Core.InstanceId),
                         new StatusItemValueItem("ApplicationName", Core.ApplicationName),
                         new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
                     );

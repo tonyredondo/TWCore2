@@ -28,6 +28,7 @@ namespace TWCore.Messaging.Server
 	/// <summary>
 	/// Message queue server counters
 	/// </summary>
+	[StatusName("Counters")]
 	public class MQServerCounters
 	{
 		private Timer _timerThirtyMinutes;

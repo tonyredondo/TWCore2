@@ -119,29 +119,7 @@ namespace TWCore.Diagnostics.Log
                 }
             }, false, true, false);
             _itemsWorker.OnWorkDone += (s, e) => _completationHandler.Set();
-            Core.Status.Attach(() =>
-            {
-                var sItem = new StatusItem();
-                var lItems = _lastLogItems.ToList();
-                if (lItems.Count > 0)
-                {
-                    sItem.Name = $"Last {lItems.Count} error messages";
-                    for (var i = 0; i < lItems.Count; i++)
-                    {
-                        var item = lItems[i];
-                        sItem.Values.Add("Error " + i, 
-                            new StatusItemValueItem("Date", item.Timestamp),
-                            new StatusItemValueItem("Group", item.GroupName),
-                            new StatusItemValueItem("Type", item.TypeName),
-                            new StatusItemValueItem("Message", item.Message.RemoveInvalidXmlChars()),
-                            new StatusItemValueItem("StackTrace", item.Exception?.StackTrace.RemoveInvalidXmlChars())
-                        );
-                    }
-                }
-                else
-                    sItem.Name = "There are no error messages in the log";
-                return sItem;
-            }, this);
+            Core.Status.AttachObject(this);
         }
         /// <summary>
         /// Instance destructor

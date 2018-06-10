@@ -35,6 +35,7 @@ namespace TWCore.Messaging.Server
 	/// <summary>
 	/// Message Queue server base
 	/// </summary>
+	[StatusName("Queue Server")]
 	public abstract class MQueueServerBase : IMQueueServer
 	{
 		private readonly List<Task> _listenerTasks = new List<Task>();

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using TWCore.Collections;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable MemberCanBePrivate.Local
@@ -56,12 +57,10 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Register()
         {
-            lock (_locker)
-            {
-                var now = Core.Now;
-                var dayArray = _values.GetOrAdd(now.Date, _ => new int[24]);
-                dayArray[now.Hour]++;
-            }
+            var now = Core.Now;
+            var dayArray = _values.GetOrAdd(now.Date, _ => new int[24]);
+            Interlocked.Increment(ref dayArray[now.Hour]);
+            dayArray[now.Hour]++;
         }
         /// <inheritdoc />
         /// <summary>

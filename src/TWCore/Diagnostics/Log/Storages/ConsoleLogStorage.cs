@@ -46,7 +46,15 @@ namespace TWCore.Diagnostics.Log.Storages
         static ConsoleLogStorage()
         {
             HasConsole = ServiceContainer.HasConsole;
-            DefaultColor = HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
+            if (HasConsole)
+            {
+                Console.ResetColor();
+                DefaultColor = Console.ForegroundColor;
+            }
+            else
+            {
+                DefaultColor = ConsoleColor.Gray;
+            }
             StringBuilderPool = new ConcurrentStack<StringBuilder>();
         }
         #endregion

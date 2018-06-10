@@ -37,6 +37,7 @@ namespace TWCore.Net.RPC.Client
     /// <summary>
     /// RPC standard client
     /// </summary>
+    [StatusName("RPC Client")]
     public class RPCClient : IRPCClient, IDisposable
     {
         private static readonly object[] _emptyArgs = new object[0];
@@ -55,7 +56,6 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Transport client object
         /// </summary>
-        [StatusProperty]
         public ITransportClient Transport
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]

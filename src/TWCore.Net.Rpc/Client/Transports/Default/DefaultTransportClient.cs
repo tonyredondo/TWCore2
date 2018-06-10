@@ -35,6 +35,7 @@ namespace TWCore.Net.RPC.Client.Transports.Default
     /// <summary>
     /// Default RPC Transport client
     /// </summary>
+    [StatusName("Transport")]
     public class DefaultTransportClient : ITransportClient
     {
         private const int ResetIndex = 500000;
@@ -88,7 +89,6 @@ namespace TWCore.Net.RPC.Client.Transports.Default
         /// <summary>
         /// Transport Counters
         /// </summary>
-        [StatusProperty]
         public RPCTransportCounters Counters { get; }
         /// <summary>
         /// Invoke Method Timeout

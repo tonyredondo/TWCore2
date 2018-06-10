@@ -42,6 +42,7 @@ namespace TWCore.Services
         /// <summary>
         /// Gets the cache storage manager
         /// </summary>
+        [StatusReference]
         public StorageManager Manager { get; private set; }
         #endregion
 

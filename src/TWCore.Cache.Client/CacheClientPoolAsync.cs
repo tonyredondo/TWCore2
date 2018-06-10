@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 using TWCore.Threading;
 
@@ -28,6 +29,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache client connection pool
     /// </summary>
+    [StatusName("Cache Client Pool")]
     public class CacheClientPoolAsync : IStorageWithExtensionExecutionAsync
     {
         private readonly PoolAsyncItemCollection _pool;

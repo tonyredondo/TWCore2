@@ -36,6 +36,7 @@ namespace TWCore.Net.RPC.Server.Transports.Default
     /// <summary>
     /// Default RPC Transport Server
     /// </summary>
+    [StatusName("Transport")]
     public class DefaultTransportServer : ITransportServer
     {
         private readonly object _locker = new object();
@@ -57,8 +58,12 @@ namespace TWCore.Net.RPC.Server.Transports.Default
         /// <summary>
         /// true if the transport server can send the services descriptors; otherwise, false
         /// </summary>
-        [StatusProperty]
-        public bool EnableGetDescriptors { get { return false; } set { } }
+        [StatusProperty("Get Descriptors Enabled")]
+        public bool EnableGetDescriptors 
+        { 
+            get => false;
+            set { } 
+        }
         /// <inheritdoc />
         /// <summary>
         /// Serializer to encode and decode the incoming and outgoing data

@@ -36,6 +36,7 @@ namespace TWCore.Net.RPC.Server
     /// <summary>
     /// RPC Standard server
     /// </summary>
+    [StatusName("RPC Server")]
     public class RPCServer : IRPCServer
     {
         private readonly List<ServiceItem> _serviceInstances = new List<ServiceItem>();
@@ -85,7 +86,7 @@ namespace TWCore.Net.RPC.Server
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(Running), Running, Running ? StatusItemValueStatus.Ok : StatusItemValueStatus.Error);
-                collection.Add("Service Instances Count", _serviceInstances.Count);
+                collection.Add("Instances Count", _serviceInstances.Count);
                 foreach (var sItem in _serviceInstances)
                     Core.Status.AttachChild(sItem, this);
                 Core.Status.AttachChild(Transport, this);
@@ -208,15 +209,16 @@ namespace TWCore.Net.RPC.Server
         #endregion
 
         #region Nested ServiceItem Class
+        [StatusName("Service Instance")]
         private class ServiceItem
         {
             public static readonly NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo> TaskResultsProperties = new NonBlocking.ConcurrentDictionary<Type, FastPropertyInfo>();
             private readonly RPCServer _server;
             private readonly Dictionary<int, Guid> _threadClientId = new Dictionary<int, Guid>();
 
-            [StatusProperty]
+            [StatusProperty("Type")]
             public Type ServiceType { get; }
-            [StatusProperty, StatusReference]
+            [StatusProperty("Instance"), StatusReference]
             public object ServiceInstance { get; }
             public ServiceDescriptor Descriptor { get; }
             public readonly Dictionary<EventInfo, EventHandler> ServiceEventHandlers = new Dictionary<EventInfo, EventHandler>();

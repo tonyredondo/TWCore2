@@ -78,7 +78,6 @@ namespace TWCore.Net.RPC.Client
         /// <summary>
         /// Gets or Sets if the RPC client needs to get the server description for checks
         /// </summary>
-        [StatusProperty]
         public bool UseServerDescriptor { get; set; } = false;
         #endregion
 

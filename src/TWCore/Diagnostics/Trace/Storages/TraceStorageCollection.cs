@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Diagnostics.Trace.Storages
 {
@@ -26,6 +27,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
+    [StatusName("Trace Storages")]
     public class TraceStorageCollection : ITraceStorage
     {
         private readonly object _locker = new object();

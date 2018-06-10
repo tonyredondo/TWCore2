@@ -20,6 +20,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 // ReSharper disable IntroduceOptionalParameters.Global
@@ -31,6 +32,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
+    [StatusName("Log Storages")]
     public class LogStorageCollection : ILogStorage
     {
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;

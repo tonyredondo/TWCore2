@@ -22,6 +22,7 @@ using System.Net.Mail;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Settings;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -34,6 +35,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// Sends the Logs items via email using SMTP
     /// </summary>
     [SettingsContainer("MailLogStorage")]
+    [StatusName("Mail Log")]
     public class MailLogStorage: SettingsBase, ILogStorage
     {
         private readonly List<ILogItem> _buffer = new List<ILogItem>();

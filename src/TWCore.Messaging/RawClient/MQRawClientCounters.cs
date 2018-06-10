@@ -26,6 +26,7 @@ namespace TWCore.Messaging.RawClient
 	/// <summary>
 	/// Message queue client counters
 	/// </summary>
+	[StatusName("Counters")]
 	public class MQRawClientCounters
 	{
 		private Timer _timerTen;

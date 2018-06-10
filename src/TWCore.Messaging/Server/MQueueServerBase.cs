@@ -111,6 +111,10 @@ namespace TWCore.Messaging.Server
 	    protected MQueueServerBase()
         {
             Counters = new MQServerCounters();
+	        Core.Status.Attach(collection =>
+	        {
+		        collection.Add("Type", GetType().FullName);
+	        });
         }
         ~MQueueServerBase()
 		{

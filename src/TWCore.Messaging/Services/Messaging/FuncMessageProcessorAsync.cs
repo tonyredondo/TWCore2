@@ -29,7 +29,7 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Process messages using different Func delegates for each message type async version
     /// </summary>
-    [StatusName("Func Processor")]
+    [StatusName("Processor")]
     public class FuncMessageProcessorAsync : IMessageProcessorAsync
     {
         /// <summary>
@@ -45,6 +45,7 @@ namespace TWCore.Services.Messaging
         {
             Core.Status.Attach(collection =>
             {
+                collection.Add("Type", "Func");
                 collection.Add("Message Types", Funcs.Keys.Select(k => k.Name).Join(", "));
             });
         }

@@ -35,6 +35,7 @@ namespace TWCore.Messaging.Client
     /// <summary>
     /// Message Queue client base
     /// </summary>
+    [StatusName("Queue Client")]
     public abstract class MQueueClientBase : IMQueueClient
     {
         private readonly WeakDictionary<object, object> _receivedMessagesCache = new WeakDictionary<object, object>();
@@ -96,6 +97,10 @@ namespace TWCore.Messaging.Client
         protected MQueueClientBase()
         {
             Counters = new MQClientCounters();
+	        Core.Status.Attach(collection =>
+	        {
+		        collection.Add("Type", GetType().FullName);
+	        });
         }
         ~MQueueClientBase()
         {

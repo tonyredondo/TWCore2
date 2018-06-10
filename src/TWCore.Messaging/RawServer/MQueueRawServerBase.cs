@@ -115,6 +115,10 @@ namespace TWCore.Messaging.RawServer
 	    protected MQueueRawServerBase()
         {
             Counters = new MQRawServerCounters();
+	        Core.Status.Attach(collection =>
+	        {
+		        collection.Add("Type", GetType().FullName);
+	        });
         }
         ~MQueueRawServerBase()
         {

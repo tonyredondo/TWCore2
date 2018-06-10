@@ -32,7 +32,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
-    [StatusName("Log Storages")]
+    [StatusName("Storages")]
     public class LogStorageCollection : ILogStorage
     {
         public const LogLevel AllLevels = LogLevel.Error | LogLevel.Warning | LogLevel.InfoBasic | LogLevel.InfoMedium | LogLevel.InfoDetail | LogLevel.Debug | LogLevel.Verbose | LogLevel.Stats | LogLevel.LibDebug | LogLevel.LibVerbose;

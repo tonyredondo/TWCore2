@@ -27,6 +27,7 @@ using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Threading;
 
 // ReSharper disable NotAccessedField.Local
@@ -58,6 +59,7 @@ namespace TWCore.Messaging.NSQ
         /// <summary>
         /// Use Single Response Queue
         /// </summary>
+        [StatusProperty]
         public bool UseSingleResponseQueue { get; private set; }
         #endregion
 
@@ -159,9 +161,9 @@ namespace TWCore.Messaging.NSQ
             {
                 if (_senders != null)
                     for (var i = 0; i < _senders.Count; i++)
-                        collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Item1.Route);
+                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Item1.Route);
                 if (_clientQueues?.RecvQueue != null)
-                    collection.Add(nameof(_receiver) + " Path", _clientQueues.RecvQueue.Route);
+                    collection.Add("Receiver Path", _clientQueues.RecvQueue.Route);
             });
         }
         /// <inheritdoc />

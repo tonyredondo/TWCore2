@@ -39,14 +39,14 @@ namespace TWCore.Diagnostics.Api
 	        var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("DEV", null, null);
 	        
 
-            Task.Delay(5000).ContinueWith(async _ =>
+            Task.Delay(6000).ContinueWith(async _ =>
             {
                 while (true)
                 {
 
                     Core.Trace.Write("Hola Mundo");
 
-                    await Task.Delay(5000).ConfigureAwait(false);
+                    await Task.Delay(6000).ConfigureAwait(false);
                 }
             });
 

@@ -26,6 +26,7 @@ namespace TWCore.Messaging.Client
 	/// <summary>
 	/// Message queue client counters
 	/// </summary>
+	[StatusName("Counters")]
 	public class MQClientCounters
 	{
 		private Timer _timerTen;

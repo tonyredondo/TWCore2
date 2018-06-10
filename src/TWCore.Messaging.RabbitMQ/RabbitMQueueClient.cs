@@ -23,6 +23,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
 using TWCore.Messaging.Configuration;
 using TWCore.Messaging.Exceptions;
@@ -63,6 +64,7 @@ namespace TWCore.Messaging.RabbitMQ
         /// <summary>
         /// Use Single Response Queue
         /// </summary>
+        [StatusProperty]
         public bool UseSingleResponseQueue { get; private set; }
         #endregion
 
@@ -134,10 +136,10 @@ namespace TWCore.Messaging.RabbitMQ
                     for (var i = 0; i < _senders.Count; i++)
                     {
                         if (_senders[i]?.Factory == null) continue;
-                        collection.Add(nameof(_senders) + " {0} Path".ApplyFormat(i), _senders[i].Factory.HostName);
+                        collection.Add("Sender Path: {0}".ApplyFormat(i), _senders[i].Factory.HostName);
                     }
                 if (_receiver?.Factory != null)
-                    collection.Add(nameof(_receiver) + " Path", _receiver.Factory.HostName);
+                    collection.Add("Receiver Path", _receiver.Factory.HostName);
             });
         }
 

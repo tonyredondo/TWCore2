@@ -31,7 +31,7 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Business message processor
     /// </summary>
-    [StatusName("Business Processor")]
+    [StatusName("Processor")]
     public class BusinessMessageProcessorAsync : IMessageProcessorAsync
     {
         private static readonly BusinessMessageProcessorSettings Settings = Core.GetSettings<BusinessMessageProcessorSettings>();
@@ -112,6 +112,7 @@ namespace TWCore.Services.Messaging
         {
             Core.Status.Attach(collection =>
             {
+                collection.Add("Type", "Business");
                 collection.Add("Maximum businesses per queue", _maxMessagesPerQueue);
                 collection.Add("Maximum total businesses", _maxMessages);
                 collection.Add("Business item initial count in percent of the total maximum items", InitialBusinessesPercent);

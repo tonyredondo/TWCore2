@@ -27,7 +27,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// <summary>
     /// A collection to write and read on multiple storages
     /// </summary>
-    [StatusName("Trace Storages")]
+    [StatusName("Storages")]
     public class TraceStorageCollection : ITraceStorage
     {
         private readonly object _locker = new object();

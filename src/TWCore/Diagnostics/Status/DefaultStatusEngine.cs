@@ -349,11 +349,11 @@ namespace TWCore.Diagnostics.Status
                         if (gItem.Count() == 1) continue;
                         var group = new StatusData
                         {
-                            Value = new StatusItem { Name = "Instances of : " + gItem.Key }
+                            Value = new StatusItem { Name = "Instances of: " + gItem.Key }
                         };
                         gItem.Each((item, index) => 
                         {
-                            item.Value.Name += " [I:" + index + "]";
+                            item.Value.Name += " [" + index + "]";
                             group.Value.Children.Add(item.Value);
                             roots.Remove(item);
                         });

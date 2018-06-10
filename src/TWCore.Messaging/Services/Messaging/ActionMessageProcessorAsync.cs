@@ -37,7 +37,7 @@ namespace TWCore.Services.Messaging
     /// <summary>
     /// Process messages using different Action delegates for each message type
     /// </summary>
-    [StatusName("Action Processor")]
+    [StatusName("Processor")]
     public class ActionMessageProcessorAsync : IMessageProcessorAsync
     {
         /// <summary>
@@ -53,6 +53,7 @@ namespace TWCore.Services.Messaging
         {
             Core.Status.Attach(collection =>
             {
+                collection.Add("Type", "Action");
                 collection.Add("Message Types", Actions.Keys.Select(k => k.Name).Join(", "));
             });
         }

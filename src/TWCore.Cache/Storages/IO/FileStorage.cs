@@ -35,6 +35,7 @@ namespace TWCore.Cache.Storages.IO
     /// <summary>
     /// File Cache Storage
     /// </summary>
+    [StatusName("File Cache Storage")]
     public class FileStorage : StorageBase
     {
         private FolderHandler[] _handlers;
@@ -86,9 +87,9 @@ namespace TWCore.Cache.Storages.IO
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
                 collection.Add(nameof(SlowDownWriteThreshold), SlowDownWriteThreshold);
                 if (_handlers == null) return;
-                foreach (var sto in _handlers)
-                    Core.Status.AttachChild(sto, this);
-            });
+                foreach (var hnd in _handlers)
+                    Core.Status.AttachChild(hnd, this);
+            }, this);
         }
         #endregion
 
@@ -184,6 +185,7 @@ namespace TWCore.Cache.Storages.IO
         #endregion
 
         #region Inner Types
+        [StatusName("Folder Handler")]
         private sealed class FolderHandler : IDisposable
         {
             private static readonly byte[] BytesEmpty = new byte[0];
@@ -473,7 +475,7 @@ namespace TWCore.Cache.Storages.IO
                     collection.Add("Transaction Log Length", _currentTransactionLogLength, StatusItemValueStatus.Ok);
                     collection.Add("Index File", _indexFilePath, StatusItemValueStatus.Ok);
                     collection.Add("Transaction File", _transactionLogFilePath, StatusItemValueStatus.Ok);
-                });
+                }, this);
             }
             #endregion
 

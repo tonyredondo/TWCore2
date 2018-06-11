@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -31,11 +32,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
 	public class RavenDbQueryHandler : IDiagnosticQueryHandler
 	{
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the environments and apps list
-		/// </summary>
-		/// <returns>List of BasicInfo</returns>
 		public async Task<List<BasicInfo>> GetEnvironmentsAndApps()
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -56,22 +52,15 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				return await results.ToListAsync().ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs by group
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate)
+
+		
+		public async Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery
+						.Statistics(out var stats)
 						.WhereEquals(x => x.Environment, environment)
 						.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -81,25 +70,26 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				if (!string.IsNullOrWhiteSpace(group))
 					query = query.Search(x => x.Group, "*" + group + "*");
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				query = query.Skip(page * pageSize).Take(pageSize);
+				
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeLogItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
+
+		public async Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery
+					.Statistics(out var stats)
 					.WhereEquals(x => x.Environment, environment)
 					.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -111,27 +101,27 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Message, "*" + search + "*")
 						.Search(x => x.Group, "*" + search + "*")
 						.Search(x => x.Code, "*" + search + "*");
+				
+				query = query.Skip(page * pageSize).Take(pageSize);
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeLogItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="level">Log level</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate)
+		
+		public async Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
 				var query = documentQuery
+					.Statistics(out var stats)
 					.WhereEquals(x => x.Environment, environment)
 					.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -146,26 +136,28 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Group, "*" + search + "*")
 						.Search(x => x.Code, "*" + search + "*");
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				query = query.Skip(page * pageSize).Take(pageSize);
+
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeLogItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Get the traces form a query
-		/// </summary>
-		/// <returns>Traces instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate)
+		
+		
+		public async Task<PagedList<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
 				var query = documentQuery
+					.Statistics(out var stats)
 					.WhereEquals(x => x.Environment, environment)
 					.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -177,26 +169,27 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Group, "*" + search + "*")
 						.Search(x => x.Name, "*" + search + "*");
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				query = query.Skip(page * pageSize).Take(pageSize);
+
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeTraceItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the traces by group.
-		/// </summary>
-		/// <returns>The traces by group.</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group name</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate)
+		
+		public async Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
 				var query = documentQuery
+					.Statistics(out var stats)
 					.WhereEquals(x => x.Environment, environment)
 					.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -207,16 +200,20 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 					query = query
 						.Search(x => x.Group, "*" + group + "*");
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				query = query.Skip(page * pageSize).Take(pageSize);
+
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeTraceItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the Trace object
-		/// </summary>
-		/// <returns>The trace object</returns>
-		/// <param name="id">Trace object id</param>
+		
 		public async Task<SerializedObject> GetTraceObjectAsync(string id)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -227,22 +224,15 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 			}).ConfigureAwait(false);
 		}
-		/// <inheritdoc />
-		/// <summary>
-		/// Gets the statuses
-		/// </summary>
-		/// <returns>The statuses from the query</returns>
-		/// <param name="environment">Environment name or null</param>
-		/// <param name="machine">Machine name or null</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		public async Task<List<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate)
+		
+		
+		public async Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
 				var query = documentQuery
+					.Statistics(out var stats)
 					.WhereEquals(x => x.Environment, environment)
 					.WhereBetween(x => x.Timestamp, fromDate, toDate);
 
@@ -252,8 +242,45 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				if (!string.IsNullOrWhiteSpace(application))
 					query = query.WhereEquals(x => x.Application, application);
 
-				return await query.ToListAsync().ConfigureAwait(false);
+				query = query.Skip(page * pageSize).Take(pageSize);
 
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				return new PagedList<NodeStatusItem>
+				{
+					PageNumber = page,
+					PageSize = pageSize,
+					TotalResults = stats.TotalResults,
+					Data = data
+				};
+
+			}).ConfigureAwait(false);
+		}
+
+		public async Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application)
+		{
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
+			{
+				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
+				var query = documentQuery
+					.WhereEquals(x => x.Environment, environment);
+
+				if (!string.IsNullOrWhiteSpace(machine))
+					query = query.WhereEquals(x => x.Machine, machine);
+
+				if (!string.IsNullOrWhiteSpace(application))
+					query = query.WhereEquals(x => x.Application, application);
+
+				query = query
+					.WhereGreaterThanOrEqual(i => i.Timestamp, DateTime.Now.AddMinutes(-5))
+					.OrderByDescending(i => i.Timestamp);
+				
+				var data = await query.ToListAsync().ConfigureAwait(false);
+				var rData = data
+					.GroupBy(i => new {i.Environment, i.Machine, i.Application})
+					.Select(i => i.First())
+					.ToList();
+
+                return rData;
 			}).ConfigureAwait(false);
 		}
 	}

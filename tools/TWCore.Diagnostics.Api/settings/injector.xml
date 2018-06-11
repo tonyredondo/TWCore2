@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8" ?> 
+﻿<?xml version="1.0" encoding="utf-8" ?>
 <InjectorGlobalSettings>
   <Global>
     <Interfaces>
@@ -16,8 +16,8 @@
         </Class>
         <Class Name="Console" Type="TWCore.Diagnostics.Log.Storages.ConsoleLogStorage, TWCore" />
         <Class Name="Messages" Type="TWCore.Diagnostics.Log.Storages.MessagingLogStorage, TWCore.Messaging">
-            <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
-            <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
+          <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+          <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
         </Class>
       </Interface>
 
@@ -26,34 +26,41 @@
         <Class Name="File" Type="TWCore.Diagnostics.Trace.Storages.SimpleFileTraceStorage, TWCore">
           <Parameter Name="basePath" Type="Settings" Value="Core.Trace.BasePath" />
         </Class>
-          <Class Name="Messages" Type="TWCore.Diagnostics.Trace.Storages.MessagingTraceStorage, TWCore.Messaging">
-              <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
-              <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
-              <Parameter Name="sendCompleteTrace" Type="Raw" Value="true" />
-          </Class>
+        <Class Name="Messages" Type="TWCore.Diagnostics.Trace.Storages.MessagingTraceStorage, TWCore.Messaging">
+          <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+          <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
+          <Parameter Name="sendCompleteTrace" Type="Raw" Value="true" />
+        </Class>
       </Interface>
-      
+
       <!--Status Transports-->
       <Interface Type="TWCore.Diagnostics.Status.IStatusTransport, TWCore">
         <Class Name="Http" Type="TWCore.Diagnostics.Status.Transports.HttpStatusTransport, TWCore.Net.HttpServer">
           <Parameter Name="port" Type="Settings" Value="Core.Status.Transport.Http.Port" />
         </Class>
-          <Class Name="Messages" Type="TWCore.Diagnostics.Status.Transports.MessagingStatusTransport, TWCore.Messaging">
-              <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
-              <Parameter Name="periodInSeconds" Type="Raw" Value="30" />
-          </Class>
+        <Class Name="Messages" Type="TWCore.Diagnostics.Status.Transports.MessagingStatusTransport, TWCore.Messaging">
+          <Parameter Name="queueName" Type="Raw" Value="TWCore.Diagnostics.Api" />
+          <Parameter Name="periodInSeconds" Type="Raw" Value="15" />
+        </Class>
       </Interface>
-      
+
     </Interfaces>
   </Global>
   <InjectorSettings EnvironmentName="" ApplicationName="TWCore.Diagnostics.Api">
     <Interfaces>
 
-      <!-- Handlers -->
-      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticHandler, TWCore.Diagnostics.Api.Models">
-        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDb.RavenDbHandler, TWCore.Diagnostics.Api" />
+
+      <!-- IDiagnosticMessagesHandler -->
+      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticMessagesHandler, TWCore.Diagnostics.Api.Models">
+        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDb.RavenDbMessagesHandler, TWCore.Diagnostics.Api" />
       </Interface>
-      
+
+      <!-- IDiagnosticQueryHandler -->
+      <Interface Type="TWCore.Diagnostics.Api.Models.IDiagnosticQueryHandler, TWCore.Diagnostics.Api.Models">
+        <Class Name="RavenDb" Type="TWCore.Diagnostics.Api.MessageHandlers.RavenDb.RavenDbQueryHandler, TWCore.Diagnostics.Api" />
+      </Interface>
+
+
     </Interfaces>
   </InjectorSettings>
 </InjectorGlobalSettings>

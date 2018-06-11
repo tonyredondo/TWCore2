@@ -35,6 +35,7 @@ namespace TWCore.Messaging.RawServer
 	/// <summary>
 	/// Message Queue server base
 	/// </summary>
+	[StatusName("Raw Queue Server")]
 	public abstract class MQueueRawServerBase : IMQueueRawServer
 	{
 		private readonly List<Task> _listenerTasks = new List<Task>();
@@ -114,6 +115,10 @@ namespace TWCore.Messaging.RawServer
 	    protected MQueueRawServerBase()
         {
             Counters = new MQRawServerCounters();
+	        Core.Status.Attach(collection =>
+	        {
+		        collection.Add("Type", GetType().FullName);
+	        });
         }
         ~MQueueRawServerBase()
         {
@@ -265,14 +270,13 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_RequestReceived(object sender, RawRequestReceivedEventArgs e)
 		{
-            Counters.IncrementMessages();
+            var iMessages = Counters.IncrementMessages();
             try
             {
                 if (_serverQueues?.AdditionalSendQueues?.Any() == true)
                     e.ResponseQueues.AddRange(_serverQueues.AdditionalSendQueues);
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
-                var pThreads = Counters.IncrementProcessingThreads();
-                Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, pThreads);
+                Core.Log.InfoDetail("Request message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, iMessages);
                 if (RequestReceived != null)
                     await RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueRawServerEvents.RequestReceived != null)
@@ -310,14 +314,12 @@ namespace TWCore.Messaging.RawServer
                     else
                         Core.Log.Warning("The message couldn't be sent.");
                 }
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception)
             {
                 Counters.IncrementTotalExceptions();
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 throw;
             }
@@ -325,24 +327,21 @@ namespace TWCore.Messaging.RawServer
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		private async Task QueueListener_ResponseReceived(object sender, RawResponseReceivedEventArgs e)
 		{
-            Counters.IncrementMessages();
+            var iMessages = Counters.IncrementMessages();
             try
             {
                 Counters.IncrementTotalReceivingBytes(e.MessageLength);
-                var pThreads = Counters.IncrementProcessingThreads();
-                Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, pThreads);
+                Core.Log.InfoDetail("Response message received with CorrelationId = {0} . Current messages processing = {1}", e.CorrelationId, iMessages);
                 if (ResponseReceived != null)
                     await ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
                 if (MQueueRawServerEvents.ResponseReceived != null)
                     await MQueueRawServerEvents.ResponseReceived.InvokeAsync(sender, e).ConfigureAwait(false);
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 Counters.IncrementTotalMessagesProccesed();
             }
             catch (Exception)
             {
                 Counters.IncrementTotalExceptions();
-                Counters.DecrementProcessingThreads();
                 Counters.DecrementMessages();
                 throw;
             }

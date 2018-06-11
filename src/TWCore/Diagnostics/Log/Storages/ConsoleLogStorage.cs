@@ -20,8 +20,10 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Services;
-
+// ReSharper disable ClassNeverInstantiated.Local
+// ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable AutoPropertyCanBeMadeGetOnly.Global
 // ReSharper disable SwitchStatementMissingSomeCases
 
@@ -31,6 +33,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// Writes the Logs items using the Console.Writeline method
     /// </summary>
+    [StatusName("Console Log")]
     public class ConsoleLogStorage : ILogStorage
     {
         private static readonly object PadLock = new object();
@@ -46,7 +49,15 @@ namespace TWCore.Diagnostics.Log.Storages
         static ConsoleLogStorage()
         {
             HasConsole = ServiceContainer.HasConsole;
-            DefaultColor = HasConsole ? Console.ForegroundColor : ConsoleColor.Gray;
+            if (HasConsole)
+            {
+                Console.ResetColor();
+                DefaultColor = Console.ForegroundColor;
+            }
+            else
+            {
+                DefaultColor = ConsoleColor.Gray;
+            }
             StringBuilderPool = new ConcurrentStack<StringBuilder>();
         }
         #endregion

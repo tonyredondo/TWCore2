@@ -33,6 +33,7 @@ namespace TWCore.Messaging.RawClient
     /// <summary>
     /// Message Queue raw client base
     /// </summary>
+    [StatusName("Raw Queue Client")]
     public abstract class MQueueRawClientBase : IMQueueRawClient
     {
         #region Properties
@@ -96,6 +97,10 @@ namespace TWCore.Messaging.RawClient
         protected MQueueRawClientBase()
         {
             Counters = new MQRawClientCounters();
+            Core.Status.Attach(collection =>
+            {
+                collection.Add("Type", GetType().FullName);
+            });
         }
         #endregion
 

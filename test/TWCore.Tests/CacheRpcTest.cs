@@ -50,7 +50,7 @@ namespace TWCore.Tests
             var cacheService = new TestCacheService();
             cacheService.OnStart(null);
 
-			using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
+			using (var cachePool = new CacheClientPoolAsync("Pool Test") { Serializer = GlobalSerializer })
             {
 				var cacheClient = await CacheClientProxy.GetClientAsync(new DefaultTransportClient("127.0.0.1", 20051, 3, GlobalSerializer)).ConfigureAwait(false);
                 cachePool.Add("localhost:20051", cacheClient, StorageItemMode.ReadAndWrite);

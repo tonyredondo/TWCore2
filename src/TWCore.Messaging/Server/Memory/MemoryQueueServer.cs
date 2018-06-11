@@ -152,7 +152,6 @@ namespace TWCore.Messaging
                 if (message == null) return;
 				try
 				{
-					Counters.IncrementProcessingThreads();
 					Core.Log.LibVerbose("Received message from the memory queue '{0}/{1}'", Connection.Route, Connection.Name);
 					var messageBody = message.Value;
 					switch (messageBody)
@@ -184,10 +183,6 @@ namespace TWCore.Messaging
 				{
 					Counters.IncrementTotalExceptions();
 					Core.Log.Write(ex);
-				}
-				finally
-				{
-					Counters.DecrementProcessingThreads();
 				}
 			}
 

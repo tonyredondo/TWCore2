@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using TWCore.Collections;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 
@@ -24,6 +25,7 @@ namespace TWCore.Cache.Storages
     /// <summary>
     /// Cache storage using a collection with a fixed capacity and LRU 2Q replacement logic
     /// </summary>
+    [StatusName("LRU2Q Simple Algorithm Cache Storage")]
     public class LRU2QSimpleStorage : CacheCollectionStorage
     {
         /// <inheritdoc />

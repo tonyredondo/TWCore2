@@ -70,7 +70,7 @@ namespace TWCore.Cache.Client.Configuration
             }
             else
                 serializer = SerializerManager.DefaultBinarySerializer;
-            var ccp = new CacheClientPoolAsync(pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder)
+            var ccp = new CacheClientPoolAsync(name, pingDelay, pingDelayOnError, readMode, writeMode, selectionOrder)
             {
                 Serializer = serializer,
                 ForceAtLeastOneNetworkItemEnabled = forceNetworkItem
@@ -90,8 +90,6 @@ namespace TWCore.Cache.Client.Configuration
                 {
                     case ITransportClient transport:
                     {
-                        if (transport == null)
-                            Core.Log.Warning("The transport definition for the pool item is null, skipping pool item.");
                         var hostParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Host");
                         var portParam = pitem.Parameters?.FirstOrDefault(p => p.Key == "Port");
 

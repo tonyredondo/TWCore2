@@ -34,6 +34,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// Writes an html log file
     /// </summary>
+    [StatusName("Html File Log")]
 	public class HtmlFileLogStorage : ILogStorage
     {
         private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();

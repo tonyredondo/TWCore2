@@ -104,7 +104,6 @@ namespace TWCore.Diagnostics.Status
             public int Index { get; }
             private ItemValue<double> _lastestValue;
             private readonly ItemInterval<double> _last10MinutesValues = new ItemInterval<double>(TimeSpan.FromMinutes(10), val => val.Value);
-            private readonly ItemInterval<double> _last30MinutesValues = new ItemInterval<double>(TimeSpan.FromMinutes(30), val => val.Value);
             private readonly ItemInterval<double> _oneHourValues = new ItemInterval<double>(TimeSpan.FromHours(1), val => val.Value);
             private readonly ItemInterval<double> _24HoursValues = new ItemInterval<double>(TimeSpan.FromHours(24), val => val.Value);
 
@@ -119,7 +118,6 @@ namespace TWCore.Diagnostics.Status
             {
                 _lastestValue = new ItemValue<double>(value);
                 _last10MinutesValues.Register(value);
-                _last30MinutesValues.Register(value);
                 _oneHourValues.Register(value);
                 _24HoursValues.Register(value);
             }
@@ -131,7 +129,6 @@ namespace TWCore.Diagnostics.Status
                 cStatus.Values.Add("Lastest Value", _lastestValue.Value, true);
                 cStatus.Values.Add("Lastest Value Date", _lastestValue.ValueDate);
                 cStatus.Children.Add(GetStatusItem(_last10MinutesValues, "Last 10 Minutes"));
-                cStatus.Children.Add(GetStatusItem(_last30MinutesValues, "Last 30 Minutes"));
                 cStatus.Children.Add(GetStatusItem(_oneHourValues, "Last Hour"));
                 cStatus.Children.Add(GetStatusItem(_24HoursValues, "Last 24 Hours"));
                 return cStatus;

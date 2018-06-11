@@ -206,7 +206,6 @@ namespace TWCore.Messaging.NSQ
             if (message.Body == null) return;
 			try
 			{
-				Counters.IncrementProcessingThreads();
 				Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Count, Connection.Route, Connection.Name);
 				var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
 				switch (messageBody)
@@ -236,10 +235,6 @@ namespace TWCore.Messaging.NSQ
 				Core.Log.Write(ex);
 				lock (_lock)
 					_exceptionSleep = true;
-			}
-			finally
-			{
-				Counters.DecrementProcessingThreads();
 			}
 		}
 		#endregion

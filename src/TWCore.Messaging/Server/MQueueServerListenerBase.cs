@@ -18,6 +18,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Configuration;
 using TWCore.Serialization;
 using TWCore.Threading;
@@ -30,6 +31,7 @@ namespace TWCore.Messaging.Server
     /// <summary>
     /// Message queue server listener base
     /// </summary>
+    [StatusName("Listener")]
     public abstract class MQueueServerListenerBase : IMQueueServerListener
     {
         private long _activeWorkers;

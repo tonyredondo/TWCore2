@@ -58,7 +58,6 @@ namespace TWCore.Net.RPC.Client
 
             Core.Status.Attach(collection =>
             {
-                collection.Add("Client", _client);
                 Core.Status.AttachChild(_client, this);
             });
         }

@@ -19,26 +19,38 @@ using System.Threading;
 using TWCore.Diagnostics.Status;
 // ReSharper disable NotAccessedField.Local
 // ReSharper disable CheckNamespace
+// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable ConvertToAutoPropertyWithPrivateSetter
 
 namespace TWCore.Services
 {
     /// <summary>
-    /// Messaging Service counters
+    /// Messaging Service status
     /// </summary>
-    public class MessagingServiceCounters
+    [StatusName("Messaging Service Status")]
+    public class MessagingServiceStatus
     {
-        private readonly object _locker = new object();
         private double? _processTimes;
         private double? _lastMinuteProcessTimes;
         private readonly DayStatus _dayStatus = new DayStatus("Day Statistics");
         private Timer _timer;
-
+        private long _currentMessagesBeingProcessed;
+        private long _peakCurrentMessagesBeingProcessed;
+        private DateTime _peakCurrentMessagesBeingProcessedLastDate;
+        private long _lastMinuteMessagesBeingProcessed;
+        private long _peakLastMinuteMessagesBeingProcessed;
+        private DateTime _peakLastMinuteMessagesBeingProcessedLastDate;
+        private DateTime _lastMessageDateTime;
+        private DateTime _lastProcessingDateTime;
+        private long _totalMessagesReceived;
+        private long _totalMessagesProccesed;
+        private long _totalExceptions;
+        
         #region Properties
         /// <summary>
         /// Process average time
         /// </summary>
         public double ProcessAverageTime => _processTimes ?? 0;
-
         /// <summary>
         /// Process average time on the last minute
         /// </summary>
@@ -47,68 +59,64 @@ namespace TWCore.Services
         /// <summary>
         /// Number of current active processing threads
         /// </summary>
-        public long CurrentMessagesBeingProcessed { get; private set; }
+        public long CurrentMessagesBeingProcessed => _currentMessagesBeingProcessed;
         /// <summary>
         /// Peak value of number of active processing threads
         /// </summary>
-        public long PeakCurrentMessagesBeingProcessed { get; private set; }
+        public long PeakCurrentMessagesBeingProcessed => _peakCurrentMessagesBeingProcessed;
         /// <summary>
         /// Date and time of the peak value of number of active processing threads
         /// </summary>
-        public DateTime PeakCurrentMessagesBeingProcessedLastDate { get; private set; }
+        public DateTime PeakCurrentMessagesBeingProcessedLastDate => _peakCurrentMessagesBeingProcessedLastDate;
 
         /// <summary>
         /// Number of active processing threads on the last minute
         /// </summary>
-        public long LastMinuteMessagesBeingProcessed { get; private set; }
+        public long LastMinuteMessagesBeingProcessed => _lastMinuteMessagesBeingProcessed;
         /// <summary>
         /// Peak value of the number of active processing threads on the last minute
         /// </summary>
-        public long PeakLastMinuteMessagesBeingProcessed { get; private set; }
+        public long PeakLastMinuteMessagesBeingProcessed => _peakLastMinuteMessagesBeingProcessed;
         /// <summary>
         /// Date and time of the peak value of number of active processing threads on the last minute
         /// </summary>
-        public DateTime PeakLastMinuteMessagesBeingProcessedLastDate { get; private set; }
+        public DateTime PeakLastMinuteMessagesBeingProcessedLastDate => _peakLastMinuteMessagesBeingProcessedLastDate;
 
         /// <summary>
         /// Date and time of the last received message
         /// </summary>
-        public DateTime LastMessageDateTime { get; private set; }
+        public DateTime LastMessageDateTime => _lastMessageDateTime;
         /// <summary>
         /// Date and time of the last process of a message
         /// </summary>
-        public DateTime LastProcessingDateTime { get; private set; }
+        public DateTime LastProcessingDateTime => _lastProcessingDateTime;
 
         /// <summary>
         /// Number of received messages
         /// </summary>
-        public long TotalMessagesReceived { get; private set; }
+        public long TotalMessagesReceived => _totalMessagesReceived;
         /// <summary>
         /// Number of processed messages
         /// </summary>
-        public long TotalMessagesProccesed { get; private set; }
+        public long TotalMessagesProccesed => _totalMessagesProccesed;
         /// <summary>
         /// Number of exceptions
         /// </summary>
-        public long TotalExceptions { get; private set; }
+        public long TotalExceptions => _totalExceptions;
         #endregion
 
         #region .ctor
         /// <summary>
-        /// Message queue server counters
+        /// Messaging service status
         /// </summary>
-        public MessagingServiceCounters()
+        public MessagingServiceStatus(IMessagingServiceAsync messagingService)
         {
             _timer = new Timer(state =>
             {
-                lock (_locker)
-                {
-                    _lastMinuteProcessTimes = null;
-
-                    LastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;
-                    PeakLastMinuteMessagesBeingProcessed = CurrentMessagesBeingProcessed;
-                    PeakLastMinuteMessagesBeingProcessedLastDate = LastProcessingDateTime;
-                }
+                _lastMinuteProcessTimes = null;
+                _lastMinuteMessagesBeingProcessed = _currentMessagesBeingProcessed;
+                _peakLastMinuteMessagesBeingProcessed = _currentMessagesBeingProcessed;
+                _peakLastMinuteMessagesBeingProcessedLastDate = _lastProcessingDateTime;
             }, this, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(1));
 
             Core.Status.Attach(collection =>
@@ -133,8 +141,11 @@ namespace TWCore.Services
                     new StatusItemValueItem("Message Received", TotalMessagesReceived, true),
                     new StatusItemValueItem("Message Processed", TotalMessagesProccesed, true),
                     new StatusItemValueItem("Exceptions", TotalExceptions, true));
-            });
-            Core.Status.AttachChild(_dayStatus, this);
+                
+                Core.Status.AttachChild(messagingService.QueueServer, this);
+                Core.Status.AttachChild(messagingService.Processor, this);
+                Core.Status.AttachChild(_dayStatus, this);
+            }, this);
         }
         #endregion
 
@@ -144,8 +155,7 @@ namespace TWCore.Services
         /// </summary>
         public void IncrementTotalExceptions()
         {
-            lock (_locker)
-                TotalExceptions++;
+            Interlocked.Increment(ref _totalExceptions);
             _dayStatus.Register("Exceptions");
         }
         /// <summary>
@@ -153,30 +163,28 @@ namespace TWCore.Services
         /// </summary>
         public void IncrementTotalMessagesProccesed()
         {
-            lock (_locker)
-                TotalMessagesProccesed++;
+            Interlocked.Increment(ref _totalMessagesProccesed);
         }
         /// <summary>
         /// Increments the messages being processed
         /// </summary>
         public void IncrementCurrentMessagesBeingProcessed()
         {
-            lock (_locker)
+            Interlocked.Increment(ref _currentMessagesBeingProcessed);
+            Interlocked.Increment(ref _totalMessagesReceived);
+            Interlocked.Increment(ref _lastMinuteMessagesBeingProcessed);
+            _lastMessageDateTime = Core.Now;
+            var cmbp = Interlocked.Read(ref _currentMessagesBeingProcessed);
+            if (cmbp >= Interlocked.Read(ref _peakCurrentMessagesBeingProcessed))
             {
-                CurrentMessagesBeingProcessed++;
-                TotalMessagesReceived++;
-                LastMinuteMessagesBeingProcessed++;
-                LastMessageDateTime = Core.Now;
-                if (CurrentMessagesBeingProcessed >= PeakCurrentMessagesBeingProcessed)
-                {
-                    PeakCurrentMessagesBeingProcessed = CurrentMessagesBeingProcessed;
-                    PeakCurrentMessagesBeingProcessedLastDate = LastMessageDateTime;
-                }
-                if (LastMinuteMessagesBeingProcessed >= PeakLastMinuteMessagesBeingProcessed)
-                {
-                    PeakLastMinuteMessagesBeingProcessed = LastMinuteMessagesBeingProcessed;
-                    PeakLastMinuteMessagesBeingProcessedLastDate = LastMessageDateTime;
-                }
+                Interlocked.Exchange(ref _peakCurrentMessagesBeingProcessed, cmbp);
+                _peakCurrentMessagesBeingProcessedLastDate = Core.Now;
+            }
+            var lmbp = Interlocked.Read(ref _lastMinuteMessagesBeingProcessed);
+            if (lmbp >= Interlocked.Read(ref _peakLastMinuteMessagesBeingProcessed))
+            {
+                Interlocked.Exchange(ref _peakLastMinuteMessagesBeingProcessed, lmbp);
+                _peakLastMinuteMessagesBeingProcessedLastDate = Core.Now;
             }
         }
         /// <summary>
@@ -184,21 +192,21 @@ namespace TWCore.Services
         /// </summary>
         public void ReportProcessingTime(double time)
         {
-            lock (_locker)
-            {
-                _dayStatus.Register("Successfully Processed Messages", time);
-                _processTimes = _processTimes * 0.8 + time * 0.2 ?? time;
-                _lastMinuteProcessTimes = _lastMinuteProcessTimes * 0.8 + time * 0.2 ?? time;
-                LastProcessingDateTime = Core.Now;
-            }
+            _dayStatus.Register("Successfully Processed Messages", time);
+            _lastProcessingDateTime = Core.Now;
+            var pTime = _processTimes;
+            var lmpTime = _lastMinuteProcessTimes;
+            pTime = pTime * 0.8 + time * 0.2 ?? time;
+            lmpTime = lmpTime * 0.8 + time * 0.2 ?? time;
+            _processTimes = pTime;
+            _lastMinuteProcessTimes = lmpTime;
         }
         /// <summary>
         /// Decrement the current processing threads
         /// </summary>
         public void DecrementCurrentMessagesBeingProcessed()
         {
-            lock (_locker)
-                CurrentMessagesBeingProcessed--;
+            Interlocked.Decrement(ref _currentMessagesBeingProcessed);
         }
         #endregion
     }

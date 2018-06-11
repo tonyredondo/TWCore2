@@ -16,12 +16,15 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using TWCore.Diagnostics.Status;
+
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Triggers
 {
     public delegate DateTime DateTimeUpdateEventTriggerDelegate(string environment, string applicationName, string machineName, string triggerName);
 
+    [StatusName("DateTime Update Event Trigger")]
     public class DateTimeUpdateEventTrigger : TriggerBase
     {
         private DateTime _lastUpdate;

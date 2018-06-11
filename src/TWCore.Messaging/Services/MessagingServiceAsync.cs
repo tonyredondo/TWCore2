@@ -75,7 +75,7 @@ namespace TWCore.Services
         /// <summary>
         /// Messaging service counters
         /// </summary>
-        public MessagingServiceCounters Counters { get; private set; }
+        public MessagingServiceStatus Status { get; private set; }
         /// <summary>
         /// Gets a value indicating enable messages trace.
         /// </summary>
@@ -96,7 +96,7 @@ namespace TWCore.Services
                 Core.Log.InfoBasic("Starting messaging service");
                 _cTokenSource = new CancellationTokenSource();
                 OnInit(args);
-                Counters = new MessagingServiceCounters();
+                Status = new MessagingServiceStatus(this);
                 QueueServer = GetQueueServer();
                 if (QueueServer == null)
                     throw new Exception("The queue server is null, please check the configuration file and ensure the Types assemblies are on the assembly folder.");
@@ -112,7 +112,7 @@ namespace TWCore.Services
                         if (e.Message?.Body == null) return;
 
                         ReceivedMessagesCache.TryAdd(e.Message.Body, e.Message);
-                        Counters.IncrementCurrentMessagesBeingProcessed();
+                        Status.IncrementCurrentMessagesBeingProcessed();
                         var sw = Stopwatch.StartNew();
                         try
                         {
@@ -121,12 +121,12 @@ namespace TWCore.Services
                         catch(Exception ex)
                         {
                             Core.Log.Write(ex);
-                            Counters.IncrementTotalExceptions();
+                            Status.IncrementTotalExceptions();
                         }
                         sw.Stop();
-                        Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                        Counters.DecrementCurrentMessagesBeingProcessed();
-                        Counters.IncrementTotalMessagesProccesed();
+                        Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                        Status.DecrementCurrentMessagesBeingProcessed();
+                        Status.IncrementTotalMessagesProccesed();
                         ReceivedMessagesCache.TryRemove(e.Message.Body, out object _);
                     };
                 }
@@ -140,7 +140,7 @@ namespace TWCore.Services
 
                         ReceivedMessagesCache.TryAdd(e.Request.Body, e.Request);
                         object result = null;
-                        Counters.IncrementCurrentMessagesBeingProcessed();
+                        Status.IncrementCurrentMessagesBeingProcessed();
                         var sw = Stopwatch.StartNew();
                         try
                         {
@@ -149,12 +149,12 @@ namespace TWCore.Services
                         catch(Exception ex)
                         {
                             Core.Log.Write(ex);
-                            Counters.IncrementTotalExceptions();
+                            Status.IncrementTotalExceptions();
                         }
                         sw.Stop();
-                        Counters.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
-                        Counters.DecrementCurrentMessagesBeingProcessed();
-                        Counters.IncrementTotalMessagesProccesed();
+                        Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
+                        Status.DecrementCurrentMessagesBeingProcessed();
+                        Status.IncrementTotalMessagesProccesed();
                         e.Response.Body = result;
                         ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
                     };
@@ -173,13 +173,6 @@ namespace TWCore.Services
                 Processor.Init();
                 QueueServer.StartListeners();
                 Core.Log.InfoBasic("Messaging service started.");
-
-                Core.Status.Attach(collection =>
-                {
-                    Core.Status.AttachChild(Processor, this);
-                    Core.Status.AttachChild(QueueServer, this);
-                    Core.Status.AttachChild(Counters, this);
-                });
             }
             catch(Exception ex)
             {

@@ -22,6 +22,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore;
 using TWCore.Collections;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable ClassWithVirtualMembersNeverInherited.Global
 
@@ -31,6 +32,7 @@ namespace TWCore.Cache
     /// <summary>
     /// Storage Manager
     /// </summary>
+    [StatusName("Cache Storage Manager")]
     public class StorageManager : IStorageWithExtensionExecution
     {
 	    private readonly Stack<IStorage> _storageStack = new Stack<IStorage>();

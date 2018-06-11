@@ -21,6 +21,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Compression;
+using TWCore.Diagnostics.Status;
 using TWCore.Net.Multicast;
 using TWCore.Serialization;
 // ReSharper disable InconsistentlySynchronizedField
@@ -33,6 +34,7 @@ namespace TWCore.Diagnostics.Trace.Storages
     /// <summary>
     /// Writes a simple trace file
     /// </summary>
+    [StatusName("Simple File Trace")]
     public class SimpleFileTraceStorage : ITraceStorage
     {
         private static readonly NonBlocking.ConcurrentDictionary<string, StreamWriter> LogStreams = new NonBlocking.ConcurrentDictionary<string, StreamWriter>();

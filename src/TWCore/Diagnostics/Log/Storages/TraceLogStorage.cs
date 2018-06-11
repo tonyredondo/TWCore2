@@ -19,6 +19,7 @@ using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Diagnostics.Log.Storages
 {
@@ -26,6 +27,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// Writes the Logs items using the System.Diagnostics.Trace method
     /// </summary>
+    [StatusName("Trace Log")]
     public class TraceLogStorage : ILogStorage
     {
         private static readonly ConcurrentStack<StringBuilder> StringBuilderPool = new ConcurrentStack<StringBuilder>();

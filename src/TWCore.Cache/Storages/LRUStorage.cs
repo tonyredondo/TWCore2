@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using TWCore.Collections;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable InconsistentNaming
 
@@ -24,6 +25,7 @@ namespace TWCore.Cache.Storages
     /// <summary>
     /// Cache storage using LRU Algorithm
     /// </summary>
+    [StatusName("LRU Algorithm Cache Storage")]
     public class LRUStorage : CacheCollectionStorage
     {
         /// <inheritdoc />

@@ -20,6 +20,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Threading;
 
 // ReSharper disable ConvertToAutoPropertyWhenPossible
@@ -75,6 +76,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Cache pool item collection
     /// </summary>
+    [StatusName("Pool Collection")]
     public class PoolAsyncItemCollection : IDisposable
     {
         private ActionWorker _worker;
@@ -156,7 +158,6 @@ namespace TWCore.Cache.Client
                 collection.Add(nameof(WriteMode), WriteMode);
                 collection.Add(nameof(SelectionOrder), SelectionOrder);
                 collection.Add(nameof(ForceAtLeastOneNetworkItemEnabled), ForceAtLeastOneNetworkItemEnabled);
-                Core.Status.AttachChild(_worker, this);
                 if (Items == null) return;
                 collection.Add(nameof(Items.Count), Items.Count);
                 foreach (var item in Items)

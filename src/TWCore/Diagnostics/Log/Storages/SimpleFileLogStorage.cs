@@ -35,6 +35,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// Writes a simple log file
     /// </summary>
+    [StatusName("Simple File Log")]
     public class SimpleFileLogStorage : ILogStorage
     {
         /// <summary>

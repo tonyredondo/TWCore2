@@ -53,7 +53,7 @@ namespace TWCore.Tests
 
         private static async Task CacheSingleTest()
         {
-            using (var cachePool = new CacheClientPoolAsync { Serializer = GlobalSerializer })
+            using (var cachePool = new CacheClientPoolAsync("Pool Test") { Serializer = GlobalSerializer })
             {
                 try
                 {

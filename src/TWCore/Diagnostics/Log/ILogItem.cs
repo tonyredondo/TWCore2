@@ -24,6 +24,10 @@ namespace TWCore.Diagnostics.Log
     public interface ILogItem
     {
         /// <summary>
+        /// Instance identifier
+        /// </summary>
+        Guid InstanceId { get; }
+        /// <summary>
         /// Item unique identifier
         /// </summary>
         Guid Id { get; }

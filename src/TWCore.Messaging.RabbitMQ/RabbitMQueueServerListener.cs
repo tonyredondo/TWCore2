@@ -185,7 +185,6 @@ namespace TWCore.Messaging.RabbitMQ
             if (message.Body == null) return;
             try
             {
-                Counters.IncrementProcessingThreads();
                 Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}/{2}'", message.Body.Length, _receiver.Route, _receiver.Name);
                 var messageBody = ReceiverSerializer.Deserialize(message.Body, _messageType);
                 switch (messageBody)
@@ -231,10 +230,6 @@ namespace TWCore.Messaging.RabbitMQ
                 Core.Log.Write(ex);
                 lock (_lock)
                     _exceptionSleep = true;
-            }
-            finally
-            {
-                Counters.DecrementProcessingThreads();
             }
         }
         #endregion

@@ -1,7 +1,7 @@
 ﻿FROM microsoft/dotnet:2.0-runtime-deps
 
 WORKDIR /App
-COPY ./app/. ./App
+COPY ./app/. .
 
 
 ENV TWCORE_FORCE_ENVIRONMENT=Docker

@@ -32,23 +32,23 @@ namespace TWCore.Diagnostics.Api
             SerializerManager.SupressFileExtensionWarning = true;
             base.OnInit(args);
 
-	        var data = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
-	        var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
-	        var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        //var data = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        //var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
+	        //var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 
-	        var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("DEV", null, null);
+	        //var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("DEV", null, null);
 	        
 
-            Task.Delay(6000).ContinueWith(async _ =>
-            {
-                while (true)
-                {
+         //   Task.Delay(6000).ContinueWith(async _ =>
+         //   {
+         //       while (true)
+         //       {
 
-                    Core.Trace.Write("Hola Mundo");
+         //           Core.Trace.Write("Hola Mundo");
 
-                    await Task.Delay(6000).ConfigureAwait(false);
-                }
-            });
+         //           await Task.Delay(6000).ConfigureAwait(false);
+         //       }
+         //   });
 
 
             /*

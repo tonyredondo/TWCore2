@@ -3,7 +3,8 @@
     "Core.DebugMode": false,
     "WebService.Urls": "http://*:55999",
     "Core.Services.Queue.ConfigFile": "./settings/queues.xml",
-    "Core.Services.Queue.ServerName": "TWCore.Diagnostics.Api"
+    "Core.Services.Queue.ServerName": "TWCore.Diagnostics.Api",
+    "AssemblyResolverManager.Paths": "./assemblies"
   },
   "Core": {
     "environmentName": "DEV",

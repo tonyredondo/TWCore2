@@ -118,5 +118,13 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="page">Page number</param>
 		/// <param name="pageSize">Page size</param>
 		Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-	}
+        /// <summary>
+        /// Get Current Statuses
+        /// </summary>
+		/// <param name="environment">Environment name</param>
+		/// <param name="machine">Machine name or null</param>
+		/// <param name="application">Application name or null</param>
+        /// <returns>Get Current Status list</returns>
+        Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application);
+    }
 }

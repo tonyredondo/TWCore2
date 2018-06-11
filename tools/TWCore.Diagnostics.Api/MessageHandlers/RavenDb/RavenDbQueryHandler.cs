@@ -256,9 +256,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			}).ConfigureAwait(false);
 		}
 
-		public async Task GetCurrentStatus(string environment, string machine, string application)
+		public async Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application)
 		{
-			await RavenHelper.ExecuteAndReturnAsync(async session =>
+			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var documentQuery = session.Advanced.AsyncDocumentQuery<NodeStatusItem>();
 				var query = documentQuery
@@ -279,8 +279,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 					.GroupBy(i => new {i.Environment, i.Machine, i.Application})
 					.Select(i => i.First())
 					.ToList();
-				
-				return new object();
+
+                return rData;
 			}).ConfigureAwait(false);
 		}
 	}

@@ -49,8 +49,12 @@ namespace TWCore.Diagnostics.Api.Controllers
             return serObject.GetValue();
         }
 
-        [HttpGet("{environment}/status/")]
+        [HttpGet("{environment}/status")]
         public Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
             => DbHandlers.Instance.Query.GetStatusesAsync(environment, machine, application, fromDate, toDate, page, pageSize);
+
+        [HttpGet("{environment}/status/current")]
+        public Task<List<NodeStatusItem>> GetCurrentStatus(string environment, string machine, string application)
+            => DbHandlers.Instance.Query.GetCurrentStatus(environment, machine, application);
     }
 }

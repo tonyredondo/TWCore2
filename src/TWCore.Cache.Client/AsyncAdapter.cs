@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 
 namespace TWCore.Cache.Client
@@ -26,6 +27,7 @@ namespace TWCore.Cache.Client
     /// <summary>
     /// Async adapter for IStorage
     /// </summary>
+    [StatusName("Async Adapter")]
     public class AsyncAdapter : IStorageAsync
     {
         private readonly IStorage _storage;

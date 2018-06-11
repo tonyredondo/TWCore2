@@ -16,12 +16,14 @@ limitations under the License.
 
 using System;
 using System.Threading;
+using TWCore.Diagnostics.Status;
 // ReSharper disable EventNeverSubscribedTo.Global
 
 namespace TWCore.Triggers
 {
     public delegate bool UpdateEventTriggerDelegate(string environment, string applicationName, string machineName, string triggerName);
 
+    [StatusName("Update Event Trigger")]
     public class UpdateEventTrigger : TriggerBase
     {
         private CancellationTokenSource _tokenSource;

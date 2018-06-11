@@ -24,6 +24,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Data.Schema;
 using TWCore.Data.Schema.Generator;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Data.SqlServer
 {
@@ -31,6 +32,7 @@ namespace TWCore.Data.SqlServer
     /// <summary>
     /// Sql Server Data Access
     /// </summary>
+    [StatusName("Sql Server Data Access")]
     public class SqlServerDataAccess : DataAccessBase
     {
         #region Static Default Values

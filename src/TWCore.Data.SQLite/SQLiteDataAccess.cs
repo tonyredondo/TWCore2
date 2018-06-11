@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Data.Schema.Generator;
+using TWCore.Diagnostics.Status;
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedParameter.Local
 
@@ -31,6 +32,7 @@ namespace TWCore.Data.SQLite
     /// <summary>
     /// SQLite Data Access
     /// </summary>
+    [StatusName("Sql Lite Data Access")]
     public class SQLiteDataAccess : DataAccessBase
     {
         /// <inheritdoc />

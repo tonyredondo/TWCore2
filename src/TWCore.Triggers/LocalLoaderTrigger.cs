@@ -15,8 +15,11 @@ limitations under the License.
  */
 
 
+using TWCore.Diagnostics.Status;
+
 namespace TWCore.Triggers
 {
+    [StatusName("Local Loader Trigger")]
     internal class LocalLoaderTrigger : TriggerBase
     {
         protected override void OnInit()

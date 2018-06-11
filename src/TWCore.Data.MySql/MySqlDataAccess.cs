@@ -22,6 +22,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using TWCore.Data.Schema.Generator;
+using TWCore.Diagnostics.Status;
 
 namespace TWCore.Data.MySql
 {
@@ -29,6 +30,7 @@ namespace TWCore.Data.MySql
     /// <summary>
     /// MySql Data Access
     /// </summary>
+    [StatusName("MySql Data Access")]
     public class MySqlDataAccess : DataAccessBase
     {
         /// <inheritdoc />

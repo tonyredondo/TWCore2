@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using TWCore.Diagnostics.Status;
 // ReSharper disable EventNeverSubscribedTo.Global
 // ReSharper disable UnusedMember.Global
 
@@ -33,6 +34,7 @@ namespace TWCore.Triggers
     /// Class to handle an object instances that updates based on triggers
     /// </summary>
     /// <typeparam name="T">Type of instance</typeparam>
+    [StatusName("Updatable Object")]
 	public class UpdatableObject<T> : IDisposable where T : class
     {
         /// <summary>
@@ -90,6 +92,7 @@ namespace TWCore.Triggers
 
             Core.Status.Attach(collection =>
             {
+                collection.Add("Type", typeof(T).FullName);
                 collection.Add(nameof(MinTimeOfInstance), MinTimeOfInstance);
                 collection.Add("LastUpdateTime", _lastUpdateTime);
                 foreach (var trigger in _triggers)
@@ -151,6 +154,7 @@ namespace TWCore.Triggers
         public void Load()
         {
             var trigger = new LocalLoaderTrigger();
+            trigger.Init();
             Core.Status.AttachChild(trigger, this);
             InnerOnTriggerExecute(trigger);
         }

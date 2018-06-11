@@ -24,6 +24,7 @@ using System.Text;
 using TWCore.Data.Schema.Generator;
 using TWCore.Data.Schema;
 using System.Data;
+using TWCore.Diagnostics.Status;
 // ReSharper disable InconsistentNaming
 
 namespace TWCore.Data.PostgreSQL
@@ -32,6 +33,7 @@ namespace TWCore.Data.PostgreSQL
     /// <summary>
     /// Postgres Data Access
     /// </summary>
+    [StatusName("PostgreSql Data Access")]
     public class PostgreSQLDataAccess : DataAccessBase
     {
         /// <inheritdoc />

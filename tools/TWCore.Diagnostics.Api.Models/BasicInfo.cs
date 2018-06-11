@@ -13,7 +13,5 @@ namespace TWCore.Diagnostics.Api.Models
         public string Machine { get; set; }
         [XmlAttribute, DataMember]
         public string Application { get; set; }
-        [XmlAttribute, DataMember]
-        public Guid InstanceId { get; set; }
     }
 }

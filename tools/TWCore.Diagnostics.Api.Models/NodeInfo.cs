@@ -24,6 +24,8 @@ namespace TWCore.Diagnostics.Api.Models
     public abstract class NodeInfo : BasicInfo
     {
         [XmlAttribute, DataMember]
+        public Guid InstanceId { get; set; }
+        [XmlAttribute, DataMember]
         public string Id { get; set; }
     }
 }

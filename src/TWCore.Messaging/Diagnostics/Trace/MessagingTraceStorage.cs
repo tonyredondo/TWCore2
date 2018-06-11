@@ -78,7 +78,8 @@ namespace TWCore.Diagnostics.Trace.Storages
 			{
 				EnvironmentName = Core.EnvironmentName,
 				MachineName = Core.MachineName,
-				ApplicationName = Core.ApplicationName,
+				ApplicationName = Core.ApplicationName, 
+				InstanceId = Core.InstanceId,
 				GroupName = item.GroupName,
 				Id = item.Id,
 				Timestamp = item.Timestamp,

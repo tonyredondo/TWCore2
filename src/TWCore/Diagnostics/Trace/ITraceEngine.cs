@@ -47,8 +47,8 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="groupName">Group name</param>
         /// <param name="traceName">Trace name</param>
         /// <param name="traceObject">Trace object</param>
-        /// <param name="idstags">Identifiers tags</param>
-        void Write(string groupName, string traceName, object traceObject, params Guid[] idstags);
+        /// <param name="tags">Tags</param>
+        void Write(string groupName, string traceName, object traceObject, params string[] tags);
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
@@ -75,8 +75,8 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="groupName">Group name</param>
         /// <param name="traceName">Trace name</param>
         /// <param name="traceObject">Trace object</param>
-        /// <param name="idstags">Identifiers tags</param>
-        void WriteDebug(string groupName, string traceName, object traceObject, params Guid[] idstags);
+        /// <param name="tags">Tags</param>
+        void WriteDebug(string groupName, string traceName, object traceObject, params string[] tags);
         /// <summary>
         /// Write a trace item into the trace storages if is in Debug Mode
         /// </summary>

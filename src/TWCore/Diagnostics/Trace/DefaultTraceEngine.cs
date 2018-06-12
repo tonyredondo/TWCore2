@@ -122,13 +122,13 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="groupName">Group name</param>
         /// <param name="traceName">Trace name</param>
         /// <param name="traceObject">Trace object</param>
-        /// <param name="idstags">Identifiers tags</param>
+        /// <param name="tags">Tags</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Write(string groupName, string traceName, object traceObject, params Guid[] idstags)
+        public void Write(string groupName, string traceName, object traceObject, params string[] tags)
         {
             if (_disposed) return;
             if (!Enabled) return;
-            var item = ItemFactory(groupName, traceName, traceObject, idstags);
+            var item = ItemFactory(groupName, traceName, traceObject, tags);
             Write(item);
         }
         /// <inheritdoc />
@@ -169,14 +169,14 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="groupName">Group name</param>
         /// <param name="traceName">Trace name</param>
         /// <param name="traceObject">Trace object</param>
-        /// <param name="idstags">Identifiers tags</param>
+        /// <param name="tags">Tags</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteDebug(string groupName, string traceName, object traceObject, params Guid[] idstags)
+        public void WriteDebug(string groupName, string traceName, object traceObject, params string[] tags)
         {
             if (_disposed) return;
             if (!Enabled) return;
             if (!Core.DebugMode) return;
-            var item = ItemFactory(groupName, traceName, traceObject, idstags);
+            var item = ItemFactory(groupName, traceName, traceObject, tags);
             Write(item);
         }
         /// <inheritdoc />

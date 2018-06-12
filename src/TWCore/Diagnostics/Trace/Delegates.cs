@@ -25,9 +25,9 @@ namespace TWCore.Diagnostics.Trace
     /// <param name="groupName">Trace group name</param>
     /// <param name="traceName">Trace Name</param>
     /// <param name="traceObject">Trace Object</param>
-    /// <param name="idstags">Identifiers tags</param>
+    /// <param name="tags">Tags</param>
     /// <returns>TraceItem instance</returns>
-    public delegate TraceItem CreateTraceItemDelegate(string groupName, string traceName, object traceObject, Guid[] idstags);
+    public delegate TraceItem CreateTraceItemDelegate(string groupName, string traceName, object traceObject, string[] tags);
     /// <summary>
     /// Creates a new trace engine instance
     /// </summary>

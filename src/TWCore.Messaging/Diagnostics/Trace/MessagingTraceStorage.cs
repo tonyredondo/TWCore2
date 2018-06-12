@@ -82,7 +82,7 @@ namespace TWCore.Diagnostics.Trace.Storages
 				InstanceId = Core.InstanceId,
 				GroupName = item.GroupName,
 				Id = item.Id,
-                IdsTags = item.IdsTags,
+                Tags = item.Tags,
 				Timestamp = item.Timestamp,
 				TraceName = item.TraceName,
 				TraceObject = _sendCompleteTrace ? new SerializedObject(item.TraceObject) : null

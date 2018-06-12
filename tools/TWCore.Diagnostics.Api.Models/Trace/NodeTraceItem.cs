@@ -26,7 +26,7 @@ namespace TWCore.Diagnostics.Api.Models.Trace
         [XmlAttribute, DataMember]
         public Guid TraceId { get; set; }
         [XmlElement, DataMember]
-        public string IdsTags { get; set; }
+        public string Tags { get; set; }
         [XmlAttribute, DataMember]
         public string Group { get; set; }
         [XmlAttribute, DataMember]

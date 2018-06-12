@@ -169,7 +169,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     query = query
                         .Search(x => x.Group, "*" + search + "*")
                         .Search(x => x.Name, "*" + search + "*")
-                        .Search(x => x.IdsTags, "*" + search + "*");
+                        .Search(x => x.Tags, "*" + search + "*");
                 }
 
 				query = query.Skip(page * pageSize).Take(pageSize);

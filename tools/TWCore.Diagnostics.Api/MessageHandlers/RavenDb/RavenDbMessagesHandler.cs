@@ -77,7 +77,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Application = traceItem.ApplicationName,
                         InstanceId = traceItem.InstanceId,
                         TraceId = traceItem.Id,
-                        IdsTags = traceItem.IdsTags?.Select(i => i.ToString()).Join(", "),
+                        Tags = traceItem.Tags?.Select(i => i.ToString()).Join(", "),
                         Group = traceItem.GroupName,
                         Name = traceItem.TraceName,
                         Timestamp = traceItem.Timestamp

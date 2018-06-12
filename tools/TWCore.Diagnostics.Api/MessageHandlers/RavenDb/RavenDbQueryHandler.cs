@@ -164,10 +164,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				if (!string.IsNullOrWhiteSpace(application))
 					query = query.WhereEquals(x => x.Application, application);
 
-				if (!string.IsNullOrWhiteSpace(search))
-					query = query
-						.Search(x => x.Group, "*" + search + "*")
-						.Search(x => x.Name, "*" + search + "*");
+                if (!string.IsNullOrWhiteSpace(search))
+                {
+                    query = query
+                        .Search(x => x.Group, "*" + search + "*")
+                        .Search(x => x.Name, "*" + search + "*")
+                        .Search(x => x.IdsTags, "*" + search + "*");
+                }
 
 				query = query.Skip(page * pageSize).Take(pageSize);
 

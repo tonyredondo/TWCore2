@@ -554,11 +554,13 @@ namespace TWCore.Object.Api.Controllers
                     if (!wChildren) continue;
                     if (!(srv.Data.GetValue() is Dictionary<string, object> data)) continue;
                     if (!data.TryGetValue("Port", out var port)) continue;
-                    var strPort = port.ToString();
+                    if (srv.Addresses == null || srv.Addresses.Length == 0) continue;
+                    var ipAddress = srv.Addresses[0];
+                    var strPort = ipAddress + "/"+ port.ToString();
                     if (srvPe.Entries.All((c, aPort) => c.Path != aPort, strPort))
                         srvPe.Entries.Add(new PathEntry
                         {
-                            Name = "CURRENT STATUS",
+                            Name = $"CURRENT STATUS ({ipAddress})",
                             Path = strPort,
                             Type = PathEntryType.Status
                         });

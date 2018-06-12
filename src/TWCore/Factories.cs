@@ -413,12 +413,13 @@ namespace TWCore
             return lItem;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static TraceItem BaseCreateTraceItem(string groupName, string traceName, object traceObject)
+        private static TraceItem BaseCreateTraceItem(string groupName, string traceName, object traceObject, Guid[] idstags)
         {
             return new TraceItem
             {
                 InstanceId = Core.InstanceId,
                 Id = Factory.NewGuid(),
+                IdsTags = idstags,
                 Timestamp = Core.Now,
                 GroupName = groupName,
                 TraceName = traceName,

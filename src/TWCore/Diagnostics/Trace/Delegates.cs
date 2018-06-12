@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 
+using System;
+
 namespace TWCore.Diagnostics.Trace
 {
     /// <summary>
@@ -23,8 +25,9 @@ namespace TWCore.Diagnostics.Trace
     /// <param name="groupName">Trace group name</param>
     /// <param name="traceName">Trace Name</param>
     /// <param name="traceObject">Trace Object</param>
+    /// <param name="idstags">Identifiers tags</param>
     /// <returns>TraceItem instance</returns>
-    public delegate TraceItem CreateTraceItemDelegate(string groupName, string traceName, object traceObject);
+    public delegate TraceItem CreateTraceItemDelegate(string groupName, string traceName, object traceObject, Guid[] idstags);
     /// <summary>
     /// Creates a new trace engine instance
     /// </summary>

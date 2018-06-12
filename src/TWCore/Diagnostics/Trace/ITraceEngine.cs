@@ -40,6 +40,15 @@ namespace TWCore.Diagnostics.Trace
         /// </summary>
         /// <param name="item">Trace item</param>
         void Write(TraceItem item);
+
+        /// <summary>
+        /// Write a trace item into the trace storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        /// <param name="idstags">Identifiers tags</param>
+        void Write(string groupName, string traceName, object traceObject, params Guid[] idstags);
         /// <summary>
         /// Write a trace item into the trace storages
         /// </summary>
@@ -58,6 +67,35 @@ namespace TWCore.Diagnostics.Trace
         /// </summary>
         /// <param name="traceObject">Trace object</param>
         void Write(object traceObject);
+
+
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        /// <param name="idstags">Identifiers tags</param>
+        void WriteDebug(string groupName, string traceName, object traceObject, params Guid[] idstags);
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        void WriteDebug(string groupName, string traceName, object traceObject);
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        void WriteDebug(string traceName, object traceObject);
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="traceObject">Trace object</param>
+        void WriteDebug(object traceObject);
+
         /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>

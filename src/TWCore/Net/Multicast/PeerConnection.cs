@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using NonBlocking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,11 +39,10 @@ namespace TWCore.Net.Multicast
     {
         private const int PacketSize = 512;
         private static ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
-        private readonly TimeoutDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<Guid, ReceivedDatagrams>();
+        private readonly ConcurrentDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<Guid, ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
-        private readonly TimeSpan _messageTimeout = TimeSpan.FromSeconds(30);
 
         private IPAddress _multicastIp;
         private IPEndPoint _sendEndpoint;
@@ -271,10 +271,11 @@ namespace TWCore.Net.Multicast
             {
                 try
                 {
-                    var whenAnyTask = await Task.WhenAny(client.ReceiveAsync(), _cancellationTokenTask).ConfigureAwait(false);
+                    var clientTask = client.ReceiveAsync();
+                    var whenAnyTask = await Task.WhenAny(clientTask, _cancellationTokenTask).ConfigureAwait(false);
                     if (_token.IsCancellationRequested)
                         return;
-                    var udpReceiveResult = ((Task<UdpReceiveResult>) whenAnyTask).Result;
+                    var udpReceiveResult = clientTask.Result;
                     var rcvEndpoint = udpReceiveResult.RemoteEndPoint;
                     if (rcvEndpoint == null) continue;
                     var datagram = udpReceiveResult.Buffer;
@@ -290,7 +291,7 @@ namespace TWCore.Net.Multicast
 
                     //Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
 
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => (new ReceivedDatagrams(numMsgs, rcvEndpoint.Address), _messageTimeout));
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => new ReceivedDatagrams(numMsgs, rcvEndpoint.Address));
                     if (receivedDatagrams.Address != rcvEndpoint.Address.ToString())
                         continue;
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
@@ -329,8 +330,8 @@ namespace TWCore.Net.Multicast
         #region Nested Types
         private class ReceivedDatagrams
         {
-            public byte[][] Datagrams { get; }
-            public string Address { get; }
+            public byte[][] Datagrams { get; private set; }
+            public string Address { get; private set; }
             public bool Complete => Datagrams.All(i => i != null);
             public ReceivedDatagrams(int numMessages, IPAddress address)
             {
@@ -338,8 +339,14 @@ namespace TWCore.Net.Multicast
                 Address = address.ToString();
             }
 
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] GetMessage()
-                => Datagrams.SelectMany(i => i).ToArray();
+            {
+                var buffer = Datagrams.SelectMany(i => i).ToArray();
+                Datagrams = null;
+                Address = null;
+                return buffer;
+            }
         }
         #endregion
     }

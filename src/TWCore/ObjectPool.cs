@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 #pragma warning disable 649
 
 namespace TWCore
@@ -32,10 +34,42 @@ namespace TWCore
     public sealed class ObjectPool<T> : IPool<T>
     {
         private readonly ConcurrentStack<T> _objectStack;
+        private readonly ConcurrentDictionary<Guid, PoolTime> _poolTimeDictionary;
+        private Guid _lastId;
+        private readonly int _maxUnusedTimePerItem;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
-        
+
+        public int Count => _objectStack.Count;
+
+        private struct PoolTime
+        {
+            public Guid Id { get; }
+            private readonly Task _removeTask;
+            private readonly CancellationTokenSource _tokenSource;
+            private bool Done => _tokenSource.IsCancellationRequested || _removeTask.IsCompleted;
+
+            public PoolTime(ObjectPool<T> pool)
+            {
+                Id = Guid.NewGuid();
+                _tokenSource = new CancellationTokenSource();
+                var token = _tokenSource.Token;
+                var id = Id;
+                _removeTask = Task.Delay(pool._maxUnusedTimePerItem, token).ContinueWith(tsk =>
+                {
+                    Core.Log.InfoBasic("Removing unused item from the pool.");
+                    pool._objectStack.TryPop(out _);
+                    pool._poolTimeDictionary.TryRemove(id, out _);
+                }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
+            }
+            public void Cancel()
+            {
+                _tokenSource.Cancel();
+            }
+        }
+
         /// <summary>
         /// Object pool
         /// </summary>
@@ -43,13 +77,16 @@ namespace TWCore
         /// <param name="resetAction">Reset action before storing back the item in the pool</param>
         /// <param name="initialBufferSize">Initial buffer size</param>
         /// <param name="resetMode">Pool reset mode</param>
+        /// <param name="maxUnusedTimePerItemInSeconds">Max time of unused items in pool before removing it</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int maxUnusedTimePerItemInSeconds = 60)
         {
             _objectStack = new ConcurrentStack<T>();
+            _poolTimeDictionary = new ConcurrentDictionary<Guid, PoolTime>();
             _createFunc = createFunc;
             _resetAction = resetAction;
             _resetMode = resetMode;
+            _maxUnusedTimePerItem = maxUnusedTimePerItemInSeconds * 1000;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
         }
@@ -61,8 +98,13 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            for(var i = 0; i < number; i++)
+            for (var i = 0; i < number; i++)
+            {
                 _objectStack.Push(_createFunc(this));
+                var pTime = new PoolTime(this);
+                _lastId = pTime.Id;
+                _poolTimeDictionary.TryAdd(pTime.Id, pTime);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -76,6 +118,8 @@ namespace TWCore
                 return _createFunc(this);
             if (_resetMode == PoolResetMode.BeforeUse)
                 _resetAction?.Invoke(value);
+            if (_poolTimeDictionary.TryRemove(_lastId, out var time))
+                time.Cancel();
             return value;
         }
         /// <inheritdoc />
@@ -89,6 +133,9 @@ namespace TWCore
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
+            var pTime = new PoolTime(this);
+            _lastId = pTime.Id;
+            _poolTimeDictionary.TryAdd(pTime.Id, pTime);
         }
         /// <inheritdoc />
         /// <summary>
@@ -108,6 +155,9 @@ namespace TWCore
         public void Clear()
         {
             _objectStack.Clear();
+            foreach (var item in _poolTimeDictionary)
+                item.Value.Cancel();
+            _poolTimeDictionary.Clear();
         }
     }
 
@@ -137,7 +187,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            for(var i = 0; i < number; i++)
+            for (var i = 0; i < number; i++)
                 _objectStack.Push(_allocator.New());
         }
         /// <inheritdoc />

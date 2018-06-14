@@ -93,6 +93,10 @@ namespace TWCore.Serialization.WSerializer
                 value.TypeCache.Clear(SerializerMode.CachedUShort);
                 value.ObjectCache.Clear(SerializerMode.CachedUShort);
             }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(CachePoolItem value)
+            {
+            }
         }
         private struct StackPoolAllocator : IPoolObjectLifecycle<Stack<SerializerScope>>
         {
@@ -102,6 +106,10 @@ namespace TWCore.Serialization.WSerializer
             public Stack<SerializerScope> New() => new Stack<SerializerScope>();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(Stack<SerializerScope> value) => value.Clear();
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(Stack<SerializerScope> value)
+            {
+            }
         }
         private struct DesCachePoolAllocator : IPoolObjectLifecycle<DesCachePoolItem>
         {
@@ -116,6 +124,10 @@ namespace TWCore.Serialization.WSerializer
                 value.TypeCache.Clear(SerializerMode.CachedUShort);
                 value.ObjectCache.Clear(SerializerMode.CachedUShort);
             }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DesCachePoolItem value)
+            {
+            }
         }
         private struct DesStackPoolAllocator : IPoolObjectLifecycle<Stack<DeserializerTypeItem>>
         {
@@ -125,6 +137,10 @@ namespace TWCore.Serialization.WSerializer
             public Stack<DeserializerTypeItem> New() => new Stack<DeserializerTypeItem>();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(Stack<DeserializerTypeItem> value) => value.Clear();
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(Stack<DeserializerTypeItem> value)
+            {
+            }
         }
         #endregion
         

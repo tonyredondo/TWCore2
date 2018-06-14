@@ -24,7 +24,6 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedField.Local
@@ -38,7 +37,7 @@ namespace TWCore.Net.Multicast
     public class PeerConnection
     {
         private const int PacketSize = 512;
-        private static ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
+        private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
         private readonly ConcurrentDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<Guid, ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
@@ -66,6 +65,10 @@ namespace TWCore.Net.Multicast
             public byte[] New() => new byte[PacketSize];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(byte[] value) => Array.Clear(value, 0, PacketSize);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(byte[] value)
+            {
+            }
         }
         #endregion
         
@@ -272,7 +275,7 @@ namespace TWCore.Net.Multicast
                 try
                 {
                     var clientTask = client.ReceiveAsync();
-                    var whenAnyTask = await Task.WhenAny(clientTask, _cancellationTokenTask).ConfigureAwait(false);
+                    await Task.WhenAny(clientTask, _cancellationTokenTask).ConfigureAwait(false);
                     if (_token.IsCancellationRequested)
                         return;
                     var udpReceiveResult = clientTask.Result;

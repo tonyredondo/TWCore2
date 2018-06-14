@@ -19,7 +19,7 @@ namespace TWCore
     /// <summary>
     /// Pool Object Lifecycle
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="T">Type of object</typeparam>
     public interface IPoolObjectLifecycle<T>
     {
         /// <summary>
@@ -40,5 +40,14 @@ namespace TWCore
         /// </summary>
         /// <param name="value">Item instance</param>
         void Reset(T value);
+        /// <summary>
+        /// Drop time frequency in seconds
+        /// </summary>
+        int DropTimeFrequencyInSeconds { get; }
+        /// <summary>
+        /// Drop action
+        /// </summary>
+        /// <param name="value">Drop value</param>
+        void DropAction(T value);
     }
 }

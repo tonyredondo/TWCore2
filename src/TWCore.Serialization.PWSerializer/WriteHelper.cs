@@ -34,6 +34,10 @@ namespace TWCore.Serialization.PWSerializer
             public void Reset(byte[] value)
             {
             }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(byte[] value)
+            {
+            }
         }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

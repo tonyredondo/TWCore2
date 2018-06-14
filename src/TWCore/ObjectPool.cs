@@ -34,37 +34,12 @@ namespace TWCore
     public sealed class ObjectPool<T> : IPool<T>
     {
         private readonly ConcurrentStack<T> _objectStack;
-        private readonly ConcurrentQueue<PoolTime> _poolTimeQueue;
-        private readonly int _maxUnusedTimePerItem;
+        private readonly PoolResetMode _resetMode;
 
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
 
         public int Count => _objectStack.Count;
-
-        private struct PoolTime
-        {
-            private readonly Task _removeTask;
-            private readonly CancellationTokenSource _tokenSource;
-            private bool Done => _tokenSource.IsCancellationRequested || _removeTask.IsCompleted;
-
-            public PoolTime(ObjectPool<T> pool)
-            {
-                _tokenSource = new CancellationTokenSource();
-                var token = _tokenSource.Token;
-                _removeTask = Task.Delay(pool._maxUnusedTimePerItem, token).ContinueWith(tsk =>
-                {
-                    Core.Log.InfoBasic("Removing unused item from the pool.");
-                    pool._objectStack.TryPop(out _);
-                    pool._poolTimeQueue.TryDequeue(out _);
-                }, token, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.Current);
-            }
-            public void Cancel()
-            {
-                _tokenSource.Cancel();
-            }
-        }
 
         /// <summary>
         /// Object pool
@@ -73,18 +48,33 @@ namespace TWCore
         /// <param name="resetAction">Reset action before storing back the item in the pool</param>
         /// <param name="initialBufferSize">Initial buffer size</param>
         /// <param name="resetMode">Pool reset mode</param>
-        /// <param name="maxUnusedTimePerItemInSeconds">Max time of unused items in pool before removing it</param>
+        /// <param name="dropTimeFrequencyInSeconds">Drop time frequency in seconds</param>
+        /// <param name="dropAction">Drop action over the drop item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int maxUnusedTimePerItemInSeconds = 60)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null)
         {
             _objectStack = new ConcurrentStack<T>();
-            _poolTimeQueue = new ConcurrentQueue<PoolTime>();
             _createFunc = createFunc;
             _resetAction = resetAction;
             _resetMode = resetMode;
-            _maxUnusedTimePerItem = maxUnusedTimePerItemInSeconds * 1000;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
+            if (dropTimeFrequencyInSeconds > 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                dropTimeFrequencyInSeconds = dropTimeFrequencyInSeconds * 1000;
+                var token = cancellationTokenSource.Token;
+                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var count = _objectStack.Count;
+                        if (count > 2 && _objectStack.TryPop(out var item))
+                            dropAction?.Invoke(item);
+                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
+                    }
+                }, token);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -95,10 +85,7 @@ namespace TWCore
         public void Preallocate(int number)
         {
             for (var i = 0; i < number; i++)
-            {
                 _objectStack.Push(_createFunc(this));
-                _poolTimeQueue.Enqueue(new PoolTime(this));
-            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -112,8 +99,6 @@ namespace TWCore
                 return _createFunc(this);
             if (_resetMode == PoolResetMode.BeforeUse)
                 _resetAction?.Invoke(value);
-            if (_poolTimeQueue.TryDequeue(out var time))
-                time.Cancel();
             return value;
         }
         /// <inheritdoc />
@@ -127,7 +112,6 @@ namespace TWCore
             if (_resetMode == PoolResetMode.AfterUse)
                 _resetAction?.Invoke(obj);
             _objectStack.Push(obj);
-            _poolTimeQueue.Enqueue(new PoolTime(this));
         }
         /// <inheritdoc />
         /// <summary>
@@ -147,8 +131,6 @@ namespace TWCore
         public void Clear()
         {
             _objectStack.Clear();
-            while (_poolTimeQueue.TryDequeue(out var item))
-                item.Cancel();
         }
     }
 
@@ -169,6 +151,22 @@ namespace TWCore
             _objectStack = new ConcurrentStack<T>();
             for (var i = 0; i < _allocator.InitialSize; i++)
                 _objectStack.Push(_allocator.New());
+            if (_allocator.DropTimeFrequencyInSeconds > 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                var dropTimeFrequencyInSeconds = _allocator.DropTimeFrequencyInSeconds * 1000;
+                var token = cancellationTokenSource.Token;
+                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var count = _objectStack.Count;
+                        if (count > 2 && _objectStack.TryPop(out var item))
+                            _allocator.DropAction(item);
+                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
+                    }
+                }, token);
+            }
         }
         /// <inheritdoc />
         /// <summary>

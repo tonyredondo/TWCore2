@@ -114,6 +114,10 @@ namespace TWCore.Serialization.PWSerializer
             public SerPoolItem New() => new SerPoolItem();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerPoolItem value) => value.Clear();
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerPoolItem value)
+            {
+            }
         }
         private struct DesPoolAllocator : IPoolObjectLifecycle<DesPoolItem>
         {
@@ -123,6 +127,10 @@ namespace TWCore.Serialization.PWSerializer
             public DesPoolItem New() => new DesPoolItem();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DesPoolItem value) => value.Clear();
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DesPoolItem value)
+            {
+            }
         }
         private struct SerializerScopeAllocator : IPoolObjectLifecycle<SerializerScope>
         {
@@ -132,6 +140,10 @@ namespace TWCore.Serialization.PWSerializer
             public SerializerScope New() => new SerializerScope();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializerScope value) => value.Init();
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializerScope value)
+            {
+            }
         }
         private struct RuntimeValueAllocator : IPoolObjectLifecycle<SerializerPlanItem.RuntimeValue>
         {
@@ -141,6 +153,10 @@ namespace TWCore.Serialization.PWSerializer
             public SerializerPlanItem.RuntimeValue New() => new SerializerPlanItem.RuntimeValue();
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializerPlanItem.RuntimeValue value) => value.Init(null, null, null);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializerPlanItem.RuntimeValue value)
+            {
+            }
         }
         #endregion
 

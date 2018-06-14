@@ -8,7 +8,7 @@ echo "Publishing project..."
 dotnet publish -c Release -r linux-x64 -v q -o ./app/
 
 echo "Building docker image"
-docker build -t twcore_objectviewer:2.0.136 .
+docker build -t twcore_objectviewer:2.0.137 .
 
 echo "Remove build artifacts"
 rm -r app

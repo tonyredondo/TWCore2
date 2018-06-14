@@ -76,7 +76,7 @@ namespace TWCore.Test.Core
                 Task.Run(async () =>
                 {
                     var rnd = new Random();
-                    var pool = new ObjectPool<int>(i => rnd.Next(100), null, 0, PoolResetMode.AfterUse, 1);
+                    var pool = new ObjectPool<int>(i => rnd.Next(100), null, 0, PoolResetMode.AfterUse, 5);
                     while (true)
                     {
                         var max = rnd.Next(10);

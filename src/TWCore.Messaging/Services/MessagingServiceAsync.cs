@@ -264,30 +264,18 @@ namespace TWCore.Services
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
 
-                switch (e.Message)
-                {
-                    case RequestMessage reqMsg:
-                        Core.Trace.Write("QueueReceivedRequestMessage - " + reqMsg.CorrelationId, reqMsg);
-                        break;
-                    case ResponseMessage resMsg:
-                        Core.Trace.Write("QueueReceivedResponseMessage - " + resMsg.CorrelationId, resMsg);
-                        break;
-                }
+                if (e.Message is IMessage msg)
+                    Core.Trace.Write(GetType().FullName, OnGetReceivedMessageTraceName(msg), msg, msg.CorrelationId.ToString());
+
                 return Task.CompletedTask;
             };
             MessageSent += (sender, e) =>
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
 
-                switch (e.Message)
-                {
-                    case RequestMessage reqMsg:
-                        Core.Trace.Write("QueueSentRequestMessage - " + reqMsg.CorrelationId, reqMsg);
-                        break;
-                    case ResponseMessage resMsg:
-                        Core.Trace.Write("QueueSentResponseMessage - " + resMsg.CorrelationId, resMsg);
-                        break;
-                }
+                if (e.Message is IMessage msg)
+                    Core.Trace.Write(GetType().FullName, OnGetSentMessageTraceName(msg), msg, msg.CorrelationId.ToString());
+
                 return Task.CompletedTask;
             };
         }
@@ -310,6 +298,21 @@ namespace TWCore.Services
         /// <param name="server">Queue server object instance</param>
         /// <returns>Message processor instance</returns>
         protected abstract IMessageProcessorAsync GetMessageProcessorAsync(IMQueueServer server);
+
+        /// <summary>
+        /// Get Received Message Trace Name
+        /// </summary>
+        /// <param name="message">Message object</param>
+        /// <returns>Trace name</returns>
+        protected virtual string OnGetReceivedMessageTraceName(IMessage message)
+            => "QueueReceivedMessage - " + message.CorrelationId;
+        /// <summary>
+        /// Get Sent Message Trace Name
+        /// </summary>
+        /// <param name="message">Message object</param>
+        /// <returns>Trace name</returns>
+        protected virtual string OnGetSentMessageTraceName(IMessage message)
+            => "QueueSentMessage - " + message.CorrelationId;
         #endregion
 
         #region Static Methods

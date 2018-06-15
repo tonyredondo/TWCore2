@@ -27,6 +27,8 @@ namespace TWCore.Triggers
     [StatusName("Time of day Trigger")]
 	public class TimeOfDayTrigger : TriggerBase
     {
+        private volatile bool _processing;
+        
         /// <summary>
 		/// Time of day for the Trigger
 		/// </summary>
@@ -72,10 +74,20 @@ namespace TWCore.Triggers
             _tokenSource = new CancellationTokenSource();
             _timer = new Timer(obj =>
             {
+                if (_processing) return;
+                _processing = true;
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
-                Trigger();
+                try
+                {
+                    Trigger();
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                _processing = false;
             }, _tokenSource, startTime, TimeSpan.FromDays(1));
         }
         /// <inheritdoc />

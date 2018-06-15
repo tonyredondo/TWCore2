@@ -38,10 +38,12 @@ namespace TWCore.Diagnostics.Trace.Storages
     {
         private readonly string _queueName;
         private readonly Timer _timer;
+	    private volatile bool _processing;
+	    private int _count;
         private readonly bool _sendCompleteTrace;
 		private readonly BlockingCollection<MessagingTraceItem> _traceItems;
 		private IMQueueClient _queueClient;
-		private IPool<List<MessagingTraceItem>> _pool;
+		private readonly IPool<List<MessagingTraceItem>> _pool;
 
 
         #region .ctor
@@ -74,19 +76,20 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="item">Trace item</param>
         public Task WriteAsync(TraceItem item)
         {
-			_traceItems.Add(new MessagingTraceItem
-			{
-				EnvironmentName = Core.EnvironmentName,
-				MachineName = Core.MachineName,
-				ApplicationName = Core.ApplicationName, 
-				InstanceId = Core.InstanceId,
-				GroupName = item.GroupName,
-				Id = item.Id,
-                Tags = item.Tags,
-				Timestamp = item.Timestamp,
-				TraceName = item.TraceName,
-				TraceObject = _sendCompleteTrace ? new SerializedObject(item.TraceObject) : null
-			});
+	        if (Interlocked.Increment(ref _count) < 10_000)
+				_traceItems.Add(new MessagingTraceItem
+				{
+					EnvironmentName = Core.EnvironmentName,
+					MachineName = Core.MachineName,
+					ApplicationName = Core.ApplicationName, 
+					InstanceId = Core.InstanceId,
+					GroupName = item.GroupName,
+					Id = item.Id,
+					Tags = item.Tags,
+					Timestamp = item.Timestamp,
+					TraceName = item.TraceName,
+					TraceObject = _sendCompleteTrace ? new SerializedObject(item.TraceObject) : null
+				});
             return Task.CompletedTask;
         }
         /// <inheritdoc />
@@ -104,15 +107,20 @@ namespace TWCore.Diagnostics.Trace.Storages
         #region Private methods
         private void TimerCallback(object state)
         {
+	        if (_processing) return;
+	        _processing = true;
             try
             {
 				if (_traceItems.Count == 0) return;
 
                 var itemsToSend = _pool.New();
-				while (itemsToSend.Count < 2048 && _traceItems.TryTake(out var item, 10))
-					itemsToSend.Add(item);
+	            while (itemsToSend.Count < 2048 && _traceItems.TryTake(out var item, 10))
+	            {
+		            itemsToSend.Add(item);
+		            Interlocked.Decrement(ref _count);
+	            }
 
-                Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
+	            Core.Log.LibDebug("Sending {0} trace items to the diagnostic queue.", itemsToSend.Count);
                 _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
@@ -123,6 +131,7 @@ namespace TWCore.Diagnostics.Trace.Storages
             {
                 Core.Log.Write(ex);
             }
+	        _processing = false;
         }
         #endregion
     }

@@ -33,6 +33,7 @@ namespace TWCore.Diagnostics.Status.Transports
     {
         private readonly string _queueName;
         private readonly Timer _timer;
+        private volatile bool _processing;
 		private IMQueueClient _queueClient;
 
         #region Events
@@ -64,6 +65,8 @@ namespace TWCore.Diagnostics.Status.Transports
         #region Private methods
         private void TimerCallback(object state)
         {
+            if (_processing) return;
+            _processing = true;
             try
             {
                 var statusData = OnFetchStatus?.Invoke();
@@ -76,6 +79,7 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 Core.Log.Write(ex);
             }
+            _processing = false;
         }
         #endregion
         

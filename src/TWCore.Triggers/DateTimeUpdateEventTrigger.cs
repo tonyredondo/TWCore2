@@ -31,6 +31,7 @@ namespace TWCore.Triggers
         private CancellationTokenSource _tokenSource;
         private Timer _timer;
         private readonly string _triggerName;
+        private volatile bool _processing;
 
         #region Events
         public event DateTimeUpdateEventTriggerDelegate OnEventTriggerCheck;
@@ -64,18 +65,27 @@ namespace TWCore.Triggers
             _tokenSource = new CancellationTokenSource();
             _timer = new Timer(obj =>
             {
+                if (_processing) return;
+                _processing = true;
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
                 if (OnEventTriggerCheck == null) return;
-
-                var lastUpdate = OnEventTriggerCheck(Core.EnvironmentName, Core.ApplicationName, Core.MachineName, _triggerName);
-                var ts = lastUpdate - _lastUpdate;
-                if (Math.Abs(ts.TotalSeconds) > 5)
+                try
                 {
-                    _lastUpdate = lastUpdate;
-                    Trigger();
+                    var lastUpdate = OnEventTriggerCheck(Core.EnvironmentName, Core.ApplicationName, Core.MachineName, _triggerName);
+                    var ts = lastUpdate - _lastUpdate;
+                    if (Math.Abs(ts.TotalSeconds) > 5)
+                    {
+                        _lastUpdate = lastUpdate;
+                        Trigger();
+                    }
                 }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                _processing = false;
             }, _tokenSource, CheckFrequency, CheckFrequency);
         }
         protected override void OnFinalize()

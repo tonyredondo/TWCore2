@@ -70,7 +70,11 @@ namespace TWCore.Diagnostics.Status.Transports
             try
             {
                 var statusData = OnFetchStatus?.Invoke();
-                if (statusData == null) return;
+                if (statusData == null)
+                {
+                    _processing = false;
+                    return;
+                }
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(statusData).WaitAndResults();

@@ -120,7 +120,11 @@ namespace TWCore.Diagnostics.Log.Storages
 	        _processing = true;
             try
             {
-				if (_logItems.Count == 0) return;
+	            if (_logItems.Count == 0)
+	            {
+		            _processing = false;
+		            return;
+	            }
 
                 var itemsToSend = _pool.New();
 	            while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))

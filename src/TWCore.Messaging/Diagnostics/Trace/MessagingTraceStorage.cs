@@ -111,7 +111,11 @@ namespace TWCore.Diagnostics.Trace.Storages
 	        _processing = true;
             try
             {
-				if (_traceItems.Count == 0) return;
+	            if (_traceItems.Count == 0)
+	            {
+		            _processing = false;
+		            return;
+	            }
 
                 var itemsToSend = _pool.New();
 	            while (itemsToSend.Count < 2048 && _traceItems.TryTake(out var item, 10))

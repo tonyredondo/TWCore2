@@ -71,7 +71,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="item">Log Item</param>
         public Task WriteAsync(ILogItem item)
         {
-			if (item is LogItem logItem && Interlocked.Increment(ref _count) < 25_000)
+			if (item is LogItem logItem && Interlocked.Increment(ref _count) < 10_000)
 				_logItems.Add(new LogItem
 				{
                     InstanceId = Core.InstanceId,

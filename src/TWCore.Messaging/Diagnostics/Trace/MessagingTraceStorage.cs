@@ -76,7 +76,7 @@ namespace TWCore.Diagnostics.Trace.Storages
         /// <param name="item">Trace item</param>
         public Task WriteAsync(TraceItem item)
         {
-	        if (Interlocked.Increment(ref _count) < 10_000)
+	        if (Interlocked.Increment(ref _count) < 1_000)
 				_traceItems.Add(new MessagingTraceItem
 				{
 					EnvironmentName = Core.EnvironmentName,

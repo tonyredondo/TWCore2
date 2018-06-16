@@ -213,15 +213,10 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             var pattern = DateTime.Today.ToString("yyyy-MM-dd");
 
-            if (pattern.StartsWith("\\"))
-                pattern = pattern.Substring(1);
             if (BasePath.IsNullOrEmpty())
                 Core.Log.Warning("BasePath parameter is null!");
-            else
-            {
-                if (!Directory.Exists(BasePath))
-                    Directory.CreateDirectory(BasePath);
-            }
+            else if (!Directory.Exists(BasePath))
+                Directory.CreateDirectory(BasePath);
 
             var myPath = Path.Combine(BasePath, pattern);
             var path = Factory.GetAbsolutePath(myPath);

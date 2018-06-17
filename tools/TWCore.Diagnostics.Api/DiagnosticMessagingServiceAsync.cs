@@ -36,7 +36,7 @@ namespace TWCore.Diagnostics.Api
 	        //var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 	        //var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 
-	        //var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("DEV", null, null);
+	        var status = ((RavenDbQueryHandler) DbHandlers.Instance.Query).GetCurrentStatus("docker", null, null);
 	        
 
          //   Task.Delay(6000).ContinueWith(async _ =>

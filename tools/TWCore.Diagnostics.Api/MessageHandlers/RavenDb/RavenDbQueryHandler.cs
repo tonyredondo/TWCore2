@@ -25,6 +25,7 @@ using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
+using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
@@ -274,7 +275,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 					query = query.WhereEquals(x => x.Application, application);
 
 				query = query
-					.WhereGreaterThanOrEqual(i => i.Timestamp, DateTime.Now.AddMinutes(-5))
+					//.WhereGreaterThanOrEqual(i => i.Timestamp, DateTime.Now.AddMinutes(-30))
 					.OrderByDescending(i => i.Timestamp);
 				
 				var data = await query.ToListAsync().ConfigureAwait(false);

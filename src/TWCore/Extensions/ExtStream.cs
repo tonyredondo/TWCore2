@@ -60,7 +60,7 @@ namespace TWCore
         /// <param name="stream">Stream source</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadBytes(this Stream stream)
+        public static SubArray<byte> ReadAllBytes(this Stream stream)
         {
             using (var ms = new MemoryStream())
             {
@@ -75,7 +75,7 @@ namespace TWCore
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SubArray<byte> ReadBytes(this Stream stream, int bufferSize)
+        public static SubArray<byte> ReadAllBytes(this Stream stream, int bufferSize)
         {
             using (var ms = new MemoryStream())
             {
@@ -89,7 +89,7 @@ namespace TWCore
         /// <param name="stream">Stream source</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream)
+        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream)
         {
             using (var ms = new MemoryStream())
             {
@@ -104,7 +104,7 @@ namespace TWCore
         /// <param name="bufferSize">Buffer size</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize)
+        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize)
         {
             using (var ms = new MemoryStream())
             {
@@ -120,7 +120,7 @@ namespace TWCore
         /// <param name="timeout">Timeout</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, int timeout)
+        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, int timeout)
         {
             var cts = new CancellationTokenSource();
             using (var ms = new MemoryStream())
@@ -138,7 +138,7 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Bytes array</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static async Task<SubArray<byte>> ReadBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
+        public static async Task<SubArray<byte>> ReadAllBytesAsync(this Stream stream, int bufferSize, CancellationToken cancellationToken)
         {
             using (var ms = new MemoryStream())
             {

@@ -208,29 +208,40 @@ namespace TWCore.Serialization
         public static SerializedObject FromSubArray(SubArray<byte> byteArray)
         {
             if (byteArray.Count == 0) return null;
-            using(var ms = byteArray.ToMemoryStream())
-            using (var br = new BinaryReader(ms))
+            var memData = byteArray.AsReadOnlyMemory();
+            var length = byteArray.Count;
+
+            var dtLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            if (dtLength < -1 || dtLength > length) return null;
+            var dataTypeByte = ReadOnlyMemory<byte>.Empty;
+            if (dtLength != -1)
             {
-                var rByte = byteArray.Count;
-
-                var dataTypeByteLength = br.ReadInt32();
-                if (dataTypeByteLength < -1 || dataTypeByteLength > rByte) return null;
-                var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
-                rByte -= dataTypeByteLength;
-
-                var serializerMimeTypeByteLength = br.ReadInt32();
-                if (serializerMimeTypeByteLength < -1 || serializerMimeTypeByteLength > rByte) return null;
-                var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
-                rByte -= serializerMimeTypeByteLength;
-
-                var dataLength = br.ReadInt32();
-                if (dataLength < -1 || dataLength > rByte) return null;
-                var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
-
-                return new SerializedObject(data,
-                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+                dataTypeByte = memData.Slice(4, dtLength);
+                length -= dtLength;
+                memData = memData.Slice(4 + dtLength);
             }
+
+            var smtLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            if (smtLength < -1 || smtLength > length) return null;
+            var serializerMimeTypeByte = ReadOnlyMemory<byte>.Empty;
+            if (smtLength != -1)
+            {
+                serializerMimeTypeByte = memData.Slice(4, smtLength);
+                length -= smtLength;
+                memData = memData.Slice(4 + smtLength);
+            }
+
+            var dataLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            if (dataLength < -1 || dataLength > length) return null;
+            var data = ReadOnlyMemory<byte>.Empty;
+            if (dataLength != -1)
+            {
+                data = memData.Slice(4, dataLength);
+            }
+
+            return new SerializedObject(data.ToArray(),
+                !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte.Span) : null,
+                !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte.Span) : null);
         }
         /// <summary>
         /// Get SerializedObject instance from a stream
@@ -295,44 +306,40 @@ namespace TWCore.Serialization
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var length = fs.Length;
-                var bInt = new byte[4];
+                var fsData = (ReadOnlyMemory<byte>) await fs.ReadBytesAsMemoryAsync().ConfigureAwait(false);
+                var length = fsData.Length;
 
-                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
-                var dtLength = BitConverter.ToInt32(bInt, 0);
+                var dtLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
                 if (dtLength < -1 || dtLength > length) return null;
-                byte[] dataTypeByte = null;
+                var dataTypeByte = ReadOnlyMemory<byte>.Empty;
                 if (dtLength != -1)
                 {
-                    dataTypeByte = new byte[dtLength];
-                    await fs.ReadAsync(dataTypeByte, 0, dtLength).ConfigureAwait(false);
+                    dataTypeByte = fsData.Slice(4, dtLength);
                     length -= dtLength;
+                    fsData = fsData.Slice(4 + dtLength);
                 }
 
-                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
-                var smtLength = BitConverter.ToInt32(bInt, 0);
+                var smtLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
                 if (smtLength < -1 || smtLength > length) return null;
-                byte[] serializerMimeTypeByte = null;
+                var serializerMimeTypeByte = ReadOnlyMemory<byte>.Empty;
                 if (smtLength != -1)
                 {
-                    serializerMimeTypeByte = new byte[smtLength];
-                    await fs.ReadAsync(serializerMimeTypeByte, 0, smtLength).ConfigureAwait(false);
+                    serializerMimeTypeByte = fsData.Slice(4, smtLength);
                     length -= smtLength;
+                    fsData = fsData.Slice(4 + smtLength);
                 }
 
-                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
-                var dataLength = BitConverter.ToInt32(bInt, 0);
+                var dataLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
                 if (dataLength < -1 || dataLength > length) return null;
-                byte[] data = null;
+                var data = ReadOnlyMemory<byte>.Empty;
                 if (dataLength != -1)
                 {
-                    data = new byte[dataLength];
-                    await fs.ReadAsync(data, 0, dataLength).ConfigureAwait(false);
+                    data = fsData.Slice(4, dataLength);
                 }
 
-                return new SerializedObject(data,
-                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+                return new SerializedObject(data.ToArray(),
+                    !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte.Span) : null,
+                    !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte.Span) : null);
             }
         }
         #endregion

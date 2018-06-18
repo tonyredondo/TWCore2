@@ -49,8 +49,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Compress(Stream source, Stream destination)
         {
-            using (var ms = Compress(source.ReadBytes()).ToMemoryStream())
-                ms.CopyTo(destination);
+            var compressValue = Compress(source.ReadAllBytes()).AsReadOnlySpan();
+            destination.Write(compressValue);
         }
         /// <inheritdoc />
         /// <summary>
@@ -61,8 +61,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task CompressAsync(Stream source, Stream destination)
         {
-            using (var ms = Compress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
-                await ms.CopyToAsync(destination).ConfigureAwait(false);
+            var compressValue = Compress(await source.ReadAllBytesAsync().ConfigureAwait(false)).AsReadOnlyMemory();
+            await destination.WriteAsync(compressValue).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>
@@ -93,8 +93,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Decompress(Stream source, Stream destination)
         {
-            using (var ms = Decompress(source.ReadBytes()).ToMemoryStream())
-                ms.CopyTo(destination);
+            var decompress = Decompress(source.ReadAllBytes()).AsReadOnlySpan();
+            destination.Write(decompress);
         }
         /// <inheritdoc />
         /// <summary>
@@ -105,8 +105,8 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task DecompressAsync(Stream source, Stream destination)
         {
-            using (var ms = Decompress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
-                await ms.CopyToAsync(destination).ConfigureAwait(false);
+            var decompress = Decompress(await source.ReadAllBytesAsync().ConfigureAwait(false)).AsReadOnlyMemory();
+            await destination.WriteAsync(decompress).ConfigureAwait(false);
         }
         /// <inheritdoc />
         /// <summary>

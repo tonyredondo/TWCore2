@@ -306,7 +306,7 @@ namespace TWCore.Serialization
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                var fsData = (ReadOnlyMemory<byte>) await fs.ReadBytesAsMemoryAsync().ConfigureAwait(false);
+                var fsData = (ReadOnlyMemory<byte>) await fs.ReadAllBytesAsMemoryAsync().ConfigureAwait(false);
                 var length = fsData.Length;
 
                 var dtLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));

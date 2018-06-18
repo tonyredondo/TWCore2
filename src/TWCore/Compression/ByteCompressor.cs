@@ -49,7 +49,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Compress(Stream source, Stream destination)
         {
-            using (var ms = Compress(source.ReadBytes()).ToMemoryStream())
+            using (var ms = Compress(source.ReadAllBytes()).ToMemoryStream())
                 ms.CopyTo(destination);
         }
         /// <inheritdoc />
@@ -61,7 +61,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task CompressAsync(Stream source, Stream destination)
         {
-            using (var ms = Compress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
+            using (var ms = Compress(await source.ReadAllBytesAsync().ConfigureAwait(false)).ToMemoryStream())
                 await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <inheritdoc />
@@ -93,7 +93,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual void Decompress(Stream source, Stream destination)
         {
-            using (var ms = Decompress(source.ReadBytes()).ToMemoryStream())
+            using (var ms = Decompress(source.ReadAllBytes()).ToMemoryStream())
                 ms.CopyTo(destination);
         }
         /// <inheritdoc />
@@ -105,7 +105,7 @@ namespace TWCore.Compression
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public virtual async Task DecompressAsync(Stream source, Stream destination)
         {
-            using (var ms = Decompress(await source.ReadBytesAsync().ConfigureAwait(false)).ToMemoryStream())
+            using (var ms = Decompress(await source.ReadAllBytesAsync().ConfigureAwait(false)).ToMemoryStream())
                 await ms.CopyToAsync(destination).ConfigureAwait(false);
         }
         /// <inheritdoc />

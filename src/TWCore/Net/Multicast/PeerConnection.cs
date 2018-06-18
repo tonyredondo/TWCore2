@@ -269,7 +269,6 @@ namespace TWCore.Net.Multicast
 
         private async Task ReceiveSocketThreadAsync(UdpClient client)
         {
-            var guidBytes = new byte[16];
             while (!_token.IsCancellationRequested)
             {
                 try
@@ -284,29 +283,29 @@ namespace TWCore.Net.Multicast
                     var datagram = udpReceiveResult.Buffer;
                     if (datagram.Length < 22)
                         continue;
-                    Buffer.BlockCopy(datagram, 0, guidBytes, 0, 16);
-                    var guid = new Guid(guidBytes);
+
+                    var guid = new Guid(datagram.AsSpan(0, 16));
                     var numMsgs = BitConverter.ToUInt16(datagram, 16);
                     var currentMsg = BitConverter.ToUInt16(datagram, 18);
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
-                    var buffer = new byte[dataSize];
-                    Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
+                    var buffer = datagram.AsMemory(22, dataSize);
 
                     //Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
 
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => new ReceivedDatagrams(numMsgs, rcvEndpoint.Address));
-                    if (receivedDatagrams.Address != rcvEndpoint.Address.ToString())
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, _ => ReceivedDatagrams.Rent(numMsgs, rcvEndpoint.Address));
+                    if (!receivedDatagrams.Address.Equals(rcvEndpoint.Address))
                         continue;
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
                     _receivedMessagesDatagram.TryRemove(guid, out _);
 
-                    buffer = receivedDatagrams.GetMessage();
+                    var bufferMessage = receivedDatagrams.GetMessage();
+                    ReceivedDatagrams.Store(receivedDatagrams);
 
                     try
                     {
-                        OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, buffer));
+                        OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
                     }
                     catch (Exception ex)
                     {
@@ -331,25 +330,44 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Nested Types
+        private static readonly ReferencePool<ReceivedDatagrams> _receivedDatagrams = new ReferencePool<ReceivedDatagrams>();
         private class ReceivedDatagrams
         {
-            public byte[][] Datagrams { get; private set; }
-            public string Address { get; private set; }
-            public bool Complete => Datagrams.All(i => i != null);
-            public ReceivedDatagrams(int numMessages, IPAddress address)
-            {
-                Datagrams = new byte[numMessages][];
-                Address = address.ToString();
-            }
+            public Memory<byte>[] Datagrams { get; private set; }
+            public IPAddress Address { get; private set; }
+            public bool Complete => !Datagrams.Any(i => i.IsEmpty);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] GetMessage()
             {
-                var buffer = Datagrams.SelectMany(i => i).ToArray();
-                Datagrams = null;
-                Address = null;
+                var start = 0;
+                var length = Datagrams.Sum(i => i.Length);
+                var buffer = new byte[length];
+                foreach(var datagram in Datagrams)
+                {
+                    datagram.CopyTo(buffer.AsMemory(start, datagram.Length));
+                    start += datagram.Length;
+                }
                 return buffer;
             }
+
+            #region Statics
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static ReceivedDatagrams Rent(int numMessages, IPAddress address)
+            {
+                var datagram = _receivedDatagrams.New();
+                datagram.Datagrams = new Memory<byte>[numMessages];
+                datagram.Address = address;
+                return datagram;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public static void Store(ReceivedDatagrams datagram)
+            {
+                datagram.Datagrams = null;
+                datagram.Address = null;
+                _receivedDatagrams.Store(datagram);
+            }
+            #endregion
         }
         #endregion
     }

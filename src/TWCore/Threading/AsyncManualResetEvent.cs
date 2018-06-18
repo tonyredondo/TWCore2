@@ -78,8 +78,9 @@ namespace TWCore.Threading
         public Task WaitAsync(CancellationToken cancellationToken)
         {
             if (_mTcs == null) return DisposedExceptionTask;
+            if (_mTcs.Task.IsCompleted) return Task.CompletedTask;
             var cTask = CTasks.GetOrAdd(cancellationToken, token => token.WhenCanceledAsync());
-
+            if (cTask.IsCompleted) return Task.CompletedTask;
             return Task.WhenAny(_mTcs.Task, cTask);
         }
         /// <summary>
@@ -91,6 +92,9 @@ namespace TWCore.Threading
         public Task<bool> WaitAsync(int milliseconds)
         {
             if (_mTcs == null) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(milliseconds);
             return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
@@ -104,7 +108,10 @@ namespace TWCore.Threading
         public Task<bool> WaitAsync(TimeSpan timeout)
         {
             if (_mTcs == null) return TaskHelper.CompleteFalse;
-            var delayTask = Task.Delay((int)timeout.TotalMilliseconds);
+            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
+            var delayTask = Task.Delay(timeout);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask, 
                     CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
@@ -120,6 +127,9 @@ namespace TWCore.Threading
         {
             if (_mTcs == null) return TaskHelper.CompleteFalse;
             if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(milliseconds, cancellationToken);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
@@ -136,6 +146,9 @@ namespace TWCore.Threading
         {
             if (_mTcs == null) return TaskHelper.CompleteFalse;
             if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
+            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
             var delayTask = Task.Delay(timeout, cancellationToken);
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,

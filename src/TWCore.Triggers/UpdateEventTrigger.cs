@@ -26,6 +26,7 @@ namespace TWCore.Triggers
     [StatusName("Update Event Trigger")]
     public class UpdateEventTrigger : TriggerBase
     {
+        private volatile bool _processing;
         private CancellationTokenSource _tokenSource;
         private Timer _timer;
         private readonly string _triggerName;
@@ -61,15 +62,23 @@ namespace TWCore.Triggers
             _tokenSource = new CancellationTokenSource();
             _timer = new Timer(obj =>
             {
+                if (_processing) return;
+                _processing = true;
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
                 if (OnEventTriggerCheck == null) return;
-
-                var shouldUpdate = OnEventTriggerCheck(Core.EnvironmentName, Core.ApplicationName, Core.MachineName, _triggerName);
-                if (shouldUpdate)
-                    Trigger();
-
+                try
+                {
+                    var shouldUpdate = OnEventTriggerCheck(Core.EnvironmentName, Core.ApplicationName, Core.MachineName, _triggerName);
+                    if (shouldUpdate)
+                        Trigger();
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                _processing = false;
             }, _tokenSource, CheckFrequency, CheckFrequency);
         }
         protected override void OnFinalize()

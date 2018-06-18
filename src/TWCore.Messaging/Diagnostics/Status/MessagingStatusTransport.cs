@@ -33,6 +33,7 @@ namespace TWCore.Diagnostics.Status.Transports
     {
         private readonly string _queueName;
         private readonly Timer _timer;
+        private volatile bool _processing;
 		private IMQueueClient _queueClient;
 
         #region Events
@@ -64,10 +65,16 @@ namespace TWCore.Diagnostics.Status.Transports
         #region Private methods
         private void TimerCallback(object state)
         {
+            if (_processing) return;
+            _processing = true;
             try
             {
                 var statusData = OnFetchStatus?.Invoke();
-                if (statusData == null) return;
+                if (statusData == null)
+                {
+                    _processing = false;
+                    return;
+                }
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
                 _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(statusData).WaitAndResults();
@@ -76,6 +83,7 @@ namespace TWCore.Diagnostics.Status.Transports
             {
                 Core.Log.Write(ex);
             }
+            _processing = false;
         }
         #endregion
         

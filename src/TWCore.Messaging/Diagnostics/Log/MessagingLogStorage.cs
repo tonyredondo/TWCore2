@@ -37,9 +37,11 @@ namespace TWCore.Diagnostics.Log.Storages
     {
         private readonly string _queueName;
         private readonly Timer _timer;
+	    private volatile bool _processing;
+	    private int _count;
 		private readonly BlockingCollection<LogItem> _logItems;
 		private IMQueueClient _queueClient;
-		private IPool<List<LogItem>> _pool;
+		private readonly IPool<List<LogItem>> _pool;
 
         #region .ctor
         /// <summary>
@@ -69,7 +71,7 @@ namespace TWCore.Diagnostics.Log.Storages
         /// <param name="item">Log Item</param>
         public Task WriteAsync(ILogItem item)
         {
-			if (item is LogItem logItem)
+			if (item is LogItem logItem && Interlocked.Increment(ref _count) < 10_000)
 				_logItems.Add(new LogItem
 				{
                     InstanceId = Core.InstanceId,
@@ -114,15 +116,24 @@ namespace TWCore.Diagnostics.Log.Storages
 		#region Private methods
         private void TimerCallback(object state)
         {
+	        if (_processing) return;
+	        _processing = true;
             try
             {
-				if (_logItems.Count == 0) return;
+	            if (_logItems.Count == 0)
+	            {
+		            _processing = false;
+		            return;
+	            }
 
                 var itemsToSend = _pool.New();
-				while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))
-					itemsToSend.Add(item);
+	            while (itemsToSend.Count < 2048 && _logItems.TryTake(out var item, 10))
+	            {
+		            itemsToSend.Add(item);
+		            Interlocked.Decrement(ref _count);
+	            }
 
-                Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
+	            Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
                 _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
@@ -133,6 +144,7 @@ namespace TWCore.Diagnostics.Log.Storages
             {
 				//
             }
+	        _processing = false;
         }
         #endregion
     }

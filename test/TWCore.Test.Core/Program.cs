@@ -73,7 +73,24 @@ namespace TWCore.Test.Core
 
                 var enumArrayObject = enumArraySer.DeserializeFromNBinary<VarEnum[]>();
 
-
+                /*Task.Run(async () =>
+                {
+                    var rnd = new Random();
+                    var pool = new ObjectPool<int>(i => rnd.Next(100), null, 0, PoolResetMode.AfterUse, 5);
+                    while (true)
+                    {
+                        var max = rnd.Next(10);
+                        TWCore.Core.Log.InfoBasic("Using pool ({0}) Current Count = {1}", max, pool.Count);
+                        for (var i = 0; i < max; i++)
+                            pool.New();
+                        for (var i = 0; i < max; i++)
+                            pool.Store(i);
+                        
+                        await Task.Delay(1000).ConfigureAwait(false);
+                        TWCore.Core.Log.InfoBasic("Current Count = {0}", pool.Count);
+                    }
+                });*/
+                
                 //DiscoveryService.OnNewServiceReceived += DiscoveryService_OnServiceReceived;
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;

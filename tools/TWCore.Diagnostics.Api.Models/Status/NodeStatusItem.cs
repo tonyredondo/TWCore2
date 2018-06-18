@@ -20,7 +20,7 @@ using System.Runtime.Serialization;
 using System.Xml.Serialization;
 using TWCore.Diagnostics.Status;
 
-namespace TWCore.Diagnostics.Api.Models.Trace
+namespace TWCore.Diagnostics.Api.Models.Status
 {
     [DataContract]
 	public class NodeStatusItem : NodeInfo

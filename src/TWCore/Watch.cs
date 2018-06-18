@@ -272,6 +272,10 @@ namespace TWCore
                 public WItem New() => new WItem();
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Reset(WItem value) => value.Reset();
+                public int DropTimeFrequencyInSeconds => 60;
+                public void DropAction(WItem value)
+                {
+                }
             }
 
             [IgnoreStackFrameLog]

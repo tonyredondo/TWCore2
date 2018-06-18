@@ -11,13 +11,21 @@
               Server="TWCore.Messaging.RabbitMQ.RabbitMQueueRawServer, TWCore.Messaging.RabbitMQ"
               Admin="TWCore.Messaging.RabbitMQ.RabbitMQueueAdmin, TWCore.Messaging.RabbitMQ" />
 
+    
     <ClientQueues EnvironmentName="" MachineName="">
       <SendQueue Route="amqp://test:test@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
     </ClientQueues>
-
     <ServerQueues EnvironmentName="" MachineName="">
       <RecvQueue Route="amqp://test:test@127.0.0.1:5672/" Name="DIAGNOSTICS_RQ" />
     </ServerQueues>
+    
+    <ClientQueues EnvironmentName="Docker" MachineName="">
+      <SendQueue Route="{Env:DIAGNOSTICS_QUEUE_ROUTE}" Name="{Env:DIAGNOSTICS_QUEUE_NAME}" />
+    </ClientQueues>
+    <ServerQueues EnvironmentName="Docker" MachineName="">
+      <RecvQueue Route="{Env:DIAGNOSTICS_QUEUE_ROUTE}" Name="{Env:DIAGNOSTICS_QUEUE_NAME}" />
+    </ServerQueues>
+    
 
     <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="gzip">
       <ClientSenderOptions MessageExpirationInSec="30" MessagePriority="Normal" UseDeadLetter="true" Recoverable="false" Label="DIAGNOSTICS REQUEST" />

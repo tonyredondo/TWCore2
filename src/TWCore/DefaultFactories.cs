@@ -585,6 +585,7 @@ namespace TWCore
                 private Timer _timer;
                 private DateTime _monitorTime;
                 private TimeSpan _cpuTime;
+                private volatile bool _processing;
 
                 public double Percentage { get; private set; }
 
@@ -598,6 +599,8 @@ namespace TWCore
 
                 private void TimerCallback(object state)
                 {
+                    if (_processing) return;
+                    _processing = true;
                     var lastNow = DateTime.UtcNow;
                     
                     var newCpuTime = _process.TotalProcessorTime - _startCpuTime;
@@ -610,6 +613,7 @@ namespace TWCore
                     _cpuTime = newCpuTime;
                     _monitorTime = lastNow;
                     Percentage = Math.Round(usage * 100, 2);
+                    _processing = false;
                 }
             }
         }

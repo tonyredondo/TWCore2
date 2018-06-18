@@ -27,6 +27,8 @@ namespace TWCore.Triggers
     [StatusName("Periodic Trigger")]
 	public class PeriodicTrigger : TriggerBase
     {
+        private volatile bool _processing;
+        
         /// <summary>
         /// Periodic Time to use by the trigger
         /// </summary>
@@ -65,10 +67,20 @@ namespace TWCore.Triggers
             _tokenSource = new CancellationTokenSource();
             _timer = new Timer(obj =>
             {
+                if (_processing) return;
+                _processing = true;
                 var tSource = (CancellationTokenSource)obj;
                 if (tSource.Token.IsCancellationRequested) return;
                 Core.Log.LibVerbose("{0}: Trigger call", GetType().Name);
-                Trigger();
+                try
+                {
+                    Trigger();
+                }
+                catch (Exception ex)
+                {
+                    Core.Log.Write(ex);
+                }
+                _processing = false;
             }, _tokenSource, Time, Time);
         }
         /// <inheritdoc />

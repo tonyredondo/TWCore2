@@ -289,6 +289,10 @@ namespace TWCore.Net.RPC.Client
             public void Reset((object[], Type[]) value)
             {
             }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction((object[], Type[]) value)
+            {
+            }
         }
         private struct Args2Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -298,6 +302,10 @@ namespace TWCore.Net.RPC.Client
             public (object[], Type[]) New() => (new object[2], new Type[2]);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset((object[], Type[]) value)
+            {
+            }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction((object[], Type[]) value)
             {
             }
         }
@@ -311,6 +319,10 @@ namespace TWCore.Net.RPC.Client
             public void Reset((object[], Type[]) value)
             {
             }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction((object[], Type[]) value)
+            {
+            }
         }
         private struct Args4Allocator : IPoolObjectLifecycle<(object[], Type[])>
         {
@@ -320,6 +332,10 @@ namespace TWCore.Net.RPC.Client
             public (object[], Type[]) New() => (new object[4], new Type[4]);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset((object[], Type[]) value)
+            {
+            }
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction((object[], Type[]) value)
             {
             }
         }

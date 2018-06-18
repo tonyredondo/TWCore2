@@ -19,6 +19,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 // ReSharper disable UnusedMember.Local
 
@@ -56,8 +58,10 @@ namespace TWCore
         /// <param name="resetAction">Reset action before storing back the item in the pool</param>
         /// <param name="onetimeInitAction">Action to execute after a new object creation</param>
         /// <param name="resetMode">Pool reset mode</param>
+        /// <param name="dropTimeFrequencyInSeconds">Drop time frequency in seconds</param>
+        /// <param name="dropAction">Drop action over the drop item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.AfterUse)
+        public ReferencePool(int initialBufferSize = 0, Action<T> resetAction = null, Action<T> onetimeInitAction = null, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null)
         {
             _objectStack = new ConcurrentStack<T>();
             _resetAction = resetAction;
@@ -65,6 +69,22 @@ namespace TWCore
             _resetMode = resetMode;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
+            if (dropTimeFrequencyInSeconds > 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                dropTimeFrequencyInSeconds = dropTimeFrequencyInSeconds * 1000;
+                var token = cancellationTokenSource.Token;
+                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var count = _objectStack.Count;
+                        if (count > 2 && _objectStack.TryPop(out var item))
+                            dropAction?.Invoke(item);
+                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
+                    }
+                }, token);
+            }
         }
 
         /// <inheritdoc />

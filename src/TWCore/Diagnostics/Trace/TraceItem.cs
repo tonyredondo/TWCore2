@@ -38,6 +38,11 @@ namespace TWCore.Diagnostics.Trace
         [XmlAttribute, DataMember]
         public Guid Id { get; set; }
         /// <summary>
+        /// Tags
+        /// </summary>
+        [XmlElement, DataMember]
+        public string[] Tags { get; set; }
+        /// <summary>
         /// Trace group name
         /// </summary>
         [XmlAttribute, DataMember]

@@ -91,7 +91,7 @@ namespace TWCore.Messaging.RabbitMQ
             try
             {
                 if (Channel != null) return true;
-                Extensions.InvokeWithRetry((Action)InternalConnection, 5000, int.MaxValue).WaitAsync();
+                ((Action)InternalConnection).InvokeWithRetry(5000, int.MaxValue).WaitAsync();
                 return true;
             }
             catch (Exception ex)

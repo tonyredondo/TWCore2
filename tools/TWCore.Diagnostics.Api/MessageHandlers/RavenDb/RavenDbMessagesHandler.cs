@@ -37,9 +37,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             Core.Log.InfoBasic("Storing LogItem messages...");
 
-            await RavenHelper.ExecuteAsync(async session =>
+            foreach (var logItem in message)
             {
-                foreach (var logItem in message)
+                await RavenHelper.ExecuteAsync(async session =>
                 {
                     var logInfo = new NodeLogItem
                     {
@@ -58,20 +58,17 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Timestamp = logItem.Timestamp
                     };
                     await session.StoreAsync(logInfo).ConfigureAwait(false);
-                }
-
-                await session.SaveChangesAsync().ConfigureAwait(false);
-
-            }).ConfigureAwait(false);
+                    await session.SaveChangesAsync().ConfigureAwait(false);
+                }).ConfigureAwait(false);
+            }
         }
 
         public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
         {
             Core.Log.InfoBasic("Storing TraceItem messages...");
-
-            await RavenHelper.ExecuteAsync(async session =>
+            foreach (var traceItem in message)
             {
-                foreach (var traceItem in message)
+                await RavenHelper.ExecuteAsync(async session =>
                 {
                     var traceInfo = new NodeTraceItem
                     {
@@ -80,6 +77,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         Application = traceItem.ApplicationName,
                         InstanceId = traceItem.InstanceId,
                         TraceId = traceItem.Id,
+                        Tags = traceItem.Tags?.Select(i => i.ToString()).Join(", "),
                         Group = traceItem.GroupName,
                         Name = traceItem.TraceName,
                         Timestamp = traceItem.Timestamp
@@ -93,13 +91,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             traceItem.TraceObject.SerializeToNBinary(ms);
                             ms.Position = 0;
                         }
+
                         session.Advanced.Attachments.Store(traceInfo.Id, "Trace", ms, traceItem.TraceObject?.GetType().FullName);
 
                         await session.SaveChangesAsync().ConfigureAwait(false);
                     }
-                }
-
-            }).ConfigureAwait(false);
+                }).ConfigureAwait(false);
+            }
         }
 
         public async Task ProcessStatusMessageAsync(StatusItemCollection message)

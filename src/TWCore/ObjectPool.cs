@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 #pragma warning disable 649
 
 namespace TWCore
@@ -32,10 +34,13 @@ namespace TWCore
     public sealed class ObjectPool<T> : IPool<T>
     {
         private readonly ConcurrentStack<T> _objectStack;
+        private readonly PoolResetMode _resetMode;
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Func<ObjectPool<T>, T> _createFunc;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly Action<T> _resetAction;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly PoolResetMode _resetMode;
-        
+
+        public int Count => _objectStack.Count;
+
         /// <summary>
         /// Object pool
         /// </summary>
@@ -43,8 +48,10 @@ namespace TWCore
         /// <param name="resetAction">Reset action before storing back the item in the pool</param>
         /// <param name="initialBufferSize">Initial buffer size</param>
         /// <param name="resetMode">Pool reset mode</param>
+        /// <param name="dropTimeFrequencyInSeconds">Drop time frequency in seconds</param>
+        /// <param name="dropAction">Drop action over the drop item</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse)
+        public ObjectPool(Func<ObjectPool<T>, T> createFunc, Action<T> resetAction = null, int initialBufferSize = 0, PoolResetMode resetMode = PoolResetMode.AfterUse, int dropTimeFrequencyInSeconds = 60, Action<T> dropAction = null)
         {
             _objectStack = new ConcurrentStack<T>();
             _createFunc = createFunc;
@@ -52,6 +59,22 @@ namespace TWCore
             _resetMode = resetMode;
             if (initialBufferSize > 0)
                 Preallocate(initialBufferSize);
+            if (dropTimeFrequencyInSeconds > 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                dropTimeFrequencyInSeconds = dropTimeFrequencyInSeconds * 1000;
+                var token = cancellationTokenSource.Token;
+                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var count = _objectStack.Count;
+                        if (count > 2 && _objectStack.TryPop(out var item))
+                            dropAction?.Invoke(item);
+                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
+                    }
+                }, token);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -61,7 +84,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            for(var i = 0; i < number; i++)
+            for (var i = 0; i < number; i++)
                 _objectStack.Push(_createFunc(this));
         }
         /// <inheritdoc />
@@ -128,6 +151,22 @@ namespace TWCore
             _objectStack = new ConcurrentStack<T>();
             for (var i = 0; i < _allocator.InitialSize; i++)
                 _objectStack.Push(_allocator.New());
+            if (_allocator.DropTimeFrequencyInSeconds > 0)
+            {
+                var cancellationTokenSource = new CancellationTokenSource();
+                var dropTimeFrequencyInSeconds = _allocator.DropTimeFrequencyInSeconds * 1000;
+                var token = cancellationTokenSource.Token;
+                Task.Delay(dropTimeFrequencyInSeconds, token).ContinueWith(async tsk =>
+                {
+                    while (!token.IsCancellationRequested)
+                    {
+                        var count = _objectStack.Count;
+                        if (count > 2 && _objectStack.TryPop(out var item))
+                            _allocator.DropAction(item);
+                        await Task.Delay(dropTimeFrequencyInSeconds, token).ConfigureAwait(false);                        
+                    }
+                }, token);
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -137,7 +176,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Preallocate(int number)
         {
-            for(var i = 0; i < number; i++)
+            for (var i = 0; i < number; i++)
                 _objectStack.Push(_allocator.New());
         }
         /// <inheritdoc />

@@ -16,7 +16,6 @@ limitations under the License.
 
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.IO;
 using System.Runtime.CompilerServices;
 using TWCore.Serialization.WSerializer.Types.ValueTypes;
@@ -41,6 +40,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public SerializersTable New() => new SerializersTable(SerializerMode.CachedUShort);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializersTable value)
+            {
+            }
         }
         private struct Table2048Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -50,6 +53,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public SerializersTable New() => new SerializersTable(SerializerMode.Cached2048);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializersTable value)
+            {
+            }
         }
         private struct Table1024Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -59,6 +66,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public SerializersTable New() => new SerializersTable(SerializerMode.Cached1024);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializersTable value)
+            {
+            }
         }
         private struct Table512Allocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -68,6 +79,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public SerializersTable New() => new SerializersTable(SerializerMode.Cached512);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializersTable value)
+            {
+            }
         }
         private struct TableNoCacheAllocator : IPoolObjectLifecycle<SerializersTable>
         {
@@ -77,6 +92,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public SerializersTable New() => new SerializersTable(SerializerMode.NoCached);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(SerializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(SerializersTable value)
+            {
+            }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Init(SerializersTable table)
@@ -272,6 +291,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public DeserializersTable New() => new DeserializersTable(SerializerMode.CachedUShort);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DeserializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DeserializersTable value)
+            {
+            }
         }
         private struct Table2048Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -281,6 +304,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached2048);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DeserializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DeserializersTable value)
+            {
+            }
         }
         private struct Table1024Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -290,6 +317,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached1024);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DeserializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DeserializersTable value)
+            {
+            }
         }
         private struct Table512Allocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -299,6 +330,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public DeserializersTable New() => new DeserializersTable(SerializerMode.Cached512);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DeserializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DeserializersTable value)
+            {
+            }
         }
         private struct TableNoCacheAllocator : IPoolObjectLifecycle<DeserializersTable>
         {
@@ -308,6 +343,10 @@ namespace TWCore.Serialization.WSerializer.Types
             public DeserializersTable New() => new DeserializersTable(SerializerMode.NoCached);
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset(DeserializersTable value) => Init(value);
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(DeserializersTable value)
+            {
+            }
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void Init(DeserializersTable table)

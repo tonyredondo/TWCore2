@@ -1,8 +1,7 @@
 {
   "profiles": {
     "TWCore.Test.Core": {
-      "commandName": "Project",
-      "commandLineArgs": "/serializertest"
+      "commandName": "Project"
     }
   }
 }

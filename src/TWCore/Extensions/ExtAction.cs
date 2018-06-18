@@ -696,7 +696,7 @@ namespace TWCore
                     if (exceptions.Count > 10)
                         exceptions.Dequeue();
                 }
-                if (retry < retryCount)
+                if (retry < retryCount - 1)
                 {
                     if (hasException)
                         Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exceptions.Last().Message, retryInterval);
@@ -775,7 +775,6 @@ namespace TWCore
             var exceptions = new Queue<Exception>();
             for (var retry = 0; retry < retryCount; retry++)
             {
-                var hasException = false;
                 try
                 {
                     action();
@@ -783,17 +782,13 @@ namespace TWCore
                 }
                 catch (Exception ex)
                 {
-                    hasException = true;
                     exceptions.Enqueue(ex);
                     if (exceptions.Count > 10)
                         exceptions.Dequeue();
                 }
-                if (retry < retryCount)
+                if (retry < retryCount - 1)
                 {
-                    if (hasException)
-                        Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exceptions.Last().Message, retryInterval);
-                    else
-                        Core.Log.Warning("Retrying in {0}ms...", retryInterval);
+                    Core.Log.Warning("Error: {0}, Retrying in {1}ms...", exceptions.Last().Message, retryInterval);
                     await Task.Delay(retryInterval).ConfigureAwait(false);
                 }
             }

@@ -114,6 +114,23 @@ namespace TWCore.Diagnostics.Trace
             }
             _itemsWorker.Enqueue(item);
         }
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a trace item into the trace storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        /// <param name="tags">Tags</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void Write(string groupName, string traceName, object traceObject, params string[] tags)
+        {
+            if (_disposed) return;
+            if (!Enabled) return;
+            var item = ItemFactory(groupName, traceName, traceObject, tags);
+            Write(item);
+        }
         /// <inheritdoc />
         /// <summary>
         /// Write a trace item into the trace storages
@@ -126,7 +143,7 @@ namespace TWCore.Diagnostics.Trace
         {
             if (_disposed) return;
             if (!Enabled) return;
-            var item = ItemFactory(groupName, traceName, traceObject);
+            var item = ItemFactory(groupName, traceName, traceObject, null);
             Write(item);
         }
         /// <inheritdoc />
@@ -144,6 +161,56 @@ namespace TWCore.Diagnostics.Trace
         /// <param name="traceObject">Trace object</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Write(object traceObject) => Write(null, traceObject);
+
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        /// <param name="tags">Tags</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteDebug(string groupName, string traceName, object traceObject, params string[] tags)
+        {
+            if (_disposed) return;
+            if (!Enabled) return;
+            if (!Core.DebugMode) return;
+            var item = ItemFactory(groupName, traceName, traceObject, tags);
+            Write(item);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteDebug(string groupName, string traceName, object traceObject)
+        {
+            if (_disposed) return;
+            if (!Enabled) return;
+            if (!Core.DebugMode) return;
+            var item = ItemFactory(groupName, traceName, traceObject, null);
+            Write(item);
+        }
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="traceName">Trace name</param>
+        /// <param name="traceObject">Trace object</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteDebug(string traceName, object traceObject) => WriteDebug(null, traceName, traceObject);
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a trace item into the trace storages if is in Debug Mode
+        /// </summary>
+        /// <param name="traceObject">Trace object</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void WriteDebug(object traceObject) => WriteDebug(null, traceObject);
+
         /// <inheritdoc />
         /// <summary>
         /// Dispose all the object resources

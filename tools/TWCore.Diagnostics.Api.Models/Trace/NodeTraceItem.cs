@@ -18,13 +18,15 @@ using System;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
 
-namespace TWCore.Diagnostics.Api.Models.Status
+namespace TWCore.Diagnostics.Api.Models.Trace
 {
     [DataContract]
 	public class NodeTraceItem : NodeInfo
     {
         [XmlAttribute, DataMember]
         public Guid TraceId { get; set; }
+        [XmlElement, DataMember]
+        public string Tags { get; set; }
         [XmlAttribute, DataMember]
         public string Group { get; set; }
         [XmlAttribute, DataMember]

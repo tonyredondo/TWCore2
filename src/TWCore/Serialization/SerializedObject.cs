@@ -296,36 +296,43 @@ namespace TWCore.Serialization
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 var length = fs.Length;
+                var bInt = new byte[4];
 
-                var dtLength = BitConverter.ToInt32((await fs.ReadBytesAsMemoryAsync(4).ConfigureAwait(false)).Span);
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var dtLength = BitConverter.ToInt32(bInt, 0);
                 if (dtLength < -1 || dtLength > length) return null;
-                var dataTypeByte = Memory<byte>.Empty;
+                byte[] dataTypeByte = null;
                 if (dtLength != -1)
                 {
-                    dataTypeByte = await fs.ReadBytesAsMemoryAsync(dtLength).ConfigureAwait(false);
+                    dataTypeByte = new byte[dtLength];
+                    await fs.ReadAsync(dataTypeByte, 0, dtLength).ConfigureAwait(false);
                     length -= dtLength;
                 }
 
-                var smtLength = BitConverter.ToInt32((await fs.ReadBytesAsMemoryAsync(4).ConfigureAwait(false)).Span);
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var smtLength = BitConverter.ToInt32(bInt, 0);
                 if (smtLength < -1 || smtLength > length) return null;
-                var serializerMimeTypeByte = Memory<byte>.Empty;
+                byte[] serializerMimeTypeByte = null;
                 if (smtLength != -1)
                 {
-                    serializerMimeTypeByte = await fs.ReadBytesAsMemoryAsync(smtLength).ConfigureAwait(false);
+                    serializerMimeTypeByte = new byte[smtLength];
+                    await fs.ReadAsync(serializerMimeTypeByte, 0, smtLength).ConfigureAwait(false);
                     length -= smtLength;
                 }
 
-                var dataLength = BitConverter.ToInt32((await fs.ReadBytesAsMemoryAsync(4).ConfigureAwait(false)).Span);
+                await fs.ReadAsync(bInt, 0, 4).ConfigureAwait(false);
+                var dataLength = BitConverter.ToInt32(bInt, 0);
                 if (dataLength < -1 || dataLength > length) return null;
-                var data = Memory<byte>.Empty;
+                byte[] data = null;
                 if (dataLength != -1)
                 {
-                    data = await fs.ReadBytesAsMemoryAsync(dataLength).ConfigureAwait(false);
+                    data = new byte[dataLength];
+                    await fs.ReadAsync(data, 0, dataLength).ConfigureAwait(false);
                 }
 
-                return new SerializedObject(data.ToArray(),
-                    !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte.Span) : null,
-                    !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte.Span) : null);
+                return new SerializedObject(data,
+                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
             }
         }
         #endregion

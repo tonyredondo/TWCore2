@@ -38,7 +38,7 @@ namespace TWCore.Net.Multicast
     {
         private const int PacketSize = 512;
         private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
-        private readonly ConcurrentDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<Guid, ReceivedDatagrams>();
+        private readonly ConcurrentDictionary<(Guid, ushort, string), ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<(Guid, ushort, string), ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
@@ -271,6 +271,7 @@ namespace TWCore.Net.Multicast
         {
             while (!_token.IsCancellationRequested)
             {
+                byte[] bufferMessage;
                 try
                 {
                     var clientTask = client.ReceiveAsync();
@@ -279,7 +280,8 @@ namespace TWCore.Net.Multicast
                         return;
                     var udpReceiveResult = clientTask.Result;
                     var rcvEndpoint = udpReceiveResult.RemoteEndPoint;
-                    if (rcvEndpoint == null) continue;
+                    if (rcvEndpoint == null)
+                        continue;
                     var datagram = udpReceiveResult.Buffer;
                     if (datagram.Length < 22)
                         continue;
@@ -289,18 +291,18 @@ namespace TWCore.Net.Multicast
                     var currentMsg = BitConverter.ToUInt16(datagram, 18);
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
                     var buffer = datagram.AsMemory(22, dataSize);
+                    var ip = rcvEndpoint.Address.ToString();
+                    var key = (guid, numMsgs, ip);
 
-                    //Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
-
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, _ => ReceivedDatagrams.Rent(numMsgs, rcvEndpoint.Address));
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => ReceivedDatagrams.Rent(tuple.Item2, tuple.Item3));
                     if (!receivedDatagrams.Address.Equals(rcvEndpoint.Address))
                         continue;
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    _receivedMessagesDatagram.TryRemove(guid, out _);
+                    _receivedMessagesDatagram.TryRemove(key, out _);
 
-                    var bufferMessage = receivedDatagrams.GetMessage();
+                    bufferMessage = receivedDatagrams.GetMessage();
                     ReceivedDatagrams.Store(receivedDatagrams);
 
                     try
@@ -334,12 +336,13 @@ namespace TWCore.Net.Multicast
         private class ReceivedDatagrams
         {
             public Memory<byte>[] Datagrams { get; private set; }
-            public IPAddress Address { get; private set; }
+            public string Address { get; private set; }
             public bool Complete => !Datagrams.Any(i => i.IsEmpty);
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] GetMessage()
             {
+                if (Datagrams == null) return null;
                 var start = 0;
                 var length = Datagrams.Sum(i => i.Length);
                 var buffer = new byte[length];
@@ -353,7 +356,7 @@ namespace TWCore.Net.Multicast
 
             #region Statics
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static ReceivedDatagrams Rent(int numMessages, IPAddress address)
+            public static ReceivedDatagrams Rent(int numMessages, string address)
             {
                 var datagram = _receivedDatagrams.New();
                 datagram.Datagrams = new Memory<byte>[numMessages];

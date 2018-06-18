@@ -385,7 +385,7 @@ namespace TWCore.Object.Api.Controllers
                     });
                 }
 
-                obj = (byte[]) await Request.Body.ReadBytesAsync();
+                obj = (byte[]) await Request.Body.ReadAllBytesAsync();
                 sessionData = HttpContext.Session.GetSessionData();
                 sessionData.FilePath = name;
                 sessionData.FileObject = obj;

@@ -337,7 +337,7 @@ namespace TWCore.Net.Multicast
         {
             public Memory<byte>[] Datagrams { get; private set; }
             public string Address { get; private set; }
-            public bool Complete => !Datagrams.Any(i => i.IsEmpty);
+            public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] GetMessage()

@@ -55,6 +55,10 @@ namespace TWCore.Diagnostics.Status.Transports
             _queueName = queueName;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
+            Core.Status.Attach(_ =>
+            {
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
         }
         ~MessagingStatusTransport()
         {

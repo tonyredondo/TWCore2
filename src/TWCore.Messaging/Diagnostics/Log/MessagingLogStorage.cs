@@ -56,6 +56,10 @@ namespace TWCore.Diagnostics.Log.Storages
 			_pool = new ReferencePool<List<LogItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
+            Core.Status.Attach(_ =>
+            {
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
         }
 		~MessagingLogStorage()
 		{

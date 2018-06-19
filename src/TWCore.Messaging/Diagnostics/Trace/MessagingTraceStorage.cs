@@ -61,8 +61,12 @@ namespace TWCore.Diagnostics.Trace.Storages
 			_pool = new ReferencePool<List<MessagingTraceItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
+            Core.Status.Attach(_ =>
+            {
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
         }
-		~MessagingTraceStorage()
+        ~MessagingTraceStorage()
 		{
 			Dispose();
 		}

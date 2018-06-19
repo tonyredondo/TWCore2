@@ -34,7 +34,7 @@ namespace TWCore.Diagnostics.Status.Transports
         private readonly string _queueName;
         private readonly Timer _timer;
         private volatile bool _processing;
-		private IMQueueClient _queueClient;
+        private IMQueueClient _queueClient;
 
         #region Events
         /// <inheritdoc />
@@ -55,6 +55,10 @@ namespace TWCore.Diagnostics.Status.Transports
             _queueName = queueName;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
+            Core.Status.Attach(_ =>
+            {
+                Core.Status.AttachChild(_queueClient, this);
+            }, this);
         }
         ~MessagingStatusTransport()
         {
@@ -86,7 +90,7 @@ namespace TWCore.Diagnostics.Status.Transports
             _processing = false;
         }
         #endregion
-        
+
         #region Dispose
         /// <inheritdoc />
         /// <summary>

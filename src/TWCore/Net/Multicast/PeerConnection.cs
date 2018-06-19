@@ -345,7 +345,7 @@ namespace TWCore.Net.Multicast
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] GetMessage()
             {
-                var buffer = Datagrams.SelectMany(i => i).ToArray();
+                var buffer = Datagrams?.SelectMany(i => i).ToArray();
                 Datagrams = null;
                 Address = null;
                 return buffer;

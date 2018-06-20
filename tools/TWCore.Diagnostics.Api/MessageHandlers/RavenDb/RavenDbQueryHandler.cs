@@ -18,26 +18,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
-using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
-	public class RavenDbQueryHandler : IDiagnosticQueryHandler
+    public class RavenDbQueryHandler : IDiagnosticQueryHandler
 	{
 		public async Task<List<BasicInfo>> GetEnvironmentsAndApps()
 		{
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var results = session.Query<NodeLogItem>()
+                    .OrderByDescending(x => x.Timestamp)
 					.GroupBy(x => new
 					{
 						x.Environment,
@@ -71,7 +70,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				if (!string.IsNullOrWhiteSpace(group))
 					query = query.Search(x => x.Group, "*" + group + "*");
 
-				query = query.Skip(page * pageSize).Take(pageSize);
+				query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
 				
 				var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeLogItem>
@@ -102,10 +104,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Message, "*" + search + "*")
 						.Search(x => x.Group, "*" + search + "*")
 						.Search(x => x.Code, "*" + search + "*");
-				
-				query = query.Skip(page * pageSize).Take(pageSize);
 
-				var data = await query.ToListAsync().ConfigureAwait(false);
+                query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
+
+                var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeLogItem>
 				{
 					PageNumber = page,
@@ -137,9 +142,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 						.Search(x => x.Group, "*" + search + "*")
 						.Search(x => x.Code, "*" + search + "*");
 
-				query = query.Skip(page * pageSize).Take(pageSize);
+                query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
 
-				var data = await query.ToListAsync().ConfigureAwait(false);
+                var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeLogItem>
 				{
 					PageNumber = page,
@@ -173,9 +181,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         .Search(x => x.Tags, "*" + search + "*");
                 }
 
-				query = query.Skip(page * pageSize).Take(pageSize);
+                query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
 
-				var data = await query.ToListAsync().ConfigureAwait(false);
+                var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeTraceItem>
 				{
 					PageNumber = page,
@@ -204,9 +215,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 					query = query
 						.Search(x => x.Group, "*" + group + "*");
 
-				query = query.Skip(page * pageSize).Take(pageSize);
+                query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
 
-				var data = await query.ToListAsync().ConfigureAwait(false);
+                var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeTraceItem>
 				{
 					PageNumber = page,
@@ -223,6 +237,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 			return await RavenHelper.ExecuteAndReturnAsync(async session =>
 			{
 				var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
+                if (attachment == null || attachment.Stream == null)
+                {
+                    Core.Log.Warning("The Trace object for id: {0}", id);
+                    return null;
+                }
 				var traceObject = attachment.Stream.DeserializeFromNBinary<object>();
 				return (SerializedObject)traceObject;
 
@@ -246,9 +265,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 				if (!string.IsNullOrWhiteSpace(application))
 					query = query.WhereEquals(x => x.Application, application);
 
-				query = query.Skip(page * pageSize).Take(pageSize);
+                query = query
+                            .OrderByDescending(x => x.Timestamp)
+                            .Skip(page * pageSize)
+                            .Take(pageSize);
 
-				var data = await query.ToListAsync().ConfigureAwait(false);
+                var data = await query.ToListAsync().ConfigureAwait(false);
 				return new PagedList<NodeStatusItem>
 				{
 					PageNumber = page,

@@ -65,7 +65,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         public async Task<object> GetTraceObjectValueAsync([FromRoute] string environment, [FromRoute] string id)
         {
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
-            return serObject.GetValue();
+            return serObject?.GetValue();
         }
 
         [HttpGet("{environment}/status")]

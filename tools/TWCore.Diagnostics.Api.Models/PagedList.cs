@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Xml.Serialization;
@@ -29,6 +30,16 @@ namespace TWCore.Diagnostics.Api.Models
         public int PageSize { get; set; }
         [XmlAttribute, DataMember]
         public int TotalResults { get; set; }
+        [XmlAttribute, DataMember]
+        public int TotalPages
+        {
+            get
+            {
+                if (PageSize == 0) return 0;
+                return (int)Math.Ceiling((decimal)TotalResults / PageSize);
+            }
+            set { }
+        }
         [XmlElement, DataMember]
         public List<T> Data { get; set; }
     }

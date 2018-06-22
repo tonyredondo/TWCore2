@@ -14,16 +14,59 @@ namespace TWCore.Diagnostics.Api.Controllers
     [Route("api/query")]
     public class QueryController : Controller
     {
-        [HttpGet("applications")]
-        public Task<List<BasicInfo>> GetEnvironmentsAndApps()
+        /// <summary>
+        /// Gets the environments
+        /// </summary>
+        /// <returns>List of BasicInfo</returns>
+        [HttpGet("")]
+        public Task<List<string>> GetEnvironments()
         {
-            return DbHandlers.Instance.Query.GetEnvironmentsAndApps();
+            return DbHandlers.Instance.Query.GetEnvironments();
         }
+        /// <summary>
+        /// Gets the Applications with logs by environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>List of applications</returns>
+        [HttpGet("{environment}/logs/applications")]
+        public Task<LogSummary> GetLogsApplicationsLevelsByEnvironment([FromRoute] string environment, DateTime fromDate, DateTime toDate)
+        {
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.GetLogsApplicationsLevelsByEnvironment(environment, fromDate, toDate);
+        }
+        /// <summary>
+        /// Gets the Logs by Application Levels and Environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="application">Application name</param>
+        /// <param name="level">Log level</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Logs</returns>
+        [HttpGet("{environment}/logs/{application}/{level?}")]
+        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, [FromRoute] string application, [FromRoute]LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        {
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironment(environment, application, level, fromDate, toDate, page, pageSize);
+        }
+
+
+
 
         [HttpGet("{environment}/logs/group/{group}/{application?}")]
         public Task<PagedList<NodeLogItem>> GetLogsByGroup([FromRoute] string environment, string group, [FromRoute] string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetLogsByGroup(environment, group, application, fromDate, toDate, page, pageSize);
         }
 
@@ -31,6 +74,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         public Task<PagedList<NodeLogItem>> GetLogsAsync([FromRoute] string environment, [FromRoute] string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, fromDate, toDate, page, pageSize);
         }
 
@@ -38,6 +83,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         public Task<PagedList<NodeLogItem>> GetLogsAsync([FromRoute] string environment, [FromRoute] string search, string application, [FromRoute] LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, level, fromDate, toDate, page, pageSize);
         }
 
@@ -45,6 +92,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         public Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync([FromRoute] string environment, [FromRoute] string group, [FromRoute] string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetTracesByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
         }
 
@@ -52,6 +101,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         public Task<PagedList<NodeTraceItem>> GetTracesAsync([FromRoute] string environment, [FromRoute] string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetTracesAsync(environment, search, application, fromDate, toDate, page, pageSize);
         }
 
@@ -72,6 +123,8 @@ namespace TWCore.Diagnostics.Api.Controllers
         public Task<PagedList<NodeStatusItem>> GetStatusesAsync([FromRoute] string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.GetStatusesAsync(environment, machine, application, fromDate, toDate, page, pageSize);
         }
 

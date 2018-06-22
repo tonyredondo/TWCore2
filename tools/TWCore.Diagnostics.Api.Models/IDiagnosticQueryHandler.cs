@@ -34,23 +34,44 @@ namespace TWCore.Diagnostics.Api.Models
 	/// </summary>
 	public interface IDiagnosticQueryHandler
 	{
-		/// <summary>
-		/// Gets the environments and apps list
-		/// </summary>
-		/// <returns>List of BasicInfo</returns>
-		Task<List<BasicInfo>> GetEnvironmentsAndApps();
-		/// <summary>
-		/// Get the logs by group
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
-		Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+        /// <summary>
+        /// Gets the environments
+        /// </summary>
+        /// <returns>List of BasicInfo</returns>
+        Task<List<string>> GetEnvironments();
+        /// <summary>
+        /// Gets the Applications with logs by environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>List of applications</returns>
+        Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate);
+        /// <summary>
+        /// Gets the Logs by Application Levels and Environment
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="application">Application name</param>
+        /// <param name="level">Log level</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Logs</returns>
+        Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+
+        /// <summary>
+        /// Get the logs by group
+        /// </summary>
+        /// <returns>Logs instance</returns>
+        /// <param name="environment">Environment name</param>
+        /// <param name="group">Group</param>
+        /// <param name="application">Application name or null</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>

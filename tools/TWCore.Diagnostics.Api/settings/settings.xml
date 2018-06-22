@@ -37,7 +37,7 @@
       <Item Key="Core.Status.Transport.File.Format" Value="TWCore.Diagnostics.Api [STATUS]-{yyyy}-{MM}-{dd}_{HH}-{mm}" />
       <Item Key="Core.Status.Transport.Http.Port" Value="28905" />
       <Item Key="RavenDb.Database" Value="Diagnostics" />
-      <Item Key="RavenDb.Urls" Value="http://127.0.0.1:8080" />
+      <Item Key="RavenDb.Urls" Value="http://10.10.1.52:8080" />
     </Items>
     <Overwrite EnvironmentName="Docker" MachineName="">
       <Item Key="Core.Status.Transport.Http.Port" Value="{Env:DIAGNOSTICS_STATUS_HTTP_PORT}" />

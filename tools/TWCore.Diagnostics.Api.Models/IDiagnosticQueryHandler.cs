@@ -46,7 +46,7 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="fromDate">From date and time</param>
         /// <param name="toDate">To date and time</param>
         /// <returns>List of applications</returns>
-        Task<List<ApplicationsLevels>> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate);
+        Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate);
         /// <summary>
         /// Gets the Logs by Application Levels and Environment
         /// </summary>

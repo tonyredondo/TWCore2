@@ -60,36 +60,54 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return logsEnvironments.Concat(traceEnvironments).Concat(statusEnvironment).Distinct().RemoveNulls().ToList();
         }
 
-        public async Task<List<ApplicationsLevels>> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate)
+        public Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate)
         {
-            return await RavenHelper.ExecuteAndReturnAsync(async session =>
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var results = session.Query<NodeLogItem>()
                     .Where(x => x.Environment == environment)
-                    .Where(x => x.Timestamp.Date >= fromDate && x.Timestamp.Date <= toDate)
+                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
                     .OrderBy(x => x.Application)
                     .GroupBy(x => new
                     {
                         x.Environment,
                         x.Application,
                         x.Level,
-                        x.Timestamp.Date
+                        x.Timestamp
                     })
                     .Select(x => new
                     {
                         x.Key.Application,
                         x.Key.Level,
-                        x.Key.Date
+                        x.Key.Timestamp
                     })
                     .Distinct();
                 var value = await results.ToListAsync().ConfigureAwait(false);
 
-                return value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
+                var summary = new LogSummary
                 {
-                    Application = x.Key,
-                    Levels = x.Select(i => i.Level).OrderBy(i => i).ToArray()
-                }).ToList();
-            }).ConfigureAwait(false);
+                    Applications = value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
+                    {
+                        Application = x.Key,
+                        Levels = x.GroupBy(i => i.Level).Select(ix => new LogLevelQuantity
+                        {
+                            Name = ix.Key,
+                            Count = ix.Count()
+                        }).OrderBy(i => i.Name).ToArray()
+                    }).ToArray(),
+                    Levels = value.GroupBy(x => x.Level).Select(x => new LogLevelTimes
+                    {
+                        Name = x.Key,
+                        Count = x.Count(),
+                        Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
+                        {
+                            Date = i.Key,
+                            Count = i.Count()
+                        }).ToArray()
+                    }).ToArray()
+                };
+                return summary;
+            });
         }
 
         public async Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)

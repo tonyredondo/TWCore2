@@ -104,7 +104,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             Date = i.Key,
                             Count = i.Count()
                         }).ToArray()
-                    }).ToArray()
+                    }).OrderBy(x => x.Name).ToArray()
                 };
                 return summary;
             });

@@ -516,7 +516,7 @@ namespace TWCore
                 var time = TimeSpan.FromMinutes(Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes);
                 _largeObjectTimer = new Timer(obj =>
                 {
-                    Core.Log.Warning("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
+                    Core.Log.InfoBasic("Setting the Compaction on the Large Object Heap and forcing the garbage collector collect...");
                     GCSettings.LargeObjectHeapCompactionMode = GCLargeObjectHeapCompactionMode.CompactOnce;
                     GC.Collect();
                 }, null, time, time);

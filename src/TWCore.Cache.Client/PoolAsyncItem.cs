@@ -179,7 +179,7 @@ namespace TWCore.Cache.Client
                 {
                     if (Storage == null)
                     {
-                        Core.Log.Error("The pool item node: {0} doesn't have any storage associated", Name);
+                        Core.Log.Error("The cache pool item node: {0} doesn't have any storage associated", Name);
                         break;
                     }
                     var lastEnabled = Enabled;
@@ -197,7 +197,7 @@ namespace TWCore.Cache.Client
                     }
                     catch (Exception ex)
                     {
-                        Core.Log.Error("Ping Error on {0}: {1}", Name, ex.InnerException?.Message ?? ex.Message);
+                        Core.Log.Error("Cache Ping Error on {0}: {1}", Name, ex.InnerException?.Message ?? ex.Message);
                         Enabled = false;
                         if (PingFailure == int.MaxValue) PingFailure = 15;
                         if (PingConsecutiveFailure == int.MaxValue) PingConsecutiveFailure = 15;
@@ -208,7 +208,7 @@ namespace TWCore.Cache.Client
 
                     if (Enabled != lastEnabled)
                         EnabledChanged?.Invoke(this, Enabled);
-                    Core.Log.LibVerbose("Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
+                    Core.Log.LibVerbose("Cache Ping Task for Pool item node: {0} has Enabled = {1} with a PingTime = {2:0.0000}ms", Name, Enabled, PingTime);
 
                     var waitDelay = PingConsecutiveFailure < 15 ? PingDelayOnError : PingDelay;
                     if (Enabled == false)

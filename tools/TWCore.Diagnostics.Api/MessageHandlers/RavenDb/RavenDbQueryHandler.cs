@@ -33,7 +33,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbQueryHandler : IDiagnosticQueryHandler
     {
-        public async Task<List<string>> GetEnvironments()
+        public async Task<List<string>> GetEnvironmentsAsync()
         {
             var logsEnvironments = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
@@ -61,7 +61,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         }
 
         //Logs
-        public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate)
+        public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
         {
             var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
@@ -111,7 +111,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return summary;
         }
 
-        public async Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public async Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
             {
@@ -146,24 +146,43 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 
         //Traces
-        public async Task<object> GetTracesByEnvironment(string environment, DateTime fromDate, DateTime toDate)
+        public async Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
         {
             var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var results = session.Query<NodeTraceItem>()
-                    .Where(x => x.Environment == environment)
-                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
-                    .OrderByDescending(x => x.Timestamp);
+                var res = session.Advanced.AsyncRawQuery<TraceTempResult>(@"
+                    from NodeTraceItems as trace
+                    group by trace.Group, trace.Environment, trace.Timestamp 
+                    where (trace.Environment = $environment) and (trace.Timestamp between $fromDate and $toDate) 
+                    order by Timestamp desc 
+                    select trace.Group, trace.Timestamp");
+                res.AddParameter("environment", environment);
+                res.AddParameter("fromDate", fromDate);
+                res.AddParameter("toDate", toDate);
 
-                return results.ToListAsync();
+                return res.ToListAsync();
             }).ConfigureAwait(false);
 
-            return value;
+            var val = value.GroupBy(i => i.Group).Select(i => new TraceResult
+            {
+                Group = i.Key,
+                Count = i.Count(),
+                Start = i.Min(x => x.Timestamp),
+                End = i.Max(x => x.Timestamp),
+            }).ToList();
+
+            return val;
+        }
+        private class TraceTempResult
+        {
+            public string Group { get; set; }
+            public DateTime Timestamp { get; set; }
         }
 
+        
 
         //Others
-        public async Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public async Task<PagedList<NodeLogItem>> GetLogsByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
             {

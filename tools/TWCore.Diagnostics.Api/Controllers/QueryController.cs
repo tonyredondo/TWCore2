@@ -21,7 +21,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("")]
         public Task<List<string>> GetEnvironments()
         {
-            return DbHandlers.Instance.Query.GetEnvironments();
+            return DbHandlers.Instance.Query.GetEnvironmentsAsync();
         }
         /// <summary>
         /// Gets the Applications with logs by environment
@@ -36,7 +36,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsApplicationsLevelsByEnvironment(environment, fromDate, toDate);
+            return DbHandlers.Instance.Query.GetLogsApplicationsLevelsByEnvironmentAsync(environment, fromDate, toDate);
         }
         /// <summary>
         /// Gets the Logs by Application Levels and Environment
@@ -55,9 +55,23 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironment(environment, application, level, fromDate, toDate, page, pageSize);
+            return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironmentAsync(environment, application, level, fromDate, toDate, page, pageSize);
         }
-
+        /// <summary>
+        /// Gets the traces objects by environment and dates
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Traces</returns>
+        [HttpGet("{environment}/traces")]
+        public Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
+        {
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.GetTracesByEnvironmentAsync(environment, fromDate, toDate);
+        }
 
 
 
@@ -67,7 +81,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsByGroup(environment, group, application, fromDate, toDate, page, pageSize);
+            return DbHandlers.Instance.Query.GetLogsByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
         }
 
         [HttpGet("{environment}/logs/search/{search?}")]

@@ -38,7 +38,7 @@ namespace TWCore.Diagnostics.Api.Models
         /// Gets the environments
         /// </summary>
         /// <returns>List of BasicInfo</returns>
-        Task<List<string>> GetEnvironments();
+        Task<List<string>> GetEnvironmentsAsync();
         /// <summary>
         /// Gets the Applications with logs by environment
         /// </summary>
@@ -46,7 +46,7 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="fromDate">From date and time</param>
         /// <param name="toDate">To date and time</param>
         /// <returns>List of applications</returns>
-        Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate);
+        Task<LogSummary> GetLogsApplicationsLevelsByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate);
         /// <summary>
         /// Gets the Logs by Application Levels and Environment
         /// </summary>
@@ -58,7 +58,16 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="page">Page number</param>
         /// <param name="pageSize">Page size</param>
         /// <returns>Logs</returns>
-        Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+        Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+        /// <summary>
+        /// Gets the traces objects by environment and dates
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Traces</returns>
+        Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate);
+
 
         /// <summary>
         /// Get the logs by group
@@ -71,7 +80,7 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="toDate">To date and time</param>
         /// <param name="page">Page number</param>
         /// <param name="pageSize">Page size</param>
-        Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+        Task<PagedList<NodeLogItem>> GetLogsByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		/// <summary>
 		/// Get the logs from a query
 		/// </summary>

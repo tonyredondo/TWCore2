@@ -134,6 +134,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 query = query.Skip(page * pageSize).Take(pageSize);
 
                 var data = await query.ToListAsync().ConfigureAwait(false);
+
+                foreach (var item in data)
+                    item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
+
                 return new PagedList<NodeLogItem>
                 {
                     PageNumber = page,
@@ -164,9 +168,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }).ConfigureAwait(false);
 
             foreach(var item in value)
-            {
                 item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
-            }
 
             var val = value.GroupBy(i => i.Group).Select(i => new TraceResult
             {

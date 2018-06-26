@@ -101,7 +101,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 {
                     Name = x.Key,
                     Count = x.Count(),
-                    Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
+                    Series = x.GroupBy(i => i.Timestamp.Date).OrderBy(i => i.Key).Select(i => new TimeCount
                     {
                         Date = i.Key,
                         Count = i.Count()

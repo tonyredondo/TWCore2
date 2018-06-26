@@ -163,6 +163,11 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 return res.ToListAsync();
             }).ConfigureAwait(false);
 
+            foreach(var item in value)
+            {
+                item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
+            }
+
             var val = value.GroupBy(i => i.Group).Select(i => new TraceResult
             {
                 Group = i.Key,

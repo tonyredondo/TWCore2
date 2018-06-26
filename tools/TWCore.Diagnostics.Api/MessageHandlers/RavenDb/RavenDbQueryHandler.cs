@@ -35,36 +35,37 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
     {
         public async Task<List<string>> GetEnvironments()
         {
-            var logsEnvironments = await RavenHelper.ExecuteAndReturnAsync(async session =>
+            var logsEnvironments = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var results = session.Query<NodeLogItem>()
+                return session.Query<NodeLogItem>()
                     .Select(x => x.Environment)
-                    .Distinct();
-                return await results.ToListAsync().ConfigureAwait(false);
+                    .Distinct()
+                    .ToListAsync();
             }).ConfigureAwait(false);
-            var traceEnvironments = await RavenHelper.ExecuteAndReturnAsync(async session =>
+            var traceEnvironments = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var results = session.Query<NodeTraceItem>()
+                return session.Query<NodeTraceItem>()
                     .Select(x => x.Environment)
-                    .Distinct();
-                return await results.ToListAsync().ConfigureAwait(false);
+                    .Distinct()
+                    .ToListAsync();
             }).ConfigureAwait(false);
-            var statusEnvironment = await RavenHelper.ExecuteAndReturnAsync(async session =>
+            var statusEnvironment = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var results = session.Query<NodeStatusItem>()
+                return session.Query<NodeStatusItem>()
                     .Select(x => x.Environment)
-                    .Distinct();
-                return await results.ToListAsync().ConfigureAwait(false);
+                    .Distinct()
+                    .ToListAsync();
             }).ConfigureAwait(false);
 
             return logsEnvironments.Concat(traceEnvironments).Concat(statusEnvironment).Distinct().RemoveNulls().ToList();
         }
 
-        public Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate)
+        //Logs
+        public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironment(string environment, DateTime fromDate, DateTime toDate)
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var results = session.Query<NodeLogItem>()
+                return session.Query<NodeLogItem>()
                     .Where(x => x.Environment == environment)
                     .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
                     .OrderBy(x => x.Application)
@@ -81,33 +82,33 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         x.Key.Level,
                         x.Key.Timestamp
                     })
-                    .Distinct();
-                var value = await results.ToListAsync().ConfigureAwait(false);
+                    .Distinct()
+                    .ToListAsync();
+            }).ConfigureAwait(false);
 
-                var summary = new LogSummary
+            var summary = new LogSummary
+            {
+                Applications = value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
                 {
-                    Applications = value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
+                    Application = x.Key,
+                    Levels = x.GroupBy(i => i.Level).Select(ix => new LogLevelQuantity
                     {
-                        Application = x.Key,
-                        Levels = x.GroupBy(i => i.Level).Select(ix => new LogLevelQuantity
-                        {
-                            Name = ix.Key,
-                            Count = ix.Count()
-                        }).OrderBy(i => i.Name).ToArray()
-                    }).ToArray(),
-                    Levels = value.GroupBy(x => x.Level).Select(x => new LogLevelTimes
+                        Name = ix.Key,
+                        Count = ix.Count()
+                    }).OrderBy(i => i.Name).ToArray()
+                }).ToArray(),
+                Levels = value.GroupBy(x => x.Level).Select(x => new LogLevelTimes
+                {
+                    Name = x.Key,
+                    Count = x.Count(),
+                    Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
                     {
-                        Name = x.Key,
-                        Count = x.Count(),
-                        Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
-                        {
-                            Date = i.Key,
-                            Count = i.Count()
-                        }).ToArray()
-                    }).OrderBy(x => x.Name).ToArray()
-                };
-                return summary;
-            });
+                        Date = i.Key,
+                        Count = i.Count()
+                    }).ToArray()
+                }).OrderBy(x => x.Name).ToArray()
+            };
+            return summary;
         }
 
         public async Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
@@ -144,7 +145,24 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         }
 
 
+        //Traces
+        public async Task<object> GetTracesByEnvironment(string environment, DateTime fromDate, DateTime toDate)
+        {
+            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
+            {
+                var results = session.Query<NodeTraceItem>()
+                    .Where(x => x.Environment == environment)
+                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
+                    .OrderByDescending(x => x.Timestamp);
 
+                return results.ToListAsync();
+            }).ConfigureAwait(false);
+
+            return value;
+        }
+
+
+        //Others
         public async Task<PagedList<NodeLogItem>> GetLogsByGroup(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>

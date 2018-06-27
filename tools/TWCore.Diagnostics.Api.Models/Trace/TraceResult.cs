@@ -31,5 +31,7 @@ namespace TWCore.Diagnostics.Api.Models.Trace
         public DateTime Start { get; set; }
         [XmlAttribute, DataMember]
         public DateTime End { get; set; }
+        [XmlAttribute, DataMember]
+        public bool HasErrors { get; set; }
     }
 }

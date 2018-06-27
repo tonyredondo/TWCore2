@@ -110,7 +110,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             };
             return summary;
         }
-
         public async Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
@@ -150,16 +149,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
 
         //Traces
-        public async Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
+        public async Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
                 var res = session.Advanced.AsyncRawQuery<TraceTempResult>(@"
                     from NodeTraceItems as trace
-                    group by trace.Group, trace.Environment, trace.Timestamp 
+                    group by trace.Group, trace.Environment, trace.Timestamp, trace.Tags 
                     where (trace.Environment = $environment) and (trace.Timestamp between $fromDate and $toDate) 
                     order by Timestamp desc 
-                    select trace.Group, trace.Timestamp");
+                    select trace.Group, trace.Timestamp, trace.Tags");
                 res.AddParameter("environment", environment);
                 res.AddParameter("fromDate", fromDate);
                 res.AddParameter("toDate", toDate);
@@ -170,23 +169,46 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             foreach(var item in value)
                 item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
 
-            var val = value.GroupBy(i => i.Group).Select(i => new TraceResult
+            var valGroup = value.GroupBy(i => i.Group);
+            var totalResult = valGroup.Count();
+
+            var val = valGroup.Select(i => new TraceResult
             {
                 Group = i.Key,
                 Count = i.Count(),
                 Start = i.Min(x => x.Timestamp),
                 End = i.Max(x => x.Timestamp),
-            }).ToList();
+                HasErrors = i.Any(x => x.Tags.Contains("Status: Error"))
+            }).Skip(page * pageSize).Take(pageSize).ToList();
 
-            return val;
+            return new PagedList<TraceResult>
+            {
+                PageNumber = page,
+                PageSize = pageSize,
+                TotalResults = totalResult,
+                Data = val
+            };
         }
         private class TraceTempResult
         {
             public string Group { get; set; }
             public DateTime Timestamp { get; set; }
+            public string Tags { get; set; }
         }
-
+        public Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
+        {
+            return RavenHelper.ExecuteAndReturnAsync(session =>
+            {
+                var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
+                var query = documentQuery
+                    .WhereEquals(x => x.Environment, environment)
+                    .WhereEquals(x => x.Group, groupName)
+                    .OrderBy(x => x.Timestamp);
+                return query.ToListAsync();
+            });
+        }
         
+
 
         //Others
         public async Task<PagedList<NodeLogItem>> GetLogsByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
@@ -362,6 +384,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return await RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
+                if (attachment == null) return null;
                 var traceObject = attachment.Stream.DeserializeFromNBinary<object>();
                 return (SerializedObject)traceObject;
 

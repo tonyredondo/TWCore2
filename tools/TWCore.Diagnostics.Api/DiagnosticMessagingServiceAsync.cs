@@ -28,6 +28,8 @@ namespace TWCore.Diagnostics.Api
     {
         protected override void OnInit(string[] args)
         {
+            Core.GlobalSettings.LargeObjectHeapCompactTimeoutInMinutes = 1;
+            Core.GlobalSettings.ReloadSettings();
             EnableMessagesTrace = false;
             SerializerManager.SupressFileExtensionWarning = true;
             base.OnInit(args);
@@ -36,7 +38,7 @@ namespace TWCore.Diagnostics.Api
             //var data2 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
             //var data3 = DbHandlers.Instance.Query.GetEnvironmentsAndApps().WaitAndResults();
 
-            var status = ((RavenDbQueryHandler)DbHandlers.Instance.Query).GetTracesByEnvironmentAsync("docker", DateTime.MinValue, DateTime.Now).WaitAndResults();
+            var status = ((RavenDbQueryHandler)DbHandlers.Instance.Query).GetTracesByEnvironmentAsync("docker", DateTime.MinValue, DateTime.Now, 0).WaitAndResults();
 	        
 
          //   Task.Delay(6000).ContinueWith(async _ =>

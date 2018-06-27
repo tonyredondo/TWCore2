@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TWCore.Diagnostics.Api.Models;
@@ -50,7 +51,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// <param name="pageSize">Page size</param>
         /// <returns>Logs</returns>
         [HttpGet("{environment}/logs/{application}/{level?}")]
-        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, [FromRoute] string application, [FromRoute]LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment([FromRoute]string environment, [FromRoute] string application, [FromRoute]LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
@@ -63,15 +64,29 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// <param name="environment">Environment name</param>
         /// <param name="fromDate">From date and time</param>
         /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
         /// <returns>Traces</returns>
         [HttpGet("{environment}/traces")]
-        public Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
+        public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync([FromRoute]string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetTracesByEnvironmentAsync(environment, fromDate, toDate);
+            return DbHandlers.Instance.Query.GetTracesByEnvironmentAsync(environment, fromDate, toDate, page, pageSize);
         }
+        /// <summary>
+        /// Get the traces from a Trace Group
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Traces from that group</returns>
+        [HttpGet("{environment}/traces/{groupName}")]
+        public Task<List<NodeTraceItem>> GetTracesByGroupIdAsync([FromRoute]string environment, [FromRoute]string groupName)
+        {
+            return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
+        }
+
 
 
 
@@ -129,8 +144,9 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("{environment}/traces/object/{id}")]
         public async Task<object> GetTraceObjectValueAsync([FromRoute] string environment, [FromRoute] string id)
         {
+            id = WebUtility.UrlDecode(id);
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
-            return serObject.GetValue();
+            return serObject?.GetValue();
         }
 
         [HttpGet("{environment}/status")]

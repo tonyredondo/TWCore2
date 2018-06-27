@@ -65,8 +65,18 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="environment">Environment name</param>
         /// <param name="fromDate">From date and time</param>
         /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
         /// <returns>Traces</returns>
-        Task<List<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate);
+        Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
+        /// <summary>
+        /// Get the traces from a Trace Group
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Traces from that group</returns>
+        Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName);
+
 
 
         /// <summary>

@@ -137,7 +137,7 @@ namespace TWCore
 
         /// <summary>
         /// Timeout in minutes to set the LargeObjectHeap (LOH) Compact in the Garbage Collector. 
-        /// Default = 0 (Never).
+        /// Default = 60
         /// </summary>
         [SettingsKey("LargeObjectHeapCompactTimeoutInMinutes")]
         public int LargeObjectHeapCompactTimeoutInMinutes { get; set; } = 60;

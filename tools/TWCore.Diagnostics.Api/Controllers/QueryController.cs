@@ -88,6 +88,43 @@ namespace TWCore.Diagnostics.Api.Controllers
         }
 
 
+        [HttpGet("{environment}/traces/xml/{id}")]
+        public async Task<string> GetTraceObjectValueInXmlAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            id = WebUtility.UrlDecode(id);
+            var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            try
+            {
+                var value = serObject?.GetValue();
+                if (value is string strValue)
+                    return strValue;
+                return value?.SerializeToXml();
+            }
+            catch(Exception ex)
+            {
+                return new SerializableException(ex).SerializeToXml();
+            }
+        }
+        [HttpGet("{environment}/traces/json/{id}")]
+        public async Task<string> GetTraceObjectValueInJsonAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            id = WebUtility.UrlDecode(id);
+            var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            try
+            {
+                var value = serObject?.GetValue();
+                if (value is string strValue)
+                    return strValue;
+                return value?.SerializeToJson();
+            }
+            catch (Exception ex)
+            {
+                return new SerializableException(ex).SerializeToJson();
+            }
+        }
+
+
+
 
 
         [HttpGet("{environment}/logs/group/{group}/{application?}")]

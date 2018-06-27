@@ -15,6 +15,13 @@ namespace TWCore.Diagnostics.Api.Controllers
     [Route("api/query")]
     public class QueryController : Controller
     {
+        private static JsonTextSerializer _jsonSerializer = new JsonTextSerializer
+        {
+            Indent = true,
+            EnumsAsStrings = true,
+            UseCamelCase = true
+        };
+
         /// <summary>
         /// Gets the environments
         /// </summary>
@@ -87,7 +94,6 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
         }
 
-
         [HttpGet("{environment}/traces/xml/{id}")]
         public async Task<string> GetTraceObjectValueInXmlAsync([FromRoute] string environment, [FromRoute] string id)
         {
@@ -113,13 +119,14 @@ namespace TWCore.Diagnostics.Api.Controllers
             try
             {
                 var value = serObject?.GetValue();
+                if (value == null) return null;
                 if (value is string strValue)
                     return strValue;
-                return value?.SerializeToJson();
+                return _jsonSerializer.SerializeToString(value, value.GetType());
             }
             catch (Exception ex)
             {
-                return new SerializableException(ex).SerializeToJson();
+                return _jsonSerializer.SerializeToString(new SerializableException(ex));
             }
         }
 

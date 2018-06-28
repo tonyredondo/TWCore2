@@ -195,9 +195,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             public DateTime Timestamp { get; set; }
             public string Tags { get; set; }
         }
-        public Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
+        public async Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
         {
-            return RavenHelper.ExecuteAndReturnAsync(session =>
+            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
                 var documentQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>();
                 var query = documentQuery
@@ -206,8 +206,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
                 return query.ToListAsync();
             });
+
+            foreach (var item in value)
+                item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
+
+            return value;
         }
-        
+
 
 
         //Others

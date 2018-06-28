@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using TWCore.Diagnostics.Api.Models;
@@ -7,6 +8,7 @@ using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
+using TWCore.Messaging;
 using TWCore.Serialization;
 
 namespace TWCore.Diagnostics.Api.Controllers
@@ -14,6 +16,13 @@ namespace TWCore.Diagnostics.Api.Controllers
     [Route("api/query")]
     public class QueryController : Controller
     {
+        private static JsonTextSerializer _jsonSerializer = new JsonTextSerializer
+        {
+            Indent = true,
+            EnumsAsStrings = true,
+            UseCamelCase = true
+        };
+
         /// <summary>
         /// Gets the environments
         /// </summary>
@@ -21,7 +30,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("")]
         public Task<List<string>> GetEnvironments()
         {
-            return DbHandlers.Instance.Query.GetEnvironments();
+            return DbHandlers.Instance.Query.GetEnvironmentsAsync();
         }
         /// <summary>
         /// Gets the Applications with logs by environment
@@ -36,7 +45,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsApplicationsLevelsByEnvironment(environment, fromDate, toDate);
+            return DbHandlers.Instance.Query.GetLogsApplicationsLevelsByEnvironmentAsync(environment, fromDate, toDate);
         }
         /// <summary>
         /// Gets the Logs by Application Levels and Environment
@@ -50,13 +59,87 @@ namespace TWCore.Diagnostics.Api.Controllers
         /// <param name="pageSize">Page size</param>
         /// <returns>Logs</returns>
         [HttpGet("{environment}/logs/{application}/{level?}")]
-        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment(string environment, [FromRoute] string application, [FromRoute]LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironment([FromRoute]string environment, [FromRoute] string application, [FromRoute]LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironment(environment, application, level, fromDate, toDate, page, pageSize);
+            return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironmentAsync(environment, application, level, fromDate, toDate, page, pageSize);
         }
+        /// <summary>
+        /// Gets the traces objects by environment and dates
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <param name="page">Page number</param>
+        /// <param name="pageSize">Page size</param>
+        /// <returns>Traces</returns>
+        [HttpGet("{environment}/traces")]
+        public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync([FromRoute]string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        {
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.GetTracesByEnvironmentAsync(environment, fromDate, toDate, page, pageSize);
+        }
+        /// <summary>
+        /// Get the traces from a Trace Group
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="groupName">Group name</param>
+        /// <returns>Traces from that group</returns>
+        [HttpGet("{environment}/traces/{groupName}")]
+        public Task<List<NodeTraceItem>> GetTracesByGroupIdAsync([FromRoute]string environment, [FromRoute]string groupName)
+        {
+            return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
+        }
+
+        [HttpGet("{environment}/traces/xml/{id}")]
+        public async Task<string> GetTraceObjectValueInXmlAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            id = WebUtility.UrlDecode(id);
+            var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            try
+            {
+                var value = serObject?.GetValue();
+                if (value == null) return null;
+                if (value is ResponseMessage rsMessage)
+                    return rsMessage.Body?.SerializeToXml();
+                if (value is RequestMessage rqMessage)
+                    return rqMessage.Body?.SerializeToXml();
+                if (value is string strValue)
+                    return strValue;
+                return value.SerializeToXml();
+            }
+            catch(Exception ex)
+            {
+                return new SerializableException(ex).SerializeToXml();
+            }
+        }
+        [HttpGet("{environment}/traces/json/{id}")]
+        public async Task<string> GetTraceObjectValueInJsonAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            id = WebUtility.UrlDecode(id);
+            var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
+            try
+            {
+                var value = serObject?.GetValue();
+                if (value == null) return null;
+                if (value is ResponseMessage rsMessage)
+                    return rsMessage.Body != null ? _jsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
+                if (value is RequestMessage rqMessage)
+                    return rqMessage.Body != null ? _jsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
+                if (value is string strValue)
+                    return strValue;
+                return _jsonSerializer.SerializeToString(value, value.GetType());
+            }
+            catch (Exception ex)
+            {
+                return _jsonSerializer.SerializeToString(new SerializableException(ex));
+            }
+        }
+
 
 
 
@@ -67,7 +150,7 @@ namespace TWCore.Diagnostics.Api.Controllers
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsByGroup(environment, group, application, fromDate, toDate, page, pageSize);
+            return DbHandlers.Instance.Query.GetLogsByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
         }
 
         [HttpGet("{environment}/logs/search/{search?}")]
@@ -115,6 +198,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("{environment}/traces/object/{id}")]
         public async Task<object> GetTraceObjectValueAsync([FromRoute] string environment, [FromRoute] string id)
         {
+            id = WebUtility.UrlDecode(id);
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
             return serObject?.GetValue();
         }

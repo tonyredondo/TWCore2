@@ -66,8 +66,10 @@ namespace TWCore.Web.Logger
         /// <param name="formatter">Function to create a string message of the state and exception.</param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
+            if (_name.IndexOf("WebHost", StringComparison.OrdinalIgnoreCase) == -1 && logLevel == LogLevel.Information) return;
+
             Diagnostics.Log.LogLevel cLogLevel;
-            switch(logLevel)
+            switch (logLevel)
             {
                 case LogLevel.Critical:
                     cLogLevel = Diagnostics.Log.LogLevel.Error;
@@ -93,11 +95,12 @@ namespace TWCore.Web.Logger
                     cLogLevel = Diagnostics.Log.LogLevel.Verbose;
                     break;
             }
+
             var type = _name ?? string.Empty;
             var dotIdx = type.LastIndexOf(".", StringComparison.Ordinal);
             if (dotIdx > -1)
                 type = type.Substring(dotIdx + 1);
-            
+
             Core.Log.Write(cLogLevel, eventId.Id.ToString(), formatter(state, exception), "AspNetCore", exception, string.Empty, type);
         }
         #endregion

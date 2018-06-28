@@ -37,12 +37,12 @@ namespace TWCore
         /// <summary>
         /// Gets the original exception type
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlElement, DataMember]
         public string ExceptionType { get; set; }
         /// <summary>
         /// Gets a message that describes the current exception.
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlElement, DataMember]
         public string Message { get; set; }
         /// <summary>
         /// Gets or sets a link to the help file associated with this exception.
@@ -57,12 +57,12 @@ namespace TWCore
         /// <summary>
         /// Gets or sets the name of the application or the object that causes the error.
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlElement, DataMember]
         public string Source { get; set; }
         /// <summary>
         /// Gets a string representation of the immediate frames on the call stack.
         /// </summary>
-        [XmlAttribute, DataMember]
+        [XmlElement, DataMember]
         public string StackTrace { get; set; }
         /// <summary>
         /// Gets a collection of key/value pairs that provide additional user-defined information about the exception

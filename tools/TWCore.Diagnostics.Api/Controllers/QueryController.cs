@@ -8,6 +8,7 @@ using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
+using TWCore.Messaging;
 using TWCore.Serialization;
 
 namespace TWCore.Diagnostics.Api.Controllers
@@ -102,9 +103,14 @@ namespace TWCore.Diagnostics.Api.Controllers
             try
             {
                 var value = serObject?.GetValue();
+                if (value == null) return null;
+                if (value is ResponseMessage rsMessage)
+                    return rsMessage.Body?.SerializeToXml();
+                if (value is RequestMessage rqMessage)
+                    return rqMessage.Body?.SerializeToXml();
                 if (value is string strValue)
                     return strValue;
-                return value?.SerializeToXml();
+                return value.SerializeToXml();
             }
             catch(Exception ex)
             {
@@ -120,6 +126,10 @@ namespace TWCore.Diagnostics.Api.Controllers
             {
                 var value = serObject?.GetValue();
                 if (value == null) return null;
+                if (value is ResponseMessage rsMessage)
+                    return rsMessage.Body != null ? _jsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
+                if (value is RequestMessage rqMessage)
+                    return rqMessage.Body != null ? _jsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
                 if (value is string strValue)
                     return strValue;
                 return _jsonSerializer.SerializeToString(value, value.GetType());

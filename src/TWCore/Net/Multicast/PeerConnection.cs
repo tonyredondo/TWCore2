@@ -14,7 +14,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using NonBlocking;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,6 +23,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedField.Local
@@ -37,12 +37,13 @@ namespace TWCore.Net.Multicast
     public class PeerConnection
     {
         private const int PacketSize = 512;
-        private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
-        private readonly ConcurrentDictionary<Guid, ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<Guid, ReceivedDatagrams>();
+        private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();
+        private readonly TimeoutDictionary<(Guid, ushort), ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<(Guid, ushort), ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
         private readonly HashSet<EndPoint> _endpointErrors = new HashSet<EndPoint>();
+        private readonly TimeSpan TimeoutTime = TimeSpan.FromSeconds(5);
 
         private IPAddress _multicastIp;
         private IPEndPoint _sendEndpoint;
@@ -292,29 +293,24 @@ namespace TWCore.Net.Multicast
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
                     var buffer = new byte[dataSize];
                     Buffer.BlockCopy(datagram, 22, buffer, 0, dataSize);
+                    var key = (guid, numMsgs);
 
-                    //Core.Log.InfoDetail("Guid: {0}, NumMsg: {1}, CurrentMsg: {2}, DataSize: {3}", guid, numMsgs, currentMsg, dataSize);
-
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(guid, mguid => new ReceivedDatagrams(numMsgs, rcvEndpoint.Address));
-                    if (receivedDatagrams.Address != rcvEndpoint.Address.ToString())
-                        continue;
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime));
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    _receivedMessagesDatagram.TryRemove(guid, out _);
-
-                    buffer = receivedDatagrams.GetMessage();
-
                     try
                     {
+                        buffer = receivedDatagrams.GetMessage();
                         OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, buffer));
                     }
                     catch (Exception ex)
                     {
                         Core.Log.Write(ex);
                     }
+                    _receivedMessagesDatagram.TryRemove(key, out _);
                 }
-                catch(InvalidCastException)
+                catch (InvalidCastException)
                 {
                     //
                 }
@@ -332,15 +328,13 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Nested Types
-        private class ReceivedDatagrams
+        private struct ReceivedDatagrams
         {
             public byte[][] Datagrams { get; private set; }
-            public string Address { get; private set; }
             public bool Complete => Datagrams.All(i => i != null);
-            public ReceivedDatagrams(int numMessages, IPAddress address)
+            public ReceivedDatagrams(int numMessages)
             {
                 Datagrams = new byte[numMessages][];
-                Address = address.ToString();
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -348,7 +342,6 @@ namespace TWCore.Net.Multicast
             {
                 var buffer = Datagrams?.SelectMany(i => i).ToArray();
                 Datagrams = null;
-                Address = null;
                 return buffer;
             }
         }

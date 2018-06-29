@@ -291,7 +291,7 @@ namespace TWCore.Net.Multicast
         {
             try
             {
-                var serObj = SerializedObject.FromSpan(e.Data.ToArray());
+                var serObj = SerializedObject.FromReadOnlySequence(e.Data);
                 if (serObj == null) return;
                 if (!(serObj.GetValue() is RegisteredService rService)) return;
 

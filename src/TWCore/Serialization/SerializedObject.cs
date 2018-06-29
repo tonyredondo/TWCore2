@@ -15,6 +15,8 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
+using System.Buffers.Text;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -125,18 +127,77 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SubArray<byte> ToSubArray()
         {
-            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
-            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
-            using (var ms = new MemoryStream())
-            using (var bw = new BinaryWriter(ms))
+            var hasDataType = !string.IsNullOrEmpty(DataType);
+            var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
+
+            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
+            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
+            var totalBytes = 4 + dataTypeLength + 4 + serializerMimeTypeLength + 4 + (Data?.Length ?? 0);
+            var bytes = new byte[totalBytes];
+            var span = new Span<byte>(bytes);
+
+            BitConverter.TryWriteBytes(span, hasDataType ? dataTypeLength : -1);
+            span = span.Slice(4);
+            if (hasDataType)
             {
-                bw.Write(dataTypeByte?.Length ?? -1);
-                if (dataTypeByte != null) bw.Write(dataTypeByte);
-                bw.Write(serializerMimeTypeByte?.Length ?? -1);
-                if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
-                bw.Write(Data?.Length ?? -1);
-                if (Data != null) bw.Write(Data);
-                return ms.ToSubArray();
+                Encoding.UTF8.GetBytes(DataType, span);
+                span = span.Slice(dataTypeLength);
+            }
+
+            BitConverter.TryWriteBytes(span, hasMimeType ? serializerMimeTypeLength : -1);
+            span = span.Slice(4);
+            if (hasMimeType)
+            {
+                Encoding.UTF8.GetBytes(SerializerMimeType, span);
+                span = span.Slice(serializerMimeTypeLength);
+            }
+
+            BitConverter.TryWriteBytes(span, Data?.Length ?? -1);
+            span = span.Slice(4);
+            if (Data != null)
+            {
+                Data.CopyTo(span.Slice(0, Data.Length));
+            }
+
+            return new SubArray<byte>(bytes);
+        }
+        /// <summary>
+        /// Get SubArray representation of the SerializedObject instance
+        /// </summary>
+        /// <returns>SubArray instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void CopyTo(Span<byte> span)
+        {
+            var hasDataType = !string.IsNullOrEmpty(DataType);
+            var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
+
+            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
+            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
+            var totalBytes = 4 + dataTypeLength + 4 + serializerMimeTypeLength + 4 + (Data?.Length ?? 0);
+            if (span.Length < totalBytes)
+                throw new ArgumentOutOfRangeException(nameof(span), "The span length is lower than the required length");
+
+            BitConverter.TryWriteBytes(span, hasDataType ? dataTypeLength : -1);
+            span = span.Slice(4);
+            if (hasDataType)
+            {
+                Encoding.UTF8.GetBytes(DataType, span);
+                span = span.Slice(dataTypeLength);
+            }
+
+            BitConverter.TryWriteBytes(span, hasMimeType ? serializerMimeTypeLength : -1);
+            span = span.Slice(4);
+            if (hasMimeType)
+            {
+                Encoding.UTF8.GetBytes(SerializerMimeType, span);
+                span = span.Slice(serializerMimeTypeLength);
+            }
+
+            BitConverter.TryWriteBytes(span, Data?.Length ?? -1);
+            span = span.Slice(4);
+            if (Data != null)
+            {
+                Data.CopyTo(span.Slice(0, Data.Length));
             }
         }
         /// <summary>
@@ -199,6 +260,7 @@ namespace TWCore.Serialization
             }
         }
         
+
         /// <summary>
         /// Get SerializedObject instance from the SubArray representation.
         /// </summary>
@@ -264,6 +326,66 @@ namespace TWCore.Serialization
                 !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte) : null,
                 !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
         }
+        private static MemoryPool<byte> pool = MemoryPool<byte>.Shared;
+        /// <summary>
+        /// Get SerializedObject instance from the ReadonlySequence representation.
+        /// </summary>
+        /// <param name="byteArray">Readonly Span instance</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromReadOnlySequence(ReadOnlySequence<byte> sequence)
+        {
+            if (sequence.IsEmpty) return null;
+            var length = sequence.Length;
+            using (var intBuffer = pool.Rent(minBufferSize: 4))
+            {
+                var lengthSpan = intBuffer.Memory.Span;
+                string dataType = null;
+                string mimeType = null;
+
+                sequence.Slice(0, 4).CopyTo(lengthSpan);
+                var dtLength = BitConverter.ToInt32(lengthSpan);
+                if (dtLength < -1 || dtLength > length) return null;
+                if (dtLength != -1)
+                {
+                    using (var buffer = pool.Rent(minBufferSize: dtLength))
+                    {
+                        sequence.Slice(4, dtLength).CopyTo(buffer.Memory.Span);
+                        dataType = Encoding.UTF8.GetString(buffer.Memory.Span.Slice(0, dtLength));
+                        length -= dtLength;
+                        sequence = sequence.Slice(4 + dtLength);
+                    }
+                }
+
+                sequence.Slice(0, 4).CopyTo(lengthSpan);
+                var smtLength = BitConverter.ToInt32(lengthSpan);
+                if (smtLength < -1 || smtLength > length) return null;
+                if (smtLength != -1)
+                {
+                    using (var buffer = pool.Rent(minBufferSize: smtLength))
+                    {
+                        sequence.Slice(4, smtLength).CopyTo(buffer.Memory.Span);
+                        mimeType = Encoding.UTF8.GetString(buffer.Memory.Span.Slice(0, smtLength));
+                        length -= smtLength;
+                        sequence = sequence.Slice(4 + smtLength);
+                    }
+                }
+
+                sequence.Slice(0, 4).CopyTo(lengthSpan);
+                var dataLength = BitConverter.ToInt32(lengthSpan);
+                if (dataLength < -1 || dataLength > length) return null;
+                var data = ReadOnlySpan<byte>.Empty;
+                if (dataLength != -1)
+                {
+                    var dSpan = new Span<byte>(new byte[dataLength]);
+                    sequence.Slice(4, dataLength).CopyTo(dSpan);
+                    data = dSpan;
+                }
+
+                return new SerializedObject(data.ToArray(), dataType, mimeType);
+
+            }
+        }
         /// <summary>
         /// Get SerializedObject instance from a stream
         /// </summary>
@@ -326,42 +448,7 @@ namespace TWCore.Serialization
             if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
-            {
-                var fsData = (ReadOnlyMemory<byte>) await fs.ReadAllBytesAsMemoryAsync().ConfigureAwait(false);
-                var length = fsData.Length;
-
-                var dtLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
-                if (dtLength < -1 || dtLength > length) return null;
-                var dataTypeByte = ReadOnlyMemory<byte>.Empty;
-                if (dtLength != -1)
-                {
-                    dataTypeByte = fsData.Slice(4, dtLength);
-                    length -= dtLength;
-                    fsData = fsData.Slice(4 + dtLength);
-                }
-
-                var smtLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
-                if (smtLength < -1 || smtLength > length) return null;
-                var serializerMimeTypeByte = ReadOnlyMemory<byte>.Empty;
-                if (smtLength != -1)
-                {
-                    serializerMimeTypeByte = fsData.Slice(4, smtLength);
-                    length -= smtLength;
-                    fsData = fsData.Slice(4 + smtLength);
-                }
-
-                var dataLength = BitConverter.ToInt32(fsData.Span.Slice(0, 4));
-                if (dataLength < -1 || dataLength > length) return null;
-                var data = ReadOnlyMemory<byte>.Empty;
-                if (dataLength != -1)
-                {
-                    data = fsData.Slice(4, dataLength);
-                }
-
-                return new SerializedObject(data.ToArray(),
-                    !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte.Span) : null,
-                    !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte.Span) : null);
-            }
+                return FromMemory(await fs.ReadAllBytesAsMemoryAsync().ConfigureAwait(false));
         }
         #endregion
     }

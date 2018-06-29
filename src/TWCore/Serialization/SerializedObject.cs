@@ -208,40 +208,61 @@ namespace TWCore.Serialization
         public static SerializedObject FromSubArray(SubArray<byte> byteArray)
         {
             if (byteArray.Count == 0) return null;
-            var memData = byteArray.AsReadOnlyMemory();
-            var length = byteArray.Count;
+            return FromSpan(byteArray.AsReadOnlySpan());
+        }
+        /// <summary>
+        /// Get SerializedObject instance from the Memory representation.
+        /// </summary>
+        /// <param name="byteArray">Readonly Memory instance</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromMemory(ReadOnlyMemory<byte> memoryData)
+        {
+            if (memoryData.IsEmpty) return null;
+            return FromSpan(memoryData.Span);
+        }
+        /// <summary>
+        /// Get SerializedObject instance from the Span representation.
+        /// </summary>
+        /// <param name="byteArray">Readonly Span instance</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromSpan(ReadOnlySpan<byte> spanData)
+        {
+            if (spanData.IsEmpty) return null;
+            var length = spanData.Length;
 
-            var dtLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            var dtLength = BitConverter.ToInt32(spanData.Slice(0, 4));
             if (dtLength < -1 || dtLength > length) return null;
-            var dataTypeByte = ReadOnlyMemory<byte>.Empty;
+            var dataTypeByte = ReadOnlySpan<byte>.Empty;
             if (dtLength != -1)
             {
-                dataTypeByte = memData.Slice(4, dtLength);
+                dataTypeByte = spanData.Slice(4, dtLength);
                 length -= dtLength;
-                memData = memData.Slice(4 + dtLength);
+                spanData = spanData.Slice(4 + dtLength);
             }
 
-            var smtLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            var smtLength = BitConverter.ToInt32(spanData.Slice(0, 4));
             if (smtLength < -1 || smtLength > length) return null;
-            var serializerMimeTypeByte = ReadOnlyMemory<byte>.Empty;
+            var serializerMimeTypeByte = ReadOnlySpan<byte>.Empty;
             if (smtLength != -1)
             {
-                serializerMimeTypeByte = memData.Slice(4, smtLength);
+                serializerMimeTypeByte = spanData.Slice(4, smtLength);
                 length -= smtLength;
-                memData = memData.Slice(4 + smtLength);
+                spanData = spanData.Slice(4 + smtLength);
             }
 
-            var dataLength = BitConverter.ToInt32(memData.Span.Slice(0, 4));
+            var dataLength = BitConverter.ToInt32(spanData.Slice(0, 4));
             if (dataLength < -1 || dataLength > length) return null;
-            var data = ReadOnlyMemory<byte>.Empty;
+            var data = ReadOnlySpan<byte>.Empty;
             if (dataLength != -1)
             {
-                data = memData.Slice(4, dataLength);
+                data = spanData.Slice(4, dataLength);
             }
 
             return new SerializedObject(data.ToArray(),
-                !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte.Span) : null,
-                !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte.Span) : null);
+                !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte) : null,
+                !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
         }
         /// <summary>
         /// Get SerializedObject instance from a stream

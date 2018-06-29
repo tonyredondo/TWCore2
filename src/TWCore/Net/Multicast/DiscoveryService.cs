@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -290,7 +291,7 @@ namespace TWCore.Net.Multicast
         {
             try
             {
-                var serObj = SerializedObject.FromSubArray(e.Data);
+                var serObj = SerializedObject.FromSpan(e.Data.ToArray());
                 if (serObj == null) return;
                 if (!(serObj.GetValue() is RegisteredService rService)) return;
 

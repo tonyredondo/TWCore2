@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
-using NonBlocking;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -24,6 +25,7 @@ using System.Net.Sockets;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Collections;
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable UnusedMember.Global
 // ReSharper disable NotAccessedField.Local
@@ -37,12 +39,13 @@ namespace TWCore.Net.Multicast
     public class PeerConnection
     {
         private const int PacketSize = 512;
-        private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();  
-        private readonly ConcurrentDictionary<(Guid, ushort, string), ReceivedDatagrams> _receivedMessagesDatagram = new ConcurrentDictionary<(Guid, ushort, string), ReceivedDatagrams>();
+        private static readonly ObjectPool<byte[], ByteArrayAllocator> DatagramPool = new ObjectPool<byte[], ByteArrayAllocator>();
+        private readonly TimeoutDictionary<(Guid, ushort), ReceivedDatagrams> _receivedMessagesDatagram = new TimeoutDictionary<(Guid, ushort), ReceivedDatagrams>();
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
         private readonly HashSet<EndPoint> _endpointErrors = new HashSet<EndPoint>();
+        private readonly TimeSpan TimeoutTime = TimeSpan.FromSeconds(5);
 
         private IPAddress _multicastIp;
         private IPEndPoint _sendEndpoint;
@@ -72,7 +75,7 @@ namespace TWCore.Net.Multicast
             }
         }
         #endregion
-        
+
         #region Properties
         /// <summary>
         /// Port number
@@ -126,7 +129,8 @@ namespace TWCore.Net.Multicast
                 if (nicPropv4 == null) continue;
                 var addresses = nicProp.UnicastAddresses
                     .Where(a => a.Address.AddressFamily == AddressFamily.InterNetwork)
-                    .Select(a => a.Address);
+                    .Select(a => a.Address)
+                    .Distinct();
 
                 foreach (var ipAddress in addresses)
                 {
@@ -272,7 +276,6 @@ namespace TWCore.Net.Multicast
         {
             while (!_token.IsCancellationRequested)
             {
-                byte[] bufferMessage;
                 try
                 {
                     var clientTask = client.ReceiveAsync();
@@ -292,30 +295,26 @@ namespace TWCore.Net.Multicast
                     var currentMsg = BitConverter.ToUInt16(datagram, 18);
                     var dataSize = BitConverter.ToUInt16(datagram, 20);
                     var buffer = datagram.AsMemory(22, dataSize);
-                    var ip = rcvEndpoint.Address.ToString();
-                    var key = (guid, numMsgs, ip);
+                    var key = (guid, numMsgs);
 
-                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => ReceivedDatagrams.Rent(tuple.Item2, tuple.Item3));
-                    if (!receivedDatagrams.Address.Equals(rcvEndpoint.Address))
-                        continue;
+                    var receivedDatagrams = _receivedMessagesDatagram.GetOrAdd(key, tuple => (new ReceivedDatagrams(tuple.Item2), TimeoutTime));
                     receivedDatagrams.Datagrams[currentMsg] = buffer;
                     if (!receivedDatagrams.Complete)
                         continue;
-                    _receivedMessagesDatagram.TryRemove(key, out _);
-
-                    bufferMessage = receivedDatagrams.GetMessage();
-                    ReceivedDatagrams.Store(receivedDatagrams);
 
                     try
                     {
+                        var bufferMessage = receivedDatagrams.GetMessage();
                         OnReceive?.Invoke(this, new PeerConnectionMessageReceivedEventArgs(rcvEndpoint.Address, bufferMessage));
                     }
                     catch (Exception ex)
                     {
                         Core.Log.Write(ex);
                     }
+
+                    _receivedMessagesDatagram.TryRemove(key, out _);
                 }
-                catch(InvalidCastException)
+                catch (InvalidCastException)
                 {
                     //
                 }
@@ -333,45 +332,50 @@ namespace TWCore.Net.Multicast
         #endregion
 
         #region Nested Types
-        private static readonly ReferencePool<ReceivedDatagrams> _receivedDatagrams = new ReferencePool<ReceivedDatagrams>();
-        private class ReceivedDatagrams
+        private struct ReceivedDatagrams
         {
             public Memory<byte>[] Datagrams { get; private set; }
-            public string Address { get; private set; }
             public bool Complete => !Datagrams?.Any(i => i.IsEmpty) ?? false;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public byte[] GetMessage()
+            public ReadOnlySequence<byte> GetMessage()
             {
-                if (Datagrams == null) return null;
-                var start = 0;
-                var length = Datagrams.Sum(i => i.Length);
-                var buffer = new byte[length];
-                foreach(var datagram in Datagrams)
+                if (Datagrams == null) return ReadOnlySequence<byte>.Empty;
+                if (Datagrams.Length == 0) return ReadOnlySequence<byte>.Empty;
+                ReadOnlySequence<byte> sequence;
+                if (Datagrams.Length == 1)
                 {
-                    datagram.CopyTo(buffer.AsMemory(start, datagram.Length));
-                    start += datagram.Length;
+                    sequence = new ReadOnlySequence<byte>(Datagrams[0]);
                 }
-                return buffer;
+                else
+                {
+                    var firstSegment = new Segment<byte>(Datagrams[0]);
+                    var lastSegment = firstSegment;
+                    for (var i = 1; i < Datagrams.Length; i++)
+                        lastSegment = lastSegment.Add(Datagrams[i]);
+                    sequence = new ReadOnlySequence<byte>(firstSegment, 0, lastSegment, lastSegment.Memory.Length);
+                }
+                return sequence;
             }
 
-            #region Statics
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static ReceivedDatagrams Rent(int numMessages, string address)
+            public ReceivedDatagrams(int numMessages)
             {
-                var datagram = _receivedDatagrams.New();
-                datagram.Datagrams = new Memory<byte>[numMessages];
-                datagram.Address = address;
-                return datagram;
+                Datagrams = new Memory<byte>[numMessages];
             }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public static void Store(ReceivedDatagrams datagram)
+        }
+
+        private class Segment<T> : ReadOnlySequenceSegment<T>
+        {
+            public Segment(ReadOnlyMemory<T> memory)
+                => Memory = memory;
+
+            public Segment<T> Add(ReadOnlyMemory<T> mem)
             {
-                datagram.Datagrams = null;
-                datagram.Address = null;
-                _receivedDatagrams.Store(datagram);
+                var segment = new Segment<T>(mem);
+                segment.RunningIndex = RunningIndex + Memory.Length;
+                Next = segment;
+                return segment;
             }
-            #endregion
         }
         #endregion
     }

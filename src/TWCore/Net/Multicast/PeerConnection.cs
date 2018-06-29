@@ -42,6 +42,7 @@ namespace TWCore.Net.Multicast
         private readonly List<UdpClient> _clients = new List<UdpClient>();
         private readonly List<UdpClient> _sendClients = new List<UdpClient>();
         private readonly List<Task> _clientsReceiveTasks = new List<Task>();
+        private readonly HashSet<EndPoint> _endpointErrors = new HashSet<EndPoint>();
 
         private IPAddress _multicastIp;
         private IPEndPoint _sendEndpoint;
@@ -215,10 +216,9 @@ namespace TWCore.Net.Multicast
             var guidBytes = Guid.NewGuid().ToByteArray();
             var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
             var remain = count;
-            var endpointHash = new HashSet<EndPoint>();
+            var datagram = DatagramPool.New();
             for (var i = 0; i < numMsgs; i++)
             {
-                var datagram = DatagramPool.New();
                 var csize = remain >= dtsize ? dtsize : remain;
                 Buffer.BlockCopy(guidBytes, 0, datagram, 0, 16);
                 Buffer.BlockCopy(numMsgsBytes, 0, datagram, 16, 2);
@@ -229,7 +229,7 @@ namespace TWCore.Net.Multicast
                 foreach (var c in _sendClients)
                 {
                     if (_token.IsCancellationRequested) break;
-                    if (endpointHash.Contains(c.Client.LocalEndPoint)) continue;
+                    if (_endpointErrors.Contains(c.Client.LocalEndPoint)) continue;
                     try
                     {
                         await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
@@ -237,16 +237,17 @@ namespace TWCore.Net.Multicast
                     }
                     catch (Exception)
                     {
-                        if (endpointHash.Add(c.Client.LocalEndPoint))
+                        if (_endpointErrors.Add(c.Client.LocalEndPoint))
                             Core.Log.Error("Error sending datagram to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                 }
 
                 remain -= dtsize;
                 offset += csize;
-                
-                DatagramPool.Store(datagram);
+
+                Array.Clear(datagram, 0, PacketSize);
             }
+            DatagramPool.Store(datagram);
         }
         /// <summary>
         /// Send buffer

@@ -35,7 +35,8 @@ namespace TWCore.Tests
             {
                 var fileSto = new FileStorage("./cache_data")
                 {
-                    NumberOfSubFolders = 10
+                    NumberOfSubFolders = 10,
+                    ExpirationCheckTimeInMinutes = 1                    
                 };
                 var lruSto = new LRU2QStorage(10000);
                 var stoManager = new StorageManager();

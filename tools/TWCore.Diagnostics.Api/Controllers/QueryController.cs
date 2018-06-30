@@ -16,7 +16,7 @@ namespace TWCore.Diagnostics.Api.Controllers
     [Route("api/query")]
     public class QueryController : Controller
     {
-        private static JsonTextSerializer _jsonSerializer = new JsonTextSerializer
+        private static readonly JsonTextSerializer JsonSerializer = new JsonTextSerializer
         {
             Indent = true,
             EnumsAsStrings = true,
@@ -94,11 +94,13 @@ namespace TWCore.Diagnostics.Api.Controllers
         {
             return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
         }
-
         [HttpGet("{environment}/traces/xml/{id}")]
         public async Task<string> GetTraceObjectValueInXmlAsync([FromRoute] string environment, [FromRoute] string id)
         {
             id = WebUtility.UrlDecode(id);
+            var xmlData = await DbHandlers.Instance.Query.GetTraceXmlAsync(id).ConfigureAwait(false);
+            if (xmlData != null)
+                return xmlData;
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
             try
             {
@@ -121,25 +123,47 @@ namespace TWCore.Diagnostics.Api.Controllers
         public async Task<string> GetTraceObjectValueInJsonAsync([FromRoute] string environment, [FromRoute] string id)
         {
             id = WebUtility.UrlDecode(id);
+            var jsonData = await DbHandlers.Instance.Query.GetTraceJsonAsync(id).ConfigureAwait(false);
+            if (jsonData != null)
+                return jsonData;
             var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
             try
             {
                 var value = serObject?.GetValue();
                 if (value == null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body != null ? _jsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
+                    return rsMessage.Body != null ? JsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body != null ? _jsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
+                    return rqMessage.Body != null ? JsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
                 if (value is string strValue)
                     return strValue;
-                return _jsonSerializer.SerializeToString(value, value.GetType());
+                return JsonSerializer.SerializeToString(value, value.GetType());
             }
             catch (Exception ex)
             {
-                return _jsonSerializer.SerializeToString(new SerializableException(ex));
+                return JsonSerializer.SerializeToString(new SerializableException(ex));
             }
         }
-
+        /// <summary>
+        /// Search a term in the database
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="searchTerm">Term to search in the database</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Search results</returns>
+        [HttpGet("{environment}/search/{searchTerm}")]
+        public Task<SearchResults> SearchAsync([FromRoute]string environment, [FromRoute]string searchTerm, DateTime fromDate, DateTime toDate)
+        {
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.SearchAsync(environment, searchTerm, fromDate, toDate);
+        }
+        
+        
+        
+        
 
 
 

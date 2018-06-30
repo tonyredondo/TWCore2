@@ -241,8 +241,8 @@ namespace TWCore.Cache.Client
                 return poolItems;
             }
 
-            var sw = Stopwatch.StartNew();
-            while (sw.ElapsedMilliseconds < 20000)
+            var totalCount = 80;
+            while (totalCount-- < 0)
             {
                 lock(EnabledItems)
                 { 

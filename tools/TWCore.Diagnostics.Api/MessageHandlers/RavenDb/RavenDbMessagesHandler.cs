@@ -14,10 +14,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
  */
 
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -33,6 +33,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {
+        private static readonly JsonTextSerializer JsonSerializer = new JsonTextSerializer
+        {
+            Indent = true,
+            EnumsAsStrings = true,
+            UseCamelCase = true
+        };
+        
         public async Task ProcessLogItemsMessageAsync(List<LogItem> message)
         {
             Core.Log.InfoBasic("Storing LogItem messages...");
@@ -63,6 +70,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             }
         }
 
+        
         public async Task ProcessTraceItemsMessageAsync(List<MessagingTraceItem> message)
         {
             Core.Log.InfoBasic("Storing TraceItem messages...");
@@ -84,18 +92,49 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     };
                     await session.StoreAsync(traceInfo).ConfigureAwait(false);
 
-                    using (var ms = new MemoryStream())
+                    if (traceItem.TraceObject != null)
                     {
-                        if (traceItem.TraceObject != null)
+                        using (var msNBinary = new MemoryStream())
+                        using (var msXml = new MemoryStream())
+                        using (var msJson = new MemoryStream())
                         {
-                            traceItem.TraceObject.SerializeToNBinary(ms);
-                            ms.Position = 0;
+                            try
+                            {
+                                traceItem.TraceObject.SerializeToNBinary(msNBinary);
+                                msNBinary.Position = 0;
+                                session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
+                            }
+                            catch (Exception)
+                            {
+                                //
+                            }
+                            
+                            try
+                            {
+                                traceItem.TraceObject.SerializeToXml(msXml);
+                                msXml.Position = 0;
+                                session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
+                            }
+                            catch (Exception)
+                            {
+                                //
+                            }
+                            
+                            try
+                            {
+                                JsonSerializer.Serialize(traceItem.TraceObject, msJson);
+                                msJson.Position = 0;
+                                session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
+                            }
+                            catch (Exception)
+                            {
+                                //
+                            }
                         }
-
-                        session.Advanced.Attachments.Store(traceInfo.Id, "Trace", ms, traceItem.TraceObject?.GetType().FullName);
-
-                        await session.SaveChangesAsync().ConfigureAwait(false);
                     }
+                    
+                    await session.SaveChangesAsync().ConfigureAwait(false);
+
                 }).ConfigureAwait(false);
             }
         }

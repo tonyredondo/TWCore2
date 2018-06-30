@@ -216,9 +216,36 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         }
 
         // Search
-        public async Task<SearchResults> Search(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
+        public Task<SearchResults> Search(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
         {
-            return null;
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>()
+                    .WhereEquals(x => x.Environment, environment)
+                    .WhereBetween(x => x.Timestamp, fromDate, toDate)
+                    .Search(x => x.Message, "*" + searchTerm + "*")
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Level, searchTerm)
+                    .Search(x => x.Code, searchTerm)
+                    .Search(x => x.Type, searchTerm)
+                    .Search(x => x.Application, searchTerm)
+                    .Search(x => x.Machine, searchTerm)
+                    .OrderBy(x => x.Timestamp);
+                var logResults = await logQuery.ToListAsync().ConfigureAwait(false);
+
+                var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
+                    .WhereEquals(x => x.Environment, environment)
+                    .WhereBetween(x => x.Timestamp, fromDate, toDate)
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Name, "*" + searchTerm + "*")
+                    .Search(x => x.Tags, "*" + searchTerm + "*")
+                    .Search(x => x.Application, searchTerm)
+                    .Search(x => x.Machine, searchTerm)
+                    .OrderBy(x => x.Timestamp);
+                var traceResults = await traceQuery.ToListAsync().ConfigureAwait(false);
+                    
+                return new SearchResults { Logs = logResults, Traces = traceResults };
+            });
         }
 
         
@@ -233,9 +260,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var documentQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>();
                 var query = documentQuery
-                        .Statistics(out var stats)
-                        .WhereEquals(x => x.Environment, environment)
-                        .WhereBetween(x => x.Timestamp, fromDate, toDate);
+                    .Statistics(out var stats)
+                    .WhereEquals(x => x.Environment, environment)
+                    .WhereBetween(x => x.Timestamp, fromDate, toDate);
+                        
 
                 if (!string.IsNullOrWhiteSpace(application))
                     query = query.WhereEquals(x => x.Application, application);

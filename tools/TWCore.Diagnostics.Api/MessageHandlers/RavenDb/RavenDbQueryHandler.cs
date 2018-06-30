@@ -208,6 +208,28 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 return (SerializedObject)traceObject;
             });
         }
+        public Task<string> GetTraceXmlAsync(string id)
+        {
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceXml").ConfigureAwait(false);
+                if (attachment?.Stream == null) return null;
+                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+            });
+        }
+        public Task<string> GetTraceJsonAsync(string id)
+        {
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            {
+                var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceJson").ConfigureAwait(false);
+                if (attachment?.Stream == null) return null;
+                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+            });
+        }
+        
+        
+        
+        
         private class TraceTempResult
         {
             public string Group { get; set; }
@@ -216,7 +238,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         }
 
         // Search
-        public Task<SearchResults> Search(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
+        public Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
@@ -230,7 +252,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Type, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
-                    .OrderBy(x => x.Timestamp);
+                    .OrderBy(x => x.Timestamp)
+                    .Take(100);
                 var logResults = await logQuery.ToListAsync().ConfigureAwait(false);
 
                 var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
@@ -241,7 +264,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Tags, "*" + searchTerm + "*")
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
-                    .OrderBy(x => x.Timestamp);
+                    .OrderBy(x => x.Timestamp)
+                    .Take(100);
+                
                 var traceResults = await traceQuery.ToListAsync().ConfigureAwait(false);
                     
                 return new SearchResults { Logs = logResults, Traces = traceResults };

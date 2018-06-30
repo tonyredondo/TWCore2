@@ -76,9 +76,39 @@ namespace TWCore.Diagnostics.Api.Models
         /// <param name="groupName">Group name</param>
         /// <returns>Traces from that group</returns>
         Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName);
+		/// <summary>
+		/// Gets the Trace object
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="id">Trace object id</param>
+		Task<SerializedObject> GetTraceObjectAsync(string id);
+		/// <summary>
+		/// Gets the Trace object in xml
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="id">Trace object id</param>
+		Task<string> GetTraceXmlAsync(string id);
+		/// <summary>
+		/// Gets the Trace object in json
+		/// </summary>
+		/// <returns>The trace object</returns>
+		/// <param name="id">Trace object id</param>
+		Task<string> GetTraceJsonAsync(string id);
+		/// <summary>
+		/// Search a term in the database
+		/// </summary>
+		/// <param name="environment">Environment name</param>
+		/// <param name="searchTerm">Term to search in the database</param>
+		/// <param name="fromDate">From date and time</param>
+		/// <param name="toDate">To date and time</param>
+		/// <returns>Search results</returns>
+		Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
 
-
-
+		
+		
+		
+		
+		
         /// <summary>
         /// Get the logs by group
         /// </summary>
@@ -140,12 +170,8 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <param name="page">Page number</param>
 		/// <param name="pageSize">Page size</param>
 		Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-		/// <summary>
-		/// Gets the Trace object
-		/// </summary>
-		/// <returns>The trace object</returns>
-		/// <param name="id">Trace object id</param>
-		Task<SerializedObject> GetTraceObjectAsync(string id);
+		
+		
 		/// <summary>
 		/// Gets the statuses
 		/// </summary>

@@ -245,6 +245,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
+                    .OpenSubclause()
                     .Search(x => x.Message, "*" + searchTerm + "*")
                     .Search(x => x.Group, "*" + searchTerm + "*")
                     .Search(x => x.Level, searchTerm)
@@ -252,20 +253,24 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Type, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .CloseSubclause()
                     .OrderBy(x => x.Timestamp)
-                    .Take(100);
+                    .Take(200);
+
                 var logResults = await logQuery.ToListAsync().ConfigureAwait(false);
 
                 var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
+                    .OpenSubclause()
                     .Search(x => x.Group, "*" + searchTerm + "*")
                     .Search(x => x.Name, "*" + searchTerm + "*")
                     .Search(x => x.Tags, "*" + searchTerm + "*")
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .CloseSubclause()
                     .OrderBy(x => x.Timestamp)
-                    .Take(100);
+                    .Take(200);
                 
                 var traceResults = await traceQuery.ToListAsync().ConfigureAwait(false);
                     

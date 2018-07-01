@@ -242,7 +242,7 @@ namespace TWCore.Cache.Client
             }
 
             var totalCount = 80;
-            while (totalCount-- < 0)
+            while (totalCount-- > 0)
             {
                 lock(EnabledItems)
                 { 

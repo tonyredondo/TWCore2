@@ -155,6 +155,7 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("{environment}/search/{searchTerm}")]
         public Task<SearchResults> SearchAsync([FromRoute]string environment, [FromRoute]string searchTerm, DateTime fromDate, DateTime toDate)
         {
+        	searchTerm = searchTerm?.Trim();
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);

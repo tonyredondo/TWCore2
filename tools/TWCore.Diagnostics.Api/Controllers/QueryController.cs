@@ -94,6 +94,12 @@ namespace TWCore.Diagnostics.Api.Controllers
         {
             return DbHandlers.Instance.Query.GetTracesByGroupIdAsync(environment, groupName);
         }
+        
+        [HttpGet("{environment}/traces/raw/{id}")]
+        public Task<SerializedObject> GetTraceObjectAsync([FromRoute] string environment, [FromRoute] string id)
+        {
+            return DbHandlers.Instance.Query.GetTraceObjectAsync(id);
+        }
         [HttpGet("{environment}/traces/xml/{id}")]
         public async Task<string> GetTraceObjectValueInXmlAsync([FromRoute] string environment, [FromRoute] string id)
         {
@@ -155,78 +161,14 @@ namespace TWCore.Diagnostics.Api.Controllers
         [HttpGet("{environment}/search/{searchTerm}")]
         public Task<SearchResults> SearchAsync([FromRoute]string environment, [FromRoute]string searchTerm, DateTime fromDate, DateTime toDate)
         {
-        	searchTerm = searchTerm?.Trim();
+            searchTerm = searchTerm?.Trim();
             if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
             fromDate = fromDate.Date;
             toDate = toDate.Date.AddDays(1).AddSeconds(-1);
             return DbHandlers.Instance.Query.SearchAsync(environment, searchTerm, fromDate, toDate);
         }
+
         
-        
-        
-        
-
-
-
-
-        [HttpGet("{environment}/logs/group/{group}/{application?}")]
-        public Task<PagedList<NodeLogItem>> GetLogsByGroup([FromRoute] string environment, string group, [FromRoute] string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
-        {
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
-        }
-
-        [HttpGet("{environment}/logs/search/{search?}")]
-        public Task<PagedList<NodeLogItem>> GetLogsAsync([FromRoute] string environment, [FromRoute] string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
-        {
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, fromDate, toDate, page, pageSize);
-        }
-
-        [HttpGet("{environment}/logs/level/{level}/{search?}")]
-        public Task<PagedList<NodeLogItem>> GetLogsAsync([FromRoute] string environment, [FromRoute] string search, string application, [FromRoute] LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
-        {
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetLogsAsync(environment, search, application, level, fromDate, toDate, page, pageSize);
-        }
-
-        [HttpGet("{environment}/traces/group/{group}/{application?}")]
-        public Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync([FromRoute] string environment, [FromRoute] string group, [FromRoute] string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
-        {
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetTracesByGroupAsync(environment, group, application, fromDate, toDate, page, pageSize);
-        }
-
-        [HttpGet("{environment}/traces/search/{search?}")]
-        public Task<PagedList<NodeTraceItem>> GetTracesAsync([FromRoute] string environment, [FromRoute] string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
-        {
-            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
-            fromDate = fromDate.Date;
-            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
-            return DbHandlers.Instance.Query.GetTracesAsync(environment, search, application, fromDate, toDate, page, pageSize);
-        }
-
-        [HttpGet("{environment}/traces/raw/{id}")]
-        public Task<SerializedObject> GetTraceObjectAsync([FromRoute] string environment, [FromRoute] string id)
-        {
-            return DbHandlers.Instance.Query.GetTraceObjectAsync(id);
-        }
-
-        [HttpGet("{environment}/traces/object/{id}")]
-        public async Task<object> GetTraceObjectValueAsync([FromRoute] string environment, [FromRoute] string id)
-        {
-            id = WebUtility.UrlDecode(id);
-            var serObject = await DbHandlers.Instance.Query.GetTraceObjectAsync(id).ConfigureAwait(false);
-            return serObject?.GetValue();
-        }
 
         [HttpGet("{environment}/status")]
         public Task<PagedList<NodeStatusItem>> GetStatusesAsync([FromRoute] string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)

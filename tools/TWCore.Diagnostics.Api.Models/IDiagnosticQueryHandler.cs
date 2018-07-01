@@ -17,13 +17,10 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
-using TWCore.Diagnostics.Status;
-using TWCore.Diagnostics.Trace.Storages;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
@@ -104,72 +101,6 @@ namespace TWCore.Diagnostics.Api.Models
 		/// <returns>Search results</returns>
 		Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate);
 
-		
-		
-		
-		
-		
-        /// <summary>
-        /// Get the logs by group
-        /// </summary>
-        /// <returns>Logs instance</returns>
-        /// <param name="environment">Environment name</param>
-        /// <param name="group">Group</param>
-        /// <param name="application">Application name or null</param>
-        /// <param name="fromDate">From date and time</param>
-        /// <param name="toDate">To date and time</param>
-        /// <param name="page">Page number</param>
-        /// <param name="pageSize">Page size</param>
-        Task<PagedList<NodeLogItem>> GetLogsByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
-		Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-		/// <summary>
-		/// Get the logs from a query
-		/// </summary>
-		/// <returns>Logs instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="level">Log level</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
-		Task<PagedList<NodeLogItem>> GetLogsAsync(string environment, string search, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-		/// <summary>
-		/// Get the traces form a query
-		/// </summary>
-		/// <returns>Traces instance</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="search">Search term</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
-		Task<PagedList<NodeTraceItem>> GetTracesAsync(string environment, string search, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
-		/// <summary>
-		/// Gets the traces by group.
-		/// </summary>
-		/// <returns>The traces by group.</returns>
-		/// <param name="environment">Environment name</param>
-		/// <param name="group">Group name</param>
-		/// <param name="application">Application name or null</param>
-		/// <param name="fromDate">From date and time</param>
-		/// <param name="toDate">To date and time</param>
-		/// <param name="page">Page number</param>
-		/// <param name="pageSize">Page size</param>
-		Task<PagedList<NodeTraceItem>> GetTracesByGroupAsync(string environment, string group, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50);
 		
 		
 		/// <summary>

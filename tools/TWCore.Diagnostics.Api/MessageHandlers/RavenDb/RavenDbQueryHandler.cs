@@ -127,9 +127,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                 var data = await query.ToListAsync().ConfigureAwait(false);
 
-                foreach (var item in data)
-                    item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
-
                 return new PagedList<NodeLogItem>
                 {
                     PageNumber = page,
@@ -157,9 +154,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                 return res.ToListAsync();
             }).ConfigureAwait(false);
-
-            foreach(var item in value)
-                item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
 
             var valGroup = value.GroupBy(i => i.Group);
             var totalResult = valGroup.Count();
@@ -192,9 +186,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
                 return query.ToListAsync();
             });
-
-            foreach (var item in value)
-                item.Timestamp = new DateTime(item.Timestamp.Ticks, DateTimeKind.Utc).ToLocalTime();
 
             return value;
         }

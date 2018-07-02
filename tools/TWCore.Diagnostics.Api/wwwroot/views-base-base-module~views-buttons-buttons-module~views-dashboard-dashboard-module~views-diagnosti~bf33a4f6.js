@@ -87,7 +87,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var rxjs_operators__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! rxjs/operators */ "./node_modules/rxjs/_esm5/operators/index.js");
 /* harmony import */ var _angular_platform_browser__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @angular/platform-browser */ "./node_modules/@angular/platform-browser/fesm5/platform-browser.js");
 /**
- * @license Angular v6.0.5
+ * @license Angular v6.0.7
  * (c) 2010-2018 Google, Inc. https://angular.io/
  * License: MIT
  */
@@ -1949,21 +1949,31 @@ var NgControlStatusGroup = /** @class */ (function (_super) {
  * found in the LICENSE file at https://angular.io/license
  */
 /**
- * Indicates that a FormControl is valid, i.e. that no errors exist in the input value.
+ * Reports that a FormControl is valid, meaning that no errors exist in the input value.
+ *
+ * @see `status`
  */
 var VALID = 'VALID';
 /**
- * Indicates that a FormControl is invalid, i.e. that an error exists in the input value.
+ * Reports that a FormControl is invalid, meaning that an error exists in the input value.
+ *
+ * @see `status`
  */
 var INVALID = 'INVALID';
 /**
- * Indicates that a FormControl is pending, i.e. that async validation is occurring and
+ * Reports that a FormControl is pending, meaning that that async validation is occurring and
  * errors are not yet available for the input value.
+ *
+ * @see `markAsPending`
+ * @see `status`
  */
 var PENDING = 'PENDING';
 /**
- * Indicates that a FormControl is disabled, i.e. that the control is exempt from ancestor
+ * Reports that a FormControl is disabled, meaning that the control is exempt from ancestor
  * calculations of validity or value.
+ *
+ * @see `markAsDisabled`
+ * @see `status`
  */
 var DISABLED = 'DISABLED';
 function _find(control, path, delimiter) {
@@ -2000,8 +2010,6 @@ function isOptionsObj(validatorOrOpts) {
         typeof validatorOrOpts === 'object';
 }
 /**
- * @description
- *
  * This is the base class for `FormControl`, `FormGroup`, and `FormArray`.
  *
  * It provides some of the shared behavior that all controls and groups of controls have, like
@@ -2017,8 +2025,9 @@ function isOptionsObj(validatorOrOpts) {
 var AbstractControl = /** @class */ (function () {
     /**
      * Initialize the AbstractControl instance.
-     * @param validator The function that will determine the synchronous validity of this control.
-     * @param asyncValidator The function that will determine the asynchronous validity of this
+     *
+     * @param validator The function that determines the synchronous validity of this control.
+     * @param asyncValidator The function that determines the asynchronous validity of this
      * control.
      */
     function AbstractControl(validator, asyncValidator) {
@@ -2030,14 +2039,16 @@ var AbstractControl = /** @class */ (function () {
          * A control is `pristine` if the user has not yet changed
          * the value in the UI.
          *
-         * Note that programmatic changes to a control's value will
-         * *not* mark it dirty.
+         * @returns True if the user has not yet changed the value in the UI; compare `dirty`.
+         * Programmatic changes to a control's value do not mark it dirty.
          */
         this.pristine = true;
         /**
-        * A control is marked `touched` once the user has triggered
-        * a `blur` event on it.
-        */
+         * True if the control is marked as `touched`.
+         *
+         * A control is marked `touched` once the user has triggered
+         * a `blur` event on it.
+         */
         this.touched = false;
         /** @internal */
         this._onDisabledChange = [];
@@ -2052,10 +2063,12 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "valid", {
         /**
-         * A control is `valid` when its `status === VALID`.
+         * A control is `valid` when its `status` is `VALID`.
          *
-         * In order to have this status, the control must have passed all its
-         * validation checks.
+         * @see `status`
+         *
+         * @returns True if the control has passed all of its validation tests,
+         * false otherwise.
          */
         get: function () { return this.status === VALID; },
         enumerable: true,
@@ -2063,10 +2076,12 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "invalid", {
         /**
-         * A control is `invalid` when its `status === INVALID`.
+         * A control is `invalid` when its `status` is `INVALID`.
          *
-         * In order to have this status, the control must have failed
-         * at least one of its validation checks.
+         * @see `status`
+         *
+         * @returns True if this control has failed one or more of its validation checks,
+         * false otherwise.
          */
         get: function () { return this.status === INVALID; },
         enumerable: true,
@@ -2074,10 +2089,12 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "pending", {
         /**
-         * A control is `pending` when its `status === PENDING`.
+         * A control is `pending` when its `status` is `PENDING`.
          *
-         * In order to have this status, the control must be in the
-         * middle of conducting a validation check.
+         * @see `status`
+         *
+         * @returns True if this control is in the process of conducting a validation check,
+         * false otherwise.
          */
         get: function () { return this.status == PENDING; },
         enumerable: true,
@@ -2085,11 +2102,15 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "disabled", {
         /**
-         * A control is `disabled` when its `status === DISABLED`.
+         * A control is `disabled` when its `status` is `DISABLED`.
+         *
+         * @see `status`
          *
          * Disabled controls are exempt from validation checks and
          * are not included in the aggregate value of their ancestor
          * controls.
+         *
+         * @returns True if the control is disabled, false otherwise.
          */
         get: function () { return this.status === DISABLED; },
         enumerable: true,
@@ -2097,10 +2118,13 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "enabled", {
         /**
-         * A control is `enabled` as long as its `status !== DISABLED`.
+         * A control is `enabled` as long as its `status` is not `DISABLED`.
          *
-         * In other words, it has a status of `VALID`, `INVALID`, or
-         * `PENDING`.
+         * @see `status`
+         *
+         * @returns True if the control has any status other than 'DISABLED',
+         * false if the status is 'DISABLED'.
+         *
          */
         get: function () { return this.status !== DISABLED; },
         enumerable: true,
@@ -2111,8 +2135,8 @@ var AbstractControl = /** @class */ (function () {
          * A control is `dirty` if the user has changed the value
          * in the UI.
          *
-         * Note that programmatic changes to a control's value will
-         * *not* mark it dirty.
+         * @returns True if the user has changed the value of this control in the UI; compare `pristine`.
+         * Programmatic changes to a control's value do not mark it dirty.
          */
         get: function () { return !this.pristine; },
         enumerable: true,
@@ -2120,6 +2144,8 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "untouched", {
         /**
+         * True if the control has not been marked as touched
+         *
          * A control is `untouched` if the user has not yet triggered
          * a `blur` event on it.
          */
@@ -2129,9 +2155,10 @@ var AbstractControl = /** @class */ (function () {
     });
     Object.defineProperty(AbstractControl.prototype, "updateOn", {
         /**
-         * Returns the update strategy of the `AbstractControl` (i.e.
-         * the event on which the control will update itself).
-         * Possible values: `'change'` (default) | `'blur'` | `'submit'`
+         * Reports the update strategy of the `AbstractControl` (meaning
+         * the event on which the control updates itself).
+         * Possible values: `'change'` | `'blur'` | `'submit'`
+         * Default value: `'change'`
          */
         get: function () {
             return this._updateOn ? this._updateOn : (this.parent ? this.parent.updateOn : 'change');
@@ -2141,14 +2168,14 @@ var AbstractControl = /** @class */ (function () {
     });
     /**
      * Sets the synchronous validators that are active on this control.  Calling
-     * this will overwrite any existing sync validators.
+     * this overwrites any existing sync validators.
      */
     AbstractControl.prototype.setValidators = function (newValidator) {
         this.validator = coerceToValidator(newValidator);
     };
     /**
      * Sets the async validators that are active on this control. Calling this
-     * will overwrite any existing async validators.
+     * overwrites any existing async validators.
      */
     AbstractControl.prototype.setAsyncValidators = function (newValidator) {
         this.asyncValidator = coerceToAsyncValidator(newValidator);
@@ -2162,10 +2189,13 @@ var AbstractControl = /** @class */ (function () {
      */
     AbstractControl.prototype.clearAsyncValidators = function () { this.asyncValidator = null; };
     /**
-     * Marks the control as `touched`.
+     * Marks the control as `touched`. A control is touched by focus and
+     * blur events that do not change the value; compare `markAsDirty`;
      *
-     * This will also mark all direct ancestors as `touched` to maintain
-     * the model.
+     *  @param opts Configuration options that determine how the control propagates changes
+     * and emits events events after marking is applied.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false.
      */
     AbstractControl.prototype.markAsTouched = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2177,9 +2207,13 @@ var AbstractControl = /** @class */ (function () {
     /**
      * Marks the control as `untouched`.
      *
-     * If the control has any children, it will also mark all children as `untouched`
-     * to maintain the model, and re-calculate the `touched` status of all parent
-     * controls.
+     * If the control has any children, also marks all children as `untouched`
+     * and recalculates the `touched` status of all parent controls.
+     *
+     *  @param opts Configuration options that determine how the control propagates changes
+     * and emits events after the marking is applied.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false.
      */
     AbstractControl.prototype.markAsUntouched = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2191,10 +2225,13 @@ var AbstractControl = /** @class */ (function () {
         }
     };
     /**
-     * Marks the control as `dirty`.
+     * Marks the control as `dirty`. A control becomes dirty when
+     * the control's is changed through the UI; compare `markAsTouched`.
      *
-     * This will also mark all direct ancestors as `dirty` to maintain
-     * the model.
+     *  @param opts Configuration options that determine how the control propagates changes
+     * and emits events after marking is applied.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false.
      */
     AbstractControl.prototype.markAsDirty = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2206,9 +2243,14 @@ var AbstractControl = /** @class */ (function () {
     /**
      * Marks the control as `pristine`.
      *
-     * If the control has any children, it will also mark all children as `pristine`
-     * to maintain the model, and re-calculate the `pristine` status of all parent
+     * If the control has any children, marks all children as `pristine`,
+     * and recalculates the `pristine` status of all parent
      * controls.
+     *
+     *  @param opts Configuration options that determine how the control emits events after
+     * marking is applied.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false..
      */
     AbstractControl.prototype.markAsPristine = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2222,9 +2264,16 @@ var AbstractControl = /** @class */ (function () {
     /**
      * Marks the control as `pending`.
      *
-     * An event will be emitted by `statusChanges` by default.
+     * A control is pending while the control performs async validation.
      *
-     * Passing `false` for `emitEvent` will cause `statusChanges` to not emit an event.
+     *  @param opts Configuration options that determine how the control propagates changes and
+     * emits events after marking is applied.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false..
+     * * `emitEvent`: When true or not supplied (the default), the `statusChanges`
+     * observable emits an event with the latest status the control is marked pending.
+     * When false, no events are emitted.
+     *
      */
     AbstractControl.prototype.markAsPending = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2237,10 +2286,19 @@ var AbstractControl = /** @class */ (function () {
         }
     };
     /**
-     * Disables the control. This means the control will be exempt from validation checks and
+     * Disables the control. This means the control is exempt from validation checks and
      * excluded from the aggregate value of any parent. Its status is `DISABLED`.
      *
-     * If the control has children, all children will be disabled to maintain the model.
+     * If the control has children, all children are also disabled.
+     *
+     *  @param opts Configuration options that determine how the control propagates
+     * changes and emits events after the control is disabled.
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false..
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is disabled.
+     * When false, no events are emitted.
      */
     AbstractControl.prototype.disable = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2256,11 +2314,20 @@ var AbstractControl = /** @class */ (function () {
         this._onDisabledChange.forEach(function (changeFn) { return changeFn(true); });
     };
     /**
-     * Enables the control. This means the control will be included in validation checks and
-     * the aggregate value of its parent. Its status is re-calculated based on its value and
+     * Enables the control. This means the control is included in validation checks and
+     * the aggregate value of its parent. Its status recalculates based on its value and
      * its validators.
      *
-     * If the control has children, all children will be enabled.
+     * By default, if the control has children, all children are enabled.
+     *
+     *  @param opts Configure options that control how the control propagates changes and
+     * emits events when marked as untouched
+     * * `onlySelf`: When true, mark only this control. When false or not supplied,
+     * marks all direct ancestors. Default is false..
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is enabled.
+     * When false, no events are emitted.
      */
     AbstractControl.prototype.enable = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2277,11 +2344,23 @@ var AbstractControl = /** @class */ (function () {
             this._parent._updateTouched();
         }
     };
+    /**
+     * @param parent Sets the parent of the control
+     */
     AbstractControl.prototype.setParent = function (parent) { this._parent = parent; };
     /**
-     * Re-calculates the value and validation status of the control.
+     * Recalculates the value and validation status of the control.
      *
-     * By default, it will also update the value and validity of its ancestors.
+     * By default, it also updates the value and validity of its ancestors.
+     *
+     * @param opts Configuration options determine how the control propagates changes and emits events
+     * after updates and validity checks are applied.
+     * * `onlySelf`: When true, only update this control. When false or not supplied,
+     * update all direct ancestors. Default is false..
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is updated.
+     * When false, no events are emitted.
      */
     AbstractControl.prototype.updateValueAndValidity = function (opts) {
         if (opts === void 0) { opts = {}; }
@@ -2330,24 +2409,22 @@ var AbstractControl = /** @class */ (function () {
         }
     };
     /**
-     * Sets errors on a form control.
+     * Sets errors on a form control when running validations manually, rather than automatically.
      *
-     * This is used when validations are run manually by the user, rather than automatically.
+     * Calling `setErrors` also updates the validity of the parent control.
      *
-     * Calling `setErrors` will also update the validity of the parent control.
-     *
-     * ### Example
+     * ### Manually set the errors for a control
      *
      * ```
-     * const login = new FormControl("someLogin");
+     * const login = new FormControl('someLogin');
      * login.setErrors({
-     *   "notUnique": true
+     *   notUnique: true
      * });
      *
      * expect(login.valid).toEqual(false);
-     * expect(login.errors).toEqual({"notUnique": true});
+     * expect(login.errors).toEqual({ notUnique: true });
      *
-     * login.setValue("someOtherLogin");
+     * login.setValue('someOtherLogin');
      *
      * expect(login.valid).toEqual(true);
      * ```
@@ -2360,9 +2437,12 @@ var AbstractControl = /** @class */ (function () {
     /**
      * Retrieves a child control given the control's name or path.
      *
-     * Paths can be passed in as an array or a string delimited by a dot.
+     * @param path A dot-delimited string or array of string/number values that define the path to the
+     * control.
      *
-     * To get a control nested within a `person` sub-group:
+     * ### Retrieve a nested control
+     *
+     * For example, to get a `name` control nested within a `person` sub-group:
      *
      * * `this.form.get('person.name');`
      *
@@ -2372,20 +2452,26 @@ var AbstractControl = /** @class */ (function () {
      */
     AbstractControl.prototype.get = function (path) { return _find(this, path, '.'); };
     /**
-     * Returns error data if the control with the given path has the error specified. Otherwise
-     * returns null or undefined.
+     * Reports error data for a specific error occurring in this control or in another control.
      *
-     * If no path is given, it checks for the error on the present control.
+     * @param errorCode The error code for which to retrieve data
+     * @param path The path to a control to check. If not supplied, checks for the error in this
+     * control.
+     *
+     * @returns The error data if the control with the given path has the given error, otherwise null
+     * or undefined.
      */
     AbstractControl.prototype.getError = function (errorCode, path) {
         var control = path ? this.get(path) : this;
         return control && control.errors ? control.errors[errorCode] : null;
     };
     /**
-     * Returns true if the control with the given path has the error specified. Otherwise
-     * returns false.
+     * Reports whether the control with the given path has the error specified.
      *
-     * If no path is given, it checks for the error on the present control.
+     * @param errorCode The error code for which to retrieve data
+     * @param path The path to a control to check. If not supplied, checks for the error in this
+     * control.
+     * @returns True when the control with the given path has the error, otherwise false.
      */
     AbstractControl.prototype.hasError = function (errorCode, path) { return !!this.getError(errorCode, path); };
     Object.defineProperty(AbstractControl.prototype, "root", {
@@ -2472,46 +2558,46 @@ var AbstractControl = /** @class */ (function () {
     return AbstractControl;
 }());
 /**
- * @description
- *
  * Tracks the value and validation status of an individual form control.
  *
  * This is one of the three fundamental building blocks of Angular forms, along with
- * `FormGroup` and `FormArray`.
+ * `FormGroup` and `FormArray`. It extends the `AbstractControl` class that
+ * implements most of the base functionality for accessing the value, validation status,
+ * user interactions and events.
  *
- * When instantiating a `FormControl`, you can pass in an initial value as the
- * first argument. Example:
+ * @see `AbstractControl`
+ * @see [Reactive Forms Guide](guide/reactive-forms)
+ * @see [Usage Notes](#usage-notes)
+ *
+ * @usageNotes
+ *
+ * ### Initializing Form Controls
+ *
+ * Instantiate a `FormControl`, with an initial value.
  *
  * ```ts
  * const ctrl = new FormControl('some value');
  * console.log(ctrl.value);     // 'some value'
  *```
  *
- * You can also initialize the control with a form state object on instantiation,
- * which includes both the value and whether or not the control is disabled.
- * You can't use the value key without the disabled key; both are required
- * to use this way of initialization.
+ * The following example initializes the control with a form state object. The `value`
+ * and `disabled` keys are required in this case.
  *
  * ```ts
- * const ctrl = new FormControl({value: 'n/a', disabled: true});
+ * const ctrl = new FormControl({ value: 'n/a', disabled: true });
  * console.log(ctrl.value);     // 'n/a'
- * console.log(ctrl.status);   // 'DISABLED'
+ * console.log(ctrl.status);    // 'DISABLED'
  * ```
  *
- * The second `FormControl` argument can accept one of three things:
- * * a sync validator function
- * * an array of sync validator functions
- * * an options object containing validator and/or async validator functions
- *
- * Example of a single sync validator function:
+ * The following example initializes the control with a sync validator.
  *
  * ```ts
  * const ctrl = new FormControl('', Validators.required);
- * console.log(ctrl.value);     // ''
- * console.log(ctrl.status);   // 'INVALID'
+ * console.log(ctrl.value);      // ''
+ * console.log(ctrl.status);     // 'INVALID'
  * ```
  *
- * Example using options object:
+ * The following example initializes the control using an options object.
  *
  * ```ts
  * const ctrl = new FormControl('', {
@@ -2520,26 +2606,68 @@ var AbstractControl = /** @class */ (function () {
  * });
  * ```
  *
- * The options object can also be used to define when the control should update.
- * By default, the value and validity of a control updates whenever the value
- * changes. You can configure it to update on the blur event instead by setting
- * the `updateOn` option to `'blur'`.
+ * ### Configure the control to update on a blur event
+ *
+ * Set the `updateOn` option to `'blur'` to update on the blur `event`.
  *
  * ```ts
- * const c = new FormControl('', { updateOn: 'blur' });
+ * const ctrl = new FormControl('', { updateOn: 'blur' });
  * ```
  *
- * You can also set `updateOn` to `'submit'`, which will delay value and validity
- * updates until the parent form of the control fires a submit event.
+ * ### Configure the control to update on a submit event
  *
- * See its superclass, `AbstractControl`, for more properties and methods.
+ * Set the `updateOn` option to `'submit'` to update on a submit `event`.
  *
- * * **npm package**: `@angular/forms`
+ * ```ts
+ * const ctrl = new FormControl('', { updateOn: 'submit' });
+ * ```
  *
+ * ### Reset the control back to an initial value
  *
- */
+ * You reset to a specific form state by passing through a standalone
+ * value or a form state object that contains both a value and a disabled state
+ * (these are the only two properties that cannot be calculated).
+ *
+ * ```ts
+ * const ctrl = new FormControl('Nancy');
+ *
+ * console.log(control.value); // 'Nancy'
+ *
+ * control.reset('Drew');
+ *
+ * console.log(control.value); // 'Drew'
+ * ```
+ *
+ * ### Reset the control back to an initial value and disabled
+ *
+ * ```
+ * const ctrl = new FormControl('Nancy');
+ *
+ * console.log(control.value); // 'Nancy'
+ * console.log(this.control.status); // 'DISABLED'
+ *
+ * control.reset({ value: 'Drew', disabled: true });
+ *
+ * console.log(this.control.value); // 'Drew'
+ * console.log(this.control.status); // 'DISABLED'
+ *
+*/
 var FormControl = /** @class */ (function (_super) {
     Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"])(FormControl, _super);
+    /**
+    * Creates a new `FormControl` instance.
+    *
+    * @param formState Initializes the control with an initial state value,
+    * or with an object that defines the initial value, status, and options
+    * for handling updates and validation.
+    *
+    * @param validatorOrOpts A synchronous validator function, or an array of
+    * such functions, or an `AbstractControlOptions` object that contains validation functions
+    * and a validation trigger.
+    *
+    * @param asyncValidator A single async validator or array of async validator functions
+    *
+    */
     function FormControl(formState, validatorOrOpts, asyncValidator) {
         if (formState === void 0) { formState = null; }
         var _this = _super.call(this, coerceToValidator(validatorOrOpts), coerceToAsyncValidator(asyncValidator, validatorOrOpts)) || this;
@@ -2552,21 +2680,27 @@ var FormControl = /** @class */ (function (_super) {
         return _this;
     }
     /**
-     * Set the value of the form control to `value`.
+     * Sets a new value for the form control.
      *
-     * If `onlySelf` is `true`, this change will only affect the validation of this `FormControl`
-     * and not its parent component. This defaults to false.
+     * @param value The new value for the control.
+     * @param options Configuration options that determine how the control proopagates changes
+     * and emits events when the value changes.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
      *
-     * If `emitEvent` is `true`, this
-     * change will cause a `valueChanges` event on the `FormControl` to be emitted. This defaults
-     * to true (as it falls through to `updateValueAndValidity`).
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default is
+     * false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control value is updated.
+     * When false, no events are emitted.
+     * * `emitModelToViewChange`: When true or not supplied  (the default), each change triggers an
+     * `onChange` event to
+     * update the view.
+     * * `emitViewToModelChange`: When true or not supplied (the default), each change triggers an
+     * `ngModelChange`
+     * event to update the model.
      *
-     * If `emitModelToViewChange` is `true`, the view will be notified about the new value
-     * via an `onChange` event. This is the default behavior if `emitModelToViewChange` is not
-     * specified.
-     *
-     * If `emitViewToModelChange` is `true`, an ngModelChange event will be fired to update the
-     * model.  This is the default behavior if `emitViewToModelChange` is not specified.
      */
     FormControl.prototype.setValue = function (value, options) {
         var _this = this;
@@ -2583,38 +2717,31 @@ var FormControl = /** @class */ (function (_super) {
      * This function is functionally the same as {@link FormControl#setValue setValue} at this level.
      * It exists for symmetry with {@link FormGroup#patchValue patchValue} on `FormGroups` and
      * `FormArrays`, where it does behave differently.
+     *
+     * @see `setValue` for options
      */
     FormControl.prototype.patchValue = function (value, options) {
         if (options === void 0) { options = {}; }
         this.setValue(value, options);
     };
     /**
-     * Resets the form control. This means by default:
+     * Resets the form control, marking it `pristine` and `untouched`, and setting
+     * the value to null.
      *
-     * * it is marked as `pristine`
-     * * it is marked as `untouched`
-     * * value is set to null
+     * @param formState Initializes the control with an initial state value,
+     * or with an object that defines the initial value, status, and options
+     * for handling updates and validation.
      *
-     * You can also reset to a specific form state by passing through a standalone
-     * value or a form state object that contains both a value and a disabled state
-     * (these are the only two properties that cannot be calculated).
+     * @param options Configuration options that determine how the control propagates changes
+     * and emits events after the value changes.
      *
-     * Ex:
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default is
+     * false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is reset.
+     * When false, no events are emitted.
      *
-     * ```ts
-     * this.control.reset('Nancy');
-     *
-     * console.log(this.control.value);  // 'Nancy'
-     * ```
-     *
-     * OR
-     *
-     * ```
-     * this.control.reset({value: 'Nancy', disabled: true});
-     *
-     * console.log(this.control.value);  // 'Nancy'
-     * console.log(this.control.status);  // 'DISABLED'
-     * ```
      */
     FormControl.prototype.reset = function (formState, options) {
         if (formState === void 0) { formState = null; }
@@ -2639,6 +2766,8 @@ var FormControl = /** @class */ (function (_super) {
     FormControl.prototype._allControlsDisabled = function () { return this.disabled; };
     /**
      * Register a listener for change events.
+     *
+     * @param fn The method that is called when the value changes
      */
     FormControl.prototype.registerOnChange = function (fn) { this._onChange.push(fn); };
     /**
@@ -2651,6 +2780,8 @@ var FormControl = /** @class */ (function (_super) {
     };
     /**
      * Register a listener for disabled events.
+     *
+     * @param fn The method that is called when the disabled status changes.
      */
     FormControl.prototype.registerOnDisabledChange = function (fn) {
         this._onDisabledChange.push(fn);
@@ -2686,12 +2817,10 @@ var FormControl = /** @class */ (function (_super) {
     return FormControl;
 }(AbstractControl));
 /**
- * @description
- *
  * Tracks the value and validity state of a group of `FormControl` instances.
  *
  * A `FormGroup` aggregates the values of each child `FormControl` into one object,
- * with each control name as the key.  It calculates its status by reducing the statuses
+ * with each control name as the key.  It calculates its status by reducing the status values
  * of its children. For example, if one of the controls in a group is invalid, the entire
  * group becomes invalid.
  *
@@ -2699,9 +2828,11 @@ var FormControl = /** @class */ (function (_super) {
  * along with `FormControl` and `FormArray`.
  *
  * When instantiating a `FormGroup`, pass in a collection of child controls as the first
- * argument. The key for each child will be the name under which it is registered.
+ * argument. The key for each child registers the name for the control.
  *
- * ### Example
+ * @usageNotes
+ *
+ * ### Create a form group with 2 controls
  *
  * ```
  * const form = new FormGroup({
@@ -2713,11 +2844,11 @@ var FormControl = /** @class */ (function (_super) {
  * console.log(form.status);  // 'VALID'
  * ```
  *
- * You can also include group-level validators as the second arg, or group-level async
+ * ### Create a form group with a group-level validator
+ *
+ * You include group-level validators as the second arg, or group-level async
  * validators as the third arg. These come in handy when you want to perform validation
  * that considers the value of more than one child control.
- *
- * ### Example
  *
  * ```
  * const form = new FormGroup({
@@ -2732,33 +2863,44 @@ var FormControl = /** @class */ (function (_super) {
  * }
  * ```
  *
- * Like `FormControl` instances, you can alternatively choose to pass in
+ * Like `FormControl` instances, you choose to pass in
  * validators and async validators as part of an options object.
  *
  * ```
  * const form = new FormGroup({
  *   password: new FormControl('')
  *   passwordConfirm: new FormControl('')
- * }, {validators: passwordMatchValidator, asyncValidators: otherValidator});
+ * }, { validators: passwordMatchValidator, asyncValidators: otherValidator });
  * ```
  *
- * The options object can also be used to set a default value for each child
+ * ### Set the updateOn property for all controls in a form group
+ *
+ * The options object is used to set a default value for each child
  * control's `updateOn` property. If you set `updateOn` to `'blur'` at the
- * group level, all child controls will default to 'blur', unless the child
+ * group level, all child controls default to 'blur', unless the child
  * has explicitly specified a different `updateOn` value.
  *
  * ```ts
  * const c = new FormGroup({
- *    one: new FormControl()
- * }, {updateOn: 'blur'});
+ *   one: new FormControl()
+ * }, { updateOn: 'blur' });
  * ```
- *
- * * **npm package**: `@angular/forms`
- *
- *
  */
 var FormGroup = /** @class */ (function (_super) {
     Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"])(FormGroup, _super);
+    /**
+    * Creates a new `FormGroup` instance.
+    *
+    * @param controls A collection of child controls. The key for each child is the name
+    * under which it is registered.
+    *
+    * @param validatorOrOpts A synchronous validator function, or an array of
+    * such functions, or an `AbstractControlOptions` object that contains validation functions
+    * and a validation trigger.
+    *
+    * @param asyncValidator A single async validator or array of async validator functions
+    *
+    */
     function FormGroup(controls, validatorOrOpts, asyncValidator) {
         var _this = _super.call(this, coerceToValidator(validatorOrOpts), coerceToAsyncValidator(asyncValidator, validatorOrOpts)) || this;
         _this.controls = controls;
@@ -2771,8 +2913,11 @@ var FormGroup = /** @class */ (function (_super) {
     /**
      * Registers a control with the group's list of controls.
      *
-     * This method does not update the value or validity of the control, so for most cases you'll want
-     * to use {@link FormGroup#addControl addControl} instead.
+     * This method does not update the value or validity of the control.
+     * Use {@link FormGroup#addControl addControl} instead.
+     *
+     * @param name The control name to register in the collection
+     * @param control Provides the control for the given name
      */
     FormGroup.prototype.registerControl = function (name, control) {
         if (this.controls[name])
@@ -2784,6 +2929,11 @@ var FormGroup = /** @class */ (function (_super) {
     };
     /**
      * Add a control to this group.
+     *
+     * This method also updates the value and validity of the control.
+     *
+     * @param name The control name to add to the collection
+     * @param control Provides the control for the given name
      */
     FormGroup.prototype.addControl = function (name, control) {
         this.registerControl(name, control);
@@ -2792,6 +2942,8 @@ var FormGroup = /** @class */ (function (_super) {
     };
     /**
      * Remove a control from this group.
+     *
+     * @param name The control name to remove from the collection
      */
     FormGroup.prototype.removeControl = function (name) {
         if (this.controls[name])
@@ -2802,6 +2954,9 @@ var FormGroup = /** @class */ (function (_super) {
     };
     /**
      * Replace an existing control.
+     *
+     * @param name The control name to replace in the collection
+     * @param control Provides the control for the given name
      */
     FormGroup.prototype.setControl = function (name, control) {
         if (this.controls[name])
@@ -2815,32 +2970,49 @@ var FormGroup = /** @class */ (function (_super) {
     /**
      * Check whether there is an enabled control with the given name in the group.
      *
-     * It will return false for disabled controls. If you'd like to check for existence in the group
+     * Reports false for disabled controls. If you'd like to check for existence in the group
      * only, use {@link AbstractControl#get get} instead.
+     *
+     * @param name The control name to check for existence in the collection
+     *
+     * @returns false for disabled controls, true otherwise.
      */
     FormGroup.prototype.contains = function (controlName) {
         return this.controls.hasOwnProperty(controlName) && this.controls[controlName].enabled;
     };
     /**
-     *  Sets the value of the `FormGroup`. It accepts an object that matches
-     *  the structure of the group, with control names as keys.
+     * Sets the value of the `FormGroup`. It accepts an object that matches
+     * the structure of the group, with control names as keys.
      *
-     *  ### Example
+     * ### Set the complete value for the form group
      *
-     *  ```
-     *  const form = new FormGroup({
-     *     first: new FormControl(),
-     *     last: new FormControl()
-     *  });
-     *  console.log(form.value);   // {first: null, last: null}
+     * ```
+     * const form = new FormGroup({
+     *   first: new FormControl(),
+     *   last: new FormControl()
+     * });
      *
-     *  form.setValue({first: 'Nancy', last: 'Drew'});
-     *  console.log(form.value);   // {first: 'Nancy', last: 'Drew'}
+     * console.log(form.value);   // {first: null, last: null}
      *
-     *  ```
-     * @throws This method performs strict checks, so it will throw an error if you try
-     * to set the value of a control that doesn't exist or if you exclude the
-     * value of a control.
+     * form.setValue({first: 'Nancy', last: 'Drew'});
+     * console.log(form.value);   // {first: 'Nancy', last: 'Drew'}
+     *
+     * ```
+     * @throws When strict checks fail, such as setting the value of a control
+     * that doesn't exist or if you excluding the value of a control.
+     *
+     * @param value The new value for the control that matches the structure of the group.
+     * @param options Configuration options that determine how the control propagates changes
+     * and emits events after the value changes.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
+     *
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default is
+     * false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control value is updated.
+     * When false, no events are emitted.
      */
     FormGroup.prototype.setValue = function (value, options) {
         var _this = this;
@@ -2853,13 +3025,13 @@ var FormGroup = /** @class */ (function (_super) {
         this.updateValueAndValidity(options);
     };
     /**
-     *  Patches the value of the `FormGroup`. It accepts an object with control
-     *  names as keys, and will do its best to match the values to the correct controls
-     *  in the group.
+     * Patches the value of the `FormGroup`. It accepts an object with control
+     * names as keys, and does its best to match the values to the correct controls
+     * in the group.
      *
-     *  It accepts both super-sets and sub-sets of the group without throwing an error.
+     * It accepts both super-sets and sub-sets of the group without throwing an error.
      *
-     *  ### Example
+     * ### Patch the value for a form group
      *
      *  ```
      *  const form = new FormGroup({
@@ -2872,6 +3044,18 @@ var FormGroup = /** @class */ (function (_super) {
      *  console.log(form.value);   // {first: 'Nancy', last: null}
      *
      *  ```
+     *
+     * @param value The object that matches the structure of the group
+     * @param options Configure options that determines how the control propagates changes and
+     * emits events after the value is patched
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default is
+     * true.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control value is updated.
+     * When false, no events are emitted.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
      */
     FormGroup.prototype.patchValue = function (value, options) {
         var _this = this;
@@ -2884,29 +3068,55 @@ var FormGroup = /** @class */ (function (_super) {
         this.updateValueAndValidity(options);
     };
     /**
-     * Resets the `FormGroup`. This means by default:
+     * Resets the `FormGroup`, marks all descendants are marked `pristine` and `untouched`, and
+     * the value of all descendants to null.
      *
-     * * The group and all descendants are marked `pristine`
-     * * The group and all descendants are marked `untouched`
-     * * The value of all descendants will be null or null maps
-     *
-     * You can also reset to a specific form state by passing in a map of states
+     * You reset to a specific form state by passing in a map of states
      * that matches the structure of your form, with control names as keys. The state
-     * can be a standalone value or a form state object with both a value and a disabled
+     * is a standalone value or a form state object with both a value and a disabled
      * status.
      *
-     * ### Example
+     * @param value Initializes the control with an initial state value,
+     * or with an object that defines the initial value, status,
+     * and options for handling updates and validation.
+     *
+     * @param options Configuration options that determine how the control propagates changes
+     * and emits events when the group is reset.
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default is
+     * false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is reset.
+     * When false, no events are emitted.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
+     *
+     * @usageNotes
+     *
+     * ### Reset the form group values
      *
      * ```ts
-     * this.form.reset({first: 'name', last: 'last name'});
+     * const form = new FormGroup({
+     *   first: new FormControl('first name'),
+     *   last: new FormControl('last name')
+     * });
      *
-     * console.log(this.form.value);  // {first: 'name', last: 'last name'}
+     * console.log(form.value);  // {first: 'first name', last: 'last name'}
+     *
+     * form.reset({ first: 'name', last: 'last name' });
+     *
+     * console.log(form.value);  // {first: 'name', last: 'last name'}
      * ```
      *
-     * - OR -
+     * ### Reset the form group values and disabled status
      *
      * ```
-     * this.form.reset({
+     * const form = new FormGroup({
+     *   first: new FormControl('first name'),
+     *   last: new FormControl('last name')
+     * });
+     *
+     * form.reset({
      *   first: {value: 'name', disabled: true},
      *   last: 'last'
      * });
@@ -2928,8 +3138,9 @@ var FormGroup = /** @class */ (function (_super) {
     /**
      * The aggregate value of the `FormGroup`, including any disabled controls.
      *
-     * If you'd like to include all values regardless of disabled status, use this method.
-     * Otherwise, the `value` property is the best way to get the value of the group.
+     * Retrieves all values regardless of disabled status.
+     * The `value` property is the best way to get the value of the group, because
+     * it excludes disabled controls in the `FormGroup`.
      */
     FormGroup.prototype.getRawValue = function () {
         return this._reduceChildren({}, function (acc, control, name) {
@@ -3026,22 +3237,19 @@ var FormGroup = /** @class */ (function (_super) {
     return FormGroup;
 }(AbstractControl));
 /**
- * @description
- *
  * Tracks the value and validity state of an array of `FormControl`,
  * `FormGroup` or `FormArray` instances.
  *
  * A `FormArray` aggregates the values of each child `FormControl` into an array.
- * It calculates its status by reducing the statuses of its children. For example, if one of
+ * It calculates its status by reducing the status values of its children. For example, if one of
  * the controls in a `FormArray` is invalid, the entire array becomes invalid.
  *
  * `FormArray` is one of the three fundamental building blocks used to define forms in Angular,
  * along with `FormControl` and `FormGroup`.
  *
- * When instantiating a `FormArray`, pass in an array of child controls as the first
- * argument.
+ * @usageNotes
  *
- * ### Example
+ * ### Create an array of form controls
  *
  * ```
  * const arr = new FormArray([
@@ -3053,11 +3261,13 @@ var FormGroup = /** @class */ (function (_super) {
  * console.log(arr.status);  // 'VALID'
  * ```
  *
- * You can also include array-level validators and async validators. These come in handy
+ * ### Create a form array with array-level validators
+ *
+ * You include array-level validators and async validators. These come in handy
  * when you want to perform validation that considers the value of more than one child
  * control.
  *
- * The two types of validators can be passed in separately as the second and third arg
+ * The two types of validators are passed in separately as the second and third arg
  * respectively, or together as part of an options object.
  *
  * ```
@@ -3067,31 +3277,44 @@ var FormGroup = /** @class */ (function (_super) {
  * ], {validators: myValidator, asyncValidators: myAsyncValidator});
  * ```
  *
- * The options object can also be used to set a default value for each child
+  * ### Set the updateOn property for all controls in a form array
+ *
+ * The options object is used to set a default value for each child
  * control's `updateOn` property. If you set `updateOn` to `'blur'` at the
- * array level, all child controls will default to 'blur', unless the child
+ * array level, all child controls default to 'blur', unless the child
  * has explicitly specified a different `updateOn` value.
  *
  * ```ts
- * const c = new FormArray([
+ * const arr = new FormArray([
  *    new FormControl()
  * ], {updateOn: 'blur'});
  * ```
  *
- * ### Adding or removing controls
+ * ### Adding or removing controls from a form array
  *
  * To change the controls in the array, use the `push`, `insert`, or `removeAt` methods
  * in `FormArray` itself. These methods ensure the controls are properly tracked in the
  * form's hierarchy. Do not modify the array of `AbstractControl`s used to instantiate
- * the `FormArray` directly, as that will result in strange and unexpected behavior such
+ * the `FormArray` directly, as that result in strange and unexpected behavior such
  * as broken change detection.
- *
- * * **npm package**: `@angular/forms`
  *
  *
  */
 var FormArray = /** @class */ (function (_super) {
     Object(tslib__WEBPACK_IMPORTED_MODULE_0__["__extends"])(FormArray, _super);
+    /**
+    * Creates a new `FormArray` instance.
+    *
+    * @param controls An array of child controls. Each child control is given an index
+    * wheh it is registered.
+    *
+    * @param validatorOrOpts A synchronous validator function, or an array of
+    * such functions, or an `AbstractControlOptions` object that contains validation functions
+    * and a validation trigger.
+    *
+    * @param asyncValidator A single async validator or array of async validator functions
+    *
+    */
     function FormArray(controls, validatorOrOpts, asyncValidator) {
         var _this = _super.call(this, coerceToValidator(validatorOrOpts), coerceToAsyncValidator(asyncValidator, validatorOrOpts)) || this;
         _this.controls = controls;
@@ -3103,10 +3326,14 @@ var FormArray = /** @class */ (function (_super) {
     }
     /**
      * Get the `AbstractControl` at the given `index` in the array.
+     *
+     * @param index Index in the array to retrieve the control
      */
     FormArray.prototype.at = function (index) { return this.controls[index]; };
     /**
      * Insert a new `AbstractControl` at the end of the array.
+     *
+     * @param control Form control to be inserted
      */
     FormArray.prototype.push = function (control) {
         this.controls.push(control);
@@ -3114,13 +3341,22 @@ var FormArray = /** @class */ (function (_super) {
         this.updateValueAndValidity();
         this._onCollectionChange();
     };
-    /** Insert a new `AbstractControl` at the given `index` in the array. */
+    /**
+     * Insert a new `AbstractControl` at the given `index` in the array.
+     *
+     * @param index Index in the array to insert the control
+     * @param control Form control to be inserted
+     */
     FormArray.prototype.insert = function (index, control) {
         this.controls.splice(index, 0, control);
         this._registerControl(control);
         this.updateValueAndValidity();
     };
-    /** Remove the control at the given `index` in the array. */
+    /**
+     * Remove the control at the given `index` in the array.
+     *
+     * @param index Index in the array to remove the control
+     */
     FormArray.prototype.removeAt = function (index) {
         if (this.controls[index])
             this.controls[index]._registerOnCollectionChange(function () { });
@@ -3129,6 +3365,9 @@ var FormArray = /** @class */ (function (_super) {
     };
     /**
      * Replace an existing control.
+     *
+     * @param index Index in the array to replace the control
+     * @param control The `AbstractControl` control to replace the existing control
      */
     FormArray.prototype.setControl = function (index, control) {
         if (this.controls[index])
@@ -3150,25 +3389,38 @@ var FormArray = /** @class */ (function (_super) {
         configurable: true
     });
     /**
-     *  Sets the value of the `FormArray`. It accepts an array that matches
-     *  the structure of the control.
+     * Sets the value of the `FormArray`. It accepts an array that matches
+     * the structure of the control.
      *
-     * This method performs strict checks, so it will throw an error if you try
+     * This method performs strict checks, and throws an error if you try
      * to set the value of a control that doesn't exist or if you exclude the
      * value of a control.
      *
-     *  ### Example
+     * ### Set the values for the controls in the form array
      *
-     *  ```
-     *  const arr = new FormArray([
-     *     new FormControl(),
-     *     new FormControl()
-     *  ]);
-     *  console.log(arr.value);   // [null, null]
+     * ```
+     * const arr = new FormArray([
+     *   new FormControl(),
+     *   new FormControl()
+     * ]);
+     * console.log(arr.value);   // [null, null]
      *
-     *  arr.setValue(['Nancy', 'Drew']);
-     *  console.log(arr.value);   // ['Nancy', 'Drew']
-     *  ```
+     * arr.setValue(['Nancy', 'Drew']);
+     * console.log(arr.value);   // ['Nancy', 'Drew']
+     * ```
+     *
+     * @param value Array of values for the controls
+     * @param options Configure options that determine how the control propagates changes and
+     * emits events after the value changes
+     *
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default
+     * is false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control value is updated.
+     * When false, no events are emitted.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
      */
     FormArray.prototype.setValue = function (value, options) {
         var _this = this;
@@ -3181,24 +3433,37 @@ var FormArray = /** @class */ (function (_super) {
         this.updateValueAndValidity(options);
     };
     /**
-     *  Patches the value of the `FormArray`. It accepts an array that matches the
-     *  structure of the control, and will do its best to match the values to the correct
-     *  controls in the group.
+     * Patches the value of the `FormArray`. It accepts an array that matches the
+     * structure of the control, and does its best to match the values to the correct
+     * controls in the group.
      *
-     *  It accepts both super-sets and sub-sets of the array without throwing an error.
+     * It accepts both super-sets and sub-sets of the array without throwing an error.
      *
-     *  ### Example
+     * ### Patch the values for controls in a form array
      *
-     *  ```
-     *  const arr = new FormArray([
-     *     new FormControl(),
-     *     new FormControl()
-     *  ]);
-     *  console.log(arr.value);   // [null, null]
+     * ```
+     * const arr = new FormArray([
+     *    new FormControl(),
+     *    new FormControl()
+     * ]);
+     * console.log(arr.value);   // [null, null]
      *
-     *  arr.patchValue(['Nancy']);
-     *  console.log(arr.value);   // ['Nancy', null]
-     *  ```
+     * arr.patchValue(['Nancy']);
+     * console.log(arr.value);   // ['Nancy', null]
+     * ```
+     *
+     * @param value Array of latest values for the controls
+     * @param options Configure options that determine how the control propagates changes and
+     * emits events after the value changes
+     *
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default
+     * is false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control value is updated.
+     * When false, no events are emitted.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
      */
     FormArray.prototype.patchValue = function (value, options) {
         var _this = this;
@@ -3211,25 +3476,26 @@ var FormArray = /** @class */ (function (_super) {
         this.updateValueAndValidity(options);
     };
     /**
-     * Resets the `FormArray`. This means by default:
+     * Resets the `FormArray` and all descendants are marked `pristine` and `untouched`, and the
+     * value of all descendants to null or null maps.
      *
-     * * The array and all descendants are marked `pristine`
-     * * The array and all descendants are marked `untouched`
-     * * The value of all descendants will be null or null maps
-     *
-     * You can also reset to a specific form state by passing in an array of states
-     * that matches the structure of the control. The state can be a standalone value
+     * You reset to a specific form state by passing in an array of states
+     * that matches the structure of the control. The state is a standalone value
      * or a form state object with both a value and a disabled status.
      *
-     * ### Example
+     * ### Reset the values in a form array
      *
      * ```ts
-     * this.arr.reset(['name', 'last name']);
+     * const arr = new FormArray([
+     *    new FormControl(),
+     *    new FormControl()
+     * ]);
+     * arr.reset(['name', 'last name']);
      *
      * console.log(this.arr.value);  // ['name', 'last name']
      * ```
      *
-     * - OR -
+     * ### Reset the values in a form array and the disabled status for the first control
      *
      * ```
      * this.arr.reset([
@@ -3240,6 +3506,19 @@ var FormArray = /** @class */ (function (_super) {
      * console.log(this.arr.value);  // ['name', 'last name']
      * console.log(this.arr.get(0).status);  // 'DISABLED'
      * ```
+     *
+     * @param value Array of values for the controls
+     * @param options Configure options that determine how the control propagates changes and
+     * emits events after the value changes
+     *
+     * * `onlySelf`: When true, each change only affects this control, and not its parent. Default
+     * is false.
+     * * `emitEvent`: When true or not supplied (the default), both the `statusChanges` and
+     * `valueChanges`
+     * observables emit events with the latest status and value when the control is reset.
+     * When false, no events are emitted.
+     * The configuration options are passed to the {@link AbstractControl#updateValueAndValidity
+     * updateValueAndValidity} method.
      */
     FormArray.prototype.reset = function (value, options) {
         if (value === void 0) { value = []; }
@@ -3254,8 +3533,8 @@ var FormArray = /** @class */ (function (_super) {
     /**
      * The aggregate value of the array, including any disabled controls.
      *
-     * If you'd like to include all values regardless of disabled status, use this method.
-     * Otherwise, the `value` property is the best way to get the value of the array.
+     * Reports all values regardless of disabled status.
+     * For enabled controls only, the `value` property is the best way to get the value of the array.
      */
     FormArray.prototype.getRawValue = function () {
         return this.controls.map(function (control) {
@@ -5041,7 +5320,7 @@ var FormBuilder = /** @class */ (function () {
  * @description
  * Entry point for all public APIs of the common package.
  */
-var VERSION = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["Version"]('6.0.5');
+var VERSION = new _angular_core__WEBPACK_IMPORTED_MODULE_1__["Version"]('6.0.7');
 
 /**
  * @license

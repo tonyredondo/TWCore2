@@ -735,7 +735,7 @@ var AppRoutingModule = /** @class */ (function () {
 /*! no static exports found */
 /***/ (function(module, exports) {
 
-module.exports = "<app-header\r\n  [fixed]=\"true\"\r\n  [navbarBrandFull]=\"{src: 'assets/img/brand/diagnostics.svg', width: 130, height: 25, alt: 'Diagnostics'}\"\r\n  [navbarBrandMinimized]=\"{src: 'assets/img/brand/diagnostics.svg', width: 30, height: 30, alt: 'Diagnostics'}\"\r\n  [sidebarToggler]=\"'lg'\"\r\n  [asideMenuToggler]=\"false\" [mobileAsideMenuToggler]=\"false\">\r\n  <ul class=\"nav navbar-nav ml-auto env-nav\">\r\n    <!-- <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-bell\"></i><span class=\"badge badge-pill badge-danger\">5</span></a>\r\n    </li>\r\n    <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-list\"></i></a>\r\n    </li>\r\n    <li class=\"nav-item d-md-down-none\">\r\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-location-pin\"></i></a>\r\n    </li> -->\r\n    <li class=\"nav-item dropdown\" dropdown placement=\"bottom right\" *ngIf=\"false\">\r\n      <a class=\"nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" dropdownToggle (click)=\"false\">\r\n        <div>Environment: <span class=\"bolder\">Production</span></div>\r\n      </a>\r\n      <div class=\"dropdown-menu dropdown-menu-right\" *dropdownMenu aria-labelledby=\"simple-dropdown\">\r\n        <div class=\"dropdown-header text-center\"><strong>Environments</strong></div>\r\n        <a class=\"dropdown-item\" href=\"#\"><i class=\"fa fa-tasks\"></i> DEV<span class=\"badge badge-info\"></span></a>\r\n        <a class=\"dropdown-item\" href=\"#\"><i class=\"fa fa-tasks\"></i> Docker<span class=\"badge badge-success\"></span></a>\r\n        <a class=\"dropdown-item\" href=\"#\"><i class=\"fa fa-tasks\"></i> Production<span class=\"badge badge-danger\"></span></a>\r\n      </div>\r\n    </li>\r\n  </ul>\r\n</app-header>\r\n\r\n<div class=\"app-body\">\r\n  <app-sidebar [fixed]=\"true\" [display]=\"'lg'\">\r\n    <app-sidebar-nav [navItems]=\"navItems\" [perfectScrollbar] [disabled]=\"sidebarMinimized\"></app-sidebar-nav>\r\n    <app-sidebar-minimizer></app-sidebar-minimizer>\r\n  </app-sidebar>\r\n  <!-- Main content -->\r\n  <main class=\"main\">\r\n    <!-- Breadcrumb -->\r\n    <div class=\"row\">&nbsp;</div>\r\n    <!-- <ol class=\"breadcrumb\">\r\n      <app-breadcrumb></app-breadcrumb>\r\n    </ol> -->\r\n    <div class=\"container-fluid\">\r\n      <router-outlet></router-outlet>\r\n    </div>\r\n    <!-- /.container-fluid -->\r\n  </main>\r\n</div>\r\n\r\n\r\n<app-footer>\r\n  <span><a href=\"https://github.com/tonyredondo\">TWCore Diagnostics</a> &copy; 2018 Daniel Redondo.</span>\r\n  <span class=\"ml-auto\">Powered by <a href=\"https://coreui.io/angular\">CoreUI for Angular</a></span>\r\n</app-footer>\r\n"
+module.exports = "<app-header [fixed]=\"true\" [navbarBrandFull]=\"{src: 'assets/img/brand/diagnostics.svg', width: 130, height: 25, alt: 'Diagnostics'}\"\n  [navbarBrandMinimized]=\"{src: 'assets/img/brand/diagnostics.svg', width: 30, height: 30, alt: 'Diagnostics'}\" [sidebarToggler]=\"'lg'\"\n  [asideMenuToggler]=\"false\" [mobileAsideMenuToggler]=\"false\">\n  <ul class=\"nav navbar-nav ml-auto env-nav\">\n    <!-- <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-bell\"></i><span class=\"badge badge-pill badge-danger\">5</span></a>\n    </li>\n    <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-list\"></i></a>\n    </li>\n    <li class=\"nav-item d-md-down-none\">\n      <a class=\"nav-link\" href=\"#\"><i class=\"icon-location-pin\"></i></a>\n    </li> -->\n    <li class=\"nav-item dropdown\" dropdown placement=\"bottom right\">\n      <a class=\"nav-link\" data-toggle=\"dropdown\" href=\"#\" role=\"button\" aria-haspopup=\"true\" aria-expanded=\"false\" dropdownToggle\n        (click)=\"false\">\n        <div>Environment:\n          <span class=\"bolder\">{{currentEnvironment}}</span>\n        </div>\n      </a>\n      <div class=\"dropdown-menu dropdown-menu-right\" *dropdownMenu aria-labelledby=\"simple-dropdown\">\n        <div class=\"dropdown-header text-center\">\n          <strong>Environments</strong>\n        </div>\n        <a *ngFor=\"let item of environments\" class=\"dropdown-item\" (click)=\"changeEnvironmentAndReload(item)\">\n          <i class=\"fa fa-tasks\"></i> {{item}}\n          <span class=\"badge badge-info\"></span>\n        </a>\n      </div>\n    </li>\n  </ul>\n</app-header>\n\n<div class=\"app-body\">\n  <app-sidebar [fixed]=\"true\" [display]=\"'lg'\">\n    <app-sidebar-nav [navItems]=\"navItems\" [perfectScrollbar] [disabled]=\"sidebarMinimized\"></app-sidebar-nav>\n    <app-sidebar-minimizer></app-sidebar-minimizer>\n  </app-sidebar>\n  <!-- Main content -->\n  <main class=\"main\">\n    <!-- Breadcrumb -->\n    <div class=\"row\">&nbsp;</div>\n    <!-- <ol class=\"breadcrumb\">\n      <app-breadcrumb></app-breadcrumb>\n    </ol> -->\n    <div class=\"container-fluid\">\n      <router-outlet></router-outlet>\n    </div>\n    <!-- /.container-fluid -->\n  </main>\n</div>\n\n\n<app-footer>\n  <span>\n    <a href=\"https://github.com/tonyredondo/TWCore2.Diagnostics.Client\">TWCore Diagnostics</a> &copy; 2018 Daniel Redondo.</span>\n  <span class=\"ml-auto\">Powered by\n    <a href=\"https://coreui.io/angular\">CoreUI for Angular</a>\n  </span>\n</app-footer>\n"
 
 /***/ }),
 
@@ -749,8 +749,11 @@ module.exports = "<app-header\r\n  [fixed]=\"true\"\r\n  [navbarBrandFull]=\"{sr
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DefaultLayoutComponent", function() { return DefaultLayoutComponent; });
-/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
-/* harmony import */ var _nav__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../../_nav */ "./src/app/_nav.ts");
+/* harmony import */ var _angular_router__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @angular/router */ "./node_modules/@angular/router/fesm5/router.js");
+/* harmony import */ var _angular_core__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @angular/core */ "./node_modules/@angular/core/fesm5/core.js");
+/* harmony import */ var _nav__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../../_nav */ "./src/app/_nav.ts");
+/* harmony import */ var _services_api_api_query_service__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../services/api/api/query.service */ "./src/app/services/api/api/query.service.ts");
+/* harmony import */ var _environments_environment__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../environments/environment */ "./src/environments/environment.ts");
 var __decorate = (undefined && undefined.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -762,10 +765,16 @@ var __metadata = (undefined && undefined.__metadata) || function (k, v) {
 };
 
 
+
+
+
 var DefaultLayoutComponent = /** @class */ (function () {
-    function DefaultLayoutComponent() {
+    function DefaultLayoutComponent(_queryService, _activatedRoute, _router) {
         var _this = this;
-        this.navItems = _nav__WEBPACK_IMPORTED_MODULE_1__["navItems"];
+        this._queryService = _queryService;
+        this._activatedRoute = _activatedRoute;
+        this._router = _router;
+        this.navItems = _nav__WEBPACK_IMPORTED_MODULE_2__["navItems"];
         this.sidebarMinimized = true;
         this.element = document.body;
         this.changes = new MutationObserver(function (mutations) {
@@ -775,12 +784,50 @@ var DefaultLayoutComponent = /** @class */ (function () {
             attributes: true
         });
     }
+    DefaultLayoutComponent.prototype.ngOnInit = function () {
+        var _this = this;
+        this._queryParams = Object.assign({}, this._activatedRoute.snapshot.queryParams);
+        this.currentEnvironment = _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].name;
+        if (this._queryParams.env !== undefined) {
+            this.changeEnvironment(this._queryParams.env);
+        }
+        else {
+            this.updateParams();
+        }
+        this._queryService.apiQueryGet().subscribe(function (envs) {
+            _this.environments = envs;
+            if (envs === undefined || envs === null) {
+                return;
+            }
+            if (envs.indexOf(_this.currentEnvironment) === -1 && envs.length > 0) {
+                _this.changeEnvironmentAndReload(envs[0]);
+            }
+        });
+        console.log(this._activatedRoute);
+    };
+    DefaultLayoutComponent.prototype.changeEnvironment = function (name) {
+        if (_environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].name === name) {
+            return;
+        }
+        this.currentEnvironment = name;
+        _environments_environment__WEBPACK_IMPORTED_MODULE_4__["environment"].name = name;
+        this.updateParams();
+    };
+    DefaultLayoutComponent.prototype.changeEnvironmentAndReload = function (name) {
+        this.changeEnvironment(name);
+        this._router.navigate([''], { relativeTo: this._activatedRoute, queryParams: this._queryParams });
+    };
+    // Private Methods
+    DefaultLayoutComponent.prototype.updateParams = function () {
+        this._queryParams.env = this.currentEnvironment;
+        this._router.navigate([], { relativeTo: this._activatedRoute, queryParams: this._queryParams });
+    };
     DefaultLayoutComponent = __decorate([
-        Object(_angular_core__WEBPACK_IMPORTED_MODULE_0__["Component"])({
+        Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
             selector: 'app-dashboard',
             template: __webpack_require__(/*! ./default-layout.component.html */ "./src/app/containers/default-layout/default-layout.component.html")
         }),
-        __metadata("design:paramtypes", [])
+        __metadata("design:paramtypes", [_services_api_api_query_service__WEBPACK_IMPORTED_MODULE_3__["QueryService"], _angular_router__WEBPACK_IMPORTED_MODULE_0__["ActivatedRoute"], _angular_router__WEBPACK_IMPORTED_MODULE_0__["Router"]])
     ], DefaultLayoutComponent);
     return DefaultLayoutComponent;
 }());
@@ -1702,7 +1749,7 @@ __webpack_require__.r(__webpack_exports__);
 var environment = {
     production: false,
     apiUrl: window.location.origin,
-    name: 'Docker'
+    name: ''
 };
 
 

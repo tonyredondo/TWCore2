@@ -106,6 +106,8 @@ namespace TWCore.Diagnostics.Api
                 routes.MapRoute(
                     name: "default",
                     template: "{controller=Home}/{action=Index}/{id?}");
+
+                routes.MapRoute("HomeIndex", "{*url}", defaults: new { controller = "Home", action = "Index" });
             });
         }
     }

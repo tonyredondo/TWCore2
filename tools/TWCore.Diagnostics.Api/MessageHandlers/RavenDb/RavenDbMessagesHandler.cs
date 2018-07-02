@@ -108,7 +108,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             {
                                 //
                             }
-                            
+
                             try
                             {
                                 traceItem.TraceObject.SerializeToXml(msXml);
@@ -119,7 +119,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             {
                                 //
                             }
-                            
+
                             try
                             {
                                 JsonSerializer.Serialize(traceItem.TraceObject, msJson);
@@ -130,10 +130,14 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             {
                                 //
                             }
+
+                            await session.SaveChangesAsync().ConfigureAwait(false);
                         }
                     }
-                    
-                    await session.SaveChangesAsync().ConfigureAwait(false);
+                    else
+                    {
+                        await session.SaveChangesAsync().ConfigureAwait(false);
+                    }
 
                 }).ConfigureAwait(false);
             }

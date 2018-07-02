@@ -112,7 +112,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                             try
                             {
-                                traceItem.TraceObject.SerializeToXml(msXml);
+                                if (traceItem.TraceObject is SerializedObject serObj)
+                                    serObj.GetValue()?.SerializeToXml(msXml);
+                                else
+                                    traceItem.TraceObject.SerializeToXml(msXml);
                                 msXml.Position = 0;
                                 session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
                             }
@@ -123,7 +126,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 
                             try
                             {
-                                JsonSerializer.Serialize(traceItem.TraceObject, msJson);
+                                if (traceItem.TraceObject is SerializedObject serObj)
+                                    JsonSerializer.Serialize(serObj.GetValue(), msJson);
+                                else
+                                    JsonSerializer.Serialize(traceItem.TraceObject, msJson);
                                 msJson.Position = 0;
                                 session.Advanced.Attachments.Store(traceInfo.Id, "TraceJson", msJson, traceItem.TraceObject?.GetType().FullName);
                             }

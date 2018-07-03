@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -27,6 +26,7 @@ using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Diagnostics.Trace.Storages;
+using TWCore.Messaging;
 using TWCore.Serialization;
 // ReSharper disable UnusedMember.Global
 
@@ -117,8 +117,18 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                     var value = serObj.GetValue();
                                     if (value is string valStr)
                                         await msXml.WriteTextAsync(valStr).ConfigureAwait(false);
+                                    else if (value is ResponseMessage rsMessage && rsMessage?.Body != null)
+                                    {
+                                        rsMessage.Body?.SerializeToXml(msXml);
+                                    }
+                                    else if (value is RequestMessage rqMessage && rqMessage?.Body != null)
+                                    {
+                                        rqMessage.Body?.SerializeToXml(msXml);
+                                    }
                                     else if (value != null)
+                                    {
                                         serObj.GetValue()?.SerializeToXml(msXml);
+                                    }
                                 }
                                 else
                                     traceItem.TraceObject.SerializeToXml(msXml);
@@ -137,8 +147,18 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                     var value = serObj.GetValue();
                                     if (value is string valStr)
                                         await msJson.WriteTextAsync(valStr).ConfigureAwait(false);
+                                    else if (value is ResponseMessage rsMessage && rsMessage?.Body != null)
+                                    {
+                                        JsonSerializer.Serialize(rsMessage.Body, msJson);
+                                    }
+                                    else if (value is RequestMessage rqMessage && rqMessage?.Body != null)
+                                    {
+                                        JsonSerializer.Serialize(rqMessage.Body, msJson);
+                                    }
                                     else if (value != null)
+                                    {
                                         JsonSerializer.Serialize(value, msJson);
+                                    }
                                 }
                                 else
                                     JsonSerializer.Serialize(traceItem.TraceObject, msJson);

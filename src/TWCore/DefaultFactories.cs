@@ -49,7 +49,6 @@ namespace TWCore
         private const string ForceMachineVariableName = "TWCORE_FORCE_MACHINE";
         private Assembly[] _assemblies;
         private bool _usedResolver;
-        private static CpuUsage _cpuUsage;
 
         [DllImport("rpcrt4.dll", SetLastError = true)]
         private static extern int UuidCreateSequential(out Guid guid);
@@ -104,7 +103,7 @@ namespace TWCore
                 Directory.SetCurrentDirectory(AppContext.BaseDirectory);
             if (SetDirectoryToConfigurationFilePath && ConfigurationFile != null && (Path.IsPathRooted(ConfigurationFile) || !string.IsNullOrEmpty(Path.GetDirectoryName(ConfigurationFile))))
                 Directory.SetCurrentDirectory(Path.GetDirectoryName(ConfigurationFile));
-            
+
             if (Factory.PlatformType == PlatformType.Windows)
                 SequentialGuidGenerator = GetSequentialGuid;
 
@@ -121,7 +120,7 @@ namespace TWCore
                                                        "Load the application using other configuration file.",
                                                        obj => { });
 
-            
+
             var argConfigFile = cleanArguments.FirstOrDefault(a => a.StartsWith("configfile=", StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrWhiteSpace(argConfigFile))
             {
@@ -312,13 +311,13 @@ namespace TWCore
                 var forcedEnvironmentVariable = GetValueFromEnvironment(ForceEnvironmentVariableName);
                 if (forcedEnvironmentVariable != null && envConfigFile.IsNullOrWhitespace())
                 {
-					Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName ?? "(null)", forcedEnvironmentVariable);
+                    Core.Log.Warning("Environment name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.EnvironmentName ?? "(null)", forcedEnvironmentVariable);
                     Core.EnvironmentName = forcedEnvironmentVariable;
                 }
                 var forcedMachineVariable = GetValueFromEnvironment(ForceMachineVariableName);
                 if (forcedMachineVariable != null && mnameConfigFile.IsNullOrWhitespace())
                 {
-					Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName ?? "(null)", forcedMachineVariable);
+                    Core.Log.Warning("Machine name forced by EnvironmentVariable, previous value: {0}, new value: {1}", Core.MachineName ?? "(null)", forcedMachineVariable);
                     Core.MachineName = forcedMachineVariable;
                 }
 
@@ -329,7 +328,7 @@ namespace TWCore
                         throw new FileNotFoundException("The settings file: " + fSettings.Core.SettingsFile + " was not found.");
                     Core.LoadSettings(settingsFile);
                 }
-                
+
                 if (fSettings.AppSettings != null)
                 {
                     foreach (var item in fSettings.AppSettings)
@@ -392,10 +391,34 @@ namespace TWCore
                 Core.DefaultEnvironmentVariables.TryGetValue(environmentName, out defaultValue);
             return Environment.GetEnvironmentVariable(environmentName) ?? defaultValue;
         }
+
+
+
+
+        private static Lazy<StatusItemValueItem[]> OperatingSystemStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
+        {
+            new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
+            new StatusItemValueItem(nameof(Factory.RunningAsContainer), Factory.RunningAsContainer),
+            new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
+            new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
+            new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture),
+            new StatusItemValueItem(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription),
+            new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
+            new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
+        });
+        private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
+        {
+            new StatusItemValueItem("Version", Core.FrameworkVersion),
+            new StatusItemValueItem("Debug Mode", Core.DebugMode),
+            new StatusItemValueItem("Environment", Core.EnvironmentName),
+            new StatusItemValueItem("MachineName", Core.MachineName),
+            new StatusItemValueItem("InstanceId", Core.InstanceId),
+            new StatusItemValueItem("ApplicationName", Core.ApplicationName),
+            new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
+        });
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void AttachStatus()
         {
-            _cpuUsage = new CpuUsage(Process.GetCurrentProcess());
             Core.Status.Attach(() =>
             {
                 using (var process = Process.GetCurrentProcess())
@@ -403,78 +426,26 @@ namespace TWCore
                     var sItem = new StatusItem { Name = "Application Information" };
                     sItem.Values.Add("Command Line", Environment.CommandLine);
                     sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
-
-                    sItem.Values.Add("Operating System",
-                        new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
-                        new StatusItemValueItem(nameof(Factory.RunningAsContainer), Factory.RunningAsContainer),
-                        new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
-                        new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
-                        new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture),
-                            RuntimeInformation.OSArchitecture),
-                        new StatusItemValueItem(nameof(RuntimeInformation.OSDescription),
-                            RuntimeInformation.OSDescription)
-                    );
-                    sItem.Values.Add("User",
-                        new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
-                        new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
-                    );
+                    sItem.Values.Add("Operating System", OperatingSystemStatusItems.Value);
                     sItem.Values.Add("Process Information",
                         new StatusItemValueItem(nameof(process.Id), process.Id),
-                        new StatusItemValueItem(nameof(RuntimeInformation.ProcessArchitecture),
-                            RuntimeInformation.ProcessArchitecture),
                         new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
                         new StatusItemValueItem(nameof(process.Threads), process.Threads.Count, true),
                         new StatusItemValueItem("Handles", process.HandleCount, true),
-                        new StatusItemValueItem(nameof(RuntimeInformation.FrameworkDescription),
-                            RuntimeInformation.FrameworkDescription)
-                    );
-                    sItem.Values.Add("Process Times",
                         new StatusItemValueItem(nameof(process.StartTime), process.StartTime),
                         new StatusItemValueItem("RunningTime", Core.Now - process.StartTime),
-                        new StatusItemValueItem(nameof(process.UserProcessorTime), process.UserProcessorTime),
-                        new StatusItemValueItem(nameof(process.PrivilegedProcessorTime),
-                            process.PrivilegedProcessorTime),
-                        new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime)
-                    );
-
-                    sItem.Values.Add("Process Usages",
-                        new StatusItemValueItem("30 Seconds Usage in %", _cpuUsage.Last30Seconds, true),
-                        new StatusItemValueItem("1 Minute Usage in %", _cpuUsage.LastMinute, true),
-                        new StatusItemValueItem("10 Minutes Usage in %", _cpuUsage.Last10Minutes, true),
-                        new StatusItemValueItem("30 Minutes Usage in %", _cpuUsage.Last30Minutes, true));
-
-                    sItem.Values.Add("Process Memory",
+                        new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime),
                         new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)",
-                            Environment.WorkingSet.ToMegabytes(), true),
-                        new StatusItemValueItem(nameof(process.PrivateMemorySize64) + " (MB)",
-                            process.PrivateMemorySize64.ToMegabytes(), true),
-                        new StatusItemValueItem(nameof(process.PagedMemorySize64) + " (MB)",
-                            process.PagedMemorySize64.ToMegabytes(), true),
-                        new StatusItemValueItem(nameof(process.NonpagedSystemMemorySize64) + " (MB)",
-                            process.NonpagedSystemMemorySize64.ToMegabytes(), true),
-                        new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)",
-                            process.VirtualMemorySize64.ToMegabytes(), true)
+                            Environment.WorkingSet.ToMegabytes(), true)
                     );
-
-                    var maxGen = GC.MaxGeneration;
-                    var lstGc = new List<StatusItemValueItem>();
-                    for (var i = 0; i <= maxGen; i++)
-                        lstGc.Add(new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true));
-                    lstGc.Add(new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(),
-                        true));
-                    lstGc.Add(new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC));
-                    lstGc.Add(new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode));
-                    sItem.Values.Add("Garbage Collector", lstGc.ToArray());
-
-                    sItem.Values.Add("Core Framework",
-                        new StatusItemValueItem("Version", Core.FrameworkVersion),
-                        new StatusItemValueItem("Debug Mode", Core.DebugMode),
-                        new StatusItemValueItem("Environment", Core.EnvironmentName),
-                        new StatusItemValueItem("MachineName", Core.MachineName),
-                        new StatusItemValueItem("InstanceId", Core.InstanceId),
-                        new StatusItemValueItem("ApplicationName", Core.ApplicationName),
-                        new StatusItemValueItem("ApplicationDisplayName", Core.ApplicationDisplayName)
-                    );
+                    var arrGc = new StatusItemValueItem[6];
+                    for (var i = 0; i <= 2; i++)
+                        arrGc[i] = new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true);
+                    arrGc[3] = new StatusItemValueItem("Allocated Memory (MB)", GC.GetTotalMemory(false).ToMegabytes(), true);
+                    arrGc[4] = new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC);
+                    arrGc[5] = new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode);
+                    sItem.Values.Add("Garbage Collector", arrGc);
+                    sItem.Values.Add("Core Framework", CoreFrameworkStatusItems.Value);
                     return sItem;
 
                 }
@@ -553,68 +524,6 @@ namespace TWCore
                 public string InjectorFile { get; set; }
                 [DataMember]
                 public string EncriptionKey { get; set; }
-            }
-        }
-        #endregion
-
-        #region CPU Usage
-        private class CpuUsage
-        {
-            private readonly CpuUsageTimer _cpuLast30Seconds;
-            private readonly CpuUsageTimer _cpuLastMinute;
-            private readonly CpuUsageTimer _cpuLast10Minutes;
-            private readonly CpuUsageTimer _cpuLast30Minutes;
-
-            public double Last30Seconds => _cpuLast30Seconds.Percentage;
-            public double LastMinute => _cpuLastMinute.Percentage;
-            public double Last10Minutes => _cpuLast10Minutes.Percentage;
-            public double Last30Minutes => _cpuLast30Minutes.Percentage;
-
-            public CpuUsage(Process process)
-            {
-                _cpuLast30Seconds = new CpuUsageTimer(process, TimeSpan.FromSeconds(30));
-                _cpuLastMinute = new CpuUsageTimer(process, TimeSpan.FromMinutes(1));
-                _cpuLast10Minutes = new CpuUsageTimer(process, TimeSpan.FromMinutes(10));
-                _cpuLast30Minutes = new CpuUsageTimer(process, TimeSpan.FromMinutes(30));
-            }
-            
-            private class CpuUsageTimer
-            {
-                private readonly Process _process;
-                private readonly TimeSpan _startCpuTime;
-                private Timer _timer;
-                private DateTime _monitorTime;
-                private TimeSpan _cpuTime;
-                private volatile bool _processing;
-
-                public double Percentage { get; private set; }
-
-                public CpuUsageTimer(Process process, TimeSpan frequency)
-                {
-                    _process = process;
-                    _startCpuTime = process.TotalProcessorTime;
-                    _monitorTime = DateTime.UtcNow;
-                    _timer = new Timer(TimerCallback, this, frequency, frequency);
-                }
-
-                private void TimerCallback(object state)
-                {
-                    if (_processing) return;
-                    _processing = true;
-                    var lastNow = DateTime.UtcNow;
-                    
-                    var newCpuTime = _process.TotalProcessorTime - _startCpuTime;
-                    var diffCpuTime = (double)(newCpuTime - _cpuTime).Ticks;
-                    var diffTime = (double)lastNow.Subtract(_monitorTime).Ticks;
-                    
-                    var usage = diffCpuTime / diffTime;
-                    usage *= 1d / Environment.ProcessorCount;
-                    
-                    _cpuTime = newCpuTime;
-                    _monitorTime = lastNow;
-                    Percentage = Math.Round(usage * 100, 2);
-                    _processing = false;
-                }
             }
         }
         #endregion

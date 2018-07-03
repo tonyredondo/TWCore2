@@ -151,21 +151,6 @@ namespace TWCore.Serialization
                     }
                 }
 
-                Core.Status.Attach(() =>
-                {
-                    var item = new StatusItem
-                    {
-                        Name = "Application Information\\Serializer Manager"
-                    };
-                    var collection = item.Values;
-                    collection.Add(nameof(DefaultBinarySerializer), DefaultBinarySerializer);
-                    collection.Add(nameof(DefaultTextSerializer), DefaultTextSerializer);
-                    collection.Add("DefaultKnownTypes Count", DefaultKnownTypes.Count);
-                    var serType = Serializers.GroupBy(s => s.SerializerType).ToArray();
-                    var serValues = serType.Select(s => new StatusItemValueItem(s.Key.ToString(), s.Join("\r\n"))).ToArray();
-                    collection.Add("Serializers", serValues);
-                    return item;
-                });
             });
         }
         #endregion

@@ -35,6 +35,7 @@ namespace TWCore.Diagnostics.Status.Transports
     /// <summary>
     /// Http server status transport
     /// </summary>
+    [StatusName("Http Status")]
     public class HttpStatusTransport : IStatusTransport
     {
         private const int MaxNumberOfTries = 3;
@@ -92,7 +93,7 @@ namespace TWCore.Diagnostics.Status.Transports
                 var services = DiscoveryService.GetRegisteredServices();
                 var statusServices = services.Where(s => s.Category == DiscoveryService.FrameworkCategory && s.Name == "STATUS.HTTP").ToArray();
                 ctx.Response.WriteLine("<html><head><title>Discovered Status Services</title></head><body style='padding:30px;'><h1 style='text-align:center;'>Discovered status services</h1>");
-                foreach(var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
+                foreach (var g in statusServices.GroupBy(s => new { s.EnvironmentName, s.MachineName }).OrderBy(s => s.Key.EnvironmentName))
                 {
                     ctx.Response.WriteLine($"<h3>Environment: {g.Key.EnvironmentName} - Machine: {g.Key.MachineName}</h3>");
                     ctx.Response.WriteLine("<ul>");
@@ -140,6 +141,10 @@ namespace TWCore.Diagnostics.Status.Transports
             }
             else
             {
+                Core.Status.Attach(col =>
+                {
+                    col.Add("Port", port);
+                }, this);
                 var settings = Core.GetSettings<HttpStatusSettings>();
                 if (settings.Discovery)
                 {

@@ -42,7 +42,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Client remote address
         /// </summary>
-        public string RemoteAddress { get; }
+        public IPAddress RemoteAddress { get; }
         /// <summary>
         /// Client remote port
         /// </summary>
@@ -59,10 +59,6 @@ namespace TWCore.Net.HttpServer
         /// Url Address
         /// </summary>
         public Uri Url { get; private set; }
-        /// <summary>
-        /// Http version
-        /// </summary>
-        public string HttpVersion { get; private set; }
         /// <summary>
         /// Request headers
         /// </summary>
@@ -90,7 +86,7 @@ namespace TWCore.Net.HttpServer
         /// <summary>
         /// Input stream
         /// </summary>
-        public Stream InputStream { get; }
+        public NetworkStream InputStream { get; }
         /// <summary>
         /// Has post object
         /// </summary>
@@ -109,10 +105,10 @@ namespace TWCore.Net.HttpServer
             _client = socketClient;
             _context = context;
             socketClient.ReceiveTimeout = 120000;
-            InputStream = new BufferedStream(socketClient.GetStream(), 16384);
+            InputStream = socketClient.GetStream();
             _streamReader = new StreamReader(InputStream);
             var ipEndPoint = (IPEndPoint)socketClient.Client.RemoteEndPoint;
-            RemoteAddress = ipEndPoint.Address.ToString();
+            RemoteAddress = ipEndPoint.Address;
             RemotePort = ipEndPoint.Port;
         }
         #endregion
@@ -140,7 +136,6 @@ namespace TWCore.Net.HttpServer
             if (newIndex < 0)
                 throw new Exception("Invalid http request line");
             RawUrl = request.Substring(lastIndex, newIndex - lastIndex);
-            HttpVersion = request.Substring(newIndex + 1);
 
             switch(strMethod)
             {

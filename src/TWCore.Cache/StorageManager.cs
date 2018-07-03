@@ -60,7 +60,7 @@ namespace TWCore.Cache
         /// On remove event
         /// </summary>
         public event EventHandler<string> OnRemove;
-        // <summary>
+        /// <summary>
         /// On copy event
         /// </summary>
         public event EventHandler<(string SourceKey, string TargetKey)> OnCopy;
@@ -136,13 +136,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void LoadExtensions()
         {
-            var sampleExtension = new SampleStorageExtension();
             var extensions = Core.Injector.GetAllInstances<IStorageExtension>();
-            if (extensions == null || extensions.Length == 0)
-            {
-                _extensions.TryAdd(sampleExtension.ExtensionName.ToLowerInvariant(), sampleExtension);
-                return;
-            }
             foreach (var ext in extensions)
             {
                 if (ext.ExtensionName == null) continue;
@@ -151,7 +145,6 @@ namespace TWCore.Cache
                 ext.Init(this);
                 _extensions.TryAdd(extName, ext);
             }
-            _extensions.TryAdd(sampleExtension.ExtensionName.ToLowerInvariant(), sampleExtension);
         }
 		#endregion
 

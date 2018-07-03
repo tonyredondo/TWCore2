@@ -37,18 +37,27 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var logsEnv = await session.Query<NodeLogItem>()
+                var logsEnvQuery = session.Query<NodeLogItem>()
+                    .Select(x => x.Environment)
+                    .Distinct();
+                var logsEnvTask = session.Query<NodeLogItem>()
                     .Select(x => x.Environment)
                     .Distinct()
-                    .ToListAsync();
-                var tracesEnv = await session.Query<NodeTraceItem>()
+                    .LazilyAsync();
+                var tracesEnvTask = session.Query<NodeTraceItem>()
                     .Select(x => x.Environment)
                     .Distinct()
-                    .ToListAsync();
-                var statusEnv = await session.Query<NodeStatusItem>()
+                    .LazilyAsync();
+                var statusEnvTask = session.Query<NodeStatusItem>()
                     .Select(x => x.Environment)
                     .Distinct()
-                    .ToListAsync();
+                    .LazilyAsync();
+
+                await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
+                var logsEnv = await logsEnvTask.Value.ConfigureAwait(false);
+                var tracesEnv = await tracesEnvTask.Value.ConfigureAwait(false);
+                var statusEnv = await statusEnvTask.Value.ConfigureAwait(false);
+
                 return logsEnv.Concat(tracesEnv).Concat(statusEnv).Distinct().RemoveNulls().ToList();
             });
         }
@@ -246,9 +255,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Machine, searchTerm)
                     .CloseSubclause()
                     .OrderBy(x => x.Timestamp)
-                    .Take(200);
-
-                var logResults = await logQuery.ToListAsync().ConfigureAwait(false);
+                    .Take(200)
+                    .LazilyAsync();
 
                 var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
                     .WhereEquals(x => x.Environment, environment)
@@ -261,11 +269,14 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .Search(x => x.Machine, searchTerm)
                     .CloseSubclause()
                     .OrderBy(x => x.Timestamp)
-                    .Take(200);
-                
-                var traceResults = await traceQuery.ToListAsync().ConfigureAwait(false);
+                    .Take(200)
+                    .LazilyAsync();
+
+                await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
+                var logResults = await logQuery.Value.ConfigureAwait(false);
+                var traceResults = await traceQuery.Value.ConfigureAwait(false);
                     
-                return new SearchResults { Logs = logResults, Traces = traceResults };
+                return new SearchResults { Logs = logResults.ToList(), Traces = traceResults.ToList() };
             });
         }
 

@@ -436,9 +436,7 @@ namespace TWCore
                         new StatusItemValueItem("RunningTime", Core.Now - process.StartTime),
                         new StatusItemValueItem(nameof(process.TotalProcessorTime), process.TotalProcessorTime),
                         new StatusItemValueItem(nameof(Environment.WorkingSet) + " (MB)",
-                            Environment.WorkingSet.ToMegabytes(), true),
-                        new StatusItemValueItem(nameof(process.VirtualMemorySize64) + " (MB)",
-                            process.VirtualMemorySize64.ToMegabytes(), true)
+                            Environment.WorkingSet.ToMegabytes(), true)
                     );
                     var arrGc = new StatusItemValueItem[6];
                     for (var i = 0; i <= 2; i++)

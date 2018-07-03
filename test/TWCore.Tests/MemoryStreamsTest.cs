@@ -42,7 +42,7 @@ namespace TWCore.Tests
             var xbuffer = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
             using (Watch.Create("RecycleMemoryStream"))
             {
-                for (var m = 0; m < 200000; m++)
+                for (var m = 0; m < 50000; m++)
                 {
                     using (var rms = new RecycleMemoryStream())
                     {
@@ -67,7 +67,7 @@ namespace TWCore.Tests
             Console.ReadLine();
             using (Watch.Create("MemoryStream"))
             {
-                for (var m = 0; m < 200000; m++)
+                for (var m = 0; m < 50000; m++)
                 {
                     using (var rms = new MemoryStream())
                     {

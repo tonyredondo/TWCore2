@@ -566,7 +566,7 @@ namespace TWCore.Object.Api.Controllers
                         });
                 }
 
-                return (servicesPathEntries, TimeSpan.FromSeconds(30));
+                return (servicesPathEntries, TimeSpan.FromSeconds(20));
             });
         }
         private static PathEntry EnsureServiceEntry(Dictionary<string, PathEntry> servicesPathEntries, DiscoveryService.ReceivedService srv)

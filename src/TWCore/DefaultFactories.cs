@@ -395,7 +395,7 @@ namespace TWCore
 
 
 
-        private static Lazy<StatusItemValueItem[]> OperatingSystemStatusItems = new Lazy<StatusItemValueItem[]>(new[]
+        private static Lazy<StatusItemValueItem[]> OperatingSystemStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
         {
             new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
             new StatusItemValueItem(nameof(Factory.RunningAsContainer), Factory.RunningAsContainer),
@@ -406,7 +406,7 @@ namespace TWCore
             new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
             new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
         });
-        private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(new[]
+        private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(() => new[]
         {
             new StatusItemValueItem("Version", Core.FrameworkVersion),
             new StatusItemValueItem("Debug Mode", Core.DebugMode),

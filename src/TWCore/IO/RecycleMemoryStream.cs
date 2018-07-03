@@ -29,11 +29,9 @@ namespace TWCore.IO
     /// </summary>
     public class RecycleMemoryStream : Stream
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly object LstPoolLock = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly Queue<List<byte[]>> LstPool = new Queue<List<byte[]>>();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static readonly object PoolLock = new object();
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _lstPoolCount;
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private static int _poolCount;
+        private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
+        private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
+
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 255;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _length;
@@ -43,7 +41,26 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private byte[] _currentBuffer;
 
-        private static readonly Queue<byte[]> Pool = new Queue<byte[]>();
+        #region Allocators
+        private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
+        {
+            public int InitialSize => 4;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(byte[] value) {}
+            public byte[] New() => new byte[MaxLength];
+            public void Reset(byte[] value) => Array.Clear(value, 0, MaxLength);
+        }
+        private struct ListBytePoolAllocator : IPoolObjectLifecycle<List<byte[]>>
+        {
+            public int InitialSize => 1;
+            public PoolResetMode ResetMode => PoolResetMode.AfterUse;
+            public int DropTimeFrequencyInSeconds => 60;
+            public void DropAction(List<byte[]> value) { }
+            public List<byte[]> New() => new List<byte[]>(10);
+            public void Reset(List<byte[]> value) => value.Clear();
+        }
+        #endregion
 
         #region Properties
         /// <inheritdoc />
@@ -117,8 +134,8 @@ namespace TWCore.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public RecycleMemoryStream(byte[] buffer, int index, int count, bool writable)
         {
-            _currentBuffer = GetArray();
-            _buffer = GetList();
+            _currentBuffer = ByteArrayPool.New();
+            _buffer = ListByteArrayPool.New();
             _buffer.Add(_currentBuffer);
             _maxRow = 0;
             if (buffer != null)
@@ -137,8 +154,8 @@ namespace TWCore.IO
             {
                 _currentBuffer = null;
                 foreach (var array in _buffer)
-                    StoreArray(array);
-                StoreList(_buffer);
+                    ByteArrayPool.Store(array);
+                ListByteArrayPool.Store(_buffer);
                 _buffer = null;
             }
             base.Dispose(disposing);
@@ -203,7 +220,7 @@ namespace TWCore.IO
             {
                 while (nRows < _buffer.Count)
                 {
-                    StoreArray(_currentBuffer);
+                    ByteArrayPool.Store(_currentBuffer);
                     var lastIdx = _buffer.Count - 1;
                     _currentBuffer = _buffer[lastIdx];
                     _buffer.RemoveAt(lastIdx);
@@ -214,7 +231,7 @@ namespace TWCore.IO
             if (nRows <= _buffer.Count) return;
             for (var i = _buffer.Count; i < nRows; i++)
             {
-                _currentBuffer = GetArray();
+                _currentBuffer = ByteArrayPool.New();
                 _buffer.Add(_currentBuffer);
                 _maxRow++;
             }
@@ -271,7 +288,7 @@ namespace TWCore.IO
                 var remain = MaxLength - _position;
                 if (remain == 0)
                 {
-                    _currentBuffer = GetArray();
+                    _currentBuffer = ByteArrayPool.New();
                     _buffer.Add(_currentBuffer);
                     _maxRow++;
                     _rowIndex++;
@@ -302,7 +319,7 @@ namespace TWCore.IO
                 if (_position > _length) _length = _position;
                 return;
             }
-            _currentBuffer = GetArray();
+            _currentBuffer = ByteArrayPool.New();
             _buffer.Add(_currentBuffer);
             _maxRow++;
             _rowIndex++;
@@ -339,49 +356,6 @@ namespace TWCore.IO
                 Buffer.BlockCopy(_buffer[i], 0, tmp, i * MaxLength, MaxLength);
             Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * MaxLength, _length);
             return tmp;
-        }
-        #endregion
-
-        #region Pool Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static byte[] GetArray()
-        {
-            lock (PoolLock)
-            {
-                if (_poolCount <= 0) return new byte[MaxLength];
-                _poolCount--;
-                return Pool.Dequeue();
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void StoreArray(byte[] array)
-        {
-            Array.Clear(array, 0, MaxLength);
-            lock (PoolLock)
-            {
-                _poolCount++;
-                Pool.Enqueue(array);
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<byte[]> GetList()
-        {
-            lock (LstPoolLock)
-            {
-                if (_lstPoolCount <= 0) return new List<byte[]>(10);
-                _lstPoolCount--;
-                return LstPool.Dequeue();
-            }
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static void StoreList(List<byte[]> lst)
-        {
-            lst.Clear();
-            lock (LstPoolLock)
-            {
-                LstPool.Enqueue(lst);
-                _lstPoolCount++;
-            }
         }
         #endregion
     }

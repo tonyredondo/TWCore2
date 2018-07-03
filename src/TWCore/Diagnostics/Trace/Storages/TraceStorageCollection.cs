@@ -45,7 +45,6 @@ namespace TWCore.Diagnostics.Trace.Storages
         {
             Core.Status.Attach(collection =>
             {
-                collection.Add("Items", _items.Join(", "));
                 foreach (var i in _items)
                     Core.Status.AttachChild(i, this);
             });

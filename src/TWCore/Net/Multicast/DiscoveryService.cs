@@ -40,7 +40,7 @@ namespace TWCore.Net.Multicast
         private static readonly PeerConnection PeerConnection;
         private static readonly List<RegisteredServiceContainer> LocalServices;
         private static readonly TimeoutDictionary<Guid, ReceivedService> ReceivedServices;
-        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(60);
+        private static readonly TimeSpan ServiceTimeout = TimeSpan.FromSeconds(70);
         private static Task _sendThread;
         private static CancellationTokenSource _tokenSource;
         private static CancellationToken _token;

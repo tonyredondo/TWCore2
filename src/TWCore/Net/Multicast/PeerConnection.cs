@@ -68,7 +68,7 @@ namespace TWCore.Net.Multicast
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public byte[] New() => new byte[PacketSize];
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Reset(byte[] value) => Array.Clear(value, 0, PacketSize);
+            public void Reset(byte[] value) {}
             public int DropTimeFrequencyInSeconds => 60;
             public void DropAction(byte[] value)
             {
@@ -217,18 +217,19 @@ namespace TWCore.Net.Multicast
             const int dtsize = PacketSize - 16 - 2 - 2 - 2;
             var numMsgs = (int)Math.Ceiling((double)count / dtsize);
             if (numMsgs > ushort.MaxValue) throw new ArgumentOutOfRangeException($"The buffer must be less than {ushort.MaxValue} bytes");
-            var guidBytes = Guid.NewGuid().ToByteArray();
-            var numMsgsBytes = BitConverter.GetBytes((ushort)numMsgs);
+            var guid = Guid.NewGuid();
             var remain = count;
             var datagram = DatagramPool.New();
             for (var i = 0; i < numMsgs; i++)
             {
                 var csize = remain >= dtsize ? dtsize : remain;
-                Buffer.BlockCopy(guidBytes, 0, datagram, 0, 16);
-                Buffer.BlockCopy(numMsgsBytes, 0, datagram, 16, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes((ushort)i), 0, datagram, 18, 2);
-                Buffer.BlockCopy(BitConverter.GetBytes((ushort)csize), 0, datagram, 20, 2);
-                Buffer.BlockCopy(buffer, offset, datagram, 22, csize);
+                var dGram = new Memory<byte>(datagram);
+                guid.TryWriteBytes(dGram.Span.Slice(0, 16));
+                BitConverter.TryWriteBytes(dGram.Span.Slice(16, 2), (ushort)numMsgs);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(18, 2), (ushort)i);
+                BitConverter.TryWriteBytes(dGram.Span.Slice(20, 2), (ushort)csize);
+                buffer.AsSpan(offset, csize).CopyTo(dGram.Span.Slice(22));
+                dGram.Span.Slice(csize + 22).Clear();
 
                 foreach (var c in _sendClients)
                 {
@@ -237,7 +238,6 @@ namespace TWCore.Net.Multicast
                     try
                     {
                         await c.SendAsync(datagram, PacketSize, _sendEndpoint).ConfigureAwait(false);
-                        //Core.Log.InfoBasic("Datagram sent to to the multicast group on: {0}", c.Client.LocalEndPoint);
                     }
                     catch (Exception)
                     {
@@ -248,8 +248,6 @@ namespace TWCore.Net.Multicast
 
                 remain -= dtsize;
                 offset += csize;
-
-                Array.Clear(datagram, 0, PacketSize);
             }
             DatagramPool.Store(datagram);
         }

@@ -156,13 +156,14 @@ namespace TWCore.Net.Multicast
                 Category = category,
                 Name = name,
                 Description = description,
+                InstanceId = Core.InstanceId,
                 MachineName = Core.MachineName,
                 ApplicationName = Core.ApplicationName,
                 FrameworkVersion = Core.FrameworkVersion,
                 EnvironmentName = Core.EnvironmentName,
                 Data = data
             };
-            var serviceText = service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
+            var serviceText = service.InstanceId + service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
             service.ServiceId = serviceText.GetHashSHA1Guid();
             lock (LocalServices)
             {
@@ -190,13 +191,14 @@ namespace TWCore.Net.Multicast
                 Category = category,
                 Name = name,
                 Description = description,
+                InstanceId = Core.InstanceId,
                 MachineName = Core.MachineName,
                 ApplicationName = Core.ApplicationName,
                 FrameworkVersion = Core.FrameworkVersion,
                 EnvironmentName = Core.EnvironmentName,
                 GetDataFunc = getData
             };
-            var serviceText = service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
+            var serviceText = service.InstanceId + service.Category + service.Name + service.Description + service.MachineName + service.ApplicationName + service.FrameworkVersion + service.EnvironmentName;
             service.ServiceId = serviceText.GetHashSHA1Guid();
             lock (LocalServices)
             {
@@ -395,6 +397,11 @@ namespace TWCore.Net.Multicast
             /// </summary>
             [DataMember, XmlAttribute]
             public Guid ServiceId { get; set; }
+            /// <summary>
+            /// Instance Id
+            /// </summary>
+            [DataMember, XmlAttribute]
+            public Guid InstanceId { get; set; }
             /// <summary>
             /// Service Category
             /// </summary>

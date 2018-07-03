@@ -302,6 +302,7 @@ namespace TWCore.Net.Multicast
                     var received = new ReceivedService
                     {
                         ServiceId = rService.ServiceId,
+                        InstanceId = rService.InstanceId,
                         Category = rService.Category,
                         Name = rService.Name,
                         Description = rService.Description,

@@ -45,6 +45,7 @@ namespace TWCore.Cache
         private int _expirationCheckTimeInMinutes = 30;
         private bool _init;
         private Timer _expirationTimer;
+        private volatile bool _expirationRunning;
 
         #region Properties
         /// <summary>
@@ -134,6 +135,8 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void CheckItemExpiration(bool initial = false)
         {
+            if (_expirationRunning == true) return;
+            _expirationRunning = true;
             try
             {
                 Core.Log.LibVerbose("Checking items expiration");
@@ -155,6 +158,7 @@ namespace TWCore.Cache
             {
                 Core.Log.Write(ex);
             }
+            _expirationRunning = false;
         }
         /// <summary>
         /// Method that handles when a item is expiring

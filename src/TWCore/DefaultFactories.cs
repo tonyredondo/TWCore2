@@ -395,11 +395,6 @@ namespace TWCore
 
 
 
-        private static Lazy<StatusItemValueItem[]> UserStatusItems = new Lazy<StatusItemValueItem[]>(new[]
-        {
-            new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
-            new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
-        });
         private static Lazy<StatusItemValueItem[]> OperatingSystemStatusItems = new Lazy<StatusItemValueItem[]>(new[]
         {
             new StatusItemValueItem(nameof(Factory.PlatformType), Factory.PlatformType),
@@ -407,7 +402,9 @@ namespace TWCore
             new StatusItemValueItem(nameof(Environment.ProcessorCount), Environment.ProcessorCount),
             new StatusItemValueItem(nameof(Environment.OSVersion), Environment.OSVersion),
             new StatusItemValueItem(nameof(RuntimeInformation.OSArchitecture), RuntimeInformation.OSArchitecture),
-            new StatusItemValueItem(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription)
+            new StatusItemValueItem(nameof(RuntimeInformation.OSDescription), RuntimeInformation.OSDescription),
+            new StatusItemValueItem(nameof(Environment.MachineName), Environment.MachineName),
+            new StatusItemValueItem(nameof(Environment.UserName), Environment.UserName)
         });
         private static Lazy<StatusItemValueItem[]> CoreFrameworkStatusItems = new Lazy<StatusItemValueItem[]>(new[]
         {
@@ -430,7 +427,6 @@ namespace TWCore
                     sItem.Values.Add("Command Line", Environment.CommandLine);
                     sItem.Values.Add("Current Directory", Directory.GetCurrentDirectory());
                     sItem.Values.Add("Operating System", OperatingSystemStatusItems.Value);
-                    sItem.Values.Add("User", UserStatusItems.Value);
                     sItem.Values.Add("Process Information",
                         new StatusItemValueItem(nameof(process.Id), process.Id),
                         new StatusItemValueItem(nameof(process.ProcessName), process.ProcessName),
@@ -447,7 +443,7 @@ namespace TWCore
                     var arrGc = new StatusItemValueItem[6];
                     for (var i = 0; i <= 2; i++)
                         arrGc[i] = new StatusItemValueItem("Collection Count Gen " + i, GC.CollectionCount(i), true);
-                    arrGc[3] = new StatusItemValueItem("Memory allocated (MB)", GC.GetTotalMemory(false).ToMegabytes(), true);
+                    arrGc[3] = new StatusItemValueItem("Allocated Memory (MB)", GC.GetTotalMemory(false).ToMegabytes(), true);
                     arrGc[4] = new StatusItemValueItem("Is Server GC", GCSettings.IsServerGC);
                     arrGc[5] = new StatusItemValueItem("Latency Mode", GCSettings.LatencyMode);
                     sItem.Values.Add("Garbage Collector", arrGc);

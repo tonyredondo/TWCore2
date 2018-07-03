@@ -29,6 +29,7 @@ namespace TWCore.Diagnostics.Status.Transports
     /// <summary>
     /// Messaging Status Transport
     /// </summary>
+    [StatusName("Messaging Status")]
     public class MessagingStatusTransport : IStatusTransport
     {
         private readonly string _queueName;
@@ -55,10 +56,6 @@ namespace TWCore.Diagnostics.Status.Transports
             _queueName = queueName;
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
-            Core.Status.Attach(_ =>
-            {
-                Core.Status.AttachChild(_queueClient, this);
-            }, this);
         }
         ~MessagingStatusTransport()
         {
@@ -80,7 +77,11 @@ namespace TWCore.Diagnostics.Status.Transports
                     return;
                 }
                 Core.Log.LibDebug("Sending status data to the diagnostic queue.");
-                _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
+                if (_queueClient == null)
+                {
+                    _queueClient = Core.Services.GetQueueClient(_queueName);
+                    Core.Status.AttachChild(_queueClient, this);
+                }
                 _queueClient.SendAsync(statusData).WaitAndResults();
             }
             catch (Exception ex)

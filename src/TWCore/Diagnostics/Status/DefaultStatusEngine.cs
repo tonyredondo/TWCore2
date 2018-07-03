@@ -36,6 +36,7 @@ namespace TWCore.Diagnostics.Status
     /// Default status engine
     /// </summary>
     [IgnoreStackFrameLog]
+    [StatusName("Application Information\\Status")]
     public class DefaultStatusEngine : IStatusEngine
     {
         private readonly StatusContainerCollection _statusCollection = new StatusContainerCollection();
@@ -77,6 +78,7 @@ namespace TWCore.Diagnostics.Status
                                     continue;
                                 }
                                 item.OnFetchStatus += Transport_OnFetchStatus;
+                                AttachChild(item, this);
                             }
                         }
                         break;
@@ -91,6 +93,7 @@ namespace TWCore.Diagnostics.Status
                                     continue;
                                 }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                                DeAttachObject(item);
                             }
                         }
                         break;
@@ -105,6 +108,7 @@ namespace TWCore.Diagnostics.Status
                                     continue;
                                 }
                                 item.OnFetchStatus += Transport_OnFetchStatus;
+                                AttachChild(item, this);
                             }
                         }
                         if (e.OldItems != null)
@@ -117,6 +121,7 @@ namespace TWCore.Diagnostics.Status
                                     continue;
                                 }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                                DeAttachObject(item);
                             }
                         }
                         break;
@@ -131,11 +136,14 @@ namespace TWCore.Diagnostics.Status
                                     continue;
                                 }
                                 item.OnFetchStatus -= Transport_OnFetchStatus;
+                                DeAttachObject(item);
                             }
                         }
                         break;
                 }
             };
+
+            AttachObject(this);
         }
 
         /// <summary>

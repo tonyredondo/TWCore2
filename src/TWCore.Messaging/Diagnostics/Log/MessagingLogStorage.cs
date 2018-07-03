@@ -21,6 +21,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Diagnostics.Status;
 using TWCore.Messaging.Client;
 using TWCore.Services;
 // ReSharper disable ImpureMethodCallOnReadonlyValueField
@@ -33,6 +34,7 @@ namespace TWCore.Diagnostics.Log.Storages
     /// <summary>
     /// Messaging log storage
     /// </summary>
+    [StatusName("Messaging Log")]
     public class MessagingLogStorage : ILogStorage
     {
         private readonly string _queueName;
@@ -56,10 +58,6 @@ namespace TWCore.Diagnostics.Log.Storages
 			_pool = new ReferencePool<List<LogItem>>();
             var period = TimeSpan.FromSeconds(periodInSeconds);
             _timer = new Timer(TimerCallback, this, period, period);
-            Core.Status.Attach(_ =>
-            {
-                Core.Status.AttachChild(_queueClient, this);
-            }, this);
         }
         ~MessagingLogStorage()
 		{
@@ -138,7 +136,11 @@ namespace TWCore.Diagnostics.Log.Storages
 	            }
 
 	            Core.Log.LibDebug("Sending {0} log items to the diagnostic queue.", itemsToSend.Count);
-                _queueClient = _queueClient ?? Core.Services.GetQueueClient(_queueName);
+                if (_queueClient == null)
+                {
+                    _queueClient = Core.Services.GetQueueClient(_queueName);
+                    Core.Status.AttachChild(_queueClient, this);
+                }
                 _queueClient.SendAsync(itemsToSend).WaitAndResults();
 
 				itemsToSend.Clear();

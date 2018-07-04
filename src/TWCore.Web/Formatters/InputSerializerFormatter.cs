@@ -32,6 +32,11 @@ namespace TWCore.Web.Formatters
         private readonly ISerializer _serializer;
 
         /// <summary>
+        /// Serializer
+        /// </summary>
+        public ISerializer Serializer => _serializer;
+
+        /// <summary>
         /// InputFormatter for ISerializer instances
         /// </summary>
         /// <param name="serializer">ISerializer instance</param>

@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Threading.Tasks;
 using Raven.Client.Documents;
+using Raven.Client.Documents.BulkInsert;
 using Raven.Client.Documents.Session;
 using TWCore.Settings;
 using TWCore.Threading;
@@ -26,34 +27,45 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
     public static class RavenHelper
     {
         public static readonly RavenDbSettings Settings = Core.GetSettings<RavenDbSettings>();
-        private static readonly AsyncLock Locker = new AsyncLock();
-        
+
+        #region DocumentStore
+        private static Lazy<DocumentStore> _documentStoreLazy = new Lazy<DocumentStore>(CreateDocumentStore);
+        private static DocumentStore CreateDocumentStore()
+        {
+            var store = new DocumentStore
+            {
+                Urls = Settings.Urls, 
+                Database = Settings.Database
+            };
+            store.Initialize();
+            return store;
+        }
+        public static void CloseDocumentStore()
+        {
+            if (!_documentStoreLazy.IsValueCreated) return;
+            _documentStoreLazy.Value.Dispose();
+            _documentStoreLazy = new Lazy<DocumentStore>(CreateDocumentStore);
+        }
+        #endregion
+
         public static async Task ExecuteAsync(Func<IAsyncDocumentSession, Task> sessionFunc)
         {
-            using (await Locker.LockAsync().ConfigureAwait(false))
-            {
-                using (var store = new DocumentStore {Urls = Settings.Urls, Database = Settings.Database})
-                {
-                    store.Initialize();
-                    using (var session = store.OpenAsyncSession())
-                        await sessionFunc(session).ConfigureAwait(false);
-                }
-            }
+            using (var session = _documentStoreLazy.Value.OpenAsyncSession())
+                await sessionFunc(session).ConfigureAwait(false);
         }
 
 		public static async Task<T> ExecuteAndReturnAsync<T>(Func<IAsyncDocumentSession, Task<T>> sessionFunc)
 		{
-		    using (await Locker.LockAsync().ConfigureAwait(false))
-		    {
-		        using (var store = new DocumentStore { Urls = Settings.Urls, Database = Settings.Database })
-                {
-                    store.Initialize();
-                    using (var session = store.OpenAsyncSession())
-                        return await sessionFunc(session).ConfigureAwait(false);
-                }
-		    }
+		    using (var session = _documentStoreLazy.Value.OpenAsyncSession())
+		        return await sessionFunc(session).ConfigureAwait(false);
 		}
 
+        public static async Task BulkInsertAsync(Func<BulkInsertOperation, Task> bulkInsertOperation)
+        {
+            using (var bulkInsert = _documentStoreLazy.Value.BulkInsert())
+                await bulkInsertOperation(bulkInsert).ConfigureAwait(false);
+        }
+        
         public class RavenDbSettings : SettingsBase
         {
             [SettingsArray(",")]

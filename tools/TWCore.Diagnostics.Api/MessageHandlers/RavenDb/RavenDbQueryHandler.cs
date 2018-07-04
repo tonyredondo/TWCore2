@@ -219,9 +219,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
-                if (attachment == null) return null;
-                var traceObject = attachment.Stream.DeserializeFromNBinary<object>();
-                return (SerializedObject)traceObject;
+                var traceObject = attachment?.Stream?.DeserializeFromNBinary<object>();
+                return (SerializedObject) traceObject;
             });
         }
         public Task<string> GetTraceXmlAsync(string id)

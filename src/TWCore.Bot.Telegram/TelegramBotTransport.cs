@@ -94,56 +94,21 @@ namespace TWCore.Bot.Telegram
             Core.Log.Write(e.ApiRequestException);
         }
 
-        private void Bot_OnMessage(object sender, TBot.Args.MessageEventArgs e)
+        private async void Bot_OnMessage(object sender, TBot.Args.MessageEventArgs e)
         {
-            if (e.Message == null) return;
-
-            switch (e.Message.Type)
+            try
             {
-                case TBot.Types.Enums.MessageType.TextMessage:
-                    if (string.IsNullOrWhiteSpace(e.Message.Text)) return;
-                    var message = new BotTextMessage
-                    {
-                        Id = e.Message.MessageId.ToString(),
-                        Date = e.Message.Date,
-                        Text = e.Message.Text,
-                        Chat = new TelegramBotChat
-                        {
-                            Id = e.Message.Chat.Id.ToString(),
-                            ChatType = (BotChatType)e.Message.Chat.Type,
-                            Name = e.Message.Chat.Title,
-                            Title = e.Message.Chat.Title,
-                            Username = e.Message.Chat.Username,
-                            FirstName = e.Message.Chat.FirstName,
-                            LastName = e.Message.Chat.LastName
-                        },
-                        User = new TelegramBotUser
-                        {
-                            Id = e.Message.From.Id.ToString(),
-                            Name = e.Message.From.Username,
-                            FirstName = e.Message.From.FirstName,
-                            LastName = e.Message.From.LastName
-                        }
-                    };
-                    TextMessageReceived?.Invoke(this, new EventArgs<BotTextMessage>(message));
-                    break;
-                case TBot.Types.Enums.MessageType.PhotoMessage:
-                    foreach(var photo in e.Message.Photo)
-                    {
-                        var photoMessage = new BotPhotoMessage
+                if (e.Message == null) return;
+
+                switch (e.Message.Type)
+                {
+                    case TBot.Types.Enums.MessageType.Text:
+                        if (string.IsNullOrWhiteSpace(e.Message.Text)) return;
+                        var message = new BotTextMessage
                         {
                             Id = e.Message.MessageId.ToString(),
                             Date = e.Message.Date,
-                            PhotoWidth = photo.Width,
-                            PhotoHeight = photo.Height,
-                            PhotoId = photo.FileId,
-                            PhotoSize = photo.FileSize,
-                            PhotoName = photo.FilePath,
-                            PhotoStream = new Lazy<Stream>(() =>
-                            {
-                                var file = _bot.GetFileAsync(photo.FileId).WaitAndResults();
-                                return file.FileStream;
-                            }),
+                            Text = e.Message.Text,
                             Chat = new TelegramBotChat
                             {
                                 Id = e.Message.Chat.Id.ToString(),
@@ -162,9 +127,51 @@ namespace TWCore.Bot.Telegram
                                 LastName = e.Message.From.LastName
                             }
                         };
-                        PhotoMessageReceived?.Invoke(this, new EventArgs<BotPhotoMessage>(photoMessage));
-                    }
-                    break;
+                        TextMessageReceived?.Invoke(this, new EventArgs<BotTextMessage>(message));
+                        break;
+                    case TBot.Types.Enums.MessageType.Photo:
+                        foreach (var photo in e.Message.Photo)
+                        {
+                            var photoFileInfo = await _bot.GetFileAsync(photo.FileId);
+                            var photoMessage = new BotPhotoMessage
+                            {
+                                Id = e.Message.MessageId.ToString(),
+                                Date = e.Message.Date,
+                                PhotoWidth = photo.Width,
+                                PhotoHeight = photo.Height,
+                                PhotoId = photo.FileId,
+                                PhotoSize = photo.FileSize,
+                                PhotoName = photoFileInfo.FilePath,
+                                PhotoStream = new Lazy<Stream>(() =>
+                                {
+                                    return _bot.DownloadFileAsync(photoFileInfo.FilePath).WaitAndResults();
+                                }),
+                                Chat = new TelegramBotChat
+                                {
+                                    Id = e.Message.Chat.Id.ToString(),
+                                    ChatType = (BotChatType)e.Message.Chat.Type,
+                                    Name = e.Message.Chat.Title,
+                                    Title = e.Message.Chat.Title,
+                                    Username = e.Message.Chat.Username,
+                                    FirstName = e.Message.Chat.FirstName,
+                                    LastName = e.Message.Chat.LastName
+                                },
+                                User = new TelegramBotUser
+                                {
+                                    Id = e.Message.From.Id.ToString(),
+                                    Name = e.Message.From.Username,
+                                    FirstName = e.Message.From.FirstName,
+                                    LastName = e.Message.From.LastName
+                                }
+                            };
+                            PhotoMessageReceived?.Invoke(this, new EventArgs<BotPhotoMessage>(photoMessage));
+                        }
+                        break;
+                }
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
             }
         }
         #endregion
@@ -242,9 +249,7 @@ namespace TWCore.Bot.Telegram
                 using (var fs = File.Open(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
                     await fs.CopyToAsync(ms).ConfigureAwait(false);
                 ms.Position = 0;
-                var fileToSend = new TBot.Types.FileToSend(Path.GetFileName(fileName), ms);
-
-                await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+                await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), ms, caption).ConfigureAwait(false);
             }
         }
         /// <inheritdoc />
@@ -260,8 +265,7 @@ namespace TWCore.Bot.Telegram
         {
             if (!_active) return;
             Ensure.ArgumentNotNull(fileStream, "The fileStream can't be null");
-            var fileToSend = new TBot.Types.FileToSend(caption ?? Core.Now.Ticks.ToString(), fileStream);
-            await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileToSend, caption).ConfigureAwait(false);
+            await _bot.SendPhotoAsync(chat.Id.ParseTo<long>(-1), fileStream, caption).ConfigureAwait(false);
         }
         #endregion
     }

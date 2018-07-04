@@ -1036,6 +1036,49 @@ var QueryService = /** @class */ (function () {
             reportProgress: reportProgress
         });
     };
+    QueryService.prototype.apiQueryByEnvironmentLogsSearchBySearchTermGet = function (environment, searchTerm, fromDate, toDate, observe, reportProgress) {
+        if (observe === void 0) { observe = 'body'; }
+        if (reportProgress === void 0) { reportProgress = false; }
+        if (environment === null || environment === undefined) {
+            throw new Error('Required parameter environment was null or undefined when calling apiQueryByEnvironmentLogsSearchBySearchTermGet.');
+        }
+        if (searchTerm === null || searchTerm === undefined) {
+            throw new Error('Required parameter searchTerm was null or undefined when calling apiQueryByEnvironmentLogsSearchBySearchTermGet.');
+        }
+        var queryParameters = new _angular_common_http__WEBPACK_IMPORTED_MODULE_1__["HttpParams"]({ encoder: new _encoder__WEBPACK_IMPORTED_MODULE_2__["CustomHttpUrlEncodingCodec"]() });
+        if (fromDate !== undefined) {
+            queryParameters = queryParameters.set('fromDate', fromDate.toISOString());
+        }
+        if (toDate !== undefined) {
+            queryParameters = queryParameters.set('toDate', toDate.toISOString());
+        }
+        var headers = this.defaultHeaders;
+        // to determine the Accept header
+        var httpHeaderAccepts = [
+            'text/plain',
+            'application/json',
+            'text/json',
+            'application/xml',
+            'text/xml',
+            'application/binary-formatter',
+            'application/n-binary',
+            'application/pw-binary',
+            'application/w-binary'
+        ];
+        var httpHeaderAcceptSelected = this.configuration.selectHeaderAccept(httpHeaderAccepts);
+        if (httpHeaderAcceptSelected != undefined) {
+            headers = headers.set("Accept", httpHeaderAcceptSelected);
+        }
+        // to determine the Content-Type header
+        var consumes = [];
+        return this.httpClient.get(this.basePath + "/api/query/" + encodeURIComponent(String(environment)) + "/logs/search/" + encodeURIComponent(String(searchTerm)), {
+            params: queryParameters,
+            withCredentials: this.configuration.withCredentials,
+            headers: headers,
+            observe: observe,
+            reportProgress: reportProgress
+        });
+    };
     QueryService.prototype.apiQueryByEnvironmentSearchBySearchTermGet = function (environment, searchTerm, fromDate, toDate, observe, reportProgress) {
         if (observe === void 0) { observe = 'body'; }
         if (reportProgress === void 0) { reportProgress = false; }

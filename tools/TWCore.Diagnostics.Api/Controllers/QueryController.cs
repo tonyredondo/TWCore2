@@ -67,6 +67,23 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.GetLogsByApplicationLevelsEnvironmentAsync(environment, application, level, fromDate, toDate, page, pageSize);
         }
         /// <summary>
+        /// Gets the Logs from a search term in message or group
+        /// </summary>
+        /// <param name="environment">Environment name</param>
+        /// <param name="searchTerm">Term to search in the database</param>
+        /// <param name="fromDate">From date and time</param>
+        /// <param name="toDate">To date and time</param>
+        /// <returns>Logs search results</returns>
+        [HttpGet("{environment}/logs/search/{searchTerm}")]
+        public Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
+        {
+            searchTerm = searchTerm?.Trim();
+            if (toDate == DateTime.MinValue) toDate = DateTime.Now.Date;
+            fromDate = fromDate.Date;
+            toDate = toDate.Date.AddDays(1).AddSeconds(-1);
+            return DbHandlers.Instance.Query.GetLogsBySearch(environment, searchTerm, fromDate, toDate);
+        }
+        /// <summary>
         /// Gets the traces objects by environment and dates
         /// </summary>
         /// <param name="environment">Environment name</param>
@@ -168,7 +185,8 @@ namespace TWCore.Diagnostics.Api.Controllers
             return DbHandlers.Instance.Query.SearchAsync(environment, searchTerm, fromDate, toDate);
         }
 
-        
+
+
 
         [HttpGet("{environment}/status")]
         public Task<PagedList<NodeStatusItem>> GetStatusesAsync([FromRoute] string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)

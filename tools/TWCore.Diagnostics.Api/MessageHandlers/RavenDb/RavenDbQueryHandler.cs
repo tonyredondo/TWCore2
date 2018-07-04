@@ -145,6 +145,22 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
+        public Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
+        {
+            return RavenHelper.ExecuteAndReturnAsync(session =>
+            {
+                return session.Advanced.AsyncDocumentQuery<NodeLogItem>()
+                    .WhereEquals(x => x.Environment, environment)
+                    .WhereBetween(x => x.Timestamp, fromDate, toDate)
+                    .OpenSubclause()
+                    .Search(x => x.Message, "*" + searchTerm + "*")
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .CloseSubclause()
+                    .OrderBy(x => x.Timestamp)
+                    .Take(150)
+                    .ToListAsync();
+            });
+        }
 
         // Traces
         public async Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
@@ -227,15 +243,13 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             });
         }
         
-        
-        
-        
         private class TraceTempResult
         {
             public string Group { get; set; }
             public DateTime Timestamp { get; set; }
             public string Tags { get; set; }
         }
+
 
         // Search
         public Task<SearchResults> SearchAsync(string environment, string searchTerm, DateTime fromDate, DateTime toDate)

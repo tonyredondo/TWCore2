@@ -32,7 +32,7 @@ namespace TWCore.IO
         private static readonly ObjectPool<byte[], BytePoolAllocator> ByteArrayPool = new ObjectPool<byte[], BytePoolAllocator>();
         private static readonly ObjectPool<List<byte[]>, ListBytePoolAllocator> ListByteArrayPool = new ObjectPool<List<byte[]>, ListBytePoolAllocator>();
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 255;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private const int MaxLength = 1024;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _canWrite;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _length;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _maxRow;

@@ -30,6 +30,11 @@ namespace TWCore.Web.Formatters
     public class InputSerializerFormatter : InputFormatter
     {
         private readonly ISerializer _serializer;
+        
+        /// <summary>
+        /// Serializer
+        /// </summary>
+        public ISerializer Serializer => _serializer;
 
         /// <summary>
         /// InputFormatter for ISerializer instances

@@ -22,6 +22,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Net.Http.Headers;
 using System;
+using System.Linq;
 using TWCore.Serialization;
 using TWCore.Web.Logger;
 // ReSharper disable InconsistentNaming
@@ -81,8 +82,17 @@ namespace TWCore.Web
             {
                 try
                 {
-                    options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
-
+                    if (settings.UseCustomXmlSerializer)
+                    {
+                        var xmlSerializer = new XmlTextSerializer();
+                        options.AddISerializerInputFormatter(xmlSerializer);
+                        options.AddISerializerOutputFormatter(xmlSerializer);
+                    }
+                    else
+                    {
+                        options.InputFormatters.Add(new XmlSerializerInputFormatter());
+                        options.OutputFormatters.Add(new XmlSerializerOutputFormatter());
+                    }
                     if (settings.EnableFormatMapping)
                     {
                         options.FormatterMappings.SetMediaTypeMappingForFormat
@@ -125,6 +135,15 @@ namespace TWCore.Web
             {
                 services.Configure<GzipCompressionProviderOptions>(options => options.Level = System.IO.Compression.CompressionLevel.Fastest);
                 services.AddResponseCompression();
+                if (settings.EnableTWCoreSerializers)
+                {
+                    var serializers = SerializerManager.GetBinarySerializers();
+
+                    services.Configure<ResponseCompressionOptions>(options =>
+                    {
+                        options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(serializers.SelectMany(i => i.MimeTypes));
+                    });
+                }
             }
         }
     }

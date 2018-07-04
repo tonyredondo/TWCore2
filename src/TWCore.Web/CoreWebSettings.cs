@@ -32,5 +32,6 @@ namespace TWCore.Web
         public bool EnableJsonStringEnum { get; set; } = true;
         public bool EnableTWCoreLogger { get; set; } = true;
         public bool EnableGZipCompressor { get; set; } = true;
+        public bool UseCustomXmlSerializer { get; set; } = false;
     }
 }

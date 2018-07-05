@@ -71,12 +71,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             await bulkOp.StoreAsync(logInfo).ConfigureAwait(false);
                         }
                     }
-                    finally
+                    catch(Exception ex)
                     {
-                        if (bulkOp != null)
-                        {
-                            await bulkOp.DisposeAsync().ConfigureAwait(false);
-                        }
+                        Core.Log.Write(ex);
                     }
                 }).ConfigureAwait(false);
             }

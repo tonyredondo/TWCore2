@@ -28,8 +28,8 @@ namespace TWCore.Net.HttpServer
     public class RouteHandler
     {
         private const string RouteParamPattern = @"({([0-9a-z?]*)*})";
-        private const string RouteRequiredParamReplacePattern = @"([a-z0-9 -.$\[\]]+)";
-        private const string RouteOptionalParamReplacePattern = @"([a-z0-9 -.$\[\]]*)";
+        private const string RouteRequiredParamReplacePattern = @"([a-z0-9 _-.$\[\]]+)";
+        private const string RouteOptionalParamReplacePattern = @"([a-z0-9 _-.$\[\]]*)";
         private static readonly Regex RouteParamRegex = new Regex(RouteParamPattern, RegexOptions.IgnoreCase | RegexOptions.Compiled);
         private readonly List<string> _routeParameters = new List<string>();
         private readonly Regex _rgxMatchRoute;

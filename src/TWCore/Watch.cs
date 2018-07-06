@@ -299,7 +299,7 @@ namespace TWCore
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Write(item.Level, indent + "[" + gValue + "-START] " + item.Message);
+                        Core.Log.Write(item.Level, null, indent + "[" + gValue + "-START] " + item.Message, item.Group);
                         break;
                     case 1:
                         cTime = item.LastTapTicks * FrequencyTime;
@@ -307,11 +307,11 @@ namespace TWCore
                         if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.00001)
                         {
                             gTime = item.GlobalTicks * FrequencyTime;
-                            Core.Log.Write(item.Level, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
+                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), item.Group);
                         }
                         else
                         {
-                            Core.Log.Write(item.Level, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms] {2}", gValue, cTime, item.Message));
+                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms] {2}", gValue, cTime, item.Message), item.Group);
                         }
                         break;
                     case 2:
@@ -319,9 +319,9 @@ namespace TWCore
                         gTime = item.GlobalTicks * FrequencyTime;
                         item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, gTime);
                         if (Math.Abs(cTime - gTime) > 0.00001)
-                            Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message));
+                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), item.Group);
                         else
-                            Core.Log.Write(item.Level, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message));
+                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message), item.Group);
                         break;
                 }
             }

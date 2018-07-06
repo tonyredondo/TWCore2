@@ -89,19 +89,24 @@ namespace TWCore
                 {
                     _platformType = PlatformType.Linux;
 
-                    //Tries to detect a docker container.
-                    try
+                    if (Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER") == "true")
+                        RunningAsContainer = true;
+                    else
                     {
-                        if (File.Exists("/proc/1/cgroup"))
+                        //Tries to detect a docker container.
+                        try
                         {
-                            var fileContent = File.ReadAllText("/proc/1/cgroup");
-                            if (fileContent.Contains("/docker/"))
-                                RunningAsContainer = true;
+                            if (File.Exists("/proc/1/cgroup"))
+                            {
+                                var fileContent = File.ReadAllText("/proc/1/cgroup");
+                                if (fileContent.Contains("/docker/"))
+                                    RunningAsContainer = true;
+                            }
                         }
-                    }
-                    catch
-                    {
-                        //
+                        catch
+                        {
+                            //
+                        }
                     }
                 }
                 else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))

@@ -676,8 +676,8 @@ namespace TWCore.Diagnostics.Status
             private readonly object _locker = new object();
             private WeakReference<object> _object;
             private WeakReference<object> _parent;
-            private readonly List<WeakDelegate.WeakAction<StatusItemValuesCollection>> _lstStatusValueCollection = new List<WeakDelegate.WeakAction<StatusItemValuesCollection>>();
-            private readonly List<WeakDelegate.WeakFunc<StatusItem>> _lstStatusItem = new List<WeakDelegate.WeakFunc<StatusItem>>();
+            private readonly List<WeakAction<StatusItemValuesCollection>> _lstStatusValueCollection = new List<WeakAction<StatusItemValuesCollection>>();
+            private readonly List<WeakFunc<StatusItem>> _lstStatusItem = new List<WeakFunc<StatusItem>>();
 
             #region Properties
             public object Object

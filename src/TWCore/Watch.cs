@@ -282,6 +282,8 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private static void WorkerMethod(LogStatItem item)
             {
+                if (!Core.Log.MaxLogLevel.HasFlag(item.Level)) return;
+
                 double gTime;
                 double cTime;
                 string indent = null;
@@ -290,7 +292,7 @@ namespace TWCore
                 {
                     gValue = string.Format("{0:00}", item.Id);
                     if (EnableIndent)
-                        indent = IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 2));
+                        indent = IndentTexts.GetOrAdd(item.Id, num => new string(' ', (num - 1) * 3));
                 }
                 else
                 {
@@ -299,29 +301,18 @@ namespace TWCore
                 switch (item.Type)
                 {
                     case 0:
-                        Core.Log.Write(item.Level, null, indent + "[" + gValue + "-START] " + item.Message, item.Group);
+                        Core.Log.Write(item.Level, null, indent + "[START] " + item.Message, gValue);
                         break;
                     case 1:
                         cTime = item.LastTapTicks * FrequencyTime;
+                        gTime = item.GlobalTicks * FrequencyTime;
+                        Core.Log.Write(item.Level, null, indent + $"  [Time = {cTime:0.0000}ms, Cumulated = {gTime:0.0000}ms] {item.Message}", gValue);
                         item.Counter?.Register(item.Message, cTime);
-                        if (Math.Abs(item.LastTapTicks - item.GlobalTicks) > 0.00001)
-                        {
-                            gTime = item.GlobalTicks * FrequencyTime;
-                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms, Cumulated = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), item.Group);
-                        }
-                        else
-                        {
-                            Core.Log.Write(item.Level, null, indent + string.Format("  [{0}-TAP, Time = {1:0.0000}ms] {2}", gValue, cTime, item.Message), item.Group);
-                        }
                         break;
                     case 2:
-                        cTime = item.LastTapTicks * FrequencyTime;
                         gTime = item.GlobalTicks * FrequencyTime;
+                        Core.Log.Write(item.Level, null, indent + $"[END: Total Time = {gTime:0.0000}ms] {item.Message}", gValue);
                         item.Counter?.Register(item.Counter.Name == CounterPreffix + item.Message ? "Total" : item.Message, gTime);
-                        if (Math.Abs(cTime - gTime) > 0.00001)
-                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Time = {1:0.0000}ms, Total Time = {2:0.0000}ms] {3}", gValue, cTime, gTime, item.Message), item.Group);
-                        else
-                            Core.Log.Write(item.Level, null, indent + string.Format("[{0}-END, Total Time = {1:0.0000}ms] {2}", gValue, gTime, item.Message), item.Group);
                         break;
                 }
             }
@@ -357,7 +348,7 @@ namespace TWCore
             #endregion
 
             #region Nested Types
-            private class LogStatItem
+            private struct LogStatItem
             {
                 public readonly int Id;
                 public readonly double GlobalTicks;
@@ -508,8 +499,7 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 1));
+                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 1));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -521,8 +511,7 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 0));
+                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 0));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -534,8 +523,7 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                if (message != null && Core.Log.MaxLogLevel.HasFlag(_level))
-                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 2));
+                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, _counter, 2));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -554,12 +542,13 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public void Reset()
             {
-                _ticksTimestamp = Stopwatch.GetTimestamp();
-                _initTicks = _ticksTimestamp;
-                _lastTapTicks = _ticksTimestamp;
                 _level = LogLevel.Stats;
                 _disposedValue = false;
                 _counter = null;
+                _lastMessage = null;
+                _ticksTimestamp = Stopwatch.GetTimestamp();
+                _initTicks = _ticksTimestamp;
+                _lastTapTicks = _ticksTimestamp;
             }
             #endregion
 
@@ -576,11 +565,8 @@ namespace TWCore
                 if (_disposedValue) return;
                 if (disposing)
                 {
-                    if (_lastMessage != null)
-                    {
-                        EndTap(_lastMessage);
-                        _lastMessage = null;
-                    }
+                    EndTap(_lastMessage);
+                    _lastMessage = null;
                     Interlocked.Decrement(ref _watcherCount);
                     ItemPools.Store(this);
                 }

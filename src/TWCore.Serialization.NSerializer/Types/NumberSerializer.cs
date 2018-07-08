@@ -10,148 +10,120 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(decimal value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.DecimalDefault);
-                return;
-            }
-            if (_decimalCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_decimalCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefDecimal, objIdx);
-                return;
+            else
+            {
+                WriteByte(DataBytesDefinition.Decimal);
+                WriteDecimal(value);
+                _decimalCache.Set(value);
             }
-            WriteByte(DataBytesDefinition.Decimal);
-            WriteDecimal(value);
-            _decimalCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double value)
         {
             if (Math.Abs(value - default(double)) < 0.0000000000001)
-            {
                 WriteByte(DataBytesDefinition.DoubleDefault);
-                return;
-            }
-            if (_doubleCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_doubleCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefDouble, objIdx);
-                return;
+            else
+            {
+                WriteDefDouble(DataBytesDefinition.Double, value);
+                _doubleCache.Set(value);
             }
-            WriteDefDouble(DataBytesDefinition.Double, value);
-            _doubleCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float value)
         {
             if (Math.Abs(value - default(float)) < 0.0000000000001)
-            {
                 WriteByte(DataBytesDefinition.FloatDefault);
-                return;
-            }
-            if (_floatCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_floatCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefFloat, objIdx);
-                return;
+            else
+            {
+                WriteDefFloat(DataBytesDefinition.Float, value);
+                _floatCache.Set(value);
             }
-            WriteDefFloat(DataBytesDefinition.Float, value);
-            _floatCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(long value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.LongDefault);
-                return;
-            }
-            if (_longCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_longCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefLong, objIdx);
-                return;
+            else
+            {
+                WriteDefLong(DataBytesDefinition.Long, value);
+                _longCache.Set(value);
             }
-            WriteDefLong(DataBytesDefinition.Long, value);
-            _longCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ulong value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.ULongDefault);
-                return;
-            }
-            if (_uLongCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_uLongCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefULong, objIdx);
-                return;
+            else
+            {
+                WriteDefULong(DataBytesDefinition.ULong, value);
+                _uLongCache.Set(value);
             }
-            WriteDefULong(DataBytesDefinition.ULong, value);
-            _uLongCache.Set(value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(int value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.IntDefault);
-                return;
-            }
-            WriteDefInt(DataBytesDefinition.Int, value);
+            else
+                WriteDefInt(DataBytesDefinition.Int, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(uint value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.UIntDefault);
-                return;
-            }
-            WriteDefUInt(DataBytesDefinition.UInt, value);
+            else
+                WriteDefUInt(DataBytesDefinition.UInt, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(short value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.ShortDefault);
-                return;
-            }
-            WriteDefShort(DataBytesDefinition.Short, value);
+            else
+                WriteDefShort(DataBytesDefinition.Short, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(ushort value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.UShortDefault);
-                return;
-            }
-            WriteDefUshort(DataBytesDefinition.UShort, value);
+            else
+                WriteDefUshort(DataBytesDefinition.UShort, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(byte value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.ByteDefault);
-                return;
-            }
-            WriteDefByte(DataBytesDefinition.Byte, value);
+            else
+                WriteDefByte(DataBytesDefinition.Byte, value);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(sbyte value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.SByteDefault);
-                return;
-            }
-            if (value == -1)
-            {
+            else if (value == -1)
                 WriteByte(DataBytesDefinition.SByteMinusOne);
-                return;
+            else
+            {
+                WriteByte(DataBytesDefinition.SByte);
+                WriteSByte(value);
             }
-            WriteByte(DataBytesDefinition.SByte);
-            WriteSByte(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

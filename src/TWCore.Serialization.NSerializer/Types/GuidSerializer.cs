@@ -35,9 +35,10 @@ namespace TWCore.Serialization.NSerializer
                 WriteDefInt(DataBytesDefinition.RefGuid, objIdx);
                 return;
             }
-            WriteByte(DataBytesDefinition.Guid);
-            var bytes = value.ToByteArray();
-            Stream.Write(bytes, 0, bytes.Length);
+            Span<byte> bytes = stackalloc byte[17];
+            bytes[0] = DataBytesDefinition.Guid;
+            value.TryWriteBytes(bytes.Slice(1));
+            Stream.Write(bytes);
             _guidCache.Set(value);
         }
 

@@ -16,8 +16,6 @@ limitations under the License.
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -81,15 +79,31 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            var bytes = ArrayPool<byte>.Shared.Rent(length + 5);
-            bytes[0] = DataBytesDefinition.StringLength;
-            bytes[1] = (byte)length;
-            bytes[2] = (byte)(length >> 8);
-            bytes[3] = (byte)(length >> 16);
-            bytes[4] = (byte)(length >> 24);
-            Encoding.UTF8.GetBytes(value, 0, value.Length, bytes, 5);
-            Stream.Write(bytes, 0, length + 5);
-            ArrayPool<byte>.Shared.Return(bytes);
+            if (length < 256)
+            {
+                Span<byte> span = stackalloc byte[length + 5];
+                span[0] = DataBytesDefinition.StringLength;
+                span[1] = (byte)length;
+                span[2] = (byte)(length >> 8);
+                span[3] = (byte)(length >> 16);
+                span[4] = (byte)(length >> 24);
+                Encoding.UTF8.GetBytes(value, span.Slice(5, length));
+                Stream.Write(span.Slice(0, length + 5));
+            }
+            else
+            {
+                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: length + 5))
+                {
+                    var span = buffer.Memory.Span;
+                    span[0] = DataBytesDefinition.StringLength;
+                    span[1] = (byte) length;
+                    span[2] = (byte) (length >> 8);
+                    span[3] = (byte) (length >> 16);
+                    span[4] = (byte) (length >> 24);
+                    Encoding.UTF8.GetBytes(value, span.Slice(5, length));
+                    Stream.Write(span.Slice(0, length + 5));
+                }
+            }
         }
     }
 

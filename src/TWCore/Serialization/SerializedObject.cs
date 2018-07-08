@@ -330,61 +330,53 @@ namespace TWCore.Serialization
         /// <summary>
         /// Get SerializedObject instance from the ReadonlySequence representation.
         /// </summary>
-        /// <param name="byteArray">Readonly Span instance</param>
+        /// <param name="sequence">Readonly sequence</param>
         /// <returns>SerializedObject instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromReadOnlySequence(ReadOnlySequence<byte> sequence)
         {
             if (sequence.IsEmpty) return null;
             var length = sequence.Length;
-            using (var intBuffer = pool.Rent(minBufferSize: 4))
+            Span<byte> lengthSpan = stackalloc byte[4];
+            string dataType = null;
+            string mimeType = null;
+
+            sequence.Slice(0, 4).CopyTo(lengthSpan);
+            var dtLength = BitConverter.ToInt32(lengthSpan);
+            if (dtLength < -1 || dtLength > length) return null;
+            if (dtLength != -1)
             {
-                var lengthSpan = intBuffer.Memory.Span;
-                string dataType = null;
-                string mimeType = null;
-
-                sequence.Slice(0, 4).CopyTo(lengthSpan);
-                var dtLength = BitConverter.ToInt32(lengthSpan);
-                if (dtLength < -1 || dtLength > length) return null;
-                if (dtLength != -1)
-                {
-                    using (var buffer = pool.Rent(minBufferSize: dtLength))
-                    {
-                        sequence.Slice(4, dtLength).CopyTo(buffer.Memory.Span);
-                        dataType = Encoding.UTF8.GetString(buffer.Memory.Span.Slice(0, dtLength));
-                        length -= dtLength;
-                        sequence = sequence.Slice(4 + dtLength);
-                    }
-                }
-
-                sequence.Slice(0, 4).CopyTo(lengthSpan);
-                var smtLength = BitConverter.ToInt32(lengthSpan);
-                if (smtLength < -1 || smtLength > length) return null;
-                if (smtLength != -1)
-                {
-                    using (var buffer = pool.Rent(minBufferSize: smtLength))
-                    {
-                        sequence.Slice(4, smtLength).CopyTo(buffer.Memory.Span);
-                        mimeType = Encoding.UTF8.GetString(buffer.Memory.Span.Slice(0, smtLength));
-                        length -= smtLength;
-                        sequence = sequence.Slice(4 + smtLength);
-                    }
-                }
-
-                sequence.Slice(0, 4).CopyTo(lengthSpan);
-                var dataLength = BitConverter.ToInt32(lengthSpan);
-                if (dataLength < -1 || dataLength > length) return null;
-                var data = ReadOnlySpan<byte>.Empty;
-                if (dataLength != -1)
-                {
-                    var dSpan = new Span<byte>(new byte[dataLength]);
-                    sequence.Slice(4, dataLength).CopyTo(dSpan);
-                    data = dSpan;
-                }
-
-                return new SerializedObject(data.ToArray(), dataType, mimeType);
-
+                Span<byte> buffer = stackalloc byte[dtLength];
+                sequence.Slice(4, dtLength).CopyTo(buffer);
+                dataType = Encoding.UTF8.GetString(buffer);
+                length -= dtLength;
+                sequence = sequence.Slice(4 + dtLength);
             }
+
+            sequence.Slice(0, 4).CopyTo(lengthSpan);
+            var smtLength = BitConverter.ToInt32(lengthSpan);
+            if (smtLength < -1 || smtLength > length) return null;
+            if (smtLength != -1)
+            {
+                Span<byte> buffer = stackalloc byte[smtLength];
+                sequence.Slice(4, smtLength).CopyTo(buffer);
+                mimeType = Encoding.UTF8.GetString(buffer);
+                length -= smtLength;
+                sequence = sequence.Slice(4 + smtLength);
+            }
+
+            sequence.Slice(0, 4).CopyTo(lengthSpan);
+            var dataLength = BitConverter.ToInt32(lengthSpan);
+            if (dataLength < -1 || dataLength > length) return null;
+            var data = ReadOnlySpan<byte>.Empty;
+            if (dataLength != -1)
+            {
+                var dSpan = new Span<byte>(new byte[dataLength]);
+                sequence.Slice(4, dataLength).CopyTo(dSpan);
+                data = dSpan;
+            }
+
+            return new SerializedObject(data.ToArray(), dataType, mimeType);
         }
         /// <summary>
         /// Get SerializedObject instance from a stream

@@ -42,6 +42,10 @@ namespace TWCore.Test.Core
             Value2
         }
 
+        public class TestClass
+        {
+            public bool? Enabled { get; set; }
+        }
 
         private static void Main(string[] args)
         {
@@ -67,12 +71,9 @@ namespace TWCore.Test.Core
                 var guid = Guid.NewGuid().ToString();
                 var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
 
-                var enumArray = new VarEnum[] { VarEnum.Value1, VarEnum.Value1, VarEnum.Value2 };
+                var testValue = new TestClass {Enabled = true};
 
-                var enumArraySer = enumArray.SerializeToNBinary();
-
-                var enumArrayObject = enumArraySer.DeserializeFromNBinary<VarEnum[]>();
-
+                testValue.SerializeToNBinary();
 
                 using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
                 {

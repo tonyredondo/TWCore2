@@ -25,7 +25,8 @@ namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
-        private static readonly MethodInfo ValueProperty = typeof(bool?).GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetMethod;
+        #region Expressions
+        private static readonly MethodInfo BoolValueProperty = typeof(bool?).GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetMethod;
 
         internal static Expression WriteBooleanExpression(Expression value, ParameterExpression serTable)
         {
@@ -43,12 +44,12 @@ namespace TWCore.Serialization.NSerializer
                 Expression.Equal(value, Expression.Constant(null, typeof(bool?))),
                 Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
                 Expression.Block(new[] { boolParam },
-                    Expression.Assign(boolParam, Expression.Call(value, ValueProperty)),
+                    Expression.Assign(boolParam, Expression.Call(value, BoolValueProperty)),
                     WriteBooleanExpression(boolParam, serTable)));
             var block = ifExp.Reduce();
             return block;
         }
-        
+        #endregion
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool value)

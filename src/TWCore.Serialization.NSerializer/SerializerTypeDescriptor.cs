@@ -199,7 +199,15 @@ namespace TWCore.Serialization.NSerializer
                 {
                     var getMethod = prop.GetMethod;
                     var getExpression = Expression.Call(instance, getMethod);
-                    if (prop.PropertyType == typeof(bool))
+                    if (prop.PropertyType == typeof(int))
+                    {
+                        serExpressions.Add(SerializersTable.WriteIntExpression(getExpression, serTable));
+                    }
+                    else if (prop.PropertyType == typeof(int?))
+                    {
+                        serExpressions.Add(SerializersTable.WriteNulleableIntExpression(getExpression, serTable));
+                    }
+                    else if (prop.PropertyType == typeof(bool))
                     {
                         serExpressions.Add(SerializersTable.WriteBooleanExpression(getExpression, serTable));
                     }

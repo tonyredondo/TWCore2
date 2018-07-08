@@ -1,11 +1,43 @@
 ﻿using System;
 using System.IO;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
 {
     public partial class SerializersTable
     {
+        #region Expressions - Int
+        private static readonly MethodInfo IntValueProperty = typeof(int?).GetProperty("Value", BindingFlags.Instance | BindingFlags.Public)?.GetMethod;
+
+        internal static Expression WriteIntExpression(Expression value, ParameterExpression serTable)
+        {
+            var intParam = Expression.Parameter(typeof(int));
+            var block = Expression.Block(new[] { intParam }, 
+                Expression.Assign(intParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(intParam, Expression.Constant(default(int))),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.IntDefault)),
+                    Expression.Call(serTable, WriteDefIntMInfo, Expression.Constant(DataBytesDefinition.Int), intParam)));
+            return block.Reduce();
+        }
+        internal static Expression WriteNulleableIntExpression(Expression value, ParameterExpression serTable)
+        {
+            var intParam = Expression.Parameter(typeof(int));
+            var ifExp = Expression.IfThenElse(
+                Expression.Equal(value, Expression.Constant(null, typeof(int?))),
+                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                Expression.Block(new[] { intParam },
+                    Expression.Assign(intParam, Expression.Call(value, IntValueProperty)),
+                    WriteIntExpression(intParam, serTable)));
+            var block = ifExp.Reduce();
+            return block;
+        }
+        #endregion
+
+        
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(decimal value)
         {

@@ -31,6 +31,11 @@ namespace TWCore.Serialization.NSerializer
 
     public struct SerializerTypeDescriptor
     {
+        public Type Type;
+        public PropertyInfo[] RuntimeProperties;
+        public Type IListType;
+        public Type IDictionaryType;
+        //
         public string[] Properties;
         public bool IsArray;
         public bool IsList;
@@ -42,12 +47,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerTypeDescriptor(Type type)
         {
+            Type = type;
             var ifaces = type.GetInterfaces();
-            var iListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-            var iDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-            var isIList = iListType != null;
-            var isIDictionary = iDictionaryType != null;
-            var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+            IListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            IDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIList = IListType != null;
+            var isIDictionary = IDictionaryType != null;
+            RuntimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
             {
                 if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
                 if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
@@ -57,7 +63,7 @@ namespace TWCore.Serialization.NSerializer
             }).ToArray();
 
             //
-            Properties = runtimeProperties.Select(p => p.Name).ToArray();
+            Properties = RuntimeProperties.Select(p => p.Name).ToArray();
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
             IsArray = type.IsArray;
             if (!IsArray)
@@ -82,27 +88,31 @@ namespace TWCore.Serialization.NSerializer
             defBytes[4] = (byte)(defBytesLength >> 24);
             Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
             Definition = defBytes;
+            SerializeAction = null;
 
-            //
-            var serExpressions = new List<Expression>();
-            var varExpressions = new List<ParameterExpression>();
             //
             var obj = Expression.Parameter(typeof(object), "obj");
             var serTable = Expression.Parameter(typeof(SerializersTable), "table");
 
             var instance = Expression.Parameter(type, "instance");
-            varExpressions.Add(instance);
-            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
+            var serExpression = Expression.Block(new[] {instance}, 
+                Expression.Assign(instance, Expression.Convert(obj, type)),
+                GetSerializerExpression(instance, serTable));
+            
+            var lambda = Expression.Lambda<SerializeActionDelegate>(serExpression, type.Name + "_Serializer", new[] { obj, serTable });
+            SerializeAction = lambda.Compile();
+        }
 
+        public Expression GetSerializerExpression(Expression instance, ParameterExpression serTable)
+        {
+            //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
+            //
+            
             if (IsArray)
             {
-                //var elementType = iListType.GetElementType();
-                //var itemMethod = !type. ?
-                //    SerializersTable.InternalWriteObjectValueMInfo :
-                //    SerializersTable.WriteValues.TryGetValue(elementType, out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
-
-
-                var elementType = type.GetElementType();
+                var elementType = Type.GetElementType();
                 var itemSpecMethod = false;
                 var itemMethod = SerializersTable.InternalWriteObjectValueMInfo;
                 if (SerializersTable.WriteValues.TryGetValue(elementType, out var propMethod))
@@ -138,8 +148,8 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (IsList)
             {
-                var argTypes = iListType.GenericTypeArguments;
-                var itemMethod = !type.IsGenericType ?
+                var argTypes = IListType.GenericTypeArguments;
+                var itemMethod = !Type.IsGenericType ?
                     SerializersTable.InternalWriteObjectValueMInfo :
                     SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
 
@@ -161,11 +171,11 @@ namespace TWCore.Serialization.NSerializer
             }
             else if (IsDictionary)
             {
-                var argTypes = iDictionaryType.GenericTypeArguments;
-                var keyMember = !type.IsGenericType ?
+                var argTypes = IDictionaryType.GenericTypeArguments;
+                var keyMember = !Type.IsGenericType ?
                     SerializersTable.InternalWriteObjectValueMInfo :
                     SerializersTable.WriteValues.TryGetValue(argTypes[0], out var wMethodTuple) ? wMethodTuple.Method : SerializersTable.InternalWriteObjectValueMInfo;
-                var valueMember = !type.IsGenericType ?
+                var valueMember = !Type.IsGenericType ?
                     SerializersTable.InternalWriteObjectValueMInfo :
                     SerializersTable.WriteValues.TryGetValue(argTypes[1], out var wMethodTuple1) ? wMethodTuple1.Method : SerializersTable.InternalWriteObjectValueMInfo;
 
@@ -193,9 +203,9 @@ namespace TWCore.Serialization.NSerializer
             }
 
             //
-            if (runtimeProperties.Length > 0)
+            if (RuntimeProperties.Length > 0)
             {
-                foreach (var prop in runtimeProperties)
+                foreach (var prop in RuntimeProperties)
                 {
                     var getMethod = prop.GetMethod;
                     var getExpression = Expression.Call(instance, getMethod);
@@ -225,8 +235,7 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
-            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_Serializer", new[] { obj, serTable });
-            SerializeAction = lambda.Compile();
+            return expressionBlock;
         }
     }
 }

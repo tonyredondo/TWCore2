@@ -199,7 +199,15 @@ namespace TWCore.Serialization.NSerializer
                 {
                     var getMethod = prop.GetMethod;
                     var getExpression = Expression.Call(instance, getMethod);
-                    if (SerializersTable.WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
+                    if (prop.PropertyType == typeof(bool))
+                    {
+                        serExpressions.Add(SerializersTable.WriteBooleanExpression(getExpression, serTable));
+                    }
+                    else if (prop.PropertyType == typeof(bool?))
+                    {
+                        serExpressions.Add(SerializersTable.WriteNulleableBooleanExpression(getExpression, serTable));
+                    }
+                    else if (SerializersTable.WriteValues.TryGetValue(prop.PropertyType, out var wMethodTuple))
                         serExpressions.Add(Expression.Call(serTable, wMethodTuple.Method, getExpression));
                     else if (prop.PropertyType.IsEnum)
                         serExpressions.Add(Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum))));

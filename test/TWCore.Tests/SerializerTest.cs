@@ -114,27 +114,27 @@ namespace TWCore.Tests
             var vType = value?.GetType() ?? typeof(object);
             var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
-            //var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
+            var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
-            //var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
-            //var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
-            
+            var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
+            var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
+
             Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By size:");
-            //Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
+            Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
             Core.Log.InfoBasic("\tUtf8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
-            //Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
-            //Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
+            Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
+            Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
             Core.Log.WriteEmptyLine();
             Core.Log.InfoBasic("By Times: {0}", times);
-            //SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
+            SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             SerializerProcess("Utf8Json", value, vType, times, ut8JsonSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
-            //SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
-            //SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
+            SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
+            SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
             Console.ReadLine();
         }
         

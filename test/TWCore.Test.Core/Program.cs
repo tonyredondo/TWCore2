@@ -73,55 +73,55 @@ namespace TWCore.Test.Core
                 var guid = Guid.NewGuid().ToString();
                 var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
 
-                var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
+                //var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
 
-                var testValueSer = new SerializedObject(testValue);
+                //var testValueSer = new SerializedObject(testValue);
 
-                testValueSer.SerializeToNBinary();
+                //testValueSer.SerializeToNBinary();
 
-                var desTestValueSer = (TestClass)testValueSer.GetValue();
+                //var desTestValueSer = (TestClass)testValueSer.GetValue();
 
-                new int[] { 1, 2, 3 }.SerializeToNBinary();
+                //new int[] { 1, 2, 3 }.SerializeToNBinary();
 
-                testValue.SerializeToNBinary();
+                //testValue.SerializeToNBinary();
 
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
-                using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                {
-                    wc.Tap("Tap 1");
-                    wc.Tap("Tap 2");
-                }
+                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
+                //{
+                //    wc.Tap("Tap 1");
+                //    wc.Tap("Tap 2");
+                //}
+                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
+                //{
+                //    wc.Tap("Tap 1");
+                //    wc.Tap("Tap 2");
+                //}
+                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
+                //{
+                //    wc.Tap("Tap 1");
+                //    wc.Tap("Tap 2");
+                //}
+                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
+                //{
+                //    wc.Tap("Tap 1");
+                //    wc.Tap("Tap 2");
+                //}
 
-                using (var wc = Watch.Create("Inicio", "Fin"))
-                {
-                    wc.Tap("Tap 1");
-                    using (var wc2 = Watch.Create("Inicio 2", "Fin 2"))
-                    {
-                        wc2.Tap("Tap 1");
-                        using (var wc3 = Watch.Create("Inicio 2", "Fin 2"))
-                        {
-                            wc3.Tap("Tap 1");
-                            wc3.Tap("Tap 2");
-                        }
-                        wc2.Tap("Tap 2");
-                    }
-                    wc.Tap("Tap 2");
-                }
-                Console.ReadLine();
+                //using (var wc = Watch.Create("Inicio", "Fin"))
+                //{
+                //    wc.Tap("Tap 1");
+                //    using (var wc2 = Watch.Create("Inicio 2", "Fin 2"))
+                //    {
+                //        wc2.Tap("Tap 1");
+                //        using (var wc3 = Watch.Create("Inicio 2", "Fin 2"))
+                //        {
+                //            wc3.Tap("Tap 1");
+                //            wc3.Tap("Tap 2");
+                //        }
+                //        wc2.Tap("Tap 2");
+                //    }
+                //    wc.Tap("Tap 2");
+                //}
+                //Console.ReadLine();
 
                 /*Task.Run(async () =>
                 {

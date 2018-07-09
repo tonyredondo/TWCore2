@@ -79,7 +79,7 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            if (length < 256)
+            if (length < 1024)
             {
                 Span<byte> span = stackalloc byte[length + 5];
                 span[0] = DataBytesDefinition.StringLength;
@@ -144,10 +144,23 @@ namespace TWCore.Serialization.NSerializer
                     throw new InvalidOperationException("Invalid type value.");
             }
 
-            var bytes = ArrayPool<byte>.Shared.Rent(length);
-            Stream.Read(bytes, 0, length);
-            var strValue = Encoding.UTF8.GetString(bytes, 0, length);
-            ArrayPool<byte>.Shared.Return(bytes);
+            string strValue;
+            if (length < 1024)
+            {
+                Span<byte> bytes = stackalloc byte[length];
+                Stream.Read(bytes);
+                strValue = Encoding.UTF8.GetString(bytes);
+            }
+            else
+            {
+                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: length))
+                {
+                    Span<byte> bytes = buffer.Memory.Span.Slice(0, length);
+                    Stream.Read(bytes);
+                    strValue = Encoding.UTF8.GetString(bytes);
+                }
+            }
+
             var sLength = strValue.Length;
 
             if (sLength <= 2) return strValue;

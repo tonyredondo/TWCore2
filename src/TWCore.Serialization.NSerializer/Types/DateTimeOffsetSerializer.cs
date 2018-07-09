@@ -26,18 +26,14 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(DateTimeOffset value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.DateTimeOffsetDefault);
-                return;
-            }
-            if (_dateTimeOffsetCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_dateTimeOffsetCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefDateTimeOffset, objIdx);
-                return;
+            else
+            {
+                WriteDefLong(DataBytesDefinition.DateTimeOffset, value.ToFileTime());
+                _dateTimeOffsetCache.Set(value);
             }
-            var longBinary = value.ToFileTime();
-            WriteDefLong(DataBytesDefinition.DateTimeOffset, longBinary);
-            _dateTimeOffsetCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,17 +55,15 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTimeOffset ReadDateTimeOffset(byte type)
         {
-            switch (type)
+            if (type == DataBytesDefinition.DateTimeOffsetDefault)
+                return default;
+            if (type == DataBytesDefinition.RefDateTimeOffset)
+                return _dateTimeOffsetCache.Get(StreamReadInt());
+            if (type == DataBytesDefinition.DateTimeOffset)
             {
-                case DataBytesDefinition.DateTimeOffsetDefault:
-                    return default;
-                case DataBytesDefinition.RefDateTimeOffset:
-                    return _dateTimeOffsetCache.Get(StreamReadInt());
-                case DataBytesDefinition.DateTimeOffset:
-                    var longBinary = StreamReadLong();
-                    var cValue = DateTimeOffset.FromFileTime(longBinary);
-                    _dateTimeOffsetCache.Set(cValue);
-                    return cValue;
+                var cValue = DateTimeOffset.FromFileTime(StreamReadLong());
+                _dateTimeOffsetCache.Set(cValue);
+                return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -78,8 +72,19 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTimeOffset? ReadDateTimeOffsetNullable(byte type)
         {
-            if (type == DataBytesDefinition.ValueNull) return null;
-            return ReadDateTimeOffset(type);
+            if (type == DataBytesDefinition.ValueNull)
+                return null;
+            if (type == DataBytesDefinition.DateTimeOffsetDefault)
+                return default;
+            if (type == DataBytesDefinition.RefDateTimeOffset)
+                return _dateTimeOffsetCache.Get(StreamReadInt());
+            if (type == DataBytesDefinition.DateTimeOffset)
+            {
+                var cValue = DateTimeOffset.FromFileTime(StreamReadLong());
+                _dateTimeOffsetCache.Set(cValue);
+                return cValue;
+            }
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 

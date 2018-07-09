@@ -39,8 +39,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(DateTime? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
-            else WriteValue(value.Value);
+            if (value == null)
+                WriteByte(DataBytesDefinition.ValueNull);
+            else
+                WriteValue(value.Value);
         }
     }
 
@@ -53,17 +55,15 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime ReadDateTime(byte type)
         {
-            switch (type)
+            if (type == DataBytesDefinition.DateTimeDefault)
+                return default;
+            if (type == DataBytesDefinition.RefDateTime)
+                return _dateTimeCache.Get(StreamReadInt());
+            if (type == DataBytesDefinition.DateTime)
             {
-                case DataBytesDefinition.DateTimeDefault:
-                    return default;
-                case DataBytesDefinition.RefDateTime:
-                    return _dateTimeCache.Get(StreamReadInt());
-                case DataBytesDefinition.DateTime:
-                    var longBinary = StreamReadLong();
-                    var cValue = DateTime.FromBinary(longBinary);
-                    _dateTimeCache.Set(cValue);
-                    return cValue;
+                var cValue = DateTime.FromBinary(StreamReadLong());
+                _dateTimeCache.Set(cValue);
+                return cValue;
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -72,7 +72,8 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public DateTime? ReadDateTimeNullable(byte type)
         {
-            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.ValueNull)
+                return null;
             return ReadDateTime(type);
         }
     }

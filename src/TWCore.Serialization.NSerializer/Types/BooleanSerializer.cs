@@ -92,8 +92,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool? ReadBoolNullable(byte value)
         {
-            if (value == DataBytesDefinition.ValueNull) return null;
-            return ReadBool(value);
+            if (value == DataBytesDefinition.ValueNull)
+                return null;
+            if (value == DataBytesDefinition.BoolTrue)
+                return true;
+            if (value == DataBytesDefinition.BoolFalse)
+                return false;
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

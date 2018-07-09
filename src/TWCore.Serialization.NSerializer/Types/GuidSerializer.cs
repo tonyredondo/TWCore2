@@ -42,8 +42,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(Guid? value)
         {
-            if (value == null) WriteByte(DataBytesDefinition.ValueNull);
-            else WriteValue(value.Value);
+            if (value == null)
+                WriteByte(DataBytesDefinition.ValueNull);
+            else
+                WriteValue(value.Value);
         }
     }
 
@@ -56,16 +58,15 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid StreamReadGuid(byte type)
         {
-            switch (type)
+            if (type == DataBytesDefinition.GuidDefault)
+                return default;
+            if (type == DataBytesDefinition.RefGuid)
+                return _guidCache.Get(StreamReadInt());
+            if (type == DataBytesDefinition.Guid)
             {
-                case DataBytesDefinition.GuidDefault:
-                    return default;
-                case DataBytesDefinition.RefGuid:
-                    return _guidCache.Get(StreamReadInt());
-                case DataBytesDefinition.Guid:
-                    var guidValue = StreamReadGuid();
-                    _guidCache.Set(guidValue);
-                    return guidValue;
+                var guidValue = StreamReadGuid();
+                _guidCache.Set(guidValue);
+                return guidValue;
             }
             throw new InvalidOperationException("Invalid type value.");
         }
@@ -74,7 +75,8 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Guid? StreamReadGuidNullable(byte type)
         {
-            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.ValueNull)
+                return null;
             return StreamReadGuid(type);
         }
     }

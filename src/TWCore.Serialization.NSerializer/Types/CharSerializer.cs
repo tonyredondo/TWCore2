@@ -52,13 +52,10 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char StreamReadChar(byte value)
         {
-            switch (value)
-            {
-                case DataBytesDefinition.CharDefault:
-                    return default;
-                case DataBytesDefinition.Char:
-                    return StreamReadChar();
-            }
+            if (value == DataBytesDefinition.CharDefault)
+                return default;
+            if (value == DataBytesDefinition.Char)
+                return StreamReadChar();
             throw new InvalidOperationException("Invalid type value.");
         }
 
@@ -66,8 +63,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public char? StreamReadCharNullable(byte value)
         {
-            if (value == DataBytesDefinition.ValueNull) return null;
-            return StreamReadChar(value);
+            if (value == DataBytesDefinition.ValueNull)
+                return null;
+            if (value == DataBytesDefinition.CharDefault)
+                return default;
+            if (value == DataBytesDefinition.Char)
+                return StreamReadChar();
+            throw new InvalidOperationException("Invalid type value.");
         }
     }
 }

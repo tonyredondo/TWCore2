@@ -30,27 +30,29 @@ namespace TWCore.Serialization.NSerializer
 
         internal static Expression WriteBooleanExpression(Expression value, ParameterExpression serTable)
         {
-            var ifExp = Expression.IfThenElse(
-                Expression.Equal(value, Expression.Constant(true)),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolTrue)),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolFalse)));
-            var block = ifExp.Reduce();
-            return block;
+            var boolParam = Expression.Parameter(typeof(bool));
+            var block = Expression.Block(new[] { boolParam },
+                Expression.Assign(boolParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(boolParam, Expression.Constant(true)),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolTrue)),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.BoolFalse))));
+            return block.Reduce();
         }
         internal static Expression WriteNulleableBooleanExpression(Expression value, ParameterExpression serTable)
         {
-            var boolParam = Expression.Parameter(typeof(bool));
-            var ifExp = Expression.IfThenElse(
-                Expression.Equal(value, Expression.Constant(null, typeof(bool?))),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
-                Expression.Block(new[] { boolParam },
-                    Expression.Assign(boolParam, Expression.Call(value, BoolValueProperty)),
-                    WriteBooleanExpression(boolParam, serTable)));
-            var block = ifExp.Reduce();
-            return block;
+            var boolParam = Expression.Parameter(typeof(bool?));
+            var block = Expression.Block(new[] { boolParam },
+                Expression.Assign(boolParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(boolParam, Expression.Constant(null, typeof(bool?))),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                    WriteBooleanExpression(Expression.Call(boolParam, BoolValueProperty), serTable))
+                );
+            return block.Reduce();
         }
         #endregion
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(bool value)
         {

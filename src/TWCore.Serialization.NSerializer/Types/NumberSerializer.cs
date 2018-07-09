@@ -24,15 +24,14 @@ namespace TWCore.Serialization.NSerializer
         }
         internal static Expression WriteNulleableIntExpression(Expression value, ParameterExpression serTable)
         {
-            var intParam = Expression.Parameter(typeof(int));
-            var ifExp = Expression.IfThenElse(
-                Expression.Equal(value, Expression.Constant(null, typeof(int?))),
-                Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
-                Expression.Block(new[] { intParam },
-                    Expression.Assign(intParam, Expression.Call(value, IntValueProperty)),
-                    WriteIntExpression(intParam, serTable)));
-            var block = ifExp.Reduce();
-            return block;
+            var intParam = Expression.Parameter(typeof(int?));
+            var block = Expression.Block(new[] { intParam },
+                Expression.Assign(intParam, value),
+                Expression.IfThenElse(
+                    Expression.Equal(intParam, Expression.Constant(null, typeof(int?))),
+                    Expression.Call(serTable, WriteByteMethodInfo, Expression.Constant(DataBytesDefinition.ValueNull)),
+                    WriteIntExpression(Expression.Call(intParam, IntValueProperty), serTable)));
+            return block.Reduce();
         }
         #endregion
 

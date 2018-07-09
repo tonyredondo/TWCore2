@@ -20,7 +20,7 @@ using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
 {
-    internal class SerializerCache<T>
+    internal sealed class SerializerCache<T>
     {
         private readonly Dictionary<T, int> _serializationCache;
         private int _serCurrentIndex;
@@ -51,7 +51,7 @@ namespace TWCore.Serialization.NSerializer
                 _serializationCache.Add(value, _serCurrentIndex++);
         }
     }
-    internal class DeserializerCache<T>
+    internal sealed class DeserializerCache<T>
     {
         private readonly Dictionary<int, T> _deserializationCache;
         private int _desCurrentIndex;
@@ -84,7 +84,7 @@ namespace TWCore.Serialization.NSerializer
     }
 
 
-    internal class SerializerStringCache
+    internal sealed class SerializerStringCache
     {
         private readonly Dictionary<string, int> _serializationCache;
         private int _serCurrentIndex;
@@ -115,7 +115,7 @@ namespace TWCore.Serialization.NSerializer
                 _serializationCache.Add(value, _serCurrentIndex++);
         }
     }
-    internal class DeserializerStringCache
+    internal sealed class DeserializerStringCache
     {
         private readonly Dictionary<int, string> _deserializationCache;
         private int _desCurrentIndex;

@@ -65,7 +65,6 @@ namespace TWCore.Serialization.NSerializer
 
         private readonly object[] _paramObj = new object[1];
         protected Stream Stream;
-        protected BinaryWriter Writer;
 
         #region Statics
         static SerializersTable()
@@ -739,7 +738,6 @@ namespace TWCore.Serialization.NSerializer
             try
             {
                 Stream = stream;
-                Writer = new BinaryWriter(stream, Encoding.UTF8, true);
                 Stream.WriteByte(DataBytesDefinition.Start);
 
                 if (value == null)
@@ -801,7 +799,6 @@ namespace TWCore.Serialization.NSerializer
                 _typeCache.Clear();
                 _objectCache.Clear();
                 Stream = null;
-                Writer = null;
             }
         }
 
@@ -896,7 +893,6 @@ namespace TWCore.Serialization.NSerializer
                 descriptor.SerializeAction(value, this);
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
-
         #endregion
 
         #region Private Write Methods
@@ -1051,7 +1047,11 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteDecimal(decimal value)
         {
-            Writer.Write(value);
+            var bits = decimal.GetBits(value);
+            Span<byte> buffer = stackalloc byte[16];
+            for(var i = 0; i < 4; i++)
+                BitConverter.TryWriteBytes(buffer.Slice(i * 4, 4), bits[i]);
+            Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteSByte(sbyte value)

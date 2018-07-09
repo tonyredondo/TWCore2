@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.CompilerServices;
 // ReSharper disable CheckNamespace
@@ -58,5 +59,86 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static ReadOnlyMemory<byte> AsReadOnlyMemory(this MemoryStream mStream)
             => mStream != null ? new ReadOnlyMemory<byte>(mStream.GetBuffer(), 0, (int)mStream.Length) : ReadOnlyMemory<byte>.Empty;
+        /// <summary>
+        /// Split a char memory using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<ReadOnlyMemory<char>> Split(this ReadOnlyMemory<char> memory, char separator, StringSplitOptions options = StringSplitOptions.None)
+        {
+            var result = new List<ReadOnlyMemory<char>>();
+            while (memory.Length > 0)
+            {
+                var idx = memory.Span.IndexOf(separator);
+                if (idx == -1)
+                    break;
+                var value = memory.Slice(0, idx);
+                if (options == StringSplitOptions.None)
+                    result.Add(value);
+                else if (value.Length > 0)
+                    result.Add(value);
+                memory = memory.Slice(idx + 1);
+            }
+            if (memory.Length > 0)
+                result.Add(memory);
+            return result;
+        }
+        /// <summary>
+        /// Split a char memory using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<string> SplitAsString(this ReadOnlyMemory<char> memory, char separator, StringSplitOptions options = StringSplitOptions.None)
+        {
+            var result = new List<string>();
+            while (memory.Length > 0)
+            {
+                var idx = memory.Span.IndexOf(separator);
+                if (idx == -1)
+                    break;
+                var value = memory.Slice(0, idx);
+                if (options == StringSplitOptions.None)
+                    result.Add(value.Span.ToString());
+                else if (value.Length > 0)
+                    result.Add(value.Span.ToString());
+                memory = memory.Slice(idx + 1);
+            }
+            if (memory.Length > 0)
+                result.Add(memory.Span.ToString());
+            return result;
+        }
+        /// <summary>
+        /// Split a char span using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<string> SplitAsString(this ReadOnlySpan<char> span, char separator, StringSplitOptions options = StringSplitOptions.None)
+        {
+            var result = new List<string>();
+            while (span.Length > 0)
+            {
+                var idx = span.IndexOf(separator);
+                if (idx == -1)
+                    break;
+                var value = span.Slice(0, idx);
+                if (options == StringSplitOptions.None)
+                    result.Add(value.ToString());
+                else if (value.Length > 0)
+                    result.Add(value.ToString());
+                span = span.Slice(idx + 1);
+            }
+            if (span.Length > 0)
+                result.Add(span.ToString());
+            return result;
+        }
     }
 }

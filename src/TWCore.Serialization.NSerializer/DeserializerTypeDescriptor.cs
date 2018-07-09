@@ -56,12 +56,11 @@ namespace TWCore.Serialization.NSerializer
             Activator = Factory.Accessors.CreateActivator(type);
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
             Properties = new Dictionary<string, FastPropertyInfo>();
-            var propNames = new string[runtimeProperties.Length];
-            var idx = 0;
+            var propNames = new List<string>(runtimeProperties.Length);
             foreach (var prop in runtimeProperties)
             {
                 Properties[prop.Name] = prop.GetFastPropertyInfo();
-                propNames[idx++] = prop.Name;
+                propNames.Add(prop.Name);
             }
             var isArray = type.IsArray;
             if (isArray)

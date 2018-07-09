@@ -46,6 +46,7 @@ namespace TWCore.Test.Core
         {
             public bool? Enabled { get; set; }
             public int[] Values { get; set; }
+            public decimal DecimalValue { get; set; }
         }
 
         private static void Main(string[] args)
@@ -72,11 +73,13 @@ namespace TWCore.Test.Core
                 var guid = Guid.NewGuid().ToString();
                 var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
 
-                var testValue = new TestClass {Enabled = true, Values = new[] { 1,2,3,4 } };
+                var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
 
                 var testValueSer = new SerializedObject(testValue);
 
                 testValueSer.SerializeToNBinary();
+
+                var desTestValueSer = (TestClass)testValueSer.GetValue();
 
                 new int[] { 1, 2, 3 }.SerializeToNBinary();
 

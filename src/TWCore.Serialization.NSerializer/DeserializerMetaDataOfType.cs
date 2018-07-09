@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 
 namespace TWCore.Serialization.NSerializer
@@ -25,11 +26,11 @@ namespace TWCore.Serialization.NSerializer
         public readonly bool IsArray;
         public readonly bool IsList;
         public readonly bool IsDictionary;
-        public readonly string[] Properties;
+        public readonly List<string> Properties;
 
         #region .ctor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DeserializerMetaDataOfType(Type type, bool isArray, bool isList, bool isDictionary, string[] properties)
+        public DeserializerMetaDataOfType(Type type, bool isArray, bool isList, bool isDictionary, List<string> properties)
         {
             Type = type;
             IsArray = isArray;
@@ -50,8 +51,8 @@ namespace TWCore.Serialization.NSerializer
             if (Properties == null && other.Properties != null) return false;
             if (Properties != null && other.Properties == null) return false;
             if (Properties == null && other.Properties == null) return true;
-            if (Properties.Length != other.Properties.Length) return false;
-            var length = Math.Min(Properties.Length, other.Properties.Length);
+            if (Properties.Count != other.Properties.Count) return false;
+            var length = Math.Min(Properties.Count, other.Properties.Count);
             for (var i = 0; i < length; i++)
                 if (Properties[i] != other.Properties[i]) return false;
             return true;
@@ -72,8 +73,11 @@ namespace TWCore.Serialization.NSerializer
             hash = (hash * 7) + IsList.GetHashCode();
             hash = (hash * 7) + IsDictionary.GetHashCode();
             if (Properties != null)
-                for (var i = 0; i < Properties.Length; i++)
+            {
+                var length = Properties.Count;
+                for (var i = 0; i < length; i++)
                     hash = (hash * 7) + Properties[i].GetHashCode();
+            }
             return hash;
         }
         #endregion

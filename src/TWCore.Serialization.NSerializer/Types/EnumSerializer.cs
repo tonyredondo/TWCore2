@@ -27,8 +27,8 @@ namespace TWCore.Serialization.NSerializer
         {
             if (enumValue == null)
                 WriteByte(DataBytesDefinition.ValueNull);
-            var value = Convert.ToInt32(enumValue);
-            WriteDefInt(DataBytesDefinition.EnumInt, value);
+            else
+                WriteDefInt(DataBytesDefinition.EnumInt, Convert.ToInt32(enumValue));
         }
     }
 

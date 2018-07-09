@@ -15,11 +15,9 @@ limitations under the License.
  */
 
 using System;
-using System.IO;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ComTypes;
 
 namespace TWCore.Serialization.NSerializer
 {

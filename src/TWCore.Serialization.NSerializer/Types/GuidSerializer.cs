@@ -26,20 +26,17 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(Guid value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.GuidDefault);
-                return;
-            }
-            if (_guidCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_guidCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefGuid, objIdx);
-                return;
+            else
+            {
+                Span<byte> bytes = stackalloc byte[17];
+                bytes[0] = DataBytesDefinition.Guid;
+                value.TryWriteBytes(bytes.Slice(1));
+                Stream.Write(bytes);
+                _guidCache.Set(value);
             }
-            Span<byte> bytes = stackalloc byte[17];
-            bytes[0] = DataBytesDefinition.Guid;
-            value.TryWriteBytes(bytes.Slice(1));
-            Stream.Write(bytes);
-            _guidCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

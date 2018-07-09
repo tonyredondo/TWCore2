@@ -49,7 +49,7 @@ namespace TWCore.Tests
             };
 
             var collection = new List<List<STest>>();
-            for (var i = 0; i <= 10000; i++)
+            for (var i = 0; i <= 10; i++)
             {
                 var colSTest = new List<STest>
                 {
@@ -98,14 +98,7 @@ namespace TWCore.Tests
                 ["Value3"] = 3,
             };
 
-            var valSer = collection.Where((item, i) => i % 2 == 0).SelectMany(i => i).OrderBy(i => i.FirstName);
-            var valSerData = valSer.SerializeToNBinary();
-            var valSer2 = valSerData.DeserializeFromNBinary<object>();
-
-            var valSerData2 = valSer.SerializeToWBinary();
-            var valSer3 = valSerData2.DeserializeFromWBinary<object>();
-
-            RunTest(collection[0], 100_000, false);
+            RunTest(collection[0], 200_000, false);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -26,18 +26,14 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(DateTime value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.DateTimeDefault);
-                return;
-            }
-            if (_dateTimeCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_dateTimeCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefDateTime, objIdx);
-                return;
+            else
+            {
+                WriteDefLong(DataBytesDefinition.DateTime, value.ToBinary());
+                _dateTimeCache.Set(value);
             }
-            var longBinary = value.ToBinary();
-            WriteDefLong(DataBytesDefinition.DateTime, longBinary);
-            _dateTimeCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

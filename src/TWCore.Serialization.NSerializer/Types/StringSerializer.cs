@@ -88,20 +88,20 @@ namespace TWCore.Serialization.NSerializer
                 span[3] = (byte)(length >> 16);
                 span[4] = (byte)(length >> 24);
                 Encoding.UTF8.GetBytes(value, span.Slice(5, length));
-                Stream.Write(span.Slice(0, length + 5));
+                Stream.Write(span);
             }
             else
             {
                 using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: length + 5))
                 {
-                    var span = buffer.Memory.Span;
+                    var span = buffer.Memory.Span.Slice(0, length + 5);
                     span[0] = DataBytesDefinition.StringLength;
                     span[1] = (byte) length;
                     span[2] = (byte) (length >> 8);
                     span[3] = (byte) (length >> 16);
                     span[4] = (byte) (length >> 24);
                     Encoding.UTF8.GetBytes(value, span.Slice(5, length));
-                    Stream.Write(span.Slice(0, length + 5));
+                    Stream.Write(span);
                 }
             }
         }

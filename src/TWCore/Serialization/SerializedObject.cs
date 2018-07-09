@@ -37,7 +37,7 @@ namespace TWCore.Serialization
         /// Serialized Object File Extension
         /// </summary>
         public const string FileExtension = ".sobj";
-        
+
         #region Properties
         /// <summary>
         /// Item Data
@@ -61,7 +61,7 @@ namespace TWCore.Serialization
         public SerializedObject()
         {
         }
-        
+
         public SerializedObject(object data) : this(data, SerializerManager.DefaultBinarySerializer)
         {
         }
@@ -81,7 +81,7 @@ namespace TWCore.Serialization
                 SerializerMimeType = serializer.MimeTypes[0];
                 if (serializer.Compressor != null)
                     SerializerMimeType += ":" + serializer.Compressor.EncodingType;
-                Data = (byte[]) serializer.Serialize(data, type);
+                Data = (byte[])serializer.Serialize(data, type);
             }
             SerializedObjects.TryAdd(Data, data);
         }
@@ -106,7 +106,7 @@ namespace TWCore.Serialization
             if (SerializedObjects.TryGetValue(Data, out var value))
                 return value;
             var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
-            if (string.IsNullOrWhiteSpace(SerializerMimeType)) 
+            if (string.IsNullOrWhiteSpace(SerializerMimeType))
                 return type == typeof(byte[]) ? Data : null;
             var idx = SerializerMimeType.IndexOf(':');
             var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
@@ -207,32 +207,44 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteTo(Stream stream)
         {
-            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
-            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
-            using (var bw = new BinaryWriter(stream, Encoding.UTF8, true))
+            var hasDataType = !string.IsNullOrEmpty(DataType);
+            var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
+
+            var dataTypeLength = hasDataType ? Encoding.UTF8.GetByteCount(DataType) : 0;
+            var serializerMimeTypeLength = hasMimeType ? Encoding.UTF8.GetByteCount(SerializerMimeType) : 0;
+
+            Span<byte> intBuffer = stackalloc byte[4];
+
+            //DataType
+            BitConverter.TryWriteBytes(intBuffer, hasDataType ? dataTypeLength : -1);
+            stream.Write(intBuffer);
+            if (hasDataType)
             {
-                bw.Write(dataTypeByte?.Length ?? -1);
-                if (dataTypeByte != null) bw.Write(dataTypeByte);
-                bw.Write(serializerMimeTypeByte?.Length ?? -1);
-                if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
-                bw.Write(Data?.Length ?? -1);
-                if (Data != null) bw.Write(Data);
+                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dataTypeLength))
+                {
+                    var dataTypeBuffer = memBuffer.Memory.Span.Slice(0, dataTypeLength);
+                    Encoding.UTF8.GetBytes(DataType, dataTypeBuffer);
+                    stream.Write(dataTypeBuffer);
+                }
             }
-        }
-        /// <summary>
-        /// Writes the SerializedObject to a binary writer
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void WriteTo(BinaryWriter bw)
-        {
-            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
-            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
-            bw.Write(dataTypeByte?.Length ?? -1);
-            if (dataTypeByte != null) bw.Write(dataTypeByte);
-            bw.Write(serializerMimeTypeByte?.Length ?? -1);
-            if (serializerMimeTypeByte != null) bw.Write(serializerMimeTypeByte);
-            bw.Write(Data?.Length ?? -1);
-            if (Data != null) bw.Write(Data);
+
+            //MimeType
+            BitConverter.TryWriteBytes(intBuffer, hasMimeType ? serializerMimeTypeLength : -1);
+            stream.Write(intBuffer);
+            if (hasMimeType)
+            {
+                Span<byte> mimeTypeBuffer = stackalloc byte[serializerMimeTypeLength];
+                Encoding.UTF8.GetBytes(SerializerMimeType, mimeTypeBuffer);
+                stream.Write(mimeTypeBuffer);
+            }
+
+            //Data
+            BitConverter.TryWriteBytes(intBuffer, Data?.Length ?? -1);
+            stream.Write(intBuffer);
+            if (Data != null)
+            {
+                stream.Write(Data, 0, Data.Length);
+            }
         }
         /// <summary>
         /// Write the SerializedObject to a file
@@ -242,24 +254,15 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task ToFileAsync(string filepath)
         {
-            var dataTypeByte = !string.IsNullOrEmpty(DataType) ? Encoding.UTF8.GetBytes(DataType) : null;
-            var serializerMimeTypeByte = !string.IsNullOrEmpty(SerializerMimeType) ? Encoding.UTF8.GetBytes(SerializerMimeType) : null;
             if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
                 filepath += FileExtension;
             using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
             {
-                await fs.WriteBytesAsync(BitConverter.GetBytes(dataTypeByte?.Length ?? -1), false).ConfigureAwait(false);
-                if (dataTypeByte != null) 
-                    await fs.WriteBytesAsync(dataTypeByte, false).ConfigureAwait(false);
-                await fs.WriteBytesAsync(BitConverter.GetBytes(serializerMimeTypeByte?.Length ?? -1), false).ConfigureAwait(false);
-                if (serializerMimeTypeByte != null) 
-                    await fs.WriteBytesAsync(serializerMimeTypeByte, false).ConfigureAwait(false);
-                await fs.WriteBytesAsync(BitConverter.GetBytes(Data?.Length ?? -1), false).ConfigureAwait(false);
-                if (Data != null) 
-                    await fs.WriteBytesAsync(Data).ConfigureAwait(false);
+                WriteTo(fs);
+                await fs.FlushAsync().ConfigureAwait(false);
             }
         }
-        
+
 
         /// <summary>
         /// Get SerializedObject instance from the SubArray representation.
@@ -326,7 +329,6 @@ namespace TWCore.Serialization
                 !dataTypeByte.IsEmpty ? Encoding.UTF8.GetString(dataTypeByte) : null,
                 !serializerMimeTypeByte.IsEmpty ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
         }
-        private static MemoryPool<byte> pool = MemoryPool<byte>.Shared;
         /// <summary>
         /// Get SerializedObject instance from the ReadonlySequence representation.
         /// </summary>
@@ -346,11 +348,14 @@ namespace TWCore.Serialization
             if (dtLength < -1 || dtLength > length) return null;
             if (dtLength != -1)
             {
-                Span<byte> buffer = stackalloc byte[dtLength];
-                sequence.Slice(4, dtLength).CopyTo(buffer);
-                dataType = Encoding.UTF8.GetString(buffer);
-                length -= dtLength;
-                sequence = sequence.Slice(4 + dtLength);
+                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dtLength))
+                {
+                    Span<byte> buffer = memBuffer.Memory.Span.Slice(0, dtLength);
+                    sequence.Slice(4, dtLength).CopyTo(buffer);
+                    dataType = Encoding.UTF8.GetString(buffer);
+                    length -= dtLength;
+                    sequence = sequence.Slice(4 + dtLength);
+                }
             }
 
             sequence.Slice(0, 4).CopyTo(lengthSpan);
@@ -386,48 +391,42 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromStream(Stream stream)
         {
-            using (var br = new BinaryReader(stream, Encoding.UTF8, true))
+            Span<byte> intBuffer = stackalloc byte[4];
+            string dataType = null;
+            string serializerMimeType = null;
+            byte[] data = null;
+
+            stream.Read(intBuffer);
+            var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
+            if (dataTypeByteLength > -1)
             {
-                var dataTypeByteLength = br.ReadInt32();
-                if (dataTypeByteLength < -1) return null;
-                var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
-
-                var serializerMimeTypeByteLength = br.ReadInt32();
-                if (serializerMimeTypeByteLength < -1) return null;
-                var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
-
-                var dataLength = br.ReadInt32();
-                if (dataLength < -1) return null;
-                var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
-
-                return new SerializedObject(data,
-                    dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                    serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dataTypeByteLength))
+                {
+                    var spanBuffer = memBuffer.Memory.Span.Slice(0, dataTypeByteLength);
+                    stream.Read(spanBuffer);
+                    dataType = Encoding.UTF8.GetString(spanBuffer);
+                }
             }
-        }
-        /// <summary>
-        /// Get SerializedObject instance from a BinaryReader
-        /// </summary>
-        /// <param name="br">BinaryReader instance</param>
-        /// <returns>SerializedObject instance</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedObject FromStream(BinaryReader br)
-        {
-            var dataTypeByteLength = br.ReadInt32();
-            if (dataTypeByteLength < -1) return null;
-            var dataTypeByte = dataTypeByteLength != -1 ? br.ReadBytes(dataTypeByteLength) : null;
 
-            var serializerMimeTypeByteLength = br.ReadInt32();
-            if (serializerMimeTypeByteLength < -1) return null;
-            var serializerMimeTypeByte = serializerMimeTypeByteLength != -1 ? br.ReadBytes(serializerMimeTypeByteLength) : null;
+            stream.Read(intBuffer);
+            var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer);
+            if (serializerMimeTypeByteLength > -1)
+            {
+                Span<byte> spanBuffer = stackalloc byte[serializerMimeTypeByteLength];
+                stream.Read(spanBuffer);
+                serializerMimeType = Encoding.UTF8.GetString(spanBuffer);
+            }
 
-            var dataLength = br.ReadInt32();
-            if (dataLength < -1) return null;
-            var data = dataLength != -1 ? br.ReadBytes(dataLength) : null;
+            stream.Read(intBuffer);
+            var dataLength = BitConverter.ToInt32(intBuffer);
+            if (dataLength > -1)
+            {
+                data = new byte[dataLength];
+                var spanBuffer = data.AsSpan();
+                stream.Read(spanBuffer);
+            }
 
-            return new SerializedObject(data,
-                dataTypeByte != null ? Encoding.UTF8.GetString(dataTypeByte) : null,
-                serializerMimeTypeByte != null ? Encoding.UTF8.GetString(serializerMimeTypeByte) : null);
+            return new SerializedObject(data, dataType, serializerMimeType);
         }
         /// <summary>
         /// Read the SerializedObject from a file

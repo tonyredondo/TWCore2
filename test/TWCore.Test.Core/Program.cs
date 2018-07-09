@@ -74,6 +74,10 @@ namespace TWCore.Test.Core
 
                 var testValue = new TestClass {Enabled = true, Values = new[] { 1,2,3,4 } };
 
+                var testValueSer = new SerializedObject(testValue);
+
+                testValueSer.SerializeToNBinary();
+
                 new int[] { 1, 2, 3 }.SerializeToNBinary();
 
                 testValue.SerializeToNBinary();

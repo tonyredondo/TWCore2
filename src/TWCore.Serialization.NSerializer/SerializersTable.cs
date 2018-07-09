@@ -913,8 +913,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[3];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -922,38 +921,23 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[5];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
-            buffer[3] = (byte)(value >> 16);
-            buffer[4] = (byte)(value >> 24);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDefDouble(byte type, double value)
+        protected void WriteDefDouble(byte type, double value)
         {
-            var tmpValue = *(ulong*)&value;
             Span<byte> buffer = stackalloc byte[9];
             buffer[0] = type;
-            buffer[1] = (byte)tmpValue;
-            buffer[2] = (byte)(tmpValue >> 8);
-            buffer[3] = (byte)(tmpValue >> 16);
-            buffer[4] = (byte)(tmpValue >> 24);
-            buffer[5] = (byte)(tmpValue >> 32);
-            buffer[6] = (byte)(tmpValue >> 40);
-            buffer[7] = (byte)(tmpValue >> 48);
-            buffer[8] = (byte)(tmpValue >> 56);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDefFloat(byte type, float value)
+        protected void WriteDefFloat(byte type, float value)
         {
-            var tmpValue = *(uint*)&value;
             Span<byte> buffer = stackalloc byte[5];
             buffer[0] = type;
-            buffer[1] = (byte)tmpValue;
-            buffer[2] = (byte)(tmpValue >> 8);
-            buffer[3] = (byte)(tmpValue >> 16);
-            buffer[4] = (byte)(tmpValue >> 24);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -961,14 +945,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[9];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
-            buffer[3] = (byte)(value >> 16);
-            buffer[4] = (byte)(value >> 24);
-            buffer[5] = (byte)(value >> 32);
-            buffer[6] = (byte)(value >> 40);
-            buffer[7] = (byte)(value >> 48);
-            buffer[8] = (byte)(value >> 56);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -976,14 +953,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[9];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
-            buffer[3] = (byte)(value >> 16);
-            buffer[4] = (byte)(value >> 24);
-            buffer[5] = (byte)(value >> 32);
-            buffer[6] = (byte)(value >> 40);
-            buffer[7] = (byte)(value >> 48);
-            buffer[8] = (byte)(value >> 56);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -991,10 +961,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[5];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
-            buffer[3] = (byte)(value >> 16);
-            buffer[4] = (byte)(value >> 24);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1002,8 +969,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[3];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1011,8 +977,7 @@ namespace TWCore.Serialization.NSerializer
         {
             Span<byte> buffer = stackalloc byte[3];
             buffer[0] = type;
-            buffer[1] = (byte)value;
-            buffer[2] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer.Slice(1), value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1024,98 +989,63 @@ namespace TWCore.Serialization.NSerializer
         protected void WriteUshort(ushort value)
         {
             Span<byte> buffer = stackalloc byte[2];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteInt(int value)
         {
             Span<byte> buffer = stackalloc byte[4];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
-            buffer[2] = (byte)(value >> 16);
-            buffer[3] = (byte)(value >> 24);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteDouble(double value)
+        protected void WriteDouble(double value)
         {
-            var tmpValue = *(ulong*)&value;
             Span<byte> buffer = stackalloc byte[8];
-            buffer[0] = (byte)tmpValue;
-            buffer[1] = (byte)(tmpValue >> 8);
-            buffer[2] = (byte)(tmpValue >> 16);
-            buffer[3] = (byte)(tmpValue >> 24);
-            buffer[4] = (byte)(tmpValue >> 32);
-            buffer[5] = (byte)(tmpValue >> 40);
-            buffer[6] = (byte)(tmpValue >> 48);
-            buffer[7] = (byte)(tmpValue >> 56);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected unsafe void WriteFloat(float value)
+        protected void WriteFloat(float value)
         {
-            var tmpValue = *(uint*)&value;
             Span<byte> buffer = stackalloc byte[4];
-            buffer[0] = (byte)tmpValue;
-            buffer[1] = (byte)(tmpValue >> 8);
-            buffer[2] = (byte)(tmpValue >> 16);
-            buffer[3] = (byte)(tmpValue >> 24);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteLong(long value)
         {
             Span<byte> buffer = stackalloc byte[8];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
-            buffer[2] = (byte)(value >> 16);
-            buffer[3] = (byte)(value >> 24);
-            buffer[4] = (byte)(value >> 32);
-            buffer[5] = (byte)(value >> 40);
-            buffer[6] = (byte)(value >> 48);
-            buffer[7] = (byte)(value >> 56);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteULong(ulong value)
         {
             Span<byte> buffer = stackalloc byte[8];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
-            buffer[2] = (byte)(value >> 16);
-            buffer[3] = (byte)(value >> 24);
-            buffer[4] = (byte)(value >> 32);
-            buffer[5] = (byte)(value >> 40);
-            buffer[6] = (byte)(value >> 48);
-            buffer[7] = (byte)(value >> 56);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteUInt(uint value)
         {
             Span<byte> buffer = stackalloc byte[4];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
-            buffer[2] = (byte)(value >> 16);
-            buffer[3] = (byte)(value >> 24);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteShort(short value)
         {
             Span<byte> buffer = stackalloc byte[2];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteChar(char value)
         {
             Span<byte> buffer = stackalloc byte[2];
-            buffer[0] = (byte)value;
-            buffer[1] = (byte)(value >> 8);
+            BitConverter.TryWriteBytes(buffer, value);
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1126,8 +1056,9 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteSByte(sbyte value)
         {
-            var bytes = BitConverter.GetBytes(value);
-            Stream.Write(bytes, 0, bytes.Length);
+            Span<byte> buffer = stackalloc byte[1];
+            BitConverter.TryWriteBytes(buffer, value);
+            Stream.Write(buffer);
         }
         #endregion
     }

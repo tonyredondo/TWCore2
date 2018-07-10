@@ -431,7 +431,7 @@ namespace TWCore
         /// <summary>
         /// Creates an Weak delegate from a normal Func
         /// </summary>
-        /// <param name="action">Func delegate</param>
+        /// <param name="func">Func delegate</param>
         /// <returns>WeakDelegate instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeakDelegate GetWeak<TResult>(this Func<TResult> func)
@@ -439,7 +439,7 @@ namespace TWCore
         /// <summary>
         /// Creates an Weak delegate from a normal Func
         /// </summary>
-        /// <param name="action">Func delegate</param>
+        /// <param name="func">Func delegate</param>
         /// <returns>WeakDelegate instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeakDelegate GetWeak<T1, TResult>(this Func<T1, TResult> func)
@@ -447,7 +447,7 @@ namespace TWCore
         /// <summary>
         /// Creates an Weak delegate from a normal Func
         /// </summary>
-        /// <param name="action">Func delegate</param>
+        /// <param name="func">Func delegate</param>
         /// <returns>WeakDelegate instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeakDelegate GetWeak<T1, T2, TResult>(this Func<T1, T2, TResult> func)
@@ -455,7 +455,7 @@ namespace TWCore
         /// <summary>
         /// Creates an Weak delegate from a normal Func
         /// </summary>
-        /// <param name="action">Func delegate</param>
+        /// <param name="func">Func delegate</param>
         /// <returns>WeakDelegate instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeakDelegate GetWeak<T1, T2, T3, TResult>(this Func<T1, T2, T3, TResult> func)
@@ -463,7 +463,7 @@ namespace TWCore
         /// <summary>
         /// Creates an Weak delegate from a normal Func
         /// </summary>
-        /// <param name="action">Func delegate</param>
+        /// <param name="func">Func delegate</param>
         /// <returns>WeakDelegate instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static WeakDelegate GetWeak<T1, T2, T3, T4, TResult>(this Func<T1, T2, T3, T4, TResult> func)

@@ -10,9 +10,9 @@ dotnet build -c Release -r linux-x64
 dotnet publish -c Release -r linux-x64 -v q -o ./app/
 
 echo "Building docker image"
-docker build -t twcore_diagnostics:2.1.148 .
-docker tag twcore_diagnostics:2.1.148 tonyredondo/twcore_diagnostics:2.1.148
-docker push tonyredondo/twcore_diagnostics:2.1.148
+docker build -t twcore_diagnostics:2.1.149 .
+docker tag twcore_diagnostics:2.1.149 tonyredondo/twcore_diagnostics:2.1.149
+docker push tonyredondo/twcore_diagnostics:2.1.149
 
 echo "Remove build artifacts"
 rm -r app

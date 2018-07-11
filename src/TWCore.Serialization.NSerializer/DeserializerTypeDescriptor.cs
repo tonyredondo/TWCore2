@@ -56,11 +56,12 @@ namespace TWCore.Serialization.NSerializer
             Activator = Factory.Accessors.CreateActivator(type);
             IsNSerializable = ifaces.Any(i => i == typeof(INSerializable));
             Properties = new Dictionary<string, FastPropertyInfo>();
-            var propNames = new List<string>(runtimeProperties.Length);
+            var propNames = new string[runtimeProperties.Length];
+            var idx = 0;
             foreach (var prop in runtimeProperties)
             {
                 Properties[prop.Name] = prop.GetFastPropertyInfo();
-                propNames.Add(prop.Name);
+                propNames[idx++] = prop.Name;
             }
             var isArray = type.IsArray;
             if (isArray)
@@ -89,11 +90,13 @@ namespace TWCore.Serialization.NSerializer
 
             if (isArray)
             {
+                var elementType = type.GetElementType();
+
                 serExpressions.Add(Expression.Assign(capacity, Expression.Call(table, DeserializersTable.StreamReadIntMethod)));
-                serExpressions.Add(Expression.Assign(value, Expression.New(ctor, capacity)));
+                serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, capacity)));
+                //serExpressions.Add(Expression.Assign(value, Expression.New(ctor, capacity)));
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
-                var elementType = type.GetElementType();
                 var methodName = "InnerReadValue";
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(elementType, out var propMethod))
                     methodName = propMethod.Name;

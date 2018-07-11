@@ -32,6 +32,7 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)> WriteValues = new Dictionary<Type, (MethodInfo Method, MethodAccessorDelegate Accessor)>();
         internal static readonly ConcurrentDictionary<Type, SerializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, SerializerTypeDescriptor>();
         internal static readonly MethodInfo InternalWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
+        internal static readonly MethodInfo InternalSimpleWriteObjectValueMInfo = typeof(SerializersTable).GetMethod("InternalSimpleWriteObjectValue", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteDefIntMInfo = typeof(SerializersTable).GetMethod("WriteDefInt", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteByteMethodInfo = typeof(SerializersTable).GetMethod("WriteByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo WriteIntMethodInfo = typeof(SerializersTable).GetMethod("WriteInt", BindingFlags.NonPublic | BindingFlags.Instance);
@@ -854,6 +855,44 @@ namespace TWCore.Serialization.NSerializer
                 descriptor.SerializeAction(value, this);
             Stream.WriteByte(DataBytesDefinition.TypeEnd);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void InternalSimpleWriteObjectValue(object value)
+        {
+            if (value == null)
+            {
+                Stream.WriteByte(DataBytesDefinition.ValueNull);
+                return;
+            }
+            var vType = value.GetType();
+            if (_objectCache.TryGetValue(value, out var oIdx))
+            {
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefObject;
+                BitConverter.TryWriteBytes(buffer.Slice(1), oIdx);
+                Stream.Write(buffer);
+                return;
+            }
+            _objectCache.Set(value);
+            var descriptor = Descriptors.GetOrAdd(vType, type => new SerializerTypeDescriptor(type));
+            if (_typeCache.TryGetValue(vType, out var tIdx))
+            {
+                Span<byte> buffer = stackalloc byte[5];
+                buffer[0] = DataBytesDefinition.RefType;
+                BitConverter.TryWriteBytes(buffer.Slice(1), tIdx);
+                Stream.Write(buffer);
+            }
+            else
+            {
+                Stream.Write(descriptor.Definition, 0, descriptor.Definition.Length);
+                _typeCache.Set(vType);
+            }
+            if (descriptor.IsNSerializable)
+                ((INSerializable)value).Serialize(this);
+            else
+                descriptor.SerializeAction(value, this);
+            Stream.WriteByte(DataBytesDefinition.TypeEnd);
+        }
         #endregion
 
         #region Private Write Methods
@@ -1010,7 +1049,7 @@ namespace TWCore.Serialization.NSerializer
         {
             var bits = decimal.GetBits(value);
             Span<byte> buffer = stackalloc byte[16];
-            for(var i = 0; i < 4; i++)
+            for (var i = 0; i < 4; i++)
                 BitConverter.TryWriteBytes(buffer.Slice(i * 4, 4), bits[i]);
             Stream.Write(buffer);
         }

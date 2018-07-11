@@ -76,13 +76,11 @@ namespace TWCore
                 if (idx == -1)
                     break;
                 var value = memory.Slice(0, idx);
-                if (options == StringSplitOptions.None)
-                    result.Add(value);
-                else if (value.Length > 0)
+                if (options == StringSplitOptions.None || value.Length > 0)
                     result.Add(value);
                 memory = memory.Slice(idx + 1);
             }
-            if (memory.Length > 0)
+            if (options == StringSplitOptions.None || memory.Length > 0)
                 result.Add(memory);
             return result;
         }
@@ -95,24 +93,7 @@ namespace TWCore
         /// <returns>List with the split result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static List<string> SplitAsString(this ReadOnlyMemory<char> memory, char separator, StringSplitOptions options = StringSplitOptions.None)
-        {
-            var result = new List<string>();
-            while (memory.Length > 0)
-            {
-                var idx = memory.Span.IndexOf(separator);
-                if (idx == -1)
-                    break;
-                var value = memory.Slice(0, idx);
-                if (options == StringSplitOptions.None)
-                    result.Add(value.Span.ToString());
-                else if (value.Length > 0)
-                    result.Add(value.Span.ToString());
-                memory = memory.Slice(idx + 1);
-            }
-            if (memory.Length > 0)
-                result.Add(memory.Span.ToString());
-            return result;
-        }
+            => SplitAsString(memory.Span, separator, options);
         /// <summary>
         /// Split a char span using a separator
         /// </summary>
@@ -130,13 +111,11 @@ namespace TWCore
                 if (idx == -1)
                     break;
                 var value = span.Slice(0, idx);
-                if (options == StringSplitOptions.None)
-                    result.Add(value.ToString());
-                else if (value.Length > 0)
+                if (options == StringSplitOptions.None || value.Length > 0)
                     result.Add(value.ToString());
                 span = span.Slice(idx + 1);
             }
-            if (span.Length > 0)
+            if (options == StringSplitOptions.None || span.Length > 0)
                 result.Add(span.ToString());
             return result;
         }

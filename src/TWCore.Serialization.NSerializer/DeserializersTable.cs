@@ -155,30 +155,20 @@ namespace TWCore.Serialization.NSerializer
                 if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
-                    var typeDataSpan = typeData.AsSpan();
-
-                    var idx = typeDataSpan.IndexOf(';');
-                    var vTypeString = typeDataSpan.Slice(0, idx);
-                    var valueType = Core.GetType(vTypeString.ToString());
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isArray = typeDataSpan.Slice(0, idx)[0] == '1';
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isList = typeDataSpan.Slice(0, idx)[0] == '1';
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isDictionary = typeDataSpan.Slice(0, idx)[0] == '1';
-                    var propertiesString = typeDataSpan.Slice(idx + 1);
-
-                    var properties = propertiesString.SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
+                    var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
+                    var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
+                    var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
+                    var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
+                    var vTypeString = typeData.Substring(0, fsCol1);
+                    var isArray = typeData[fsCol1 + 1] == '1';
+                    var isList = typeData[fsCol2 + 1] == '1';
+                    var isDictionary = typeData[fsCol3 + 1] == '1';
+                    var propertiesString = typeData.Substring(fsCol4 + 1);
+                    var valueType = Core.GetType(vTypeString);
+                    var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-
                     SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
                 subTypeBytes = null;
@@ -221,30 +211,20 @@ namespace TWCore.Serialization.NSerializer
                 if (!SubArrayMetadata.TryGetValue(subTypeBytes, out metadata))
                 {
                     var typeData = Encoding.UTF8.GetString(typeBytes, 0, length);
-                    var typeDataSpan = typeData.AsSpan();
-
-                    var idx = typeDataSpan.IndexOf(';');
-                    var vTypeString = typeDataSpan.Slice(0, idx);
-                    var valueType = Core.GetType(vTypeString.ToString());
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isArray = typeDataSpan.Slice(0, idx)[0] == '1';
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isList = typeDataSpan.Slice(0, idx)[0] == '1';
-
-                    typeDataSpan = typeDataSpan.Slice(idx + 1);
-                    idx = typeDataSpan.IndexOf(';');
-                    var isDictionary = typeDataSpan.Slice(0, idx)[0] == '1';
-                    var propertiesString = typeDataSpan.Slice(idx + 1);
-
-                    var properties = propertiesString.SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
+                    var fsCol1 = typeData.IndexOf(";", StringComparison.Ordinal);
+                    var fsCol2 = typeData.IndexOf(";", fsCol1 + 1, StringComparison.Ordinal);
+                    var fsCol3 = typeData.IndexOf(";", fsCol2 + 1, StringComparison.Ordinal);
+                    var fsCol4 = typeData.IndexOf(";", fsCol3 + 1, StringComparison.Ordinal);
+                    var vTypeString = typeData.Substring(0, fsCol1);
+                    var isArray = typeData[fsCol1 + 1] == '1';
+                    var isList = typeData[fsCol2 + 1] == '1';
+                    var isDictionary = typeData[fsCol3 + 1] == '1';
+                    var propertiesString = typeData.Substring(fsCol4 + 1);
+                    var valueType = Core.GetType(vTypeString);
+                    var properties = propertiesString.Split(";", StringSplitOptions.RemoveEmptyEntries);
                     var runtimeMeta = new DeserializerMetaDataOfType(valueType, isArray, isList, isDictionary, properties);
                     var descriptor = Descriptors.GetOrAdd(valueType, vType => new DeserializerTypeDescriptor(vType));
                     metadata = new DeserializerMetadataOfTypeRuntime(runtimeMeta, descriptor);
-
                     SubArrayMetadata.TryAdd(new SubArray<byte>(subTypeBytes.ToArray()), metadata);
                 }
                 subTypeBytes = null;
@@ -269,70 +249,79 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object FillObject(DeserializerTypeDescriptor descriptor, DeserializerMetaDataOfType metadata)
         {
-            object value;
-            if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+            try
             {
-                var capacity = StreamReadInt();
-                value = descriptor.Activator(capacity);
-                ObjectCache.Set(value);
+                object value;
+                if (metadata.IsArray || metadata.IsList || metadata.IsDictionary)
+                {
+                    var capacity = StreamReadInt();
+                    value = descriptor.Activator(capacity);
+                    ObjectCache.Set(value);
 
-                if (descriptor.Metadata.IsArray)
-                {
-                    var aValue = (Array)value;
-                    for (var i = 0; i < capacity; i++)
+                    if (descriptor.Metadata.IsArray)
                     {
-                        var item = ReadValue(StreamReadByte());
-                        aValue.SetValue(item, i);
+                        var aValue = (Array)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = ReadValue(StreamReadByte());
+                            aValue.SetValue(item, i);
+                        }
                     }
-                }
-                else if (descriptor.Metadata.IsList)
-                {
-                    var iValue = (IList)value;
-                    for (var i = 0; i < capacity; i++)
+                    else if (descriptor.Metadata.IsList)
                     {
-                        var item = ReadValue(StreamReadByte());
-                        iValue.Add(item);
+                        var iValue = (IList)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var item = ReadValue(StreamReadByte());
+                            iValue.Add(item);
+                        }
                     }
-                }
-                else if (descriptor.Metadata.IsDictionary)
-                {
-                    var dictio = (IDictionary)value;
-                    for (var i = 0; i < capacity; i++)
+                    else if (descriptor.Metadata.IsDictionary)
                     {
-                        var dKey = ReadValue(StreamReadByte());
-                        var dValue = ReadValue(StreamReadByte());
-                        dictio[dKey] = dValue;
-                    }
-                }
-            }
-            else
-            {
-                value = descriptor.Activator();
-                ObjectCache.Set(value);
-            }
-
-            for (var i = 0; i < metadata.Properties.Count; i++)
-            {
-                var name = metadata.Properties[i];
-                var propValue = ReadValue(StreamReadByte());
-
-                if (descriptor.Properties.TryGetValue(name, out var fProp))
-                {
-                    try
-                    {
-                        fProp.SetValue(value, propValue);
-                    }
-                    catch (Exception ex)
-                    {
-                        Core.Log.Write(ex);
+                        var dictio = (IDictionary)value;
+                        for (var i = 0; i < capacity; i++)
+                        {
+                            var dKey = ReadValue(StreamReadByte());
+                            var dValue = ReadValue(StreamReadByte());
+                            dictio[dKey] = dValue;
+                        }
                     }
                 }
                 else
-                    Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
-            }
+                {
+                    value = descriptor.Activator();
+                    ObjectCache.Set(value);
+                }
 
-            StreamReadByte();
-            return value;
+                for (var i = 0; i < metadata.Properties.Length; i++)
+                {
+                    var name = metadata.Properties[i];
+                    var propValue = ReadValue(StreamReadByte());
+
+                    if (descriptor.Properties.TryGetValue(name, out var fProp))
+                    {
+                        try
+                        {
+                            fProp.SetValue(value, propValue);
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                    }
+                    else
+                        Core.Log.Warning("The Property '{0}' can't be found in the type '{1}'", name, metadata.Type.FullName);
+                }
+
+                StreamReadByte();
+                return value;
+            }
+            catch(Exception ex)
+            {
+                var metaProperties = metadata.Properties?.Join(", ");
+                var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+                throw new Exception($"Error trying to fill an object of type: {metadata.Type.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
+            }
         }
 
         #region Read Values

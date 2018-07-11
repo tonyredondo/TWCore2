@@ -49,6 +49,15 @@ namespace TWCore.Test.Core
             public decimal DecimalValue { get; set; }
         }
 
+        public class ProviderCacheClone<T1, T2, T3, T4, T5>
+        {
+            public T1 Item1 { get; set; }
+            public T2 Item2 { get; set; }
+            public T3 Item3 { get; set; }
+            public T4 Item4 { get; set; }
+            public T5 Item5 { get; set; }
+        }
+
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
@@ -73,7 +82,33 @@ namespace TWCore.Test.Core
                 var guid = Guid.NewGuid().ToString();
                 var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
 
-                //var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
+                var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
+
+                var strSplit = "fdsfdsafdsafd;FdsafdsAF;dsafD;saF;DSA;FDS;AFDsafdsa;fdssa;;;fdsaf;";
+                var split1 = strSplit.Split(';', StringSplitOptions.None);
+                var split2 = strSplit.Split(';', StringSplitOptions.RemoveEmptyEntries);
+                var splitSpan1 = strSplit.AsSpan().SplitAsString(';');
+                var splitSpan2 = strSplit.AsSpan().SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
+                var splitMemory1 = strSplit.AsMemory().SplitAsString(';');
+                var splitMemory2 = strSplit.AsMemory().SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
+
+                var request = new TWCore.Net.RPC.RPCRequestMessage
+                {
+                    MessageId = Guid.NewGuid(),
+                    MethodId = Guid.NewGuid(),
+                    Parameters = new object[]
+                    {
+                        new string[] { Guid.NewGuid().ToString(), Guid.NewGuid().ToString() },
+                        new SerializedObject(new ProviderCacheClone<TestClass, TestClass, TestClass, TestClass, TestClass> { Item1 = testValue, Item2 = testValue, Item3 = testValue, Item4 = testValue, Item5 = testValue } ),
+                        TimeSpan.FromMinutes(5)
+                    }
+                };
+
+                var rqSer = request.SerializeToNBinary();
+
+                var rqDes = rqSer.DeserializeFromNBinary<TWCore.Net.RPC.RPCMessage>();
+
+
 
                 //var testValueSer = new SerializedObject(testValue);
 

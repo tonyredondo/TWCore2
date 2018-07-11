@@ -315,7 +315,9 @@ namespace TWCore.Serialization.NSerializer
                         }
                         catch (Exception ex)
                         {
-                            Core.Log.Write(ex);
+                            var metaProperties = metadata.Properties?.Join(", ");
+                            var typeProperties = descriptor.Metadata.Properties?.Join(", ");
+                            Core.Log.Error(ex, $"Error trying to fill the property '{name}' of the object type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}].");
                         }
                     }
                     else
@@ -329,7 +331,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 var metaProperties = metadata.Properties?.Join(", ");
                 var typeProperties = descriptor.Metadata.Properties?.Join(", ");
-                throw new Exception($"Error trying to fill an object of type: {metadata.Type.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
+                throw new Exception($"Error trying to fill an object of type: {metadata.Type?.FullName}; with a different Definition [{metaProperties}] != [{typeProperties}]", ex);
             }
         }
 

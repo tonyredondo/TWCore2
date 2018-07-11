@@ -110,15 +110,15 @@ namespace TWCore.Test.Core
 
 
 
-                //var testValueSer = new SerializedObject(testValue);
+                var testValueSer = new SerializedObject(testValue);
 
-                //testValueSer.SerializeToNBinary();
+                testValueSer.SerializeToNBinary();
 
-                //var desTestValueSer = (TestClass)testValueSer.GetValue();
+                var desTestValueSer = (TestClass)testValueSer.GetValue();
 
-                //new int[] { 1, 2, 3 }.SerializeToNBinary();
+                new int[] { 1, 2, 3 }.SerializeToNBinary();
 
-                //testValue.SerializeToNBinary();
+                testValue.SerializeToNBinary();
 
                 //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
                 //{

@@ -79,31 +79,15 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            if (length < 1024)
-            {
-                Span<byte> span = stackalloc byte[length + 5];
-                span[0] = DataBytesDefinition.StringLength;
-                span[1] = (byte)length;
-                span[2] = (byte)(length >> 8);
-                span[3] = (byte)(length >> 16);
-                span[4] = (byte)(length >> 24);
-                Encoding.UTF8.GetBytes(value, span.Slice(5, length));
-                Stream.Write(span);
-            }
-            else
-            {
-                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: length + 5))
-                {
-                    var span = buffer.Memory.Span.Slice(0, length + 5);
-                    span[0] = DataBytesDefinition.StringLength;
-                    span[1] = (byte) length;
-                    span[2] = (byte) (length >> 8);
-                    span[3] = (byte) (length >> 16);
-                    span[4] = (byte) (length >> 24);
-                    Encoding.UTF8.GetBytes(value, span.Slice(5, length));
-                    Stream.Write(span);
-                }
-            }
+            var buffer = ArrayPool<byte>.Shared.Rent(length + 5);
+            buffer[0] = DataBytesDefinition.StringLength;
+            buffer[1] = (byte)length;
+            buffer[2] = (byte)(length >> 8);
+            buffer[3] = (byte)(length >> 16);
+            buffer[4] = (byte)(length >> 24);
+            Encoding.UTF8.GetBytes(value, buffer.AsSpan().Slice(5, length));
+            Stream.Write(buffer, 0, length + 5);
+            ArrayPool<byte>.Shared.Return(buffer);
         }
     }
 
@@ -144,21 +128,20 @@ namespace TWCore.Serialization.NSerializer
                     throw new InvalidOperationException("Invalid type value.");
             }
 
-            string strValue;
-            if (length < 1024)
+            string strValue = null;
+            var buffer = ArrayPool<byte>.Shared.Rent(length);
+            try
             {
-                Span<byte> bytes = stackalloc byte[length];
-                Stream.Read(bytes);
-                strValue = Encoding.UTF8.GetString(bytes);
+                Stream.ReadExact(buffer, 0, length);
+                strValue = Encoding.UTF8.GetString(buffer, 0, length);
             }
-            else
+            catch
             {
-                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: length))
-                {
-                    Span<byte> bytes = buffer.Memory.Span.Slice(0, length);
-                    Stream.Read(bytes);
-                    strValue = Encoding.UTF8.GetString(bytes);
-                }
+                throw;
+            }
+            finally
+            {
+                ArrayPool<byte>.Shared.Return(buffer);
             }
 
             var sLength = strValue.Length;

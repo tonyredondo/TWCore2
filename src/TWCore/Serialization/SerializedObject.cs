@@ -121,11 +121,11 @@ namespace TWCore.Serialization
             return value;
         }
         /// <summary>
-        /// Get SubArray representation of the SerializedObject instance
+        /// Get Byte array representation of the SerializedObject instance
         /// </summary>
-        /// <returns>SubArray instance</returns>
+        /// <returns>Byte array instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SubArray<byte> ToSubArray()
+        public byte[] ToArray()
         {
             var hasDataType = !string.IsNullOrEmpty(DataType);
             var hasMimeType = !string.IsNullOrEmpty(SerializerMimeType);
@@ -159,7 +159,7 @@ namespace TWCore.Serialization
                 Data.CopyTo(span.Slice(0, Data.Length));
             }
 
-            return new SubArray<byte>(bytes);
+            return bytes;
         }
         /// <summary>
         /// Get SubArray representation of the SerializedObject instance
@@ -264,6 +264,17 @@ namespace TWCore.Serialization
         }
 
 
+        /// <summary>
+        /// Get SerializedObject instance from the SubArray representation.
+        /// </summary>
+        /// <param name="byteArray">SubArray instance</param>
+        /// <returns>SerializedObject instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromArray(byte[] byteArray)
+        {
+            if (byteArray.Length == 0) return null;
+            return FromSpan(byteArray.AsSpan());
+        }
         /// <summary>
         /// Get SerializedObject instance from the SubArray representation.
         /// </summary>
@@ -391,40 +402,63 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedObject FromStream(Stream stream)
         {
-            Span<byte> intBuffer = stackalloc byte[4];
+            var intBuffer = ArrayPool<byte>.Shared.Rent(4);
             string dataType = null;
             string serializerMimeType = null;
             byte[] data = null;
 
-            stream.Read(intBuffer);
+            stream.Read(intBuffer, 0, 4);
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
             if (dataTypeByteLength > -1)
             {
-                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dataTypeByteLength))
+                var buffer = ArrayPool<byte>.Shared.Rent(dataTypeByteLength);
+                try
                 {
-                    var spanBuffer = memBuffer.Memory.Span.Slice(0, dataTypeByteLength);
-                    stream.Read(spanBuffer);
-                    dataType = Encoding.UTF8.GetString(spanBuffer);
+                    stream.ReadExact(buffer, 0, dataTypeByteLength);
+                    dataType = Encoding.UTF8.GetString(buffer, 0, dataTypeByteLength);
+                }
+                catch
+                {
+                    ArrayPool<byte>.Shared.Return(intBuffer);
+                    throw;
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
                 }
             }
 
-            stream.Read(intBuffer);
+            stream.Read(intBuffer, 0, 4);
             var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer);
             if (serializerMimeTypeByteLength > -1)
             {
-                Span<byte> spanBuffer = stackalloc byte[serializerMimeTypeByteLength];
-                stream.Read(spanBuffer);
-                serializerMimeType = Encoding.UTF8.GetString(spanBuffer);
+                var buffer = ArrayPool<byte>.Shared.Rent(serializerMimeTypeByteLength);
+                try
+                {
+                    stream.ReadExact(buffer, 0, serializerMimeTypeByteLength);
+                    serializerMimeType = Encoding.UTF8.GetString(buffer, 0, serializerMimeTypeByteLength);
+                }
+                catch
+                {
+                    ArrayPool<byte>.Shared.Return(intBuffer);
+                    throw;
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
 
-            stream.Read(intBuffer);
+            stream.Read(intBuffer, 0, 4);
             var dataLength = BitConverter.ToInt32(intBuffer);
             if (dataLength > -1)
             {
                 data = new byte[dataLength];
-                var spanBuffer = data.AsSpan();
-                stream.Read(spanBuffer);
+                stream.ReadExact(data, 0, dataLength);
             }
+
+            ArrayPool<byte>.Shared.Return(intBuffer);
+
 
             return new SerializedObject(data, dataType, serializerMimeType);
         }

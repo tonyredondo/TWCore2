@@ -171,7 +171,7 @@ namespace TWCore.Net.Multicast
                 if (LocalServices.All((s, serviceId) => s.Service.ServiceId != serviceId, service.ServiceId))
                 {
                     var sObj = new SerializedObject(service, Serializer);
-                    var sObjArr = sObj.ToSubArray();
+                    var sObjArr = sObj.ToArray();
                     LocalServices.Add(new RegisteredServiceContainer(service, Serializer, sObjArr));
                 }
             }
@@ -351,7 +351,7 @@ namespace TWCore.Net.Multicast
                         {
                             if (srv.Serializer != Serializer)
                             {
-                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToSubArray();
+                                srv.DataToSend = new SerializedObject(srv.Service, Serializer).ToArray();
                                 srv.Serializer = Serializer;
                             }
                             servicesBytes.Add(srv.DataToSend);
@@ -359,7 +359,7 @@ namespace TWCore.Net.Multicast
                         else if (srv.Service.GetDataFunc != null)
                         {
                             srv.Service.Data = srv.Service.GetDataFunc();
-                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToSubArray());
+                            servicesBytes.Add(new SerializedObject(srv.Service, Serializer).ToArray());
                         }
                     }
                 }
@@ -375,9 +375,9 @@ namespace TWCore.Net.Multicast
         {
             public RegisteredService Service;
             public ISerializer Serializer;
-            public SubArray<byte> DataToSend;
+            public byte[] DataToSend;
 
-            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, SubArray<byte> dataToSend)
+            public RegisteredServiceContainer(RegisteredService service, ISerializer serializer, byte[] dataToSend)
             {
                 Service = service;
                 Serializer = serializer;

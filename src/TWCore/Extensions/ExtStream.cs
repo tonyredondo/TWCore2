@@ -258,6 +258,44 @@ namespace TWCore
             using (var sr = new StreamReader(stream, encoding ?? Encoding.UTF8))
                 return await sr.ReadLineAsync().ConfigureAwait(false);
         }
+        /// <summary>
+        /// Read exactly a number of bytes
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="buffer">Buffer to store the data</param>
+        /// <param name="offset">Offset</param>
+        /// <param name="count">Count</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void ReadExact(this Stream stream, byte[] buffer, int offset, int count)
+        {
+            var remain = count;
+            while(remain > 0)
+            {
+                var consumed = stream.Read(buffer, offset, remain);
+                if (consumed < 0) break;
+                offset += consumed;
+                remain -= consumed;
+            }
+        }
+        /// <summary>
+        /// Read exactly a number of bytes
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="buffer">Buffer to store the data</param>
+        /// <param name="offset">Offset</param>
+        /// <param name="count">Count</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task ReadExactAsync(this Stream stream, byte[] buffer, int offset, int count)
+        {
+            var remain = count;
+            while (remain > 0)
+            {
+                var consumed = await stream.ReadAsync(buffer, offset, remain).ConfigureAwait(false);
+                if (consumed < 0) break;
+                offset += consumed;
+                remain -= consumed;
+            }
+        }
         #endregion
 
         #region Write

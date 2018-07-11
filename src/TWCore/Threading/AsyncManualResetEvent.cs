@@ -95,9 +95,18 @@ namespace TWCore.Threading
             if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
             if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
             if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
-            var delayTask = Task.Delay(milliseconds);
-            return Task.WhenAny(delayTask, _mTcs.Task).ContinueWith((prev, obj) => prev != (Task) obj, delayTask,
-                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            var delayCancellation = new CancellationTokenSource();
+            var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
+            return Task.WhenAny(delayTask, _mTcs.Task)
+                .ContinueWith((prev, obj) => {
+                    var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
+                    if (prev != objTuple.Item1)
+                    {
+                        delayCancellation.Cancel();
+                        return true;
+                    }
+                    return false;
+                }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event
@@ -111,10 +120,19 @@ namespace TWCore.Threading
             if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
             if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
             if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
+            var delayCancellation = new CancellationTokenSource();
             var delayTask = Task.Delay(timeout);
             return Task.WhenAny(delayTask, _mTcs.Task)
-                .ContinueWith((prev, obj) => prev != (Task)obj, delayTask, 
-                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                .ContinueWith((prev, obj) =>
+                {
+                    var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
+                    if (prev != objTuple.Item1)
+                    {
+                        delayCancellation.Cancel();
+                        return true;
+                    }
+                    return false;
+                }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
         /// Wait Async for the set event

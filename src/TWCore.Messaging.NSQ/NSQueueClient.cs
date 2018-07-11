@@ -285,7 +285,7 @@ namespace TWCore.Messaging.NSQ
                 throw new MessageQueueTimeoutException(_receiverOptionsTimeout, correlationId.ToString());
 
             if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
+                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + correlationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Count, _clientQueues.RecvQueue.Name, correlationId);
             var rs = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);

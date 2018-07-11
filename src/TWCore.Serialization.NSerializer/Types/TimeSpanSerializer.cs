@@ -26,18 +26,15 @@ namespace TWCore.Serialization.NSerializer
         public void WriteValue(TimeSpan value)
         {
             if (value == default)
-            {
                 WriteByte(DataBytesDefinition.TimeSpanDefault);
-                return;
-            }
-            if (_timespanCache.TryGetValue(value, out var objIdx))
-            {
+            else if (_timespanCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefTimeSpan, objIdx);
-                return;
+            else
+            {
+                var longBinary = value.Ticks;
+                WriteDefLong(DataBytesDefinition.TimeSpan, longBinary);
+                _timespanCache.Set(value);
             }
-            var longBinary = value.Ticks;
-            WriteDefLong(DataBytesDefinition.TimeSpan, longBinary);
-            _timespanCache.Set(value);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,7 +56,7 @@ namespace TWCore.Serialization.NSerializer
             switch (type)
             {
                 case DataBytesDefinition.TimeSpanDefault:
-                    return default(TimeSpan);
+                    return default;
                 case DataBytesDefinition.RefTimeSpan:
                     return _timespanCache.Get(StreamReadInt());
                 case DataBytesDefinition.TimeSpan:

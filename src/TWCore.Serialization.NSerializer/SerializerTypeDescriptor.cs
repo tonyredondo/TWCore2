@@ -211,17 +211,7 @@ namespace TWCore.Serialization.NSerializer
                 return Expression.Call(serTable, wMethodTuple.Method, getExpression);
             if (type.IsEnum)
                 return Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum)));
-            if (type == typeof(IEnumerable) || type == typeof(IEnumerable<>) ||
-                type.ReflectedType == typeof(IEnumerable) || type.ReflectedType == typeof(IEnumerable<>) ||
-                type.ReflectedType == typeof(Enumerable) || type.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1 ||
-                type.IsAssignableFrom(typeof(IEnumerable)))
-                return Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression);
-            if (type.IsAbstract || type.IsInterface || type == typeof(object))
-                return Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression);
-            if (type.IsSealed)
-                return Expression.Call(serTable, SerializersTable.InternalSimpleWriteObjectValueMInfo, getExpression);
-
-            return Expression.Call(serTable, SerializersTable.InternalSimpleWriteObjectValueMInfo, getExpression);
+            return Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression);
         }
     }
 }

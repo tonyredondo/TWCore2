@@ -502,7 +502,8 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 0));
+                if (message != null)
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 0));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>
@@ -514,7 +515,8 @@ namespace TWCore
             {
                 var currentTicks = Stopwatch.GetTimestamp();
                 _lastTapTicks = currentTicks - _ticksTimestamp;
-                LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 2));
+                if (message != null)
+                    LogStatsWorker.Enqueue(new LogStatItem(_id, _level, currentTicks - _initTicks, _lastTapTicks, message, _groupValue, 2));
                 _ticksTimestamp = currentTicks;
             }
             /// <summary>

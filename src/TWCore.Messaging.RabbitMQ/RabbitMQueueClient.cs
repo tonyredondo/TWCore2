@@ -303,7 +303,7 @@ namespace TWCore.Messaging.RabbitMQ
             }
 
             if (message.Body == null)
-                throw new MessageQueueNotFoundException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
+                throw new MessageQueueBodyNullException("The Message can't be retrieved, null body on CorrelationId = " + strCorrelationId);
 
             Core.Log.LibVerbose("Received {0} bytes from the Queue '{1}' with CorrelationId={2}", message.Body.Length, _clientQueues.RecvQueue.Name, strCorrelationId);
             var response = ReceiverSerializer.Deserialize<ResponseMessage>(message.Body);

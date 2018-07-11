@@ -33,8 +33,7 @@ namespace TWCore.Collections
             return target == null ? WeakNullReference<T>.Singleton : new WeakReference<T>(target);
         }
 
-        protected WeakReference(T target)
-            : base(target, false) { }
+        protected WeakReference(T target) : base(target, false) { }
 
         public new T Target => (T)base.Target;
     }
@@ -50,15 +49,13 @@ namespace TWCore.Collections
 
         public override bool IsAlive => true;
     }
-
     // Provides a weak reference to an object of the given type to be used in
     // a WeakDictionary along with the given comparer.
     internal sealed class WeakKeyReference<T> : WeakReference<T> where T : class
     {
         public readonly int HashCode;
 
-        public WeakKeyReference(T key, IEqualityComparer<object> comparer)
-            : base(key)
+        public WeakKeyReference(T key, IEqualityComparer<object> comparer) : base(key)
         {
             // retain the object’s hash code immediately so that even
             // if the target is GC’ed we will be able to find and
@@ -66,17 +63,14 @@ namespace TWCore.Collections
             HashCode = comparer.GetHashCode(key);
         }
     }
-
     // Compares objects of the given type or WeakKeyReferences to them
     // for equality based on the given comparer. Note that we can only
     // implement IEqualityComparer<T> for T = object as there is no 
     // other common base between T and WeakKeyReference<T>. We need a
     // single comparer to handle both types because we don’t want to
     // allocate a new weak reference for every lookup.
-    internal sealed class WeakKeyComparer<T> : IEqualityComparer<object>
-        where T : class
+    internal sealed class WeakKeyComparer<T> : IEqualityComparer<object> where T : class
     {
-
         private readonly IEqualityComparer<T> _comparer;
 
         internal WeakKeyComparer(IEqualityComparer<T> comparer)
@@ -164,8 +158,7 @@ namespace TWCore.Collections
         private readonly WeakKeyComparer<TKey> _comparer;
         private readonly Action _removeWeakReferencesInNull;
 
-        public WeakDictionary()
-            : this(null) { }
+        public WeakDictionary(): this(null) { }
         
         public WeakDictionary(IEqualityComparer<TKey> comparer)
         {
@@ -181,44 +174,60 @@ namespace TWCore.Collections
         public override int Count => _dictionary.Count;
 
         public override void Add(TKey key, TValue value)
-        {
-            TryAdd(key, value);
-        }
+            => TryAdd(key, value);
+        
         public bool TryAdd(TKey key, TValue value)
         {
-            if (key == null) throw new ArgumentNullException("key");
+            if (key == null) throw new ArgumentNullException(nameof(key));
             var weakKey = new WeakKeyReference<TKey>(key, _comparer);
+            if (_dictionary.TryGetValue(weakKey, out var oValue))
+            {
+                if (!oValue.IsAlive)
+                    _dictionary.TryRemove(weakKey, out _);
+                else
+                    return false;
+            }
             var weakValue = WeakReference<TValue>.Create(value);
             _removeWeakReferencesInNull();
             return _dictionary.TryAdd(weakKey, weakValue);
         }
-
         public TValue GetOrAdd(TKey key, TValue value)
         {
-            if (key == null) throw new ArgumentNullException("key");
-            WeakReference<TKey> weakKey = new WeakKeyReference<TKey>(key, _comparer);
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             _removeWeakReferencesInNull();
-            var res = _dictionary.GetOrAdd(weakKey, mKey => WeakReference<TValue>.Create(value));
+            WeakReference<TValue> res;
+            while (true)
+            {
+                res = _dictionary.GetOrAdd(weakKey, mKey => WeakReference<TValue>.Create(value));
+                if (res.IsAlive)
+                    break;
+                _dictionary.TryRemove(weakKey, out _);
+            }
             return res.Target;
         }
         public TValue GetOrAdd(TKey key, Func<object, TValue> valueFactory)
         {
-            if (key == null) throw new ArgumentNullException("key");
-            WeakReference<TKey> weakKey = new WeakKeyReference<TKey>(key, _comparer);
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             _removeWeakReferencesInNull();
-            var res = _dictionary.GetOrAdd(weakKey, mKey => WeakReference<TValue>.Create(valueFactory(mKey)));
+            WeakReference<TValue> res;
+            while (true)
+            {
+                res = _dictionary.GetOrAdd(weakKey, mKey => WeakReference<TValue>.Create(valueFactory(mKey)));
+                if (res.IsAlive)
+                    break;
+                _dictionary.TryRemove(weakKey, out _);
+            }
             return res.Target;
         }
 
         public override bool ContainsKey(TKey key)
-        {
-            return _dictionary.ContainsKey(key);
-        }
+            => _dictionary.TryGetValue(key, out var value) && value.IsAlive;
 
         public override bool Remove(TKey key)
-        {
-            return _dictionary.TryRemove(key, out var _);
-        }
+            => _dictionary.TryRemove(key, out _);
+        
         public bool TryRemove(TKey key, out TValue value)
         {
             var res = _dictionary.TryRemove(key, out var weakValue);
@@ -239,20 +248,18 @@ namespace TWCore.Collections
 
         protected override void SetValue(TKey key, TValue value)
         {
-            WeakReference<TKey> weakKey = new WeakKeyReference<TKey>(key, _comparer);
+            var weakKey = new WeakKeyReference<TKey>(key, _comparer);
             _dictionary[weakKey] = WeakReference<TValue>.Create(value);
         }
 
         public override void Clear()
-        {
-            _dictionary.Clear();
-        }
+            => _dictionary.Clear();
 
         public override IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
             foreach (var kvp in _dictionary)
             {
-                var weakKey = (WeakReference<TKey>)(kvp.Key);
+                var weakKey = (WeakReference<TKey>) kvp.Key;
                 var weakValue = kvp.Value;
                 var key = weakKey.Target;
                 var value = weakValue.Target;
@@ -267,21 +274,13 @@ namespace TWCore.Collections
         // of dead key-value pairs that were eliminated.
         public void RemoveCollectedEntries()
         {
-            List<object> toRemove = null;
-            var dct = _dictionary.ToArray();
-            foreach (var pair in dct)
+            foreach (var pair in _dictionary)
             {
-                var weakKey = (WeakReference<TKey>)(pair.Key);
+                var weakKey = (WeakReference<TKey>) pair.Key;
                 var weakValue = pair.Value;
                 if (weakKey.IsAlive && weakValue.IsAlive) continue;
-                if (toRemove == null)
-                    toRemove = new List<object>();
-                toRemove.Add(weakKey);
+                _dictionary.TryRemove(weakKey, out _);
             }
-
-            if (toRemove == null) return;
-            foreach (var key in toRemove)
-                _dictionary.TryRemove(key, out var _);
         }
     }
 }

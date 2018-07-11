@@ -34,8 +34,8 @@ namespace TWCore.Diagnostics.Status
         /// Attach a status item delegate 
         /// </summary>
         /// <param name="statusItemDelegate">Status Item delegate</param>
-        /// <param name="parent">Object Parent</param>
-        void Attach(Func<StatusItem> statusItemDelegate, object parent = null);
+        /// <param name="objectToAttach">Object to attach, if is null is extracted from the delegate</param>
+        void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null);
         /// <summary>
         /// Attach a values filler delegate
         /// </summary>
@@ -50,14 +50,14 @@ namespace TWCore.Diagnostics.Status
         /// <summary>
         /// Attach a child object
         /// </summary>
-        /// <param name="childObject">Child object</param>
+        /// <param name="objectToAttach">Object to attach</param>
         /// <param name="parent">Parent object</param>
-        void AttachChild(object childObject, object parent);
+        void AttachChild(object objectToAttach, object parent);
         /// <summary>
         /// DeAttach all handlers for an object
         /// </summary>
-        /// <param name="objectToDeattach">Object to deattach</param>
-        void DeAttachObject(object objectToDeattach);
+        /// <param name="objectToDetach">Object to detach</param>
+        void DeAttachObject(object objectToDetach);
         /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>

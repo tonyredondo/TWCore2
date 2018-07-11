@@ -39,7 +39,6 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
         private static readonly byte[] EmptyBytes = new byte[0];
-        private readonly byte[] _buffer = new byte[16];
         private readonly object[] _parameters = new object[1];
         internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<DeserializerMetadataOfTypeRuntime> _typeCache = new DeserializerCache<DeserializerMetadataOfTypeRuntime>();
@@ -842,8 +841,9 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Guid StreamReadGuid()
         {
-            Stream.Read(_buffer, 0, 16);
-            return new Guid(_buffer);
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
+            return new Guid(buffer);
         }
         #endregion
     }

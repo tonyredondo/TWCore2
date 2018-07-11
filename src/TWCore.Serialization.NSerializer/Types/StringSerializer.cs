@@ -96,12 +96,12 @@ namespace TWCore.Serialization.NSerializer
     public partial class DeserializersTable
     {
         [DeserializerMethod(
-            DataBytesDefinition.StringNull, 
-            DataBytesDefinition.StringEmpty, 
-            DataBytesDefinition.RefString, 
-            DataBytesDefinition.RefString8, 
-            DataBytesDefinition.RefString16, 
-            DataBytesDefinition.RefString32, 
+            DataBytesDefinition.StringNull,
+            DataBytesDefinition.StringEmpty,
+            DataBytesDefinition.RefString,
+            DataBytesDefinition.RefString8,
+            DataBytesDefinition.RefString16,
+            DataBytesDefinition.RefString32,
             DataBytesDefinition.StringLength, ReturnType = typeof(string))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string ReadString(byte type)

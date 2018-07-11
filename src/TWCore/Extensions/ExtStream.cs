@@ -272,7 +272,7 @@ namespace TWCore
             while(remain > 0)
             {
                 var consumed = stream.Read(buffer, offset, remain);
-                if (consumed < 0) break;
+                if (consumed < 0 || consumed == remain) break;
                 offset += consumed;
                 remain -= consumed;
             }
@@ -291,9 +291,43 @@ namespace TWCore
             while (remain > 0)
             {
                 var consumed = await stream.ReadAsync(buffer, offset, remain).ConfigureAwait(false);
-                if (consumed < 0) break;
+                if (consumed < 0 || consumed == remain) break;
                 offset += consumed;
                 remain -= consumed;
+            }
+        }
+
+
+        /// <summary>
+        /// Fill the span with data
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="span">Span to fill</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void Fill(this Stream stream, Span<byte> span)
+        {
+            while (span.Length > 0)
+            {
+                var consumed = stream.Read(span);
+                if (consumed < 0 || consumed == span.Length) break;
+                span = span.Slice(consumed);
+            }
+        }
+
+        /// <summary>
+        /// Fill the memory with data
+        /// </summary>
+        /// <param name="stream">Stream source</param>
+        /// <param name="memory">Memory to fill</param>
+        /// <param name="cancellation">Cancellation token</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static async Task FillAsync(this Stream stream, Memory<byte> memory, CancellationToken cancellationToken = default)
+        {
+            while (memory.Length > 0)
+            {
+                var consumed = await stream.ReadAsync(memory, cancellationToken).ConfigureAwait(false);
+                if (consumed < 0 || consumed == memory.Length) break;
+                memory = memory.Slice(consumed);
             }
         }
         #endregion

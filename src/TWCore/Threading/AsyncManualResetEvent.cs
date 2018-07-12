@@ -100,12 +100,9 @@ namespace TWCore.Threading
             return Task.WhenAny(delayTask, _mTcs.Task)
                 .ContinueWith((prev, obj) => {
                     var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
-                    if (prev != objTuple.Item1)
-                    {
-                        delayCancellation.Cancel();
-                        return true;
-                    }
-                    return false;
+                    if (prev == objTuple.Item1) return false;
+                    delayCancellation.Cancel();
+                    return true;
                 }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>
@@ -126,12 +123,9 @@ namespace TWCore.Threading
                 .ContinueWith((prev, obj) =>
                 {
                     var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
-                    if (prev != objTuple.Item1)
-                    {
-                        delayCancellation.Cancel();
-                        return true;
-                    }
-                    return false;
+                    if (prev == objTuple.Item1) return false;
+                    delayCancellation.Cancel();
+                    return true;
                 }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
         /// <summary>

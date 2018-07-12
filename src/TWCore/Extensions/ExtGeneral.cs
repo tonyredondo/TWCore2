@@ -350,7 +350,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 return await readyTask.ConfigureAwait(false);
             }
@@ -374,7 +374,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 return await readyTask.ConfigureAwait(false);
             }
@@ -400,7 +400,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 return await readyTask.ConfigureAwait(false);
             }
@@ -421,7 +421,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 await readyTask.ConfigureAwait(false);
             }
@@ -445,7 +445,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 await readyTask.ConfigureAwait(false);
             }
@@ -471,7 +471,7 @@ namespace TWCore
                 var cancellationTask = tcs.Task;
                 var readyTask = await Task.WhenAny(asyncTask, cancellationTask).ConfigureAwait(false);
                 if (readyTask == cancellationTask)
-                    await asyncTask.ContinueWith(_ => asyncTask.Exception, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                    await asyncTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
                         .ConfigureAwait(false);
                 await readyTask.ConfigureAwait(false);
             }

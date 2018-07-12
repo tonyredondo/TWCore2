@@ -35,10 +35,8 @@ namespace TWCore.Serialization.NSerializer
         internal static readonly Dictionary<Type, MethodInfo> ReadValuesFromType = new Dictionary<Type, MethodInfo>();
         internal static readonly ConcurrentDictionary<Type, DeserializerTypeDescriptor> Descriptors = new ConcurrentDictionary<Type, DeserializerTypeDescriptor>();
         internal static readonly ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime> SubArrayMetadata = new ConcurrentDictionary<SubArray<byte>, DeserializerMetadataOfTypeRuntime>(SubArrayBytesComparer.Instance);
-
         internal static readonly MethodInfo StreamReadByteMethod = typeof(DeserializersTable).GetMethod("StreamReadByte", BindingFlags.NonPublic | BindingFlags.Instance);
         internal static readonly MethodInfo StreamReadIntMethod = typeof(DeserializersTable).GetMethod("StreamReadInt", BindingFlags.NonPublic | BindingFlags.Instance);
-        private static readonly byte[] EmptyBytes = new byte[0];
         private readonly object[] _parameters = new object[1];
         internal readonly DeserializerCache<object> ObjectCache = new DeserializerCache<object>();
         private readonly DeserializerCache<DeserializerMetadataOfTypeRuntime> _typeCache = new DeserializerCache<DeserializerMetadataOfTypeRuntime>();
@@ -55,9 +53,7 @@ namespace TWCore.Serialization.NSerializer
         private readonly DeserializerStringCache _stringCache32 = new DeserializerStringCache();
         private readonly DeserializerStringCache _stringCache = new DeserializerStringCache();
         private readonly DeserializerCache<TimeSpan> _timespanCache = new DeserializerCache<TimeSpan>();
-        //private readonly Dictionary<Type, DeserializerMetadataOfTypeRuntime> _metadataInTypes = new Dictionary<Type, DeserializerMetadataOfTypeRuntime>();
         protected Stream Stream;
-        protected BinaryReader Reader;
 
 
         #region Attributes
@@ -94,7 +90,6 @@ namespace TWCore.Serialization.NSerializer
             try
             {
                 Stream = stream;
-                Reader = new BinaryReader(stream, Encoding.UTF8, true);
                 if (stream.ReadByte() != DataBytesDefinition.Start)
                     throw new FormatException("The stream is not in NSerializer format.");
                 value = ReadValue(StreamReadByte());
@@ -132,7 +127,6 @@ namespace TWCore.Serialization.NSerializer
                 _timespanCache.Clear();
                 ObjectCache.Clear();
                 _typeCache.Clear();
-                Reader = null;
                 Stream = null;
             }
             return value;
@@ -817,29 +811,85 @@ namespace TWCore.Serialization.NSerializer
 
         #region Private Read Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected byte StreamReadByte() => Reader.ReadByte();
+        protected byte StreamReadByte() => (byte)Stream.ReadByte();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ushort StreamReadUShort() => Reader.ReadUInt16();
+        protected ushort StreamReadUShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt16(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected int StreamReadInt() => Reader.ReadInt32();
+        protected int StreamReadInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt32(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected double StreamReadDouble() => Reader.ReadDouble();
+        protected double StreamReadDouble()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToDouble(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected float StreamReadFloat() => Reader.ReadSingle();
+        protected float StreamReadFloat()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToSingle(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected long StreamReadLong() => Reader.ReadInt64();
+        protected long StreamReadLong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt64(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected ulong StreamReadULong() => Reader.ReadUInt64();
+        protected ulong StreamReadULong()
+        {
+            Span<byte> buffer = stackalloc byte[8];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt64(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected uint StreamReadUInt() => Reader.ReadUInt32();
+        protected uint StreamReadUInt()
+        {
+            Span<byte> buffer = stackalloc byte[4];
+            Stream.Fill(buffer);
+            return BitConverter.ToUInt32(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected short StreamReadShort() => Reader.ReadInt16();
+        protected short StreamReadShort()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToInt16(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected char StreamReadChar() => Reader.ReadChar();
+        protected char StreamReadChar()
+        {
+            Span<byte> buffer = stackalloc byte[2];
+            Stream.Fill(buffer);
+            return BitConverter.ToChar(buffer);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected decimal StreamReadDecimal() => Reader.ReadDecimal();
+        protected decimal StreamReadDecimal()
+        {
+            Span<byte> buffer = stackalloc byte[16];
+            Stream.Fill(buffer);
+            var bits = new int[4];
+            for(var i = 0; i < 4; i++)
+                bits[i] = BitConverter.ToInt32(buffer.Slice(i * 4, 4));
+            return new decimal(bits);
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected sbyte StreamReadSByte() => Reader.ReadSByte();
+        protected sbyte StreamReadSByte()
+        {
+            return (sbyte)Stream.ReadByte();
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected Guid StreamReadGuid()
         {

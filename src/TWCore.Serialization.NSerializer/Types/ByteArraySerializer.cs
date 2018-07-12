@@ -55,7 +55,7 @@ namespace TWCore.Serialization.NSerializer
                 case DataBytesDefinition.ByteArrayNull:
                     return null;
                 case DataBytesDefinition.ByteArrayEmpty:
-                    return EmptyBytes;
+                    return Array.Empty<byte>();
                 case DataBytesDefinition.ByteArrayLength:
                     var buffer = new byte[StreamReadInt()];
                     Stream.Read(buffer, 0, buffer.Length);

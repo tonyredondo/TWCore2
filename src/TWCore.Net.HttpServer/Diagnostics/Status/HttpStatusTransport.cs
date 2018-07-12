@@ -58,7 +58,7 @@ namespace TWCore.Diagnostics.Status.Transports
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public HttpStatusTransport(int port = 80)
         {
-            var htmlPage = this.GetAssembly().GetResourceString("Status.htm");
+            var htmlPage = GetType().Assembly.GetResourceString("Status.htm");
             var xmlSerializer = new XmlTextSerializer();
             var jsonSerializer = new JsonTextSerializer() { UseCamelCase = true };
             _httpServer = new SimpleHttpServer();

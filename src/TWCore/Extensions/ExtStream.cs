@@ -268,13 +268,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ReadExact(this Stream stream, byte[] buffer, int offset, int count)
         {
-            var remain = count;
-            while(remain > 0)
+            while(count > 0)
             {
-                var consumed = stream.Read(buffer, offset, remain);
-                if (consumed < 0 || consumed == remain) break;
+                var consumed = stream.Read(buffer, offset, count);
+                if (consumed < 0 || consumed == count) break;
                 offset += consumed;
-                remain -= consumed;
+                count -= consumed;
             }
         }
         /// <summary>
@@ -287,13 +286,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static async Task ReadExactAsync(this Stream stream, byte[] buffer, int offset, int count)
         {
-            var remain = count;
-            while (remain > 0)
+            while (count > 0)
             {
-                var consumed = await stream.ReadAsync(buffer, offset, remain).ConfigureAwait(false);
-                if (consumed < 0 || consumed == remain) break;
+                var consumed = await stream.ReadAsync(buffer, offset, count).ConfigureAwait(false);
+                if (consumed < 0 || consumed == count) break;
                 offset += consumed;
-                remain -= consumed;
+                count -= consumed;
             }
         }
 

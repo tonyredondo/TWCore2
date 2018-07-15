@@ -26,9 +26,9 @@ namespace TWCore
     public class SubArrayBytesComparer : IEqualityComparer<SubArray<byte>>
     {
         /// <summary>
-        /// Byte SubArray comparer instace
+        /// Byte SubArray comparer instance
         /// </summary>
-        public static SubArrayBytesComparer Instance = new SubArrayBytesComparer();
+        public static readonly SubArrayBytesComparer Instance = new SubArrayBytesComparer();
 
         private SubArrayBytesComparer()
         {
@@ -51,8 +51,8 @@ namespace TWCore
 
             fixed (byte* tmpb1 = x.Array, tmpb2 = y.Array)
             {
-                byte* bytes1 = (byte*)x.GetPointer();
-                byte* bytes2 = (byte*)y.GetPointer();
+                var bytes1 = (byte*)x.GetPointer();
+                var bytes2 = (byte*)y.GetPointer();
                 var len = x.Count;
                 var rem = len % (sizeof(long) * 16);
                 var b1 = (long*)bytes1;

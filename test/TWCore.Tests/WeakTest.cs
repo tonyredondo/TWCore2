@@ -61,51 +61,54 @@ namespace TWCore.Tests
         private class WStatusEngine : IStatusEngine
         {
             private WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
+            private WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
+            private HashSet<WeakValue> _values = new HashSet<WeakValue>();
+            private HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
 
+            #region Properties
+            /// <inheritdoc />
             public ObservableCollection<IStatusTransport> Transports { get; }
+            /// <inheritdoc />
+            public bool Enabled { get; set; }
+            #endregion
             
-            
+            #region Methods
+            /// <inheritdoc />
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
                 throw new NotImplementedException();
             }
-
+            /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
                 throw new NotImplementedException();
             }
-
+            /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
                 throw new NotImplementedException();
             }
-
+            /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
                 throw new NotImplementedException();
             }
-
+            /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
             {
                 throw new NotImplementedException();
             }
-
-            public bool Enabled { get; set; }
-            
+            /// <inheritdoc />
             public void Dispose()
             {
                 throw new NotImplementedException();
             }
-
+            #endregion
             
+            #region Nested Types
             private class WeakChildren
             {
-                public List<WeakReference> Children { get; set; }
-
-                public WeakChildren()
-                {
-                    Children = new List<WeakReference>();
-                }
+                public List<WeakReference> Children { get; set; } = new List<WeakReference>();
             }
             private class WeakValue
             {
@@ -120,6 +123,7 @@ namespace TWCore.Tests
                     ObjectAttached = new WeakReference(objectToAttach);
                 }
             }
+            #endregion
         }
     }
 }

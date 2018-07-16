@@ -37,9 +37,9 @@ namespace TWCore
     #endregion
 
     /// <summary>
-    /// Helper to call delegates using objects with a weak reference
+    /// Delegates using objects with a weak reference
     /// </summary>
-    public struct WeakDelegate
+    public class WeakDelegate
     {
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]  private readonly bool _isStatic;
 
@@ -134,8 +134,7 @@ namespace TWCore
         /// <returns>WeakAction instance</returns>
         public WeakAction GetAction()
         {
-            var self = this;
-            return () => self.TryInvokeAction();
+            return () => TryInvokeAction();
         }
         /// <summary>
         /// Gets a WeakAction delegate from the instance
@@ -143,8 +142,7 @@ namespace TWCore
         /// <returns>WeakAction instance</returns>
         public WeakAction<T> GetAction<T>()
         {
-            var self = this;
-            return (arg) => self.TryInvokeAction(arg);
+            return (arg) => TryInvokeAction(arg);
         }
         /// <summary>
         /// Gets a WeakAction delegate from the instance
@@ -152,8 +150,7 @@ namespace TWCore
         /// <returns>WeakAction instance</returns>
         public WeakAction<T1, T2> GetAction<T1, T2>()
         {
-            var self = this;
-            return (arg1, arg2) => self.TryInvokeAction(arg1, arg2);
+            return (arg1, arg2) => TryInvokeAction(arg1, arg2);
         }
         /// <summary>
         /// Gets a WeakAction delegate from the instance
@@ -161,8 +158,7 @@ namespace TWCore
         /// <returns>WeakAction instance</returns>
         public WeakAction<T1, T2, T3> GetAction<T1, T2, T3>()
         {
-            var self = this;
-            return (arg1, arg2, arg3) => self.TryInvokeAction(arg1, arg2, arg3);
+            return (arg1, arg2, arg3) => TryInvokeAction(arg1, arg2, arg3);
         }
         /// <summary>
         /// Gets a WeakAction delegate from the instance
@@ -170,8 +166,7 @@ namespace TWCore
         /// <returns>WeakAction instance</returns>
         public WeakAction<T1, T2, T3, T4> GetAction<T1, T2, T3, T4>()
         {
-            var self = this;
-            return (arg1, arg2, arg3, arg4) => self.TryInvokeAction(arg1, arg2, arg3, arg4);
+            return (arg1, arg2, arg3, arg4) => TryInvokeAction(arg1, arg2, arg3, arg4);
         }
         #endregion
 
@@ -182,10 +177,9 @@ namespace TWCore
         /// <returns>WeakFunc instance</returns>
         public WeakFunc<TResult> GetFunc<TResult>()
         {
-            var self = this;
             return () =>
             {
-                if (self.TryInvoke(null, out var result))
+                if (TryInvoke(null, out var result))
                     return (true, (TResult)result);
                 return (false, default(TResult));
             };
@@ -196,10 +190,9 @@ namespace TWCore
         /// <returns>WeakFunc instance</returns>
         public WeakFunc<T1, TResult> GetFunc<T1, TResult>()
         {
-            var self = this;
             return (arg) =>
             {
-                if (self.TryInvoke(new object[] { arg }, out var result))
+                if (TryInvoke(new object[] { arg }, out var result))
                     return (true, (TResult)result);
                 return (false, default(TResult));
             };
@@ -210,10 +203,9 @@ namespace TWCore
         /// <returns>WeakFunc instance</returns>
         public WeakFunc<T1, T2, TResult> GetFunc<T1, T2, TResult>()
         {
-            var self = this;
             return (arg1, arg2) =>
             {
-                if (self.TryInvoke(new object[] { arg1, arg2 }, out var result))
+                if (TryInvoke(new object[] { arg1, arg2 }, out var result))
                     return (true, (TResult)result);
                 return (false, default(TResult));
             };
@@ -224,10 +216,9 @@ namespace TWCore
         /// <returns>WeakFunc instance</returns>
         public WeakFunc<T1, T2, T3, TResult> GetFunc<T1, T2, T3, TResult>()
         {
-            var self = this;
             return (arg1, arg2, arg3) =>
             {
-                if (self.TryInvoke(new object[] { arg1, arg2, arg3 }, out var result))
+                if (TryInvoke(new object[] { arg1, arg2, arg3 }, out var result))
                     return (true, (TResult)result);
                 return (false, default(TResult));
             };
@@ -238,10 +229,9 @@ namespace TWCore
         /// <returns>WeakFunc instance</returns>
         public WeakFunc<T1, T2, T3, T4, TResult> GetFunc<T1, T2, T3, T4, TResult>()
         {
-            var self = this;
             return (arg1, arg2, arg3, arg4) =>
             {
-                if (self.TryInvoke(new object[] { arg1, arg2, arg3, arg4 }, out var result))
+                if (TryInvoke(new object[] { arg1, arg2, arg3, arg4 }, out var result))
                     return (true, (TResult)result);
                 return (false, default(TResult));
             };

@@ -115,12 +115,20 @@ namespace TWCore.Tests
                 public List<WeakDelegate> FuncDelegates;
                 public List<WeakDelegate> ActionDelegates;
                 public WeakReference ObjectAttached;
+                public WeakReference ObjectParent;
 
                 public WeakValue(object objectToAttach)
                 {
                     FuncDelegates = new List<WeakDelegate>();
                     ActionDelegates = new List<WeakDelegate>();
                     ObjectAttached = new WeakReference(objectToAttach);
+                }
+                public WeakValue(object objectToAttach, object objectParent)
+                {
+                    FuncDelegates = new List<WeakDelegate>();
+                    ActionDelegates = new List<WeakDelegate>();
+                    ObjectAttached = new WeakReference(objectToAttach);
+                    ObjectParent = new WeakReference(objectParent);
                 }
             }
             #endregion

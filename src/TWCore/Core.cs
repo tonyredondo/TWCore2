@@ -375,6 +375,16 @@ namespace TWCore
             };
             Init(factories);
         }
+        /// <summary>
+        /// Initialize with the default factories.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static void InitDefaults(Action<DefaultFactories> defaultFactoryAction)
+        {
+            var factories = new DefaultFactories();
+            defaultFactoryAction(factories);
+            Init(factories);
+        }
         #endregion
 
         #region Run Service

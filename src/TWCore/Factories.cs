@@ -45,37 +45,37 @@ namespace TWCore
         /// <summary>
         /// Activation helper
         /// </summary>
-        public IAccessorsFactory Accessors { get; protected set; } = new DefaultAccessorsFactory();
+        public IAccessorsFactory Accessors { get; set; } = new DefaultAccessorsFactory();
         /// <summary>
         /// Log Item Factory
         /// </summary>
-        public CreateLogItemDelegate CreateLogItem { get; protected set; } = BaseCreateLogItem;
+        public CreateLogItemDelegate CreateLogItem { get; set; } = BaseCreateLogItem;
         /// <summary>
         /// Default LogEngine factory
         /// </summary>
-        public CreateLogEngineDelegate CreateLogEngine { get; protected set; } = () => new DefaultLogEngine();
+        public CreateLogEngineDelegate CreateLogEngine { get; set; } = () => new DefaultLogEngine();
         /// <summary>
         /// Trace Item Factory
         /// </summary>
-        public CreateTraceItemDelegate CreateTraceItem { get; protected set; } = BaseCreateTraceItem;
+        public CreateTraceItemDelegate CreateTraceItem { get; set; } = BaseCreateTraceItem;
         /// <summary>
         /// Default TraceEngine factory
         /// </summary>
-        public CreateTraceEngineDelegate CreateTraceEngine { get; protected set; } = () => new DefaultTraceEngine();
+        public CreateTraceEngineDelegate CreateTraceEngine { get; set; } = () => new DefaultTraceEngine();
         /// <summary>
         /// Default StatusEngine factory
         /// </summary>
-        public CreateStatusEngineDelegate CreateStatusEngine { get; protected set; } = () => new DefaultStatusEngine();
+        public CreateStatusEngineDelegate CreateStatusEngine { get; set; } = () => new DefaultStatusEngine();
         /// <summary>
         /// Gets the available assemblies loaded on the AppDomain
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public GetAssembliesDelegate GetAssemblies { get; protected set; } = () => throw new NullReferenceException();
+        public GetAssembliesDelegate GetAssemblies { get; set; } = () => throw new NullReferenceException();
         /// <summary>
         /// Gets the available assemblies on the folder
         /// </summary>
         /// <returns>Assemblies array</returns>
-        public GetAssembliesDelegate GetAllAssemblies { get; protected set; } = () => throw new NullReferenceException();
+        public GetAssembliesDelegate GetAllAssemblies { get; set; } = () => throw new NullReferenceException();
         /// <summary>
         /// Gets the platform type
         /// </summary>
@@ -123,15 +123,15 @@ namespace TWCore
         /// <summary>
         /// Gets if the process is running inside a container
         /// </summary>
-        public bool RunningAsContainer { get; protected set; }
+        public bool RunningAsContainer { get; set; }
         /// <summary>
         /// Sequential Guid Generator
         /// </summary>
-        public GuidGeneratorDelegate SequentialGuidGenerator { get; protected set; } = BaseSequentialGuidGenerator;
+        public GuidGeneratorDelegate SequentialGuidGenerator { get; set; } = BaseSequentialGuidGenerator;
         /// <summary>
         /// Get New Guid
         /// </summary>
-        public GetGuidDelegate NewGuid { get; protected set; } = BaseNewGuid;
+        public GetGuidDelegate NewGuid { get; set; } = BaseNewGuid;
         #endregion
 
         /// <summary>

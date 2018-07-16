@@ -30,7 +30,7 @@ namespace TWCore.Reflection
     public class CompleteAccessorsFactory : IAccessorsFactory
     {
         private static MethodInfo _cTypeMInfo;
-        private static MethodInfo ChangeTypeMethodInfo 
+        private static MethodInfo ChangeTypeMethodInfo
             => _cTypeMInfo ?? (_cTypeMInfo = typeof(CompleteAccessorsFactory).GetMethods(BindingFlags.NonPublic | BindingFlags.Static).First(n => n.Name == "ChangeType"));
 
 
@@ -56,7 +56,7 @@ namespace TWCore.Reflection
                 expArr[i] = argExpConverted;
             }
             var newExp = Expression.New(ctor, expArr);
-            var lambda = Expression.Lambda<ActivatorDelegate>(newExp, "New+" + ctor.Name, new []{ paramExp });
+            var lambda = Expression.Lambda<ActivatorDelegate>(newExp, "New+" + ctor.Name, new[] { paramExp });
             return lambda.Compile();
         }
         /// <inheritdoc />
@@ -84,10 +84,18 @@ namespace TWCore.Reflection
         {
             var method = property.GetMethod;
             var obj = Expression.Parameter(typeof(object), "obj");
-            var instance = Expression.Convert(obj, method.DeclaringType);
-            var call = Expression.Call(instance, method);
+            MethodCallExpression call;
+            if (method.IsStatic)
+            {
+                call = Expression.Call(method);
+            }
+            else
+            {
+                var instance = Expression.Convert(obj, method.DeclaringType);
+                call = Expression.Call(instance, method);
+            }
             var result = Expression.Convert(call, typeof(object));
-            var expr = Expression.Lambda<GetAccessorDelegate>(result, "Get+" +  property.Name, new[] { obj });
+            var expr = Expression.Lambda<GetAccessorDelegate>(result, "Get+" + property.Name, new[] { obj });
             return expr.Compile();
         }
         /// <inheritdoc />
@@ -102,10 +110,19 @@ namespace TWCore.Reflection
             var method = property.SetMethod;
             var obj = Expression.Parameter(typeof(object), "obj");
             var value = Expression.Parameter(typeof(object), "value");
-            var instance = Expression.Convert(obj, method.DeclaringType);
-            var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
-            var call = Expression.Call(instance, method, castedValue);
-            var expr = Expression.Lambda<SetAccessorDelegate>(call, "Set+" + property.Name, new []{ obj, value });
+            MethodCallExpression call;
+            if (method.IsStatic)
+            {
+                var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
+                call = Expression.Call(method, castedValue);
+            }
+            else
+            {
+                var instance = Expression.Convert(obj, method.DeclaringType);
+                var castedValue = Expression.Convert(value, method.GetParameters()[0].ParameterType);
+                call = Expression.Call(instance, method, castedValue);
+            }
+            var expr = Expression.Lambda<SetAccessorDelegate>(call, "Set+" + property.Name, new[] { obj, value });
             return expr.Compile();
         }
         /// <inheritdoc />

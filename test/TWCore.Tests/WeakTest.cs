@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -61,7 +62,7 @@ namespace TWCore.Tests
             }
         }
 
-        private class WStatusEngine : IStatusEngine
+        public class WStatusEngine : IStatusEngine
         {
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
@@ -182,30 +183,64 @@ namespace TWCore.Tests
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
                 var obj = objectToAttach ?? statusItemDelegate.Target;
-                var weakValue = _weakValues.GetOrAdd(obj, key => new WeakValue(key));
+                var weakValue = _weakValues.GetOrAdd(obj, key => 
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
                 weakValue.Add(statusItemDelegate);
             }
             /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
                 var obj = objectToAttach ?? valuesFillerDelegate.Target;
-                var weakValue = _weakValues.GetOrAdd(obj, key => new WeakValue(key));
+                var weakValue = _weakValues.GetOrAdd(obj, key =>
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
                 weakValue.Add(valuesFillerDelegate);
             }
             /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
                 if (objectToAttach == null) return;
-                _weakValues.GetOrAdd(objectToAttach, key => new WeakValue(key));
+                _weakValues.GetOrAdd(objectToAttach, key =>
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
             }
             /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
                 if (objectToAttach == null) return;
-                var value = _weakValues.GetOrAdd(objectToAttach, key => new WeakValue(key));
+                var value = _weakValues.GetOrAdd(objectToAttach, key =>
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
                 if (parent == null) return;
-                _weakValues.GetOrAdd(parent, key => new WeakValue(key));
                 value.SetParent(parent);
+
+                _weakValues.GetOrAdd(parent, key => 
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
+                var wChildren =_weakChildren.GetOrAdd(parent, key =>
+                {
+                    var wValue = new WeakChildren();
+                    _children.Add(wValue);
+                    return wValue;
+                });
+                if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
+                    wChildren.Children.Add(new WeakReference(objectToAttach));
             }
             /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
@@ -275,6 +310,7 @@ namespace TWCore.Tests
                     ObjectAttached = new WeakReference(objectToAttach);
                     AttributeStatus = AttributeFunc.GetOrAdd(objectToAttach.GetType(), GetAttributeStatusFunc);
                 }
+                
                 #endregion
 
                 #region Methods

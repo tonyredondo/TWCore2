@@ -214,7 +214,7 @@ namespace TWCore.Collections
             WeakReference<TValue> res;
             while (true)
             {
-                res = _dictionary.GetOrAdd(weakKey, mKey => WeakReference<TValue>.Create(valueFactory(mKey)));
+                res = _dictionary.GetOrAdd(weakKey, (mKey, eKey) => WeakReference<TValue>.Create(valueFactory(eKey)), key);
                 if (res.IsAlive)
                     break;
                 _dictionary.TryRemove(weakKey, out _);

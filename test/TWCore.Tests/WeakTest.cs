@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Collections;
@@ -11,7 +13,7 @@ using TWCore.Services;
 
 namespace TWCore.Tests
 {
-    public class WeakTest: ContainerParameterService
+    public class WeakTest : ContainerParameterService
     {
         public WeakTest() : base("weaktest", "Weak Test") { }
         protected override void OnHandler(ParameterHandlerInfo info)
@@ -61,10 +63,10 @@ namespace TWCore.Tests
 
         private class WStatusEngine : IStatusEngine
         {
-            private WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
-            private WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
-            private HashSet<WeakValue> _values = new HashSet<WeakValue>();
-            private HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
+            private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
+            private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
+            private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
+            private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
 
             #region Properties
             /// <inheritdoc />
@@ -72,7 +74,108 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public bool Enabled { get; set; }
             #endregion
-            
+
+            #region .ctor
+            /// <summary>
+            /// Status Engine
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            public WStatusEngine()
+            {
+                Transports.CollectionChanged += (s, e) =>
+                {
+                    if (e == null) return;
+                    switch (e.Action)
+                    {
+                        case NotifyCollectionChangedAction.Add:
+                            if (e.NewItems != null)
+                            {
+                                foreach (IStatusTransport item in e.NewItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus += Transport_OnFetchStatus;
+                                    AttachChild(item, this);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Remove:
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Replace:
+                            if (e.NewItems != null)
+                            {
+                                foreach (IStatusTransport item in e.NewItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus += Transport_OnFetchStatus;
+                                    AttachChild(item, this);
+                                }
+                            }
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Reset:
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
+                    }
+                };
+
+                AttachObject(this);
+
+            }
+            /// <summary>
+            /// Destructor
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ~WStatusEngine()
+            {
+                Dispose();
+            }
+            #endregion
+
             #region Methods
             /// <inheritdoc />
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
@@ -99,20 +202,53 @@ namespace TWCore.Tests
             {
                 if (objectToAttach == null) return;
                 var value = _weakValues.GetOrAdd(objectToAttach, key => new WeakValue(key));
+                if (parent == null) return;
+                _weakValues.GetOrAdd(parent, key => new WeakValue(key));
                 value.SetParent(parent);
             }
             /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
             {
-                throw new NotImplementedException();
+                if (objectToDetach == null) return;
+                _weakValues.TryRemove(objectToDetach, out _);
             }
             /// <inheritdoc />
             public void Dispose()
             {
-                throw new NotImplementedException();
+                _weakValues.Clear();
+                _weakChildren.Clear();
+                _values.Clear();
+                _children.Clear();
             }
             #endregion
-            
+
+            #region Private Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private StatusItemCollection Transport_OnFetchStatus()
+            {
+                if (!Enabled)
+                    return null;
+
+                //var sw = Stopwatch.StartNew();
+                //var items = _statusCollection.GetStatus();
+                //return new StatusItemCollection
+                //{
+                //    InstanceId = Core.InstanceId,
+                //    Timestamp = Core.Now,
+                //    EnvironmentName = Core.EnvironmentName,
+                //    MachineName = Core.MachineName,
+                //    ApplicationDisplayName = Core.ApplicationDisplayName,
+                //    ApplicationName = Core.ApplicationName,
+                //    Items = items,
+                //    ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
+                //    StartTime = Process.GetCurrentProcess().StartTime
+                //};
+
+                return null;
+            }
+            #endregion
+
+
             #region Nested Types
             private class WeakChildren
             {
@@ -138,14 +274,12 @@ namespace TWCore.Tests
                 #region Methods
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Add(Func<StatusItem> @delegate)
-                {
-                    FuncDelegates.Add(@delegate.GetWeak());
-                }
+                    => FuncDelegates.Add(@delegate.GetWeak());
+
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void Add(Action<StatusItemValuesCollection> @delegate)
-                {
-                    ActionDelegates.Add(@delegate.GetWeak());
-                }
+                    => ActionDelegates.Add(@delegate.GetWeak());
+
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public void SetParent(object parentObject)
                 {

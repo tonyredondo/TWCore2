@@ -63,6 +63,7 @@ namespace TWCore.Tests
 
         private class WStatusEngine : IStatusEngine
         {
+            private static readonly NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>> AttributeFunc = new NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>>();
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
             private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
@@ -225,6 +226,43 @@ namespace TWCore.Tests
             #endregion
 
             #region Private Methods
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private Func<object, StatusItem> GetAttributeStatusFunc(Type type)
+            {
+                var props = type.GetProperties();
+                var nameAttribute = type.GetAttribute<StatusNameAttribute>();
+                var lstProps = new List<(FastPropertyInfo, StatusPropertyAttribute, StatusReferenceAttribute)>();
+                foreach(var prop in props)
+                {
+                    var fastProp = prop.GetFastPropertyInfo();
+                    var attrPropAttr = prop.GetAttribute<StatusPropertyAttribute>();
+                    var attrRefAttr = prop.GetAttribute<StatusReferenceAttribute>();
+                    if (attrPropAttr == null && attrRefAttr == null) continue;
+                    lstProps.Add((fastProp, attrPropAttr, attrRefAttr));
+                }
+                if (lstProps.Count == 0) return null;
+                return item =>
+                {
+                    var sItem = new StatusItem();
+                    if (nameAttribute != null)
+                        sItem.Name = nameAttribute.Name;
+                    foreach((var fProp, var propAttr, var refAttr) in lstProps)
+                    {
+                        var value = fProp.GetValue(item);
+                        if (propAttr != null)
+                        {
+                            var name = propAttr.Name ?? fProp.Name;
+                            sItem.Values.Add(name, value, propAttr.Status, propAttr.PlotEnabled);
+                        }
+                        if (refAttr != null)
+                        {
+                            Core.Status.AttachChild(value, item);
+                        }
+                    }
+                    return sItem;
+                };
+            }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private StatusItemCollection Transport_OnFetchStatus()
             {

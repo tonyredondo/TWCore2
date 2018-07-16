@@ -82,6 +82,7 @@ namespace TWCore.Tests
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public WStatusEngine()
             {
+                Transports = new ObservableCollection<IStatusTransport>();
                 Transports.CollectionChanged += (s, e) =>
                 {
                     if (e == null) return;
@@ -215,6 +216,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Dispose()
             {
+                Transports?.Clear();
                 _weakValues.Clear();
                 _weakChildren.Clear();
                 _values.Clear();
@@ -285,6 +287,12 @@ namespace TWCore.Tests
                 {
                     if (ObjectParent != null && ObjectParent.IsAlive) return;
                     ObjectParent = new WeakReference(parentObject);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public StatusItem GetStatusItem()
+                {
+                    return null;
                 }
                 #endregion
             }

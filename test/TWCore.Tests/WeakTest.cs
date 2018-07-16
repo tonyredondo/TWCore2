@@ -68,6 +68,7 @@ namespace TWCore.Tests
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
             private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
             private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
+            private bool _isFirstTime = true;
 
             #region Properties
             /// <inheritdoc />
@@ -273,11 +274,17 @@ namespace TWCore.Tests
                 if (!Enabled)
                     return null;
 
-                foreach (var value in _values)
-                {
+                #region Update Values
+                foreach (var value in _weakValues.Values)
                     value.Update();
+                if (_isFirstTime)
+                {
+                    foreach (var value in _weakValues.Values)
+                        value.Update();
                 }
+                #endregion
 
+                
                 //var sw = Stopwatch.StartNew();
                 //var items = _statusCollection.GetStatus();
                 //return new StatusItemCollection
@@ -293,12 +300,13 @@ namespace TWCore.Tests
                 //    StartTime = Process.GetCurrentProcess().StartTime
                 //};
                 
-                
-                foreach (var value in _values)
-                {
-                    value.Clean();
-                }
 
+                #region Clear Values
+                foreach (var value in _weakValues.Values)
+                    value.Clean();
+                _isFirstTime = false;
+                #endregion
+                
                 return null;
             }
             #endregion

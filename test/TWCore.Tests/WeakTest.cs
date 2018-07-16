@@ -275,7 +275,7 @@ namespace TWCore.Tests
 
                 foreach (var value in _values)
                 {
-                    value.UpdateStatusItem();
+                    value.Update();
                 }
 
                 //var sw = Stopwatch.StartNew();
@@ -292,6 +292,12 @@ namespace TWCore.Tests
                 //    ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
                 //    StartTime = Process.GetCurrentProcess().StartTime
                 //};
+                
+                
+                foreach (var value in _values)
+                {
+                    value.Clean();
+                }
 
                 return null;
             }
@@ -343,7 +349,7 @@ namespace TWCore.Tests
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public void UpdateStatusItem()
+                public void Update()
                 {
                     if (!Enable)
                     {
@@ -384,6 +390,12 @@ namespace TWCore.Tests
 
                     CurrentStatusItem = item;
                 }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Clean()
+                {
+                    CurrentStatusItem = null;
+                }
                 #endregion
 
                 #region Private Methods
@@ -407,7 +419,7 @@ namespace TWCore.Tests
                         var sItem = new StatusItem();
                         if (nameAttribute != null)
                             sItem.Name = nameAttribute.Name;
-                        foreach ((var fProp, var propAttr, var refAttr) in lstProps)
+                        foreach (var (fProp, propAttr, refAttr) in lstProps)
                         {
                             var value = fProp.GetValue(item);
                             if (propAttr != null)

@@ -73,7 +73,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public ObservableCollection<IStatusTransport> Transports { get; }
             /// <inheritdoc />
-            public bool Enabled { get; set; }
+            public bool Enabled { get; set; } = true;
             #endregion
 
             #region .ctor
@@ -183,7 +183,7 @@ namespace TWCore.Tests
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
                 var obj = objectToAttach ?? statusItemDelegate.Target;
-                var weakValue = _weakValues.GetOrAdd(obj, key => 
+                var weakValue = _weakValues.GetOrAdd(obj, key =>
                 {
                     var wValue = new WeakValue(key);
                     _values.Add(wValue);
@@ -227,18 +227,18 @@ namespace TWCore.Tests
                 if (parent == null) return;
                 value.SetParent(parent);
 
-                _weakValues.GetOrAdd(parent, key => 
+                _weakValues.GetOrAdd(parent, key =>
                 {
                     var wValue = new WeakValue(key);
                     _values.Add(wValue);
                     return wValue;
                 });
-                var wChildren =_weakChildren.GetOrAdd(parent, key =>
-                {
-                    var wValue = new WeakChildren();
-                    _children.Add(wValue);
-                    return wValue;
-                });
+                var wChildren = _weakChildren.GetOrAdd(parent, key =>
+                 {
+                     var wValue = new WeakChildren();
+                     _children.Add(wValue);
+                     return wValue;
+                 });
                 if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
                     wChildren.Children.Add(new WeakReference(objectToAttach));
             }
@@ -266,6 +266,11 @@ namespace TWCore.Tests
             {
                 if (!Enabled)
                     return null;
+
+                foreach (var value in _values)
+                {
+                    var statusItem = value.GetStatusItem();
+                }
 
                 //var sw = Stopwatch.StartNew();
                 //var items = _statusCollection.GetStatus();
@@ -310,7 +315,7 @@ namespace TWCore.Tests
                     ObjectAttached = new WeakReference(objectToAttach);
                     AttributeStatus = AttributeFunc.GetOrAdd(objectToAttach.GetType(), GetAttributeStatusFunc);
                 }
-                
+
                 #endregion
 
                 #region Methods
@@ -332,7 +337,35 @@ namespace TWCore.Tests
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public StatusItem GetStatusItem()
                 {
-                    return null;
+                    var obj = ObjectAttached.Target;
+                    if (!ObjectAttached.IsAlive) return null;
+                    var item = AttributeStatus?.Invoke(obj);
+                    foreach (var @delegate in FuncDelegates)
+                    {
+                        if (@delegate.TryInvoke(null, out var itemResult) && itemResult is StatusItem sItemResult)
+                        {
+                            if (item == null)
+                            {
+                                item = sItemResult;
+                                continue;
+                            }
+                            if (!string.IsNullOrEmpty(sItemResult.Name))
+                            {
+                                item.Name = sItemResult.Name;
+                                if (sItemResult.Values != null && sItemResult.Values.Count > 0)
+                                    item.Values.AddRange(sItemResult.Values);
+                                if (sItemResult.Children != null && sItemResult.Children.Count > 0)
+                                    item.Children.AddRange(sItemResult.Children);
+                            }
+                        }
+                    }
+                    if (item == null)
+                        item = new StatusItem { Name = obj.GetType().Name };
+
+                    foreach(var @delegate in ActionDelegates)
+                        @delegate.TryInvokeAction(item.Values);
+
+                    return item;
                 }
                 #endregion
 

@@ -246,7 +246,13 @@ namespace TWCore.Tests
             public void DeAttachObject(object objectToDetach)
             {
                 if (objectToDetach == null) return;
-                _weakValues.TryRemove(objectToDetach, out _);
+                var value = _weakValues.GetOrAdd(objectToDetach, key =>
+                {
+                    var wValue = new WeakValue(key);
+                    _values.Add(wValue);
+                    return wValue;
+                });
+                value.Enable = false;
             }
             /// <inheritdoc />
             public void Dispose()
@@ -269,7 +275,7 @@ namespace TWCore.Tests
 
                 foreach (var value in _values)
                 {
-                    var statusItem = value.GetStatusItem();
+                    value.UpdateStatusItem();
                 }
 
                 //var sw = Stopwatch.StartNew();
@@ -305,6 +311,8 @@ namespace TWCore.Tests
                 public Func<object, StatusItem> AttributeStatus;
                 public WeakReference ObjectAttached;
                 public WeakReference ObjectParent;
+                public StatusItem CurrentStatusItem;
+                public bool Enable = true;
 
                 #region .ctor
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -335,10 +343,19 @@ namespace TWCore.Tests
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                public StatusItem GetStatusItem()
+                public void UpdateStatusItem()
                 {
+                    if (!Enable)
+                    {
+                        CurrentStatusItem = null;
+                        return;
+                    }
                     var obj = ObjectAttached.Target;
-                    if (!ObjectAttached.IsAlive) return null;
+                    if (!ObjectAttached.IsAlive)
+                    {
+                        CurrentStatusItem = null;
+                        return;
+                    }
                     var item = AttributeStatus?.Invoke(obj);
                     foreach (var @delegate in FuncDelegates)
                     {
@@ -365,7 +382,7 @@ namespace TWCore.Tests
                     foreach(var @delegate in ActionDelegates)
                         @delegate.TryInvokeAction(item.Values);
 
-                    return item;
+                    CurrentStatusItem = item;
                 }
                 #endregion
 
@@ -373,15 +390,15 @@ namespace TWCore.Tests
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 private static Func<object, StatusItem> GetAttributeStatusFunc(Type type)
                 {
-                    var props = type.GetProperties();
+                    var props = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
                     var nameAttribute = type.GetAttribute<StatusNameAttribute>();
                     var lstProps = new List<(FastPropertyInfo, StatusPropertyAttribute, StatusReferenceAttribute)>();
                     foreach (var prop in props)
                     {
-                        var fastProp = prop.GetFastPropertyInfo();
                         var attrPropAttr = prop.GetAttribute<StatusPropertyAttribute>();
                         var attrRefAttr = prop.GetAttribute<StatusReferenceAttribute>();
                         if (attrPropAttr == null && attrRefAttr == null) continue;
+                        var fastProp = prop.GetFastPropertyInfo();
                         lstProps.Add((fastProp, attrPropAttr, attrRefAttr));
                     }
                     if (lstProps.Count == 0 && nameAttribute == null) return null;

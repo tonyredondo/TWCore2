@@ -61,13 +61,12 @@ namespace TWCore.Test.Core
         private static void Main(string[] args)
         {
             Console.WriteLine("MAIN");
+
             SerializerManager.DefaultBinarySerializer = new NBinarySerializer();
 
             TWCore.Core.DebugMode = true;
             TWCore.Core.RunOnInit(() =>
             {
-                TWCore.Core.SetStatusEngine(new Tests.WeakTest.WStatusEngine());
-
                 TWCore.Core.Status.Transports.Add(new HttpStatusTransport(8089));
                 TWCore.Core.Log.AddSimpleFileStorage("./log/testlog.txt");
                 TWCore.Core.Log.AddHtmlFileStorage("./log/testlog.htm");
@@ -182,6 +181,13 @@ namespace TWCore.Test.Core
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
             });
+
+
+            TWCore.Core.InitDefaults(factory =>
+            {
+                factory.CreateStatusEngine = () => new Tests.WeakTest.WStatusEngine();
+            });
+
 
             TWCore.Core.RunService<TestService>(args);
         }

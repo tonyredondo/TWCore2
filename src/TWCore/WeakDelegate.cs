@@ -41,13 +41,13 @@ namespace TWCore
     /// </summary>
     public class WeakDelegate
     {
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]  private readonly bool _isStatic;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private readonly bool _isStatic;
 
         #region Properties
         /// <summary>
         /// Weak object reference
         /// </summary>
-        public WeakReference<object> WeakObject { get; }
+        public WeakReference WeakObject { get; }
         /// <summary>
         /// Method to execute
         /// </summary>
@@ -65,10 +65,10 @@ namespace TWCore
         {
             _isStatic = method?.IsStatic ?? false;
             Method = method?.GetMethodAccessor();
-            if (target is WeakReference<object> weakTarget)
+            if (target is WeakReference weakTarget)
                 WeakObject = weakTarget;
             else if (method != null && !_isStatic)
-                WeakObject = new WeakReference<object>(target);
+                WeakObject = new WeakReference(target);
             else
                 WeakObject = null;
         }
@@ -97,7 +97,8 @@ namespace TWCore
                 result = Method.Invoke(null, parameters);
                 return true;
             }
-            if (WeakObject.TryGetTarget(out var target))
+            var target = WeakObject.Target;
+            if (WeakObject.IsAlive)
             {
                 result = Method.Invoke(target, parameters);
                 return true;
@@ -119,7 +120,8 @@ namespace TWCore
                 Method.Invoke(null, parameters);
                 return true;
             }
-            if (WeakObject.TryGetTarget(out var target))
+            var target = WeakObject.Target;
+            if (WeakObject.IsAlive)
             {
                 Method.Invoke(target, parameters);
                 return true;

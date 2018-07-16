@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status;
@@ -76,22 +77,29 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
-                throw new NotImplementedException();
+                var obj = objectToAttach ?? statusItemDelegate.Target;
+                var weakValue = _weakValues.GetOrAdd(obj, key => new WeakValue(key));
+                weakValue.Add(statusItemDelegate);
             }
             /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
-                throw new NotImplementedException();
+                var obj = objectToAttach ?? valuesFillerDelegate.Target;
+                var weakValue = _weakValues.GetOrAdd(obj, key => new WeakValue(key));
+                weakValue.Add(valuesFillerDelegate);
             }
             /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
-                throw new NotImplementedException();
+                if (objectToAttach == null) return;
+                _weakValues.GetOrAdd(objectToAttach, key => new WeakValue(key));
             }
             /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
-                throw new NotImplementedException();
+                if (objectToAttach == null) return;
+                var value = _weakValues.GetOrAdd(objectToAttach, key => new WeakValue(key));
+                value.SetParent(parent);
             }
             /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
@@ -117,19 +125,34 @@ namespace TWCore.Tests
                 public WeakReference ObjectAttached;
                 public WeakReference ObjectParent;
 
+                #region .ctor
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 public WeakValue(object objectToAttach)
                 {
                     FuncDelegates = new List<WeakDelegate>();
                     ActionDelegates = new List<WeakDelegate>();
                     ObjectAttached = new WeakReference(objectToAttach);
                 }
-                public WeakValue(object objectToAttach, object objectParent)
+                #endregion
+
+                #region Methods
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Add(Func<StatusItem> @delegate)
                 {
-                    FuncDelegates = new List<WeakDelegate>();
-                    ActionDelegates = new List<WeakDelegate>();
-                    ObjectAttached = new WeakReference(objectToAttach);
-                    ObjectParent = new WeakReference(objectParent);
+                    FuncDelegates.Add(@delegate.GetWeak());
                 }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Add(Action<StatusItemValuesCollection> @delegate)
+                {
+                    ActionDelegates.Add(@delegate.GetWeak());
+                }
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void SetParent(object parentObject)
+                {
+                    if (ObjectParent != null && ObjectParent.IsAlive) return;
+                    ObjectParent = new WeakReference(parentObject);
+                }
+                #endregion
             }
             #endregion
         }

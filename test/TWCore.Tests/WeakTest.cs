@@ -68,7 +68,6 @@ namespace TWCore.Tests
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
             private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
             private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
-            private bool _isFirstTime = true;
 
             #region Properties
             /// <inheritdoc />
@@ -184,62 +183,31 @@ namespace TWCore.Tests
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
                 var obj = objectToAttach ?? statusItemDelegate.Target;
-                var weakValue = _weakValues.GetOrAdd(obj, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
+                var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(statusItemDelegate);
             }
             /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
                 var obj = objectToAttach ?? valuesFillerDelegate.Target;
-                var weakValue = _weakValues.GetOrAdd(obj, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
+                var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(valuesFillerDelegate);
             }
             /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
                 if (objectToAttach == null) return;
-                _weakValues.GetOrAdd(objectToAttach, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
+                _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
             }
             /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
                 if (objectToAttach == null) return;
-                var value = _weakValues.GetOrAdd(objectToAttach, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
+                var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
                 if (parent == null) return;
                 value.SetParent(parent);
-
-                _weakValues.GetOrAdd(parent, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
-                var wChildren = _weakChildren.GetOrAdd(parent, key =>
-                 {
-                     var wValue = new WeakChildren();
-                     _children.Add(wValue);
-                     return wValue;
-                 });
+                _weakValues.GetOrAdd(parent, CreateWeakValue);
+                var wChildren = _weakChildren.GetOrAdd(parent, CreateWeakChildren);
                 if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
                     wChildren.Children.Add(new WeakReference(objectToAttach));
             }
@@ -247,12 +215,7 @@ namespace TWCore.Tests
             public void DeAttachObject(object objectToDetach)
             {
                 if (objectToDetach == null) return;
-                var value = _weakValues.GetOrAdd(objectToDetach, key =>
-                {
-                    var wValue = new WeakValue(key);
-                    _values.Add(wValue);
-                    return wValue;
-                });
+                var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
                 value.Enable = false;
             }
             /// <inheritdoc />
@@ -269,19 +232,41 @@ namespace TWCore.Tests
             #region Private Methods
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private WeakValue CreateWeakValue(object key)
+            {
+                var wValue = new WeakValue(key);
+                _values.Add(wValue);
+                return wValue;
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private WeakChildren CreateWeakChildren(object parent)
+            {
+                var wValue = new WeakChildren();
+                _children.Add(wValue);
+                return wValue;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private StatusItemCollection Transport_OnFetchStatus()
             {
                 if (!Enabled)
                     return null;
 
+                var initialCount = _weakValues.Count;
+                var lstWithSlashName = new List<WeakValue>(_weakValues.Count);
+
                 #region Update Values
-                foreach (var value in _weakValues.Values)
-                    value.Update();
-                if (_isFirstTime)
+                do
                 {
+                    lstWithSlashName.Clear();
                     foreach (var value in _weakValues.Values)
+                    {
+                        if (value.CurrentStatusItem != null) continue;
                         value.Update();
-                }
+                        if (value.CurrentStatusItem?.Name?.IndexOf('\\', StringComparison.Ordinal) > 0)
+                            lstWithSlashName.Add(value);
+                    }
+                } while (_weakValues.Count != initialCount);
                 #endregion
 
                 
@@ -304,7 +289,6 @@ namespace TWCore.Tests
                 #region Clear Values
                 foreach (var value in _weakValues.Values)
                     value.Clean();
-                _isFirstTime = false;
                 #endregion
                 
                 return null;

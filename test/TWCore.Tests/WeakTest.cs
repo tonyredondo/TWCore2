@@ -11,6 +11,7 @@ using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
 using TWCore.Services;
+using System.Threading;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Tests
@@ -65,6 +66,7 @@ namespace TWCore.Tests
 
         public class WStatusEngine : IStatusEngine
         {
+            private const int MaxItems = 1500;
             private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> _listPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
             private static readonly ReferencePool<Dictionary<string, WeakValue>> _dictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
@@ -73,6 +75,7 @@ namespace TWCore.Tests
             private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
             private readonly Action _throttledUpdate;
             private StatusItemCollection _lastResult;
+            private long CurrentItems;
 
             #region Properties
             /// <inheritdoc />
@@ -188,6 +191,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
+                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
                 var obj = objectToAttach ?? statusItemDelegate.Target;
                 var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(statusItemDelegate);
@@ -195,6 +199,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
+                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
                 var obj = objectToAttach ?? valuesFillerDelegate.Target;
                 var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(valuesFillerDelegate);
@@ -202,12 +207,14 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
+                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
                 if (objectToAttach == null) return;
                 _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
             }
             /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
+                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
                 if (objectToAttach == null) return;
                 var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
                 if (parent == null) return;
@@ -220,6 +227,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
             {
+                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
                 if (objectToDetach == null) return;
                 var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
                 value.Enable = false;
@@ -239,6 +247,7 @@ namespace TWCore.Tests
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private WeakValue CreateWeakValue(object key)
             {
+                Interlocked.Increment(ref CurrentItems);
                 var wValue = new WeakValue(key);
                 _values.Add(wValue);
                 return wValue;

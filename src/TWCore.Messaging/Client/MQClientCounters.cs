@@ -32,75 +32,85 @@ namespace TWCore.Messaging.Client
 		private Timer _timerTen;
 		private Timer _timerThirty;
 		private Timer _timerHour;
+        private long _messagesSent;
+        private long _lastTenMinutesMessagesSent;
+        private long _lastThirtyMinutesMessagesSent;
+        private long _lastHourMessagesSent;
+        private long _messagesReceived;
+        private long _lastTenMinutesMessagesReceived;
+        private long _lastThirtyMinutesMessagesReceived;
+        private long _lastHourMessagesReceived;
+        private long _totalNetworkTime;
+        private long _totalReceivingTime;
 
-		#region Properties
-		/// <summary>
-		/// Number of messages Sent
-		/// </summary>
-		public long MessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last ten minutes
-		/// </summary>
-		public long LastTenMinutesMessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesMessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last hour
-		/// </summary>
-		public long LastHourMessagesSent { get; private set; }
+        #region Properties
+        /// <summary>
+        /// Number of messages Sent
+        /// </summary>
+        public long MessagesSent => _messagesSent;
+        /// <summary>
+        /// Number of messages sent in the last ten minutes
+        /// </summary>
+        public long LastTenMinutesMessagesSent => _lastTenMinutesMessagesSent;
+        /// <summary>
+        /// Number of messages sent in the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesMessagesSent => _lastThirtyMinutesMessagesSent;
+        /// <summary>
+        /// Number of messages sent in the last hour
+        /// </summary>
+        public long LastHourMessagesSent => _lastHourMessagesSent;
 
-		/// <summary>
-		/// Number of messages received
-		/// </summary>
-		public long MessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last ten minutes
-		/// </summary>
-		public long LastTenMinutesMessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesMessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last hour
-		/// </summary>
-		public long LastHourMessagesReceived { get; private set; }
+        /// <summary>
+        /// Number of messages received
+        /// </summary>
+        public long MessagesReceived => _messagesReceived;
+        /// <summary>
+        /// Number of messages received in the last ten minutes
+        /// </summary>
+        public long LastTenMinutesMessagesReceived => _lastTenMinutesMessagesReceived;
+        /// <summary>
+        /// Number of messages received in the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesMessagesReceived => _lastThirtyMinutesMessagesReceived;
+        /// <summary>
+        /// Number of messages received in the last hour
+        /// </summary>
+        public long LastHourMessagesReceived => _lastHourMessagesReceived;
 
-		/// <summary>
-		/// Total network time
-		/// </summary>
-		public double TotalNetworkTime { get; private set; }
-		/// <summary>
-		/// Total receiving time
-		/// </summary>
-		public double TotalReceivingTime { get; private set; }
-		#endregion
+        /// <summary>
+        /// Total network time
+        /// </summary>
+        public long TotalNetworkTime => _totalNetworkTime;
+        /// <summary>
+        /// Total receiving time
+        /// </summary>
+        public long TotalReceivingTime => _totalReceivingTime;
+        #endregion
 
-		#region .ctor
-		/// <summary>
-		/// Message queue server counters
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region .ctor
+        /// <summary>
+        /// Message queue server counters
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQClientCounters()
 		{
 			_timerTen = new Timer(state =>
 			{
-				LastTenMinutesMessagesSent = 0;
-				LastTenMinutesMessagesReceived = 0;
+                Interlocked.Exchange(ref _lastTenMinutesMessagesSent, 0);
+                Interlocked.Exchange(ref _lastTenMinutesMessagesReceived, 0);
 			}, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
 			_timerThirty = new Timer(state =>
 			{
-				LastThirtyMinutesMessagesSent = 0;
-				LastThirtyMinutesMessagesReceived = 0;
+                Interlocked.Exchange(ref _lastThirtyMinutesMessagesSent, 0);
+                Interlocked.Exchange(ref _lastThirtyMinutesMessagesReceived, 0);
 			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 
 			_timerHour = new Timer(state =>
 			{
-				LastHourMessagesSent = 0;
-				LastHourMessagesReceived = 0;
+                Interlocked.Exchange(ref _lastHourMessagesSent, 0);
+                Interlocked.Exchange(ref _lastHourMessagesReceived, 0);
 			}, this, TimeSpan.FromMinutes(60), TimeSpan.FromMinutes(60));
 
 			Core.Status.Attach(collection =>
@@ -132,7 +142,7 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementTotalNetworkTime(TimeSpan increment)
 		{
-			TotalNetworkTime += increment.TotalMilliseconds;
+            Interlocked.Add(ref _totalNetworkTime, (long)increment.TotalMilliseconds);
 		}
 		/// <summary>
 		/// Increments the receiving time
@@ -141,7 +151,7 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementReceivingTime(TimeSpan increment)
 		{
-			TotalReceivingTime += increment.TotalMilliseconds;
+            Interlocked.Add(ref _totalReceivingTime, (long)increment.TotalMilliseconds);
 		}
 		/// <summary>
 		/// Increments the messages sent
@@ -149,10 +159,10 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesSent()
 		{
-			MessagesSent++;
-			LastTenMinutesMessagesSent++;
-			LastThirtyMinutesMessagesSent++;
-			LastHourMessagesSent++;
+            Interlocked.Increment(ref _messagesSent);
+            Interlocked.Increment(ref _lastTenMinutesMessagesSent);
+            Interlocked.Increment(ref _lastThirtyMinutesMessagesSent);
+            Interlocked.Increment(ref _lastHourMessagesSent);
 		}
 		/// <summary>
 		/// Increment the message received
@@ -160,10 +170,10 @@ namespace TWCore.Messaging.Client
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesReceived()
 		{
-			MessagesReceived++;
-			LastTenMinutesMessagesReceived++;
-			LastThirtyMinutesMessagesReceived++;
-			LastHourMessagesReceived++;
+            Interlocked.Increment(ref _messagesReceived);
+            Interlocked.Increment(ref _lastTenMinutesMessagesReceived);
+            Interlocked.Increment(ref _lastThirtyMinutesMessagesReceived);
+            Interlocked.Increment(ref _lastHourMessagesReceived);
 		}
 		#endregion
 	}

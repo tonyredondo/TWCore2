@@ -66,7 +66,7 @@ namespace TWCore.Tests
 
         public class WStatusEngine : IStatusEngine
         {
-            private const int MaxItems = 1500;
+            private const int MaxItems = 2500;
             private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> _listPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
             private static readonly ReferencePool<Dictionary<string, WeakValue>> _dictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();

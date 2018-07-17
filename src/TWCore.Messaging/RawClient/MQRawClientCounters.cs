@@ -31,61 +31,69 @@ namespace TWCore.Messaging.RawClient
 	{
 		private Timer _timerTen;
 		private Timer _timerThirty;
+        private long _messagesSent;
+        private long _lastTenMinutesMessagesSent;
+        private long _lastThirtyMinutesMessagesSent;
+        private long _messagesReceived;
+        private long _lastTenMinutesMessagesReceived;
+        private long _lastThirtyMinutesMessagesReceived;
+        private long _totalBytesSent;
+        private long _totalBytesReceived;
 
-		#region Properties
-		/// <summary>
-		/// Number of messages Sent
-		/// </summary>
-		public long MessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last ten minutes
-		/// </summary>
-		public long LastTenMinutesMessagesSent { get; private set; }
-		/// <summary>
-		/// Number of messages sent in the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesMessagesSent { get; private set; }
+        #region Properties
+        /// <summary>
+        /// Number of messages Sent
+        /// </summary>
+        public long MessagesSent => _messagesSent;
+        /// <summary>
+        /// Number of messages sent in the last ten minutes
+        /// </summary>
+        public long LastTenMinutesMessagesSent => _lastTenMinutesMessagesSent;
+        /// <summary>
+        /// Number of messages sent in the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesMessagesSent => _lastThirtyMinutesMessagesSent;
 
-		/// <summary>
-		/// Number of messages received
-		/// </summary>
-		public long MessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last ten minutes
-		/// </summary>
-		public long LastTenMinutesMessagesReceived { get; private set; }
-		/// <summary>
-		/// Number of messages received in the last thirty minutes
-		/// </summary>
-		public long LastThirtyMinutesMessagesReceived { get; private set; }
+        /// <summary>
+        /// Number of messages received
+        /// </summary>
+        public long MessagesReceived => _messagesReceived;
+        /// <summary>
+        /// Number of messages received in the last ten minutes
+        /// </summary>
+        public long LastTenMinutesMessagesReceived => _lastTenMinutesMessagesReceived;
+        /// <summary>
+        /// Number of messages received in the last thirty minutes
+        /// </summary>
+        public long LastThirtyMinutesMessagesReceived => _lastThirtyMinutesMessagesReceived;
 
-		/// <summary>
-		/// Total bytes sent
-		/// </summary>
-		public double TotalBytesSent { get; private set; }
-		/// <summary>
-		/// Total bytes received
-		/// </summary>
-		public double TotalBytesReceived { get; private set; }
-		#endregion
+        /// <summary>
+        /// Total bytes sent
+        /// </summary>
+        public long TotalBytesSent => _totalBytesSent;
+        /// <summary>
+        /// Total bytes received
+        /// </summary>
+        public double TotalBytesReceived => _totalBytesReceived;
+        #endregion
 
-		#region .ctor
-		/// <summary>
-		/// Message queue server counters
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        #region .ctor
+        /// <summary>
+        /// Message queue server counters
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public MQRawClientCounters()
 		{
 			_timerTen = new Timer(state =>
 			{
-				LastTenMinutesMessagesSent = 0;
-				LastTenMinutesMessagesReceived = 0;
+                Interlocked.Exchange(ref _lastTenMinutesMessagesSent, 0);
+                Interlocked.Exchange(ref _lastTenMinutesMessagesReceived, 0);
 			}, this, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(10));
 
 			_timerThirty = new Timer(state =>
 			{
-				LastThirtyMinutesMessagesSent = 0;
-				LastThirtyMinutesMessagesReceived = 0;
+                Interlocked.Exchange(ref _lastThirtyMinutesMessagesSent, 0);
+                Interlocked.Exchange(ref _lastThirtyMinutesMessagesReceived, 0);
 			}, this, TimeSpan.FromMinutes(30), TimeSpan.FromMinutes(30));
 
 			Core.Status.Attach(collection =>
@@ -113,18 +121,18 @@ namespace TWCore.Messaging.RawClient
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalBytesSent(double increment)
+		public void IncrementTotalBytesSent(long increment)
 		{
-			TotalBytesSent += increment;
+            Interlocked.Add(ref _totalBytesSent, increment);
 		}
 		/// <summary>
 		/// Increments the total bytes received
 		/// </summary>
 		/// <param name="increment">Increment value</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public void IncrementTotalBytesReceived(double increment)
+		public void IncrementTotalBytesReceived(long increment)
 		{
-			TotalBytesReceived += increment;
+            Interlocked.Add(ref _totalBytesReceived, increment);
 		}
 		/// <summary>
 		/// Increments the messages sent
@@ -132,9 +140,9 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesSent()
 		{
-			MessagesSent++;
-			LastTenMinutesMessagesSent++;
-			LastThirtyMinutesMessagesSent++;
+            Interlocked.Increment(ref _messagesSent);
+            Interlocked.Increment(ref _lastTenMinutesMessagesSent);
+            Interlocked.Increment(ref _lastThirtyMinutesMessagesSent);
 		}
 		/// <summary>
 		/// Increment the message received
@@ -142,9 +150,9 @@ namespace TWCore.Messaging.RawClient
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public void IncrementMessagesReceived()
 		{
-			MessagesReceived++;
-			LastTenMinutesMessagesReceived++;
-			LastThirtyMinutesMessagesReceived++;
+            Interlocked.Increment(ref _messagesReceived);
+            Interlocked.Increment(ref _lastTenMinutesMessagesReceived);
+            Interlocked.Increment(ref _lastThirtyMinutesMessagesReceived);
 		}
 		#endregion
 	}

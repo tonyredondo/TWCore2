@@ -297,12 +297,11 @@ namespace TWCore.Tests
                     var name = sSlashItem.Name;
                     var baseName = name.Substring(0, index);
                     var baseRest = name.Substring(index + 1);
-                    //
                     StatusItem baseStatus;
                     if (dctByName.TryGetValue(baseName, out var baseWeakValue))
                     {
                         baseStatus = baseWeakValue.CurrentStatusItem;
-                        _weakValues.TryRemove(key, out _);
+                        value.Enable = false;
                     }
                     else
                     {
@@ -320,9 +319,11 @@ namespace TWCore.Tests
                         baseStatus.Values.AddRange(sSlashItem.Values);
                         baseStatus.Children.AddRange(sSlashItem.Children);
                     }
-
                 }
                 #endregion
+
+                dctByName.Clear();
+                lstWithSlashName.Clear();
 
                 //var sw = Stopwatch.StartNew();
                 //var items = _statusCollection.GetStatus();

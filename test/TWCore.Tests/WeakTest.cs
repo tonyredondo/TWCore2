@@ -67,15 +67,15 @@ namespace TWCore.Tests
         public class WStatusEngine : IStatusEngine
         {
             private const int MaxItems = 2500;
-            private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> _listPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
-            private static readonly ReferencePool<Dictionary<string, WeakValue>> _dictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
+            private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> ListPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
+            private static readonly ReferencePool<Dictionary<string, WeakValue>> DictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
             private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
             private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
             private readonly Action _throttledUpdate;
             private StatusItemCollection _lastResult;
-            private long CurrentItems;
+            private long _currentItems;
 
             #region Properties
             /// <inheritdoc />
@@ -191,7 +191,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
             {
-                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
                 var obj = objectToAttach ?? statusItemDelegate.Target;
                 var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(statusItemDelegate);
@@ -199,7 +199,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
             {
-                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
                 var obj = objectToAttach ?? valuesFillerDelegate.Target;
                 var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
                 weakValue.Add(valuesFillerDelegate);
@@ -207,14 +207,14 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void AttachObject(object objectToAttach)
             {
-                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
                 if (objectToAttach == null) return;
                 _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
             }
             /// <inheritdoc />
             public void AttachChild(object objectToAttach, object parent)
             {
-                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
                 if (objectToAttach == null) return;
                 var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
                 if (parent == null) return;
@@ -227,7 +227,7 @@ namespace TWCore.Tests
             /// <inheritdoc />
             public void DeAttachObject(object objectToDetach)
             {
-                if (Interlocked.Read(ref CurrentItems) >= MaxItems) return;
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
                 if (objectToDetach == null) return;
                 var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
                 value.Enable = false;
@@ -247,7 +247,7 @@ namespace TWCore.Tests
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private WeakValue CreateWeakValue(object key)
             {
-                Interlocked.Increment(ref CurrentItems);
+                Interlocked.Increment(ref _currentItems);
                 var wValue = new WeakValue(key);
                 _values.Add(wValue);
                 return wValue;
@@ -277,8 +277,8 @@ namespace TWCore.Tests
             {
                 var startTime = Stopwatch.GetTimestamp();
                 int initialCount;
-                var lstWithSlashName = _listPool.New();
-                var dctByName = _dictioPool.New();
+                var lstWithSlashName = ListPool.New();
+                var dctByName = DictioPool.New();
                 var items = new List<StatusItem>();
 
                 #region Update Values
@@ -357,13 +357,11 @@ namespace TWCore.Tests
 
                         var parentStatus = parentValue.CurrentStatusItem;
                         var childStatus = value.CurrentStatusItem;
-                        if (childStatus != null)
+                        if (childStatus == null) continue;
+                        if (parentStatus != null)
                         {
-                            if (parentStatus != null)
-                            {
-                                parentStatus.Children.Add(childStatus);
-                                value.Processed = true;
-                            }
+                            parentStatus.Children.Add(childStatus);
+                            value.Processed = true;
                         }
                     }
                 }
@@ -411,8 +409,8 @@ namespace TWCore.Tests
 
                 lstWithSlashName.Clear();
                 dctByName.Clear();
-                _listPool.Store(lstWithSlashName);
-                _dictioPool.Store(dctByName);
+                ListPool.Store(lstWithSlashName);
+                DictioPool.Store(dctByName);
 
                 #region Clear Values
                 foreach (var value in _weakValues.Values)
@@ -420,7 +418,7 @@ namespace TWCore.Tests
                 #endregion
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetIds(string prefix, List<StatusItem> items)
+            private static void SetIds(string prefix, List<StatusItem> items)
             {
                 prefix = prefix ?? string.Empty;
                 if (items == null) return;
@@ -435,7 +433,7 @@ namespace TWCore.Tests
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void SetIds(string prefix, StatusItemValuesCollection collection)
+            private static void SetIds(string prefix, StatusItemValuesCollection collection)
             {
                 prefix = prefix ?? string.Empty;
                 if (collection == null) return;
@@ -452,7 +450,7 @@ namespace TWCore.Tests
                 }
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void CheckSameNames(List<StatusItem> items)
+            private static void CheckSameNames(List<StatusItem> items)
             {
                 if (items == null) return;
                 if (items.Count == 0) return;
@@ -513,7 +511,6 @@ namespace TWCore.Tests
                     ObjectAttached = new WeakReference(objectToAttach);
                     AttributeStatus = AttributeFunc.GetOrAdd(objectToAttach.GetType(), GetAttributeStatusFunc);
                 }
-
                 #endregion
 
                 #region Methods
@@ -556,14 +553,12 @@ namespace TWCore.Tests
                                 item = sItemResult;
                                 continue;
                             }
-                            if (!string.IsNullOrEmpty(sItemResult.Name))
-                            {
-                                item.Name = sItemResult.Name;
-                                if (sItemResult.Values != null && sItemResult.Values.Count > 0)
-                                    item.Values.AddRange(sItemResult.Values);
-                                if (sItemResult.Children != null && sItemResult.Children.Count > 0)
-                                    item.Children.AddRange(sItemResult.Children);
-                            }
+                            if (string.IsNullOrEmpty(sItemResult.Name)) continue;
+                            item.Name = sItemResult.Name;
+                            if (sItemResult.Values != null && sItemResult.Values.Count > 0)
+                                item.Values.AddRange(sItemResult.Values);
+                            if (sItemResult.Children != null && sItemResult.Children.Count > 0)
+                                item.Children.AddRange(sItemResult.Children);
                         }
                     }
                     if (item == null)

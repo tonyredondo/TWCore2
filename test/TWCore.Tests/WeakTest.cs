@@ -267,7 +267,7 @@ namespace TWCore.Tests
             private void UpdateStatus()
             {
                 var startTime = Stopwatch.GetTimestamp();
-                var initialCount = _weakValues.Count;
+                int initialCount;
                 var lstWithSlashName = _listPool.New();
                 var dctByName = _dictioPool.New();
                 var items = new List<StatusItem>();
@@ -277,6 +277,7 @@ namespace TWCore.Tests
                 {
                     lstWithSlashName.Clear();
                     dctByName.Clear();
+                    initialCount = _weakValues.Count;
 
                     foreach (var weakItem in _weakValues)
                     {
@@ -362,7 +363,7 @@ namespace TWCore.Tests
                 #region Get Roots
                 foreach (var item in _weakValues.Values)
                 {
-                    if (!item.Enable || item.Processed) continue;
+                    if (!item.Enable || item.Processed || item.ObjectParent != null) continue;
                     items.Add(item.CurrentStatusItem);
                 }
                 items.Sort((a, b) =>

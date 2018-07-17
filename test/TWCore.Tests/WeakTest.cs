@@ -253,23 +253,77 @@ namespace TWCore.Tests
                     return null;
 
                 var initialCount = _weakValues.Count;
-                var lstWithSlashName = new List<WeakValue>(_weakValues.Count);
+                var lstWithSlashName = new List<(object Key, WeakValue Value, int Index)>(_weakValues.Count);
+                var dctByName = new Dictionary<string, WeakValue>();
 
                 #region Update Values
                 do
                 {
                     lstWithSlashName.Clear();
-                    foreach (var value in _weakValues.Values)
+                    dctByName.Clear();
+
+                    foreach (var weakItem in _weakValues)
                     {
-                        if (value.CurrentStatusItem != null) continue;
-                        value.Update();
-                        if (value.CurrentStatusItem?.Name?.IndexOf('\\', StringComparison.Ordinal) > 0)
-                            lstWithSlashName.Add(value);
+                        var key = weakItem.Key;
+                        var value = weakItem.Value;
+                        if (value.CurrentStatusItem == null)
+                            value.Update();
+                        if (value.CurrentStatusItem == null) continue;
+
+                        var name = value.CurrentStatusItem.Name;
+                        if (name == null) continue;
+
+                        var slashIdx = name.IndexOf('\\', StringComparison.Ordinal);
+                        if (slashIdx > 0)
+                            lstWithSlashName.Add((key, value, slashIdx));
+
+                        if (dctByName.TryGetValue(name, out var currentValue))
+                        {
+                            currentValue.CurrentStatusItem.Children.AddRange(value.CurrentStatusItem.Children);
+                            currentValue.CurrentStatusItem.Values.AddRange(value.CurrentStatusItem.Values);
+                            value.CurrentStatusItem = null;
+                        }
+                        else
+                            dctByName.TryAdd(name, value);
                     }
                 } while (_weakValues.Count != initialCount);
                 #endregion
 
-                
+                #region Merge Similar by name
+                foreach (var (key, value, index) in lstWithSlashName)
+                {
+                    if (value.CurrentStatusItem == null) continue;
+                    var sSlashItem = value.CurrentStatusItem;
+                    var name = sSlashItem.Name;
+                    var baseName = name.Substring(0, index);
+                    var baseRest = name.Substring(index + 1);
+                    //
+                    StatusItem baseStatus;
+                    if (dctByName.TryGetValue(baseName, out var baseWeakValue))
+                    {
+                        baseStatus = baseWeakValue.CurrentStatusItem;
+                        _weakValues.TryRemove(key, out _);
+                    }
+                    else
+                    {
+                        baseStatus = new StatusItem { Name = baseName };
+                        value.CurrentStatusItem = baseStatus;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(baseRest))
+                    {
+                        sSlashItem.Name = baseRest;
+                        baseStatus.Children.Add(sSlashItem);
+                    }
+                    else
+                    {
+                        baseStatus.Values.AddRange(sSlashItem.Values);
+                        baseStatus.Children.AddRange(sSlashItem.Children);
+                    }
+
+                }
+                #endregion
+
                 //var sw = Stopwatch.StartNew();
                 //var items = _statusCollection.GetStatus();
                 //return new StatusItemCollection
@@ -284,13 +338,13 @@ namespace TWCore.Tests
                 //    ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
                 //    StartTime = Process.GetCurrentProcess().StartTime
                 //};
-                
+
 
                 #region Clear Values
                 foreach (var value in _weakValues.Values)
                     value.Clean();
                 #endregion
-                
+
                 return null;
             }
             #endregion
@@ -377,7 +431,7 @@ namespace TWCore.Tests
                     if (item == null)
                         item = new StatusItem { Name = obj.GetType().Name };
 
-                    foreach(var @delegate in ActionDelegates)
+                    foreach (var @delegate in ActionDelegates)
                         @delegate.TryInvokeAction(item.Values);
 
                     CurrentStatusItem = item;

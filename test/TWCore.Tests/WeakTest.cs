@@ -252,6 +252,7 @@ namespace TWCore.Tests
                 if (!Enabled)
                     return null;
 
+                var initialTime = Stopwatch.GetTimestamp();
                 var initialCount = _weakValues.Count;
                 var lstWithSlashName = new List<(object Key, WeakValue Value, int Index)>(_weakValues.Count);
                 var dctByName = new Dictionary<string, WeakValue>();
@@ -267,8 +268,11 @@ namespace TWCore.Tests
                         var key = weakItem.Key;
                         var value = weakItem.Value;
                         if (value.CurrentStatusItem == null)
+                        {
                             value.Update();
-                        if (value.CurrentStatusItem == null) continue;
+                            if (value.CurrentStatusItem == null)
+                                continue;
+                        }
 
                         var name = value.CurrentStatusItem.Name;
                         if (name == null) continue;
@@ -281,7 +285,7 @@ namespace TWCore.Tests
                         {
                             currentValue.CurrentStatusItem.Children.AddRange(value.CurrentStatusItem.Children);
                             currentValue.CurrentStatusItem.Values.AddRange(value.CurrentStatusItem.Values);
-                            value.CurrentStatusItem = null;
+                            value.Processed = true;
                         }
                         else
                             dctByName.TryAdd(name, value);
@@ -301,7 +305,7 @@ namespace TWCore.Tests
                     if (dctByName.TryGetValue(baseName, out var baseWeakValue))
                     {
                         baseStatus = baseWeakValue.CurrentStatusItem;
-                        value.Enable = false;
+                        value.Processed = true;
                     }
                     else
                     {
@@ -322,31 +326,74 @@ namespace TWCore.Tests
                 }
                 #endregion
 
+                #region Children Tree
+                foreach (var item in _weakChildren)
+                {
+                    if (!_weakValues.TryGetValue(item.Key, out var parentValue)) continue;
+                    foreach (var itemWeakValue in item.Value.Children)
+                    {
+                        var itemValue = itemWeakValue.Target;
+                        if (!itemWeakValue.IsAlive) continue;
+                        if (!_weakValues.TryGetValue(itemValue, out var value)) continue;
+
+                        var parentStatus = parentValue.CurrentStatusItem;
+                        var childStatus = value.CurrentStatusItem;
+                        if (childStatus != null)
+                        {
+                            if (parentStatus != null)
+                            {
+                                parentStatus.Children.Add(childStatus);
+                                value.Processed = true;
+                            }
+                        }
+                    }
+                }
+                #endregion
+
+                var items = new List<StatusItem>();
+
+                #region Get Roots
+                foreach (var item in _weakValues.Values)
+                {
+                    if (!item.Enable || item.Processed) continue;
+                    items.Add(item.CurrentStatusItem);
+                }
+                items.Sort((a, b) =>
+                {
+                    if (a.Name == "Application Information") return -1;
+                    if (b.Name == "Application Information") return 1;
+                    if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                        !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
+                    if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                        b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
+                    return string.CompareOrdinal(a.Name, b.Name);
+                });
+                #endregion
+
+                var endTime = Stopwatch.GetTimestamp();
+
+                var statusCollection = new StatusItemCollection
+                {
+                    InstanceId = Core.InstanceId,
+                    Timestamp = Core.Now,
+                    EnvironmentName = Core.EnvironmentName,
+                    MachineName = Core.MachineName,
+                    ApplicationDisplayName = Core.ApplicationDisplayName,
+                    ApplicationName = Core.ApplicationName,
+                    Items = items,
+                    ElapsedMilliseconds = (((double)(endTime - initialTime)) / Stopwatch.Frequency) * 1000,
+                    StartTime = Process.GetCurrentProcess().StartTime
+                };
+
                 dctByName.Clear();
                 lstWithSlashName.Clear();
-
-                //var sw = Stopwatch.StartNew();
-                //var items = _statusCollection.GetStatus();
-                //return new StatusItemCollection
-                //{
-                //    InstanceId = Core.InstanceId,
-                //    Timestamp = Core.Now,
-                //    EnvironmentName = Core.EnvironmentName,
-                //    MachineName = Core.MachineName,
-                //    ApplicationDisplayName = Core.ApplicationDisplayName,
-                //    ApplicationName = Core.ApplicationName,
-                //    Items = items,
-                //    ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
-                //    StartTime = Process.GetCurrentProcess().StartTime
-                //};
-
 
                 #region Clear Values
                 foreach (var value in _weakValues.Values)
                     value.Clean();
                 #endregion
 
-                return null;
+                return statusCollection;
             }
             #endregion
 
@@ -366,6 +413,7 @@ namespace TWCore.Tests
                 public WeakReference ObjectParent;
                 public StatusItem CurrentStatusItem;
                 public bool Enable = true;
+                public bool Processed = false;
 
                 #region .ctor
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -442,6 +490,7 @@ namespace TWCore.Tests
                 public void Clean()
                 {
                     CurrentStatusItem = null;
+                    Processed = false;
                 }
                 #endregion
 

@@ -65,10 +65,14 @@ namespace TWCore.Tests
 
         public class WStatusEngine : IStatusEngine
         {
+            private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> _listPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
+            private static readonly ReferencePool<Dictionary<string, WeakValue>> _dictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
             private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
             private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
             private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
             private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
+            private readonly Action _throttledUpdate;
+            private StatusItemCollection _lastResult;
 
             #region Properties
             /// <inheritdoc />
@@ -84,6 +88,7 @@ namespace TWCore.Tests
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public WStatusEngine()
             {
+                _throttledUpdate = new Action(UpdateStatus).CreateThrottledAction(1000);
                 Transports = new ObservableCollection<IStatusTransport>();
                 Transports.CollectionChanged += (s, e) =>
                 {
@@ -231,7 +236,6 @@ namespace TWCore.Tests
             #endregion
 
             #region Private Methods
-
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             private WeakValue CreateWeakValue(object key)
             {
@@ -252,11 +256,21 @@ namespace TWCore.Tests
             {
                 if (!Enabled)
                     return null;
+                if (_lastResult == null)
+                    UpdateStatus();
+                else
+                    _throttledUpdate();
+                return _lastResult;
+            }
 
-                var initialTime = Stopwatch.GetTimestamp();
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void UpdateStatus()
+            {
+                var startTime = Stopwatch.GetTimestamp();
                 var initialCount = _weakValues.Count;
-                var lstWithSlashName = new List<(object Key, WeakValue Value, int Index)>(_weakValues.Count);
-                var dctByName = new Dictionary<string, WeakValue>();
+                var lstWithSlashName = _listPool.New();
+                var dctByName = _dictioPool.New();
+                var items = new List<StatusItem>();
 
                 #region Update Values
                 do
@@ -282,13 +296,7 @@ namespace TWCore.Tests
                         if (slashIdx > 0)
                             lstWithSlashName.Add((key, value, slashIdx));
 
-                        if (dctByName.TryGetValue(name, out var currentValue))
-                        {
-                            currentValue.CurrentStatusItem.Children.AddRange(value.CurrentStatusItem.Children);
-                            currentValue.CurrentStatusItem.Values.AddRange(value.CurrentStatusItem.Values);
-                            value.Processed = true;
-                        }
-                        else
+                        if (!dctByName.TryGetValue(name, out var currentValue))
                             dctByName.TryAdd(name, value);
                     }
                 } while (_weakValues.Count != initialCount);
@@ -351,8 +359,6 @@ namespace TWCore.Tests
                 }
                 #endregion
 
-                var items = new List<StatusItem>();
-
                 #region Get Roots
                 foreach (var item in _weakValues.Values)
                 {
@@ -371,9 +377,15 @@ namespace TWCore.Tests
                 });
                 #endregion
 
+                #region Fixes
+                CheckSameNames(items);
+                SetIds(string.Empty, items);
+                #endregion
+
                 var endTime = Stopwatch.GetTimestamp();
 
-                var statusCollection = new StatusItemCollection
+                #region Status Collection
+                _lastResult = new StatusItemCollection
                 {
                     InstanceId = Core.InstanceId,
                     Timestamp = Core.Now,
@@ -382,19 +394,85 @@ namespace TWCore.Tests
                     ApplicationDisplayName = Core.ApplicationDisplayName,
                     ApplicationName = Core.ApplicationName,
                     Items = items,
-                    ElapsedMilliseconds = (((double)(endTime - initialTime)) / Stopwatch.Frequency) * 1000,
+                    ElapsedMilliseconds = (((double)(endTime - startTime)) / Stopwatch.Frequency) * 1000,
                     StartTime = Process.GetCurrentProcess().StartTime
                 };
+                #endregion
 
-                dctByName.Clear();
                 lstWithSlashName.Clear();
+                dctByName.Clear();
+                _listPool.Store(lstWithSlashName);
+                _dictioPool.Store(dctByName);
 
                 #region Clear Values
                 foreach (var value in _weakValues.Values)
                     value.Clean();
                 #endregion
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetIds(string prefix, List<StatusItem> items)
+            {
+                prefix = prefix ?? string.Empty;
+                if (items == null) return;
+                foreach (var item in items)
+                {
+                    var key = prefix + item.Name;
+                    item.Id = key.GetHashSHA1();
+                    if (item.Children?.Count > 0)
+                        SetIds(key, item.Children);
+                    if (item.Values?.Count > 0)
+                        SetIds(key, item.Values);
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void SetIds(string prefix, StatusItemValuesCollection collection)
+            {
+                prefix = prefix ?? string.Empty;
+                if (collection == null) return;
+                foreach (var item in collection)
+                {
+                    var key = prefix + item.Key;
+                    item.Id = key.GetHashSHA1();
+                    if (item.Values == null) continue;
+                    foreach (var itemValue in item.Values)
+                    {
+                        var valueKey = key + itemValue.Name;
+                        itemValue.Id = valueKey.GetHashSHA1();
+                    }
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private void CheckSameNames(List<StatusItem> items)
+            {
+                if (items == null) return;
+                if (items.Count == 0) return;
+                if (items.Count > 1)
+                {
+                    var group = items.GroupBy(i => i.Name).ToArray();
+                    foreach (var item in group)
+                    {
+                        if (item.Count() == 1) continue;
+                        var itemArray = item.ToArray();
 
-                return statusCollection;
+                        var statusGroup = new StatusItem
+                        {
+                            Name = "Instances of: " + item.Key
+                        };
+                        for (var idx = 0; idx < itemArray.Length; idx++)
+                        {
+                            var value = itemArray[idx];
+                            value.Name += " [" + idx + "]";
+                            statusGroup.Children.Add(value);
+                            items.Remove(value);
+                        }
+                        items.Add(statusGroup);
+                    }
+                }
+                foreach (var item in items)
+                {
+                    if (item.Children == null) continue;
+                    CheckSameNames(item.Children);
+                }
             }
             #endregion
 
@@ -479,13 +557,29 @@ namespace TWCore.Tests
                         }
                     }
                     if (item == null)
-                        item = new StatusItem { Name = obj.GetType().Name };
+                        item = new StatusItem { Name = GetName(obj) };
 
                     foreach (var @delegate in ActionDelegates)
                         @delegate.TryInvokeAction(item.Values);
 
-                    item.Id = item.Name.GetHashSHA1();
                     CurrentStatusItem = item;
+
+                    string GetName(object value)
+                    {
+                        var type = value.GetType();
+                        if (type.IsGenericType)
+                        {
+                            if (type.GetInterface("IList") != null)
+                            {
+                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
+                                return (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
+                            }
+                            else
+                                return type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
+                        }
+                        else
+                            return type.Namespace + "." + type.Name;
+                    }
                 }
 
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]

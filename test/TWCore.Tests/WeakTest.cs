@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using TWCore.Security;
 using TWCore.Collections;
 using TWCore.Diagnostics.Status;
 using TWCore.Reflection;
@@ -483,6 +484,7 @@ namespace TWCore.Tests
                     foreach (var @delegate in ActionDelegates)
                         @delegate.TryInvokeAction(item.Values);
 
+                    item.Id = item.Name.GetHashSHA1();
                     CurrentStatusItem = item;
                 }
 

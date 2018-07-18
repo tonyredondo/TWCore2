@@ -63,6 +63,17 @@ namespace TWCore.Collections
             public Task Task;
             public TimeSpan Timeout;
             public CancellationTokenSource TokenSource;
+
+            public override int GetHashCode()
+            {
+                return Value.GetHashCode() + Timeout.GetHashCode();
+            }
+            public override bool Equals(object obj)
+            {
+                return obj is TimeoutStruct tStruct && 
+                    EqualityComparer<TValue>.Default.Equals(Value, tStruct.Value) && 
+                    EqualityComparer<TimeSpan>.Default.Equals(Timeout, tStruct.Timeout);
+            }
         }
         /// <inheritdoc />
         /// <summary>

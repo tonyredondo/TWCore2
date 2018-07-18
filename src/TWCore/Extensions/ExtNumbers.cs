@@ -27,10 +27,18 @@ namespace TWCore
     /// </summary>
     public struct ReadableBytes
     {
-        public string Text { get; set; }
         public long Value { get; set; }
+        public string Text { get; set; }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override string ToString() => Text;
+        public override int GetHashCode()
+        {
+            return Value.GetHashCode() + Text?.GetHashCode() ?? 0;
+        }
+        public override bool Equals(object obj)
+        {
+            return obj is ReadableBytes rBytes && Value == rBytes.Value && Text == rBytes.Text;
+        }
     }
 
     /// <summary>

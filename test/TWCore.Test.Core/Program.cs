@@ -181,14 +181,6 @@ namespace TWCore.Test.Core
                 //DiscoveryService.OnServiceExpired += DiscoveryService_OnServiceExpired;
                 //DiscoveryService.OnServiceReceived += DiscoveryService_OnServiceReceived;
             });
-
-
-            TWCore.Core.InitDefaults(factory =>
-            {
-                factory.CreateStatusEngine = () => new Tests.WeakTest.WStatusEngine();
-            });
-
-
             TWCore.Core.RunService<TestService>(args);
         }
 

@@ -22,6 +22,8 @@ using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using TWCore.Collections;
 using TWCore.Reflection;
 using TWCore.Security;
 
@@ -39,511 +41,272 @@ namespace TWCore.Diagnostics.Status
     [StatusName("Application Information\\Status")]
     public class DefaultStatusEngine : IStatusEngine
     {
-        private readonly StatusContainerCollection _statusCollection = new StatusContainerCollection();
+            private const int MaxItems = 2500;
+            private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> ListPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
+            private static readonly ReferencePool<Dictionary<string, WeakValue>> DictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
+            private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
+            private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
+            private readonly HashSet<WeakValue> _values = new HashSet<WeakValue>();
+            private readonly HashSet<WeakChildren> _children = new HashSet<WeakChildren>();
+            private readonly Action _throttledUpdate;
+            private StatusItemCollection _lastResult;
+            private long _currentItems;
 
-        #region Properties
-        /// <inheritdoc />
-        /// <summary>
-        /// Current status engine transport
-        /// </summary>
-        public ObservableCollection<IStatusTransport> Transports { get; } = new ObservableCollection<IStatusTransport>();
-        /// <inheritdoc />
-        /// <summary>
-        /// Enable or Disable the Log engine
-        /// </summary>
-        [StatusProperty]
-        public bool Enabled { get; set; } = Core.GlobalSettings.StatusEnabled;
-        #endregion
+            #region Properties
+            /// <inheritdoc />
+            public ObservableCollection<IStatusTransport> Transports { get; }
+            /// <inheritdoc />
+            public bool Enabled { get; set; } = true;
+            #endregion
 
-        #region .ctor
-        /// <summary>
-        /// Default status engine
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public DefaultStatusEngine()
-        {
-            Transports.CollectionChanged += (s, e) =>
-            {
-                if (e == null) return;
-                switch (e.Action)
-                {
-                    case NotifyCollectionChangedAction.Add:
-                        if (e.NewItems != null)
-                        {
-                            foreach (IStatusTransport item in e.NewItems)
-                            {
-                                if (item == null)
-                                {
-                                    Core.Log.LibDebug("The IStatusTransport item is null");
-                                    continue;
-                                }
-                                item.OnFetchStatus += Transport_OnFetchStatus;
-                                AttachChild(item, this);
-                            }
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Remove:
-                        if (e.OldItems != null)
-                        {
-                            foreach (IStatusTransport item in e.OldItems)
-                            {
-                                if (item == null)
-                                {
-                                    Core.Log.LibDebug("The IStatusTransport item is null");
-                                    continue;
-                                }
-                                item.OnFetchStatus -= Transport_OnFetchStatus;
-                                DeAttachObject(item);
-                            }
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Replace:
-                        if (e.NewItems != null)
-                        {
-                            foreach (IStatusTransport item in e.NewItems)
-                            {
-                                if (item == null)
-                                {
-                                    Core.Log.LibDebug("The IStatusTransport item is null");
-                                    continue;
-                                }
-                                item.OnFetchStatus += Transport_OnFetchStatus;
-                                AttachChild(item, this);
-                            }
-                        }
-                        if (e.OldItems != null)
-                        {
-                            foreach (IStatusTransport item in e.OldItems)
-                            {
-                                if (item == null)
-                                {
-                                    Core.Log.LibDebug("The IStatusTransport item is null");
-                                    continue;
-                                }
-                                item.OnFetchStatus -= Transport_OnFetchStatus;
-                                DeAttachObject(item);
-                            }
-                        }
-                        break;
-                    case NotifyCollectionChangedAction.Reset:
-                        if (e.OldItems != null)
-                        {
-                            foreach (IStatusTransport item in e.OldItems)
-                            {
-                                if (item == null)
-                                {
-                                    Core.Log.LibDebug("The IStatusTransport item is null");
-                                    continue;
-                                }
-                                item.OnFetchStatus -= Transport_OnFetchStatus;
-                                DeAttachObject(item);
-                            }
-                        }
-                        break;
-                }
-            };
-
-            AttachObject(this);
-        }
-
-        /// <summary>
-        /// Destructor
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        ~DefaultStatusEngine()
-        {
-            Dispose();
-        }
-        #endregion
-
-        #region Public Methods
-        /// <inheritdoc />
-        /// <summary>
-        /// Attach a status item delegate 
-        /// </summary>
-        /// <param name="statusItemDelegate">Status Item delegate</param>
-        /// <param name="parent">Object Parent</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Attach(Func<StatusItem> statusItemDelegate, object parent = null)
-        {
-            if (statusItemDelegate == null) return;
-            //
-            _statusCollection.Add(statusItemDelegate.Target, statusItemDelegate, parent != statusItemDelegate.Target ? parent : null);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Attach a values filler delegate
-        /// </summary>
-        /// <param name="valuesFillerDelegate">Values filler delegate</param>
-        /// <param name="objectToAttach">Object to attach, if is null is extracted from the delegate</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
-        {
-            if (valuesFillerDelegate == null) return;
-            objectToAttach = objectToAttach ?? valuesFillerDelegate.Target;
-            _statusCollection.Add(objectToAttach, valuesFillerDelegate, null);
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Attach an object without values
-        /// </summary>
-        /// <param name="objectToAttach">Object to attach, if is null is extracted from the delegate</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AttachObject(object objectToAttach)
-        {
-            if (objectToAttach != null)
-            {
-                _statusCollection.Add(objectToAttach, null);
-            }
-        }
-        /// <inheritdoc />
-        /// <summary>
-        /// Attach a child object
-        /// </summary>
-        /// <param name="childObject">Child object</param>
-        /// <param name="parent">Parent object</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AttachChild(object childObject, object parent)
-        {
-            if (parent == null) return;
-            if (childObject != parent)
-                _statusCollection.Add(childObject, parent);
-        }
-
-        /// <inheritdoc />
-        /// <summary>
-        /// DeAttach all handlers for an object
-        /// </summary>
-        /// <param name="objectToDeattach">Object to deattach</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void DeAttachObject(object objectToDeattach)
-        {
-            if (objectToDeattach == null) return;
-            _statusCollection.RemoveTarget(objectToDeattach);
-        }
-        #endregion
-
-        #region Private Methods
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private StatusItemCollection Transport_OnFetchStatus()
-        {
-            if (!Enabled)
-                return null;
-
-            var sw = Stopwatch.StartNew();
-            var items = _statusCollection.GetStatus();
-            return new StatusItemCollection
-            {
-                InstanceId = Core.InstanceId,
-                Timestamp = Core.Now,
-                EnvironmentName = Core.EnvironmentName,
-                MachineName = Core.MachineName,
-                ApplicationDisplayName = Core.ApplicationDisplayName,
-                ApplicationName = Core.ApplicationName,
-                Items = items,
-                ElapsedMilliseconds = sw.Elapsed.TotalMilliseconds,
-                StartTime = Process.GetCurrentProcess().StartTime
-            };
-        }
-        #endregion
-
-        #region Nested Class
-        private sealed class StatusContainerCollection
-        {
-            private readonly object _locker = new object();
-            private readonly List<StatusContainer> _statusList = new List<StatusContainer>();
-            private readonly List<StatusAttributesContainer> _statusAttributeContainer = new List<StatusAttributesContainer>();
-            private readonly ReferencePool<List<StatusContainer>> _containerListPool = new ReferencePool<List<StatusContainer>>(1, lst => lst.Clear());
-            private readonly ReferencePool<List<StatusData>> _statusListPool = new ReferencePool<List<StatusData>>(2, lst => lst.Clear());
-            private readonly ReferencePool<StatusItem> _statusItemPool = new ReferencePool<StatusItem>(0, s => { s.Values.Clear(); s.Children.Clear(); });
-            private readonly ReferencePool<StatusData> _statusDataPool = new ReferencePool<StatusData>(0, s => s.Clear());
-            private bool _firstTime = true;
-
-            #region Public Methods
+            #region .ctor
+            /// <summary>
+            /// Status Engine
+            /// </summary>
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Add(object target, Func<StatusItem> func, object parent)
+            public DefaultStatusEngine()
             {
-                lock (_locker)
+                _throttledUpdate = new Action(UpdateStatus).CreateThrottledAction(1000);
+                Transports = new ObservableCollection<IStatusTransport>();
+                Transports.CollectionChanged += (s, e) =>
                 {
-                    EnsureParent(parent);
-                    var sItem = EnsureTarget(target, parent);
-                    sItem.AddStatusItemDelegate(func);
-                }
-                try
-                {
-                    func();
-                }
-                catch
-                {
-                    // ignored
-                }
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Add(object target, Action<StatusItemValuesCollection> action, object parent)
-            {
-                lock (_locker)
-                {
-                    EnsureParent(parent);
-                    var sItem = EnsureTarget(target, parent);
-                    sItem.AddStatusItemValuesCollection(action);
-                }
-                var sI = _statusItemPool.New();
-                try
-                {
-                    action(sI.Values);
-                }
-                catch
-                {
-                    // ignored
-                }
-                _statusItemPool.Store(sI);
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void Add(object target, object parent)
-            {
-                lock (_locker)
-                {
-                    EnsureParent(parent);
-                    var sItem = EnsureTarget(target, parent);
-                    sItem.Parent = parent;
-                }
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void RemoveTarget(object target)
-            {
-                lock (_locker)
-                {
-                    _statusList.RemoveAll(i => i.Object == target || i.Parent == target);
-                }
-            }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public List<StatusItem> GetStatus()
-            {
-                lock (_locker)
-                {
-                    if (_firstTime)
+                    if (e == null) return;
+                    switch (e.Action)
                     {
-                        var sInit = _containerListPool.New();
-                        sInit.AddRange(_statusList);
-                        foreach (var item in sInit)
-                        {
-                            if (item.Object == null) continue;
-                            item.GetStatusItems();
-                        }
-                        _firstTime = false;
-                        _containerListPool.Store(sInit);
+                        case NotifyCollectionChangedAction.Add:
+                            if (e.NewItems != null)
+                            {
+                                foreach (IStatusTransport item in e.NewItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus += Transport_OnFetchStatus;
+                                    AttachChild(item, this);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Remove:
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Replace:
+                            if (e.NewItems != null)
+                            {
+                                foreach (IStatusTransport item in e.NewItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus += Transport_OnFetchStatus;
+                                    AttachChild(item, this);
+                                }
+                            }
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
+                        case NotifyCollectionChangedAction.Reset:
+                            if (e.OldItems != null)
+                            {
+                                foreach (IStatusTransport item in e.OldItems)
+                                {
+                                    if (item == null)
+                                    {
+                                        Core.Log.LibDebug("The IStatusTransport item is null");
+                                        continue;
+                                    }
+                                    item.OnFetchStatus -= Transport_OnFetchStatus;
+                                    DeAttachObject(item);
+                                }
+                            }
+                            break;
                     }
-                    var sList = _containerListPool.New();
-                    sList.AddRange(_statusList);
-                    var values = _statusListPool.New();
-                    var roots = _statusListPool.New();
-                    foreach (var item in sList)
-                    {
-                        if (item.Object == null) continue;
-                        var value = _statusDataPool.New();
-                        value.Init(item.Object, item.GetStatusItems(), item.Parent);
-                        values.Add(value);
-                        if (item.Parent == null)
-                            roots.Add(value);
-                    }
-                    _containerListPool.Store(sList);
+                };
 
-                    var rValues = new List<StatusItem>();
-                    foreach (var root in roots)
-                        CreateTree(root, values);
-                    foreach (var gItem in roots.GroupBy(r => r.Value?.Name).ToArray())
-                    {
-                        if (gItem.Count() == 1) continue;
-                        var group = new StatusData
-                        {
-                            Value = new StatusItem { Name = "Instances of: " + gItem.Key }
-                        };
-                        gItem.Each((item, index) => 
-                        {
-                            item.Value.Name += " [" + index + "]";
-                            group.Value.Children.Add(item.Value);
-                            roots.Remove(item);
-                        });
-                        roots.Add(group);
-                    }
-                    foreach (var root in roots)
-                    {
-                        SetIds(string.Empty, root.Value);
-                        rValues.Add(root.Value);
-                    }
-                    //
-                    foreach (var value in values)
-                        _statusDataPool.Store(value);
-                    _statusListPool.Store(values);
-                    _statusListPool.Store(roots);
-                    MergeSimilar(rValues);
-                    //
-                    rValues.Sort((a, b) =>
-                    {
-                        if (a.Name == "Application Information") return -1;
-                        if (b.Name == "Application Information") return 1;
-                        if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
-                            !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
-                        if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
-                            b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
-                        return string.CompareOrdinal(a.Name, b.Name);
-                    });
-                    return rValues;
-                }
+                AttachObject(this);
+
+            }
+            /// <summary>
+            /// Destructor
+            /// </summary>
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            ~DefaultStatusEngine()
+            {
+                Dispose();
+            }
+            #endregion
+
+            #region Methods
+            /// <inheritdoc />
+            public void Attach(Func<StatusItem> statusItemDelegate, object objectToAttach = null)
+            {
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
+                var obj = objectToAttach ?? statusItemDelegate.Target;
+                var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
+                weakValue.Add(statusItemDelegate);
+            }
+            /// <inheritdoc />
+            public void Attach(Action<StatusItemValuesCollection> valuesFillerDelegate, object objectToAttach = null)
+            {
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
+                var obj = objectToAttach ?? valuesFillerDelegate.Target;
+                var weakValue = _weakValues.GetOrAdd(obj, CreateWeakValue);
+                weakValue.Add(valuesFillerDelegate);
+            }
+            /// <inheritdoc />
+            public void AttachObject(object objectToAttach)
+            {
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
+                if (objectToAttach == null) return;
+                _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
+            }
+            /// <inheritdoc />
+            public void AttachChild(object objectToAttach, object parent)
+            {
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
+                if (objectToAttach == null) return;
+                var value = _weakValues.GetOrAdd(objectToAttach, CreateWeakValue);
+                if (parent == null) return;
+                value.SetParent(parent);
+                _weakValues.GetOrAdd(parent, CreateWeakValue);
+                var wChildren = _weakChildren.GetOrAdd(parent, CreateWeakChildren);
+                if (!wChildren.Children.Any((i, io) => i.IsAlive && i.Target == io, objectToAttach))
+                    wChildren.Children.Add(new WeakReference(objectToAttach));
+            }
+            /// <inheritdoc />
+            public void DeAttachObject(object objectToDetach)
+            {
+                if (Interlocked.Read(ref _currentItems) >= MaxItems) return;
+                if (objectToDetach == null) return;
+                var value = _weakValues.GetOrAdd(objectToDetach, CreateWeakValue);
+                value.Enable = false;
+            }
+            /// <inheritdoc />
+            public void Dispose()
+            {
+                Transports?.Clear();
+                _weakValues.Clear();
+                _weakChildren.Clear();
+                _values.Clear();
+                _children.Clear();
             }
             #endregion
 
             #region Private Methods
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private void EnsureParent(object parent)
+            private WeakValue CreateWeakValue(object key)
             {
-                if (parent == null || _statusList.FirstOrDefault((s, mParent) => s.Object == mParent, parent) != null) return;
-
-                var sParent = new StatusContainer { Object = parent };
-                _statusList.Add(sParent);
-                var gFuncInstance = new StatusAttributesContainer(parent);
-                _statusAttributeContainer.Add(gFuncInstance);
-                var parentFunc = gFuncInstance.GetFuncByAttribute();
-                if (parentFunc != null)
-                {
-                    sParent.AddStatusItemDelegate(parentFunc);
-                    parentFunc();
-                }
+                Interlocked.Increment(ref _currentItems);
+                var wValue = new WeakValue(key);
+                _values.Add(wValue);
+                return wValue;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private StatusContainer EnsureTarget(object target, object parent)
+            private WeakChildren CreateWeakChildren(object parent)
             {
-                var sItem = _statusList.FirstOrDefault((s, mTarget) => s.Object == mTarget, target);
-                if (sItem != null) return sItem;
-
-                sItem = new StatusContainer { Object = target, Parent = parent };
-                _statusList.Add(sItem);
-                var gFuncInstance = new StatusAttributesContainer(target);
-                _statusAttributeContainer.Add(gFuncInstance);
-                var baseFunc = gFuncInstance.GetFuncByAttribute();
-                if (baseFunc != null)
-                {
-                    sItem.AddStatusItemDelegate(baseFunc);
-                    baseFunc();
-                }
-                return sItem;
+                var wValue = new WeakChildren();
+                _children.Add(wValue);
+                return wValue;
             }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void CreateTree(StatusData status, IEnumerable<StatusData> data)
+            private StatusItemCollection Transport_OnFetchStatus()
             {
-                if (status.Processed) return;
-
-                (var equalSet, var notEqualSet) = data.Split(item => item.Parent == status.Object);
-                FlattenStatus(status);
-                var equalSetDistinct = equalSet.Where((s, st) => s != st, status).Each(FlattenStatus).ToArray();
-                if (equalSetDistinct.Length > 0)
-                {
-                    foreach (var item in equalSetDistinct)
-                    {
-                        CreateTree(item, notEqualSet);
-                        if (item.Value != null)
-                            status.Value.Children.Add(item.Value);
-                    }
-                    MergeSimilar(status.Value.Children);
-                    foreach (var gItem in status.Value.Children.GroupBy(g => g.Name).ToArray())
-                    {
-                        if (gItem.Count() == 1) continue;
-                        var group = new StatusItem {Name = "Instances of : " + gItem.Key};
-                        gItem.Each((item, index) =>
-                        {
-                            item.Name += " [I:" + index + "]";
-                            group.Children.Add(item);
-                            status.Value.Children.Remove(item);
-                        });
-                        status.Value.Children.Add(group);
-                    }
-                    status.Value.Children.Sort((a, b) => string.CompareOrdinal(a.Name, b.Name));
-                }
-                status.Processed = true;
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void FlattenStatus(StatusData status)
-            {
-                if (status.Value != null) return;
-
-                var type = status.Object.GetType();
-                var attr = type.GetAttribute<StatusNameAttribute>();
-
-                if (status.Statuses == null || status.Statuses.Count == 0)
-                {
-                    if (status.Object == StatusContainer.Root) return;
-
-                    var name = attr?.Name;
-                    if (name == null)
-                    {
-                        if (type.IsGenericType)
-                        {
-                            if (type.GetInterface("IList") != null)
-                            {
-                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
-                                name = (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
-                            }
-                            else
-                                name = type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
-                        }
-                        else
-                            name = type.Namespace + "." + type.Name;
-                    }
-                    status.Value = new StatusItem
-                    {
-                        Name = name
-                    };
-                    return;
-                }
-
-                var sValue = status.Statuses.Count > 1
-                    ? status.Statuses.FirstOrDefault(s => s.Name == null)
-                    : status.Statuses[0];
-                if (sValue == null)
-                    sValue = new StatusItem();
+                if (!Enabled)
+                    return null;
+                if (_lastResult == null)
+                    UpdateStatus();
                 else
-                    status.Statuses.Remove(sValue);
-                if (sValue.Name == null)
-                {
-                    var name = attr?.Name;
-                    if (name == null)
-                    {
-                        if (type.IsGenericType)
-                        {
-                            if (type.GetInterface("IList") != null)
-                            {
-                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
-                                name = (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
-                            }
-                            else
-                                name = type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
-                        }
-                        else
-                            name = type.Namespace + "." + type.Name;
-                    }
-                    sValue.Name = name;
-                }
-                sValue.Children.AddRange(status.Statuses);
-                status.Statuses = null;
-                status.Value = sValue;
+                    _throttledUpdate();
+                return _lastResult;
             }
+
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void MergeSimilar(List<StatusItem> statusValuesChildren)
+            private void UpdateStatus()
             {
-                var sSlash = statusValuesChildren.Where(s => s.Name?.IndexOf("\\", StringComparison.Ordinal) > 0).ToArray();
-                foreach (var sSlashItem in sSlash)
+                var startTime = Stopwatch.GetTimestamp();
+                int initialCount;
+                var lstWithSlashName = ListPool.New();
+                var dctByName = DictioPool.New();
+                var items = new List<StatusItem>();
+
+                #region Update Values
+                do
                 {
-                    var baseIndex = sSlashItem.Name.IndexOf("\\", StringComparison.Ordinal);
-                    var baseName = sSlashItem.Name.Substring(0, baseIndex);
-                    var baseRest = sSlashItem.Name.Substring(baseIndex + 1);
-                    var baseStatus = statusValuesChildren.FirstOrDefault((c, mBaseName) => c.Name == mBaseName, baseName);
-                    if (baseStatus == null)
+                    lstWithSlashName.Clear();
+                    dctByName.Clear();
+                    initialCount = _weakValues.Count;
+
+                    foreach (var weakItem in _weakValues)
+                    {
+                        var key = weakItem.Key;
+                        var value = weakItem.Value;
+                        if (value.CurrentStatusItem == null)
+                        {
+                            value.Update();
+                            if (value.CurrentStatusItem == null)
+                                continue;
+                        }
+
+                        var name = value.CurrentStatusItem.Name;
+                        if (name == null) continue;
+
+                        var slashIdx = name.IndexOf('\\', StringComparison.Ordinal);
+                        if (slashIdx > 0)
+                            lstWithSlashName.Add((key, value, slashIdx));
+
+                        if (!dctByName.TryGetValue(name, out var currentValue))
+                            dctByName.TryAdd(name, value);
+                    }
+                } while (_weakValues.Count != initialCount);
+                #endregion
+
+                #region Merge Similar by name
+                foreach (var (key, value, index) in lstWithSlashName)
+                {
+                    if (value.CurrentStatusItem == null) continue;
+                    var sSlashItem = value.CurrentStatusItem;
+                    var name = sSlashItem.Name;
+                    var baseName = name.Substring(0, index);
+                    var baseRest = name.Substring(index + 1);
+                    StatusItem baseStatus;
+                    if (dctByName.TryGetValue(baseName, out var baseWeakValue))
+                    {
+                        baseStatus = baseWeakValue.CurrentStatusItem;
+                        value.Processed = true;
+                    }
+                    else
                     {
                         baseStatus = new StatusItem { Name = baseName };
-                        statusValuesChildren.Add(baseStatus);
+                        value.CurrentStatusItem = baseStatus;
                     }
-                    statusValuesChildren.Remove(sSlashItem);
+
                     if (!string.IsNullOrWhiteSpace(baseRest))
                     {
                         sSlashItem.Name = baseRest;
@@ -555,275 +318,298 @@ namespace TWCore.Diagnostics.Status
                         baseStatus.Children.AddRange(sSlashItem.Children);
                     }
                 }
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            private static void SetIds(string baseId, StatusItem item)
-            {
-                if (item == null) return;
-                item.Id = (baseId + item.Name).GetHashSHA1();
-                if (item.Values != null)
+                #endregion
+
+                #region Children Tree
+                foreach (var item in _weakChildren)
                 {
-                    foreach (var value in item.Values)
+                    if (!_weakValues.TryGetValue(item.Key, out var parentValue)) continue;
+                    foreach (var itemWeakValue in item.Value.Children)
                     {
-                        value.Id = (item.Id + value.Key).GetHashSHA1();
-                        if (value.Values == null) continue;
-                        foreach (var valueVal in value.Values)
-                            valueVal.Id = (value.Id + valueVal.Name).GetHashSHA1();
+                        var itemValue = itemWeakValue.Target;
+                        if (!itemWeakValue.IsAlive) continue;
+                        if (!_weakValues.TryGetValue(itemValue, out var value)) continue;
+
+                        var parentStatus = parentValue.CurrentStatusItem;
+                        var childStatus = value.CurrentStatusItem;
+                        if (childStatus == null) continue;
+                        if (parentStatus != null)
+                        {
+                            parentStatus.Children.Add(childStatus);
+                            value.Processed = true;
+                        }
                     }
                 }
-                if (item.Children != null)
+                #endregion
+
+                #region Get Roots
+                foreach (var item in _weakValues.Values)
                 {
-                    foreach (var child in item.Children)
-                        SetIds(item.Id, child);
+                    if (!item.Enable || item.Processed || item.ObjectParent != null) continue;
+                    items.Add(item.CurrentStatusItem);
+                }
+                items.Sort((a, b) =>
+                {
+                    if (a.Name == "Application Information") return -1;
+                    if (b.Name == "Application Information") return 1;
+                    if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                        !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
+                    if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                        b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
+                    return string.CompareOrdinal(a.Name, b.Name);
+                });
+                #endregion
+
+                #region Fixes
+                CheckSameNames(items);
+                SetIds(string.Empty, items);
+                #endregion
+
+                var endTime = Stopwatch.GetTimestamp();
+
+                #region Status Collection
+                _lastResult = new StatusItemCollection
+                {
+                    InstanceId = Core.InstanceId,
+                    Timestamp = Core.Now,
+                    EnvironmentName = Core.EnvironmentName,
+                    MachineName = Core.MachineName,
+                    ApplicationDisplayName = Core.ApplicationDisplayName,
+                    ApplicationName = Core.ApplicationName,
+                    Items = items,
+                    ElapsedMilliseconds = (((double)(endTime - startTime)) / Stopwatch.Frequency) * 1000,
+                    StartTime = Process.GetCurrentProcess().StartTime
+                };
+                #endregion
+
+                lstWithSlashName.Clear();
+                dctByName.Clear();
+                ListPool.Store(lstWithSlashName);
+                DictioPool.Store(dctByName);
+
+                #region Clear Values
+                foreach (var value in _weakValues.Values)
+                    value.Clean();
+                #endregion
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetIds(string prefix, List<StatusItem> items)
+            {
+                prefix = prefix ?? string.Empty;
+                if (items == null) return;
+                foreach (var item in items)
+                {
+                    var key = prefix + item.Name;
+                    item.Id = key.GetHashSHA1();
+                    if (item.Children?.Count > 0)
+                        SetIds(key, item.Children);
+                    if (item.Values?.Count > 0)
+                        SetIds(key, item.Values);
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void SetIds(string prefix, StatusItemValuesCollection collection)
+            {
+                prefix = prefix ?? string.Empty;
+                if (collection == null) return;
+                foreach (var item in collection)
+                {
+                    var key = prefix + item.Key;
+                    item.Id = key.GetHashSHA1();
+                    if (item.Values == null) continue;
+                    foreach (var itemValue in item.Values)
+                    {
+                        var valueKey = key + itemValue.Name;
+                        itemValue.Id = valueKey.GetHashSHA1();
+                    }
+                }
+            }
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            private static void CheckSameNames(List<StatusItem> items)
+            {
+                if (items == null) return;
+                if (items.Count == 0) return;
+                if (items.Count > 1)
+                {
+                    var group = items.GroupBy(i => i.Name).ToArray();
+                    foreach (var item in group)
+                    {
+                        if (item.Count() == 1) continue;
+                        var itemArray = item.ToArray();
+
+                        var statusGroup = new StatusItem
+                        {
+                            Name = "Instances of: " + item.Key
+                        };
+                        for (var idx = 0; idx < itemArray.Length; idx++)
+                        {
+                            var value = itemArray[idx];
+                            value.Name += " [" + idx + "]";
+                            statusGroup.Children.Add(value);
+                            items.Remove(value);
+                        }
+                        items.Add(statusGroup);
+                    }
+                }
+                foreach (var item in items)
+                {
+                    if (item.Children == null) continue;
+                    CheckSameNames(item.Children);
                 }
             }
             #endregion
 
+
             #region Nested Types
-            private class StatusData
+            private class WeakChildren
             {
-                public object Object;
-                public object Parent;
-                public StatusItem Value;
-                public List<StatusItem> Statuses;
-                public bool Processed;
+                public List<WeakReference> Children { get; set; } = new List<WeakReference>();
+            }
+            private class WeakValue
+            {
+                private static readonly NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>> AttributeFunc = new NonBlocking.ConcurrentDictionary<Type, Func<object, StatusItem>>();
+                public List<WeakDelegate> FuncDelegates;
+                public List<WeakDelegate> ActionDelegates;
+                public Func<object, StatusItem> AttributeStatus;
+                public WeakReference ObjectAttached;
+                public WeakReference ObjectParent;
+                public StatusItem CurrentStatusItem;
+                public bool Enable = true;
+                public bool Processed = false;
 
                 #region .ctor
-                public void Init(object obj, List<StatusItem> statuses, object parent)
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public WeakValue(object objectToAttach)
                 {
-                    Object = obj;
-                    Statuses = statuses;
-                    Parent = parent;
+                    FuncDelegates = new List<WeakDelegate>();
+                    ActionDelegates = new List<WeakDelegate>();
+                    ObjectAttached = new WeakReference(objectToAttach);
+                    AttributeStatus = AttributeFunc.GetOrAdd(objectToAttach.GetType(), GetAttributeStatusFunc);
                 }
-                public void Clear()
+                #endregion
+
+                #region Methods
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Add(Func<StatusItem> @delegate)
+                    => FuncDelegates.Add(@delegate.GetWeak());
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Add(Action<StatusItemValuesCollection> @delegate)
+                    => ActionDelegates.Add(@delegate.GetWeak());
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void SetParent(object parentObject)
                 {
-                    Object = null;
-                    Parent = null;
-                    Value = null;
-                    Statuses = null;
+                    if (ObjectParent != null && ObjectParent.IsAlive) return;
+                    ObjectParent = new WeakReference(parentObject);
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Update()
+                {
+                    if (!Enable)
+                    {
+                        CurrentStatusItem = null;
+                        return;
+                    }
+                    var obj = ObjectAttached.Target;
+                    if (!ObjectAttached.IsAlive)
+                    {
+                        CurrentStatusItem = null;
+                        return;
+                    }
+                    var item = AttributeStatus?.Invoke(obj);
+                    foreach (var @delegate in FuncDelegates)
+                    {
+                        if (@delegate.TryInvoke(null, out var itemResult) && itemResult is StatusItem sItemResult)
+                        {
+                            if (item == null)
+                            {
+                                item = sItemResult;
+                                continue;
+                            }
+                            if (string.IsNullOrEmpty(sItemResult.Name)) continue;
+                            item.Name = sItemResult.Name;
+                            if (sItemResult.Values != null && sItemResult.Values.Count > 0)
+                                item.Values.AddRange(sItemResult.Values);
+                            if (sItemResult.Children != null && sItemResult.Children.Count > 0)
+                                item.Children.AddRange(sItemResult.Children);
+                        }
+                    }
+                    if (item == null)
+                        item = new StatusItem { Name = GetName(obj) };
+
+                    foreach (var @delegate in ActionDelegates)
+                        @delegate.TryInvokeAction(item.Values);
+
+                    CurrentStatusItem = item;
+
+                    string GetName(object value)
+                    {
+                        var type = value.GetType();
+                        if (type.IsGenericType)
+                        {
+                            if (type.GetInterface("IList") != null)
+                            {
+                                var innerType = type.IsArray ? type.GetElementType() : type.GenericTypeArguments[0];
+                                return (type.IsArray ? "Array Of ~ " : "List Of ~ ") + innerType.Namespace + "." + innerType.Name;
+                            }
+                            else
+                                return type.Namespace + "." + type.Name + " [" + type.GenericTypeArguments.Select(ga => ga.Namespace + "." + ga.Name).Join(", ") + "]";
+                        }
+                        else
+                            return type.Namespace + "." + type.Name;
+                    }
+                }
+
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                public void Clean()
+                {
+                    CurrentStatusItem = null;
                     Processed = false;
                 }
                 #endregion
-            }
-            private class StatusAttributesContainer
-            {
-                private static readonly NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]> StatusPropPerType = new NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusPropertyAttribute)[]>();
-                private static readonly NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]> StatusRefPropPerType = new NonBlocking.ConcurrentDictionary<Type, (FastPropertyInfo, StatusReferenceAttribute)[]>();
-                private readonly WeakReference<object> _target;
-                private readonly (FastPropertyInfo, StatusPropertyAttribute)[] _statusAttributes;
-                private readonly (FastPropertyInfo, StatusReferenceAttribute)[] _statusReferenceAttributes;
 
-                #region .ctor
-                public StatusAttributesContainer(object target)
+                #region Private Methods
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                private static Func<object, StatusItem> GetAttributeStatusFunc(Type type)
                 {
-                    if (target == null) return;
-                    _target = new WeakReference<object>(target);
-                    var type = target.GetType();
-                    _statusAttributes = StatusPropPerType.GetOrAdd(type, mType => mType.GetProperties().Select(p =>
+                    var props = type.GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                    var nameAttribute = type.GetAttribute<StatusNameAttribute>();
+                    var lstProps = new List<(FastPropertyInfo, StatusPropertyAttribute, StatusReferenceAttribute)>();
+                    foreach (var prop in props)
                     {
-                        var attr = p.GetAttribute<StatusPropertyAttribute>();
-                        if (attr == null || p == null)
-                            return (null, null);
-                        var fastProp = p.GetFastPropertyInfo();
-                        return (fastProp, attr);
-                    }).Where(t => t.Item2 != null).ToArray());
-                    _statusReferenceAttributes = StatusRefPropPerType.GetOrAdd(type, mType => mType.GetProperties().Select(p =>
+                        var attrPropAttr = prop.GetAttribute<StatusPropertyAttribute>();
+                        var attrRefAttr = prop.GetAttribute<StatusReferenceAttribute>();
+                        if (attrPropAttr == null && attrRefAttr == null) continue;
+                        var fastProp = prop.GetFastPropertyInfo();
+                        lstProps.Add((fastProp, attrPropAttr, attrRefAttr));
+                    }
+                    if (lstProps.Count == 0 && nameAttribute == null) return null;
+                    return item =>
                     {
-                        var attr = p.GetAttribute<StatusReferenceAttribute>();
-                        if (attr == null || p == null)
-                            return (null, null);
-                        var fastProp = p.GetFastPropertyInfo();
-                        return (fastProp, attr);
-                    }).Where(t => t.Item2 != null).ToArray());
-                }
-                #endregion
-
-                #region Public Methods
-                public Func<StatusItem> GetFuncByAttribute()
-                {
-                    if (_target == null) return null;
-                    if (_statusAttributes.Length == 0 && _statusReferenceAttributes.Length == 0)
-                        return null;
-                    return () =>
-                    {
-                        if (!_target.TryGetTarget(out var obj)) return null;
                         var sItem = new StatusItem();
-                        for (var i = 0; i < _statusAttributes.Length; i++)
+                        if (nameAttribute != null)
+                            sItem.Name = nameAttribute.Name;
+                        foreach (var (fProp, propAttr, refAttr) in lstProps)
                         {
-                            (var fProp, var attr) = _statusAttributes[i];
-                            var name = attr.Name ?? fProp.Name;
-                            var value = fProp.GetValue(obj);
-                            var status = attr.Status;
-                            var plot = attr.PlotEnabled;
-                            sItem.Values.Add(name, value, status, plot);
-                        }
-                        for (var i = 0; i < _statusReferenceAttributes.Length; i++)
-                        {
-                            (var fProp, var _) = _statusReferenceAttributes[i];
-                            var value = fProp.GetValue(obj);
-                            Core.Status.AttachChild(value, obj);
+                            var value = fProp.GetValue(item);
+                            if (propAttr != null)
+                            {
+                                var name = propAttr.Name ?? fProp.Name;
+                                sItem.Values.Add(name, value, propAttr.Status, propAttr.PlotEnabled);
+                            }
+                            if (refAttr != null)
+                            {
+                                Core.Status.AttachChild(value, item);
+                            }
                         }
                         return sItem;
                     };
                 }
-                #endregion  
+                #endregion
             }
             #endregion
-        }
-        private sealed class StatusContainer
-        {
-            public static readonly object Root = new object();
-            private readonly object _locker = new object();
-            private WeakReference<object> _object;
-            private WeakReference<object> _parent;
-            private readonly List<WeakAction<StatusItemValuesCollection>> _lstStatusValueCollection = new List<WeakAction<StatusItemValuesCollection>>();
-            private readonly List<WeakFunc<StatusItem>> _lstStatusItem = new List<WeakFunc<StatusItem>>();
-
-            #region Properties
-            public object Object
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _object == null ? Root : _object.TryGetTarget(out var item) ? item : null;
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                set
-                {
-                    switch (value)
-                    {
-                        case null:
-                            _object = null;
-                            break;
-                        case WeakReference<object> reference:
-                            _object = reference;
-                            break;
-                        default:
-                            _object = new WeakReference<object>(value);
-                            break;
-                    }
-                }
-            }
-            public object Parent
-            {
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                get => _parent == null ? null : _parent.TryGetTarget(out var item) ? item : null;
-                [MethodImpl(MethodImplOptions.AggressiveInlining)]
-                set
-                {
-                    switch (value)
-                    {
-                        case null:
-                            _parent = null;
-                            break;
-                        case WeakReference<object> reference:
-                            _parent = reference;
-                            break;
-                        default:
-                            _parent = new WeakReference<object>(value);
-                            break;
-                    }
-                }
-            }
-            #endregion
-
-            #region Public Methods
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AddStatusItemDelegate(Func<StatusItem> statusItemFunc)
-            {
-                lock (_locker)
-                {
-                    var wCreate = WeakDelegate.Create(statusItemFunc);
-                    _lstStatusItem.Add(wCreate);
-                }
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public void AddStatusItemValuesCollection(Action<StatusItemValuesCollection> statusItemValuesAction)
-            {
-                lock (_locker)
-                {
-                    var wCreate = WeakDelegate.Create(statusItemValuesAction);
-                    _lstStatusValueCollection.Add(wCreate);
-                }
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public List<StatusItem> GetStatusItems()
-            {
-                lock (_locker)
-                {
-                    var lstStatus = new List<StatusItem>();
-                    if (Object == null) return lstStatus;
-
-                    foreach(var item in _lstStatusItem)
-                    {
-                        if (item == null) continue;
-                        try
-                        {
-                            var (ran, result) = item();
-                            if (ran)
-                                lstStatus.Add(result);
-                        }
-                        catch(Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }
-                    foreach(var item in _lstStatusValueCollection)
-                    {
-                        if (item == null) continue;
-                        try
-                        {
-                            var sItem = new StatusItem();
-                            item(sItem.Values);
-                            lstStatus.Add(sItem);
-
-                        }
-                        catch (Exception ex)
-                        {
-                            Core.Log.Write(ex);
-                        }
-                    }
-
-                    var results = GetAndGroup(lstStatus);
-                    return results;
-                }
-            }
-            #endregion
-
-            private static List<StatusItem> GetAndGroup(List<StatusItem> col)
-            {
-                if (col.Count < 2) return col;
-                var response = new List<StatusItem>();
-                var group = col.GroupBy(s => s.Name);
-                foreach (var item in group)
-                {
-                    if (item.Count() == 1)
-                    {
-                        response.Add(item.First());
-                    }
-                    else
-                    {
-                        var values = item.SelectMany(i => i.Values).DistinctBy(i => i.Key).ToArray();
-                        var children = GetAndGroup(item.SelectMany(i => i.Children).ToList());
-                        response.Add(new StatusItem
-                        {
-                            Name = item.Key,
-                            Values = new StatusItemValuesCollection(values),
-                            Children = children
-                        });
-                    }
-                }
-                return response;
-            }
-        }
-        #endregion
-
-        /// <inheritdoc />
-        /// <summary>
-        /// Dispose
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Dispose()
-        {
-            Transports?.Clear();
-        }
     }
 }
 #pragma warning restore IDE0018 // Declaración de variables alineada

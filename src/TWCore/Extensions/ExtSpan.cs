@@ -92,7 +92,42 @@ namespace TWCore
         /// <param name="options">StringSplit options</param>
         /// <returns>List with the split result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<ReadOnlyMemory<char>> Split(this ReadOnlyMemory<char> memory, ReadOnlySpan<char> separator, StringSplitOptions options = StringSplitOptions.None)
+        {
+            var result = new List<ReadOnlyMemory<char>>();
+            while (memory.Length > 0)
+            {
+                var idx = memory.Span.IndexOf(separator);
+                if (idx == -1)
+                    break;
+                var value = memory.Slice(0, idx);
+                if (options == StringSplitOptions.None || value.Length > 0)
+                    result.Add(value);
+                memory = memory.Slice(idx + separator.Length);
+            }
+            if (options == StringSplitOptions.None || memory.Length > 0)
+                result.Add(memory);
+            return result;
+        }
+        /// <summary>
+        /// Split a char memory using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static List<string> SplitAsString(this ReadOnlyMemory<char> memory, char separator, StringSplitOptions options = StringSplitOptions.None)
+            => SplitAsString(memory.Span, separator, options);
+        /// <summary>
+        /// Split a char memory using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<string> SplitAsString(this ReadOnlyMemory<char> memory, ReadOnlySpan<char> separator, StringSplitOptions options = StringSplitOptions.None)
             => SplitAsString(memory.Span, separator, options);
         /// <summary>
         /// Split a char span using a separator
@@ -112,11 +147,36 @@ namespace TWCore
                     break;
                 var value = span.Slice(0, idx);
                 if (options == StringSplitOptions.None || value.Length > 0)
-                    result.Add(value.ToString());
+                    result.Add(new string(value));
                 span = span.Slice(idx + 1);
             }
             if (options == StringSplitOptions.None || span.Length > 0)
-                result.Add(span.ToString());
+                result.Add(new string(span));
+            return result;
+        }
+        /// <summary>
+        /// Split a char span using a separator
+        /// </summary>
+        /// <param name="span">Source span</param>
+        /// <param name="separator">Char separator</param>
+        /// <param name="options">StringSplit options</param>
+        /// <returns>List with the split result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static List<string> SplitAsString(this ReadOnlySpan<char> span, ReadOnlySpan<char> separator, StringSplitOptions options = StringSplitOptions.None)
+        {
+            var result = new List<string>();
+            while (span.Length > 0)
+            {
+                var idx = span.IndexOf(separator);
+                if (idx == -1)
+                    break;
+                var value = span.Slice(0, idx);
+                if (options == StringSplitOptions.None || value.Length > 0)
+                    result.Add(new string(value));
+                span = span.Slice(idx + separator.Length);
+            }
+            if (options == StringSplitOptions.None || span.Length > 0)
+                result.Add(new string(span));
             return result;
         }
     }

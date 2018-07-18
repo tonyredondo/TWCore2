@@ -151,7 +151,7 @@ namespace TWCore.Text
                     if (Guid.TryParse(value, out var guid))
                         resp = guid;
                 }
-                else if (type.GetTypeInfo().IsEnum)
+                else if (type.IsEnum)
                 {
                     if (value == null) return resp;
                     var objValue = Enum.Parse(type, value);

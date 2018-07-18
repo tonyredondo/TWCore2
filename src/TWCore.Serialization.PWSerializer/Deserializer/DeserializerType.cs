@@ -180,7 +180,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     }).Select(p => new DeserializerTypeInfo.FPropertyInfo
                     {
                         Property = p.GetFastPropertyInfo(),
-                        IsEnum = p.PropertyType.GetTypeInfo().IsEnum,
+                        IsEnum = p.PropertyType.IsEnum,
                         UnderlyingType = p.PropertyType.GetUnderlyingType()
                     }).ToDictionary(k => k.Property.Name, v => v)
                 };
@@ -193,7 +193,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                 var ifaces = typeInfo.ImplementedInterfaces.ToArray();
 
 
-                var ilist = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+                var ilist = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
                 if (ilist != null)
                 {
                     Type innerType = null;
@@ -208,7 +208,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                             innerType = gargs[0];
                         else
                         {
-                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.GetTypeInfo().IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
+                            var iListType = typeInfo.ImplementedInterfaces.FirstOrDefault(m => (m.IsGenericType && m.GetGenericTypeDefinition() == typeof(IList<>)));
                             if (iListType != null && iListType.GenericTypeArguments.Length > 0)
                                 innerType = iListType.GenericTypeArguments[0];
                         }
@@ -217,7 +217,7 @@ namespace TWCore.Serialization.PWSerializer.Deserializer
                     tinfo.InnerTypes = new[] { innerType };
                 }
 
-                var idictio = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                var idictio = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                 if (idictio != null)
                 {
                     tinfo.IsIDictionary = true;

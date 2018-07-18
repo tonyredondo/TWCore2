@@ -208,7 +208,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             {
                 PlanType = SerializerPlanItemType.PropertyValue;
                 Type = pInfo.PropertyType;
-                DefaultValue = isNullable ? null : Type.GetTypeInfo().IsValueType ? Activator.CreateInstance(Type) : null;
+                DefaultValue = isNullable ? null : Type.IsValueType ? Activator.CreateInstance(Type) : null;
                 IsNullable = isNullable;
                 Property = pInfo.GetFastPropertyInfo();
                 Name = pInfo.Name;
@@ -229,7 +229,7 @@ namespace TWCore.Serialization.PWSerializer.Serializer
             {
                 PlanType = SerializerPlanItemType.PropertyReference;
                 Type = pInfo.PropertyType;
-                DefaultValue = Type.GetTypeInfo().IsValueType ? Activator.CreateInstance(Type) : null;
+                DefaultValue = Type.IsValueType ? Activator.CreateInstance(Type) : null;
                 Property = pInfo.GetFastPropertyInfo();
                 Name = pInfo.Name;
             }

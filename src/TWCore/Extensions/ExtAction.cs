@@ -42,8 +42,8 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action CreateDelay(this Action action, int milliseconds)
         {
-            return () => Task.Delay(milliseconds).ContinueWith(t => action(), CancellationToken.None,
-                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
+            return () => Task.Delay(milliseconds).ContinueWith((t, state) => ((Action)state)(), action,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }
         /// <summary>
@@ -55,7 +55,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Action<T> CreateDelay<T>(this Action<T> action, int milliseconds)
         {
-            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => action((T)s), obj, CancellationToken.None,
+            return obj => Task.Delay(milliseconds).ContinueWith((t, s) => 
+                {
+                    var tpl = (Tuple<Action<T>, T>)s;
+                    tpl.Item1(tpl.Item2);
+                }, Tuple.Create(action, obj), CancellationToken.None,
                 TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion,
                 TaskScheduler.Default);
         }

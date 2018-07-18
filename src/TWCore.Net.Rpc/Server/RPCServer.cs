@@ -154,7 +154,7 @@ namespace TWCore.Net.RPC.Server
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void AddService(Type serviceInterfaceType, object serviceInstance)
         {
-            if (!serviceInterfaceType.GetTypeInfo().IsInterface)
+            if (!serviceInterfaceType.IsInterface)
                 throw new ArgumentException("The type of the service should be an interface", "serviceInterfaceType");
             Core.Log.LibVerbose("Adding service.");
             var sItem = new ServiceItem(this, serviceInterfaceType, serviceInstance);

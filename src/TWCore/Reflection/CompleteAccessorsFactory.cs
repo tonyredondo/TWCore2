@@ -169,7 +169,7 @@ namespace TWCore.Reflection
 
         private static object ChangeType(object value, Type conversionType)
         {
-            if (!conversionType.GetTypeInfo().IsGenericType ||
+            if (!conversionType.IsGenericType ||
                 conversionType.GetGenericTypeDefinition() != typeof(Nullable<>))
                 return Convert.ChangeType(value, conversionType);
             if (value == null) return null;

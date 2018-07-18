@@ -40,9 +40,9 @@ namespace TWCore
         private static readonly char[] Space = { ' ' };
         private static readonly Lazy<LevenshteinStringDistance> LevenshteinStringDistance = new Lazy<LevenshteinStringDistance>();
         private static readonly Lazy<DamerauLevenshteinStringDistance> DamerauLevenshteinStringDistance = new Lazy<DamerauLevenshteinStringDistance>();
-        private static readonly Regex ShrinkRegex = new Regex(@"[ ]{2,}", RegexOptions.Compiled);
-        private static readonly Regex InvalidXmlChars = new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled);
-        private static readonly Encoding DefaultEncoding = new UTF8Encoding(false);
+        private static readonly Lazy<Regex> ShrinkRegex = new Lazy<Regex>(new Regex(@"[ ]{2,}", RegexOptions.Compiled));
+        private static readonly Lazy<Regex> InvalidXmlChars = new Lazy<Regex>(new Regex(@"(?<![\uD800-\uDBFF])[\uDC00-\uDFFF]|[\uD800-\uDBFF](?![\uDC00-\uDFFF])|[\x00-\x08\x0B\x0C\x0E-\x1F\x7F-\x9F\uFEFF\uFFFE\uFFFF]", RegexOptions.Compiled));
+        private static readonly Lazy<Encoding> DefaultEncoding = new Lazy<Encoding>(new UTF8Encoding(false));
 
         #region Is? conditionals
         /// <summary>
@@ -268,7 +268,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string RemoveInvalidXmlChars(this string text)
         {
-            return string.IsNullOrEmpty(text) ? "" : InvalidXmlChars.Replace(text, "");
+            return string.IsNullOrEmpty(text) ? string.Empty : InvalidXmlChars.Value.Replace(text, string.Empty);
         }
         /// <summary>
         /// Remove spaces from a string
@@ -292,7 +292,7 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ShrinkSpaces(this string value)
         {
-            return !string.IsNullOrEmpty(value) ? ShrinkRegex.Replace(value, @" ") : value;
+            return !string.IsNullOrEmpty(value) ? ShrinkRegex.Value.Replace(value, " ") : value;
         }
         /// <summary>
         /// Split a string in to an array.
@@ -570,7 +570,7 @@ namespace TWCore
         /// <returns>A string containing all lines of the file.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string ReadTextFromFile(this string path, Encoding encoding = null)
-            => File.ReadAllText(path, encoding ?? DefaultEncoding);
+            => File.ReadAllText(path, encoding ?? DefaultEncoding.Value);
         /// <summary>
         /// Faster Index Of method
         /// </summary>

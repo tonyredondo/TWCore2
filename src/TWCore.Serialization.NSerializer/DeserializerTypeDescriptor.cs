@@ -41,8 +41,8 @@ namespace TWCore.Serialization.NSerializer
         {
             Type = type;
             var ifaces = type.GetInterfaces();
-            var iListType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-            var iDictionaryType = ifaces.FirstOrDefault(i => i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
             var isIList = iListType != null;
             var isIDictionary = iDictionaryType != null;
             var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>

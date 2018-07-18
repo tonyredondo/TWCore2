@@ -285,9 +285,9 @@ namespace TWCore
                     currentObjectPlanTypes.Add(iType);
                     var ifaces = typeInfo.ImplementedInterfaces;
                     var ifacesArray = ifaces as Type[] ?? ifaces.ToArray();
-                    var ilist = ifacesArray.FirstOrDefault(i => i == typeof(IList) || (i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
+                    var ilist = ifacesArray.FirstOrDefault(i => i == typeof(IList) || (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>)));
                     var isIList = ilist != null;
-                    var idictio = ifacesArray.FirstOrDefault(i => i == typeof(IDictionary) || i.GetTypeInfo().IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+                    var idictio = ifacesArray.FirstOrDefault(i => i == typeof(IDictionary) || i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
                     var isIDictionary = idictio != null;
 
                     var lPlan = new List<ObjectPlanItem>();
@@ -698,7 +698,7 @@ namespace TWCore
             {
                 PlanType = PlanItemType.FieldReference;
                 Type = fInfo.FieldType;
-                DefaultValue = Type.GetTypeInfo().IsValueType ? Activator.CreateInstance(Type) : null;
+                DefaultValue = Type.IsValueType ? Activator.CreateInstance(Type) : null;
                 Field = fInfo;
                 Name = fInfo.Name;
             }
@@ -717,7 +717,7 @@ namespace TWCore
             {
                 PlanType = PlanItemType.PropertyReference;
                 Type = pInfo.PropertyType;
-                DefaultValue = Type.GetTypeInfo().IsValueType ? Activator.CreateInstance(Type) : null;
+                DefaultValue = Type.IsValueType ? Activator.CreateInstance(Type) : null;
                 Property = pInfo.GetFastPropertyInfo();
                 Name = pInfo.Name;
             }

@@ -29,16 +29,16 @@ namespace TWCore
     {
         public long Value { get; set; }
         public string Text { get; set; }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public override string ToString() => Text;
+        public override string ToString() 
+            => Text;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override int GetHashCode()
-        {
-            return Value.GetHashCode() + Text?.GetHashCode() ?? 0;
-        }
+            => Value.GetHashCode() + Text?.GetHashCode() ?? 0;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public override bool Equals(object obj)
-        {
-            return obj is ReadableBytes rBytes && Value == rBytes.Value && Text == rBytes.Text;
-        }
+            => obj is ReadableBytes rBytes && Value == rBytes.Value && Text == rBytes.Text;
     }
 
     /// <summary>

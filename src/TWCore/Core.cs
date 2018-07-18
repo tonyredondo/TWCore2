@@ -124,7 +124,7 @@ namespace TWCore
         /// <summary>
         /// Current Framework version
         /// </summary>
-        public static string FrameworkVersion { get; } = typeof(Core).GetTypeInfo().Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
+        public static string FrameworkVersion { get; } = typeof(Core).Assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
         /// <summary>
         /// Global TApp settings
         /// </summary>

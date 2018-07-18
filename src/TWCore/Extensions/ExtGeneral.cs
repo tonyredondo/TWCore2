@@ -46,9 +46,8 @@ namespace TWCore
         public static T GetAttribute<T>(this object obj) where T : class
         {
             var objType = obj as Type ?? obj.GetType();
-            var objTypeInfo = objType.GetTypeInfo();
             object[] attrs;
-            if (objTypeInfo.IsEnum)
+            if (objType.IsEnum)
                 attrs = objType.GetRuntimeField(obj.ToString()).GetCustomAttributes(true);
             else if (obj is PropertyInfo pinfo)
                 attrs = pinfo.GetCustomAttributes(true);
@@ -57,7 +56,7 @@ namespace TWCore
             else if (obj is MethodInfo minfo)
                 attrs = minfo.GetCustomAttributes(true);
             else
-                attrs = objTypeInfo.GetCustomAttributes(true);
+                attrs = objType.GetCustomAttributes(true);
             foreach (var item in attrs)
                 if (item is T titem)
                     return titem;
@@ -75,8 +74,7 @@ namespace TWCore
         {
             if (source == null) return null;
             var sType = source.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return null;
+            if (sType.IsValueType) return null;
             var dct = new Dictionary<string, object>();
             var props = sType.GetRuntimeProperties();
             foreach (var prop in props)
@@ -97,8 +95,7 @@ namespace TWCore
         {
             if (source == null || target == null) return;
             var sType = target.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return;
+            if (sType.IsValueType) return;
             foreach (var item in source)
             {
                 var prop = sType.GetRuntimeProperty(item.Key);
@@ -119,8 +116,7 @@ namespace TWCore
         {
             if (source == null) return null;
             var sType = source.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return null;
+            if (sType.IsValueType) return null;
             var dct = new Dictionary<string, string>();
             var props = sType.GetRuntimeProperties();
             foreach (var prop in props)
@@ -142,8 +138,7 @@ namespace TWCore
         {
             if (source == null || target == null) return;
             var sType = target.GetType();
-            var sTypeInfo = sType.GetTypeInfo();
-            if (sTypeInfo.IsValueType) return;
+            if (sType.IsValueType) return;
             foreach (var item in source)
             {
                 var prop = sType.GetRuntimeProperty(item.Key);
@@ -161,8 +156,7 @@ namespace TWCore
         {
             FromStringDictionary(target, source, (strValue, type) =>
             {
-                var typeInfo = type.GetTypeInfo();
-                return strValue.ParseTo(type, typeInfo.IsValueType ? Activator.CreateInstance(type) : null);
+                return strValue.ParseTo(type, type.IsValueType ? Activator.CreateInstance(type) : null);
             });
         }
         #endregion

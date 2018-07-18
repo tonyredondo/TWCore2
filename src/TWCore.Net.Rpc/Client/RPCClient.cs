@@ -134,7 +134,7 @@ namespace TWCore.Net.RPC.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public async Task<DynamicProxy> CreateDynamicProxyAsync(Type interfaceType)
         {
-            if (!interfaceType.GetTypeInfo().IsInterface)
+            if (!interfaceType.IsInterface)
                 throw new ArgumentException("The type of the dynamic proxy should be an interface.");
             await InitTransportAsync().ConfigureAwait(false);
             if (Descriptors.Items.TryGetValue(interfaceType.FullName, out var descriptor))

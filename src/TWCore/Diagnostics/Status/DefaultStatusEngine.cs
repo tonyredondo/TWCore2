@@ -42,7 +42,7 @@ namespace TWCore.Diagnostics.Status
     public class DefaultStatusEngine : IStatusEngine
     {
         private const int MaxItems = 2500;
-        private static readonly ReferencePool<List<(object Key, WeakValue Value, int Index)>> ListPool = new ReferencePool<List<(object Key, WeakValue Value, int Index)>>();
+        private static readonly ReferencePool<List<(WeakValue Value, int Index)>> ListPool = new ReferencePool<List<(WeakValue Value, int Index)>>();
         private static readonly ReferencePool<Dictionary<string, WeakValue>> DictioPool = new ReferencePool<Dictionary<string, WeakValue>>();
         private readonly WeakDictionary<object, WeakValue> _weakValues = new WeakDictionary<object, WeakValue>();
         private readonly WeakDictionary<object, WeakChildren> _weakChildren = new WeakDictionary<object, WeakChildren>();
@@ -250,147 +250,157 @@ namespace TWCore.Diagnostics.Status
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void UpdateStatus()
         {
-            var startTime = Stopwatch.GetTimestamp();
-            int initialCount;
-            var lstWithSlashName = ListPool.New();
-            var dctByName = DictioPool.New();
-            var items = new List<StatusItem>();
-
-            #region Update Values
-            do
+            lock (this)
             {
-                lstWithSlashName.Clear();
-                dctByName.Clear();
-                initialCount = _weakValues.Count;
-
-                foreach (var weakItem in _weakValues)
+                try
                 {
-                    var key = weakItem.Key;
-                    var value = weakItem.Value;
-                    if (value.CurrentStatusItem == null)
+                    var startTime = Stopwatch.GetTimestamp();
+                    int initialCount;
+                    var lstWithSlashName = ListPool.New();
+                    var dctByName = DictioPool.New();
+                    var items = new List<StatusItem>();
+
+                    #region Update Values
+                    do
                     {
-                        value.Update();
-                        if (value.CurrentStatusItem == null)
-                            continue;
-                    }
+                        lstWithSlashName.Clear();
+                        dctByName.Clear();
+                        initialCount = _weakValues.Count;
 
-                    var name = value.CurrentStatusItem.Name;
-                    if (name == null) continue;
+                        foreach (var weakItem in _weakValues)
+                        {
+                            var key = weakItem.Key;
+                            var value = weakItem.Value;
+                            if (value.CurrentStatusItem == null)
+                            {
+                                value.Update();
+                                if (value.CurrentStatusItem == null)
+                                    continue;
+                            }
 
-                    var slashIdx = name.IndexOf('\\', StringComparison.Ordinal);
-                    if (slashIdx > 0)
-                        lstWithSlashName.Add((key, value, slashIdx));
+                            var name = value.CurrentStatusItem.Name;
+                            if (name == null) continue;
 
-                    if (!dctByName.TryGetValue(name, out var currentValue))
-                        dctByName.TryAdd(name, value);
-                }
-            } while (_weakValues.Count != initialCount);
-            #endregion
+                            var slashIdx = name.IndexOf('\\', StringComparison.Ordinal);
+                            if (slashIdx > 0)
+                                lstWithSlashName.Add((value, slashIdx));
 
-            #region Merge Similar by name
-            foreach (var (key, value, index) in lstWithSlashName)
-            {
-                if (value.CurrentStatusItem == null) continue;
-                var sSlashItem = value.CurrentStatusItem;
-                var name = sSlashItem.Name;
-                var baseName = name.Substring(0, index);
-                var baseRest = name.Substring(index + 1);
-                StatusItem baseStatus;
-                if (dctByName.TryGetValue(baseName, out var baseWeakValue))
-                {
-                    baseStatus = baseWeakValue.CurrentStatusItem;
-                    value.Processed = true;
-                }
-                else
-                {
-                    baseStatus = new StatusItem { Name = baseName };
-                    value.CurrentStatusItem = baseStatus;
-                }
+                            if (!dctByName.TryGetValue(name, out var currentValue))
+                                dctByName.TryAdd(name, value);
+                        }
+                    } while (_weakValues.Count != initialCount);
+                    #endregion
 
-                if (!string.IsNullOrWhiteSpace(baseRest))
-                {
-                    sSlashItem.Name = baseRest;
-                    baseStatus.Children.Add(sSlashItem);
-                }
-                else
-                {
-                    baseStatus.Values.AddRange(sSlashItem.Values);
-                    baseStatus.Children.AddRange(sSlashItem.Children);
-                }
-            }
-            #endregion
-
-            #region Children Tree
-            foreach (var item in _weakChildren)
-            {
-                if (!_weakValues.TryGetValue(item.Key, out var parentValue)) continue;
-                foreach (var itemWeakValue in item.Value.Children)
-                {
-                    var itemValue = itemWeakValue.Target;
-                    if (!itemWeakValue.IsAlive) continue;
-                    if (!_weakValues.TryGetValue(itemValue, out var value)) continue;
-
-                    var parentStatus = parentValue.CurrentStatusItem;
-                    var childStatus = value.CurrentStatusItem;
-                    if (childStatus == null) continue;
-                    if (parentStatus != null)
+                    #region Merge Similar by name
+                    foreach (var (value, index) in lstWithSlashName)
                     {
-                        parentStatus.Children.Add(childStatus);
-                        value.Processed = true;
+                        if (value.CurrentStatusItem == null) continue;
+                        var sSlashItem = value.CurrentStatusItem;
+                        var name = sSlashItem.Name;
+                        var baseName = name.Substring(0, index);
+                        var baseRest = name.Substring(index + 1);
+                        StatusItem baseStatus;
+                        if (dctByName.TryGetValue(baseName, out var baseWeakValue))
+                        {
+                            baseStatus = baseWeakValue.CurrentStatusItem;
+                            value.Processed = true;
+                        }
+                        else
+                        {
+                            baseStatus = new StatusItem { Name = baseName };
+                            value.CurrentStatusItem = baseStatus;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(baseRest))
+                        {
+                            sSlashItem.Name = baseRest;
+                            baseStatus.Children.Add(sSlashItem);
+                        }
+                        else
+                        {
+                            baseStatus.Values.AddRange(sSlashItem.Values);
+                            baseStatus.Children.AddRange(sSlashItem.Children);
+                        }
                     }
+                    #endregion
+
+                    #region Children Tree
+                    foreach (var item in _weakChildren)
+                    {
+                        if (!_weakValues.TryGetValue(item.Key, out var parentValue)) continue;
+                        foreach (var itemWeakValue in item.Value.Children)
+                        {
+                            var itemValue = itemWeakValue.Target;
+                            if (!itemWeakValue.IsAlive) continue;
+                            if (!_weakValues.TryGetValue(itemValue, out var value)) continue;
+
+                            var parentStatus = parentValue.CurrentStatusItem;
+                            var childStatus = value.CurrentStatusItem;
+                            if (childStatus == null) continue;
+                            if (parentStatus != null)
+                            {
+                                parentStatus.Children.Add(childStatus);
+                                value.Processed = true;
+                            }
+                        }
+                    }
+                    #endregion
+
+                    #region Get Roots
+                    foreach (var item in _weakValues.Values)
+                    {
+                        if (!item.Enable || item.Processed || item.ObjectParent != null) continue;
+                        items.Add(item.CurrentStatusItem);
+                    }
+                    items.Sort((a, b) =>
+                    {
+                        if (a.Name == "Application Information") return -1;
+                        if (b.Name == "Application Information") return 1;
+                        if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                            !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
+                        if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
+                            b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
+                        return string.CompareOrdinal(a.Name, b.Name);
+                    });
+                    #endregion
+
+                    #region Fixes
+                    CheckSameNames(items);
+                    SetIds(string.Empty, items);
+                    #endregion
+
+                    var endTime = Stopwatch.GetTimestamp();
+
+                    #region Status Collection
+                    _lastResult = new StatusItemCollection
+                    {
+                        InstanceId = Core.InstanceId,
+                        Timestamp = Core.Now,
+                        EnvironmentName = Core.EnvironmentName,
+                        MachineName = Core.MachineName,
+                        ApplicationDisplayName = Core.ApplicationDisplayName,
+                        ApplicationName = Core.ApplicationName,
+                        Items = items,
+                        ElapsedMilliseconds = (((double)(endTime - startTime)) / Stopwatch.Frequency) * 1000,
+                        StartTime = Process.GetCurrentProcess().StartTime
+                    };
+                    #endregion
+
+                    lstWithSlashName.Clear();
+                    dctByName.Clear();
+                    ListPool.Store(lstWithSlashName);
+                    DictioPool.Store(dctByName);
+
+                    #region Clear Values
+                    foreach (var value in _weakValues.Values)
+                        value.Clean();
+                    #endregion
+                }
+                catch(Exception ex)
+                {
+                    Core.Log.Write(ex);
                 }
             }
-            #endregion
-
-            #region Get Roots
-            foreach (var item in _weakValues.Values)
-            {
-                if (!item.Enable || item.Processed || item.ObjectParent != null) continue;
-                items.Add(item.CurrentStatusItem);
-            }
-            items.Sort((a, b) =>
-            {
-                if (a.Name == "Application Information") return -1;
-                if (b.Name == "Application Information") return 1;
-                if (a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
-                    !b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return -1;
-                if (!a.Name.StartsWith("TWCore.", StringComparison.Ordinal) &&
-                    b.Name.StartsWith("TWCore.", StringComparison.Ordinal)) return 1;
-                return string.CompareOrdinal(a.Name, b.Name);
-            });
-            #endregion
-
-            #region Fixes
-            CheckSameNames(items);
-            SetIds(string.Empty, items);
-            #endregion
-
-            var endTime = Stopwatch.GetTimestamp();
-
-            #region Status Collection
-            _lastResult = new StatusItemCollection
-            {
-                InstanceId = Core.InstanceId,
-                Timestamp = Core.Now,
-                EnvironmentName = Core.EnvironmentName,
-                MachineName = Core.MachineName,
-                ApplicationDisplayName = Core.ApplicationDisplayName,
-                ApplicationName = Core.ApplicationName,
-                Items = items,
-                ElapsedMilliseconds = (((double)(endTime - startTime)) / Stopwatch.Frequency) * 1000,
-                StartTime = Process.GetCurrentProcess().StartTime
-            };
-            #endregion
-
-            lstWithSlashName.Clear();
-            dctByName.Clear();
-            ListPool.Store(lstWithSlashName);
-            DictioPool.Store(dctByName);
-
-            #region Clear Values
-            foreach (var value in _weakValues.Values)
-                value.Clean();
-            #endregion
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void SetIds(string prefix, List<StatusItem> items)

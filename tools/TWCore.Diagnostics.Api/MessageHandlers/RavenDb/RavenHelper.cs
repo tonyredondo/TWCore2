@@ -18,6 +18,7 @@ using System;
 using System.Threading.Tasks;
 using Raven.Client.Documents;
 using Raven.Client.Documents.BulkInsert;
+using Raven.Client.Documents.Indexes;
 using Raven.Client.Documents.Session;
 using TWCore.Settings;
 using TWCore.Threading;
@@ -38,6 +39,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 Database = Settings.Database
             };
             store.Initialize();
+            
+            IndexCreation.CreateIndexes(typeof(RavenHelper).Assembly, store);
+            
             return store;
         }
         public static void CloseDocumentStore()

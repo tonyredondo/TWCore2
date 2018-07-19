@@ -37,9 +37,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var logsEnvQuery = session.Query<NodeLogItem>()
-                    .Select(x => x.Environment)
-                    .Distinct();
                 var logsEnvTask = session.Query<NodeLogItem>()
                     .Select(x => x.Environment)
                     .Distinct()

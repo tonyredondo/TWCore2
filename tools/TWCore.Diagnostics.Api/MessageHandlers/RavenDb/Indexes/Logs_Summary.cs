@@ -18,6 +18,7 @@ using System;
 using System.Linq;
 using Raven.Client.Documents.Indexes;
 using TWCore.Diagnostics.Api.Models.Log;
+using TWCore.Diagnostics.Log;
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
 {
@@ -32,7 +33,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes
 
             public class Level
             {
-                public string Name { get; set; }
+                public LogLevel Name { get; set; }
                 public int Count { get; set; }
             }
         }

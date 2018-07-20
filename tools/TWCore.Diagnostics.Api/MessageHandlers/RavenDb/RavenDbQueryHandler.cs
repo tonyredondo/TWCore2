@@ -36,62 +36,55 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
     {
         public Task<List<string>> GetEnvironmentsAsync()
         {
-            return RavenHelper.ExecuteAndReturnAsync(async session =>
+            return RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                var enviroments = await session.Query<Environments_Availables.Result, Environments_Availables>().ToListAsync().ConfigureAwait(false);
-                return enviroments?.Select(x => x.Environment).ToList();
+                return session.Query<Environments_Availables.Result, Environments_Availables>().Select(x => x.Environment).ToListAsync();
             });
         }
 
         // Logs
         public async Task<LogSummary> GetLogsApplicationsLevelsByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate)
         {
-            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
+            var values = await RavenHelper.ExecuteAndReturnAsync(session =>
             {
-                return session.Query<NodeLogItem>()
-                    .Where(x => x.Environment == environment)
-                    .Where(x => x.Timestamp >= fromDate && x.Timestamp <= toDate)
-                    .OrderBy(x => x.Application)
-                    .GroupBy(x => new
-                    {
-                        x.Environment,
-                        x.Application,
-                        x.Level,
-                        x.Timestamp
-                    })
-                    .Select(x => new
-                    {
-                        x.Key.Application,
-                        x.Key.Level,
-                        x.Key.Timestamp
-                    })
-                    .Distinct()
-                    .ToListAsync();
+                return session.Query<Logs_Summary.Result, Logs_Summary>()
+                              .Where(x => x.Environment == environment)
+                              .Where(x => x.Date >= fromDate && x.Date <= toDate)
+                              .OrderBy(x => x.Application)
+                              .ToListAsync();
             }).ConfigureAwait(false);
 
-            var summary = new LogSummary
+            var apps = values.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
             {
-                Applications = value.GroupBy(x => x.Application).Select(x => new ApplicationsLevels
+                Application = x.Key,
+                Levels = x.SelectMany(y => y.Levels).GroupBy(y => y.Name).Select(ix => new LogLevelQuantity
                 {
-                    Application = x.Key,
-                    Levels = x.GroupBy(i => i.Level).Select(ix => new LogLevelQuantity
-                    {
-                        Name = ix.Key,
-                        Count = ix.Count()
-                    }).OrderBy(i => i.Name).ToArray()
-                }).ToArray(),
-                Levels = value.GroupBy(x => x.Level).Select(x => new LogLevelTimes
+                    Name = ix.Key,
+                    Count = ix.Sum(i => i.Count)
+                }).ToArray()
+            }).ToArray();
+
+            var levels = values.SelectMany(col => col.Levels, (result, level) => new
+            {
+                Name = level.Name,
+                Count = level.Count,
+                Date = result.Date
+            }).GroupBy(x => x.Name).Select(x => new LogLevelTimes
+            {
+                Name = x.Key,
+                Count = x.Sum(i => i.Count),
+                Series = x.GroupBy(i => i.Date).Select(i => new TimeCount
                 {
-                    Name = x.Key,
-                    Count = x.Count(),
-                    Series = x.GroupBy(i => i.Timestamp.Date).Select(i => new TimeCount
-                    {
-                        Date = i.Key,
-                        Count = i.Count()
-                    }).ToArray()
-                }).OrderBy(x => x.Name).ToArray()
+                    Date = i.Key,
+                    Count = i.Sum(k => k.Count)
+                }).ToArray()
+            }).OrderBy(x => x.Name).ToArray();
+
+            return new LogSummary
+            {
+                Applications = apps,
+                Levels = levels
             };
-            return summary;
         }
         public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
@@ -201,7 +194,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
                 var traceObject = attachment?.Stream?.DeserializeFromNBinary<object>();
-                return (SerializedObject) traceObject;
+                return (SerializedObject)traceObject;
             });
         }
         public Task<string> GetTraceXmlAsync(string id)
@@ -222,7 +215,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
             });
         }
-        
+
         private class TraceTempResult
         {
             public string Group { get; set; }
@@ -269,16 +262,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
                 var logResults = await logQuery.Value.ConfigureAwait(false);
                 var traceResults = await traceQuery.Value.ConfigureAwait(false);
-                    
+
                 return new SearchResults { Logs = logResults.ToList(), Traces = traceResults.ToList() };
             });
         }
 
-        
-        
-        
-        
-        
+
+
+
+
+
         //Others
         public async Task<PagedList<NodeStatusItem>> GetStatusesAsync(string environment, string machine, string application, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {

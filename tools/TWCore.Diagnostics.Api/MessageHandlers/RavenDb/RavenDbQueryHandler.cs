@@ -20,6 +20,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
+using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
@@ -37,25 +38,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var logsEnvTask = session.Query<NodeLogItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-                var tracesEnvTask = session.Query<NodeTraceItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-                var statusEnvTask = session.Query<NodeStatusItem>()
-                    .Select(x => x.Environment)
-                    .Distinct()
-                    .LazilyAsync();
-
-                await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
-                var logsEnv = await logsEnvTask.Value.ConfigureAwait(false);
-                var tracesEnv = await tracesEnvTask.Value.ConfigureAwait(false);
-                var statusEnv = await statusEnvTask.Value.ConfigureAwait(false);
-
-                return logsEnv.Concat(tracesEnv).Concat(statusEnv).Distinct().RemoveNulls().ToList();
+                var enviroments = await session.Query<Environments_Availables.Result, Environments_Availables>().ToListAsync().ConfigureAwait(false);
+                return enviroments?.Select(x => x.Environment).ToList();
             });
         }
 

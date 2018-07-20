@@ -71,7 +71,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 {
                     Name = ix.Key,
                     Count = ix.Sum(i => i.Count)
-                }).ToArray()
+                }).OrderBy(y => y.Name).ToArray()
             }).ToArray();
 
             var levels = values.SelectMany(col => col.Levels, (result, level) => new
@@ -191,7 +191,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 if (bytes.IsGzip())
                 {
                     var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(bytes);
+                    return Encoding.UTF8.GetString(desBytes);
                 }
                 else
                 {
@@ -209,7 +209,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 if (bytes.IsGzip())
                 {
                     var desBytes = Compressor.Decompress(bytes);
-                    return Encoding.UTF8.GetString(bytes);
+                    return Encoding.UTF8.GetString(desBytes);
                 }
                 else
                 {

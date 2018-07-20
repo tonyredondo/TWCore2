@@ -43,6 +43,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             Compressor = Compressor
         };
 
+        // Environments
         public Task<List<string>> GetEnvironmentsAsync()
         {
             return RavenHelper.ExecuteAndReturnAsync(session =>
@@ -95,7 +96,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 Levels = levels
             };
         }
-        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<NodeLogItem>> GetLogsByApplicationLevelsEnvironmentAsync(string environment, string application, LogLevel? level, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
@@ -106,13 +107,8 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                         .WhereEquals(x => x.Application, application)
                         .WhereBetween(x => x.Timestamp, fromDate, toDate);
 
-                if (
-                    level == LogLevel.Error || level == LogLevel.Warning || level == LogLevel.Debug ||
-                    level == LogLevel.InfoBasic || level == LogLevel.InfoDetail || level == LogLevel.InfoMedium ||
-                    level == LogLevel.LibDebug || level == LogLevel.LibVerbose ||
-                    level == LogLevel.Stats || level == LogLevel.Verbose
-                    )
-                    query = query.WhereEquals(x => x.Level, level);
+                if (level.HasValue)
+                    query = query.WhereEquals(x => x.Level, level.Value);
 
                 query = query.OrderByDescending(x => x.Timestamp);
                 query = query.Skip(page * pageSize).Take(pageSize);
@@ -128,60 +124,36 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                 };
             });
         }
-        public Task<List<NodeLogItem>> GetLogsBySearch(string environment, string searchTerm, DateTime fromDate, DateTime toDate)
-        {
-            return RavenHelper.ExecuteAndReturnAsync(session =>
-            {
-                return session.Advanced.AsyncDocumentQuery<NodeLogItem>()
-                    .WhereEquals(x => x.Environment, environment)
-                    .WhereBetween(x => x.Timestamp, fromDate, toDate)
-                    .OpenSubclause()
-                    .Search(x => x.Message, "*" + searchTerm + "*")
-                    .Search(x => x.Group, "*" + searchTerm + "*")
-                    .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(150)
-                    .ToListAsync();
-            });
-        }
+
 
         // Traces
-        public async Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
+        public Task<PagedList<TraceResult>> GetTracesByEnvironmentAsync(string environment, DateTime fromDate, DateTime toDate, int page, int pageSize = 50)
         {
-            var value = await RavenHelper.ExecuteAndReturnAsync(session =>
+            return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var res = session.Advanced.AsyncRawQuery<TraceTempResult>(@"
-                    from NodeTraceItems as trace
-                    group by trace.Group, trace.Environment, trace.Timestamp, trace.Tags 
-                    where (trace.Environment = $environment) and (trace.Timestamp between $fromDate and $toDate) 
-                    order by Timestamp desc 
-                    select trace.Group, trace.Timestamp, trace.Tags");
-                res.AddParameter("environment", environment);
-                res.AddParameter("fromDate", fromDate);
-                res.AddParameter("toDate", toDate);
+                var res = await session.Advanced.AsyncDocumentQuery<Traces_List.Result, Traces_List>()
+                        .Statistics(out var stats)
+                        .WhereEquals(x => x.Environment, environment)
+                        .WhereBetween(x => x.Start, fromDate, toDate)
+                        .OrderByDescending(x => x.Start)
+                        .Skip(page * pageSize).Take(pageSize)
+                        .ToListAsync().ConfigureAwait(false);
 
-                return res.ToListAsync();
-            }).ConfigureAwait(false);
-
-            var valGroup = value.GroupBy(i => i.Group);
-            var totalResult = valGroup.Count();
-
-            var val = valGroup.Select(i => new TraceResult
-            {
-                Group = i.Key,
-                Count = i.Count(),
-                Start = i.Min(x => x.Timestamp),
-                End = i.Max(x => x.Timestamp),
-                HasErrors = i.Any(x => x.Tags.Contains("Status: Error"))
-            }).Skip(page * pageSize).Take(pageSize).ToList();
-
-            return new PagedList<TraceResult>
-            {
-                PageNumber = page,
-                PageSize = pageSize,
-                TotalResults = totalResult,
-                Data = val
-            };
+                return new PagedList<TraceResult>
+                {
+                    PageNumber = page,
+                    PageSize = pageSize,
+                    TotalResults = stats.TotalResults,
+                    Data = res.Select(x => new TraceResult
+                    {
+                        Group = x.Group,
+                        Count = x.Count,
+                        Start = x.Start,
+                        End = x.End,
+                        HasErrors = x.HasError
+                    }).ToList()
+                };
+            });
         }
         public async Task<List<NodeTraceItem>> GetTracesByGroupIdAsync(string environment, string groupName)
         {
@@ -194,7 +166,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     .OrderBy(x => x.Timestamp);
                 return query.ToListAsync();
             });
-
             return value;
         }
         public Task<SerializedObject> GetTraceObjectAsync(string id)

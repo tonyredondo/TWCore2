@@ -260,41 +260,53 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         {
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
-                var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem>()
+                var logQuery = session.Advanced.AsyncDocumentQuery<NodeLogItem, Logs_Search>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
                     .OpenSubclause()
-                    .Search(x => x.Message, "*" + searchTerm + "*")
-                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Group, searchTerm)
                     .Search(x => x.Level, searchTerm)
                     .Search(x => x.Code, searchTerm)
                     .Search(x => x.Type, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Message, "*" + searchTerm + "*")
                     .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(200)
-                    .LazilyAsync();
+                    .OrderBy(x => x.Timestamp);
 
-                var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem>()
+                var logQueryLazy = logQuery
+                                        .Take(200)
+                                        .LazilyAsync();
+
+                var traceQuery = session.Advanced.AsyncDocumentQuery<NodeTraceItem, Traces_Search>()
                     .WhereEquals(x => x.Environment, environment)
                     .WhereBetween(x => x.Timestamp, fromDate, toDate)
                     .OpenSubclause()
-                    .Search(x => x.Group, "*" + searchTerm + "*")
-                    .Search(x => x.Name, "*" + searchTerm + "*")
-                    .Search(x => x.Tags, "*" + searchTerm + "*")
+                    .Search(x => x.Group, searchTerm)
+                    .Search(x => x.Tags, searchTerm)
+                    .Search(x => x.Name, searchTerm)
                     .Search(x => x.Application, searchTerm)
                     .Search(x => x.Machine, searchTerm)
+                    .Search(x => x.Group, "*" + searchTerm + "*")
+                    .Search(x => x.Tags, "*" + searchTerm + "*")
+                    .Search(x => x.Name, "*" + searchTerm + "*")
                     .CloseSubclause()
-                    .OrderBy(x => x.Timestamp)
-                    .Take(200)
-                    .LazilyAsync();
+                    .OrderBy(x => x.Timestamp);
+
+                var traceQueryLazy = traceQuery
+                                        .Take(200)
+                                        .LazilyAsync();
 
                 await session.Advanced.Eagerly.ExecuteAllPendingLazyOperationsAsync().ConfigureAwait(false);
-                var logResults = await logQuery.Value.ConfigureAwait(false);
-                var traceResults = await traceQuery.Value.ConfigureAwait(false);
+                var logResults = await logQueryLazy.Value.ConfigureAwait(false);
+                var traceResults = await traceQueryLazy.Value.ConfigureAwait(false);
 
-                return new SearchResults { Logs = logResults.ToList(), Traces = traceResults.ToList() };
+                return new SearchResults
+                {
+                    Logs = new List<NodeLogItem>(logResults),
+                    Traces = new List<NodeTraceItem>(traceResults)
+                };
             });
         }
 

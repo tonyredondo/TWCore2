@@ -17,7 +17,9 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using TWCore.Compression;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
@@ -28,6 +30,7 @@ using TWCore.Diagnostics.Trace.Storages;
 using TWCore.IO;
 using TWCore.Messaging;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 
 // ReSharper disable UnusedMember.Global
 
@@ -35,8 +38,18 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbMessagesHandler : IDiagnosticMessagesHandler
     {
+        private static readonly ICompressor Compressor = new GZipCompressor();
+        private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
+        {
+            Compressor = Compressor
+        };
+        private static readonly XmlTextSerializer XmlSerializer = new XmlTextSerializer
+        {
+            Compressor = Compressor
+        };
         private static readonly JsonTextSerializer JsonSerializer = new JsonTextSerializer
         {
+            Compressor = Compressor,
             Indent = true,
             EnumsAsStrings = true,
             UseCamelCase = true
@@ -71,7 +84,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             await bulkOp.StoreAsync(logInfo).ConfigureAwait(false);
                         }
                     }
-                    catch(Exception ex)
+                    catch (Exception ex)
                     {
                         Core.Log.Write(ex);
                     }
@@ -109,7 +122,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                             {
                                 try
                                 {
-                                    traceItem.TraceObject.SerializeToNBinary(msNBinary);
+                                    NBinarySerializer.Serialize(traceItem.TraceObject, msNBinary);
                                     msNBinary.Position = 0;
                                     session.Advanced.Attachments.Store(traceInfo.Id, "Trace", msNBinary, traceItem.TraceObject?.GetType().FullName);
                                 }
@@ -126,25 +139,26 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         switch (value)
                                         {
                                             case string valStr:
-                                                await msXml.WriteTextAsync(valStr).ConfigureAwait(false);
+                                                var valBytes = Encoding.UTF8.GetBytes(valStr);
+                                                var compressedBytes = Compressor.Compress(valBytes);
+                                                msXml.WriteBytes(compressedBytes);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                rsMessage.Body?.SerializeToXml(msXml);
+                                                XmlSerializer.Serialize(rsMessage.Body, msXml);
                                                 break;
                                             case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                rqMessage.Body?.SerializeToXml(msXml);
+                                                XmlSerializer.Serialize(rqMessage.Body, msXml);
                                                 break;
                                             default:
                                                 if (value != null)
                                                 {
-                                                    serObj.GetValue()?.SerializeToXml(msXml);
+                                                    XmlSerializer.Serialize(value, msXml);
                                                 }
-
                                                 break;
                                         }
                                     }
                                     else
-                                        traceItem.TraceObject.SerializeToXml(msXml);
+                                        XmlSerializer.Serialize(traceItem.TraceObject, msXml);
 
                                     msXml.Position = 0;
                                     session.Advanced.Attachments.Store(traceInfo.Id, "TraceXml", msXml, traceItem.TraceObject?.GetType().FullName);
@@ -162,7 +176,9 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                         switch (value)
                                         {
                                             case string valStr:
-                                                await msJson.WriteTextAsync(valStr).ConfigureAwait(false);
+                                                var valBytes = Encoding.UTF8.GetBytes(valStr);
+                                                var compressedBytes = Compressor.Compress(valBytes);
+                                                msJson.WriteBytes(compressedBytes);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
                                                 JsonSerializer.Serialize(rsMessage.Body, msJson);
@@ -175,7 +191,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 {
                                                     JsonSerializer.Serialize(value, msJson);
                                                 }
-
                                                 break;
                                         }
                                     }
@@ -215,7 +230,7 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                     ")
                         .AddParameter("instanceId", message.InstanceId)
                         .ToListAsync().ConfigureAwait(false);
-                    
+
                     foreach (var id in instanceIds)
                         session.Delete(id.Id);
 
@@ -229,6 +244,6 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
         private class StatusId
         {
             public string Id { get; set; }
-        } 
+        }
     }
 }

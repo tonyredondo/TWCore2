@@ -17,9 +17,11 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
+using TWCore.Compression;
 using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
 using TWCore.Diagnostics.Api.Models;
 using TWCore.Diagnostics.Api.Models.Log;
@@ -28,12 +30,19 @@ using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
 using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
+using TWCore.Serialization.NSerializer;
 // ReSharper disable UnusedMember.Global
 
 namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
 {
     public class RavenDbQueryHandler : IDiagnosticQueryHandler
     {
+        private static readonly ICompressor Compressor = new GZipCompressor();
+        private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
+        {
+            Compressor = Compressor
+        };
+
         public Task<List<string>> GetEnvironmentsAsync()
         {
             return RavenHelper.ExecuteAndReturnAsync(session =>
@@ -193,8 +202,12 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             return RavenHelper.ExecuteAndReturnAsync(async session =>
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "Trace").ConfigureAwait(false);
-                var traceObject = attachment?.Stream?.DeserializeFromNBinary<object>();
-                return (SerializedObject)traceObject;
+                if (attachment?.Stream == null) return null;
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                    return NBinarySerializer.Deserialize<SerializedObject>(bytes);
+                else
+                    return bytes.DeserializeFromNBinary<SerializedObject>();
             });
         }
         public Task<string> GetTraceXmlAsync(string id)
@@ -203,7 +216,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceXml").ConfigureAwait(false);
                 if (attachment?.Stream == null) return null;
-                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                {
+                    var desBytes = Compressor.Decompress(bytes);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(bytes);
+                }
             });
         }
         public Task<string> GetTraceJsonAsync(string id)
@@ -212,7 +234,16 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
             {
                 var attachment = await session.Advanced.Attachments.GetAsync(id, "TraceJson").ConfigureAwait(false);
                 if (attachment?.Stream == null) return null;
-                return await attachment.Stream.TextReadToEndAsync().ConfigureAwait(false);
+                var bytes = await attachment.Stream.ReadAllBytesAsync().ConfigureAwait(false);
+                if (bytes.IsGzip())
+                {
+                    var desBytes = Compressor.Decompress(bytes);
+                    return Encoding.UTF8.GetString(bytes);
+                }
+                else
+                {
+                    return Encoding.UTF8.GetString(bytes);
+                }
             });
         }
 

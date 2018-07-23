@@ -14015,7 +14015,9 @@ var LogsComponent = /** @class */ (function () {
         this.exceptionMachine = item.machine;
         this.exceptionData = item.exception;
         this.innerExceptionsData = [];
-        this.createInnerExceptionData(this.exceptionData.innerException);
+        if (this.exceptionData !== null) {
+            this.createInnerExceptionData(this.exceptionData.innerException);
+        }
         this.exceptionModal.show();
     };
     LogsComponent.prototype.createInnerExceptionData = function (item) {
@@ -14236,7 +14238,9 @@ var SearchComponent = /** @class */ (function () {
         this.exceptionMachine = item.machine;
         this.exceptionData = item.exception;
         this.innerExceptionsData = [];
-        this.createInnerExceptionData(this.exceptionData.innerException);
+        if (this.exceptionData !== null) {
+            this.createInnerExceptionData(this.exceptionData.innerException);
+        }
         this.exceptionModal.show();
     };
     SearchComponent.prototype.createInnerExceptionData = function (item) {

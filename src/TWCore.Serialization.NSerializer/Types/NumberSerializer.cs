@@ -46,8 +46,7 @@ namespace TWCore.Serialization.NSerializer
                 WriteDefInt(DataBytesDefinition.RefDecimal, objIdx);
             else
             {
-                WriteByte(DataBytesDefinition.Decimal);
-                WriteDecimal(value);
+                WriteDefDecimal(DataBytesDefinition.Decimal, value);
                 _decimalCache.Set(value);
             }
         }

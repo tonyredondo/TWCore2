@@ -88,8 +88,7 @@ namespace TWCore.Serialization.NSerializer
     {
         private readonly Dictionary<string, int> _serializationCache;
         private int _serCurrentIndex;
-
-        public int Count => _serCurrentIndex;
+        private bool _full;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializerStringCache()
@@ -99,20 +98,24 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Clear()
         {
-            if (_serCurrentIndex == 0) return;
             _serCurrentIndex = 0;
+            _full = false;
             _serializationCache.Clear();
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool TryGetValue(string value, out int index)
-            => _serializationCache.TryGetValue(value, out index);
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Set(string value)
+        public bool TryGetOrSetValue(string value, out int index)
         {
-            if (_serCurrentIndex < 2047)
-                _serializationCache.Add(value, _serCurrentIndex++);
+            if (!_serializationCache.TryGetValue(value, out index))
+            {
+                if (!_full)
+                {
+                    _serializationCache.Add(value, _serCurrentIndex++);
+                    if (_serCurrentIndex >= 2047) _full = true;
+                }
+                return false;
+            }
+            return true;
         }
     }
     internal sealed class DeserializerStringCache

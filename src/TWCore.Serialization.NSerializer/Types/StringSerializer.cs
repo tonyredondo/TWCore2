@@ -42,52 +42,57 @@ namespace TWCore.Serialization.NSerializer
             {
                 if (vLength <= 8)
                 {
-                    if (_stringCache8.TryGetValue(value, out var objIdx))
+                    if (_stringCache8.TryGetOrSetValue(value, out var objIdx))
                     {
                         WriteDefInt(DataBytesDefinition.RefString8, objIdx);
                         return;
                     }
-                    _stringCache8.Set(value);
                 }
                 else if (vLength <= 16)
                 {
-                    if (_stringCache16.TryGetValue(value, out var objIdx))
+                    if (_stringCache16.TryGetOrSetValue(value, out var objIdx))
                     {
                         WriteDefInt(DataBytesDefinition.RefString16, objIdx);
                         return;
                     }
-                    _stringCache16.Set(value);
                 }
                 else if (vLength <= 32)
                 {
-                    if (_stringCache32.TryGetValue(value, out var objIdx))
+                    if (_stringCache32.TryGetOrSetValue(value, out var objIdx))
                     {
                         WriteDefInt(DataBytesDefinition.RefString32, objIdx);
                         return;
                     }
-                    _stringCache32.Set(value);
                 }
                 else
                 {
-                    if (_stringCache.TryGetValue(value, out var objIdx))
+                    if (_stringCache.TryGetOrSetValue(value, out var objIdx))
                     {
                         WriteDefInt(DataBytesDefinition.RefString, objIdx);
                         return;
                     }
-                    _stringCache.Set(value);
                 }
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            var buffer = ArrayPool<byte>.Shared.Rent(length + 5);
-            buffer[0] = DataBytesDefinition.StringLength;
-            buffer[1] = (byte)length;
-            buffer[2] = (byte)(length >> 8);
-            buffer[3] = (byte)(length >> 16);
-            buffer[4] = (byte)(length >> 24);
-            Encoding.UTF8.GetBytes(value, buffer.AsSpan().Slice(5, length));
-            Stream.Write(buffer, 0, length + 5);
-            ArrayPool<byte>.Shared.Return(buffer);
+            if (length <= 32768)
+            {
+                Span<byte> bufferSpan = stackalloc byte[length + 5];
+                bufferSpan[0] = DataBytesDefinition.StringLength;
+                BitConverter.TryWriteBytes(bufferSpan.Slice(1, 4), length);
+                Encoding.UTF8.GetBytes(value, bufferSpan.Slice(5));
+                Stream.Write(bufferSpan);
+            }
+            else
+            {
+                var buffer = ArrayPool<byte>.Shared.Rent(length + 5);
+                var bufferSpan = buffer.AsSpan(0, length + 5);
+                buffer[0] = DataBytesDefinition.StringLength;
+                BitConverter.TryWriteBytes(bufferSpan.Slice(1, 4), length);
+                Encoding.UTF8.GetBytes(value, bufferSpan.Slice(5));
+                Stream.Write(bufferSpan);
+                ArrayPool<byte>.Shared.Return(buffer);
+            }
         }
     }
 
@@ -129,19 +134,29 @@ namespace TWCore.Serialization.NSerializer
             }
 
             string strValue = null;
-            var buffer = ArrayPool<byte>.Shared.Rent(length);
-            try
+
+            if (length <= 32768)
             {
-                Stream.ReadExact(buffer, 0, length);
-                strValue = Encoding.UTF8.GetString(buffer, 0, length);
+                Span<byte> bufferSpan = stackalloc byte[length];
+                Stream.Fill(bufferSpan);
+                strValue = Encoding.UTF8.GetString(bufferSpan);
             }
-            catch
+            else
             {
-                throw;
-            }
-            finally
-            {
-                ArrayPool<byte>.Shared.Return(buffer);
+                var buffer = ArrayPool<byte>.Shared.Rent(length);
+                try
+                {
+                    Stream.ReadExact(buffer, 0, length);
+                    strValue = Encoding.UTF8.GetString(buffer, 0, length);
+                }
+                catch
+                {
+                    throw;
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
 
             var sLength = strValue.Length;

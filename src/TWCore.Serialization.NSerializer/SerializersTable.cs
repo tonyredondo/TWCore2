@@ -977,6 +977,17 @@ namespace TWCore.Serialization.NSerializer
             Stream.Write(buffer);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        protected void WriteDefDecimal(byte type, decimal value)
+        {
+            Span<byte> buffer = stackalloc byte[17];
+            buffer[0] = type;
+            var bits = decimal.GetBits(value);
+            var decBuffer = buffer.Slice(1);
+            for (var i = 0; i < 4; i++)
+                BitConverter.TryWriteBytes(decBuffer.Slice(i * 4, 4), bits[i]);
+            Stream.Write(buffer);
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void WriteByte(byte value)
         {
             Stream.WriteByte(value);

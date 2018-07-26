@@ -680,9 +680,6 @@ namespace TWCore
             return hash;
         }
 
-        const uint seed = 0xc58f1a7b;
-        const uint m = 0x5bd1e995;
-        const int r = 24;
         /// <summary>
         /// Gets the MurMurHash 2
         /// </summary>
@@ -693,7 +690,7 @@ namespace TWCore
         {
             var length = value.Length;
             if (length == 0) return 0;
-            var h = seed ^ (uint)length;
+            var h = 0xc58f1a7b ^ (uint)length;
             var remainingChars = length & 3;
             var numberOfLoops = length >> 2;
             fixed(char* firstChar = value)
@@ -702,11 +699,11 @@ namespace TWCore
                 while (numberOfLoops != 0)
                 {
                     uint k = *realData;
-                    k *= m;
-                    k ^= k >> r;
-                    k *= m;
+                    k *= 0x5bd1e995;
+                    k ^= k >> 24;
+                    k *= 0x5bd1e995;
 
-                    h *= m;
+                    h *= 0x5bd1e995;
                     h ^= k;
                     numberOfLoops--;
                     realData++;
@@ -716,15 +713,15 @@ namespace TWCore
                     case 3:
                         h ^= (ushort)(*realData);
                         h ^= ((uint)(*(((byte*)(realData)) + 2))) << 16;
-                        h *= m;
+                        h *= 0x5bd1e995;
                         break;
                     case 2:
                         h ^= (ushort)(*realData);
-                        h *= m;
+                        h *= 0x5bd1e995;
                         break;
                     case 1:
                         h ^= *((byte*)realData);
-                        h *= m;
+                        h *= 0x5bd1e995;
                         break;
                     default:
                         break;
@@ -733,7 +730,7 @@ namespace TWCore
             // Do a few final mixes of the hash to ensure the last few
             // bytes are well-incorporated.
             h ^= h >> 13;
-            h *= m;
+            h *= 0x5bd1e995;
             h ^= h >> 15;
             return h;
         }

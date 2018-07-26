@@ -107,7 +107,6 @@ namespace TWCore.Test.Core
 
                 testValue.SerializeToNBinary();
 
-
                 //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
                 //{
                 //    wc.Tap("Tap 1");

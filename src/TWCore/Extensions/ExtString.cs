@@ -417,7 +417,7 @@ namespace TWCore
         public static string ToHexString(this SubArray<byte> obj)
         {
             var sb = new StringBuilder(obj.Count * 2);
-			obj.ForEach((ref byte b, ref StringBuilder sbuilder) => sbuilder.AppendFormat("{0:x2}", b), ref sb);
+            obj.ForEach((ref byte b, ref StringBuilder sbuilder) => sbuilder.AppendFormat("{0:x2}", b), ref sb);
             return sb.ToString();
         }
         /// <summary>
@@ -640,7 +640,7 @@ namespace TWCore
             len >>= 2;
 
             //Main Loop
-            for(; len > 0; len --)
+            for (; len > 0; len--)
             {
                 hash += value[valueIdx];
                 tmp = ((uint)(value[valueIdx + 2] << 11)) ^ hash;
@@ -649,7 +649,7 @@ namespace TWCore
             }
 
             //Handle end cases
-            switch(rem)
+            switch (rem)
             {
                 case 3:
                     hash += value[valueIdx];
@@ -693,7 +693,7 @@ namespace TWCore
             var h = 0xc58f1a7b ^ (uint)length;
             var remainingChars = length & 3;
             var numberOfLoops = length >> 2;
-            fixed(char* firstChar = value)
+            fixed (char* firstChar = value)
             {
                 uint* realData = (uint*)firstChar;
                 while (numberOfLoops != 0)
@@ -734,5 +734,62 @@ namespace TWCore
             h ^= h >> 15;
             return h;
         }
+
+        /// <summary>
+        /// Gets the MurMurHash 3
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>MurMurHash 3</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe uint GetMurmurHash3(this string value)
+        {
+            var len = value.Length;
+            if (len == 0) return 0;
+            int i;
+            var h = 0xc58f1a7b;
+            fixed (char* firstChar = value)
+            {
+                var key = firstChar;
+                if (len > 3)
+                {
+                    uint* key_x4 = (uint*)firstChar;
+                    i = len >> 2;
+                    do
+                    {
+                        var k = *key_x4++;
+                        k *= 0xcc9e2d51;
+                        k = (k << 15) | (k >> 17);
+                        k *= 0x1b873593;
+                        h ^= k;
+                        h = (h << 13) | (h >> 19);
+                        h = (h * 5) + 0xe6546b64;
+                    } while (--i > 0);
+                    key = (char*)key_x4;
+                }
+                i = len & 3;
+                if (i != 0)
+                {
+                    uint k = 0;
+                    key = &key[i - 1];
+                    do
+                    {
+                        k <<= 8;
+                        k |= *key--;
+                    } while (--i > 0);
+                    k *= 0xcc9e2d51;
+                    k = (k << 15) | (k >> 17);
+                    k *= 0x1b873593;
+                    h ^= k;
+                }
+            }
+            h ^= (uint)len;
+            h ^= h >> 16;
+            h *= 0x85ebca6b;
+            h ^= h >> 13;
+            h *= 0xc2b2ae35;
+            h ^= h >> 16;
+            return h;
+        }
+
     }
 }

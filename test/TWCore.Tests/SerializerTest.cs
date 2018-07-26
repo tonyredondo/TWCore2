@@ -11,6 +11,7 @@ using TWCore.Serialization.MsgPack;
 using TWCore.Serialization.NSerializer;
 using TWCore.Serialization.PWSerializer;
 using TWCore.Serialization.PWSerializer.Deserializer;
+using TWCore.Serialization.RawSerializer;
 using TWCore.Serialization.Utf8Json;
 using TWCore.Serialization.WSerializer;
 using TWCore.Services;
@@ -110,6 +111,7 @@ namespace TWCore.Tests
             var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
             var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
             var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
             var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
             var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
 
@@ -119,6 +121,7 @@ namespace TWCore.Tests
             Core.Log.InfoBasic("\tJson Bytes Count: {0}", SerializerSizeProcess(value, vType, jsonSerializer));
             Core.Log.InfoBasic("\tUtf8Json Bytes Count: {0}", SerializerSizeProcess(value, vType, ut8JsonSerializer));
             Core.Log.InfoBasic("\tNBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, nBinarySerializer));
+            Core.Log.InfoBasic("\tRawBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, rawBinarySerializer));
             Core.Log.InfoBasic("\tWBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, wBinarySerializer));
             Core.Log.InfoBasic("\tPortable WBinary Bytes Count: {0}", SerializerSizeProcess(value, vType, pwBinarySerializer));
             Core.Log.WriteEmptyLine();
@@ -126,6 +129,7 @@ namespace TWCore.Tests
             SerializerProcess("Json", value, vType, times, jsonSerializer, memStream);
             SerializerProcess("Utf8Json", value, vType, times, ut8JsonSerializer, memStream);
             SerializerProcess("NBinary", value, vType, times, nBinarySerializer, memStream);
+            SerializerProcess("RawBinary", value, vType, times, rawBinarySerializer, memStream);
             SerializerProcess("WBinary", value, vType, times, wBinarySerializer, memStream);
             SerializerProcess("PWBinary", value, vType, times, pwBinarySerializer, memStream);
             Console.ReadLine();

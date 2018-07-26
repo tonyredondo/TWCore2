@@ -1,0 +1,10 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\common.props" />
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <Title>TWCore.Serialization.RawSerializer</Title>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TWCore\TWCore.csproj" />
+  </ItemGroup>
+</Project>

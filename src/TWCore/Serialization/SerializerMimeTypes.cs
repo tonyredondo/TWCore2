@@ -47,5 +47,9 @@ namespace TWCore.Serialization
         /// NSerializer binary mime type
         /// </summary>
         public const string NBinary = "application/n-binary";
+        /// <summary>
+        /// RawSerializer binary mime type
+        /// </summary>
+        public const string RawBinary = "application/raw-binary";
     }
 }

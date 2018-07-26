@@ -33,6 +33,7 @@
     <ProjectReference Include="..\..\src\TWCore.Serialization.MsgPack\TWCore.Serialization.MsgPack.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.NSerializer\TWCore.Serialization.NSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.PWSerializer\TWCore.Serialization.PWSerializer.csproj" />
+    <ProjectReference Include="..\..\src\TWCore.Serialization.RawSerializer\TWCore.Serialization.RawSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.Utf8Json\TWCore.Serialization.Utf8Json.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Serialization.WSerializer\TWCore.Serialization.WSerializer.csproj" />
     <ProjectReference Include="..\..\src\TWCore.Services\TWCore.Services.csproj" />

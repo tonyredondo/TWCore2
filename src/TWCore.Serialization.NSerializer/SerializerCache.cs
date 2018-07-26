@@ -106,16 +106,13 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetOrSetValue(string value, out int index)
         {
-            if (!_serializationCache.TryGetValue(value, out index))
+            if (_serializationCache.TryGetValue(value, out index)) return true;
+            if (!_full)
             {
-                if (!_full)
-                {
-                    _serializationCache.Add(value, _serCurrentIndex++);
-                    if (_serCurrentIndex >= 2047) _full = true;
-                }
-                return false;
+                _serializationCache.Add(value, _serCurrentIndex++);
+                if (_serCurrentIndex >= 2047) _full = true;
             }
-            return true;
+            return false;
         }
     }
     internal sealed class DeserializerStringCache

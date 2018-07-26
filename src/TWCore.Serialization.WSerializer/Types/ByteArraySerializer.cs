@@ -28,7 +28,6 @@ namespace TWCore.Serialization.WSerializer.Types
     public class ByteArraySerializer : TypeSerializer<byte[]>
     {
         private const int MaxArrayLength = 84995;
-        private static readonly byte[] EmptyBytes = new byte[0];
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.ByteArrayNull, DataType.ByteArrayEmpty, DataType.ByteArrayLengthByte, DataType.ByteArrayLengthUShort, DataType.ByteArrayLengthInt,
@@ -157,7 +156,7 @@ namespace TWCore.Serialization.WSerializer.Types
                 case DataType.ByteArrayNull:
                     return null;
                 case DataType.ByteArrayEmpty:
-                    return EmptyBytes;
+                    return Array.Empty<byte>();
                 case DataType.RefByteArrayByte:
                     objIdx = reader.ReadByte();
                     break;

@@ -188,7 +188,6 @@ namespace TWCore.Cache.Storages.IO
         [StatusName("Folder Handler")]
         private sealed class FolderHandler : IDisposable
         {
-            private static readonly byte[] BytesEmpty = new byte[0];
             private const string IndexFileName = "Index";
             private const string TransactionLogFileName = "Index.journal";
             private const string DataExtension = ".data";
@@ -273,7 +272,7 @@ namespace TWCore.Cache.Storages.IO
                 }
                 //Checks to avoid errors
                 if (!File.Exists(_transactionLogFilePath))
-                    File.WriteAllBytes(_transactionLogFilePath, BytesEmpty);
+                    File.WriteAllBytes(_transactionLogFilePath, Array.Empty<byte>());
                 if (!File.Exists(_indexFilePath))
                     IndexSerializer.SerializeToFile(new List<StorageItemMeta>(), _indexFilePath);
 

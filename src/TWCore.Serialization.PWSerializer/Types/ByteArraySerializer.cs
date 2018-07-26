@@ -27,7 +27,6 @@ namespace TWCore.Serialization.PWSerializer.Types
     /// </summary>
     public class ByteArraySerializer : ITypeSerializer<byte[]>
     {
-        private static readonly byte[] EmptyBytes = new byte[0];
         public static readonly HashSet<byte> ReadTypes = new HashSet<byte>(new []
         {
             DataType.ByteArrayNull, DataType.ByteArrayEmpty, DataType.ByteArrayLengthByte, DataType.ByteArrayLengthUShort, DataType.ByteArrayLengthInt,
@@ -133,7 +132,7 @@ namespace TWCore.Serialization.PWSerializer.Types
                 case DataType.ByteArrayNull:
                     return null;
                 case DataType.ByteArrayEmpty:
-                    return EmptyBytes;
+                    return Array.Empty<byte>();
                 case DataType.ByteArrayLengthByte:
                     length = reader.ReadByte();
                     break;

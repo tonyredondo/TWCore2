@@ -79,19 +79,7 @@ namespace TWCore.Test.Core
                 var matchTest = "value value value {Env:CONFIG_CACHESERVERIP} value value \r\n{Env:CONFIG_CACHESERVERIP} values";
                 matchTest = TWCore.Core.ReplaceEnvironmentTemplate(matchTest);
 
-                var sKeyProvider = new TWCore.Security.SymmetricKeyProvider();
-                var guid = Guid.NewGuid().ToString();
-                var value = sKeyProvider.Encrypt("Data Source=10.10.1.24;Initial Catalog=AGSW_BACKEND;User Id=sa;Password=ElPatr0n;Pooling=True", guid);
-
                 var testValue = new TestClass { Enabled = true, Values = new[] { 1, 2, 3, 4 }, DecimalValue = -13213.432M };
-
-                var strSplit = "fdsfdsafdsafd;FdsafdsAF;dsafD;saF;DSA;FDS;AFDsafdsa;fdssa;;;fdsaf;";
-                var split1 = strSplit.Split(';', StringSplitOptions.None);
-                var split2 = strSplit.Split(';', StringSplitOptions.RemoveEmptyEntries);
-                var splitSpan1 = strSplit.AsSpan().SplitAsString(';');
-                var splitSpan2 = strSplit.AsSpan().SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
-                var splitMemory1 = strSplit.AsMemory().SplitAsString(';');
-                var splitMemory2 = strSplit.AsMemory().SplitAsString(';', StringSplitOptions.RemoveEmptyEntries);
 
                 var request = new TWCore.Net.RPC.RPCRequestMessage
                 {
@@ -109,8 +97,6 @@ namespace TWCore.Test.Core
 
                 var rqDes = rqSer.DeserializeFromNBinary<TWCore.Net.RPC.RPCMessage>();
 
-
-
                 var testValueSer = new SerializedObject(testValue);
 
                 testValueSer.SerializeToNBinary();
@@ -120,6 +106,7 @@ namespace TWCore.Test.Core
                 new int[] { 1, 2, 3 }.SerializeToNBinary();
 
                 testValue.SerializeToNBinary();
+
 
                 //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
                 //{

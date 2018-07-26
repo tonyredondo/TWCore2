@@ -99,7 +99,7 @@ namespace TWCore.Cache.Storages.IO
         private int GetFolderNumber(string key)
         {
             if (string.IsNullOrEmpty(key)) return 0;
-            return (int)(key.GetJenkinsHash() % NumberOfSubFolders);
+            return (int)(key.GetMurmurHash2() % NumberOfSubFolders);
         }
 
         #endregion

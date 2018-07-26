@@ -622,27 +622,120 @@ namespace TWCore
             }
             return -1;
         }
-		/// <summary>
-		/// Gets the jenkins hash.
-		/// </summary>
-		/// <returns>The jenkins hash.</returns>
-		/// <param name="value">String Value</param>
-		public static uint GetJenkinsHash(this string value)
-		{
-			if (string.IsNullOrWhiteSpace(value)) return 0;
-			var length = value.Length;
-			var i = 0;
-			uint hash = 0;
-			while(i != length)
-			{
-				hash += value[i++];
-				hash += hash << 10;
-				hash ^= hash >> 6;
-			}
-			hash += hash << 3;
-			hash ^= hash >> 11;
-			hash += hash << 15;
-			return hash;
-		}
+        /// <summary>
+        /// Gets the superfast hash
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>Superfast hash</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static uint GetSuperFastHash(this string value)
+        {
+            var len = value.Length;
+            if (len == 0) return 0;
+            var valueIdx = 0;
+            uint hash = (uint)len;
+            uint tmp;
+
+            var rem = len & 3;
+            len >>= 2;
+
+            //Main Loop
+            for(; len > 0; len --)
+            {
+                hash += value[valueIdx];
+                tmp = ((uint)(value[valueIdx + 2] << 11)) ^ hash;
+                hash = (hash << 16) ^ tmp;
+                valueIdx += 2;
+            }
+
+            //Handle end cases
+            switch(rem)
+            {
+                case 3:
+                    hash += value[valueIdx];
+                    hash ^= hash << 16;
+                    hash ^= (uint)value[valueIdx + 2] << 18;
+                    hash += hash >> 11;
+                    break;
+                case 2:
+                    hash += value[valueIdx];
+                    hash ^= hash << 11;
+                    hash += hash >> 17;
+                    break;
+                case 1:
+                    hash += (byte)value[valueIdx];
+                    hash ^= hash << 10;
+                    hash += hash >> 1;
+                    break;
+            }
+
+            //Force "avalanching" of final 127 bits
+            hash ^= hash << 3;
+            hash += hash >> 5;
+            hash ^= hash << 4;
+            hash += hash >> 17;
+            hash ^= hash << 25;
+            hash += hash >> 6;
+
+            return hash;
+        }
+
+        const uint seed = 0xc58f1a7b;
+        const uint m = 0x5bd1e995;
+        const int r = 24;
+        /// <summary>
+        /// Gets the MurMurHash 2
+        /// </summary>
+        /// <param name="value">String value</param>
+        /// <returns>MurMurHash 2</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static unsafe uint GetMurmurHash2(this string value)
+        {
+            var length = value.Length;
+            if (length == 0) return 0;
+            var h = seed ^ (uint)length;
+            var remainingChars = length & 3;
+            var numberOfLoops = length >> 2;
+            fixed(char* firstChar = value)
+            {
+                uint* realData = (uint*)firstChar;
+                while (numberOfLoops != 0)
+                {
+                    uint k = *realData;
+                    k *= m;
+                    k ^= k >> r;
+                    k *= m;
+
+                    h *= m;
+                    h ^= k;
+                    numberOfLoops--;
+                    realData++;
+                }
+                switch (remainingChars)
+                {
+                    case 3:
+                        h ^= (ushort)(*realData);
+                        h ^= ((uint)(*(((byte*)(realData)) + 2))) << 16;
+                        h *= m;
+                        break;
+                    case 2:
+                        h ^= (ushort)(*realData);
+                        h *= m;
+                        break;
+                    case 1:
+                        h ^= *((byte*)realData);
+                        h *= m;
+                        break;
+                    default:
+                        break;
+                }
+            }
+            // Do a few final mixes of the hash to ensure the last few
+            // bytes are well-incorporated.
+            h ^= h >> 13;
+            h *= m;
+            h ^= h >> 15;
+            return h;
+        }
     }
 }

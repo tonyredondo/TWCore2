@@ -59,8 +59,7 @@ namespace TWCore.Cache.Storages.IO
         private int _currentTransactionLogLength;
         private ConcurrentDictionary<string, StorageItemMeta> _metas;
         private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
-        private readonly Worker<WorkerItem> _storageWorker;
-        private FileStorageMetaLog _currentTransaction;
+        private readonly Worker<FileStorageMetaLog> _storageWorker;
 
         private readonly Action _saveMetadataBuffered;
         #endregion
@@ -80,20 +79,6 @@ namespace TWCore.Cache.Storages.IO
         public FolderHandlerStatus Status { get; private set; }
 
         public IEnumerable<StorageItemMeta> Metas => _metas.Values;
-        #endregion
-
-        #region Nested Type
-        private readonly struct WorkerItem
-        {
-            public readonly StorageItemMeta Meta;
-            public readonly FileStorageMetaLog.TransactionType Transaction;
-
-            public WorkerItem(StorageItemMeta meta, FileStorageMetaLog.TransactionType transaction)
-            {
-                Meta = meta;
-                Transaction = transaction;
-            }
-        }
         #endregion
 
         #region .ctor
@@ -116,9 +101,8 @@ namespace TWCore.Cache.Storages.IO
             _oldTransactionLogFilePath = _transactionLogFilePath + ".old";
             _oldIndexFilePath = _indexFilePath + ".old";
 
-            _currentTransaction = new FileStorageMetaLog();
             _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
-            _storageWorker = new Worker<WorkerItem>(new Action<WorkerItem>(WorkerProcess))
+            _storageWorker = new Worker<FileStorageMetaLog>(new Action<FileStorageMetaLog>(WorkerProcess))
             {
                 EnableWaitTimeout = false
             };
@@ -310,7 +294,11 @@ namespace TWCore.Cache.Storages.IO
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                     await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
                 }
-                _storageWorker.Enqueue(new WorkerItem(meta, FileStorageMetaLog.TransactionType.Remove));
+                _storageWorker.Enqueue(new FileStorageMetaLog
+                {
+                    Meta = meta,
+                    Type = FileStorageMetaLog.TransactionType.Remove
+                });
                 return (true, meta);
             }
         }
@@ -367,7 +355,11 @@ namespace TWCore.Cache.Storages.IO
                     Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                     await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
                 }
-                _storageWorker.Enqueue(new WorkerItem(meta, FileStorageMetaLog.TransactionType.Add));
+                _storageWorker.Enqueue(new FileStorageMetaLog
+                {
+                    Meta = meta,
+                    Type = FileStorageMetaLog.TransactionType.Add
+                });
                 return true;
             }
         }
@@ -492,30 +484,17 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private string GetDataPath(string key) => _dataPathPattern.Replace("$FILE$", key);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void WorkerProcess(WorkerItem workerItem)
+        private void WorkerProcess(FileStorageMetaLog workerItem)
         {
             if (workerItem.Meta == null) return;
-            if (workerItem.Transaction == FileStorageMetaLog.TransactionType.Add && workerItem.Meta.IsExpired) return;
+            if (workerItem.Type == FileStorageMetaLog.TransactionType.Add && workerItem.Meta.IsExpired) return;
             if (_currentTransactionLogLength >= _storage.TransactionLogThreshold) _currentTransactionLogLength = 0;
 
             #region Save Transaction Log
-
             try
             {
-                File.Copy(_transactionLogFilePath, _transactionLogFilePath + ".old", true);
-            }
-            catch (Exception ex)
-            {
-                Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message);
-            }
-
-            try
-            {
-                _currentTransaction.Meta = workerItem.Meta;
-                _currentTransaction.Type = workerItem.Transaction;
-                _indexSerializer.Serialize(_currentTransaction, _transactionStream);
+                _indexSerializer.Serialize(workerItem, _transactionStream);
                 _transactionStream.Flush();
-                _currentTransaction.Meta = null;
             }
             catch (Exception ex)
             {
@@ -527,7 +506,7 @@ namespace TWCore.Cache.Storages.IO
             try
             {
                 var filePath = GetDataPath(workerItem.Meta.Key);
-                switch (workerItem.Transaction)
+                switch (workerItem.Type)
                 {
                     case FileStorageMetaLog.TransactionType.Remove:
                         Core.Log.DebugGroup(workerItem.Meta.Key, "Removing element from filesystem.");
@@ -566,7 +545,6 @@ namespace TWCore.Cache.Storages.IO
             Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
             try
             {
-                //await FileHelper.CopyFileAsync(_indexFilePath, _indexFilePath + ".old", true).ConfigureAwait(false);
                 File.Copy(_indexFilePath, _indexFilePath + ".old", true);
             }
             catch (Exception ex)
@@ -575,12 +553,10 @@ namespace TWCore.Cache.Storages.IO
             }
             try
             {
-                //await _indexSerializer.SerializeToFileAsync(_metas.Values.ToList(), _indexFilePath).ConfigureAwait(false);
                 _indexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
                 _transactionStream.Position = 0;
                 _transactionStream.SetLength(0);
                 _transactionStream.Flush();
-                //await _transactionStream.FlushAsync().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -610,10 +586,7 @@ namespace TWCore.Cache.Storages.IO
                 if (saveBuffered)
                     _saveMetadataBuffered();
                 else
-                {
-                    //await SaveMetadataAsync().ConfigureAwait(false);
                     SaveMetadata();
-                }
             }
             catch(Exception ex)
             {

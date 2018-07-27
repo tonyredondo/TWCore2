@@ -106,7 +106,7 @@ namespace TWCore.Tests
             {
 				var fileSto = new FileStorage("./cache_data")
 				{
-					NumberOfSubFolders = 10,
+					NumberOfSubFolders = 25,
                     IndexSerializer = GlobalSerializer
                 };
 				var lruSto = new LRU2QStorage(10000);

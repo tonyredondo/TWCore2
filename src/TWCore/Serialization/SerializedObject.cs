@@ -262,7 +262,19 @@ namespace TWCore.Serialization
                 await fs.FlushAsync().ConfigureAwait(false);
             }
         }
-
+        /// <summary>
+        /// Write the SerializedObject to a file
+        /// </summary>
+        /// <param name="filepath">Filepath to save the serialized object instance</param>
+        /// <returns>Awaitable task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ToFile(string filepath)
+        {
+            if (!filepath.EndsWith(FileExtension, StringComparison.OrdinalIgnoreCase))
+                filepath += FileExtension;
+            using (var fs = new FileStream(filepath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                WriteTo(fs);
+        }
 
         /// <summary>
         /// Get SerializedObject instance from the SubArray representation.

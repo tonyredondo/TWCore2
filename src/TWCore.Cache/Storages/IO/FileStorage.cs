@@ -60,7 +60,7 @@ namespace TWCore.Cache.Storages.IO
         /// <summary>
         /// Maximún number of elements waiting for write before starting to slow down the storage to free the queue
         /// </summary>
-        public int SlowDownWriteThreshold { get; set; } = 1000;
+        public int SlowDownWriteThreshold { get; set; } = 2000;
         /// <inheritdoc />
         /// <summary>
         /// Gets the Storage Type
@@ -81,7 +81,7 @@ namespace TWCore.Cache.Storages.IO
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(BasePath), BasePath);
-                collection.Add("Count", Metas?.Count(), StatusItemValueStatus.Ok);
+                collection.Add("Count", _handlers?.Sum(i => i.Count) ?? 0, StatusItemValueStatus.Ok);
                 collection.Add(nameof(IndexSerializer), IndexSerializer);
                 collection.Add(nameof(NumberOfSubFolders), NumberOfSubFolders, NumberOfSubFolders > 10 ? StatusItemValueStatus.Ok : NumberOfSubFolders > 2 ? StatusItemValueStatus.Warning : StatusItemValueStatus.Error);
                 collection.Add(nameof(TransactionLogThreshold), TransactionLogThreshold);
@@ -102,21 +102,16 @@ namespace TWCore.Cache.Storages.IO
             return (int)(key.GetMurmurHash2() % NumberOfSubFolders);
         }
 
-        #endregion
-
-        #region Overrides
-        /// <inheritdoc />
-        /// <summary>
-        /// Init this storage
-        /// </summary>
-        protected override void OnInit()
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private async Task InitAsync(CancellationToken cancellationToken = default)
         {
             Ensure.ReferenceNotNull(BasePath, "The FileStorage BasePath, is null.");
             Core.Log.InfoBasic("Initializing FileStorage...");
             if (_handlers?.Any() == true)
             {
                 Core.Log.InfoBasic("Disposing previous instances...");
-                _handlers.Each(fsto => fsto.Dispose());
+                foreach(var hnd in _handlers)
+                    await hnd.DisposeAsync(true).ConfigureAwait(false);
                 _handlers = null;
             }
             if (!Directory.Exists(BasePath))
@@ -126,16 +121,38 @@ namespace TWCore.Cache.Storages.IO
             }
             Core.Log.InfoBasic("Configuring {0} Subfolders", NumberOfSubFolders);
             _handlers = new FolderHandler[NumberOfSubFolders];
+            var loadTasks = new Task[NumberOfSubFolders];
             for (var i = 0; i < NumberOfSubFolders; i++)
             {
-                var folder = Path.Combine(BasePath, i.ToString());
+                var folder = Path.Combine(BasePath, i.ToString("00"));
                 Core.Log.InfoBasic("Initializing Subfolder: {0} on {1}", i, folder);
-                _handlers[i] = new FolderHandler(folder, this);
+                _handlers[i] = new FolderHandler(this, folder);
+                loadTasks[i] = _handlers[i].LoadAsync(cancellationToken);
             }
+
             Core.Log.InfoBasic("Waiting the folder handlers to be loaded.");
-            TaskHelper.SleepUntil(() => _handlers.All(s => s.Loaded)).WaitAsync();
-            Core.Log.InfoBasic("All folder handlers are loaded, Index Count: {0}", Metas.Count());
+            await Task.WhenAll(loadTasks).ConfigureAwait(false);
+
+            if (_handlers.Any(hnd => hnd.Status != FolderHandlerStatus.Loaded))
+            {
+                Core.Log.Error("There were some errors loading folders, the Storage can be loaded.");
+                return;
+            }
+
+            Core.Log.InfoBasic("All folder handlers are loaded, Index Count: {0}", _handlers.Sum(i => i.Count));
             SetReady(true);
+        }
+
+        #endregion
+
+        #region Overrides
+        /// <inheritdoc />
+        /// <summary>
+        /// Init this storage
+        /// </summary>
+        protected override void OnInit()
+        {
+            InitAsync().WaitAsync();
         }
         protected override IEnumerable<StorageItemMeta> Metas
         {
@@ -144,32 +161,31 @@ namespace TWCore.Cache.Storages.IO
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
-            => _handlers[GetFolderNumber(key)].OnExistKey(key);
+            => _handlers[GetFolderNumber(key)].ExistKey(key);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-            => _handlers.SelectMany(s => s.OnGetKeys()).ToArray();
+            => _handlers.SelectMany(s => s.GetKeys()).ToArray();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {
-            var res = _handlers[GetFolderNumber(key)].OnRemove(key).WaitAsync();
+            var res = _handlers[GetFolderNumber(key)].RemoveAsync(key).WaitAsync();
             meta = res.Item2;
             return res.Item1;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => _handlers[GetFolderNumber(meta.Key)].OnSet(meta, value).WaitAsync();
+            => _handlers[GetFolderNumber(meta.Key)].SetAsync(meta, value).WaitAsync();
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _handlers[GetFolderNumber(key)].OnTryGet(key, condition).WaitAsync();
+            var res = _handlers[GetFolderNumber(key)].TryGetAsync(key, condition).WaitAsync();
             value = res;
             return res != null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override bool OnTryGetMeta(string key, out StorageItemMeta value,
-            Predicate<StorageItemMeta> condition = null)
+        protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _handlers[GetFolderNumber(key)].OnTryGetMeta(key, condition);
+            var res = _handlers[GetFolderNumber(key)].TryGetMeta(key, condition);
             value = res;
             return res != null;
         }
@@ -178,13 +194,14 @@ namespace TWCore.Cache.Storages.IO
         {
             if (_handlers == null) return;
             Core.Log.InfoBasic("Disposing...");
-            _handlers.ParallelEach(s => s.Dispose());
+            Task.WaitAll(_handlers.Select(hnd => hnd.DisposeAsync(true)).ToArray());
             _handlers = null;
             Core.Log.InfoBasic("Disposed.");
         }
         #endregion
 
         #region Inner Types
+        /*
         [StatusName("Folder Handler")]
         private sealed class FolderHandler : IDisposable
         {
@@ -742,6 +759,7 @@ namespace TWCore.Cache.Storages.IO
             }
             #endregion
         }
+        */
         #endregion
     }
 }

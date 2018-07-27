@@ -598,6 +598,102 @@ namespace TWCore
             => Task.WhenAll(tasks).ConfigureAwait(continueOnCapturedContext);
         #endregion
 
+        #region ValueTask extensions
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <returns>Response of the task completation</returns>
+        public static T WaitAndResults<T>(this ValueTask<T> task)
+        {
+            if (task == null)
+                return default(T);
+            try
+            {
+                return task.GetAwaiter().GetResult();
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Count == 1)
+                {
+                    Core.Log.Write(ex.InnerExceptions[0]);
+                    ExceptionDispatchInfo.Capture(ex.InnerExceptions[0]).Throw();
+                }
+                Core.Log.Write(ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+                throw;
+            }
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="millisecondsTimeout">Milliseconds for waiting the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        public static T WaitAndResults<T>(this ValueTask<T> task, int millisecondsTimeout)
+        {
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAndResults(millisecondsTimeout);
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="timeout">TimeSpan for waiting the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        public static T WaitAndResults<T>(this ValueTask<T> task, TimeSpan timeout)
+        {
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAndResults(timeout);
+        }
+        /// <summary>
+        /// Waits for task finalization and returns the result value
+        /// </summary>
+        /// <typeparam name="T">Type of task response</typeparam>
+        /// <param name="task">Task source object</param>
+        /// <param name="cancellationToken">Cancellation token on the Wait for the task to complete</param>
+        /// <returns>Response of the task completation</returns>
+        public static T WaitAndResults<T>(this ValueTask<T> task, CancellationToken cancellationToken)
+        {
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAndResults(cancellationToken);
+        }
+        /// <summary>
+        /// Wait for task avoiding deadlocks
+        /// </summary>
+        /// <typeparam name="T">Task type</typeparam>
+        /// <param name="task">Rask</param>
+        /// <returns>Task complete</returns>
+        public static T WaitAsync<T>(this ValueTask<T> task)
+        {
+            if (task.IsCompleted)
+                return task.Result;
+            return task.AsTask().WaitAsync();
+        }
+        /// <summary>
+        /// Wait for task avoiding deadlocks
+        /// </summary>
+        /// <param name="task">Rask</param>
+        /// <returns>Task complete</returns>
+        public static void WaitAsync(this ValueTask task)
+        {
+            if (task.IsCompleted)
+                return ;
+            task.AsTask().WaitAsync();
+        }
+        #endregion
+
+
         #region Others
         /// <summary>
         /// Gets the Timespan format of the DateTime object.

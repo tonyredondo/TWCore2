@@ -16,6 +16,7 @@ limitations under the License.
 
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,7 @@ using System.Threading.Tasks;
 using TWCore.Diagnostics.Status;
 using TWCore.IO;
 using TWCore.Serialization;
+using TWCore.Threading;
 
 namespace TWCore.Cache.Storages.IO
 {
@@ -49,12 +51,16 @@ namespace TWCore.Cache.Storages.IO
         private readonly string _dataPathPattern;
         private FileStream _transactionStream;
 
+        private int _savingMetadata;
+        private int _removingExpiredItems;
         private int _metasCount;
         private int _pendingItemsCount;
+
         private int _currentTransactionLogLength;
-        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _metas;
-        private readonly NonBlocking.ConcurrentDictionary<string, SerializedObject> _pendingItems;
-        private readonly Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)> _storageWorker;
+        private ConcurrentDictionary<string, StorageItemMeta> _metas;
+        private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
+        private readonly Worker<WorkerItem> _storageWorker;
+        private FileStorageMetaLog _currentTransaction;
 
         private readonly Action _saveMetadataBuffered;
         #endregion
@@ -72,6 +78,22 @@ namespace TWCore.Cache.Storages.IO
         /// Gets the status of the handler.
         /// </summary>
         public FolderHandlerStatus Status { get; private set; }
+
+        public IEnumerable<StorageItemMeta> Metas => _metas.Values;
+        #endregion
+
+        #region Nested Type
+        private readonly struct WorkerItem
+        {
+            public readonly StorageItemMeta Meta;
+            public readonly FileStorageMetaLog.TransactionType Transaction;
+
+            public WorkerItem(StorageItemMeta meta, FileStorageMetaLog.TransactionType transaction)
+            {
+                Meta = meta;
+                Transaction = transaction;
+            }
+        }
         #endregion
 
         #region .ctor
@@ -85,7 +107,8 @@ namespace TWCore.Cache.Storages.IO
             BasePath = basePath;
             _storage = storage;
             _indexSerializer = storage.IndexSerializer;
-            _saveMetadataBuffered = new Func<Task>(SaveMetadataAsync).CreateBufferedTask(1000);
+            //_saveMetadataBuffered = new Func<Task>(SaveMetadataAsync).CreateBufferedTask(1000);
+            _saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
             var extension = _indexSerializer.Extensions[0];
             _transactionLogFilePath = Path.Combine(BasePath, TransactionLogFileName + extension);
             _dataPathPattern = Path.Combine(BasePath, "$FILE$" + DataExtension);
@@ -93,8 +116,9 @@ namespace TWCore.Cache.Storages.IO
             _oldTransactionLogFilePath = _transactionLogFilePath + ".old";
             _oldIndexFilePath = _indexFilePath + ".old";
 
-            _pendingItems = new NonBlocking.ConcurrentDictionary<string, SerializedObject>();
-            _storageWorker = new Worker<(StorageItemMeta, FileStorageMetaLog.TransactionType)>(WorkerProcess)
+            _currentTransaction = new FileStorageMetaLog();
+            _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
+            _storageWorker = new Worker<WorkerItem>(new Action<WorkerItem>(WorkerProcess))
             {
                 EnableWaitTimeout = false
             };
@@ -146,7 +170,7 @@ namespace TWCore.Cache.Storages.IO
 
                 #region Loading index file
 
-                var indexLoaded = await LoadIndexFileAsync(_indexFilePath).ConfigureAwait(false) || await LoadIndexFileAsync(_oldIndexFilePath).ConfigureAwait(false);
+                var indexLoaded = await Task.Run(() => LoadIndexFile(_indexFilePath) || LoadIndexFile(_oldIndexFilePath)).ConfigureAwait(false);
                 if (!indexLoaded)
                 {
                     Core.Log.Warning("The index doesn't exist or couldn't be loaded. Generating new index file.");
@@ -159,7 +183,7 @@ namespace TWCore.Cache.Storages.IO
                     if (_storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
                         eTime = _storage.ItemsExpirationAbsoluteDateOverwrite.Value;
 
-                    if (_metas == null) _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
+                    if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
 
                     await Task.Run(() =>
                     {
@@ -220,7 +244,8 @@ namespace TWCore.Cache.Storages.IO
 
                 _transactionStream = File.Open(_transactionLogFilePath, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
 
-                await SaveMetadataAsync().ConfigureAwait(false);
+                //await SaveMetadataAsync().ConfigureAwait(false);
+                SaveMetadata();
                 await RemoveExpiredItemsAsync(false).ConfigureAwait(false);
                 foreach (var metaItem in _metas)
                 {
@@ -241,42 +266,179 @@ namespace TWCore.Cache.Storages.IO
             }
         }
         /// <summary>
-        /// Exist ey
+        /// Exist Key
         /// </summary>
         /// <param name="key">Key value</param>
         /// <returns>True if the key exist in the metadata; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key) => _metas.ContainsKey(key);
+        /// <summary>
+        /// Get Keys
+        /// </summary>
+        /// <returns>All meta keys</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public string[] GetKeys() => _metas.Keys.ToArray();
+        /// <summary>
+        /// Remove an item
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <returns>Remove result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask<(bool, StorageItemMeta)> RemoveAsync(string key)
+        {
+            if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
+            {
+                Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
+                return new ValueTask<(bool, StorageItemMeta)>((false, null));
+            }
+
+            if (_pendingItems.TryRemove(key, out _))
+                Interlocked.Decrement(ref _pendingItemsCount);
+
+            if (!_metas.TryRemove(key, out var meta))
+                return new ValueTask<(bool, StorageItemMeta)>((false, null));
+
+            Interlocked.Decrement(ref _metasCount);
+            meta.Dispose();
+
+            return EnqueueRemoveAsync();
+
+            async ValueTask<(bool, StorageItemMeta)> EnqueueRemoveAsync()
+            {
+                if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
+                {
+                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
+                }
+                _storageWorker.Enqueue(new WorkerItem(meta, FileStorageMetaLog.TransactionType.Remove));
+                return (true, meta);
+            }
+        }
+        /// <summary>
+        /// Set an item
+        /// </summary>
+        /// <param name="meta">Item Meta</param>
+        /// <param name="value">Item Value</param>
+        /// <returns>Save result</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask<bool> SetAsync(StorageItemMeta meta, SerializedObject value)
+        {
+            if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
+            {
+                Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
+                return new ValueTask<bool>(false);
+            }
+
+            _pendingItems.AddOrUpdate(meta.Key, k =>
+            {
+                Interlocked.Increment(ref _pendingItemsCount);
+                return value;
+            }, (k, v) =>
+            {
+                return value;
+            });
+
+            if (_metas.TryRemove(meta.Key, out var oldMeta))
+            {
+                Interlocked.Decrement(ref _metasCount);
+                if (oldMeta != null && oldMeta != meta)
+                    oldMeta.Dispose();
+            }
+
+            if (meta.IsExpired)
+            {
+                if (_pendingItems.TryRemove(meta.Key, out _))
+                    Interlocked.Decrement(ref _pendingItemsCount);
+                return new ValueTask<bool>(false);
+            }
+
+            if (!_metas.TryAdd(meta.Key, meta))
+                return new ValueTask<bool>(false);
+
+            Interlocked.Increment(ref _metasCount);
+            meta.OnExpire += Meta_OnExpire;
+
+            return EnqueueSaveAsync();
+
+            async ValueTask<bool> EnqueueSaveAsync()
+            {
+                if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
+                {
+                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                    await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
+                }
+                _storageWorker.Enqueue(new WorkerItem(meta, FileStorageMetaLog.TransactionType.Add));
+                return true;
+            }
+        }
+        /// <summary>
+        /// TryGet async
+        /// </summary>
+        /// <param name="key">Item key</param>
+        /// <param name="condition">Get condition</param>
+        /// <returns>Get results</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public async Task<StorageItem> TryGetAsync(string key, Predicate<StorageItemMeta> condition = null)
+        {
+            if (!_metas.TryGetValue(key, out var metaValue))
+                return null;
+            try
+            {
+                if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+                {
+                    if (_pendingItems.TryGetValue(key, out var serObj))
+                        return new StorageItem(metaValue, serObj);
+                    serObj = await SerializedObject.FromFileAsync(GetDataPath(key)).ConfigureAwait(false);
+                    return new StorageItem(metaValue, serObj);
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            return null;
+        }
+        /// <summary>
+        /// Try Get Meta
+        /// </summary>
+        /// <param name="key">Item key</param>
+        /// <param name="condition">Get condition</param>
+        /// <returns>Get meta results</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public StorageItemMeta TryGetMeta(string key, Predicate<StorageItemMeta> condition = null)
+        {
+            if (!_metas.TryGetValue(key, out var metaValue)) return null;
+            if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+                return metaValue;
+            return null;
+        }
         #endregion
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task<bool> LoadIndexFileAsync(string filePath)
+        private bool LoadIndexFile(string filePath)
         {
             if (!File.Exists(filePath))
             {
                 Core.Log.Warning("The Index file: {0} doesn't exist.", filePath);
                 return false;
             }
-            return await Task.Run(() =>
+            try
             {
-                try
+                Core.Log.InfoBasic("Loading Index File: {0}", filePath);
+                var index = _indexSerializer.DeserializeFromFile<List<StorageItemMeta>>(filePath);
+                if (index != null)
                 {
-                    Core.Log.InfoBasic("Loading Index File: {0}", filePath);
-                    var index = _indexSerializer.DeserializeFromFile<List<StorageItemMeta>>(filePath);
-                    if (index != null)
-                    {
-                        var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
-                        _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
-                        return true;
-                    }
+                    var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
+                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                    return true;
                 }
-                catch (Exception ex)
-                {
-                    Core.Log.Write(ex);
-                }
-                return false;
-            }).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            return false;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task<List<FileStorageMetaLog>> LoadTransactionFileAsync(string filePath)
@@ -290,11 +452,18 @@ namespace TWCore.Cache.Storages.IO
                 var lstTransactions = new List<FileStorageMetaLog>();
                 using (var fStream = File.Open(_transactionLogFilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 {
-                    while (fStream.Position != fStream.Length)
+                    try
                     {
-                        var item = _indexSerializer.Deserialize<FileStorageMetaLog>(fStream);
-                        if (item != null)
-                            lstTransactions.Add(item);
+                        while (fStream.Position != fStream.Length)
+                        {
+                            var item = _indexSerializer.Deserialize<FileStorageMetaLog>(fStream);
+                            if (item != null)
+                                lstTransactions.Add(item);
+                        }
+                    }
+                    catch(Exception ex)
+                    {
+                        Core.Log.Write(ex);
                     }
                 }
                 await FileHelper.CopyFileAsync(_transactionLogFilePath, _oldTransactionLogFilePath, true).ConfigureAwait(false);
@@ -307,59 +476,197 @@ namespace TWCore.Cache.Storages.IO
             return null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void Meta_OnExpire(object sender, EventArgs e)
+        private async void Meta_OnExpire(object sender, EventArgs e)
         {
+            try
+            {
+                if (!(sender is StorageItemMeta meta)) return;
+                await RemoveAsync(meta.Key).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
+        private string GetDataPath(string key) => _dataPathPattern.Replace("$FILE$", key);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void WorkerProcess(WorkerItem workerItem)
         {
-            return;
+            if (workerItem.Meta == null) return;
+            if (workerItem.Transaction == FileStorageMetaLog.TransactionType.Add && workerItem.Meta.IsExpired) return;
+            if (_currentTransactionLogLength >= _storage.TransactionLogThreshold) _currentTransactionLogLength = 0;
+
+            #region Save Transaction Log
+
+            try
+            {
+                File.Copy(_transactionLogFilePath, _transactionLogFilePath + ".old", true);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Warning("The Transaction log copy can't be created: {0}", ex.Message);
+            }
+
+            try
+            {
+                _currentTransaction.Meta = workerItem.Meta;
+                _currentTransaction.Type = workerItem.Transaction;
+                _indexSerializer.Serialize(_currentTransaction, _transactionStream);
+                _transactionStream.Flush();
+                _currentTransaction.Meta = null;
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            #endregion
+
+            #region Process Transaction
+            try
+            {
+                var filePath = GetDataPath(workerItem.Meta.Key);
+                switch (workerItem.Transaction)
+                {
+                    case FileStorageMetaLog.TransactionType.Remove:
+                        Core.Log.DebugGroup(workerItem.Meta.Key, "Removing element from filesystem.");
+                        File.Delete(filePath);
+                        break;
+                    case FileStorageMetaLog.TransactionType.Add:
+                        Core.Log.DebugGroup(workerItem.Meta.Key, "Writing element to filesystem.");
+                        if (_pendingItems.TryGetValue(workerItem.Meta.Key, out var serObj))
+                        {
+                            serObj.ToFile(filePath);
+                            _pendingItems.TryRemove(workerItem.Meta.Key, out _);
+                        }
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            #endregion
+
+            #region Save Metadata
+            if (_currentTransactionLogLength == 0)
+                _saveMetadataBuffered();
+            #endregion
+
+            _currentTransactionLogLength++;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task SaveMetadataAsync()
+        private void SaveMetadata()
         {
-            return;
+            if (Interlocked.CompareExchange(ref _savingMetadata, 1, 0) == 1) return;
+            if (_disposedValue) return;
+            if (_transactionStream == null) return;
+            if (!_transactionStream.CanWrite) return;
+            Core.Log.LibVerbose("Writing Index: {0}", _indexFilePath);
+            try
+            {
+                //await FileHelper.CopyFileAsync(_indexFilePath, _indexFilePath + ".old", true).ConfigureAwait(false);
+                File.Copy(_indexFilePath, _indexFilePath + ".old", true);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Warning("The Index copy can't be created: {0}", ex.Message);
+            }
+            try
+            {
+                //await _indexSerializer.SerializeToFileAsync(_metas.Values.ToList(), _indexFilePath).ConfigureAwait(false);
+                _indexSerializer.SerializeToFile(_metas.Values.ToList(), _indexFilePath);
+                _transactionStream.Position = 0;
+                _transactionStream.SetLength(0);
+                _transactionStream.Flush();
+                //await _transactionStream.FlushAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            Interlocked.Exchange(ref _savingMetadata, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task RemoveExpiredItemsAsync(bool saveBuffered = true)
         {
+            if (Interlocked.CompareExchange(ref _removingExpiredItems, 1, 0) == 1) return;
+            try
+            {
+                Core.Log.InfoBasic("Removing expired items.");
+                foreach (var meta in _metas)
+                {
+                    if (meta.Value == null)
+                    {
+                        Core.Log.Warning("Metadata for {0} is null.", meta.Key);
+                        _metas.TryRemove(meta.Key, out _);
+                    }
+                    if (!meta.Value.IsExpired) continue;
+
+                    Core.Log.InfoDetail("Removing by expiration: {0}", meta.Key);
+                    await RemoveAsync(meta.Key).ConfigureAwait(false);
+                }
+                if (saveBuffered)
+                    _saveMetadataBuffered();
+                else
+                {
+                    //await SaveMetadataAsync().ConfigureAwait(false);
+                    SaveMetadata();
+                }
+            }
+            catch(Exception ex)
+            {
+                Core.Log.Write(ex);
+            }
+            Interlocked.Exchange(ref _removingExpiredItems, 0);
         }
         #endregion
 
-
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        private bool _disposedValue;
 
-        void Dispose(bool disposing)
+        // To detect redundant calls
+
+        private void Dispose(bool disposing)
         {
-            if (!disposedValue)
-            {
-                if (disposing)
-                {
-                    // TODO: dispose managed state (managed objects).
-                }
-
-                // TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-                // TODO: set large fields to null.
-
-                disposedValue = true;
-            }
+            DisposeAsync(disposing).WaitAsync();
         }
 
-        // TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-        // ~FolderHandler() {
-        //   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-        //   Dispose(false);
-        // }
+        public async Task DisposeAsync(bool disposing)
+        {
+            if (_disposedValue) return;
+            if (disposing)
+            {
 
-        // This code added to correctly implement the disposable pattern.
+            }
+            Core.Log.InfoBasic("Stopping storage folder worker on: {0}", BasePath);
+            await _storageWorker.StopAsync(int.MaxValue).ConfigureAwait(false);
+            Core.Log.InfoBasic("Saving metadata on: {0}", BasePath);
+            SaveMetadata();
+            //await SaveMetadataAsync().ConfigureAwait(false);
+            _disposedValue = true;
+            Core.Log.InfoBasic("Saving Journal on: {0}", BasePath);
+            if (_transactionStream.CanWrite)
+            {
+                await _transactionStream.FlushAsync().ConfigureAwait(false);
+                _transactionStream.Dispose();
+                _transactionStream = null;
+            }
+            _metas.Clear();
+            _pendingItems.Clear();
+            Core.Log.InfoBasic("Folder disposed: {0}", BasePath);
+        }
+
+        ~FolderHandler()
+        {
+            Dispose(false);
+        }
+
         public void Dispose()
         {
-            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
             Dispose(true);
-            // TODO: uncomment the following line if the finalizer is overridden above.
-            // GC.SuppressFinalize(this);
+            GC.SuppressFinalize(this);
         }
         #endregion
     }

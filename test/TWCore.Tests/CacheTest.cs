@@ -20,6 +20,7 @@ namespace TWCore.Tests
             Lru2QStorageTest();
             Core.Log.InfoBasic("Press ENTER to continue.");
             Console.ReadLine();
+            Core.DebugMode = true;
             FileStorageTest();
             Core.Log.InfoBasic("Press ENTER to continue.");
             Console.ReadLine();

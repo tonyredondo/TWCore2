@@ -76,6 +76,7 @@ namespace TWCore
         public static Action CreateBufferedAction(this Action action, int milliseconds)
         {
             Timer timer = null;
+            int running = 0;
             return () =>
             {
                 if (timer != null)
@@ -84,8 +85,14 @@ namespace TWCore
                 {
                     timer = new Timer(obj =>
                     {
-                        action();
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            action();
+                        }
+                        catch { }
                         timer = null;
+                        Interlocked.Exchange(ref running, 0);
                     }, null, milliseconds, Timeout.Infinite);
                 }
             };
@@ -100,6 +107,7 @@ namespace TWCore
         public static Action<T> CreateBufferedAction<T>(this Action<T> action, int milliseconds)
         {
             Timer timer = null;
+            int running = 0;
             return obj =>
             {
                 if (timer != null)
@@ -108,8 +116,85 @@ namespace TWCore
                 {
                     timer = new Timer(ot =>
                     {
-                        action((T)ot);
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            action((T)ot);
+                        }
+                        catch { }
                         timer = null;
+                        Interlocked.Exchange(ref running, 0);
+                    }, obj, milliseconds, Timeout.Infinite);
+                }
+            };
+        }
+        #endregion
+
+        #region Buffered Task
+        /// <summary>
+        ///  Creates a buffered Func wrapper from a Task action base.
+        /// </summary>
+        /// <param name="func">Original Task action</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Action CreateBufferedTask(this Func<Task> func, int milliseconds)
+        {
+            Timer timer = null;
+            int running = 0;
+            return () =>
+            {
+                if (timer != null)
+                    timer.Change(milliseconds, Timeout.Infinite);
+                else
+                {
+                    timer = new Timer(obj =>
+                    {
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            func().WaitAsync();
+                        }
+                        catch(Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                        timer = null;
+                        Interlocked.Exchange(ref running, 0);
+                    }, null, milliseconds, Timeout.Infinite);
+                }
+            };
+        }
+        /// <summary>
+        ///  Creates a buffered Func wrapper from a Task action base.
+        /// </summary>
+        /// <param name="func">Original Task action</param>
+        /// <param name="milliseconds">Delay time to start the action</param>
+        /// <returns>Buffered action instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Action<T> CreateBufferedTask<T>(this Func<T, Task> func, int milliseconds)
+        {
+            Timer timer = null;
+            int running = 0;
+            return obj =>
+            {
+                if (timer != null)
+                    timer.Change(milliseconds, Timeout.Infinite);
+                else
+                {
+                    timer = new Timer(ot =>
+                    {
+                        if (Interlocked.CompareExchange(ref running, 1, 0) == 1) return;
+                        try
+                        {
+                            func((T)ot).WaitAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            Core.Log.Write(ex);
+                        }
+                        timer = null;
+                        Interlocked.Exchange(ref running, 0);
                     }, obj, milliseconds, Timeout.Infinite);
                 }
             };
@@ -155,19 +240,19 @@ namespace TWCore
 
         #region Throttled Task
         /// <summary>
-        /// Creates a Throttled task wrapper form an action base.
+        /// Creates a Throttled task wrapper form an Task base.
         /// </summary>
         /// <param name="task">Original task</param>
         /// <param name="milliseconds">Delay time to start the action</param>
         /// <returns>Throttled task instance</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Func<Task> CreateThrottledTaskAsync(this Task task, int milliseconds)
+        public static Func<Task> CreateThrottledAction<T>(this Func<Task> task, int milliseconds)
         {
             var date = DateTime.MinValue;
             return () =>
             {
                 if (DateTime.UtcNow.Subtract(date).TotalMilliseconds < milliseconds) return Task.CompletedTask;
-                return task.ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
+                return task().ContinueWith(_ => date = DateTime.UtcNow, CancellationToken.None,
                     TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
             };
         }

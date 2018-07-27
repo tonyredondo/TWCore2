@@ -265,6 +265,7 @@ namespace TWCore.Cache.Storages.IO
                 _storageWorker.OnWorkDone += (sender, e) => _saveMetadataBuffered();
                 _currentTransaction = new FileStorageMetaLog();
 
+                //
                 if (!Directory.Exists(BasePath))
                 {
                     Core.Log.InfoBasic("Creating SubFolder Directory: {0}", BasePath);

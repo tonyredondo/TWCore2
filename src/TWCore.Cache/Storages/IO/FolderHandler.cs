@@ -65,6 +65,10 @@ namespace TWCore.Cache.Storages.IO
         /// </summary>
         public string BasePath { get; private set; }
         /// <summary>
+        /// Metas Count
+        /// </summary>
+        public int Count => _metasCount;
+        /// <summary>
         /// Gets the status of the handler.
         /// </summary>
         public FolderHandlerStatus Status { get; private set; }
@@ -236,7 +240,16 @@ namespace TWCore.Cache.Storages.IO
                 Status = FolderHandlerStatus.LoadFailed;
             }
         }
+        /// <summary>
+        /// Exist ey
+        /// </summary>
+        /// <param name="key">Key value</param>
+        /// <returns>True if the key exist in the metadata; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool ExistKey(string key) => _metas.ContainsKey(key);
+        #endregion
 
+        #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task<bool> LoadIndexFileAsync(string filePath)
         {
@@ -287,29 +300,26 @@ namespace TWCore.Cache.Storages.IO
                 await FileHelper.CopyFileAsync(_transactionLogFilePath, _oldTransactionLogFilePath, true).ConfigureAwait(false);
                 return lstTransactions;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
             return null;
         }
-        #endregion
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void Meta_OnExpire(object sender, EventArgs e)
+        {
+        }
 
-        #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task WorkerProcess((StorageItemMeta, FileStorageMetaLog.TransactionType) workerItem)
         {
             return;
         }
-
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task SaveMetadataAsync()
         {
             return;
-        }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async void Meta_OnExpire(object sender, EventArgs e)
-        {
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private async Task RemoveExpiredItemsAsync(bool saveBuffered = true)

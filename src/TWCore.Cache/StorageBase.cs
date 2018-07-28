@@ -244,7 +244,7 @@ namespace TWCore.Cache
         /// </summary>
         /// <returns>String array with the keys</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected abstract string[] OnGetKeys();
+        protected abstract IEnumerable<string> OnGetKeys();
 		/// <summary>
 		/// Init this storage
 		/// </summary>
@@ -327,7 +327,10 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string[] GetKeys()
         {
-            return !Ready ? null : OnGetKeys();
+            if (!Ready)
+                return null;
+            var keys = OnGetKeys();
+            return keys as string[] ?? keys.ToArray();
         }
         #endregion
 

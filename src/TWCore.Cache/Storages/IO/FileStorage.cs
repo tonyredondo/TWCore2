@@ -165,8 +165,8 @@ namespace TWCore.Cache.Storages.IO
             => _metas.ContainsKey(key);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected override string[] OnGetKeys()
-            => _metas.Keys.ToArray();
+        protected override IEnumerable<string> OnGetKeys()
+            => _metas.Keys;
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)

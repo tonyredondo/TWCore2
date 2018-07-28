@@ -38,7 +38,7 @@ namespace TWCore.Cache.Storages.IO
     public class FileStorage : StorageBase
     {
         private FolderHandler[] _handlers;
-        private ConcurrentDictionary<string, StorageItemMeta> _metas;
+        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _metas;
         
         #region Properties
         /// <summary>
@@ -78,7 +78,7 @@ namespace TWCore.Cache.Storages.IO
         {
             basePath = Factory.ResolveLowLowPath(basePath);
             BasePath = basePath;
-            _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+            _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(BasePath), BasePath);

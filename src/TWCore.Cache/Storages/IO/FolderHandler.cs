@@ -57,9 +57,9 @@ namespace TWCore.Cache.Storages.IO
         private int _pendingItemsCount;
 
         private int _currentTransactionLogLength;
-        private ConcurrentDictionary<string, StorageItemMeta> _globalMetas;
-        private ConcurrentDictionary<string, StorageItemMeta> _metas;
-        private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
+        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _globalMetas;
+        private NonBlocking.ConcurrentDictionary<string, StorageItemMeta> _metas;
+        private readonly NonBlocking.ConcurrentDictionary<string, SerializedObject> _pendingItems;
         private readonly Worker<FileStorageMetaLog> _storageWorker;
 
         private readonly Action _saveMetadataBuffered;
@@ -87,13 +87,12 @@ namespace TWCore.Cache.Storages.IO
         /// <param name="storage">Storage base</param>
         /// <param name="globalMetas">Global Metas</param>
         /// <param name="basePath">Base path</param>
-        public FolderHandler(FileStorage storage, ConcurrentDictionary<string, StorageItemMeta> globalMetas, string basePath)
+        public FolderHandler(FileStorage storage, NonBlocking.ConcurrentDictionary<string, StorageItemMeta> globalMetas, string basePath)
         {
             BasePath = basePath;
             _storage = storage;
             _globalMetas = globalMetas;
             _indexSerializer = storage.IndexSerializer;
-            //_saveMetadataBuffered = new Func<Task>(SaveMetadataAsync).CreateBufferedTask(1000);
             _saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
             var extension = _indexSerializer.Extensions[0];
             _transactionLogFilePath = Path.Combine(BasePath, TransactionLogFileName + extension);
@@ -102,7 +101,7 @@ namespace TWCore.Cache.Storages.IO
             _oldTransactionLogFilePath = _transactionLogFilePath + ".old";
             _oldIndexFilePath = _indexFilePath + ".old";
 
-            _pendingItems = new ConcurrentDictionary<string, SerializedObject>();
+            _pendingItems = new NonBlocking.ConcurrentDictionary<string, SerializedObject>();
             _storageWorker = new Worker<FileStorageMetaLog>(new Action<FileStorageMetaLog>(WorkerProcess))
             {
                 EnableWaitTimeout = false
@@ -168,7 +167,7 @@ namespace TWCore.Cache.Storages.IO
                     if (_storage.ItemsExpirationAbsoluteDateOverwrite.HasValue)
                         eTime = _storage.ItemsExpirationAbsoluteDateOverwrite.Value;
 
-                    if (_metas == null) _metas = new ConcurrentDictionary<string, StorageItemMeta>();
+                    if (_metas == null) _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>();
 
                     await Task.Run(() =>
                     {
@@ -222,9 +221,9 @@ namespace TWCore.Cache.Storages.IO
                                 _globalMetas.TryAdd(item.Meta.Key, item.Meta);
                                 break;
                             case FileStorageMetaLog.TransactionType.Remove:
+                                _globalMetas.TryRemove(item.Meta.Key, out _);
                                 if (_metas.TryRemove(item.Meta.Key, out var oldMeta) && oldMeta != null)
                                     oldMeta.Dispose();
-                                _globalMetas.TryRemove(item.Meta.Key, out _);
                                 break;
                         }
                     }
@@ -261,16 +260,6 @@ namespace TWCore.Cache.Storages.IO
         /// <returns>True if the key exist in the metadata; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key) => _metas.ContainsKey(key);
-        /// <summary>
-        /// Append Keys into the collection
-        /// </summary>
-        /// <param name="col">Collection</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void AppendKeys(List<string> col)
-        {
-            foreach (var key in _metas.Keys)
-                col.Add(key);
-        }
         /// <summary>
         /// Remove an item
         /// </summary>
@@ -441,7 +430,7 @@ namespace TWCore.Cache.Storages.IO
                 if (index != null)
                 {
                     var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i)).ToArray();
-                    _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                    _metas = new NonBlocking.ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
                     foreach (var valuePair in pairEnumerable)
                         _globalMetas.TryAdd(valuePair.Key, valuePair.Value);
                     return true;

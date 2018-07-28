@@ -135,7 +135,7 @@ namespace TWCore.Cache
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected void CheckItemExpiration(bool initial = false)
         {
-            if (_expirationRunning == true) return;
+            if (_expirationRunning) return;
             _expirationRunning = true;
             try
             {

@@ -162,9 +162,15 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
             => _handlers[GetFolderNumber(key)].ExistKey(key);
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-            => _handlers.SelectMany(s => s.GetKeys()).ToArray();
+        {
+            var lst = new List<string>(_handlers.Sum(i => i.Count));
+            foreach(var hnd in _handlers)
+                hnd.AppendKeys(lst);
+            return lst.ToArray();
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {

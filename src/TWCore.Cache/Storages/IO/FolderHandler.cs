@@ -257,11 +257,15 @@ namespace TWCore.Cache.Storages.IO
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool ExistKey(string key) => _metas.ContainsKey(key);
         /// <summary>
-        /// Get Keys
+        /// Append Keys into the collection
         /// </summary>
-        /// <returns>All meta keys</returns>
+        /// <param name="col">Collection</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public string[] GetKeys() => _metas.Keys.ToArray();
+        public void AppendKeys(List<string> col)
+        {
+            foreach (var key in _metas.Keys)
+                col.Add(key);
+        }
         /// <summary>
         /// Remove an item
         /// </summary>

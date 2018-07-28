@@ -466,6 +466,19 @@ namespace TWCore.Serialization
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 return FromMemory(await fs.ReadAllBytesAsMemoryAsync().ConfigureAwait(false));
         }
+        /// <summary>
+        /// Read the SerializedObject from a file
+        /// </summary>
+        /// <param name="filepath">Filepath to load the serialized object instance</param>
+        /// <returns>Awaitable task instance</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedObject FromFile(string filepath)
+        {
+            if (!File.Exists(filepath) && File.Exists(filepath + FileExtension))
+                filepath += FileExtension;
+            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                return FromMemory(fs.ReadAllBytesAsMemory());
+        }
         #endregion
     }
 }

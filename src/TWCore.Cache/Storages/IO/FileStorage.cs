@@ -60,7 +60,7 @@ namespace TWCore.Cache.Storages.IO
         /// <summary>
         /// Maximún number of elements waiting for write before starting to slow down the storage to free the queue
         /// </summary>
-        public int SlowDownWriteThreshold { get; set; } = 2000;
+        public int SlowDownWriteThreshold { get; set; } = 3000;
         /// <inheritdoc />
         /// <summary>
         /// Gets the Storage Type
@@ -160,6 +160,7 @@ namespace TWCore.Cache.Storages.IO
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get => _metas.Values;
         }
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
             => _metas.ContainsKey(key);
@@ -170,18 +171,16 @@ namespace TWCore.Cache.Storages.IO
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
-        {
-            var res = _handlers[GetFolderNumber(key)].RemoveAsync(key).WaitAsync();
-            meta = res.Item2;
-            return res.Item1;
-        }
+            => _handlers[GetFolderNumber(key)].TryRemove(key, out meta);
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnSet(StorageItemMeta meta, SerializedObject value)
-            => _handlers[GetFolderNumber(meta.Key)].SetAsync(meta, value).WaitAsync();
+            => _handlers[GetFolderNumber(meta.Key)].TrySet(meta, value);
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _handlers[GetFolderNumber(key)].TryGetAsync(key, condition).WaitAsync();
+            var res = _handlers[GetFolderNumber(key)].TryGet(key, condition);
             value = res;
             return res != null;
         }

@@ -236,7 +236,7 @@ namespace TWCore.Cache.Storages.IO
 
                 //await SaveMetadataAsync().ConfigureAwait(false);
                 SaveMetadata();
-                await RemoveExpiredItemsAsync(false).ConfigureAwait(false);
+                RemoveExpiredItems(false);
                 foreach (var metaItem in _metas)
                 {
                     if (metaItem.Value == null) continue;
@@ -245,8 +245,7 @@ namespace TWCore.Cache.Storages.IO
 
                 var metasCount = _metas.Count;
                 Interlocked.Exchange(ref _metasCount, metasCount);
-                Core.Log.InfoBasic("Total item loaded: {0}", metasCount);
-                Core.Log.LibVerbose("All metadata loaded.");
+                Core.Log.InfoBasic("Total item loaded in {0}: {1}", BasePath, metasCount);
                 Status = FolderHandlerStatus.Loaded;
             }
             catch (Exception ex)
@@ -276,14 +275,16 @@ namespace TWCore.Cache.Storages.IO
         /// Remove an item
         /// </summary>
         /// <param name="key">Key value</param>
+        /// <param name="removedMeta">Removed meta</param>
         /// <returns>Remove result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask<(bool, StorageItemMeta)> RemoveAsync(string key)
+        public bool TryRemove(string key, out StorageItemMeta removedMeta)
         {
             if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
             {
                 Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
-                return new ValueTask<(bool, StorageItemMeta)>((false, null));
+                removedMeta = null;
+                return false;
             }
 
             if (_pendingItems.TryRemove(key, out _))
@@ -291,27 +292,26 @@ namespace TWCore.Cache.Storages.IO
 
             _globalMetas.TryRemove(key, out _);
             if (!_metas.TryRemove(key, out var meta))
-                return new ValueTask<(bool, StorageItemMeta)>((false, null));
+            {
+                removedMeta = null;
+                return false;
+            }
 
             Interlocked.Decrement(ref _metasCount);
             meta.Dispose();
 
-            return EnqueueRemoveAsync();
-
-            async ValueTask<(bool, StorageItemMeta)> EnqueueRemoveAsync()
+            if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
             {
-                if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
-                {
-                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
-                }
-                _storageWorker.Enqueue(new FileStorageMetaLog
-                {
-                    Meta = meta,
-                    Type = FileStorageMetaLog.TransactionType.Remove
-                });
-                return (true, meta);
+                Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).WaitAsync();
             }
+            _storageWorker.Enqueue(new FileStorageMetaLog
+            {
+                Meta = meta,
+                Type = FileStorageMetaLog.TransactionType.Remove
+            });
+            removedMeta = meta;
+            return true;
         }
         /// <summary>
         /// Set an item
@@ -320,12 +320,12 @@ namespace TWCore.Cache.Storages.IO
         /// <param name="value">Item Value</param>
         /// <returns>Save result</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask<bool> SetAsync(StorageItemMeta meta, SerializedObject value)
+        public bool TrySet(StorageItemMeta meta, SerializedObject value)
         {
             if (_storageWorker.Status != WorkerStatus.Started && _storageWorker.Status != WorkerStatus.Stopped)
             {
                 Core.Log.Warning("The storage is disposing, modifying the collection is forbidden.");
-                return new ValueTask<bool>(false);
+                return false;
             }
 
             _pendingItems.AddOrUpdate(meta.Key, k =>
@@ -349,32 +349,27 @@ namespace TWCore.Cache.Storages.IO
             {
                 if (_pendingItems.TryRemove(meta.Key, out _))
                     Interlocked.Decrement(ref _pendingItemsCount);
-                return new ValueTask<bool>(false);
+                return false;
             }
 
             if (!_metas.TryAdd(meta.Key, meta))
-                return new ValueTask<bool>(false);
+                return false;
 
             _globalMetas.TryAdd(meta.Key, meta);
             Interlocked.Increment(ref _metasCount);
             meta.OnExpire += Meta_OnExpire;
 
-            return EnqueueSaveAsync();
-
-            async ValueTask<bool> EnqueueSaveAsync()
+            if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
             {
-                if (_storageWorker.Count >= _storage.SlowDownWriteThreshold)
-                {
-                    Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
-                    await TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).ConfigureAwait(false);
-                }
-                _storageWorker.Enqueue(new FileStorageMetaLog
-                {
-                    Meta = meta,
-                    Type = FileStorageMetaLog.TransactionType.Add
-                });
-                return true;
+                Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
+                TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).WaitAsync();
             }
+            _storageWorker.Enqueue(new FileStorageMetaLog
+            {
+                Meta = meta,
+                Type = FileStorageMetaLog.TransactionType.Add
+            });
+            return true;
         }
         /// <summary>
         /// TryGet async
@@ -383,7 +378,7 @@ namespace TWCore.Cache.Storages.IO
         /// <param name="condition">Get condition</param>
         /// <returns>Get results</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public async Task<StorageItem> TryGetAsync(string key, Predicate<StorageItemMeta> condition = null)
+        public StorageItem TryGet(string key, Predicate<StorageItemMeta> condition = null)
         {
             if (!_metas.TryGetValue(key, out var metaValue))
                 return null;
@@ -393,7 +388,7 @@ namespace TWCore.Cache.Storages.IO
                 {
                     if (_pendingItems.TryGetValue(key, out var serObj))
                         return new StorageItem(metaValue, serObj);
-                    serObj = await SerializedObject.FromFileAsync(GetDataPath(key)).ConfigureAwait(false);
+                    serObj = SerializedObject.FromFile(GetDataPath(key));
                     return new StorageItem(metaValue, serObj);
                 }
             }
@@ -483,12 +478,12 @@ namespace TWCore.Cache.Storages.IO
             return null;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async void Meta_OnExpire(object sender, EventArgs e)
+        private void Meta_OnExpire(object sender, EventArgs e)
         {
             try
             {
                 if (!(sender is StorageItemMeta meta)) return;
-                await RemoveAsync(meta.Key).ConfigureAwait(false);
+                TryRemove(meta.Key, out _);
             }
             catch (Exception ex)
             {
@@ -580,7 +575,7 @@ namespace TWCore.Cache.Storages.IO
             Interlocked.Exchange(ref _savingMetadata, 0);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private async Task RemoveExpiredItemsAsync(bool saveBuffered = true)
+        private void RemoveExpiredItems(bool saveBuffered = true)
         {
             if (Interlocked.CompareExchange(ref _removingExpiredItems, 1, 0) == 1) return;
             try
@@ -598,7 +593,7 @@ namespace TWCore.Cache.Storages.IO
                     if (!meta.Value.IsExpired) continue;
 
                     Core.Log.InfoDetail("Removing by expiration: {0}", meta.Key);
-                    await RemoveAsync(meta.Key).ConfigureAwait(false);
+                    TryRemove(meta.Key, out _);
                 }
                 if (saveBuffered)
                     _saveMetadataBuffered();

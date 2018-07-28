@@ -375,42 +375,53 @@ namespace TWCore.Cache.Storages.IO
         /// TryGet async
         /// </summary>
         /// <param name="key">Item key</param>
+        /// <param name="value">StorageItem value</param>
         /// <param name="condition">Get condition</param>
-        /// <returns>Get results</returns>
+        /// <returns>True if the value exists, otherwise; false</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItem TryGet(string key, Predicate<StorageItemMeta> condition = null)
+        public bool TryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
         {
+            value = null;
             if (!_metas.TryGetValue(key, out var metaValue))
-                return null;
+                return false;
             try
             {
                 if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
                 {
                     if (_pendingItems.TryGetValue(key, out var serObj))
-                        return new StorageItem(metaValue, serObj);
+                    {
+                        value = new StorageItem(metaValue, serObj);
+                        return true;
+                    }
                     serObj = SerializedObject.FromFile(GetDataPath(key));
-                    return new StorageItem(metaValue, serObj);
+                    value = new StorageItem(metaValue, serObj);
+                    return true;
                 }
             }
             catch (Exception ex)
             {
                 Core.Log.Write(ex);
             }
-            return null;
+            return false;
         }
         /// <summary>
         /// Try Get Meta
         /// </summary>
         /// <param name="key">Item key</param>
+        /// <param name="value">StorageItem value</param>
         /// <param name="condition">Get condition</param>
         /// <returns>Get meta results</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public StorageItemMeta TryGetMeta(string key, Predicate<StorageItemMeta> condition = null)
+        public bool TryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
-            if (!_metas.TryGetValue(key, out var metaValue)) return null;
+            value = null;
+            if (!_metas.TryGetValue(key, out var metaValue)) return false;
             if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
-                return metaValue;
-            return null;
+            {
+                value = metaValue;
+                return true;
+            }
+            return false;
         }
         #endregion
 

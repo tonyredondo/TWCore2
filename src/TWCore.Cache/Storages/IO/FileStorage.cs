@@ -179,17 +179,19 @@ namespace TWCore.Cache.Storages.IO
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGet(string key, out StorageItem value, Predicate<StorageItemMeta> condition = null)
-        {
-            var res = _handlers[GetFolderNumber(key)].TryGet(key, condition);
-            value = res;
-            return res != null;
-        }
+            => _handlers[GetFolderNumber(key)].TryGet(key, out value, condition);
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnTryGetMeta(string key, out StorageItemMeta value, Predicate<StorageItemMeta> condition = null)
         {
-            var res = _handlers[GetFolderNumber(key)].TryGetMeta(key, condition);
-            value = res;
-            return res != null;
+            value = null;
+            if (!_metas.TryGetValue(key, out var metaValue)) return false;
+            if (metaValue != null && !metaValue.IsExpired && (condition == null || condition(metaValue)))
+            {
+                value = metaValue;
+                return true;
+            }
+            return false;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override void OnDispose()

@@ -57,13 +57,14 @@ namespace TWCore.Tests
 
                 var res = await cachePool.GetMetaAsync("metaValue").ConfigureAwait(false);
 
-                await cachePool.GetKeysAsync().ConfigureAwait(false);
+                var keys = await cachePool.GetKeysAsync().ConfigureAwait(false);
 
                 using (var watch = Watch.Create("GetKeysAsync"))
                 {
                     for (var i = 0; i < 1000; i++)
                         await cachePool.GetKeysAsync().ConfigureAwait(false);
                     Core.Log.InfoBasic("Time Per Item: {0}ms", watch.GlobalElapsedMilliseconds / 1000);
+                    Core.Log.InfoBasic("Total keys: {0}", keys.Length);
                 }
 
                 Console.ReadLine();

@@ -57,6 +57,7 @@ namespace TWCore.Cache.Storages.IO
         private int _pendingItemsCount;
 
         private int _currentTransactionLogLength;
+        private ConcurrentDictionary<string, StorageItemMeta> _globalMetas;
         private ConcurrentDictionary<string, StorageItemMeta> _metas;
         private readonly ConcurrentDictionary<string, SerializedObject> _pendingItems;
         private readonly Worker<FileStorageMetaLog> _storageWorker;
@@ -77,8 +78,6 @@ namespace TWCore.Cache.Storages.IO
         /// Gets the status of the handler.
         /// </summary>
         public FolderHandlerStatus Status { get; private set; }
-
-        public IEnumerable<StorageItemMeta> Metas => _metas.Values;
         #endregion
 
         #region .ctor
@@ -86,11 +85,13 @@ namespace TWCore.Cache.Storages.IO
         /// Folder handler
         /// </summary>
         /// <param name="storage">Storage base</param>
+        /// <param name="globalMetas">Global Metas</param>
         /// <param name="basePath">Base path</param>
-        public FolderHandler(FileStorage storage, string basePath)
+        public FolderHandler(FileStorage storage, ConcurrentDictionary<string, StorageItemMeta> globalMetas, string basePath)
         {
             BasePath = basePath;
             _storage = storage;
+            _globalMetas = globalMetas;
             _indexSerializer = storage.IndexSerializer;
             //_saveMetadataBuffered = new Func<Task>(SaveMetadataAsync).CreateBufferedTask(1000);
             _saveMetadataBuffered = ActionDelegate.Create(SaveMetadata).CreateBufferedAction(1000);
@@ -177,12 +178,14 @@ namespace TWCore.Cache.Storages.IO
                         {
                             var cTime = File.GetCreationTime(file);
                             var key = Path.GetFileNameWithoutExtension(file);
-                            _metas.TryAdd(key, new StorageItemMeta
+                            var stoMeta = new StorageItemMeta
                             {
                                 Key = key,
                                 CreationDate = cTime,
                                 ExpirationDate = eTime
-                            });
+                            };
+                            _metas.TryAdd(key, stoMeta);
+                            _globalMetas.TryAdd(key, stoMeta);
                             if (idx % 100 == 0)
                                 Core.Log.InfoBasic("Number of files loaded: {0}", idx);
                             idx++;
@@ -212,13 +215,16 @@ namespace TWCore.Cache.Storages.IO
                         switch (item.Type)
                         {
                             case FileStorageMetaLog.TransactionType.Add:
+                                _globalMetas.TryRemove(item.Meta.Key, out _);
                                 if (_metas.TryRemove(item.Meta.Key, out var oldAddedMeta) && oldAddedMeta != null)
                                     oldAddedMeta.Dispose();
                                 _metas.TryAdd(item.Meta.Key, item.Meta);
+                                _globalMetas.TryAdd(item.Meta.Key, item.Meta);
                                 break;
                             case FileStorageMetaLog.TransactionType.Remove:
                                 if (_metas.TryRemove(item.Meta.Key, out var oldMeta) && oldMeta != null)
                                     oldMeta.Dispose();
+                                _globalMetas.TryRemove(item.Meta.Key, out _);
                                 break;
                         }
                     }
@@ -283,6 +289,7 @@ namespace TWCore.Cache.Storages.IO
             if (_pendingItems.TryRemove(key, out _))
                 Interlocked.Decrement(ref _pendingItemsCount);
 
+            _globalMetas.TryRemove(key, out _);
             if (!_metas.TryRemove(key, out var meta))
                 return new ValueTask<(bool, StorageItemMeta)>((false, null));
 
@@ -330,6 +337,7 @@ namespace TWCore.Cache.Storages.IO
                 return value;
             });
 
+            _globalMetas.TryRemove(meta.Key, out _);
             if (_metas.TryRemove(meta.Key, out var oldMeta))
             {
                 Interlocked.Decrement(ref _metasCount);
@@ -347,6 +355,7 @@ namespace TWCore.Cache.Storages.IO
             if (!_metas.TryAdd(meta.Key, meta))
                 return new ValueTask<bool>(false);
 
+            _globalMetas.TryAdd(meta.Key, meta);
             Interlocked.Increment(ref _metasCount);
             meta.OnExpire += Meta_OnExpire;
 
@@ -425,8 +434,10 @@ namespace TWCore.Cache.Storages.IO
                 var index = _indexSerializer.DeserializeFromFile<List<StorageItemMeta>>(filePath);
                 if (index != null)
                 {
-                    var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i));
+                    var pairEnumerable = index.Select(i => new KeyValuePair<string, StorageItemMeta>(i.Key, i)).ToArray();
                     _metas = new ConcurrentDictionary<string, StorageItemMeta>(pairEnumerable);
+                    foreach (var valuePair in pairEnumerable)
+                        _globalMetas.TryAdd(valuePair.Key, valuePair.Value);
                     return true;
                 }
             }
@@ -581,6 +592,8 @@ namespace TWCore.Cache.Storages.IO
                     {
                         Core.Log.Warning("Metadata for {0} is null.", meta.Key);
                         _metas.TryRemove(meta.Key, out _);
+                        _globalMetas.TryRemove(meta.Key, out _);
+                        continue;
                     }
                     if (!meta.Value.IsExpired) continue;
 

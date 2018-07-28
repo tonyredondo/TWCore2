@@ -15,15 +15,14 @@ limitations under the License.
  */
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-using TWCore.Threading;
 using TWCore.Diagnostics.Status;
-using TWCore.IO;
 using TWCore.Serialization;
 // ReSharper disable MemberCanBePrivate.Local
 // ReSharper disable ReturnTypeCanBeEnumerable.Local
@@ -39,7 +38,8 @@ namespace TWCore.Cache.Storages.IO
     public class FileStorage : StorageBase
     {
         private FolderHandler[] _handlers;
-
+        private ConcurrentDictionary<string, StorageItemMeta> _metas;
+        
         #region Properties
         /// <summary>
         /// Base path where the data is going to be saved.
@@ -78,6 +78,7 @@ namespace TWCore.Cache.Storages.IO
         {
             basePath = Factory.ResolveLowLowPath(basePath);
             BasePath = basePath;
+            _metas = new ConcurrentDictionary<string, StorageItemMeta>();
             Core.Status.Attach(collection =>
             {
                 collection.Add(nameof(BasePath), BasePath);
@@ -126,7 +127,7 @@ namespace TWCore.Cache.Storages.IO
             {
                 var folder = Path.Combine(BasePath, i.ToString("00"));
                 Core.Log.InfoBasic("Initializing Subfolder: {0} on {1}", i, folder);
-                _handlers[i] = new FolderHandler(this, folder);
+                _handlers[i] = new FolderHandler(this, _metas, folder);
                 loadTasks[i] = _handlers[i].LoadAsync(cancellationToken);
             }
 
@@ -157,20 +158,16 @@ namespace TWCore.Cache.Storages.IO
         protected override IEnumerable<StorageItemMeta> Metas
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _handlers?.SelectMany(s => s.Metas).ToArray();
+            get => _metas.Values;
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnExistKey(string key)
-            => _handlers[GetFolderNumber(key)].ExistKey(key);
+            => _metas.ContainsKey(key);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override string[] OnGetKeys()
-        {
-            var lst = new List<string>(_handlers.Sum(i => i.Count));
-            foreach(var hnd in _handlers)
-                hnd.AppendKeys(lst);
-            return lst.ToArray();
-        }
+            => _metas.Keys.ToArray();
+        
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected override bool OnRemove(string key, out StorageItemMeta meta)
         {
@@ -201,6 +198,7 @@ namespace TWCore.Cache.Storages.IO
             if (_handlers == null) return;
             Core.Log.InfoBasic("Disposing...");
             Task.WaitAll(_handlers.Select(hnd => hnd.DisposeAsync(true)).ToArray());
+            _metas.Clear();
             _handlers = null;
             Core.Log.InfoBasic("Disposed.");
         }

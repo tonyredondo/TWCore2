@@ -175,6 +175,8 @@ namespace TWCore
                 return default(T);
             try
             {
+                if (task.IsCompleted)
+                    return task.Result;
                 return task.GetAwaiter().GetResult();
             }
             catch (AggregateException ex)
@@ -206,6 +208,8 @@ namespace TWCore
                 return default(T);
             try
             {
+                if (task.IsCompleted)
+                    return task.Result;
                 return task.Wait(millisecondsTimeout) ? task.Result : default(T);
             }
             catch (AggregateException ex)
@@ -237,6 +241,8 @@ namespace TWCore
                 return default(T);
             try
             {
+                if (task.IsCompleted)
+                    return task.Result;
                 return task.Wait(timeout) ? task.Result : default(T);
             }
             catch (AggregateException ex)
@@ -268,6 +274,8 @@ namespace TWCore
                 return default(T);
             try
             {
+                if (task.IsCompleted)
+                    return task.Result;
                 task.Wait(cancellationToken);
                 return task.Result;
             }
@@ -295,6 +303,8 @@ namespace TWCore
         /// <returns>Task complete</returns>
         public static T WaitAsync<T>(this Task<T> task)
         {
+            if (task.IsCompleted)
+                return task.Result;
             var wait = new ManualResetEventSlim(false);
             var continuation = task.ContinueWith((oldTask, state) =>
             {
@@ -315,6 +325,8 @@ namespace TWCore
         /// <returns>Task complete</returns>
         public static void WaitAsync(this Task task)
         {
+            if (task.IsCompleted)
+                return;
             var wait = new ManualResetEventSlim(false);
             var continuation = task.ContinueWith((oldTask, state) =>
             {

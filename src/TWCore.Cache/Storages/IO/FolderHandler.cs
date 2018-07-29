@@ -16,7 +16,6 @@ limitations under the License.
 
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -40,7 +39,8 @@ namespace TWCore.Cache.Storages.IO
         private const string TransactionLogFileName = "Index.journal";
         private const string DataExtension = ".data";
         private static readonly List<StorageItemMeta> EmptyMetaList = new List<StorageItemMeta>();
-
+        private static readonly ReferencePool<FileStorageMetaLog> FileStoragePool = new ReferencePool<FileStorageMetaLog>();
+        
         #region Fields
         private readonly FileStorage _storage;
         private readonly BinarySerializer _indexSerializer;
@@ -294,11 +294,11 @@ namespace TWCore.Cache.Storages.IO
                 Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                 TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).WaitAsync();
             }
-            _storageWorker.Enqueue(new FileStorageMetaLog
-            {
-                Meta = meta,
-                Type = FileStorageMetaLog.TransactionType.Remove
-            });
+
+            var fstoItem = FileStoragePool.New();
+            fstoItem.Meta = meta;
+            fstoItem.Type = FileStorageMetaLog.TransactionType.Remove;
+            _storageWorker.Enqueue(fstoItem);
             removedMeta = meta;
             return true;
         }
@@ -353,11 +353,11 @@ namespace TWCore.Cache.Storages.IO
                 Core.Log.Warning("The storage working has reached his maximum capacity, slowing down the collection modification.");
                 TaskHelper.SleepUntil(() => _storageWorker.Count < _storage.SlowDownWriteThreshold).WaitAsync();
             }
-            _storageWorker.Enqueue(new FileStorageMetaLog
-            {
-                Meta = meta,
-                Type = FileStorageMetaLog.TransactionType.Add
-            });
+            
+            var fstoItem = FileStoragePool.New();
+            fstoItem.Meta = meta;
+            fstoItem.Type = FileStorageMetaLog.TransactionType.Add;
+            _storageWorker.Enqueue(fstoItem);
             return true;
         }
         /// <summary>
@@ -544,6 +544,9 @@ namespace TWCore.Cache.Storages.IO
             #endregion
 
             _currentTransactionLogLength++;
+
+            workerItem.Meta = null;
+            FileStoragePool.Store(workerItem);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SaveMetadata()

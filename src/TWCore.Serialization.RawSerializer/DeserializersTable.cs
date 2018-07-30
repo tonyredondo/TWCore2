@@ -77,25 +77,13 @@ namespace TWCore.Serialization.RawSerializer
             try
             {
                 Stream = stream;
-                if (stream.ReadByte() != DataBytesDefinition.Start)
+                var firstByte = stream.ReadByte();
+                if (firstByte == -1)
+                    throw new IOException("The stream has been closed.");
+                if (firstByte != DataBytesDefinition.Start)
                     throw new FormatException("The stream is not in NSerializer format.");
                 value = ReadValue(StreamReadByte());
                 while (StreamReadByte() != DataBytesDefinition.End) {}
-            }
-            catch (IOException)
-            {
-                return value;
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    while (StreamReadByte() != DataBytesDefinition.End) { }
-                }
-                catch
-                {
-                }
-                throw;
             }
             finally
             {

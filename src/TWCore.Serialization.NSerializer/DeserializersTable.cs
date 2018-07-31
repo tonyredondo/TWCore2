@@ -799,7 +799,13 @@ namespace TWCore.Serialization.NSerializer
 
         #region Private Read Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        protected byte StreamReadByte() => (byte)Stream.ReadByte();
+        protected byte StreamReadByte()
+        {
+            var res = Stream.ReadByte();
+            if (res == -1)
+                throw new IOException("The stream has been closed.");
+            return (byte)res;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         protected ushort StreamReadUShort()
         {

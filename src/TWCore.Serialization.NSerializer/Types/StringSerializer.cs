@@ -75,7 +75,7 @@ namespace TWCore.Serialization.NSerializer
             }
 
             var length = Encoding.UTF8.GetByteCount(value);
-            if (length <= 32768)
+            if (length <= 16384)
             {
                 Span<byte> bufferSpan = stackalloc byte[length + 5];
                 bufferSpan[0] = DataBytesDefinition.StringLength;
@@ -135,7 +135,7 @@ namespace TWCore.Serialization.NSerializer
 
             string strValue = null;
 
-            if (length <= 32768)
+            if (length <= 16384)
             {
                 Span<byte> bufferSpan = stackalloc byte[length];
                 Stream.Fill(bufferSpan);

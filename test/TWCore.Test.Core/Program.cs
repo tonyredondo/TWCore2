@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using TWCore.Compression;
 using TWCore.Diagnostics.Status.Transports;
 using TWCore.Net.Multicast;
 using TWCore.Reflection;
@@ -35,6 +36,11 @@ namespace TWCore.Test.Core
 {
     internal class Program
     {
+        private static readonly ICompressor Compressor = new GZipCompressor();
+        private static readonly NBinarySerializer NBinarySerializer = new NBinarySerializer
+        {
+            Compressor = Compressor
+        };
 
         public enum VarEnum
         {
@@ -107,44 +113,35 @@ namespace TWCore.Test.Core
 
                 testValue.SerializeToNBinary();
 
-                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                //{
-                //    wc.Tap("Tap 1");
-                //    wc.Tap("Tap 2");
-                //}
-                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                //{
-                //    wc.Tap("Tap 1");
-                //    wc.Tap("Tap 2");
-                //}
-                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                //{
-                //    wc.Tap("Tap 1");
-                //    wc.Tap("Tap 2");
-                //}
-                //using (var wc = Watch.Create("OffersController - POST - Synchronous", Diagnostics.Log.LogLevel.Stats, "f5c77cd8-48ce-4fc7-9c41-ada953b1ebb9"))
-                //{
-                //    wc.Tap("Tap 1");
-                //    wc.Tap("Tap 2");
-                //}
 
-                //using (var wc = Watch.Create("Inicio", "Fin"))
+                //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });
+
+                //var serObj = NBinarySerializer.DeserializeFromFile<SerializedObject>("C:\\Temp\\trace.data");
+
+                //Task.Run(async () =>
                 //{
-                //    wc.Tap("Tap 1");
-                //    using (var wc2 = Watch.Create("Inicio 2", "Fin 2"))
+                //    var value = serObj.GetValue();
+                //    var valueByte = value.SerializeToNBinary();
+
+                //    TWCore.Core.Log.InfoBasic("Testing object trace");
+
+                //    await Task.Delay(1000).ConfigureAwait(false);
+                //    using (Watch.Create("Serialize"))
                 //    {
-                //        wc2.Tap("Tap 1");
-                //        using (var wc3 = Watch.Create("Inicio 2", "Fin 2"))
-                //        {
-                //            wc3.Tap("Tap 1");
-                //            wc3.Tap("Tap 2");
-                //        }
-                //        wc2.Tap("Tap 2");
+                //        for (var i = 0; i < 4000; i++)
+                //            value.SerializeToNBinary();
                 //    }
-                //    wc.Tap("Tap 2");
-                //}
-                //Console.ReadLine();
 
+                //    await Task.Delay(1000).ConfigureAwait(false);
+                //    using (Watch.Create("Deserialize"))
+                //    {
+                //        for (var i = 0; i < 4000; i++)
+                //            valueByte.DeserializeFromNBinary<object>();
+                //    }
+
+                //    Console.ReadLine();
+                //});
+               
                 /*Task.Run(async () =>
                 {
                     var rnd = new Random();

@@ -421,7 +421,7 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SerializedObject GetSerializedObject(object item) => item is SerializedObject serObj ? serObj : new SerializedObject(item, this);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public SerializedObject GetSerializedObject<T>(T item) => typeof(T) == typeof(SerializedObject) ? item as SerializedObject : new SerializedObject(item, this);
+        public SerializedObject GetSerializedObject<T>(T item) => item is SerializedObject serObj ? serObj : new SerializedObject(item, this);
         #endregion
 
         #region CoreStart

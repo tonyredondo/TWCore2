@@ -16,14 +16,12 @@ limitations under the License.
 
 using System;
 using System.Buffers;
-using System.Buffers.Text;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
-using TWCore.Collections;
 using TWCore.Compression;
 
 namespace TWCore.Serialization
@@ -31,8 +29,6 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject
     {
-        private static WeakDictionary<byte[], object> SerializedObjects = new WeakDictionary<byte[], object>(new ArrayEqualityComparer<byte>());
-
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -83,7 +79,6 @@ namespace TWCore.Serialization
                     SerializerMimeType += ":" + serializer.Compressor.EncodingType;
                 Data = (byte[])serializer.Serialize(data, type);
             }
-            SerializedObjects.TryAdd(Data, data);
         }
 
         public SerializedObject(byte[] data, string dataType, string serializerMimeType)
@@ -103,8 +98,6 @@ namespace TWCore.Serialization
         public object GetValue()
         {
             if (Data == null) return null;
-            if (SerializedObjects.TryGetValue(Data, out var value))
-                return value;
             var type = string.IsNullOrWhiteSpace(DataType) ? typeof(object) : Core.GetType(DataType, true);
             if (string.IsNullOrWhiteSpace(SerializerMimeType))
                 return type == typeof(byte[]) ? Data : null;
@@ -116,8 +109,7 @@ namespace TWCore.Serialization
                 throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
             if (!string.IsNullOrWhiteSpace(serComp))
                 serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
-            value = serializer.Deserialize(Data, type);
-            SerializedObjects.TryAdd(Data, value);
+            var value = serializer.Deserialize(Data, type);
             return value;
         }
         /// <summary>

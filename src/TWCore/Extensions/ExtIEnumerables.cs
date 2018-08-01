@@ -697,7 +697,7 @@ namespace TWCore
                 foreach (var item in array)
                 {
                     var key = mKeySelector(item);
-                    var similarItems = source.Where((i, vTuple) => !ReferenceEquals(vTuple.item, i) && Equals(vTuple.keySelector(i), vTuple.key), (item, key, keySelector)).ToList();
+                    var similarItems = source.Where((i, iItem, iKey, iKeySelector) => !ReferenceEquals(iItem, i) && Equals(iKeySelector(i), iKey), item, key, keySelector).ToList();
                     var nItem = similarItems.Count > 1 ? mMergeFunction(similarItems) : item;
                     source = source.Where((s, mSimilarItems) => !mSimilarItems.Contains(s), similarItems).ToArray();
                     yield return nItem;
@@ -802,7 +802,7 @@ namespace TWCore
                 lastArray.Each(item =>
                 {
                     var keyValue = keySelector(item);
-                    var oItem = lst.FirstOrDefault((o, vTuple) => Equals(vTuple.keyValue, vTuple.keySelector(o)), (keyValue, keySelector));
+                    var oItem = lst.FirstOrDefault((o, iKeyValue, iKeySelector) => Equals(iKeyValue, iKeySelector(o)), keyValue, keySelector);
                     if (oItem == null)
                         lst.Add(item);
                     else
@@ -1857,7 +1857,7 @@ namespace TWCore
         /// <param name="state">State object instance</param>
         /// <returns>default(TSource) if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TSource FirstOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, in TArg state)
+        public static TSource FirstOrDefault<TSource, TArg>(this IEnumerable<TSource> source, Func<TSource, TArg, bool> predicate, TArg state)
         {
             if (source == null) throw new ArgumentNullException(nameof(source));
             if (source is IList<TSource> sourceList)
@@ -1871,6 +1871,68 @@ namespace TWCore
             {
                 foreach (var item in source)
                     if (predicate(item, state))
+                        return item;
+            }
+            return default;
+        }
+        /// <summary>
+        /// Returns the first element of the sequence that satisfies a condition or a default value if no such element is found.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the Argument 1.</typeparam>
+        /// <typeparam name="TArg2">The type of the Argument 2.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="arg0">Argument 0</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <returns>default(TSource) if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TSource FirstOrDefault<TSource, TArg, TArg2>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, bool> predicate, TArg arg0, TArg2 arg1)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is IList<TSource> sourceList)
+            {
+                var length = sourceList.Count;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceList[i], arg0, arg1))
+                        return sourceList[i];
+            }
+            else
+            {
+                foreach (var item in source)
+                    if (predicate(item, arg0, arg1))
+                        return item;
+            }
+            return default;
+        }
+        /// <summary>
+        /// Returns the first element of the sequence that satisfies a condition or a default value if no such element is found.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the Argument 1.</typeparam>
+        /// <typeparam name="TArg2">The type of the Argument 2.</typeparam>
+        /// <typeparam name="TArg3">The type of the Argument 3.</typeparam>
+        /// <param name="source">An System.Collections.Generic.IEnumerable`1 to return an element from.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="arg0">Argument 0</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        /// <returns>default(TSource) if source is empty or if no element passes the test specified by predicate; otherwise, the first element in source that passes the test specified by predicate.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static TSource FirstOrDefault<TSource, TArg, TArg2, TArg3>(this IEnumerable<TSource> source, Func<TSource, TArg, TArg2, TArg3, bool> predicate, TArg arg0, TArg2 arg1, TArg3 arg2)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source is IList<TSource> sourceList)
+            {
+                var length = sourceList.Count;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceList[i], arg0, arg1, arg2))
+                        return sourceList[i];
+            }
+            else
+            {
+                foreach (var item in source)
+                    if (predicate(item, arg0, arg1, arg2))
                         return item;
             }
             return default;
@@ -2822,6 +2884,9 @@ namespace TWCore
                     yield return selector(item, idx++, state);
             }
         }
+
+        // *** Where ***
+
         /// <summary>
         /// Filters a sequence of values based on a predicate.
         /// </summary>
@@ -2845,6 +2910,64 @@ namespace TWCore
             {
                 foreach (var item in enumerable)
                     if (predicate(item, state))
+                        yield return item;
+            }
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the Argument 1.</typeparam>
+        /// <typeparam name="TArg2">The type of the Argument 2.</typeparam>
+        /// <param name="enumerable">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="arg0">Argument 1.</param>
+        /// <param name="arg1">Argument 2</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 that contains elements from the input sequence that satisfy the condition.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IEnumerable<TSource> Where<TSource, TArg, TArg2>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, TArg2, bool> predicate, TArg arg0, TArg2 arg1)
+        {
+            if (enumerable is IList<TSource> sourceList)
+            {
+                var length = sourceList.Count;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceList[i], arg0, arg1))
+                        yield return sourceList[i];
+            }
+            else
+            {
+                foreach (var item in enumerable)
+                    if (predicate(item, arg0, arg1))
+                        yield return item;
+            }
+        }
+        /// <summary>
+        /// Filters a sequence of values based on a predicate.
+        /// </summary>
+        /// <typeparam name="TSource">The type of the elements of source.</typeparam>
+        /// <typeparam name="TArg">The type of the Argument 1.</typeparam>
+        /// <typeparam name="TArg2">The type of the Argument 2.</typeparam>
+        /// <typeparam name="TArg3">The type of the Argument 3.</typeparam>
+        /// <param name="enumerable">An System.Collections.Generic.IEnumerable`1 to filter.</param>
+        /// <param name="predicate">A function to test each element for a condition.</param>
+        /// <param name="arg0">Argument 1.</param>
+        /// <param name="arg1">Argument 2</param>
+        /// <param name="arg2">Argument 3</param>
+        /// <returns>An System.Collections.Generic.IEnumerable`1 that contains elements from the input sequence that satisfy the condition.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IEnumerable<TSource> Where<TSource, TArg, TArg2, TArg3>(this IEnumerable<TSource> enumerable, Func<TSource, TArg, TArg2, TArg3, bool> predicate, TArg arg0, TArg2 arg1, TArg3 arg2)
+        {
+            if (enumerable is IList<TSource> sourceList)
+            {
+                var length = sourceList.Count;
+                for (var i = 0; i < length; i++)
+                    if (predicate(sourceList[i], arg0, arg1, arg2))
+                        yield return sourceList[i];
+            }
+            else
+            {
+                foreach (var item in enumerable)
+                    if (predicate(item, arg0, arg1, arg2))
                         yield return item;
             }
         }

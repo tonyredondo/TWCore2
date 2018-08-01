@@ -128,7 +128,7 @@ namespace TWCore.Data.SqlServer
 
                 var tableRow = tableRows.FirstOrDefault((dRow, tName) => (string)dRow["TABLE_NAME"] == tName, tableName);
 
-                var table = catalog.Tables.FirstOrDefault((t, vTuple) => t.Name == vTuple.tableName && t.Schema == vTuple.tableSchema, (tableName, tableSchema));
+                var table = catalog.Tables.FirstOrDefault((t, mTableName, mTableSchema) => t.Name == mTableName && t.Schema == mTableSchema, tableName, tableSchema);
                 if (table == null)
                 {
                     table = new TableSchema { Name = tableName, Schema = tableSchema };
@@ -230,7 +230,7 @@ namespace TWCore.Data.SqlServer
                 var indexName = (string)indexColumn["index_name"];
 
 
-                var table = catalog.Tables.FirstOrDefault((t, vTuple) => t.Name == vTuple.tableName && t.Schema == vTuple.tableSchema, (tableName, tableSchema));
+                var table = catalog.Tables.FirstOrDefault((t, mTableName, mTableSchema) => t.Name == mTableName && t.Schema == mTableSchema, tableName, tableSchema);
                 if (table == null) continue;
 
                 var tIndex = table.Indexes.FirstOrDefault((i, iName) => i.Name == iName, indexName);
@@ -294,7 +294,7 @@ namespace TWCore.Data.SqlServer
                 var tableSchema = (string)foreignKey["TABLE_SCHEMA"];
                 var tableName = (string)foreignKey["TABLE_NAME"];
 
-                var table = catalog.Tables.FirstOrDefault((t, vTuple) => t.Name == vTuple.tableName && t.Schema == vTuple.tableSchema, (tableName, tableSchema));
+                var table = catalog.Tables.FirstOrDefault((t, mTableName, mTableSchema) => t.Name == mTableName && t.Schema == mTableSchema, tableName, tableSchema);
                 if (table == null) continue;
 
                 var fkTable = constraintName.Replace(tableName, string.Empty);

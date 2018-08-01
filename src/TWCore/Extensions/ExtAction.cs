@@ -602,7 +602,7 @@ namespace TWCore
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>A new action wrapper</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(o => action(o), obj, onException);
+        public static Action<T> CreateTry<T>(this Action<T> action, Action<Exception> onException = null) => obj => Try.Do(action, obj, onException);
         /// <summary>
         /// Invoke the action inside a try/catch sentence
         /// </summary>
@@ -619,7 +619,7 @@ namespace TWCore
         /// <param name="onException">Action to be executed when an exception has been catched</param>
         /// <returns>true if the execution finished sucessfully, otherwise false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool TryInvoke<T>(this Action<T> action, T obj, Action<Exception> onException = null) => Try.Do(o => action(o), obj, onException);
+        public static bool TryInvoke<T>(this Action<T> action, T obj, Action<Exception> onException = null) => Try.Do(action, obj, onException);
         #endregion
 
         #region Watch

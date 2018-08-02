@@ -79,7 +79,7 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual byte[] GetBytes(byte[] bytes)
+        public byte[] GetBytes(byte[] bytes)
         {
             return GetHashValue(bytes);
         }
@@ -90,7 +90,7 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string Get(byte[] bytes)
+        public string Get(byte[] bytes)
         {
             var data = GetBytes(bytes);
             var sb = new StringBuilder();
@@ -105,12 +105,9 @@ namespace TWCore.Security
         /// <param name="bytes">Bytes array to calculate the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public virtual Guid GetGuid(byte[] bytes) 
+		public Guid GetGuid(byte[] bytes) 
 		{
-			var bHash = GetBytes(bytes);
-			var newGuid = new byte[16];
-			Buffer.BlockCopy(bHash, 0, newGuid, 0, 16);
-			return new Guid(newGuid);
+			return new Guid(GetBytes(bytes).AsSpan(0, 16));
 		}
 
         /// <inheritdoc />
@@ -120,7 +117,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public byte[] GetBytes(object obj) => GetBytes((byte[])GetSerializer().Serialize(obj, obj.GetType()));
         /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from an object
@@ -128,7 +125,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public string Get(object obj) => Get((byte[])GetSerializer().Serialize(obj, obj.GetType()));
         /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from an object
@@ -136,7 +133,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
+        public Guid GetGuid(object obj) => GetGuid((byte[])GetSerializer().Serialize(obj, obj.GetType()));
 
         /// <inheritdoc />
         /// <summary>
@@ -145,7 +142,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Hash bytes array.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual byte[] GetBytes(string obj) => StringBytesHashCache.GetOrAdd(_instanceName + obj, key => GetBytes(Encoding.GetBytes(obj)));
+        public byte[] GetBytes(string obj) => StringBytesHashCache.GetOrAdd(_instanceName + obj, key => GetBytes(Encoding.GetBytes(obj)));
         /// <inheritdoc />
         /// <summary>
         /// Gets the hash string value from a string value
@@ -153,7 +150,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>String value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual string Get(string obj) => StringHashCache.GetOrAdd(_instanceName + obj, key => Get(Encoding.GetBytes(obj)));
+        public string Get(string obj) => StringHashCache.GetOrAdd(_instanceName + obj, key => Get(Encoding.GetBytes(obj)));
         /// <inheritdoc />
         /// <summary>
         /// Gets the guid hash value from a string value
@@ -161,7 +158,7 @@ namespace TWCore.Security
         /// <param name="obj">Object to get the hash.</param>
         /// <returns>Guid value with the hash.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public virtual Guid GetGuid(string obj) => StringGuidHashCache.GetOrAdd(_instanceName + obj, key => GetGuid(Encoding.GetBytes(obj)));
+        public Guid GetGuid(string obj) => StringGuidHashCache.GetOrAdd(_instanceName + obj, key => GetGuid(Encoding.GetBytes(obj)));
         #endregion
 
         #region Private Method

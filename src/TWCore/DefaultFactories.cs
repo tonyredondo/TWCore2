@@ -194,8 +194,9 @@ namespace TWCore
         {
             //https://blogs.msdn.microsoft.com/dbrowne/2012/07/03/how-to-generate-sequential-guids-for-sql-server-in-net/
             UuidCreateSequential(out var guid);
-            var s = guid.ToByteArray();
-            var t = new byte[16];
+            Span<byte> s = stackalloc byte[16];
+            Span<byte> t = stackalloc byte[16];
+            if (!guid.TryWriteBytes(s)) return guid;
             t[3] = s[0];
             t[2] = s[1];
             t[1] = s[2];

@@ -569,8 +569,15 @@ namespace TWCore.Diagnostics.Log
         /// <param name="args">Arguments to bing with the pattern</param>
         void VerboseGroup(string groupName, string message, params object[] args);
         #endregion
-        
+
         #region ErrorGroup Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a error item into the log storages
+        /// </summary>
+        /// <param name="ex">Exception</param>
+        /// <param name="groupName">Group name</param>
+        void ErrorGroup(Exception ex, string groupName);
         /// <summary>
         /// Write a error item into the log storages
         /// </summary>
@@ -811,8 +818,52 @@ namespace TWCore.Diagnostics.Log
         /// <param name="args">Arguments to bing with the pattern</param>
         void InfoDetailGroup(string groupName, string message, params object[] args);
         #endregion
-        
-        
+
+        #region StatsGroup Methods
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        void StatsGroup(string groupName, string message);
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        void StatsGroup(string groupName, string message, object arg1);
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        void StatsGroup(string groupName, string message, object arg1, object arg2);
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="arg1">First argument</param>
+        /// <param name="arg2">Second argument</param>
+        /// <param name="arg3">Third argument</param>
+        void StatsGroup(string groupName, string message, object arg1, object arg2, object arg3);
+        /// <inheritdoc />
+        /// <summary>
+        /// Write a Stats item into the log storages
+        /// </summary>
+        /// <param name="groupName">Group name</param>
+        /// <param name="message">Item message with pattern support</param>
+        /// <param name="args">Arguments to bing with the pattern</param>
+        void StatsGroup(string groupName, string message, params object[] args);
+        #endregion
+
         /// <summary>
         /// Enable or Disable the Trace engine
         /// </summary>

@@ -279,12 +279,12 @@ namespace TWCore.Messaging.NSQ
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static byte[] CreateRawMessageBody(SubArray<byte> message, Guid correlationId, string name)
         {
-            var nameBytes = Encoding.GetBytes(name);
-            var nameLength = nameBytes.Length;
+            var nameLength = Encoding.GetByteCount(name);
             var body = new byte[16 + 4 + nameLength + message.Count];
-            Buffer.BlockCopy(correlationId.ToByteArray(), 0, body, 0, 16);
-            Buffer.BlockCopy(BitConverter.GetBytes(nameLength), 0, body, 16, 4);
-            nameBytes.CopyTo(body, 20);
+            var bodySpan = body.AsSpan();
+            correlationId.TryWriteBytes(bodySpan.Slice(0, 16));
+            BitConverter.TryWriteBytes(bodySpan.Slice(16, 4), nameLength);
+            Encoding.GetBytes(name, bodySpan.Slice(20, nameLength));
             message.CopyTo(body, 20 + nameLength);
             return body;
         }
@@ -292,7 +292,7 @@ namespace TWCore.Messaging.NSQ
         internal static (SubArray<byte>, Guid, string) GetFromRawMessageBody(byte[] message)
         {
             var body = new SubArray<byte>(message);
-            var correlationId = new Guid((byte[])body.Slice(0, 16));
+            var correlationId = new Guid(body.Slice(0, 16));
             var nameLength = BitConverter.ToInt32(message, 16);
             var name = Encoding.GetString(message, 20, nameLength);
             var messageBody = body.Slice(20 + nameLength);

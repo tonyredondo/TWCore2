@@ -303,7 +303,7 @@ namespace TWCore.Messaging.NATS
         internal static byte[] CreateMessageBody(SubArray<byte> message, Guid correlationId)
         {
             var body = new byte[16 + message.Count];
-            Buffer.BlockCopy(correlationId.ToByteArray(), 0, body, 0, 16);
+            correlationId.TryWriteBytes(body.AsSpan(0, 16));
             message.CopyTo(body, 16);
             return body;
         }
@@ -311,7 +311,7 @@ namespace TWCore.Messaging.NATS
         internal static (SubArray<byte>, Guid) GetFromMessageBody(byte[] message)
         {
             var body = new SubArray<byte>(message);
-            var correlationId = new Guid((byte[])body.Slice(0, 16));
+            var correlationId = new Guid(body.Slice(0, 16));
             var messageBody = body.Slice(16);
             return (messageBody, correlationId);
         }

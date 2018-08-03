@@ -113,7 +113,6 @@ namespace TWCore.Test.Core
 
                 testValue.SerializeToNBinary();
 
-
                 //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });
 
                 //var serObj = NBinarySerializer.DeserializeFromFile<SerializedObject>("C:\\Temp\\trace.data");

@@ -940,26 +940,24 @@ namespace TWCore
         /// <param name="milliseconds">Timeout in milliseconds</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds)
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds)
         {
-            if (task.IsCompleted) return TaskHelper.CompleteTrue;
+            if (task.IsCompleted) return true;
             var delayCancellation = new CancellationTokenSource();
             var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
-            return Task.WhenAny(delayTask, task)
-                .ContinueWith((resTask, state) =>
-                {
-                    var tupleState = (Tuple<Task, CancellationTokenSource>)state;
-                    if (resTask != (Task)tupleState.Item1)
-                    {
-                        tupleState.Item2.Cancel();
-                        return true;
-                    }
-                    else
-                    {
-                        resTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
-                        return false;
-                    }
-                }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            var resTask = await Task.WhenAny(delayTask, task).ConfigureAwait(false);
+            if (resTask != delayTask)
+            {
+                delayCancellation.Cancel();
+                return true;
+            }
+            SetContinuation(task);
+            return false;
+
+            void SetContinuation(Task pTask)
+            {
+                pTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            }
         }
         /// <summary>
         /// Wait for action with timeout
@@ -969,28 +967,27 @@ namespace TWCore
         /// <param name="cancellationToken">Cancellation token instance</param>
         /// <returns>True if run successfully</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
+        public static async Task<bool> CallAndWaitFor(this Task task, int milliseconds, CancellationToken cancellationToken)
         {
-            if (task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
+            if (task.IsCompleted) return true;
+            if (cancellationToken.IsCancellationRequested) return false;
 
-            var delayCancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
-
-            return Task.WhenAny(delayTask, task).ContinueWith((resTask, state) =>
+            var delayCancellation = new CancellationTokenSource();
+            var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(delayCancellation.Token, cancellationToken);
+            var delayTask = Task.Delay(milliseconds, linkedCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, task).ConfigureAwait(false);
+            if (resTask != delayTask)
             {
-                var tupleState = (Tuple<Task, CancellationTokenSource>)state;
-                if (resTask != (Task)tupleState.Item1)
-                {
-                    tupleState.Item2.Cancel();
-                    return true;
-                }
-                else
-                {
-                    resTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
-                    return false;
-                }
-            }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                delayCancellation.Cancel();
+                return true;
+            }
+            SetContinuation(task);
+            return false;
+
+            void SetContinuation(Task pTask)
+            {
+                pTask.ContinueWith(tsk => Core.Log.Write(tsk.Exception), TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously);
+            }
         }
         #endregion
     }

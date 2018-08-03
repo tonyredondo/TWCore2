@@ -89,21 +89,19 @@ namespace TWCore.Threading
         /// <param name="milliseconds">Milliseconds</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> WaitAsync(int milliseconds)
+        public async Task<bool> WaitAsync(int milliseconds)
         {
-            if (_mTcs == null) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
+            if (_mTcs == null) return false;
+            if (_mTcs.Task.IsCompleted) return true;
+            if (_mTcs.Task.IsCanceled) return false;
+            if (_mTcs.Task.IsFaulted) return false;
             var delayCancellation = new CancellationTokenSource();
             var delayTask = Task.Delay(milliseconds, delayCancellation.Token);
-            return Task.WhenAny(delayTask, _mTcs.Task)
-                .ContinueWith((prev, obj) => {
-                    var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
-                    if (prev == objTuple.Item1) return false;
-                    delayCancellation.Cancel();
-                    return true;
-                }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
+            if (resTask == delayTask)
+                return false;
+            delayCancellation.Cancel();
+            return true;
         }
         /// <summary>
         /// Wait Async for the set event
@@ -112,22 +110,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(TimeSpan timeout)
-        {
-            if (_mTcs == null) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
-            var delayCancellation = new CancellationTokenSource();
-            var delayTask = Task.Delay(timeout);
-            return Task.WhenAny(delayTask, _mTcs.Task)
-                .ContinueWith((prev, obj) =>
-                {
-                    var objTuple = (Tuple<Task, CancellationTokenSource>)obj;
-                    if (prev == objTuple.Item1) return false;
-                    delayCancellation.Cancel();
-                    return true;
-                }, Tuple.Create(delayTask, delayCancellation), CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-        }
+            => WaitAsync((int)timeout.TotalMilliseconds);
         /// <summary>
         /// Wait Async for the set event
         /// </summary>
@@ -135,17 +118,23 @@ namespace TWCore.Threading
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
+        public async Task<bool> WaitAsync(int milliseconds, CancellationToken cancellationToken)
         {
-            if (_mTcs == null) return TaskHelper.CompleteFalse;
-            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
-            var delayTask = Task.Delay(milliseconds, cancellationToken);
-            return Task.WhenAny(delayTask, _mTcs.Task)
-                .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
-                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            if (_mTcs == null) return false;
+            if (cancellationToken.IsCancellationRequested) return false;
+            if (_mTcs.Task.IsCompleted) return true;
+            if (_mTcs.Task.IsCanceled) return false;
+            if (_mTcs.Task.IsFaulted) return false;
+            var delayCancellation = new CancellationTokenSource();
+            var linkedCancellation = CancellationTokenSource.CreateLinkedTokenSource(delayCancellation.Token, cancellationToken);
+            var delayTask = Task.Delay(milliseconds, linkedCancellation.Token);
+            var resTask = await Task.WhenAny(delayTask, _mTcs.Task).ConfigureAwait(false);
+            if (resTask == delayTask)
+                return false;
+            delayCancellation.Cancel();
+            if (cancellationToken.IsCancellationRequested)
+                return false;
+            return true;
         }
         /// <summary>
         /// Wait Async for the set event
@@ -155,17 +144,7 @@ namespace TWCore.Threading
         /// <returns>Task</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public Task<bool> WaitAsync(TimeSpan timeout, CancellationToken cancellationToken)
-        {
-            if (_mTcs == null) return TaskHelper.CompleteFalse;
-            if (cancellationToken.IsCancellationRequested) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsCompleted) return TaskHelper.CompleteTrue;
-            if (_mTcs.Task.IsCanceled) return TaskHelper.CompleteFalse;
-            if (_mTcs.Task.IsFaulted) return TaskHelper.CompleteFalse;
-            var delayTask = Task.Delay(timeout, cancellationToken);
-            return Task.WhenAny(delayTask, _mTcs.Task)
-                .ContinueWith((prev, obj) => prev != (Task)obj, delayTask,
-                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-        }
+            => WaitAsync((int)timeout.TotalMilliseconds, cancellationToken);
         #endregion
 
         #region Set Methods

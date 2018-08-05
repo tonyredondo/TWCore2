@@ -100,6 +100,15 @@ namespace TWCore.Collections
         {
             _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>();
         }
+        /// <summary>
+        /// Timeout dictionary, a dictionary which items are saved and deleted using a timeout
+        /// </summary>
+        /// <param name="comparer">Equality comparer</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public TimeoutDictionary(IEqualityComparer<TKey> comparer)
+        {
+            _dictionary = new NonBlocking.ConcurrentDictionary<TKey, TimeoutStruct>(comparer);
+        }
         #endregion
 
         #region ConcurrentDictionary Implementation

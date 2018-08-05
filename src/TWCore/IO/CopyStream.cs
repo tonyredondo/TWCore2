@@ -115,6 +115,14 @@ namespace TWCore.IO
         #endregion
 
         #region .ctor
+	    /// <inheritdoc />
+	    /// <summary>
+	    /// Stream decorator for copy the writing in another stream
+	    /// </summary>
+	    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+	    public CopyStream()
+	    {
+	    }
         /// <inheritdoc />
         /// <summary>
         /// Stream decorator for copy the writing in another stream
@@ -259,15 +267,6 @@ namespace TWCore.IO
         {
             _baseStream.WriteByte(value);
             _copyingStream.WriteByte(value);
-        }
-        /// <summary>
-        /// Dispose method
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public new void Dispose()
-        {
-			_baseStream.Dispose();
-            base.Dispose();
         }
         #endregion
     }

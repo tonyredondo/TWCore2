@@ -21,6 +21,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using TWCore.Collections;
 using TWCore.Compression;
 using TWCore.IO;
 // ReSharper disable MemberCanBeProtected.Global
@@ -36,6 +37,8 @@ namespace TWCore.Serialization
     public abstract class TextSerializer : ITextSerializer, ICoreStart
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
+        private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
+        private readonly TimeoutDictionary<object, SubArray<byte>> _serCache = new TimeoutDictionary<object, SubArray<byte>>();
 
         #region Properties
         /// <inheritdoc />
@@ -73,6 +76,14 @@ namespace TWCore.Serialization
         /// true if the serializer extension and/or compressor extension would be appended to the filePath; otherwise, false.
         /// </summary>
         public bool UseFileExtensions { get; set; } = true;
+        /// <summary>
+        /// Enable serializer cache
+        /// </summary>
+        public bool EnableCache { get; set; } = true;
+        /// <summary>
+        /// Serializer cache timeout
+        /// </summary>
+        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(10);
         #endregion
 
         #region Abstract Methods
@@ -95,6 +106,26 @@ namespace TWCore.Serialization
         protected abstract void OnSerialize(Stream stream, object item, Type itemType);
         #endregion
 
+        #region Cache Methods
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void OnCacheSerialize(Stream stream, object item, Type itemType)
+        {
+            if (_serCache.TryGetValue(item, out var value))
+            {
+                stream.Write(value.AsSpan());
+                return;
+            }
+            var ms = new MemoryStream();
+            var copyStream = PoolStream.New();
+            copyStream.BaseStream = stream;
+            copyStream.CopyingStream = ms;
+            OnSerialize(copyStream, item, itemType);
+            _serCache.TryAdd(item, ms.ToSubArray(), CacheTimeout);
+            copyStream.BaseStream = null;
+            copyStream.CopyingStream = null;
+        }
+        #endregion
+
         #region ISerializer
         /// <inheritdoc />
         /// <summary>
@@ -108,12 +139,18 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
             {
-                OnSerialize(stream, item, itemType);
+                if (EnableCache)
+                    OnCacheSerialize(stream, item, itemType);
+                else
+                    OnSerialize(stream, item, itemType);
                 return;
             }
 			using (var ms = new RecycleMemoryStream())
             {
-                OnSerialize(ms, item, itemType);
+                if (EnableCache)
+                    OnCacheSerialize(ms, item, itemType);
+                else
+                    OnSerialize(ms, item, itemType);
                 ms.Position = 0;
                 Compressor.Compress(ms, stream);
             }

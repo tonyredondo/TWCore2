@@ -52,15 +52,9 @@ namespace TWCore
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static object Clone(object value)
         {
-            return InnerClone(value);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static object InnerClone(object value)
-        {
             if (value == null) return null;
             var vType = value.GetType();
-            if (vType.IsValueType) return value;
+            if (vType.IsValueType || vType == typeof(string)) return value;
             var descriptor = Descriptors.GetOrAdd(vType, type => new ObjectDescriptor(type));
             return descriptor.CopyAction(value);
         }
@@ -269,7 +263,7 @@ namespace TWCore
             {
                 if (type.IsValueType || type == typeof(string))
                     return getValueExpression;
-                return Expression.Convert(Expression.Call(typeof(ObjectCloner), "InnerClone", Type.EmptyTypes, getValueExpression), type);
+                return Expression.Convert(Expression.Call(typeof(ObjectCloner), "Clone", Type.EmptyTypes, getValueExpression), type);
             }
         }
         #endregion

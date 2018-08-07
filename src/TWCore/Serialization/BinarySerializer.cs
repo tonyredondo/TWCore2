@@ -104,14 +104,14 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnCacheSerialize(Stream stream, object item, Type itemType)
         {
-            try
-            {
-                var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
-            }
-            catch(Exception ex)
-            {
+            //try
+            //{
+            //    var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
+            //}
+            //catch(Exception ex)
+            //{
 
-            }
+            //}
             if (_serCache.TryGetValue(item, out var value))
             {
                 stream.Write(value.AsSpan());

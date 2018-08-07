@@ -22,6 +22,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using NonBlocking;
+using TWCore.Reflection;
 using TWCore.Serialization;
 
 // ReSharper disable FieldCanBeMadeReadOnly.Local
@@ -42,6 +43,9 @@ namespace TWCore
     public class ObjectInstanceEqualityComparer : IEqualityComparer<object>
     {
         public static readonly ObjectInstanceEqualityComparer Instance = new ObjectInstanceEqualityComparer();
+
+        private static readonly ConcurrentDictionary<Type, (object, MethodAccessorDelegate, MethodAccessorDelegate)> MethodsDelegates = new ConcurrentDictionary<Type, (object, MethodAccessorDelegate, MethodAccessorDelegate)>();
+
         private static readonly ConcurrentDictionary<Type, ObjectHashDescriptor> HashDescriptors = new ConcurrentDictionary<Type, ObjectHashDescriptor>();
         private delegate bool EqualsDelegate(object x, object y);
         private delegate int HashCodeDelegate(object obj);
@@ -49,7 +53,11 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool Equals(object x, object y)
         {
-            return false;
+            if (x != null && y == null) return false;
+            if (y != null && x == null) return false;
+            var oType = x.GetType();
+            var mtds = MethodsDelegates.GetOrAdd(oType, CreateAccessors);
+            return (bool)mtds.Item3(mtds.Item1, x, y);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -59,8 +67,19 @@ namespace TWCore
             var oType = obj.GetType();
             if (oType.IsValueType || oType == typeof(string))
                 return obj.GetHashCode();
+
             var desc = HashDescriptors.GetOrAdd(oType, type => new ObjectHashDescriptor(type));
             return desc.HashCodeDelegate(obj);
+        }
+
+        private (object, MethodAccessorDelegate, MethodAccessorDelegate) CreateAccessors(Type type)
+        {
+            var eqComparer = typeof(EqualityComparer<>).MakeGenericType(type);
+            var equalityInstance = eqComparer.GetProperty("Default", BindingFlags.Public | BindingFlags.Static).GetValue(null);
+            var methods = eqComparer.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            var getEqualsMethod = methods.First(i => i.Name == "Equals" && i.GetParameters().Length == 2).GetMethodAccessor();
+            var getHashCodeMethod = methods.First(i => i.Name == "GetHashCode" && i.GetParameters().Length == 1).GetMethodAccessor();
+            return (equalityInstance, getHashCodeMethod, getEqualsMethod);
         }
 
         #region Nested Type

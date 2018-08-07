@@ -73,11 +73,11 @@ namespace TWCore.Serialization
         /// <summary>
         /// Enable serializer cache
         /// </summary>
-        public bool EnableCache { get; set; } = true;
+        public bool EnableCache { get; set; } = false;
         /// <summary>
         /// Serializer cache timeout
         /// </summary>
-        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(5);
+        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(10);
         #endregion
 
         #region Abstract Methods
@@ -104,6 +104,14 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnCacheSerialize(Stream stream, object item, Type itemType)
         {
+            try
+            {
+                var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
+            }
+            catch(Exception ex)
+            {
+
+            }
             if (_serCache.TryGetValue(item, out var value))
             {
                 stream.Write(value.AsSpan());
@@ -117,6 +125,7 @@ namespace TWCore.Serialization
             _serCache.TryAdd(item, ms.ToSubArray(), CacheTimeout);
             copyStream.BaseStream = null;
             copyStream.CopyingStream = null;
+            PoolStream.Store(copyStream);
         }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private object OnCacheDeserialize(Stream stream, Type itemType)

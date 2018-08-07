@@ -37,30 +37,34 @@ using TWCore.Serialization;
 namespace TWCore
 {
     /// <summary>
-    /// Object Cloner
+    /// Object instance Equality comparer
     /// </summary>
-    public static class ObjectCloner
+    public class ObjectInstanceEqualityComparer : IEqualityComparer<object>
     {
-        private static readonly ConcurrentDictionary<Type, ObjectDescriptor> Descriptors = new ConcurrentDictionary<Type, ObjectDescriptor>();
-        private delegate object CopyActionDelegate(object obj);
+        public static readonly ObjectInstanceEqualityComparer Instance = new ObjectInstanceEqualityComparer();
+        private static readonly ConcurrentDictionary<Type, ObjectHashDescriptor> HashDescriptors = new ConcurrentDictionary<Type, ObjectHashDescriptor>();
+        private delegate bool EqualsDelegate(object x, object y);
+        private delegate int HashCodeDelegate(object obj);
 
-        /// <summary>
-        /// Clone a object and copy Properties and Fields
-        /// </summary>
-        /// <param name="value">Source object</param>
-        /// <returns>Destination object</returns>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Clone(object value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public new bool Equals(object x, object y)
         {
-            if (value == null) return null;
-            var vType = value.GetType();
-            if (vType.IsValueType || vType == typeof(string)) return value;
-            var descriptor = Descriptors.GetOrAdd(vType, type => new ObjectDescriptor(type));
-            return descriptor.CopyAction(value);
+            return false;
         }
-        
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public int GetHashCode(object obj)
+        {
+            if (obj == null) return -1;
+            var oType = obj.GetType();
+            if (oType.IsValueType || oType == typeof(string))
+                return obj.GetHashCode();
+            var desc = HashDescriptors.GetOrAdd(oType, type => new ObjectHashDescriptor(type));
+            return desc.HashCodeDelegate(obj);
+        }
+
         #region Nested Type
-        private class ObjectDescriptor
+        private class ObjectHashDescriptor
         {
             private static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
             private static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
@@ -82,10 +86,10 @@ namespace TWCore
             public bool IsArray;
             public bool IsList;
             public bool IsDictionary;
-            public CopyActionDelegate CopyAction;
+            public HashCodeDelegate HashCodeDelegate;
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectDescriptor(Type type)
+            public ObjectHashDescriptor(Type type)
             {
                 Type = type;
                 var ifaces = type.GetInterfaces();
@@ -103,7 +107,7 @@ namespace TWCore
                 }).ToArray();
                 RuntimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
                 {
-                    if (field.IsSpecialName || field.IsStatic || field.IsLiteral || 
+                    if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
                         field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
                     if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
                     return true;
@@ -135,10 +139,10 @@ namespace TWCore
                 else if (isIList)
                     name += "_" + type.GenericTypeArguments[0].Name;
                 else if (isIDictionary)
-                    name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;                    
-                
-                var lambda = Expression.Lambda<CopyActionDelegate>(expression, name + "_Clone", new[] { obj });
-                CopyAction = lambda.Compile();
+                    name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
+
+                var lambda = Expression.Lambda<HashCodeDelegate>(expression, name + "_HashCode", new[] { obj });
+                HashCodeDelegate = lambda.Compile();
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             public Expression GetExpression(Type type, Expression instance)
@@ -146,10 +150,10 @@ namespace TWCore
                 var serExpressions = new List<Expression>();
                 var varExpressions = new List<ParameterExpression>();
                 //
-                var value = Expression.Parameter(type, "value");
-                var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
+                var hash = Expression.Parameter(typeof(int), "hash");
+                var returnTarget = Expression.Label(typeof(int), "ReturnTarget");
+                varExpressions.Add(hash);
 
-                varExpressions.Add(value);
                 //
                 if (IsArray)
                 {
@@ -158,20 +162,23 @@ namespace TWCore
                     var arrLength = Expression.Parameter(typeof(int), "length");
                     varExpressions.Add(arrLength);
                     serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, arrLength)));
-                    
+
                     var forIdx = Expression.Parameter(typeof(int), "i");
                     varExpressions.Add(forIdx);
                     var breakLabel = Expression.Label(typeof(void), "exitLoop");
                     serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
 
-                    var setValueExpression = Expression.ArrayAccess(value, forIdx);
-                    var getValueExpression = Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx));
+                    var getValueExpression = Expression.ArrayIndex(instance, forIdx);
 
                     var loop = Expression.Loop(
                         Expression.IfThenElse(
                             Expression.LessThan(forIdx, arrLength),
-                            Expression.Assign(setValueExpression, CopyExpression(elementType, getValueExpression)),
+                            Expression.Block(
+                                elementType.IsValueType ?
+                                    (Expression) Expression.AddAssign(hash, HashExpression(elementType, getValueExpression)) :
+                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(elementType, getValueExpression))),
+                                Expression.PostIncrementAssign(forIdx)
+                            ),
                             Expression.Break(breakLabel)), breakLabel);
                     serExpressions.Add(loop);
                 }
@@ -182,23 +189,25 @@ namespace TWCore
                     var iLength = Expression.Parameter(typeof(int), "length");
                     varExpressions.Add(iLength);
                     serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
 
                     var forIdx = Expression.Parameter(typeof(int), "i");
                     varExpressions.Add(forIdx);
                     var breakLabel = Expression.Label(typeof(void), "exitLoop");
                     serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
-                    
+
                     var addMethod = type.GetMethod("Add", argTypes);
 
-                    //var setValueExpression = Expression.MakeIndex(value, ListIndexProperty, new[] { forIdx });
-                    var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) });
+                    var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { forIdx });
 
                     var loop = Expression.Loop(
                         Expression.IfThenElse(
                             Expression.LessThan(forIdx, iLength),
-                            Expression.Call(value, addMethod, CopyExpression(argTypes[0], getValueExpression)),
-                            //Expression.Assign(setValueExpression, CopyExpression(argTypes[0], getValueExpression)),
+                            Expression.Block(
+                                argTypes[0].IsValueType ?
+                                    (Expression)Expression.AddAssign(hash, HashExpression(argTypes[0], getValueExpression)) :
+                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(argTypes[0], getValueExpression))),
+                                Expression.PostIncrementAssign(forIdx)
+                            ),
                             Expression.Break(breakLabel)), breakLabel);
                     serExpressions.Add(loop);
                 }
@@ -208,12 +217,11 @@ namespace TWCore
                     var iLength = Expression.Parameter(typeof(int), "length");
                     varExpressions.Add(iLength);
                     serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
 
                     var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
                     varExpressions.Add(enumerator);
                     serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, DictionaryGetEnumeratorMethod)));
-                    
+
                     var addMethod = type.GetMethod("Add", argTypes);
                     var keyElementType = argTypes[0];
                     var valueElementType = argTypes[1];
@@ -221,25 +229,32 @@ namespace TWCore
                     var breakLabel = Expression.Label(typeof(void), "exitLoop");
                     var getKeyExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorKeyMethod), keyElementType);
                     var getValueExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorValueMethod), valueElementType);
-                    
+
                     var loop = Expression.Loop(
                         Expression.IfThenElse(
                             Expression.Call(enumerator, EnumeratorMoveNextMethod),
-                            Expression.Call(value, addMethod, CopyExpression(keyElementType, getKeyExpression), CopyExpression(valueElementType, getValueExpression)),
+                            Expression.Block(
+                                keyElementType.IsValueType ?
+                                    (Expression)Expression.AddAssign(hash, HashExpression(keyElementType, getKeyExpression)) :
+                                    Expression.IfThen(Expression.ReferenceNotEqual(getKeyExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(keyElementType, getKeyExpression))),
+                                valueElementType.IsValueType ?
+                                    (Expression)Expression.AddAssign(hash, HashExpression(valueElementType, getValueExpression)) :
+                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(valueElementType, getValueExpression)))
+                            ),
                             Expression.Break(breakLabel)), breakLabel);
 
                     serExpressions.Add(loop);
-                }
-                else
-                {
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
                 }
                 //
                 if (RuntimeFields.Length > 0)
                 {
                     foreach (var field in RuntimeFields)
                     {
-                        serExpressions.Add(Expression.Assign(Expression.Field(value, field), CopyExpression(field.FieldType, Expression.Field(instance, field))));
+                        var fieldExp = Expression.Field(instance, field);
+                        serExpressions.Add(
+                            field.FieldType.IsValueType ?
+                                (Expression)Expression.AddAssign(hash, HashExpression(field.FieldType, fieldExp)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(fieldExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(field.FieldType, fieldExp))));
                     }
                 }
                 //
@@ -247,26 +262,27 @@ namespace TWCore
                 {
                     foreach (var prop in RuntimeProperties)
                     {
-                        var setExpression = Expression.Property(value, prop);
-                        var getExpression = Expression.Property(instance, prop);
-                        serExpressions.Add(Expression.Assign(setExpression, CopyExpression(prop.PropertyType, getExpression)));
+                        var propExp = Expression.Property(instance, prop);
+                        serExpressions.Add(
+                            prop.PropertyType.IsValueType ?
+                                (Expression)Expression.AddAssign(hash, HashExpression(prop.PropertyType, propExp)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(propExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(prop.PropertyType, propExp))));
                     }
                 }
-                
-                serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
-                serExpressions.Add(Expression.Label(returnTarget, value));
+
+                serExpressions.Add(Expression.Return(returnTarget, hash, typeof(int)));
+                serExpressions.Add(Expression.Label(returnTarget, hash));
 
                 var block = Expression.Block(varExpressions, serExpressions).Reduce();
-                
+
                 return block;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Expression CopyExpression(Type type, Expression getValueExpression)
+            public Expression HashExpression(Type type, Expression getValueExpression)
             {
-                if (type.IsValueType || type == typeof(string))
-                    return getValueExpression;
-                return Expression.Convert(Expression.Call(typeof(ObjectCloner), "Clone", Type.EmptyTypes, getValueExpression), type);
+                return Expression.Convert(Expression.Call(getValueExpression, "GetHashCode", Type.EmptyTypes), typeof(int));
             }
+
         }
         #endregion
     }

@@ -39,6 +39,7 @@ namespace TWCore.Serialization
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
         private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
         private readonly TimeoutDictionary<object, SubArray<byte>> _serCache = new TimeoutDictionary<object, SubArray<byte>>();
+        private readonly TimeoutDictionary<SubArray<byte>, object> _desCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
 
         #region Properties
         /// <inheritdoc />
@@ -83,7 +84,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Serializer cache timeout
         /// </summary>
-        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(10);
+        public TimeSpan CacheTimeout { get; set; } = TimeSpan.FromSeconds(5);
         #endregion
 
         #region Abstract Methods
@@ -123,6 +124,29 @@ namespace TWCore.Serialization
             _serCache.TryAdd(item, ms.ToSubArray(), CacheTimeout);
             copyStream.BaseStream = null;
             copyStream.CopyingStream = null;
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private object OnCacheDeserialize(Stream stream, Type itemType)
+        {
+            if (stream is MemoryStream mStream)
+            {
+                var data = mStream.ToArray();
+                if (_desCache.TryGetValue(data, out var value))
+                    return value.DeepClone();
+                var res = OnDeserialize(mStream, itemType);
+                _desCache.TryAdd(data, res, CacheTimeout);
+                return res;
+            }
+            if (stream is RecycleMemoryStream rStream)
+            {
+                var data = rStream.ToArray();
+                if (_desCache.TryGetValue(data, out var value))
+                    return value.DeepClone();
+                var res = OnDeserialize(rStream, itemType);
+                _desCache.TryAdd(data, res, CacheTimeout);
+                return res;
+            }
+            return OnDeserialize(stream, itemType);
         }
         #endregion
 
@@ -166,13 +190,18 @@ namespace TWCore.Serialization
         public object Deserialize(Stream stream, Type itemType)
         {
             if (Compressor == null)
+            {
+                if (EnableCache)
+                    return OnCacheDeserialize(stream, itemType);
                 return OnDeserialize(stream, itemType);
-			using (var ms = new RecycleMemoryStream())
+            }
+            using (var ms = new RecycleMemoryStream())
             {
                 Compressor.Decompress(stream, ms);
                 ms.Position = 0;
-                var res = OnDeserialize(ms, itemType);
-                return res;
+                if (EnableCache)
+                    return OnCacheDeserialize(ms, itemType);
+                return OnDeserialize(ms, itemType);
             }
         }
 

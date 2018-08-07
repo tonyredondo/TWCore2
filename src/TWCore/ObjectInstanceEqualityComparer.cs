@@ -42,13 +42,20 @@ namespace TWCore
     /// </summary>
     public class ObjectInstanceEqualityComparer : IEqualityComparer<object>
     {
-        public static readonly ObjectInstanceEqualityComparer Instance = new ObjectInstanceEqualityComparer();
-
-        private static readonly ConcurrentDictionary<Type, (object, MethodAccessorDelegate, MethodAccessorDelegate)> MethodsDelegates = new ConcurrentDictionary<Type, (object, MethodAccessorDelegate, MethodAccessorDelegate)>();
-
-        private static readonly ConcurrentDictionary<Type, ObjectHashDescriptor> HashDescriptors = new ConcurrentDictionary<Type, ObjectHashDescriptor>();
         private delegate bool EqualsDelegate(object x, object y);
         private delegate int HashCodeDelegate(object obj);
+        //
+        public static readonly ObjectInstanceEqualityComparer Instance = new ObjectInstanceEqualityComparer();
+        //
+        private static readonly ConcurrentDictionary<Type, HashCodeDelegate> HashDescriptors = new ConcurrentDictionary<Type, HashCodeDelegate>();
+        //
+        private static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
+        private static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
+        private static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
+        private static readonly MethodInfo DictionaryGetEnumeratorMethod = typeof(IDictionary).GetMethod("GetEnumerator");
+        private static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
+        private static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
+        private static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool Equals(object x, object y)
@@ -56,8 +63,7 @@ namespace TWCore
             if (x != null && y == null) return false;
             if (y != null && x == null) return false;
             var oType = x.GetType();
-            var mtds = MethodsDelegates.GetOrAdd(oType, CreateAccessors);
-            return (bool)mtds.Item3(mtds.Item1, x, y);
+            return x == y;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -67,242 +73,187 @@ namespace TWCore
             var oType = obj.GetType();
             if (oType.IsValueType || oType == typeof(string))
                 return obj.GetHashCode();
-
-            var desc = HashDescriptors.GetOrAdd(oType, type => new ObjectHashDescriptor(type));
-            return desc.HashCodeDelegate(obj);
+            var hashDelegate = HashDescriptors.GetOrAdd(oType, type => CreateHashCode(type));
+            return hashDelegate(obj);
         }
 
-        private (object, MethodAccessorDelegate, MethodAccessorDelegate) CreateAccessors(Type type)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private HashCodeDelegate CreateHashCode(Type type)
         {
-            var eqComparer = typeof(EqualityComparer<>).MakeGenericType(type);
-            var equalityInstance = eqComparer.GetProperty("Default", BindingFlags.Public | BindingFlags.Static).GetValue(null);
-            var methods = eqComparer.GetMethods(BindingFlags.Public | BindingFlags.Instance);
-            var getEqualsMethod = methods.First(i => i.Name == "Equals" && i.GetParameters().Length == 2).GetMethodAccessor();
-            var getHashCodeMethod = methods.First(i => i.Name == "GetHashCode" && i.GetParameters().Length == 1).GetMethodAccessor();
-            return (equalityInstance, getHashCodeMethod, getEqualsMethod);
+            var ifaces = type.GetInterfaces();
+            var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIList = iListType != null;
+            var isIDictionary = iDictionaryType != null;
+            var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+            {
+                if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
+                if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
+                if (prop.GetIndexParameters().Length > 0) return false;
+                if (isIList && prop.Name == "Capacity") return false;
+                return true;
+            }).ToArray();
+            var runtimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
+            {
+                if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
+                    field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
+                if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
+                return true;
+            }).ToArray();
+            var isArray = type.IsArray;
+            var isList = false;
+            var isDictionary = false;
+            if (!isArray)
+            {
+                isDictionary = isIDictionary;
+                isList = !isDictionary && isIList;
+            }
+            //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
+            
+            var obj = Expression.Parameter(typeof(object), "obj");
+            
+            var instance = Expression.Parameter(type, "instance");
+            varExpressions.Add(instance);
+            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
+            //
+            var hash = Expression.Parameter(typeof(int), "hash");
+            var returnTarget = Expression.Label(typeof(int), "ReturnTarget");
+            varExpressions.Add(hash);
+            //
+            if (isArray)
+            {
+                var elementType = type.GetElementType();
+
+                var arrLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(arrLength);
+                serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
+
+                var forIdx = Expression.Parameter(typeof(int), "i");
+                varExpressions.Add(forIdx);
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
+
+                var getValueExpression = Expression.ArrayIndex(instance, forIdx);
+
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(forIdx, arrLength),
+                        Expression.Block(
+                            elementType.IsValueType ?
+                                (Expression) Expression.AddAssign(hash, HashExpression(getValueExpression)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(getValueExpression))),
+                            Expression.PostIncrementAssign(forIdx)
+                        ),
+                        Expression.Break(breakLabel)), breakLabel);
+                serExpressions.Add(loop);
+            }
+            else if (isList)
+            {
+                var argTypes = iListType.GenericTypeArguments;
+
+                var iLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(iLength);
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
+
+                var forIdx = Expression.Parameter(typeof(int), "i");
+                varExpressions.Add(forIdx);
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
+
+                var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { forIdx });
+
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(forIdx, iLength),
+                        Expression.Block(
+                            argTypes[0].IsValueType ?
+                                (Expression)Expression.AddAssign(hash, HashExpression(getValueExpression)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(getValueExpression))),
+                            Expression.PostIncrementAssign(forIdx)
+                        ),
+                        Expression.Break(breakLabel)), breakLabel);
+                serExpressions.Add(loop);
+            }
+            else if (isDictionary)
+            {
+                var argTypes = iDictionaryType.GenericTypeArguments;
+                var iLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(iLength);
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
+
+                var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
+                varExpressions.Add(enumerator);
+                serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, DictionaryGetEnumeratorMethod)));
+
+                var keyElementType = argTypes[0];
+                var valueElementType = argTypes[1];
+
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                var getKeyExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorKeyMethod), keyElementType);
+                var getValueExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorValueMethod), valueElementType);
+
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Call(enumerator, EnumeratorMoveNextMethod),
+                        Expression.Block(
+                            keyElementType.IsValueType ?
+                                (Expression)Expression.AddAssign(hash, HashExpression(getKeyExpression)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(getKeyExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(getKeyExpression))),
+                            valueElementType.IsValueType ?
+                                (Expression)Expression.AddAssign(hash, HashExpression(getValueExpression)) :
+                                Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(getValueExpression)))
+                        ),
+                        Expression.Break(breakLabel)), breakLabel);
+
+                serExpressions.Add(loop);
+            }
+            //
+            if (runtimeFields.Length > 0)
+            {
+                foreach (var field in runtimeFields)
+                {
+                    var fieldExp = Expression.Field(instance, field);
+                    serExpressions.Add(
+                        field.FieldType.IsValueType ?
+                            (Expression)Expression.AddAssign(hash, HashExpression(fieldExp)) :
+                            Expression.IfThen(Expression.ReferenceNotEqual(fieldExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(fieldExp))));
+                }
+            }
+            //
+            if (runtimeProperties.Length > 0)
+            {
+                foreach (var prop in runtimeProperties)
+                {
+                    var propExp = Expression.Property(instance, prop);
+                    serExpressions.Add(
+                        prop.PropertyType.IsValueType ?
+                            (Expression)Expression.AddAssign(hash, HashExpression(propExp)) :
+                            Expression.IfThen(Expression.ReferenceNotEqual(propExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(propExp))));
+                }
+            }
+
+            serExpressions.Add(Expression.Return(returnTarget, hash, typeof(int)));
+            serExpressions.Add(Expression.Label(returnTarget, hash));
+
+            //
+            var name = type.Name;
+            if (isArray)
+                name += "_Array";
+            else if (isIList)
+                name += "_" + type.GenericTypeArguments[0].Name;
+            else if (isIDictionary)
+                name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
+
+            var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
+            var lambda = Expression.Lambda<HashCodeDelegate>(expressionBlock, name + "_HashCode", new[] { obj });
+            return lambda.Compile();
+            
+            Expression HashExpression(Expression gvExpression)
+            {
+                return Expression.Convert(Expression.Call(gvExpression, "GetHashCode", Type.EmptyTypes), typeof(int));
+            }
         }
-
-        #region Nested Type
-        private class ObjectHashDescriptor
-        {
-            private static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
-            private static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
-            //
-            private static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
-            //
-            private static readonly MethodInfo DictionaryGetEnumeratorMethod = typeof(IDictionary).GetMethod("GetEnumerator");
-            private static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
-            private static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
-            private static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
-            //
-            public Type Type;
-            public PropertyInfo[] RuntimeProperties;
-            public FieldInfo[] RuntimeFields;
-            public Type IListType;
-            public Type IDictionaryType;
-            //
-            public string[] Properties;
-            public bool IsArray;
-            public bool IsList;
-            public bool IsDictionary;
-            public HashCodeDelegate HashCodeDelegate;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectHashDescriptor(Type type)
-            {
-                Type = type;
-                var ifaces = type.GetInterfaces();
-                IListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-                IDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-                var isIList = IListType != null;
-                var isIDictionary = IDictionaryType != null;
-                RuntimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
-                {
-                    if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
-                    if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
-                    if (prop.GetIndexParameters().Length > 0) return false;
-                    if (isIList && prop.Name == "Capacity") return false;
-                    return true;
-                }).ToArray();
-                RuntimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
-                {
-                    if (field.IsSpecialName || field.IsStatic || field.IsLiteral ||
-                        field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
-                    if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
-                    return true;
-                }).ToArray();
-                //
-                Properties = RuntimeProperties.Select(p => p.Name).ToArray();
-                IsArray = type.IsArray;
-                if (!IsArray)
-                {
-                    IsDictionary = isIDictionary;
-                    IsList = !IsDictionary && isIList;
-                }
-                else
-                {
-                    IsList = false;
-                    IsDictionary = false;
-                }
-                //
-                var obj = Expression.Parameter(typeof(object), "obj");
-
-                var instance = Expression.Parameter(type, "instance");
-                var expression = Expression.Block(new[] { instance },
-                    Expression.Assign(instance, Expression.Convert(obj, type)),
-                    GetExpression(type, instance));
-
-                var name = type.Name;
-                if (IsArray)
-                    name += "_Array";
-                else if (isIList)
-                    name += "_" + type.GenericTypeArguments[0].Name;
-                else if (isIDictionary)
-                    name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
-
-                var lambda = Expression.Lambda<HashCodeDelegate>(expression, name + "_HashCode", new[] { obj });
-                HashCodeDelegate = lambda.Compile();
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Expression GetExpression(Type type, Expression instance)
-            {
-                var serExpressions = new List<Expression>();
-                var varExpressions = new List<ParameterExpression>();
-                //
-                var hash = Expression.Parameter(typeof(int), "hash");
-                var returnTarget = Expression.Label(typeof(int), "ReturnTarget");
-                varExpressions.Add(hash);
-
-                //
-                if (IsArray)
-                {
-                    var elementType = Type.GetElementType();
-
-                    var arrLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(arrLength);
-                    serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
-
-                    var forIdx = Expression.Parameter(typeof(int), "i");
-                    varExpressions.Add(forIdx);
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
-
-                    var getValueExpression = Expression.ArrayIndex(instance, forIdx);
-
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.LessThan(forIdx, arrLength),
-                            Expression.Block(
-                                elementType.IsValueType ?
-                                    (Expression) Expression.AddAssign(hash, HashExpression(elementType, getValueExpression)) :
-                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(elementType, getValueExpression))),
-                                Expression.PostIncrementAssign(forIdx)
-                            ),
-                            Expression.Break(breakLabel)), breakLabel);
-                    serExpressions.Add(loop);
-                }
-                else if (IsList)
-                {
-                    var argTypes = IListType.GenericTypeArguments;
-
-                    var iLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(iLength);
-                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-
-                    var forIdx = Expression.Parameter(typeof(int), "i");
-                    varExpressions.Add(forIdx);
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
-
-                    var addMethod = type.GetMethod("Add", argTypes);
-
-                    var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { forIdx });
-
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.LessThan(forIdx, iLength),
-                            Expression.Block(
-                                argTypes[0].IsValueType ?
-                                    (Expression)Expression.AddAssign(hash, HashExpression(argTypes[0], getValueExpression)) :
-                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(argTypes[0], getValueExpression))),
-                                Expression.PostIncrementAssign(forIdx)
-                            ),
-                            Expression.Break(breakLabel)), breakLabel);
-                    serExpressions.Add(loop);
-                }
-                else if (IsDictionary)
-                {
-                    var argTypes = IDictionaryType.GenericTypeArguments;
-                    var iLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(iLength);
-                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-
-                    var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
-                    varExpressions.Add(enumerator);
-                    serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, DictionaryGetEnumeratorMethod)));
-
-                    var addMethod = type.GetMethod("Add", argTypes);
-                    var keyElementType = argTypes[0];
-                    var valueElementType = argTypes[1];
-
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    var getKeyExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorKeyMethod), keyElementType);
-                    var getValueExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorValueMethod), valueElementType);
-
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.Call(enumerator, EnumeratorMoveNextMethod),
-                            Expression.Block(
-                                keyElementType.IsValueType ?
-                                    (Expression)Expression.AddAssign(hash, HashExpression(keyElementType, getKeyExpression)) :
-                                    Expression.IfThen(Expression.ReferenceNotEqual(getKeyExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(keyElementType, getKeyExpression))),
-                                valueElementType.IsValueType ?
-                                    (Expression)Expression.AddAssign(hash, HashExpression(valueElementType, getValueExpression)) :
-                                    Expression.IfThen(Expression.ReferenceNotEqual(getValueExpression, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(valueElementType, getValueExpression)))
-                            ),
-                            Expression.Break(breakLabel)), breakLabel);
-
-                    serExpressions.Add(loop);
-                }
-                //
-                if (RuntimeFields.Length > 0)
-                {
-                    foreach (var field in RuntimeFields)
-                    {
-                        var fieldExp = Expression.Field(instance, field);
-                        serExpressions.Add(
-                            field.FieldType.IsValueType ?
-                                (Expression)Expression.AddAssign(hash, HashExpression(field.FieldType, fieldExp)) :
-                                Expression.IfThen(Expression.ReferenceNotEqual(fieldExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(field.FieldType, fieldExp))));
-                    }
-                }
-                //
-                if (RuntimeProperties.Length > 0)
-                {
-                    foreach (var prop in RuntimeProperties)
-                    {
-                        var propExp = Expression.Property(instance, prop);
-                        serExpressions.Add(
-                            prop.PropertyType.IsValueType ?
-                                (Expression)Expression.AddAssign(hash, HashExpression(prop.PropertyType, propExp)) :
-                                Expression.IfThen(Expression.ReferenceNotEqual(propExp, Expression.Constant(null)), Expression.AddAssign(hash, HashExpression(prop.PropertyType, propExp))));
-                    }
-                }
-
-                serExpressions.Add(Expression.Return(returnTarget, hash, typeof(int)));
-                serExpressions.Add(Expression.Label(returnTarget, hash));
-
-                var block = Expression.Block(varExpressions, serExpressions).Reduce();
-
-                return block;
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Expression HashExpression(Type type, Expression getValueExpression)
-            {
-                return Expression.Convert(Expression.Call(getValueExpression, "GetHashCode", Type.EmptyTypes), typeof(int));
-            }
-
-        }
-        #endregion
     }
 }

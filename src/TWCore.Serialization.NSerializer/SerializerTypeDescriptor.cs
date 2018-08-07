@@ -187,8 +187,7 @@ namespace TWCore.Serialization.NSerializer
             {
                 foreach (var prop in RuntimeProperties)
                 {
-                    var getMethod = prop.GetMethod;
-                    var getExpression = Expression.Call(instance, getMethod);
+                    var getExpression = Expression.Property(instance, prop);
                     serExpressions.Add(WriteExpression(prop.PropertyType, getExpression, serTable));
                 }
             }

@@ -46,7 +46,8 @@ namespace TWCore.Tests
             {
                 FirstName = "Daniel",
                 LastName = "Redondo",
-                Age = 33
+                Age = 33,
+                value = 166
             };
 
             var collection = new List<List<STest>>();
@@ -99,6 +100,9 @@ namespace TWCore.Tests
                 ["Value3"] = 3,
             };
 
+            var colClone = collection[0].DeepClone();
+            var clone = collection.DeepClone();
+            
             RunTest(collection[0], 200_000, false);
         }
 
@@ -183,6 +187,7 @@ namespace TWCore.Tests
     [Serializable]
     public class STest //: INSerializable
     {
+        public int value;
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public int Age { get; set; }

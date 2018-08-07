@@ -196,13 +196,13 @@ namespace TWCore.Serialization.RawSerializer
             }
             foreach (var prop in runtimeProperties)
             {
-                var setMethod = prop.SetMethod;
+                var setExp = Expression.Property(value, prop);
                 if (DeserializersTable.ReadValuesFromType.TryGetValue(prop.PropertyType, out var propMethod))
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes))));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Call(table, propMethod, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)))); 
                 else if (prop.PropertyType.IsEnum)
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, DeserializersTable.ReadValuesFromType[typeof(Enum)], Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
                 else
-                    serExpressions.Add(Expression.Call(value, setMethod, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
+                    serExpressions.Add(Expression.Assign(setExp, Expression.Convert(Expression.Call(table, "ReadValue", Type.EmptyTypes, Expression.Call(table, "StreamReadByte", Type.EmptyTypes)), prop.PropertyType)));
             }
 
             serExpressions.Add(Expression.Call(table, "StreamReadByte", Type.EmptyTypes));

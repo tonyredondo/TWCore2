@@ -73,7 +73,7 @@ namespace TWCore.Serialization
         /// <summary>
         /// Enable serializer cache
         /// </summary>
-        public bool EnableCache { get; set; } = false;
+        public bool EnableCache { get; set; } = true;
         /// <summary>
         /// Serializer cache timeout
         /// </summary>
@@ -104,14 +104,14 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnCacheSerialize(Stream stream, object item, Type itemType)
         {
-            //try
-            //{
-            //    var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
-            //}
-            //catch(Exception ex)
-            //{
+            try
+            {
+                var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
+            }
+            catch(Exception ex)
+            {
 
-            //}
+            }
             if (_serCache.TryGetValue(item, out var value))
             {
                 stream.Write(value.AsSpan());

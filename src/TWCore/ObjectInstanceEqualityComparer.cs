@@ -60,9 +60,12 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public new bool Equals(object x, object y)
         {
+            if (x == null && y == null) return true;
             if (x != null && y == null) return false;
-            if (y != null && x == null) return false;
-            var oType = x.GetType();
+            if (x == null) return false;
+            var xType = x.GetType();
+            var yType = y.GetType();
+            if (xType != yType) return false;
             return x == y;
         }
 
@@ -78,7 +81,7 @@ namespace TWCore
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private HashCodeDelegate CreateHashCode(Type type)
+        private static HashCodeDelegate CreateHashCode(Type type)
         {
             var ifaces = type.GetInterfaces();
             var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
@@ -254,6 +257,12 @@ namespace TWCore
             {
                 return Expression.Convert(Expression.Call(gvExpression, "GetHashCode", Type.EmptyTypes), typeof(int));
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static EqualsDelegate CreateEquals(Type type)
+        {
+            return null;
         }
     }
 }

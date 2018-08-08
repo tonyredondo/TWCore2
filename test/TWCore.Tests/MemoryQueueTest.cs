@@ -106,7 +106,7 @@ namespace TWCore.Tests
                 mqServer.RequestReceived += (s, e) =>
                 {
                     //Core.Trace.Write("Grupo", e.Request.CorrelationId.ToString(), e.Request.Body);
-                    e.Response.Body = "Bienvenido!!!";
+                    e.Response.Body = new SerializedObject("Bienvenido!!!");
                     return Task.CompletedTask;
                 };
                 mqServer.StartListeners();

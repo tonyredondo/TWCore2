@@ -179,7 +179,7 @@ namespace TWCore.Net.RPC.Server.Transports
         #region Private Methods
         private Task QueueServerOnRequestReceived(object sender, RequestReceivedEventArgs requestReceivedEventArgs)
         {
-            var body = requestReceivedEventArgs.Request.Body;
+            var body = requestReceivedEventArgs.Request.Body?.GetValue();
             Counters.IncrementBytesReceived(requestReceivedEventArgs.MessageLength);
             switch (body)
             {
@@ -190,7 +190,7 @@ namespace TWCore.Net.RPC.Server.Transports
                         if (OnGetDescriptorsRequest != null)
                         {
                             OnGetDescriptorsRequest(requestReceivedEventArgs.Request.CorrelationId, sDesc);
-                            requestReceivedEventArgs.Response.Body = sDesc.Descriptors;
+                            requestReceivedEventArgs.Response.Body = new SerializedObject(sDesc.Descriptors);
                         }
                     }
                     break;
@@ -199,7 +199,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     if (OnMethodCall != null)
                     {
                         OnMethodCall(this, mEvent);
-                        requestReceivedEventArgs.Response.Body = mEvent.Response;
+                        requestReceivedEventArgs.Response.Body = new SerializedObject(mEvent.Response);
                     }
                     break;
             }
@@ -207,7 +207,7 @@ namespace TWCore.Net.RPC.Server.Transports
         }
         private Task QueueServerOnResponseSent(object sender, ResponseSentEventArgs responseSentEventArgs)
         {
-            if (responseSentEventArgs.Message?.Body is RPCResponseMessage responseMessage)
+            if (responseSentEventArgs.Message?.Body?.GetValue() is RPCResponseMessage responseMessage)
                 OnResponseSent?.Invoke(this, responseMessage);
             return Task.CompletedTask;
         }

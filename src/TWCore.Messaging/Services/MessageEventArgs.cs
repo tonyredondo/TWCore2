@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using TWCore.Messaging;
 
 // ReSharper disable CheckNamespace
 
@@ -29,12 +30,12 @@ namespace TWCore.Services
         /// <summary>
         /// Message object instance
         /// </summary>
-        public object Message { get; private set; }
+        public IMessage Message { get; private set; }
         /// <inheritdoc />
         /// <summary>
         /// Message event args
         /// </summary>
         /// <param name="message">Message object</param>
-        public MessageEventArgs(object message) => Message = message;
+        public MessageEventArgs(IMessage message) => Message = message;
     }
 }

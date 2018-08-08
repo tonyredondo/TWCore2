@@ -109,9 +109,7 @@ namespace TWCore.Serialization.MsgPack
             var nSerializer = new MsgPackSerializer
             {
                 Compressor = Compressor,
-                UseFileExtensions = UseFileExtensions,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                UseFileExtensions = UseFileExtensions
             };
             return nSerializer;
         }

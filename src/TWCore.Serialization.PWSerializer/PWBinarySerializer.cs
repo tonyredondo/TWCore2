@@ -73,9 +73,7 @@ namespace TWCore.Serialization.PWSerializer
             var nSerializer = new PWBinarySerializer
             {
                 Compressor = Compressor,
-                UseFileExtensions = UseFileExtensions,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                UseFileExtensions = UseFileExtensions
             };
             return nSerializer;
         }

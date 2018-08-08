@@ -72,9 +72,6 @@ namespace TWCore.Serialization.NSerializer
             Metadata = new DeserializerMetaDataOfType(type, isArray, isIList, isIDictionary, propNames);
 
             //*** Expressions
-            var ctors = type.GetConstructors();
-            var ctor = ctors.FirstOrDefault(c => c.GetParameters().Length == 0) ?? ctors[0];
-
             var serExpressions = new List<Expression>();
             var varExpressions = new List<ParameterExpression>();
             //
@@ -94,7 +91,6 @@ namespace TWCore.Serialization.NSerializer
 
                 serExpressions.Add(Expression.Assign(capacity, Expression.Call(table, DeserializersTable.StreamReadIntMethod)));
                 serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, capacity)));
-                //serExpressions.Add(Expression.Assign(value, Expression.New(ctor, capacity)));
                 serExpressions.Add(Expression.Call(objectCache, "Set", Type.EmptyTypes, value));
 
                 var methodName = "InnerReadValue";

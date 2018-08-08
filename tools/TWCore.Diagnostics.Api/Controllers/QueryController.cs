@@ -113,9 +113,9 @@ namespace TWCore.Diagnostics.Api.Controllers
                 var value = serObject?.GetValue();
                 if (value == null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body?.SerializeToXml();
+                    return rsMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body?.SerializeToXml();
+                    return rqMessage.Body?.GetValue()?.SerializeToXml();
                 if (value is string strValue)
                     return strValue;
                 return value.SerializeToXml();
@@ -138,9 +138,15 @@ namespace TWCore.Diagnostics.Api.Controllers
                 var value = serObject?.GetValue();
                 if (value == null) return null;
                 if (value is ResponseMessage rsMessage)
-                    return rsMessage.Body != null ? JsonSerializer.SerializeToString(rsMessage.Body, rsMessage.Body.GetType()) : null;
+                {
+                    var rsBody = rsMessage.Body?.GetValue();
+                    return rsBody != null ? JsonSerializer.SerializeToString(rsBody, rsBody.GetType()) : null;
+                }
                 if (value is RequestMessage rqMessage)
-                    return rqMessage.Body != null ? JsonSerializer.SerializeToString(rqMessage.Body, rqMessage.Body.GetType()) : null;
+                {
+                    var rqBody = rqMessage.Body?.GetValue();
+                    return rqBody != null ? JsonSerializer.SerializeToString(rqBody, rqBody.GetType()) : null;
+                }
                 if (value is string strValue)
                     return strValue;
                 return JsonSerializer.SerializeToString(value, value.GetType());

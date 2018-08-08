@@ -87,9 +87,7 @@ namespace TWCore.Serialization
             {
                 Compressor = Compressor?.DeepClone(),
                 Binder = Binder,
-                UseFileExtensions = UseFileExtensions,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                UseFileExtensions = UseFileExtensions
             };
             nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;

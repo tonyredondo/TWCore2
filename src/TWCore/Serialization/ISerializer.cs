@@ -55,14 +55,6 @@ namespace TWCore.Serialization
         /// </summary>
         /// <remarks>This compressor is ignored on TextSerializer</remarks>
         ICompressor Compressor { get; set; }
-        /// <summary>
-        /// Enable serializer cache
-        /// </summary>
-        bool EnableCache { get; set; }
-        /// <summary>
-        /// Serializer cache timeout
-        /// </summary>
-        TimeSpan CacheTimeout { get; set; }
         //+++
 
         /// <summary>

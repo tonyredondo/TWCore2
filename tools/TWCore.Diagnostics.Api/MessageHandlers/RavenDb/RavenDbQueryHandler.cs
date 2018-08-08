@@ -19,7 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using RabbitMQ.Client.Impl;
 using Raven.Client.Documents;
 using TWCore.Compression;
 using TWCore.Diagnostics.Api.MessageHandlers.RavenDb.Indexes;
@@ -28,7 +27,6 @@ using TWCore.Diagnostics.Api.Models.Log;
 using TWCore.Diagnostics.Api.Models.Status;
 using TWCore.Diagnostics.Api.Models.Trace;
 using TWCore.Diagnostics.Log;
-using TWCore.Diagnostics.Status;
 using TWCore.Serialization;
 using TWCore.Serialization.NSerializer;
 // ReSharper disable UnusedMember.Global

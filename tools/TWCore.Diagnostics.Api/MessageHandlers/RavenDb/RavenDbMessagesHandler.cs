@@ -144,10 +144,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 msXml.WriteBytes(compressedBytes);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                XmlSerializer.Serialize(rsMessage.Body, msXml);
+                                                XmlSerializer.Serialize(rsMessage.Body.GetValue(), msXml);
                                                 break;
                                             case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                XmlSerializer.Serialize(rqMessage.Body, msXml);
+                                                XmlSerializer.Serialize(rqMessage.Body.GetValue(), msXml);
                                                 break;
                                             default:
                                                 if (value != null)
@@ -181,10 +181,10 @@ namespace TWCore.Diagnostics.Api.MessageHandlers.RavenDb
                                                 msJson.WriteBytes(compressedBytes);
                                                 break;
                                             case ResponseMessage rsMessage when rsMessage?.Body != null:
-                                                JsonSerializer.Serialize(rsMessage.Body, msJson);
+                                                JsonSerializer.Serialize(rsMessage.Body.GetValue(), msJson);
                                                 break;
                                             case RequestMessage rqMessage when rqMessage?.Body != null:
-                                                JsonSerializer.Serialize(rqMessage.Body, msJson);
+                                                JsonSerializer.Serialize(rqMessage.Body.GetValue(), msJson);
                                                 break;
                                             default:
                                                 if (value != null)

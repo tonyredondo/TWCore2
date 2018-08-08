@@ -75,9 +75,7 @@ namespace TWCore.Serialization.RawSerializer
             var nSerializer = new RawBinarySerializer
             {
                 Compressor = Compressor,
-                UseFileExtensions = UseFileExtensions,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                UseFileExtensions = UseFileExtensions
             };
             return nSerializer;
         }

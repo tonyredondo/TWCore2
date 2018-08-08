@@ -173,9 +173,7 @@ namespace TWCore.Serialization
                 UseFileExtensions = UseFileExtensions,
                 Indent = Indent,
                 OmitXmlDeclaration = OmitXmlDeclaration,
-                RemoveNamespaces = RemoveNamespaces,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                RemoveNamespaces = RemoveNamespaces
             };
             nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;

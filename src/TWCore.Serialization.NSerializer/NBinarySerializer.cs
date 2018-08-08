@@ -75,9 +75,7 @@ namespace TWCore.Serialization.NSerializer
             var nSerializer = new NBinarySerializer
             {
                 Compressor = Compressor,
-                UseFileExtensions = UseFileExtensions,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                UseFileExtensions = UseFileExtensions
             };
             return nSerializer;
         }

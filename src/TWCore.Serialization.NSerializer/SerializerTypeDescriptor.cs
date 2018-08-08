@@ -17,13 +17,11 @@ limitations under the License.
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
-using TWCore.Reflection;
 
 namespace TWCore.Serialization.NSerializer
 {
@@ -89,27 +87,17 @@ namespace TWCore.Serialization.NSerializer
             Encoding.UTF8.GetBytes(defText, 0, defText.Length, defBytes, 5);
             Definition = defBytes;
             SerializeAction = null;
-
+            //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
             //
             var obj = Expression.Parameter(typeof(object), "obj");
             var serTable = Expression.Parameter(typeof(SerializersTable), "table");
 
             var instance = Expression.Parameter(type, "instance");
-            var serExpression = Expression.Block(new[] { instance },
-                Expression.Assign(instance, Expression.Convert(obj, type)),
-                GetSerializerExpression(instance, serTable));
-
-            var lambda = Expression.Lambda<SerializeActionDelegate>(serExpression, type.Name + "_Serializer", new[] { obj, serTable });
-            SerializeAction = lambda.Compile();
-        }
-
-        public Expression GetSerializerExpression(Expression instance, ParameterExpression serTable)
-        {
+            varExpressions.Add(instance);
+            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
             //
-            var serExpressions = new List<Expression>();
-            var varExpressions = new List<ParameterExpression>();
-            //
-
             if (IsArray)
             {
                 var elementType = Type.GetElementType();
@@ -191,35 +179,36 @@ namespace TWCore.Serialization.NSerializer
                     serExpressions.Add(WriteExpression(prop.PropertyType, getExpression, serTable));
                 }
             }
-
+            //
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
-            return expressionBlock;
-        }
-
-        public Expression WriteExpression(Type type, Expression getExpression, ParameterExpression serTable)
-        {
-            if (type == typeof(int))
-                return SerializersTable.WriteIntExpression(getExpression, serTable);
-            if (type == typeof(int?))
-                return SerializersTable.WriteNulleableIntExpression(getExpression, serTable);
-            if (type == typeof(bool))
-                return SerializersTable.WriteBooleanExpression(getExpression, serTable);
-            if (type == typeof(bool?))
-                return SerializersTable.WriteNulleableBooleanExpression(getExpression, serTable);
-            if (SerializersTable.WriteValues.TryGetValue(type, out var wMethodTuple))
-                return Expression.Call(serTable, wMethodTuple.Method, getExpression);
-            if (type.IsEnum)
-                return Expression.Call(serTable, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(getExpression, typeof(Enum)));
-            if (type == typeof(IEnumerable) || type == typeof(IEnumerable<>) || type.ReflectedType == typeof(IEnumerable) || type.ReflectedType == typeof(IEnumerable<>) ||
-                type.ReflectedType == typeof(Enumerable) || type.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1 ||
-                type.IsAssignableFrom(typeof(IEnumerable)))
-                return Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression);
-            if (type.IsAbstract || type.IsInterface || type == typeof(object))
-                return Expression.Call(serTable, SerializersTable.InternalWriteObjectValueMInfo, getExpression);
-            if (type.IsSealed)
-                return Expression.Call(serTable, SerializersTable.InternalSimpleWriteObjectValueMInfo, getExpression);
-
-            return Expression.Call(serTable, SerializersTable.InternalSimpleWriteObjectValueMInfo, getExpression);
+            var lambda = Expression.Lambda<SerializeActionDelegate>(expressionBlock, type.Name + "_Serializer", new[] { obj, serTable });
+            SerializeAction = lambda.Compile();
+            
+            Expression WriteExpression(Type itemType, Expression itemGetExpression, ParameterExpression serTableExpression)
+            {
+                if (itemType == typeof(int))
+                    return SerializersTable.WriteIntExpression(itemGetExpression, serTableExpression);
+                if (itemType == typeof(int?))
+                    return SerializersTable.WriteNulleableIntExpression(itemGetExpression, serTableExpression);
+                if (itemType == typeof(bool))
+                    return SerializersTable.WriteBooleanExpression(itemGetExpression, serTableExpression);
+                if (itemType == typeof(bool?))
+                    return SerializersTable.WriteNulleableBooleanExpression(itemGetExpression, serTableExpression);
+                if (SerializersTable.WriteValues.TryGetValue(itemType, out var wMethodTuple))
+                    return Expression.Call(serTableExpression, wMethodTuple.Method, itemGetExpression);
+                if (itemType.IsEnum)
+                    return Expression.Call(serTableExpression, SerializersTable.WriteValues[typeof(Enum)].Method, Expression.Convert(itemGetExpression, typeof(Enum)));
+                if (itemType == typeof(IEnumerable) || itemType == typeof(IEnumerable<>) || itemType.ReflectedType == typeof(IEnumerable) || itemType.ReflectedType == typeof(IEnumerable<>) ||
+                    itemType.ReflectedType == typeof(Enumerable) || itemType.FullName.IndexOf("System.Linq", StringComparison.Ordinal) > -1 ||
+                    itemType.IsAssignableFrom(typeof(IEnumerable)))
+                    return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
+                if (itemType.IsAbstract || itemType.IsInterface || itemType == typeof(object))
+                    return Expression.Call(serTableExpression, SerializersTable.InternalWriteObjectValueMInfo, itemGetExpression);
+                if (itemType.IsSealed)
+                    return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+    
+                return Expression.Call(serTableExpression, SerializersTable.InternalSimpleWriteObjectValueMInfo, itemGetExpression);
+            }
         }
     }
 }

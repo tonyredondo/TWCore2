@@ -24,6 +24,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using NonBlocking;
+using TWCore.Collections;
 using TWCore.Compression;
 
 namespace TWCore.Serialization
@@ -31,7 +32,10 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
-        private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerWithCache = new ConcurrentDictionary<(string, string), ISerializer>();
+        private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerCache = new ConcurrentDictionary<(string, string), ISerializer>();
+        private static TimeoutDictionary<SubArray<byte>, object> DesCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
+        private static TimeSpan Timeout = TimeSpan.FromSeconds(10);
+
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -75,12 +79,20 @@ namespace TWCore.Serialization
                 SerializerMimeType = null;
                 Data = bytes;
             }
+            else if (data is SerializedObject serObj)
+            {
+                Data = serObj.Data;
+                DataType = serObj.DataType;
+                SerializerMimeType = serObj.SerializerMimeType;
+            }
             else
             {
-                SerializerMimeType = serializer.MimeTypes[0];
-                if (serializer.Compressor != null)
-                    SerializerMimeType += ":" + serializer.Compressor.EncodingType;
-                var cSerializer = SerializerWithCache.GetOrAdd((serializer.MimeTypes[0], serializer.Compressor?.EncodingType), vTuple => CreateSerializer(vTuple));
+                var serMimeType = serializer.MimeTypes[0];
+                var serCompressor = serializer.Compressor?.EncodingType;
+                SerializerMimeType = serMimeType;
+                if (serCompressor != null)
+                    SerializerMimeType += ":" + serCompressor;
+                var cSerializer = SerializerCache.GetOrAdd((serMimeType, serCompressor), vTuple => CreateSerializer(vTuple));
                 Data = (byte[])cSerializer.Serialize(data, type);
             }
         }
@@ -100,7 +112,6 @@ namespace TWCore.Serialization
                 throw new FormatException($"The serializer with MimeType = {vTuple.Item1} wasn't found.");
             if (!string.IsNullOrWhiteSpace(vTuple.Item2))
                 ser.Compressor = CompressorManager.GetByEncodingType(vTuple.Item2);
-            ser.EnableCache = true;
             return ser;
         }
         #endregion
@@ -120,8 +131,11 @@ namespace TWCore.Serialization
             var idx = SerializerMimeType.IndexOf(':');
             var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
-            var serializer = SerializerWithCache.GetOrAdd((serMime, serComp), vTuple => CreateSerializer(vTuple));
+            var serializer = SerializerCache.GetOrAdd((serMime, serComp), vTuple => CreateSerializer(vTuple));
+            if (DesCache.TryGetValue(Data, out var cachedValue))
+                return cachedValue.DeepClone();
             var value = serializer.Deserialize(Data, type);
+            DesCache.TryAdd(Data, value, Timeout);
             return value;
         }
         /// <summary>
@@ -491,6 +505,7 @@ namespace TWCore.Serialization
         public bool Equals(SerializedObject other)
         {
             if (ReferenceEquals(other, null)) return false;
+            if (ReferenceEquals(this, other)) return true;
             if (other.DataType != DataType) return false;
             if (other.SerializerMimeType != SerializerMimeType) return false;
             return ByteArrayComparer.Instance.Equals(Data, other.Data);
@@ -501,6 +516,7 @@ namespace TWCore.Serialization
             if (ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return false;
             if (!ReferenceEquals(a, null) && ReferenceEquals(b, null)) return false;
             if (ReferenceEquals(a, null)) return true;
+            if (ReferenceEquals(a, b)) return true;
             if (a.DataType != b.DataType) return false;
             if (a.SerializerMimeType != b.SerializerMimeType) return false;
             return ByteArrayComparer.Instance.Equals(a.Data, b.Data);

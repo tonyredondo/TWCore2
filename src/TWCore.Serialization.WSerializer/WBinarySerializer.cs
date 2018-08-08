@@ -101,9 +101,7 @@ namespace TWCore.Serialization.WSerializer
                 Compressor = Compressor,
                 UseFileExtensions = UseFileExtensions,
                 SerializerMode = SerializerMode,
-                IncludeInnerKnownTypes = IncludeInnerKnownTypes,
-                EnableCache = EnableCache,
-                CacheTimeout = CacheTimeout
+                IncludeInnerKnownTypes = IncludeInnerKnownTypes
             };
             nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;

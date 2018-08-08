@@ -109,16 +109,15 @@ namespace TWCore.Tests
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void RunTest(object value, int times, bool useGZip)
         {
-            var enableCache = false;
             var vType = value?.GetType() ?? typeof(object);
             var compressor = useGZip ? CompressorManager.GetByEncodingType("gzip") : null;
             var memStream = new MemoryStream();
-            var jsonSerializer = new JsonTextSerializer { Compressor = compressor, EnableCache = enableCache };
-            var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor, EnableCache = enableCache };
-            var nBinarySerializer = new NBinarySerializer { Compressor = compressor, EnableCache = enableCache };
-            var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor, EnableCache = enableCache };
-            var wBinarySerializer = new WBinarySerializer { Compressor = compressor, EnableCache = enableCache };
-            var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor, EnableCache = enableCache };
+            var jsonSerializer = new JsonTextSerializer { Compressor = compressor };
+            var ut8JsonSerializer = new Utf8JsonTextSerializer { Compressor = compressor };
+            var nBinarySerializer = new NBinarySerializer { Compressor = compressor };
+            var rawBinarySerializer = new RawBinarySerializer { Compressor = compressor };
+            var wBinarySerializer = new WBinarySerializer { Compressor = compressor };
+            var pwBinarySerializer = new PWBinarySerializer { Compressor = compressor };
 
             Core.Log.Warning("Running Serializer Test. Use GZIP = {0}", useGZip);
             Core.Log.WriteEmptyLine();

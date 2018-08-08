@@ -497,12 +497,12 @@ namespace TWCore.Serialization
 
         public override bool Equals(object obj)
         {
-            return base.Equals(obj);
+            return base.Equals(obj as SerializedObject);
         }
         
         public bool Equals(SerializedObject other)
         {
-            if (other == null) return false;
+            if (ReferenceEquals(other, null)) return false;
             if (other.DataType != DataType) return false;
             if (other.SerializerMimeType != SerializerMimeType) return false;
             return ByteArrayComparer.Instance.Equals(Data, other.Data);
@@ -510,9 +510,9 @@ namespace TWCore.Serialization
         
         public static bool operator ==(SerializedObject a, SerializedObject b)
         {
-            if (a == null && b != null) return false;
-            if (a != null && b == null) return false;
-            if (a == null) return true;
+            if (ReferenceEquals(a, null) && !ReferenceEquals(b, null)) return false;
+            if (!ReferenceEquals(a, null) && ReferenceEquals(b, null)) return false;
+            if (ReferenceEquals(a, null)) return true;
             if (a.DataType != b.DataType) return false;
             if (a.SerializerMimeType != b.SerializerMimeType) return false;
             return ByteArrayComparer.Instance.Equals(a.Data, b.Data);
@@ -524,7 +524,7 @@ namespace TWCore.Serialization
 
         public bool Equals(object other, IEqualityComparer comparer)
         {
-            if (other == null) return false;
+            if (ReferenceEquals(other, null)) return false;
             if (!(other is SerializedObject bSer)) return false;
             if (!comparer.Equals(DataType, bSer.DataType)) return false;
             if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;

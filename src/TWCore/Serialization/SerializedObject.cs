@@ -16,6 +16,7 @@ limitations under the License.
 
 using System;
 using System.Buffers;
+using System.Collections;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -28,7 +29,7 @@ using TWCore.Compression;
 namespace TWCore.Serialization
 {
     [DataContract, Serializable]
-    public sealed class SerializedObject
+    public sealed class SerializedObject : IEquatable<SerializedObject>, IStructuralEquatable
     {
         private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerWithCache = new ConcurrentDictionary<(string, string), ISerializer>();
         /// <summary>
@@ -483,5 +484,60 @@ namespace TWCore.Serialization
                 return FromMemory(fs.ReadAllBytesAsMemory());
         }
         #endregion
+        
+        #region Overrides
+
+        public override int GetHashCode()
+        {
+            var hash = SerializerMimeType?.GetHashCode() ?? 0;
+            hash += (DataType?.GetHashCode() ?? 0) ^ 31;
+            hash += Data != null ? ByteArrayComparer.Instance.GetHashCode(Data) ^ 31 : 0;
+            return hash;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return base.Equals(obj);
+        }
+        
+        public bool Equals(SerializedObject other)
+        {
+            if (other == null) return false;
+            if (other.DataType != DataType) return false;
+            if (other.SerializerMimeType != SerializerMimeType) return false;
+            return ByteArrayComparer.Instance.Equals(Data, other.Data);
+        }
+        
+        public static bool operator ==(SerializedObject a, SerializedObject b)
+        {
+            if (a == null && b != null) return false;
+            if (a != null && b == null) return false;
+            if (a == null) return true;
+            if (a.DataType != b.DataType) return false;
+            if (a.SerializerMimeType != b.SerializerMimeType) return false;
+            return ByteArrayComparer.Instance.Equals(a.Data, b.Data);
+        }
+        public static bool operator !=(SerializedObject a, SerializedObject b)
+        {
+            return !(a == b);
+        }
+
+        public bool Equals(object other, IEqualityComparer comparer)
+        {
+            if (other == null) return false;
+            if (!(other is SerializedObject bSer)) return false;
+            if (!comparer.Equals(DataType, bSer.DataType)) return false;
+            if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;
+            return ByteArrayComparer.Instance.Equals(a.Data, b.Data);
+        }
+        public int GetHashCode(IEqualityComparer comparer)
+        {
+            var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) ?? 0;
+            hash += (DataType != null ? comparer.GetHashCode(DataType) ?? 0) ^ 31;
+            hash += Data != null ? ByteArrayComparer.Instance.GetHashCode(Data) ^ 31 : 0;
+            return hash;
+        }
+        #endregion
+
     }
 }

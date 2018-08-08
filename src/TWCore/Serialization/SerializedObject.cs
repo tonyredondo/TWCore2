@@ -528,7 +528,7 @@ namespace TWCore.Serialization
             if (!(other is SerializedObject bSer)) return false;
             if (!comparer.Equals(DataType, bSer.DataType)) return false;
             if (!comparer.Equals(SerializerMimeType, bSer.SerializerMimeType)) return false;
-            return ByteArrayComparer.Instance.Equals(a.Data, b.Data);
+            return ByteArrayComparer.Instance.Equals(Data, bSer.Data);
         }
         public int GetHashCode(IEqualityComparer comparer)
         {

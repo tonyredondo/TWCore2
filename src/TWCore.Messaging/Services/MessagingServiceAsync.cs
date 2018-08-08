@@ -264,19 +264,15 @@ namespace TWCore.Services
             MessageReceived += (sender, e) =>
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
-
-                if (e.Message is IMessage msg)
-                    Core.Trace.Write(GetType().FullName, OnGetReceivedMessageTraceName(msg), msg, msg.CorrelationId.ToString());
-
+                var msg = e.Message;
+                Core.Trace.Write(GetType().FullName, OnGetReceivedMessageTraceName(msg), msg, msg.CorrelationId.ToString());
                 return Task.CompletedTask;
             };
             MessageSent += (sender, e) =>
             {
                 if (!EnableMessagesTrace) return Task.CompletedTask;
-
-                if (e.Message is IMessage msg)
-                    Core.Trace.Write(GetType().FullName, OnGetSentMessageTraceName(msg), msg, msg.CorrelationId.ToString());
-
+                var msg = e.Message;
+                Core.Trace.Write(GetType().FullName, OnGetSentMessageTraceName(msg), msg, msg.CorrelationId.ToString());
                 return Task.CompletedTask;
             };
         }

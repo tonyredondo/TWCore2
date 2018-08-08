@@ -35,9 +35,10 @@ namespace TWCore.Serialization
     {
         private static readonly InstanceLocker<string> FilePathLocker = new InstanceLocker<string>();
         private static readonly ReferencePool<CopyStream> PoolStream = new ReferencePool<CopyStream>();
-        private readonly TimeoutDictionary<object, SubArray<byte>> _serCache = new TimeoutDictionary<object, SubArray<byte>>();
-        private readonly TimeoutDictionary<SubArray<byte>, object> _desCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
-
+        private TimeoutDictionary<object, SubArray<byte>> _serCache;
+        private TimeoutDictionary<SubArray<byte>, object> _desCache;
+        private bool _enableCache = false;
+        
         #region Properties
         /// <inheritdoc />
         /// <summary>
@@ -73,7 +74,19 @@ namespace TWCore.Serialization
         /// <summary>
         /// Enable serializer cache
         /// </summary>
-        public bool EnableCache { get; set; } = true;
+        public bool EnableCache
+        {
+            get => _enableCache;
+            set
+            {
+                if (value && _serCache == null)
+                {
+                    _serCache = new TimeoutDictionary<object, SubArray<byte>>();
+                    _desCache = new TimeoutDictionary<SubArray<byte>, object>(SubArrayBytesComparer.Instance);
+                }
+                _enableCache = value;
+            }
+        }
         /// <summary>
         /// Serializer cache timeout
         /// </summary>
@@ -104,14 +117,6 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void OnCacheSerialize(Stream stream, object item, Type itemType)
         {
-            try
-            {
-                var hash = ObjectInstanceEqualityComparer.Instance.GetHashCode(item);
-            }
-            catch(Exception ex)
-            {
-
-            }
             if (_serCache.TryGetValue(item, out var value))
             {
                 stream.Write(value.AsSpan());
@@ -165,7 +170,7 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
             {
-                if (EnableCache)
+                if (_enableCache)
                     OnCacheSerialize(stream, item, itemType);
                 else
                     OnSerialize(stream, item, itemType);
@@ -173,7 +178,7 @@ namespace TWCore.Serialization
             }
             using (var ms = new RecycleMemoryStream())
             {
-                if (EnableCache)
+                if (_enableCache)
                     OnCacheSerialize(ms, item, itemType);
                 else
                     OnSerialize(ms, item, itemType);
@@ -193,7 +198,7 @@ namespace TWCore.Serialization
         {
             if (Compressor == null)
             {
-                if (EnableCache)
+                if (_enableCache)
                     return OnCacheDeserialize(stream, itemType);
                 return OnDeserialize(stream, itemType);
             }
@@ -201,7 +206,7 @@ namespace TWCore.Serialization
             {
                 Compressor.Decompress(stream, ms);
                 ms.Position = 0;
-                if (EnableCache)
+                if (_enableCache)
                     return OnCacheDeserialize(ms, itemType);
                 return OnDeserialize(ms, itemType);
             }

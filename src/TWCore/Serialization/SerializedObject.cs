@@ -22,6 +22,7 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using NonBlocking;
 using TWCore.Compression;
 
 namespace TWCore.Serialization
@@ -29,6 +30,7 @@ namespace TWCore.Serialization
     [DataContract, Serializable]
     public sealed class SerializedObject
     {
+        private static readonly ConcurrentDictionary<(string, string), ISerializer> SerializerWithCache = new ConcurrentDictionary<(string, string), ISerializer>();
         /// <summary>
         /// Serialized Object File Extension
         /// </summary>
@@ -77,7 +79,8 @@ namespace TWCore.Serialization
                 SerializerMimeType = serializer.MimeTypes[0];
                 if (serializer.Compressor != null)
                     SerializerMimeType += ":" + serializer.Compressor.EncodingType;
-                Data = (byte[])serializer.Serialize(data, type);
+                var cSerializer = SerializerWithCache.GetOrAdd((serializer.MimeTypes[0], serializer.Compressor?.EncodingType), vTuple => CreateSerializer(vTuple));
+                Data = (byte[])cSerializer.Serialize(data, type);
             }
         }
 
@@ -86,6 +89,18 @@ namespace TWCore.Serialization
             Data = data;
             DataType = dataType;
             SerializerMimeType = serializerMimeType;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ISerializer CreateSerializer((string, string) vTuple)
+        {
+            var ser = SerializerManager.GetByMimeType(vTuple.Item1);
+            if (ser == null)
+                throw new FormatException($"The serializer with MimeType = {vTuple.Item1} wasn't found.");
+            if (!string.IsNullOrWhiteSpace(vTuple.Item2))
+                ser.Compressor = CompressorManager.GetByEncodingType(vTuple.Item2);
+            ser.EnableCache = true;
+            return ser;
         }
         #endregion
 
@@ -104,11 +119,7 @@ namespace TWCore.Serialization
             var idx = SerializerMimeType.IndexOf(':');
             var serMime = idx < 0 ? SerializerMimeType : SerializerMimeType.Substring(0, idx);
             var serComp = idx < 0 ? null : SerializerMimeType.Substring(idx + 1);
-            var serializer = SerializerManager.GetByMimeType(serMime);
-            if (serializer == null)
-                throw new FormatException($"The serializer with MimeType = {serMime} wasn't found.");
-            if (!string.IsNullOrWhiteSpace(serComp))
-                serializer.Compressor = CompressorManager.GetByEncodingType(serComp);
+            var serializer = SerializerWithCache.GetOrAdd((serMime, serComp), vTuple => CreateSerializer(vTuple));
             var value = serializer.Deserialize(Data, type);
             return value;
         }

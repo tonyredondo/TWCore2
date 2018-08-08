@@ -205,7 +205,9 @@ namespace TWCore.Serialization
                 Indent = Indent,
                 NameHandling = NameHandling,
                 UseCamelCase = UseCamelCase,
-				EnumsAsStrings = EnumsAsStrings
+				EnumsAsStrings = EnumsAsStrings,
+                EnableCache = EnableCache,
+                CacheTimeout = CacheTimeout
             };
             nSerializer.KnownTypes.UnionWith(KnownTypes);
             return nSerializer;

@@ -41,9 +41,20 @@ namespace TWCore
     /// </summary>
     public static class ObjectCloner
     {
-        private static readonly ConcurrentDictionary<Type, ObjectDescriptor> Descriptors = new ConcurrentDictionary<Type, ObjectDescriptor>();
-        private delegate object CopyActionDelegate(object obj);
-
+        private static readonly ConcurrentDictionary<Type, CloneDelegate> Descriptors = new ConcurrentDictionary<Type, CloneDelegate>();
+        private delegate object CloneDelegate(object obj);
+        //
+        private static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
+        private static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
+        //
+        private static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
+        //
+        private static readonly MethodInfo DictionaryGetEnumeratorMethod = typeof(IDictionary).GetMethod("GetEnumerator");
+        private static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
+        private static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
+        private static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
+        //
+        
         /// <summary>
         /// Clone a object and copy Properties and Fields
         /// </summary>
@@ -55,219 +66,183 @@ namespace TWCore
             if (value == null) return null;
             var vType = value.GetType();
             if (vType.IsValueType || vType == typeof(string)) return value;
-            var descriptor = Descriptors.GetOrAdd(vType, type => new ObjectDescriptor(type));
-            return descriptor.CopyAction(value);
+            var cloneDelegate = Descriptors.GetOrAdd(vType, type => CreateCopyDelegate(type));
+            return cloneDelegate(value);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static CloneDelegate CreateCopyDelegate(Type type)
+        {
+            var ifaces = type.GetInterfaces();
+            var iListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
+            var iDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+            var isIList = iListType != null;
+            var isIDictionary = iDictionaryType != null;
+            var runtimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
+            {
+                if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
+                if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
+                if (prop.GetIndexParameters().Length > 0) return false;
+                if (isIList && prop.Name == "Capacity") return false;
+                return true;
+            }).ToArray();
+            var runtimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
+            {
+                if (field.IsSpecialName || field.IsStatic || field.IsLiteral || 
+                    field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
+                if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
+                return true;
+            }).ToArray();
+            //
+            var isArray = type.IsArray;
+            var isList = false;
+            var isDictionary = false;
+            if (!isArray)
+            {
+                isDictionary = isIDictionary;
+                isList = !isDictionary && isIList;
+            }
+            //
+            var serExpressions = new List<Expression>();
+            var varExpressions = new List<ParameterExpression>();
+            
+            var obj = Expression.Parameter(typeof(object), "obj");
+            
+            var instance = Expression.Parameter(type, "instance");
+            varExpressions.Add(instance);
+            serExpressions.Add(Expression.Assign(instance, Expression.Convert(obj, type)));
+            //
+
+            
+            var value = Expression.Parameter(type, "value");
+            var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
+
+            varExpressions.Add(value);
+            //
+            if (isArray)
+            {
+                var elementType = type.GetElementType();
+
+                var arrLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(arrLength);
+                serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
+                serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, arrLength)));
+                
+                var forIdx = Expression.Parameter(typeof(int), "i");
+                varExpressions.Add(forIdx);
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
+
+                var setValueExpression = Expression.ArrayAccess(value, forIdx);
+                var getValueExpression = Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx));
+
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(forIdx, arrLength),
+                        Expression.Assign(setValueExpression, CopyExpression(elementType, getValueExpression)),
+                        Expression.Break(breakLabel)), breakLabel);
+                serExpressions.Add(loop);
+            }
+            else if (isList)
+            {
+                var argTypes = iListType.GenericTypeArguments;
+
+                var iLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(iLength);
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
+                serExpressions.Add(Expression.Assign(value, Expression.New(type)));
+
+                var forIdx = Expression.Parameter(typeof(int), "i");
+                varExpressions.Add(forIdx);
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
+                
+                var addMethod = type.GetMethod("Add", argTypes);
+
+                var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) });
+
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.LessThan(forIdx, iLength),
+                        Expression.Call(value, addMethod, CopyExpression(argTypes[0], getValueExpression)),
+                        Expression.Break(breakLabel)), breakLabel);
+                serExpressions.Add(loop);
+            }
+            else if (isDictionary)
+            {
+                var argTypes = iDictionaryType.GenericTypeArguments;
+                var iLength = Expression.Parameter(typeof(int), "length");
+                varExpressions.Add(iLength);
+                serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
+                serExpressions.Add(Expression.Assign(value, Expression.New(type)));
+
+                var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
+                varExpressions.Add(enumerator);
+                serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, DictionaryGetEnumeratorMethod)));
+                
+                var addMethod = type.GetMethod("Add", argTypes);
+                var keyElementType = argTypes[0];
+                var valueElementType = argTypes[1];
+
+                var breakLabel = Expression.Label(typeof(void), "exitLoop");
+                var getKeyExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorKeyMethod), keyElementType);
+                var getValueExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorValueMethod), valueElementType);
+                
+                var loop = Expression.Loop(
+                    Expression.IfThenElse(
+                        Expression.Call(enumerator, EnumeratorMoveNextMethod),
+                        Expression.Call(value, addMethod, CopyExpression(keyElementType, getKeyExpression), CopyExpression(valueElementType, getValueExpression)),
+                        Expression.Break(breakLabel)), breakLabel);
+
+                serExpressions.Add(loop);
+            }
+            else
+            {
+                serExpressions.Add(Expression.Assign(value, Expression.New(type)));
+            }
+            //
+            if (runtimeFields.Length > 0)
+            {
+                foreach (var field in runtimeFields)
+                {
+                    serExpressions.Add(Expression.Assign(Expression.Field(value, field), CopyExpression(field.FieldType, Expression.Field(instance, field))));
+                }
+            }
+            //
+            if (runtimeProperties.Length > 0)
+            {
+                foreach (var prop in runtimeProperties)
+                {
+                    var setExpression = Expression.Property(value, prop);
+                    var getExpression = Expression.Property(instance, prop);
+                    serExpressions.Add(Expression.Assign(setExpression, CopyExpression(prop.PropertyType, getExpression)));
+                }
+            }
+            
+            serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
+            serExpressions.Add(Expression.Label(returnTarget, value));
+
+            
+            //
+            var name = type.Name;
+            if (isArray)
+                name += "_Array";
+            else if (isIList)
+                name += "_" + type.GenericTypeArguments[0].Name;
+            else if (isIDictionary)
+                name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
+
+            var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
+            var lambda = Expression.Lambda<CloneDelegate>(expressionBlock, name + "_Clone", new[] { obj });
+            return lambda.Compile();
+            
+            Expression CopyExpression(Type expType, Expression getExp)
+            {
+                if (expType.IsValueType || expType == typeof(string))
+                    return getExp;
+                return Expression.Convert(Expression.Call(typeof(ObjectCloner), "Clone", Type.EmptyTypes, getExp), expType);
+            }
         }
         
-        #region Nested Type
-        private class ObjectDescriptor
-        {
-            private static readonly MethodInfo ListCountGetMethod = typeof(ICollection).GetProperty("Count").GetMethod;
-            private static readonly PropertyInfo ListIndexProperty = typeof(IList).GetProperty("Item");
-            //
-            private static readonly MethodInfo ArrayLengthGetMethod = typeof(Array).GetProperty("Length").GetMethod;
-            //
-            private static readonly MethodInfo DictionaryGetEnumeratorMethod = typeof(IDictionary).GetMethod("GetEnumerator");
-            private static readonly MethodInfo EnumeratorMoveNextMethod = typeof(IEnumerator).GetMethod("MoveNext");
-            private static readonly MethodInfo DictionaryEnumeratorKeyMethod = typeof(IDictionaryEnumerator).GetProperty("Key").GetMethod;
-            private static readonly MethodInfo DictionaryEnumeratorValueMethod = typeof(IDictionaryEnumerator).GetProperty("Value").GetMethod;
-            //
-            public Type Type;
-            public PropertyInfo[] RuntimeProperties;
-            public FieldInfo[] RuntimeFields;
-            public Type IListType;
-            public Type IDictionaryType;
-            //
-            public string[] Properties;
-            public bool IsArray;
-            public bool IsList;
-            public bool IsDictionary;
-            public CopyActionDelegate CopyAction;
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public ObjectDescriptor(Type type)
-            {
-                Type = type;
-                var ifaces = type.GetInterfaces();
-                IListType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IList<>));
-                IDictionaryType = ifaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-                var isIList = IListType != null;
-                var isIDictionary = IDictionaryType != null;
-                RuntimeProperties = type.GetRuntimeProperties().OrderBy(p => p.Name).Where(prop =>
-                {
-                    if (prop.IsSpecialName || !prop.CanRead || !prop.CanWrite) return false;
-                    if (prop.GetAttribute<NonSerializeAttribute>() != null) return false;
-                    if (prop.GetIndexParameters().Length > 0) return false;
-                    if (isIList && prop.Name == "Capacity") return false;
-                    return true;
-                }).ToArray();
-                RuntimeFields = type.GetRuntimeFields().OrderBy(f => f.Name).Where(field =>
-                {
-                    if (field.IsSpecialName || field.IsStatic || field.IsLiteral || 
-                        field.IsPrivate || field.IsInitOnly || field.IsNotSerialized || field.IsPinvokeImpl) return false;
-                    if (field.GetAttribute<NonSerializeAttribute>() != null) return false;
-                    return true;
-                }).ToArray();
-                //
-                Properties = RuntimeProperties.Select(p => p.Name).ToArray();
-                IsArray = type.IsArray;
-                if (!IsArray)
-                {
-                    IsDictionary = isIDictionary;
-                    IsList = !IsDictionary && isIList;
-                }
-                else
-                {
-                    IsList = false;
-                    IsDictionary = false;
-                }
-                //
-                var obj = Expression.Parameter(typeof(object), "obj");
-
-                var instance = Expression.Parameter(type, "instance");
-                var expression = Expression.Block(new[] { instance },
-                    Expression.Assign(instance, Expression.Convert(obj, type)),
-                    GetExpression(type, instance));
-
-                var name = type.Name;
-                if (IsArray)
-                    name += "_Array";
-                else if (isIList)
-                    name += "_" + type.GenericTypeArguments[0].Name;
-                else if (isIDictionary)
-                    name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;                    
-                
-                var lambda = Expression.Lambda<CopyActionDelegate>(expression, name + "_Clone", new[] { obj });
-                CopyAction = lambda.Compile();
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Expression GetExpression(Type type, Expression instance)
-            {
-                var serExpressions = new List<Expression>();
-                var varExpressions = new List<ParameterExpression>();
-                //
-                var value = Expression.Parameter(type, "value");
-                var returnTarget = Expression.Label(typeof(object), "ReturnTarget");
-
-                varExpressions.Add(value);
-                //
-                if (IsArray)
-                {
-                    var elementType = Type.GetElementType();
-
-                    var arrLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(arrLength);
-                    serExpressions.Add(Expression.Assign(arrLength, Expression.Call(instance, ArrayLengthGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.NewArrayBounds(elementType, arrLength)));
-                    
-                    var forIdx = Expression.Parameter(typeof(int), "i");
-                    varExpressions.Add(forIdx);
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
-
-                    var setValueExpression = Expression.ArrayAccess(value, forIdx);
-                    var getValueExpression = Expression.ArrayIndex(instance, Expression.PostIncrementAssign(forIdx));
-
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.LessThan(forIdx, arrLength),
-                            Expression.Assign(setValueExpression, CopyExpression(elementType, getValueExpression)),
-                            Expression.Break(breakLabel)), breakLabel);
-                    serExpressions.Add(loop);
-                }
-                else if (IsList)
-                {
-                    var argTypes = IListType.GenericTypeArguments;
-
-                    var iLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(iLength);
-                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
-
-                    var forIdx = Expression.Parameter(typeof(int), "i");
-                    varExpressions.Add(forIdx);
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
-                    
-                    var addMethod = type.GetMethod("Add", argTypes);
-
-                    //var setValueExpression = Expression.MakeIndex(value, ListIndexProperty, new[] { forIdx });
-                    var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) });
-
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.LessThan(forIdx, iLength),
-                            Expression.Call(value, addMethod, CopyExpression(argTypes[0], getValueExpression)),
-                            //Expression.Assign(setValueExpression, CopyExpression(argTypes[0], getValueExpression)),
-                            Expression.Break(breakLabel)), breakLabel);
-                    serExpressions.Add(loop);
-                }
-                else if (IsDictionary)
-                {
-                    var argTypes = IDictionaryType.GenericTypeArguments;
-                    var iLength = Expression.Parameter(typeof(int), "length");
-                    varExpressions.Add(iLength);
-                    serExpressions.Add(Expression.Assign(iLength, Expression.Call(instance, ListCountGetMethod)));
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
-
-                    var enumerator = Expression.Parameter(typeof(IDictionaryEnumerator), "enumerator");
-                    varExpressions.Add(enumerator);
-                    serExpressions.Add(Expression.Assign(enumerator, Expression.Call(instance, DictionaryGetEnumeratorMethod)));
-                    
-                    var addMethod = type.GetMethod("Add", argTypes);
-                    var keyElementType = argTypes[0];
-                    var valueElementType = argTypes[1];
-
-                    var breakLabel = Expression.Label(typeof(void), "exitLoop");
-                    var getKeyExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorKeyMethod), keyElementType);
-                    var getValueExpression = Expression.Convert(Expression.Call(enumerator, DictionaryEnumeratorValueMethod), valueElementType);
-                    
-                    var loop = Expression.Loop(
-                        Expression.IfThenElse(
-                            Expression.Call(enumerator, EnumeratorMoveNextMethod),
-                            Expression.Call(value, addMethod, CopyExpression(keyElementType, getKeyExpression), CopyExpression(valueElementType, getValueExpression)),
-                            Expression.Break(breakLabel)), breakLabel);
-
-                    serExpressions.Add(loop);
-                }
-                else
-                {
-                    serExpressions.Add(Expression.Assign(value, Expression.New(type)));
-                }
-                //
-                if (RuntimeFields.Length > 0)
-                {
-                    foreach (var field in RuntimeFields)
-                    {
-                        serExpressions.Add(Expression.Assign(Expression.Field(value, field), CopyExpression(field.FieldType, Expression.Field(instance, field))));
-                    }
-                }
-                //
-                if (RuntimeProperties.Length > 0)
-                {
-                    foreach (var prop in RuntimeProperties)
-                    {
-                        var setExpression = Expression.Property(value, prop);
-                        var getExpression = Expression.Property(instance, prop);
-                        serExpressions.Add(Expression.Assign(setExpression, CopyExpression(prop.PropertyType, getExpression)));
-                    }
-                }
-                
-                serExpressions.Add(Expression.Return(returnTarget, value, typeof(object)));
-                serExpressions.Add(Expression.Label(returnTarget, value));
-
-                var block = Expression.Block(varExpressions, serExpressions).Reduce();
-                
-                return block;
-            }
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            public Expression CopyExpression(Type type, Expression getValueExpression)
-            {
-                if (type.IsValueType || type == typeof(string))
-                    return getValueExpression;
-                return Expression.Convert(Expression.Call(typeof(ObjectCloner), "Clone", Type.EmptyTypes, getValueExpression), type);
-            }
-        }
-        #endregion
     }
 }

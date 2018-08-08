@@ -98,7 +98,7 @@ namespace TWCore.Messaging
             {
                 Request = request
             };
-            Body = new SerializedObject(body);
+            Body = body != null ? new SerializedObject(body) : null;
         }
         #endregion
     }

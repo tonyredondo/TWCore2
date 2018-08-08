@@ -43,6 +43,11 @@ namespace TWCore.Messaging
         /// </summary>
         [NonSerialize]
         public static Task<object> NoResponseTask { get; } = Task.FromResult(NoResponse);
+        /// <summary>
+        /// Define a no response message in serialized object format
+        /// </summary>
+        [NonSerialize]
+        public static SerializedObject NoResponseSerialized { get; } = new SerializedObject(NoResponse);
 
         /// <inheritdoc />
         /// <summary>
@@ -74,7 +79,7 @@ namespace TWCore.Messaging
         /// Response body
         /// </summary>
         [XmlElement, DataMember]
-        public object Body { get; set; }
+        public SerializedObject Body { get; set; }
 
         #region .ctor
         /// <inheritdoc />
@@ -93,7 +98,7 @@ namespace TWCore.Messaging
             {
                 Request = request
             };
-            Body = body;
+            Body = new SerializedObject(body);
         }
         #endregion
     }

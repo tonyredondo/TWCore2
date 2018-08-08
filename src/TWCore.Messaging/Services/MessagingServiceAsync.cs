@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Messaging;
 using TWCore.Messaging.Server;
+using TWCore.Serialization;
 using TWCore.Services.Messaging;
 using TWCore.Threading;
 // ReSharper disable CheckNamespace
@@ -155,7 +156,7 @@ namespace TWCore.Services
                         Status.ReportProcessingTime(sw.Elapsed.TotalMilliseconds);
                         Status.DecrementCurrentMessagesBeingProcessed();
                         Status.IncrementTotalMessagesProccesed();
-                        e.Response.Body = result;
+                        e.Response.Body = new SerializedObject(result);
                         ReceivedMessagesCache.TryRemove(e.Request.Body, out object _);
                     };
                     QueueServer.BeforeSendResponse += async (s, e) =>

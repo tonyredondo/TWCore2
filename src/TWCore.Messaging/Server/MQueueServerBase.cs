@@ -281,7 +281,7 @@ namespace TWCore.Messaging.Server
                 if (MQueueServerEvents.RequestReceived != null)
                     await MQueueServerEvents.RequestReceived.InvokeAsync(sender, e).ConfigureAwait(false);
 
-                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponse)
+                if (e.SendResponse && e.Response?.Body != ResponseMessage.NoResponseSerialized)
                 {
                     e.Response.Header.Response.ApplicationSentDate = Core.Now;
 

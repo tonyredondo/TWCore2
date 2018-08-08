@@ -231,7 +231,7 @@ namespace TWCore.Messaging.Client
             var res = default(T);
             try
             {
-                res = (T)rsMsg.Body;
+                res = (T)rsMsg.Body.GetValue();
             }
             catch (Exception ex)
             {

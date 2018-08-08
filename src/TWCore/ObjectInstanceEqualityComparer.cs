@@ -174,7 +174,7 @@ namespace TWCore
                 var breakLabel = Expression.Label(typeof(void), "exitLoop");
                 serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
 
-                var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { forIdx });
+                var getValueExpression = Expression.Convert(Expression.MakeIndex(instance, ListIndexProperty, new[] { forIdx }), argTypes[0]);
 
                 var loop = Expression.Loop(
                     Expression.IfThenElse(
@@ -253,9 +253,9 @@ namespace TWCore
             var name = type.Name;
             if (isArray)
                 name += "_Array";
-            else if (isIList)
+            else if (isIList && type.GenericTypeArguments.Length > 0)
                 name += "_" + type.GenericTypeArguments[0].Name;
-            else if (isIDictionary)
+            else if (isIDictionary && type.GenericTypeArguments.Length > 1)
                 name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();
@@ -376,8 +376,8 @@ namespace TWCore
                 varExpressions.Add(forIdx);
                 serExpressions.Add(Expression.Assign(forIdx, Expression.Constant(0)));
 
-                var instXGetValueExpression = Expression.MakeIndex(instX, ListIndexProperty, new[] { forIdx });
-                var instYGetValueExpression = Expression.MakeIndex(instY, ListIndexProperty, new[] { forIdx });
+                var instXGetValueExpression = Expression.Convert(Expression.MakeIndex(instX, ListIndexProperty, new[] { forIdx }), argTypes[0]);
+                var instYGetValueExpression = Expression.Convert(Expression.MakeIndex(instY, ListIndexProperty, new[] { forIdx }), argTypes[0]);
 
                 var loop = Expression.Loop(
                     Expression.IfThenElse(
@@ -456,9 +456,9 @@ namespace TWCore
             var name = type.Name;
             if (isArray)
                 name += "_Array";
-            else if (isIList)
+            else if (isIList && type.GenericTypeArguments.Length > 0)
                 name += "_" + type.GenericTypeArguments[0].Name;
-            else if (isIDictionary)
+            else if (isIDictionary && type.GenericTypeArguments.Length > 1)
                 name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();

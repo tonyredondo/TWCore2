@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TWCore.Compression;
 using TWCore.Diagnostics.Status.Transports;
+using TWCore.Messaging;
 using TWCore.Net.Multicast;
 using TWCore.Reflection;
 using TWCore.Serialization;
@@ -115,7 +116,7 @@ namespace TWCore.Test.Core
 
                 //AssemblyResolverManager.RegisterDomain(new[] { "C:\\AGSW_GIT\\dlls" });
 
-                //var serObj = NBinarySerializer.DeserializeFromFile<SerializedObject>("C:\\Temp\\trace.data");
+                //var serObj = NBinarySerializer.DeserializeFromFile<ResponseMessage>("C:\\Temp\\trace.data");
 
                 //Task.Run(async () =>
                 //{
@@ -140,7 +141,7 @@ namespace TWCore.Test.Core
 
                 //    Console.ReadLine();
                 //});
-               
+
                 /*Task.Run(async () =>
                 {
                     var rnd = new Random();

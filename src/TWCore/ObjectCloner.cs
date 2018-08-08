@@ -159,7 +159,7 @@ namespace TWCore
                 
                 var addMethod = type.GetMethod("Add", argTypes);
 
-                var getValueExpression = Expression.MakeIndex(instance, ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) });
+                var getValueExpression = Expression.Convert(Expression.MakeIndex(instance, ListIndexProperty, new[] { Expression.PostIncrementAssign(forIdx) }), argTypes[0]);
 
                 var loop = Expression.Loop(
                     Expression.IfThenElse(
@@ -227,9 +227,9 @@ namespace TWCore
             var name = type.Name;
             if (isArray)
                 name += "_Array";
-            else if (isIList)
+            else if (isIList && type.GenericTypeArguments.Length > 0)
                 name += "_" + type.GenericTypeArguments[0].Name;
-            else if (isIDictionary)
+            else if (isIDictionary && type.GenericTypeArguments.Length > 1)
                 name += "_" + type.GenericTypeArguments[0].Name + "_" + type.GenericTypeArguments[1].Name;
 
             var expressionBlock = Expression.Block(varExpressions, serExpressions).Reduce();

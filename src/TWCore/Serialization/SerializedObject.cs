@@ -532,8 +532,8 @@ namespace TWCore.Serialization
         }
         public int GetHashCode(IEqualityComparer comparer)
         {
-            var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) ?? 0;
-            hash += (DataType != null ? comparer.GetHashCode(DataType) ?? 0) ^ 31;
+            var hash = SerializerMimeType != null ? comparer.GetHashCode(SerializerMimeType) : 0;
+            hash += (DataType != null ? comparer.GetHashCode(DataType) : 0) ^ 31;
             hash += Data != null ? ByteArrayComparer.Instance.GetHashCode(Data) ^ 31 : 0;
             return hash;
         }

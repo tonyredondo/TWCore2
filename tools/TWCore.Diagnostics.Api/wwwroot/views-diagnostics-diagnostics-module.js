@@ -14168,7 +14168,22 @@ var SearchComponent = /** @class */ (function () {
         }
         this.bHasResults = null;
         this.bProcessing = true;
-        this._queryService.apiQueryByEnvironmentSearchBySearchTermGet(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name, this.searchValue, this.bsValue[0], this.bsValue[1]).subscribe(function (data) {
+        var searchVal = this.searchValue;
+        if (searchVal != null && (searchVal.startsWith("http://") || searchVal.startsWith("HTTP://"))) {
+            var regex1 = /[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}/i;
+            var regex2 = /[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}/i;
+            var regex1Result = regex1.exec(searchVal);
+            var regex2Result = regex2.exec(searchVal);
+            var finalRes = [];
+            if (regex1Result !== null) {
+                finalRes = finalRes.concat(regex1Result);
+            }
+            if (regex2Result !== null) {
+                finalRes = finalRes.concat(regex2Result);
+            }
+            searchVal = finalRes.join(' ');
+        }
+        this._queryService.apiQueryByEnvironmentSearchBySearchTermGet(_environments_environment__WEBPACK_IMPORTED_MODULE_3__["environment"].name, searchVal, this.bsValue[0], this.bsValue[1]).subscribe(function (data) {
             _this.bProcessing = false;
             if (data == null || (data.logs.length === 0 && data.traces.length === 0)) {
                 _this.bHasResults = false;
@@ -14194,7 +14209,7 @@ var SearchComponent = /** @class */ (function () {
                     cssClass: 'trace-application-bgcolor' + _this.applications.indexOf(item.application)
                 }));
             }
-            var groupObject = _this.groupBy(items, 'group');
+            var groupObject = _this.traceGroupBy(items, 'group');
             _this.searchTraces = [];
             for (var groupItem in groupObject) {
                 if (groupObject.hasOwnProperty(groupItem)) {
@@ -14207,7 +14222,7 @@ var SearchComponent = /** @class */ (function () {
             console.log(_this.searchTraces);
         });
     };
-    SearchComponent.prototype.groupBy = function (value, key) {
+    SearchComponent.prototype.traceGroupBy = function (value, key) {
         var resObj = {};
         for (var i = 0; i < value.length; i++) {
             var item = value[i] !== undefined ? value[i] : null;
@@ -14332,7 +14347,11 @@ var SearchComponent = /** @class */ (function () {
         Object(_angular_core__WEBPACK_IMPORTED_MODULE_1__["Component"])({
             template: __webpack_require__(/*! ./search.component.html */ "./src/app/views/diagnostics/search.component.html")
         }),
-        __metadata("design:paramtypes", [_services_api_api_query_service__WEBPACK_IMPORTED_MODULE_2__["QueryService"], _angular_router__WEBPACK_IMPORTED_MODULE_0__["ActivatedRoute"], _angular_router__WEBPACK_IMPORTED_MODULE_0__["Router"], _nomadreservations_ngx_codemirror__WEBPACK_IMPORTED_MODULE_6__["CodemirrorService"], ngx_bootstrap_datepicker__WEBPACK_IMPORTED_MODULE_7__["BsLocaleService"]])
+        __metadata("design:paramtypes", [_services_api_api_query_service__WEBPACK_IMPORTED_MODULE_2__["QueryService"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_0__["ActivatedRoute"],
+            _angular_router__WEBPACK_IMPORTED_MODULE_0__["Router"],
+            _nomadreservations_ngx_codemirror__WEBPACK_IMPORTED_MODULE_6__["CodemirrorService"],
+            ngx_bootstrap_datepicker__WEBPACK_IMPORTED_MODULE_7__["BsLocaleService"]])
     ], SearchComponent);
     return SearchComponent;
 }());

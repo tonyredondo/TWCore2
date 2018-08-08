@@ -1,5 +1,5 @@
-# TWCore 2
-A multipurpose framework library for netstandard 2, used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
+# TWCore 2.1
+A multipurpose framework library for dotnet core 2.1, used to create microservices solutions on multiple platforms (runs on windows, linux, linux-arm [raspberry pi], and osx).
 
 # Advantages
 

@@ -224,12 +224,9 @@ namespace TWCore.Serialization
             stream.Write(intBuffer);
             if (hasDataType)
             {
-                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dataTypeLength))
-                {
-                    var dataTypeBuffer = memBuffer.Memory.Span.Slice(0, dataTypeLength);
-                    Encoding.UTF8.GetBytes(DataType, dataTypeBuffer);
-                    stream.Write(dataTypeBuffer);
-                }
+                Span<byte> dataTypeBuffer = stackalloc byte[dataTypeLength];
+                Encoding.UTF8.GetBytes(DataType, dataTypeBuffer);
+                stream.Write(dataTypeBuffer);
             }
 
             //MimeType
@@ -375,14 +372,11 @@ namespace TWCore.Serialization
             if (dtLength < -1 || dtLength > length) return null;
             if (dtLength != -1)
             {
-                using (var memBuffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dtLength))
-                {
-                    Span<byte> buffer = memBuffer.Memory.Span.Slice(0, dtLength);
-                    sequence.Slice(4, dtLength).CopyTo(buffer);
-                    dataType = Encoding.UTF8.GetString(buffer);
-                    length -= dtLength;
-                    sequence = sequence.Slice(4 + dtLength);
-                }
+                Span<byte> buffer = stackalloc byte[dtLength];
+                sequence.Slice(4, dtLength).CopyTo(buffer);
+                dataType = Encoding.UTF8.GetString(buffer);
+                length -= dtLength;
+                sequence = sequence.Slice(4 + dtLength);
             }
 
             sequence.Slice(0, 4).CopyTo(lengthSpan);
@@ -400,15 +394,15 @@ namespace TWCore.Serialization
             sequence.Slice(0, 4).CopyTo(lengthSpan);
             var dataLength = BitConverter.ToInt32(lengthSpan);
             if (dataLength < -1 || dataLength > length) return null;
-            var data = ReadOnlySpan<byte>.Empty;
+            byte[] dataArray = null;
             if (dataLength != -1)
             {
-                var dSpan = new Span<byte>(new byte[dataLength]);
+                dataArray = new byte[dataLength];
+                var dSpan = dataArray.AsSpan();
                 sequence.Slice(4, dataLength).CopyTo(dSpan);
-                data = dSpan;
             }
 
-            return new SerializedObject(data.ToArray(), dataType, mimeType);
+            return new SerializedObject(dataArray, dataType, mimeType);
         }
         /// <summary>
         /// Get SerializedObject instance from a stream
@@ -427,24 +421,18 @@ namespace TWCore.Serialization
             var dataTypeByteLength = BitConverter.ToInt32(intBuffer);
             if (dataTypeByteLength > -1)
             {
-                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: dataTypeByteLength))
-                {
-                    var span = buffer.Memory.Span.Slice(0, dataTypeByteLength);
-                    stream.Fill(span);
-                    dataType = Encoding.UTF8.GetString(span);
-                }
+                Span<byte> span = stackalloc byte[dataTypeByteLength];
+                stream.Fill(span);
+                dataType = Encoding.UTF8.GetString(span);
             }
 
             stream.Fill(intBuffer);
             var serializerMimeTypeByteLength = BitConverter.ToInt32(intBuffer);
             if (serializerMimeTypeByteLength > -1)
             {
-                using (var buffer = MemoryPool<byte>.Shared.Rent(minBufferSize: serializerMimeTypeByteLength))
-                {
-                    var span = buffer.Memory.Span.Slice(0, serializerMimeTypeByteLength);
-                    stream.Fill(span);
-                    serializerMimeType = Encoding.UTF8.GetString(span);
-                }
+                Span<byte> span = stackalloc byte[serializerMimeTypeByteLength];
+                stream.Fill(span);
+                serializerMimeType = Encoding.UTF8.GetString(span);
             }
 
             stream.Fill(intBuffer);

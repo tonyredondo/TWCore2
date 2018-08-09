@@ -110,21 +110,23 @@ namespace TWCore.Net.Multicast
         /// <summary>
         /// Connect to the multicast group
         /// </summary>
-        public static void Connect()
+        /// <param name="enableReceive">Enable receive multicast</param>
+        public static void Connect(bool enableReceive = true)
         {
-            Connect(MulticastIp, Port);
+            Connect(MulticastIp, Port, enableReceive);
         }
         /// <summary>
         /// Connect to the multicast group
         /// </summary>
         /// <param name="multicastIp">Multicast Ip address</param>
         /// <param name="port">Port</param>
-        public static void Connect(string multicastIp, int port)
+        /// <param name="enableReceive">Enable receive multicast</param>
+        public static void Connect(string multicastIp, int port, bool enableReceive = true)
         {
             _connected = true;
             MulticastIp = multicastIp;
             Port = port;
-            PeerConnection.Connect(multicastIp, port);
+            PeerConnection.Connect(multicastIp, port, enableReceive);
             _sendThread = SendThreadAsync();
         }
         /// <summary>

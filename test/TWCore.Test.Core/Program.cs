@@ -120,27 +120,29 @@ namespace TWCore.Test.Core
 
                 //Task.Run(async () =>
                 //{
-                //    var value = serObj.GetValue();
+                //    var value = serObj;
+                //    NBinarySerializerExtensions.Serializer.Compressor = CompressorManager.GetByEncodingType("deflate");
                 //    var valueByte = value.SerializeToNBinary();
 
-                //    TWCore.Core.Log.InfoBasic("Testing object trace");
-
-                //    await Task.Delay(1000).ConfigureAwait(false);
+                //    TWCore.Core.Log.InfoBasic("Testing object trace - {0}", valueByte.Count);
+                //    GC.Collect();
+                //    await Task.Delay(2000).ConfigureAwait(false);
                 //    using (Watch.Create("Serialize"))
                 //    {
-                //        for (var i = 0; i < 4000; i++)
+                //        for (var i = 0; i < 10000; i++)
                 //            value.SerializeToNBinary();
                 //    }
 
-                //    await Task.Delay(1000).ConfigureAwait(false);
+                //    GC.Collect();
+                //    await Task.Delay(2000).ConfigureAwait(false);
                 //    using (Watch.Create("Deserialize"))
                 //    {
-                //        for (var i = 0; i < 4000; i++)
+                //        for (var i = 0; i < 10000; i++)
                 //            valueByte.DeserializeFromNBinary<object>();
                 //    }
 
-                //    Console.ReadLine();
                 //});
+
 
                 /*Task.Run(async () =>
                 {

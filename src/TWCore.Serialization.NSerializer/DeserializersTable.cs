@@ -556,6 +556,20 @@ namespace TWCore.Serialization.NSerializer
                 value[i] = ReadTimeSpan(StreamReadByte());
             return value;
         }
+        [DeserializerMethod(DataBytesDefinition.ObjectArray, ReturnType = typeof(object[]))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public object[] ReadObjectArray(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.RefObject)
+                return (object[])ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
+            var value = new object[length];
+            ObjectCache.Set(value);
+            for (var i = 0; i < length; i++)
+                value[i] = ReadValue(StreamReadByte());
+            return value;
+        }
 
         [DeserializerMethod(DataBytesDefinition.BoolList, ReturnType = typeof(List<bool>))]
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -793,6 +807,20 @@ namespace TWCore.Serialization.NSerializer
             ObjectCache.Set(value);
             for (var i = 0; i < length; i++)
                 value.Add(ReadTimeSpan(StreamReadByte()));
+            return value;
+        }
+        [DeserializerMethod(DataBytesDefinition.ObjectList, ReturnType = typeof(List<object>))]
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public List<object> ReadObjectList(byte type)
+        {
+            if (type == DataBytesDefinition.ValueNull) return null;
+            if (type == DataBytesDefinition.RefObject)
+                return (List<object>)ObjectCache.Get(StreamReadInt());
+            var length = StreamReadInt();
+            var value = new List<object>(length);
+            ObjectCache.Set(value);
+            for (var i = 0; i < length; i++)
+                value[i] = ReadValue(StreamReadByte());
             return value;
         }
         #endregion

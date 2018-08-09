@@ -53,7 +53,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double value)
         {
-            if (Math.Abs(value - default(double)) < 0.0000000000001)
+            if (value == default)
                 WriteByte(DataBytesDefinition.DoubleDefault);
             else if (_doubleCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefDouble, objIdx);
@@ -66,7 +66,7 @@ namespace TWCore.Serialization.NSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float value)
         {
-            if (Math.Abs(value - default(float)) < 0.0000000000001)
+            if (value == default)
                 WriteByte(DataBytesDefinition.FloatDefault);
             else if (_floatCache.TryGetValue(value, out var objIdx))
                 WriteDefInt(DataBytesDefinition.RefFloat, objIdx);

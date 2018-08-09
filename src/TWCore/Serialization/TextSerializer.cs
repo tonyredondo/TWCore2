@@ -113,7 +113,7 @@ namespace TWCore.Serialization
                 OnSerialize(stream, item, itemType);
                 return;
             }
-			using (var ms = new RecycleMemoryStream())
+            using (var ms = new RecycleMemoryStream())
             {
                 OnSerialize(ms, item, itemType);
                 ms.Position = 0;
@@ -152,9 +152,21 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public SubArray<byte> Serialize(object item, Type itemType)
         {
-            var ms = new MemoryStream();
-            Serialize(item, itemType, ms);
-            return ms.ToSubArray();
+            using (var stream = new RecycleMemoryStream())
+            {
+                if (Compressor == null)
+                {
+                    OnSerialize(stream, item, itemType);
+                    return stream.ToArray();
+                }
+                using (var ms = new RecycleMemoryStream())
+                {
+                    OnSerialize(ms, item, itemType);
+                    ms.Position = 0;
+                    Compressor.Compress(ms, stream);
+                }
+                return stream.ToArray();
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -165,7 +177,21 @@ namespace TWCore.Serialization
         /// <returns>Deserialized object</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object Deserialize(SubArray<byte> value, Type valueType)
-            => Deserialize(value.ToMemoryStream(), valueType);
+        {
+            using (var stream = value.ToMemoryStream())
+            {
+                if (Compressor == null)
+                {
+                    return OnDeserialize(stream, valueType);
+                }
+                using (var ms = new RecycleMemoryStream())
+                {
+                    Compressor.Decompress(stream, ms);
+                    ms.Position = 0;
+                    return OnDeserialize(ms, valueType);
+                }
+            }
+        }
 
         /// <inheritdoc />
         /// <summary>
@@ -177,9 +203,11 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string SerializeToString(object item, Type itemType)
         {
-            var ms = new MemoryStream();
-            OnSerialize(ms, item, itemType);
-            return Encoding.GetString(ms.GetBuffer(), 0, (int)ms.Length);
+            using (var ms = new RecycleMemoryStream())
+            {
+                OnSerialize(ms, item, itemType);
+                return Encoding.GetString(ms.ToArray());
+            }
         }
         /// <inheritdoc />
         /// <summary>
@@ -191,8 +219,8 @@ namespace TWCore.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public object DeserializeFromString(string value, Type itemType)
         {
-            var ms = new MemoryStream(Encoding.GetBytes(value));
-            return OnDeserialize(ms, itemType);
+            using (var ms = new MemoryStream(Encoding.GetBytes(value)))
+                return OnDeserialize(ms, itemType);
         }
 
 

@@ -86,6 +86,33 @@ namespace TWCore.Services
                 .UseStartup<TStartUp>()
                 .Build());
         }
+        /// <summary>
+        /// Create WebService with default WebHost
+        /// </summary>
+        /// <typeparam name="TStartUp">StartuUp class</typeparam>
+        /// <param name="builder">Builder extensions</param>
+        /// <returns>WebService default instance</returns>
+        public static WebService Create<TStartUp>(Func<IWebHostBuilder, IWebHostBuilder> builder) where TStartUp : class
+        {
+            if (builder == null)
+                return Create<TStartUp>();
+            if (Settings?.Urls?.Any() == true)
+                return new WebService(args =>
+                {
+                    var wbuilder = WebHost.CreateDefaultBuilder(args)
+                        .UseStartup<TStartUp>()
+                        .UseUrls(Settings.Urls);
+                    wbuilder = builder(wbuilder);
+                    return wbuilder.Build();
+                });
+            return new WebService(args =>
+            {
+                var wbuilder = WebHost.CreateDefaultBuilder(args)
+                        .UseStartup<TStartUp>();
+                wbuilder = builder(wbuilder);
+                return wbuilder.Build();
+            });
+        }
         #endregion
 
         protected override async Task OnActionAsync(CancellationToken token)

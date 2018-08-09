@@ -48,7 +48,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(double value)
         {
-            if (Math.Abs(value - default(double)) < 0.0000000000001)
+            if (value == default)
                 WriteByte(DataBytesDefinition.DoubleDefault);
             else
                 WriteDefDouble(DataBytesDefinition.Double, value);
@@ -56,7 +56,7 @@ namespace TWCore.Serialization.RawSerializer
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void WriteValue(float value)
         {
-            if (Math.Abs(value - default(float)) < 0.0000000000001)
+            if (value == default)
                 WriteByte(DataBytesDefinition.FloatDefault);
             else
                 WriteDefFloat(DataBytesDefinition.Float, value);

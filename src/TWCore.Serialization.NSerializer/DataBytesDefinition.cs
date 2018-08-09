@@ -25,11 +25,10 @@ namespace TWCore.Serialization.NSerializer
         public const byte   ValueNull   				= 1;
         public const byte   TypeStart                   = 2;
         public const byte   TypeEnd                     = 3;
-        public const byte   ArrayStart                  = 4;
-        public const byte   ListStart                   = 5;
-        public const byte   DictionaryStart             = 6;
-        public const byte   PropertiesStart             = 7;
-	    public const byte	SerializedObject			= 8;
+        public const byte   ObjectArray                 = 4;
+        public const byte   ObjectList                  = 5;
+
+        public const byte	SerializedObject			= 8;
 	    public const byte	SerializedObjectNull		= 9;
 	    
 		public const byte   DecimalArray				= 10;

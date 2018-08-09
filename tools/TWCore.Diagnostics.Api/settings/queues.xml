@@ -27,7 +27,7 @@
     </ServerQueues>
     
 
-    <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="gzip">
+    <RequestOptions SerializerMimeType="application/n-binary" CompressorEncodingType="deflate">
       <ClientSenderOptions MessageExpirationInSec="30" MessagePriority="Normal" UseDeadLetter="true" Recoverable="false" Label="DIAGNOSTICS REQUEST" />
       <ServerReceiverOptions ProcessingWaitOnFinalizeInSec="10" MaxSimultaneousMessagesPerQueue="200" SleepOnExceptionInSec="2" />
     </RequestOptions>

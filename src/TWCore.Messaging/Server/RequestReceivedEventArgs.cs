@@ -111,7 +111,7 @@ namespace TWCore.Messaging.Server
         public void SetResponseBody(object obj)
         {
             if (obj != null)
-                Response.Body = _senderSerializer.GetSerializedObject(obj);
+                Response.Body = _senderSerializer?.GetSerializedObject(obj) ?? ResponseMessage.NoResponseSerialized;
         }
     }
 }

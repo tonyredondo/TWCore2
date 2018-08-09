@@ -59,9 +59,9 @@ namespace TWCore.Messaging
         /// Defines a new Request Message for messaging
         /// </summary>
         /// <param name="body">Request body</param>
-        public RequestMessage(object body)
+        public RequestMessage(SerializedObject body)
         {
-            Body = new SerializedObject(body);
+            Body = body;
         }
         #endregion
     }

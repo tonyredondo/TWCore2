@@ -215,7 +215,7 @@ namespace TWCore.Messaging.NSQ
 						Counters.IncrementReceivingTime(request.Header.TotalTime);
 						if (request.Header.ClientName != Config.Name)
 							Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
-						var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count);
+						var evArgs = new RequestReceivedEventArgs(_name, Connection, request, message.Body.Count, SenderSerializer);
 						if (request.Header.ResponseQueue != null)
 							evArgs.ResponseQueues.Add(request.Header.ResponseQueue);
 						await OnRequestReceivedAsync(evArgs).ConfigureAwait(false);

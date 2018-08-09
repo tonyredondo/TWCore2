@@ -59,6 +59,11 @@ namespace TWCore.Messaging.Server
         public ISerializer ReceiverSerializer { get; set; }
         /// <inheritdoc />
         /// <summary>
+        /// Gets or sets the sender serializer
+        /// </summary>
+        public ISerializer SenderSerializer { get; set; }
+        /// <inheritdoc />
+        /// <summary>
         /// Gets if the server is configured as response server
         /// </summary>
         public bool ResponseServer { get; }
@@ -93,6 +98,7 @@ namespace TWCore.Messaging.Server
             Config = server.Config;
             Counters = new MQServerCounters();
             ReceiverSerializer = server.ReceiverSerializer;
+            SenderSerializer = server.SenderSerializer;
             ResponseServer = responseServer;
             Core.Status.Attach(collection =>
             {

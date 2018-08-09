@@ -156,7 +156,7 @@ namespace TWCore.Services
                             try
                             {
                                 result = await Processor.ProcessAsync(body, e.ProcessResponseTimeoutCancellationToken).ConfigureAwait(false);
-                                e.Response.Body = new SerializedObject(result);
+                                e.SetResponseBody(result);
                             }
                             catch (Exception ex)
                             {

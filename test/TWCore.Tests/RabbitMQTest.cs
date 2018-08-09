@@ -124,7 +124,7 @@ namespace TWCore.Tests
             {
                 mqServer.RequestReceived += (s, e) =>
                 {
-                    e.Response.Body = new SerializedObject("Bienvenido!!!");
+                    e.SetResponseBody("Bienvenido!!!");
                     return Task.CompletedTask;
                 };
                 mqServer.StartListeners();

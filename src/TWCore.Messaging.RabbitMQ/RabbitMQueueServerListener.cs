@@ -195,7 +195,7 @@ namespace TWCore.Messaging.RabbitMQ
                         if (request.Header.ClientName != Config.Name)
                             Core.Log.Warning("The Message Client Name '{0}' is different from the Server Name '{1}'", request.Header.ClientName, Config.Name);
                         var evArgs =
-                            new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length)
+                            new RequestReceivedEventArgs(_name, _receiver, request, message.Body.Length, SenderSerializer)
                             {
                                 Metadata =
                                 {

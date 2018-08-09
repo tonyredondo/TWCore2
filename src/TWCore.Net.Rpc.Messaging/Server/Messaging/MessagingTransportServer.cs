@@ -190,7 +190,7 @@ namespace TWCore.Net.RPC.Server.Transports
                         if (OnGetDescriptorsRequest != null)
                         {
                             OnGetDescriptorsRequest(requestReceivedEventArgs.Request.CorrelationId, sDesc);
-                            requestReceivedEventArgs.Response.Body = new SerializedObject(sDesc.Descriptors);
+                            requestReceivedEventArgs.Response.Body = _queueServer.SenderSerializer.GetSerializedObject(sDesc.Descriptors);
                         }
                     }
                     break;
@@ -199,7 +199,7 @@ namespace TWCore.Net.RPC.Server.Transports
                     if (OnMethodCall != null)
                     {
                         OnMethodCall(this, mEvent);
-                        requestReceivedEventArgs.Response.Body = new SerializedObject(mEvent.Response);
+                        requestReceivedEventArgs.Response.Body = _queueServer.SenderSerializer.GetSerializedObject(mEvent.Response);
                     }
                     break;
             }

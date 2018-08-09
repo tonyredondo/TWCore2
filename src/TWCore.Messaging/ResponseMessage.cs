@@ -92,13 +92,13 @@ namespace TWCore.Messaging
         /// </summary>
         /// <param name="request">Request message</param>
         /// <param name="body">Response body</param>
-        public ResponseMessage(RequestMessage request, object body)
+        public ResponseMessage(RequestMessage request, SerializedObject body)
         {
             Header = new ResponseMessageHeader
             {
                 Request = request
             };
-            Body = body != null ? new SerializedObject(body) : null;
+            Body = body;
         }
         #endregion
     }

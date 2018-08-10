@@ -1,7 +1,8 @@
 ﻿{
   "appSettings": {
     "key": "value",
-    "Core.DebugMode": false
+    "Core.DebugMode": false,
+    "Core.Discovery.DisableReceive" :  true
   },
   "Core": {
     "environmentName": "DEV",

@@ -468,7 +468,7 @@ namespace TWCore.Services
                 if (_discovery) return;
                 if (!Core.GlobalSettings.EnableDiscovery) return;
 
-                Core.Log.LibDebug("Registering Discovery services.");
+                Core.Log.InfoDetail("Registering Discovery services. (ReceiveThread={0})", !Core.GlobalSettings.DiscoveryDisableReceive);
                 _discovery = true;
 
                 var serializer = SerializerManager.DefaultBinarySerializer;

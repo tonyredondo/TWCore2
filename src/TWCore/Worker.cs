@@ -277,7 +277,9 @@ namespace TWCore
             var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                var bRes = await _processHandler.WaitAsync(2500, token).ConfigureAwait(false);
+                bool bRes = false;
+                if (!_queue.TryPeek(out _))
+                    bRes = await _processHandler.WaitAsync(5000, token).ConfigureAwait(false);
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {
@@ -336,7 +338,9 @@ namespace TWCore
             var workDone = false;
             while (!token.IsCancellationRequested)
             {
-                var bRes = await _processHandler.WaitAsync(1500, token).ConfigureAwait(false);
+                bool bRes = false;
+                if (!_queue.TryPeek(out _))
+                    bRes = await _processHandler.WaitAsync(5000, token).ConfigureAwait(false);
 
                 while (!token.IsCancellationRequested && (_status == WorkerStatus.Started || _status == WorkerStatus.Stopping) && _queue.TryDequeue(out var item))
                 {

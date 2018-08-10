@@ -24,10 +24,10 @@ using System.Xml.Serialization;
 
 namespace TWCore
 {
-	/// <summary>
-	/// Sub array for each delegate
-	/// </summary>
-	public delegate void SubArrayForEach<T>(ref T value);
+    /// <summary>
+    /// Sub array for each delegate
+    /// </summary>
+    public delegate void SubArrayForEach<T>(ref T value);
 	/// <summary>
 	/// Sub array for each delegate
 	/// </summary>

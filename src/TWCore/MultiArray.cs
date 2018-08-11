@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -158,20 +159,29 @@ namespace TWCore
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int IndexOf(T item)
         {
-            var fromIndex = FromGlobalIndex(_offset);
-            var position = fromIndex.Position;
-            var remain = _count;
-            for(var rowIndex = fromIndex.ArrayIndex; rowIndex < _listOfArrays.Count; rowIndex++)
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for(var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
-                var localCount = Math.Min(remain, _segmentLength);
-                var index = Array.IndexOf(_listOfArrays[rowIndex], item, position, localCount);
+                int index;
+                if (rowIndex == fromRowIndex)
+                {
+                    index = Array.IndexOf(_listOfArrays[rowIndex], fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    index = Array.IndexOf(_listOfArrays[rowIndex], 0, toPosition + 1);                    
+                }
+                else
+                {
+                    index = Array.IndexOf(_listOfArrays[rowIndex], 0, _segmentLength);                                        
+                }
+
                 if (index > -1)
                 {
                     var globalIndex = ToGlobalIndex(rowIndex, index);
                     return globalIndex - _offset;
                 }
-                remain -= localCount;
-                position = 0;
             }
             return -1;
         }
@@ -250,7 +260,110 @@ namespace TWCore
         /// <returns>true if the object is different; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool operator !=(MultiArray<T> a, MultiArray<T> b) => !(a == b);
-
+        /// <summary>
+        /// Get the String representation of the instance.
+        /// </summary>
+        /// <returns>String value</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override string ToString()
+        {
+            return "[MultiArray: " + typeof(T).Name + " - Offset: " + _offset + " - Count: " + _count + "]";
+        }
+        /// <summary>
+        /// For each method in the inner array by reference
+        /// </summary>
+        /// <param name="delegate">ForEach delegate</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ForEach(MultiArrayForEach<T> @delegate)
+        {
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                if (rowIndex == fromRowIndex)
+                {
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                        @delegate(ref _listOfArrays[rowIndex][index]);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    for (var index = 0; index <= toPosition; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index]);
+                }
+                else
+                {
+                    for (var index = 0; index < _segmentLength; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index]);
+                }
+            }
+        }
+        /// <summary>
+        /// For each method in the inner array by reference
+        /// </summary>
+        /// <param name="delegate">ForEach delegate</param>
+        /// <param name="arg1">Argument 1</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ForEach<TA1>(MultiArrayForEach<T, TA1> @delegate, ref TA1 arg1)
+        {
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                if (rowIndex == fromRowIndex)
+                {
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    for (var index = 0; index <= toPosition; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
+                }
+                else
+                {
+                    for (var index = 0; index < _segmentLength; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
+                }
+            }
+        }
+        /// <summary>
+        /// For each method in the inner array by reference
+        /// </summary>
+        /// <param name="delegate">ForEach delegate</param>
+        /// <param name="arg1">Argument 1</param>
+        /// <param name="arg2">Argument 2</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public void ForEach<TA1, TA2>(MultiArrayForEach<T, TA1, TA2> @delegate, ref TA1 arg1, ref TA2 arg2)
+        {
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                if (rowIndex == fromRowIndex)
+                {
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    for (var index = 0; index <= toPosition; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
+                }
+                else
+                {
+                    for (var index = 0; index < _segmentLength; index++)
+                        @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
+                }
+            }
+        }
+        /// <summary>
+        /// Copy data to the stream
+        /// </summary>
+        /// <param name="stream">Stream instance</param>
+        public void CopyTo(Stream stream)
+        {
+            
+        }
         #endregion
 
         #region Private Methods

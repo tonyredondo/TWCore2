@@ -17,6 +17,7 @@ limitations under the License.
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 // ReSharper disable MemberCanBePrivate.Global
@@ -192,9 +193,9 @@ namespace TWCore
             Ensure.GreaterEqualThan(index, 0, "Index should be a possitive number.");
             Ensure.GreaterEqualThan(count, 0, "Count should be a possitive number.");
             if (index > _count)
-                throw new ArgumentOutOfRangeException("The index should be lower than the total Array Count");
+                throw new ArgumentOutOfRangeException(nameof(index), "The index should be lower than the total Array Count");
             if (_count - index < count)
-                throw new ArgumentOutOfRangeException("The count is invalid");
+                throw new ArgumentOutOfRangeException(nameof(count), "The count is invalid");
             return new MultiArray<T>(_listOfArrays, _offset + index, count);
         }
         /// <summary>
@@ -204,13 +205,59 @@ namespace TWCore
         /// <returns>true if the MultiArray contains the element; otherwise, false.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Contains(T item) => IndexOf(item) >= 0;
+        /// <summary>
+        /// Gets the MultiArray HashCode
+        /// </summary>
+        /// <returns>HashCode</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override int GetHashCode() => (_listOfArrays == null ? 0 : _listOfArrays.GetHashCode() ^_listOfArrays.Count) ^ _offset ^ _count ^ _segmentLength;
+        /// <summary>
+        /// Gets if the MultiArray is equal to another object
+        /// </summary>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>true if the object is equal; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public override bool Equals(object obj) => obj is SubArray<T> sobj && Equals(sobj);
+        /// <summary>
+        /// Gets if the MultiArray is equal to another MultiArray
+        /// </summary>
+        /// <param name="obj">Object to compare</param>
+        /// <returns>true if the object is equal; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Equals(MultiArray<T> obj)
+        {
+            if (obj._offset != _offset) return false;
+            if (obj._count != _count) return false;
+            if (obj._segmentLength != _segmentLength) return false;
+            if (obj._listOfArrays == null && _listOfArrays != null) return false;
+            if (obj._listOfArrays != null && _listOfArrays == null) return false;
+            if (obj._listOfArrays == null && _listOfArrays == null) return true;
+            return obj._listOfArrays.SequenceEqual(_listOfArrays);
+        }
+        /// <summary>
+        /// Gets if the MultiArray is equal to another MultiArray
+        /// </summary>
+        /// <param name="a">First SubArray instance</param>
+        /// <param name="b">Second SubArray instance</param>
+        /// <returns>true if the object is equal; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator ==(MultiArray<T> a, MultiArray<T> b) => a.Equals(b);
+        /// <summary>
+        /// Gets if the MultiArray is different to another MultiArray
+        /// </summary>
+        /// <param name="a">First MultiArray instance</param>
+        /// <param name="b">Second MultiArray instance</param>
+        /// <returns>true if the object is different; otherwise, false.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool operator !=(MultiArray<T> a, MultiArray<T> b) => !(a == b);
+
         #endregion
 
         #region Private Methods
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private (int ArrayIndex, int Position) FromGlobalIndex(int globalIndex)
         {
-            var val = ((double)globalIndex / _segmentLength);
+            var val = (double)globalIndex / _segmentLength;
             var arrayIndex = (int)val;
             var position = (int)((val - arrayIndex) * _segmentLength);
             return (arrayIndex, position);

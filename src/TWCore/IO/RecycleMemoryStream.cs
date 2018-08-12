@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.CompilerServices;
 // ReSharper disable IntroduceOptionalParameters.Global
 
@@ -40,6 +41,7 @@ namespace TWCore.IO
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private int _position;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private List<byte[]> _buffer;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)] private byte[] _currentBuffer;
+        [DebuggerBrowsable(DebuggerBrowsableState.Never)] private bool _collectPoolItems = true;
 
         #region Allocators
         private struct BytePoolAllocator : IPoolObjectLifecycle<byte[]>
@@ -142,6 +144,17 @@ namespace TWCore.IO
                 Write(buffer, index, count);
             _canWrite = writable;
         }
+        internal RecycleMemoryStream(List<byte[]> buffer, int maxRow, int rowIndex, int position, int length, bool canWrite)
+        {
+            _canWrite = canWrite;
+            _length = length;
+            _maxRow = maxRow;
+            _rowIndex = rowIndex;
+            _position = position;
+            _buffer = buffer;
+            _currentBuffer = _buffer[_rowIndex];
+            _collectPoolItems = false;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ~RecycleMemoryStream()
         {
@@ -153,9 +166,12 @@ namespace TWCore.IO
             if (_buffer != null)
             {
                 _currentBuffer = null;
-                foreach (var array in _buffer)
-                    ByteArrayPool.Store(array);
-                ListByteArrayPool.Store(_buffer);
+                if (_collectPoolItems)
+                {
+                    foreach (var array in _buffer)
+                        ByteArrayPool.Store(array);
+                    ListByteArrayPool.Store(_buffer);
+                }
                 _buffer = null;
             }
             base.Dispose(disposing);

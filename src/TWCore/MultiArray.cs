@@ -422,6 +422,14 @@ namespace TWCore
                 }
             }
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator MultiArray<T>(ArraySegment<T> arraySegment) => new MultiArray<T>(arraySegment);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator MultiArray<T>(List<T[]> listOfSegments) => new MultiArray<T>(listOfSegments);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static implicit operator MultiArray<T>(T[][] listOfSegments) => new MultiArray<T>(listOfSegments);
         #endregion
 
         #region Private Methods

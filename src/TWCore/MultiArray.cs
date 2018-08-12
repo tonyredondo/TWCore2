@@ -49,7 +49,6 @@ namespace TWCore
     [DataContract]
     [Serializable]
     public readonly struct MultiArray<T>
-        where T : struct
     {
         /// <summary>
         /// Empty MultiArray instance

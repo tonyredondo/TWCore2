@@ -49,6 +49,7 @@ namespace TWCore
     [DataContract]
     [Serializable]
     public readonly struct MultiArray<T>
+        where T : struct
     {
         /// <summary>
         /// Empty MultiArray instance
@@ -365,26 +366,29 @@ namespace TWCore
         /// <param name="stream">Stream instance</param>
         public void CopyTo(Stream stream)
         {
-            if (!(_listOfArrays is IList<byte[]> listOfBytesArray))
-                throw new NotSupportedException("This method is only supported on MultiArray of Bytes");
-            
+            if (!(_listOfArrays is IList<byte[]> arrays))
+                throw new NotSupportedException("The type of MultiArray is not bytes");
+
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
             for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    var span = listOfBytesArray[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    var span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    //var resSpan = MemoryMarshal.AsBytes(span);
                     stream.Write(span);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    var span = listOfBytesArray[rowIndex].AsSpan(0, toPosition + 1);
+                    var span = arrays[rowIndex].AsSpan(0, toPosition + 1);
+                    //var resSpan = MemoryMarshal.AsBytes(span);
                     stream.Write(span);
                 }
                 else
                 {
-                    var span = listOfBytesArray[rowIndex].AsSpan(0, _segmentLength);
+                    var span = arrays[rowIndex].AsSpan(0, _segmentLength);
+                    //var resSpan = MemoryMarshal.AsBytes(span);
                     stream.Write(span);
                 }
             }
@@ -395,8 +399,8 @@ namespace TWCore
         /// <param name="stream">Stream instance</param>
         public async Task CopyToAsync(Stream stream)
         {
-            if (!(_listOfArrays is IList<byte[]> listOfBytesArray))
-                throw new NotSupportedException("This method is only supported on MultiArray of Bytes");
+            if (!(_listOfArrays is IList<byte[]> arrays))
+                throw new NotSupportedException("The type of MultiArray is not bytes");
             
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
             var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
@@ -404,17 +408,17 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    var memory = listOfBytesArray[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    var memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
                     await stream.WriteAsync(memory).ConfigureAwait(false);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    var memory = listOfBytesArray[rowIndex].AsMemory(0, toPosition + 1);
+                    var memory = arrays[rowIndex].AsMemory(0, toPosition + 1);
                     await stream.WriteAsync(memory).ConfigureAwait(false);
                 }
                 else
                 {
-                    var memory = listOfBytesArray[rowIndex].AsMemory(0, _segmentLength);
+                    var memory = arrays[rowIndex].AsMemory(0, _segmentLength);
                     await stream.WriteAsync(memory).ConfigureAwait(false);
                 }
             }

@@ -420,6 +420,16 @@ namespace TWCore
                 }
             }
         }
+        /// <summary>
+        /// Get a Readonly stream from this MultiArray instance.
+        /// </summary>
+        /// <returns>Readonly stream</returns>
+        public Stream AsReadOnlyStream()
+        {
+            if (this is MultiArray<byte> mBytes)
+                return new MultiArrayReadOnlyStream(mBytes);
+            throw new NotSupportedException("The type of MultiArray is not bytes");
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -443,6 +453,59 @@ namespace TWCore
         private int ToGlobalIndex(int arrayIndex, int position)
         {
             return (arrayIndex * _segmentLength) + position;
+        }
+        #endregion
+        
+        #region Nested Types
+        /// <summary>
+        /// MultiArray Readonly Stream
+        /// </summary>
+        public class MultiArrayReadOnlyStream : Stream
+        {
+            private MultiArray<byte> _source;
+
+            #region Properties
+            public override bool CanRead => true;
+            public override bool CanSeek => true;
+            public override bool CanWrite => false;
+            public override long Length => _source._count;
+            public override long Position { get; set; }
+            #endregion
+
+            #region .ctor
+            /// <summary>
+            /// MultiArray Readonly Stream
+            /// </summary>
+            /// <param name="source">MultiArray source</param>
+            internal MultiArrayReadOnlyStream(MultiArray<byte> source)
+            {
+                _source = source;
+            }
+            #endregion
+            
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                throw new NotImplementedException();
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                throw new NotImplementedException();
+            }
+
+            
+            public override void Flush()
+            {
+                throw new IOException("The stream is read only.");
+            }
+            public override void SetLength(long value)
+            {
+                throw new IOException("The stream is read only.");
+            }
+            public override void Write(byte[] buffer, int offset, int count)
+            {
+                throw new IOException("The stream is read only.");
+            }
         }
         #endregion
     }

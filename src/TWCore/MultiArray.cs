@@ -20,7 +20,10 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
+
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace TWCore
@@ -45,7 +48,7 @@ namespace TWCore
     /// <typeparam name="T">Type of element</typeparam>
     [DataContract]
     [Serializable]
-    public struct MultiArray<T>
+    public readonly struct MultiArray<T>
     {
         /// <summary>
         /// Empty MultiArray instance
@@ -362,7 +365,59 @@ namespace TWCore
         /// <param name="stream">Stream instance</param>
         public void CopyTo(Stream stream)
         {
+            if (!(_listOfArrays is IList<byte[]> listOfBytesArray))
+                throw new NotSupportedException("This method is only supported on MultiArray of Bytes");
             
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                if (rowIndex == fromRowIndex)
+                {
+                    var span = listOfBytesArray[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    stream.Write(span);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    var span = listOfBytesArray[rowIndex].AsSpan(0, toPosition + 1);
+                    stream.Write(span);
+                }
+                else
+                {
+                    var span = listOfBytesArray[rowIndex].AsSpan(0, _segmentLength);
+                    stream.Write(span);
+                }
+            }
+        }
+        /// <summary>
+        /// Copy data to the stream
+        /// </summary>
+        /// <param name="stream">Stream instance</param>
+        public async Task CopyToAsync(Stream stream)
+        {
+            if (!(_listOfArrays is IList<byte[]> listOfBytesArray))
+                throw new NotSupportedException("This method is only supported on MultiArray of Bytes");
+            
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+            for (var rowIndex = fromRowIndex; rowIndex <= toRowIndex; rowIndex++)
+            {
+                if (rowIndex == fromRowIndex)
+                {
+                    var memory = listOfBytesArray[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    await stream.WriteAsync(memory).ConfigureAwait(false);
+                }
+                else if (rowIndex == toRowIndex)
+                {
+                    var memory = listOfBytesArray[rowIndex].AsMemory(0, toPosition + 1);
+                    await stream.WriteAsync(memory).ConfigureAwait(false);
+                }
+                else
+                {
+                    var memory = listOfBytesArray[rowIndex].AsMemory(0, _segmentLength);
+                    await stream.WriteAsync(memory).ConfigureAwait(false);
+                }
+            }
         }
         #endregion
 

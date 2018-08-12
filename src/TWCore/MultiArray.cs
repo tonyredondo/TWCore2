@@ -55,7 +55,7 @@ namespace TWCore
         /// </summary>
         public static MultiArray<T> Empty = new MultiArray<T>();
 
-        [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+        //[DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly IList<T[]> _listOfArrays;
         [DebuggerBrowsable(DebuggerBrowsableState.Never)]
         private readonly int _offset;
@@ -150,6 +150,7 @@ namespace TWCore
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
+                if (index >= _count) throw new IndexOutOfRangeException();
                 var (arrayIndex, position) = FromGlobalIndex(index + _offset);
                 return ref _listOfArrays[arrayIndex][position];
             }
@@ -285,12 +286,12 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
                         @delegate(ref _listOfArrays[rowIndex][index]);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    for (var index = 0; index <= toPosition; index++)
+                    for (var index = 0; index < toPosition; index++)
                         @delegate(ref _listOfArrays[rowIndex][index]);
                 }
                 else
@@ -314,12 +315,12 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
                         @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    for (var index = 0; index <= toPosition; index++)
+                    for (var index = 0; index < toPosition; index++)
                         @delegate(ref _listOfArrays[rowIndex][index], ref arg1);
                 }
                 else
@@ -344,12 +345,12 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : _count); index++)
+                    for (var index = fromPosition; index < (fromRowIndex != toRowIndex ? _segmentLength : toPosition); index++)
                         @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    for (var index = 0; index <= toPosition; index++)
+                    for (var index = 0; index < toPosition; index++)
                         @delegate(ref _listOfArrays[rowIndex][index], ref arg1, ref arg2);
                 }
                 else
@@ -374,20 +375,17 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    var span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
-                    //var resSpan = MemoryMarshal.AsBytes(span);
+                    var span = arrays[rowIndex].AsSpan(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
                     stream.Write(span);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    var span = arrays[rowIndex].AsSpan(0, toPosition + 1);
-                    //var resSpan = MemoryMarshal.AsBytes(span);
+                    var span = arrays[rowIndex].AsSpan(0, toPosition);
                     stream.Write(span);
                 }
                 else
                 {
                     var span = arrays[rowIndex].AsSpan(0, _segmentLength);
-                    //var resSpan = MemoryMarshal.AsBytes(span);
                     stream.Write(span);
                 }
             }
@@ -407,12 +405,12 @@ namespace TWCore
             {
                 if (rowIndex == fromRowIndex)
                 {
-                    var memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : _count);
+                    var memory = arrays[rowIndex].AsMemory(fromPosition, fromRowIndex != toRowIndex ? _segmentLength : toPosition);
                     await stream.WriteAsync(memory).ConfigureAwait(false);
                 }
                 else if (rowIndex == toRowIndex)
                 {
-                    var memory = arrays[rowIndex].AsMemory(0, toPosition + 1);
+                    var memory = arrays[rowIndex].AsMemory(0, toPosition);
                     await stream.WriteAsync(memory).ConfigureAwait(false);
                 }
                 else

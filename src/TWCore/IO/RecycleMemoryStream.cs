@@ -144,17 +144,6 @@ namespace TWCore.IO
                 Write(buffer, index, count);
             _canWrite = writable;
         }
-        internal RecycleMemoryStream(List<byte[]> buffer, int maxRow, int rowIndex, int position, int length, bool canWrite)
-        {
-            _canWrite = canWrite;
-            _length = length;
-            _maxRow = maxRow;
-            _rowIndex = rowIndex;
-            _position = position;
-            _buffer = buffer;
-            _currentBuffer = _buffer[_rowIndex];
-            _collectPoolItems = false;
-        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         ~RecycleMemoryStream()
         {
@@ -372,6 +361,15 @@ namespace TWCore.IO
                 Buffer.BlockCopy(_buffer[i], 0, tmp, i * MaxLength, MaxLength);
             Buffer.BlockCopy(_buffer[_maxRow], 0, tmp, _maxRow * MaxLength, _length);
             return tmp;
+        }
+        /// <summary>
+        /// Get the internal buffer as MultiArray
+        /// </summary>
+        /// <returns>MultiArray instance</returns>
+        public MultiArray<byte> GetMultiArray()
+        {
+            _collectPoolItems = false;
+            return new MultiArray<byte>(_buffer, 0, (int)Length);
         }
         #endregion
     }

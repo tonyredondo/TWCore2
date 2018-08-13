@@ -15,6 +15,7 @@ limitations under the License.
  */
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -442,6 +443,31 @@ namespace TWCore
                 return new MultiArrayReadOnlyStream(mBytes);
             throw new NotSupportedException("The type of MultiArray is not bytes");
         }
+        /// <summary>
+        /// Get a ReadOnlySequence from this MultiArray instance
+        /// </summary>
+        /// <returns>ReadOnlySequence instance</returns>
+        public ReadOnlySequence<T> AsReadOnlySequence()
+        {
+            if (_listOfArrays == null) return ReadOnlySequence<T>.Empty;
+            if (_listOfArrays.Count == 0) return ReadOnlySequence<T>.Empty;
+            ReadOnlySequence<T> sequence;
+            if (_listOfArrays.Count == 1)
+            {
+                sequence = new ReadOnlySequence<T>(_listOfArrays[0]);
+            }
+            else
+            {
+                var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+                var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count);
+                var firstSegment = new SequenceSegment<T>(_listOfArrays[fromRowIndex]);
+                var lastSegment = firstSegment;
+                for (var rowIndex = fromRowIndex + 1; rowIndex <= toRowIndex; rowIndex++)
+                    lastSegment = lastSegment.Add(_listOfArrays[rowIndex]);
+                sequence = new ReadOnlySequence<T>(firstSegment, fromPosition, lastSegment, toPosition);
+            }
+            return sequence;
+        }
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -538,6 +564,20 @@ namespace TWCore
             public override void Write(byte[] buffer, int offset, int count)
             {
                 throw new IOException("The stream is read only.");
+            }
+        }
+
+        private class SequenceSegment<T> : ReadOnlySequenceSegment<T>
+        {
+            public SequenceSegment(T[] segmentItem)
+                => Memory = new ReadOnlyMemory<T>(segmentItem);
+            
+            public SequenceSegment<T> Add(T[] segmentItem)
+            {
+                var segment = new SequenceSegment<T>(segmentItem);
+                segment.RunningIndex = RunningIndex + Memory.Length;
+                Next = segment;
+                return segment;
             }
         }
         #endregion

@@ -93,7 +93,9 @@ namespace TWCore.Serialization
                 if (serCompressor != null)
                     SerializerMimeType += ":" + serCompressor;
                 var cSerializer = SerializerCache.GetOrAdd((serMimeType, serCompressor), vTuple => CreateSerializer(vTuple));
-                Data = cSerializer.Serialize(data, type).ToArray();
+                var objectData = cSerializer.Serialize(data, type);
+                //var internalData = objectData.GetData();
+                Data = objectData.ToArray();
             }
         }
 

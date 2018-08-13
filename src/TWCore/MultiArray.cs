@@ -517,6 +517,17 @@ namespace TWCore
                 lst.Add(_listOfArrays[row]);
             return new MultiArray<T>(lst, fromPosition, _count);
         }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal (List<T[]> Data, int Offset, int Count) GetData()
+        {
+            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
+            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
+            var lst = new List<T[]>();
+            for(var row = fromRowIndex; row <= toRowIndex; row++)
+                lst.Add(_listOfArrays[row]);
+            return (lst, fromPosition, _count);
+        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);

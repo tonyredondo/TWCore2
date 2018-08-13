@@ -359,14 +359,14 @@ namespace TWCore
         /// </summary>
         /// <param name="array">Array object</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(T[] array) => WriteTo(array.AsSpan());
+        public void CopyTo(T[] array) => CopyTo(array.AsSpan());
         /// <summary>
         /// Copy the MultiArray content to an Array 
         /// </summary>
         /// <param name="array">Array object</param>
         /// <param name="arrayIndex">Starting offset in the destination array</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void CopyTo(T[] array, int arrayIndex) => WriteTo(array.AsSpan(arrayIndex));
+        public void CopyTo(T[] array, int arrayIndex) => CopyTo(array.AsSpan(arrayIndex));
 
         /// <summary>
         /// Write data to a span
@@ -374,7 +374,7 @@ namespace TWCore
         /// <param name="span">Destination span</param>
         /// <return>Number of copied items</return>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public int WriteTo(Span<T> span)
+        public int CopyTo(Span<T> span)
         {
             var copyLength = _count <= span.Length ? _count : span.Length;
             var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
@@ -440,8 +440,19 @@ namespace TWCore
         public T[] ToArray()
         {
             var arr = new T[_count];
-            WriteTo(arr.AsSpan());
+            CopyTo(arr);
             return arr;
+        }
+        /// <summary>
+        /// Gets the inner array when is a simple MultiArray with only one array
+        /// </summary>
+        /// <returns></returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public T[] AsArray()
+        {
+            if (_offset == 0 && _count == _segmentLength)
+                return _listOfArrays[0];
+            throw new RankException();
         }
         /// <summary>
         /// Return the MultiArray as Span
@@ -517,17 +528,6 @@ namespace TWCore
                 lst.Add(_listOfArrays[row]);
             return new MultiArray<T>(lst, fromPosition, _count);
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal (List<T[]> Data, int Offset, int Count) GetData()
-        {
-            var (fromRowIndex, fromPosition) = FromGlobalIndex(_offset);
-            var (toRowIndex, toPosition) = FromGlobalIndex(_offset + _count - 1);
-            var lst = new List<T[]>();
-            for(var row = fromRowIndex; row <= toRowIndex; row++)
-                lst.Add(_listOfArrays[row]);
-            return (lst, fromPosition, _count);
-        }
         
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static implicit operator MultiArray<T>(T[] array) => new MultiArray<T>(array);
@@ -590,7 +590,7 @@ namespace TWCore
                 if (_position == _source._count)
                     return 0;
                 var writeSpan = buffer.AsSpan(offset, count);
-                var bytes = _source.Slice(_position).WriteTo(writeSpan);
+                var bytes = _source.Slice(_position).CopyTo(writeSpan);
                 _position += bytes;
                 return bytes;
             }
@@ -604,7 +604,7 @@ namespace TWCore
             {
                 if (_position == _source._count)
                     return 0;
-                var bytes = _source.Slice(_position).WriteTo(buffer);
+                var bytes = _source.Slice(_position).CopyTo(buffer);
                 _position += bytes;
                 return bytes;
             }

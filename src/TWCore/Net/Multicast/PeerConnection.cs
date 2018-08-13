@@ -273,7 +273,7 @@ namespace TWCore.Net.Multicast
                 BitConverter.TryWriteBytes(dGram.Span.Slice(16, 2), (ushort)numMsgs);
                 BitConverter.TryWriteBytes(dGram.Span.Slice(18, 2), (ushort)i);
                 BitConverter.TryWriteBytes(dGram.Span.Slice(20, 2), (ushort)csize);
-                buffer.Slice(offset, csize).WriteTo(dGram.Span.Slice(22));
+                buffer.Slice(offset, csize).CopyTo(dGram.Span.Slice(22));
                 dGram.Span.Slice(csize + 22).Clear();
 
                 foreach (var c in _sendClients)
